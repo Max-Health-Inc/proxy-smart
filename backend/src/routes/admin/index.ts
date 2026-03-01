@@ -12,6 +12,7 @@ import { keycloakConfigRoutes } from './keycloak-config'
 import { aiRoutes, aiPublicRoutes } from './ai'
 import { mcpServersRoutes } from './mcp-servers'
 import { consentAdminRoutes } from './consent'
+import { accessControlRoutes } from './access-control'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 
 /**
@@ -86,6 +87,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(mcpServersRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
+  // Physical access control (Kisi)
+  .use(accessControlRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

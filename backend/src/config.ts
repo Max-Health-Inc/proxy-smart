@@ -168,6 +168,22 @@ export const config = {
     }
   },
 
+  kisi: {
+    // Kisi Access Control integration
+    get apiKey() {
+      return process.env.KISI_API_KEY || null
+    },
+    get baseUrl() {
+      return process.env.KISI_BASE_URL || 'https://api.kisi.io'
+    },
+    get timeout() {
+      return Number.parseInt(process.env.KISI_TIMEOUT_MS || '10000', 10)
+    },
+    get isConfigured() {
+      return !!this.apiKey
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins
