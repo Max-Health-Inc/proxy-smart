@@ -1,92 +1,91 @@
 /**
- * Kisi Access Control Schemas
+ * Access Control Schemas
  * 
- * TypeBox schemas for Kisi entities exposed through the admin API.
+ * Provider-agnostic TypeBox schemas for the access control admin API.
+ * Works with any AccessControlProvider (Kisi, UniFi Access, etc.)
  */
 
 import { t, type Static } from 'elysia'
 
 // ==================== Core Entities ====================
 
-export const KisiPlaceSchema = t.Object({
-  id: t.Number({ description: 'Kisi place ID' }),
-  name: t.String({ description: 'Place name' }),
+export const AccessLocationSchema = t.Object({
+  id: t.String({ description: 'Location ID (provider-specific)' }),
+  name: t.String({ description: 'Location name' }),
   address: t.Optional(t.String({ description: 'Address' })),
   description: t.Optional(t.String({ description: 'Description' })),
-  latitude: t.Optional(t.Number({ description: 'Latitude' })),
-  longitude: t.Optional(t.Number({ description: 'Longitude' })),
-  timeZone: t.Optional(t.String({ description: 'IANA time zone' })),
-  organizationId: t.Optional(t.Number({ description: 'Organization ID' })),
+  metadata: t.Optional(t.Record(t.String(), t.Unknown(), { description: 'Provider-specific metadata' })),
   createdAt: t.Optional(t.String({ description: 'Created timestamp (ISO 8601)' })),
   updatedAt: t.Optional(t.String({ description: 'Updated timestamp (ISO 8601)' })),
-}, { title: 'KisiPlace' })
+}, { title: 'AccessLocation' })
 
-export type KisiPlaceSchemaType = Static<typeof KisiPlaceSchema>
+export type AccessLocationSchemaType = Static<typeof AccessLocationSchema>
 
-export const KisiLockSchema = t.Object({
-  id: t.Number({ description: 'Kisi lock ID' }),
-  name: t.String({ description: 'Lock/door name' }),
-  placeId: t.Number({ description: 'Parent place ID' }),
+export const AccessDoorSchema = t.Object({
+  id: t.String({ description: 'Door ID (provider-specific)' }),
+  name: t.String({ description: 'Door/lock name' }),
+  locationId: t.String({ description: 'Parent location ID' }),
   description: t.Optional(t.String({ description: 'Description' })),
-  online: t.Boolean({ description: 'Whether the lock controller is online' }),
+  online: t.Boolean({ description: 'Whether the door controller is online' }),
   locked: t.Optional(t.Boolean({ description: 'Whether the door is locked' })),
-  type: t.Optional(t.String({ description: 'Lock type' })),
+  type: t.Optional(t.String({ description: 'Door/lock type' })),
+  metadata: t.Optional(t.Record(t.String(), t.Unknown(), { description: 'Provider-specific metadata' })),
   createdAt: t.Optional(t.String({ description: 'Created timestamp (ISO 8601)' })),
   updatedAt: t.Optional(t.String({ description: 'Updated timestamp (ISO 8601)' })),
-}, { title: 'KisiLock' })
+}, { title: 'AccessDoor' })
 
-export type KisiLockSchemaType = Static<typeof KisiLockSchema>
+export type AccessDoorSchemaType = Static<typeof AccessDoorSchema>
 
-export const KisiGroupSchema = t.Object({
-  id: t.Number({ description: 'Kisi group ID' }),
+export const AccessGroupSchema = t.Object({
+  id: t.String({ description: 'Group ID' }),
   name: t.String({ description: 'Group name' }),
   description: t.Optional(t.String({ description: 'Description' })),
-  organizationId: t.Optional(t.Number({ description: 'Organization ID' })),
-  placeId: t.Optional(t.Number({ description: 'Place ID' })),
+  locationId: t.Optional(t.String({ description: 'Location ID' })),
+  metadata: t.Optional(t.Record(t.String(), t.Unknown(), { description: 'Provider-specific metadata' })),
   createdAt: t.Optional(t.String({ description: 'Created timestamp (ISO 8601)' })),
   updatedAt: t.Optional(t.String({ description: 'Updated timestamp (ISO 8601)' })),
-}, { title: 'KisiGroup' })
+}, { title: 'AccessGroup' })
 
-export type KisiGroupSchemaType = Static<typeof KisiGroupSchema>
+export type AccessGroupSchemaType = Static<typeof AccessGroupSchema>
 
-export const KisiMemberSchema = t.Object({
-  id: t.Number({ description: 'Kisi member ID' }),
+export const AccessMemberSchema = t.Object({
+  id: t.String({ description: 'Member ID' }),
   name: t.Optional(t.String({ description: 'Display name' })),
   email: t.String({ description: 'Email address' }),
-  organizationId: t.Optional(t.Number({ description: 'Organization ID' })),
-  groupIds: t.Optional(t.Array(t.Number(), { description: 'Assigned group IDs' })),
+  groupIds: t.Optional(t.Array(t.String(), { description: 'Assigned group IDs' })),
   confirmed: t.Optional(t.Boolean({ description: 'Whether the member confirmed their account' })),
   enabled: t.Optional(t.Boolean({ description: 'Whether the member is enabled' })),
+  metadata: t.Optional(t.Record(t.String(), t.Unknown(), { description: 'Provider-specific metadata' })),
   createdAt: t.Optional(t.String({ description: 'Created timestamp (ISO 8601)' })),
   updatedAt: t.Optional(t.String({ description: 'Updated timestamp (ISO 8601)' })),
-}, { title: 'KisiMember' })
+}, { title: 'AccessMember' })
 
-export type KisiMemberSchemaType = Static<typeof KisiMemberSchema>
+export type AccessMemberSchemaType = Static<typeof AccessMemberSchema>
 
-export const KisiGroupLockSchema = t.Object({
-  id: t.Number({ description: 'Assignment ID' }),
-  groupId: t.Number({ description: 'Group ID' }),
-  lockId: t.Number({ description: 'Lock ID' }),
+export const AccessGroupDoorSchema = t.Object({
+  id: t.String({ description: 'Assignment ID' }),
+  groupId: t.String({ description: 'Group ID' }),
+  doorId: t.String({ description: 'Door ID' }),
   createdAt: t.Optional(t.String({ description: 'Created timestamp (ISO 8601)' })),
   updatedAt: t.Optional(t.String({ description: 'Updated timestamp (ISO 8601)' })),
-}, { title: 'KisiGroupLock' })
+}, { title: 'AccessGroupDoor' })
 
-export type KisiGroupLockSchemaType = Static<typeof KisiGroupLockSchema>
+export type AccessGroupDoorSchemaType = Static<typeof AccessGroupDoorSchema>
 
-export const KisiEventSchema = t.Object({
-  id: t.Number({ description: 'Event ID' }),
-  action: t.String({ description: 'Event action (e.g., lock.unlock, member.create)' }),
+export const AccessEventSchema = t.Object({
+  id: t.String({ description: 'Event ID' }),
+  action: t.String({ description: 'Event action (e.g., door.unlock, member.create)' }),
   actorType: t.Optional(t.String({ description: 'Actor entity type' })),
-  actorId: t.Optional(t.Number({ description: 'Actor ID' })),
+  actorId: t.Optional(t.String({ description: 'Actor ID' })),
   actorEmail: t.Optional(t.String({ description: 'Actor email' })),
   objectType: t.Optional(t.String({ description: 'Object entity type' })),
-  objectId: t.Optional(t.Number({ description: 'Object ID' })),
-  lockId: t.Optional(t.Number({ description: 'Related lock ID' })),
+  objectId: t.Optional(t.String({ description: 'Object ID' })),
+  doorId: t.Optional(t.String({ description: 'Related door ID' })),
   message: t.Optional(t.String({ description: 'Human-readable event message' })),
   createdAt: t.Optional(t.String({ description: 'Timestamp (ISO 8601)' })),
-}, { title: 'KisiEvent' })
+}, { title: 'AccessEvent' })
 
-export type KisiEventSchemaType = Static<typeof KisiEventSchema>
+export type AccessEventSchemaType = Static<typeof AccessEventSchema>
 
 // ==================== Pagination Wrapper ====================
 
@@ -101,86 +100,115 @@ function paginatedSchema<T extends ReturnType<typeof t.Object>>(itemSchema: T, t
   }, { title })
 }
 
-export const KisiPlacesResponse = paginatedSchema(KisiPlaceSchema, 'KisiPlacesResponse')
-export const KisiLocksResponse = paginatedSchema(KisiLockSchema, 'KisiLocksResponse')
-export const KisiGroupsResponse = paginatedSchema(KisiGroupSchema, 'KisiGroupsResponse')
-export const KisiMembersResponse = paginatedSchema(KisiMemberSchema, 'KisiMembersResponse')
-export const KisiGroupLocksResponse = paginatedSchema(KisiGroupLockSchema, 'KisiGroupLocksResponse')
-export const KisiEventsResponse = paginatedSchema(KisiEventSchema, 'KisiEventsResponse')
+export const AccessLocationsResponse = paginatedSchema(AccessLocationSchema, 'AccessLocationsResponse')
+export const AccessDoorsResponse = paginatedSchema(AccessDoorSchema, 'AccessDoorsResponse')
+export const AccessGroupsResponse = paginatedSchema(AccessGroupSchema, 'AccessGroupsResponse')
+export const AccessMembersResponse = paginatedSchema(AccessMemberSchema, 'AccessMembersResponse')
+export const AccessGroupDoorsResponse = paginatedSchema(AccessGroupDoorSchema, 'AccessGroupDoorsResponse')
+export const AccessEventsResponse = paginatedSchema(AccessEventSchema, 'AccessEventsResponse')
 
 // ==================== Request / Operation Schemas ====================
 
-export const KisiCreateGroupRequest = t.Object({
+export const CreateGroupRequest = t.Object({
   name: t.String({ description: 'Group name', minLength: 1 }),
   description: t.Optional(t.String({ description: 'Group description' })),
-}, { title: 'KisiCreateGroupRequest' })
+}, { title: 'CreateGroupRequest' })
 
-export type KisiCreateGroupRequestType = Static<typeof KisiCreateGroupRequest>
+export type CreateGroupRequestType = Static<typeof CreateGroupRequest>
 
-export const KisiCreateMemberRequest = t.Object({
+export const CreateMemberRequest = t.Object({
   email: t.String({ description: 'Member email', format: 'email' }),
   name: t.Optional(t.String({ description: 'Display name' })),
-}, { title: 'KisiCreateMemberRequest' })
+}, { title: 'CreateMemberRequest' })
 
-export type KisiCreateMemberRequestType = Static<typeof KisiCreateMemberRequest>
+export type CreateMemberRequestType = Static<typeof CreateMemberRequest>
 
-export const KisiAssignLockRequest = t.Object({
-  groupId: t.Number({ description: 'Group ID' }),
-  lockId: t.Number({ description: 'Lock ID' }),
-}, { title: 'KisiAssignLockRequest' })
+export const AssignDoorRequest = t.Object({
+  groupId: t.String({ description: 'Group ID' }),
+  doorId: t.String({ description: 'Door ID' }),
+}, { title: 'AssignDoorRequest' })
 
-export type KisiAssignLockRequestType = Static<typeof KisiAssignLockRequest>
-
-export const KisiUnlockRequest = t.Object({
-  lockId: t.Number({ description: 'Lock ID to unlock' }),
-}, { title: 'KisiUnlockRequest' })
-
-export type KisiUnlockRequestType = Static<typeof KisiUnlockRequest>
+export type AssignDoorRequestType = Static<typeof AssignDoorRequest>
 
 // ==================== Sync Schemas ====================
 
-export const KisiSyncRequest = t.Object({
+export const SyncRequest = t.Object({
   roleMappings: t.Optional(t.Array(t.Object({
     keycloakRole: t.String({ description: 'Keycloak role name (or partial match pattern)' }),
-    kisiGroupId: t.Number({ description: 'Kisi group ID to assign' }),
+    groupId: t.String({ description: 'Provider group ID to assign' }),
   }), { description: 'Role-to-group mapping rules' })),
-}, { title: 'KisiSyncRequest' })
+}, { title: 'SyncRequest' })
 
-export type KisiSyncRequestType = Static<typeof KisiSyncRequest>
+export type SyncRequestType = Static<typeof SyncRequest>
 
-export const KisiSyncResponse = t.Object({
+export const SyncResponse = t.Object({
   created: t.Array(t.String(), { description: 'Emails of newly created members' }),
-  skipped: t.Array(t.String(), { description: 'Emails already existing in Kisi' }),
+  skipped: t.Array(t.String(), { description: 'Emails already existing' }),
   failed: t.Array(t.Object({
     email: t.String(),
     error: t.String(),
   }), { description: 'Emails that failed to sync' }),
-}, { title: 'KisiSyncResponse' })
+}, { title: 'SyncResponse' })
 
-export type KisiSyncResponseType = Static<typeof KisiSyncResponse>
+export type SyncResponseType = Static<typeof SyncResponse>
 
 // ==================== Overview ====================
 
-export const KisiOverviewResponse = t.Object({
-  places: KisiPlacesResponse,
-  locks: KisiLocksResponse,
-  groups: KisiGroupsResponse,
-  members: KisiMembersResponse,
-}, { title: 'KisiOverviewResponse' })
+export const OverviewResponse = t.Object({
+  locations: AccessLocationsResponse,
+  doors: AccessDoorsResponse,
+  groups: AccessGroupsResponse,
+  members: AccessMembersResponse,
+}, { title: 'AccessOverviewResponse' })
 
-export type KisiOverviewResponseType = Static<typeof KisiOverviewResponse>
+export type OverviewResponseType = Static<typeof OverviewResponse>
 
 // ==================== Health ====================
 
-export const KisiHealthResponse = t.Object({
-  configured: t.Boolean({ description: 'Whether Kisi integration is configured' }),
-  connected: t.Boolean({ description: 'Whether the Kisi API is reachable' }),
-}, { title: 'KisiHealthResponse' })
+export const AccessHealthResponse = t.Object({
+  configured: t.Boolean({ description: 'Whether an access control provider is configured' }),
+  connected: t.Boolean({ description: 'Whether the provider backend is reachable' }),
+  provider: t.Optional(t.String({ description: 'Active provider name (kisi, unifi-access)' })),
+  capabilities: t.Optional(t.Object({
+    groups: t.Boolean(),
+    members: t.Boolean(),
+    sync: t.Boolean(),
+    events: t.Boolean(),
+    groupDoors: t.Boolean(),
+    realtime: t.Boolean(),
+  }, { description: 'Provider capabilities' })),
+}, { title: 'AccessHealthResponse' })
 
-export type KisiHealthResponseType = Static<typeof KisiHealthResponse>
+export type AccessHealthResponseType = Static<typeof AccessHealthResponse>
 
 // ==================== ID Param ====================
 
-export const KisiIdParam = t.Object({
-  id: t.Numeric({ description: 'Kisi entity ID' }),
+export const IdParam = t.Object({
+  id: t.String({ description: 'Entity ID' }),
 })
+
+// ==================== Backward Compat Aliases ====================
+// Keep old names available for any existing imports
+
+export const KisiPlaceSchema = AccessLocationSchema
+export const KisiLockSchema = AccessDoorSchema
+export const KisiGroupSchema = AccessGroupSchema
+export const KisiMemberSchema = AccessMemberSchema
+export const KisiGroupLockSchema = AccessGroupDoorSchema
+export const KisiEventSchema = AccessEventSchema
+export const KisiPlacesResponse = AccessLocationsResponse
+export const KisiLocksResponse = AccessDoorsResponse
+export const KisiGroupsResponse = AccessGroupsResponse
+export const KisiMembersResponse = AccessMembersResponse
+export const KisiGroupLocksResponse = AccessGroupDoorsResponse
+export const KisiEventsResponse = AccessEventsResponse
+export const KisiCreateGroupRequest = CreateGroupRequest
+export const KisiCreateMemberRequest = CreateMemberRequest
+export const KisiAssignLockRequest = AssignDoorRequest
+export const KisiSyncRequest = SyncRequest
+export const KisiSyncResponse = SyncResponse
+export const KisiOverviewResponse = OverviewResponse
+export const KisiHealthResponse = AccessHealthResponse
+export const KisiIdParam = IdParam
+export type KisiSyncResponseType = SyncResponseType
+export type KisiHealthResponseType = AccessHealthResponseType

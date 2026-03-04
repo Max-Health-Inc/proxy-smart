@@ -87,7 +87,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(mcpServersRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
-  // Physical access control (Kisi)
+  // Physical access control (Kisi / UniFi Access)
   .use(accessControlRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)

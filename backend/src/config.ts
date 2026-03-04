@@ -184,6 +184,22 @@ export const config = {
     },
   },
 
+  unifiAccess: {
+    // UniFi Access local controller integration
+    get host() {
+      return process.env.UNIFI_ACCESS_HOST || null
+    },
+    get username() {
+      return process.env.UNIFI_ACCESS_USERNAME || null
+    },
+    get password() {
+      return process.env.UNIFI_ACCESS_PASSWORD || null
+    },
+    get isConfigured() {
+      return !!(this.host && this.username && this.password)
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins

@@ -54,7 +54,9 @@ const getDefaultConfig = (): LoggerConfig => {
       'sse': Math.max(LogLevel.INFO, baseLevel),
       'ws': Math.max(LogLevel.INFO, baseLevel),
       'consent': Math.max(LogLevel.INFO, baseLevel),
-      'kisi': Math.max(LogLevel.INFO, baseLevel)
+      'kisi': Math.max(LogLevel.INFO, baseLevel),
+      'unifi-access': Math.max(LogLevel.INFO, baseLevel),
+      'access-control': Math.max(LogLevel.INFO, baseLevel)
     }
   };
 };
