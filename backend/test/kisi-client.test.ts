@@ -80,7 +80,7 @@ describe('KisiClient', () => {
           status: 200,
           headers: { 'content-type': 'application/json', 'x-collection-range': '0-0/0' },
         })
-      }) as typeof fetch
+      }) as unknown as typeof fetch
 
       await client.getPlaces({ limit: 1 })
 
@@ -194,7 +194,7 @@ describe('KisiClient', () => {
       ) as unknown as typeof fetch
 
       const result = await client.getPlaces()
-      const place = result.data[0] as Record<string, unknown>
+      const place = result.data[0] as unknown as Record<string, unknown>
 
       expect(place.placeId).toBe(5)
       expect(place.createdAt).toBe('2026-01-01T00:00:00Z')
@@ -211,7 +211,7 @@ describe('KisiClient', () => {
           status: 200,
           headers: { 'content-type': 'application/json' },
         })
-      }) as typeof fetch
+      }) as unknown as typeof fetch
 
       await client.createGroup({ name: 'Test', description: 'A group' })
       const parsed = JSON.parse(capturedBody)
@@ -244,7 +244,7 @@ describe('KisiClient', () => {
           status: 200,
           headers: { 'content-type': 'application/json' },
         })
-      }) as typeof fetch
+      }) as unknown as typeof fetch
 
       const result = await client.unlock(42)
 

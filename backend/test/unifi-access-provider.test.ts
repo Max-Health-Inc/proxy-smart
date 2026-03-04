@@ -176,10 +176,12 @@ describe('UnifiAccessProvider', () => {
     })
 
     it('does not have optional methods', () => {
-      expect(provider.getGroups).toBeUndefined()
-      expect(provider.getMembers).toBeUndefined()
-      expect(provider.syncUsersFromKeycloak).toBeUndefined()
-      expect(provider.getEvents).toBeUndefined()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const p = provider as any
+      expect(p.getGroups).toBeUndefined()
+      expect(p.getMembers).toBeUndefined()
+      expect(p.syncUsersFromKeycloak).toBeUndefined()
+      expect(p.getEvents).toBeUndefined()
     })
   })
 
