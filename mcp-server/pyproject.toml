@@ -5,7 +5,6 @@ description = "MCP server generated from Proxy Smart OpenAPI specification"
 requires-python = ">=3.11"
 dependencies = [
     "mcp-generator",
-    "openapi-client",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "httpx>=0.28.1",
@@ -19,7 +18,6 @@ dependencies = [
 
 [tool.uv.sources]
 mcp-generator = { git = "https://github.com/quotentiroler/mcp-generator-2.0"}
-openapi-client = { path = "generated_openapi", editable = true }
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

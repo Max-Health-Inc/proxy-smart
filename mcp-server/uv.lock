@@ -626,8 +626,8 @@ wheels = [
 
 [[package]]
 name = "mcp-generator"
-version = "2.0.0rc1"
-source = { git = "https://github.com/quotentiroler/mcp-generator-2.0#92bf118ab1b577c7111759ad74e5da0917e1b6de" }
+version = "3.1.0rc3"
+source = { git = "https://github.com/quotentiroler/mcp-generator-2.0#280223d51883d795f45746608d76cfbbbd7d3bdf" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
@@ -653,25 +653,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ea/5d/38b681d3fce7a266dd9ab73c66959406d565b3e85f21d5e66e1181d93721/more_itertools-10.8.0.tar.gz", hash = "sha256:f638ddf8a1a0d134181275fb5d58b086ead7c6a72429ad725c67503f13ba30bd", size = 137431, upload-time = "2025-09-02T15:23:11.018Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/8e/469e5a4a2f5855992e425f3cb33804cc07bf18d48f2db061aec61ce50270/more_itertools-10.8.0-py3-none-any.whl", hash = "sha256:52d4362373dcf7c52546bc4af9a86ee7c4579df9a8dc268be0a2f949d376cc9b", size = 69667, upload-time = "2025-09-02T15:23:09.635Z" },
-]
-
-[[package]]
-name = "openapi-client"
-version = "1.0.0"
-source = { editable = "generated_openapi" }
-dependencies = [
-    { name = "pydantic" },
-    { name = "python-dateutil" },
-    { name = "typing-extensions" },
-    { name = "urllib3" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pydantic", specifier = ">=2" },
-    { name = "python-dateutil", specifier = ">=2.8.2" },
-    { name = "typing-extensions", specifier = ">=4.7.1" },
-    { name = "urllib3", specifier = ">=2.1.0,<3.0.0" },
 ]
 
 [[package]]
@@ -741,7 +722,6 @@ dependencies = [
     { name = "fastmcp" },
     { name = "httpx" },
     { name = "mcp-generator" },
-    { name = "openapi-client" },
     { name = "pydantic" },
     { name = "pyjwt" },
     { name = "pytest" },
@@ -756,7 +736,6 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=2.0.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "mcp-generator", git = "https://github.com/quotentiroler/mcp-generator-2.0" },
-    { name = "openapi-client", editable = "generated_openapi" },
     { name = "pydantic", specifier = ">=2.10.3" },
     { name = "pyjwt", specifier = ">=2.10.0" },
     { name = "pytest", specifier = ">=8.0.0" },

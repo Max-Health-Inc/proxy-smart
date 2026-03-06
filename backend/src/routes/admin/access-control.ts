@@ -42,12 +42,13 @@ import type { ErrorResponseType } from '@/schemas'
 import type { KeycloakUserIdentity } from '@/lib/access-control/types'
 
 const TAG = 'access-control'
+const TAGS = ['admin', TAG]
 const NOT_SUPPORTED = { error: 'Not supported by current provider', details: 'This capability is not available with the active access control provider.' }
 
 /**
  * Access Control admin routes — mounted under /admin/access-control
  */
-export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags: [TAG] })
+export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags: TAGS })
   .use(accessControlPlugin)
   .use(keycloakPlugin)
 
@@ -74,7 +75,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     detail: {
       summary: 'Access Control Health Check',
       description: 'Check if the access control provider is configured and reachable',
-      tags: [TAG],
+      tags: TAGS,
     }
   })
 
@@ -103,7 +104,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     detail: {
       summary: 'Access Control Overview',
       description: 'Get a high-level overview of all locations, doors, groups, and members',
-      tags: [TAG],
+      tags: TAGS,
     }
   })
 
@@ -119,7 +120,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     query: PaginationQuery,
     response: { 200: AccessLocationsResponse, 500: ErrorResponse },
-    detail: { summary: 'List Locations', tags: [TAG] }
+    detail: { summary: 'List Locations', tags: TAGS }
   })
 
   .get('/locations/:id', async ({ getAccessControl, params, set }) => {
@@ -133,7 +134,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     params: IdParam,
     response: { 200: AccessLocationSchema, 500: ErrorResponse },
-    detail: { summary: 'Get Location', tags: [TAG] }
+    detail: { summary: 'Get Location', tags: TAGS }
   })
 
   // ==================== Doors ====================
@@ -148,7 +149,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     query: PaginationQuery,
     response: { 200: AccessDoorsResponse, 500: ErrorResponse },
-    detail: { summary: 'List Doors', tags: [TAG] }
+    detail: { summary: 'List Doors', tags: TAGS }
   })
 
   .get('/doors/:id', async ({ getAccessControl, params, set }) => {
@@ -162,7 +163,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     params: IdParam,
     response: { 200: AccessDoorSchema, 500: ErrorResponse },
-    detail: { summary: 'Get Door', tags: [TAG] }
+    detail: { summary: 'Get Door', tags: TAGS }
   })
 
   .post('/doors/:id/unlock', async ({ getAccessControl, params, set }) => {
@@ -179,7 +180,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       200: t.Object({ message: t.String() }),
       500: ErrorResponse,
     },
-    detail: { summary: 'Unlock Door', description: 'Send an unlock command to a specific door', tags: [TAG] }
+    detail: { summary: 'Unlock Door', description: 'Send an unlock command to a specific door', tags: TAGS }
   })
 
   // ==================== Groups (optional) ====================
@@ -195,7 +196,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     query: PaginationQuery,
     response: { 200: AccessGroupsResponse, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'List Groups', tags: [TAG] }
+    detail: { summary: 'List Groups', tags: TAGS }
   })
 
   .get('/groups/:id', async ({ getAccessControl, params, set }) => {
@@ -210,7 +211,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     params: IdParam,
     response: { 200: AccessGroupSchema, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'Get Group', tags: [TAG] }
+    detail: { summary: 'Get Group', tags: TAGS }
   })
 
   .post('/groups', async ({ getAccessControl, body, set }) => {
@@ -225,7 +226,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     body: CreateGroupRequest,
     response: { 200: AccessGroupSchema, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'Create Group', tags: [TAG] }
+    detail: { summary: 'Create Group', tags: TAGS }
   })
 
   .delete('/groups/:id', async ({ getAccessControl, params, set }) => {
@@ -245,7 +246,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       501: ErrorResponse,
       500: ErrorResponse,
     },
-    detail: { summary: 'Delete Group', tags: [TAG] }
+    detail: { summary: 'Delete Group', tags: TAGS }
   })
 
   // ==================== Group ↔ Door (optional) ====================
@@ -261,7 +262,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     query: PaginationQuery,
     response: { 200: AccessGroupDoorsResponse, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'List Group-Door Assignments', tags: [TAG] }
+    detail: { summary: 'List Group-Door Assignments', tags: TAGS }
   })
 
   .post('/group-doors', async ({ getAccessControl, body, set }) => {
@@ -276,7 +277,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     body: AssignDoorRequest,
     response: { 200: AccessGroupDoorSchema, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'Assign Door to Group', tags: [TAG] }
+    detail: { summary: 'Assign Door to Group', tags: TAGS }
   })
 
   .delete('/group-doors/:id', async ({ getAccessControl, params, set }) => {
@@ -296,7 +297,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       501: ErrorResponse,
       500: ErrorResponse,
     },
-    detail: { summary: 'Remove Door from Group', tags: [TAG] }
+    detail: { summary: 'Remove Door from Group', tags: TAGS }
   })
 
   // ==================== Members (optional) ====================
@@ -312,7 +313,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     query: PaginationQuery,
     response: { 200: AccessMembersResponse, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'List Members', tags: [TAG] }
+    detail: { summary: 'List Members', tags: TAGS }
   })
 
   .get('/members/:id', async ({ getAccessControl, params, set }) => {
@@ -327,7 +328,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     params: IdParam,
     response: { 200: AccessMemberSchema, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'Get Member', tags: [TAG] }
+    detail: { summary: 'Get Member', tags: TAGS }
   })
 
   .post('/members', async ({ getAccessControl, body, set }) => {
@@ -342,7 +343,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     body: CreateMemberRequest,
     response: { 200: AccessMemberSchema, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'Create Member', tags: [TAG] }
+    detail: { summary: 'Create Member', tags: TAGS }
   })
 
   .delete('/members/:id', async ({ getAccessControl, params, set }) => {
@@ -362,7 +363,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       501: ErrorResponse,
       500: ErrorResponse,
     },
-    detail: { summary: 'Delete Member', tags: [TAG] }
+    detail: { summary: 'Delete Member', tags: TAGS }
   })
 
   // ==================== Events (optional) ====================
@@ -378,7 +379,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   }, {
     query: PaginationQuery,
     response: { 200: AccessEventsResponse, 501: ErrorResponse, 500: ErrorResponse },
-    detail: { summary: 'List Access Events', description: 'Retrieve physical access audit log', tags: [TAG] }
+    detail: { summary: 'List Access Events', description: 'Retrieve physical access audit log', tags: TAGS }
   })
 
   // ==================== Keycloak Sync (optional) ====================
@@ -436,6 +437,6 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     detail: {
       summary: 'Sync Users from Keycloak',
       description: 'Sync all Keycloak realm users to the access control provider. Optionally map Keycloak roles to access groups.',
-      tags: [TAG],
+      tags: TAGS,
     }
   })
