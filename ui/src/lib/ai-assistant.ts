@@ -238,7 +238,7 @@ class SmartOnFHIRAIAssistant {
   async isBackendAuthenticated(): Promise<boolean> {
     try {
       const aiApi = await this.createAiApi();
-      const health = await aiApi.getAdminAiHealth();
+      const health = await aiApi.getAdminAiHealth() as { backend_authenticated?: boolean };
       return health.backend_authenticated === true;
     } catch {
       return false;
