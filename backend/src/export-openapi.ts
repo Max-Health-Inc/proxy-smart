@@ -187,6 +187,12 @@ const exportSpec = async () => {
     }
     
     const spec = await response.json()
+
+    // @elysiajs/openapi hardcodes openapi: "3.0.3" but Elysia's TypeBox resolver
+    // emits 3.1 constructs (e.g. {type: "null"} in anyOf unions).
+    // Declare the spec as 3.1.0 — what it actually is.
+    // The sanitize-openapi.ts step will properly downgrade to 3.0.3 if needed.
+    spec.openapi = '3.1.0'
     
     // Add custom OpenAPI extensions for authentication configuration
     spec['x-jwks-uri'] = exportConfig.keycloak.jwksUri || `${exportConfig.baseUrl}/.well-known/jwks.json`

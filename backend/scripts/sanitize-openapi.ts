@@ -102,6 +102,13 @@ function downgradeToOpenApi303(obj: any): void {
 console.log('  Downgrading OpenAPI 3.1 constructs to 3.0.3 compatibility...')
 downgradeToOpenApi303(spec)
 
+// Set the version field to match the now-valid 3.0.3 constructs
+if (spec.openapi === '3.1.0' || spec.openapi === '3.1.1') {
+  spec.openapi = '3.0.3'
+  changeCount++
+  console.log('  ✓ Downgraded openapi version field to 3.0.3')
+}
+
 // --- Phase 2: Fix incomplete $ref references ---
 
 // Function to recursively fix $ref in an object
@@ -174,6 +181,17 @@ function cleanupEmptyResponses(obj: any): void {
 }
 
 cleanupEmptyResponses(spec)
+
+// Remove WebSocket endpoints (not part of OpenAPI 3.0.x)
+if (spec.paths && typeof spec.paths === 'object') {
+  for (const pathItem of Object.values(spec.paths as Record<string, Record<string, unknown>>)) {
+    if (pathItem && typeof pathItem === 'object' && 'ws' in pathItem) {
+      delete pathItem.ws
+      console.log(`  ✓ Removed WebSocket endpoint`)
+      changeCount++
+    }
+  }
+}
 
 // Write the sanitized spec back
 const sanitizedJson = JSON.stringify(spec, null, 2)
