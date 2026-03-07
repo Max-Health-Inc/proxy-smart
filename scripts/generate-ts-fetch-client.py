@@ -61,9 +61,14 @@ def safe_id(name: str) -> str:
 
 
 def operation_id(method: str, path: str, op: dict) -> str:
-    """Get or generate an operationId."""
+    """Get or generate an operationId, always returning a valid camelCase identifier."""
     if 'operationId' in op:
-        return op['operationId']
+        # Spec-provided operationIds may contain hyphens, wildcards (*), etc.
+        # Replace * with 'All' for wildcard routes, strip remaining non-identifier chars,
+        # then camelCase for a valid TS method name.
+        raw = op['operationId'].replace('*', 'All')
+        raw = re.sub(r'[^a-zA-Z0-9_-]', '', raw)
+        return camel(raw)
     parts = path.strip('/').split('/')
     cleaned = []
     for part in parts:
@@ -336,7 +341,18 @@ def gen_model(name: str, schema: dict, registry: SchemaRegistry, header: str) ->
         lines.append(f"}} from './{imp}';")
     lines.append('')
 
-    # Interface
+    # Pre-compute enum type names for properties that have enum values
+    enum_type_map: dict[str, str] = {}
+    for pname, pschema in props.items():
+        if 'enum' in pschema:
+            enum_type_map[pname] = f'{name}{pascal(pname)}Enum'
+
+    # Build camelCase property name mapping: original -> camel
+    camel_names: dict[str, str] = {}
+    for pname in props:
+        camel_names[pname] = camel(pname)
+
+    # Interface — use camelCase property names (matches Java generator convention)
     lines.append(f'/**')
     if schema.get('description'):
         lines.append(f' * {schema["description"]}')
@@ -347,14 +363,16 @@ def gen_model(name: str, schema: dict, registry: SchemaRegistry, header: str) ->
     for pname, pschema in props.items():
         desc = pschema.get('description', '')
         opt = '?' if pname not in required else ''
-        ts = prop_types[pname]
+        # Use enum type if enum values are declared, otherwise use resolved TS type
+        ts = enum_type_map.get(pname, prop_types[pname])
+        cn = camel_names[pname]
         lines.append(f'    /**')
         if desc:
             lines.append(f'     * {desc}')
         lines.append(f'     * @type {{{ts}}}')
         lines.append(f'     * @memberof {name}')
         lines.append(f'     */')
-        lines.append(f'    {safe_id(pname)}{opt}: {ts};')
+        lines.append(f'    {safe_id(cn)}{opt}: {ts};')
     lines.append('}')
     lines.append('')
 
@@ -373,18 +391,19 @@ def gen_model(name: str, schema: dict, registry: SchemaRegistry, header: str) ->
             lines.append(f'export type {enum_name} = typeof {enum_name}[keyof typeof {enum_name}];')
             lines.append('')
 
-    # instanceOf
+    # instanceOf — check camelCase property names
     lines.append(f'/**')
     lines.append(f' * Check if a given object implements the {name} interface.')
     lines.append(f' */')
     lines.append(f'export function instanceOf{name}(value: object): value is {name} {{')
     for p in required:
-        lines.append(f"    if (!('{p}' in value) || value['{p}'] === undefined) return false;")
+        cn = camel_names.get(p, p)
+        lines.append(f"    if (!('{cn}' in value) || value['{cn}'] === undefined) return false;")
     lines.append('    return true;')
     lines.append('}')
     lines.append('')
 
-    # FromJSON
+    # FromJSON — read json['original_name'], assign to camelCase key
     lines.append(f'export function {name}FromJSON(json: any): {name} {{')
     lines.append(f'    return {name}FromJSONTyped(json, false);')
     lines.append('}')
@@ -396,12 +415,14 @@ def gen_model(name: str, schema: dict, registry: SchemaRegistry, header: str) ->
     lines.append(f'    return {{')
     lines.append(f'        ')
     for pname, pschema in props.items():
-        lines.append(f"        '{safe_id(pname)}': {_from_json(pname, pschema, prop_types[pname], registry, name)},")
+        cn = safe_id(camel_names[pname])
+        is_required = pname in required
+        lines.append(f"        '{cn}': {_from_json(pname, pschema, prop_types[pname], registry, name, is_required)},")
     lines.append(f'    }};')
     lines.append('}')
     lines.append('')
 
-    # ToJSON
+    # ToJSON — read value['camelCaseName'], output to 'original_name' key
     lines.append(f'export function {name}ToJSON(json: any): {name} {{')
     lines.append(f'    return {name}ToJSONTyped(json, false);')
     lines.append('}')
@@ -414,7 +435,8 @@ def gen_model(name: str, schema: dict, registry: SchemaRegistry, header: str) ->
     lines.append(f'    return {{')
     lines.append(f'        ')
     for pname, pschema in props.items():
-        lines.append(f"        '{pname}': {_to_json(pname, pschema, prop_types[pname], registry, name)},")
+        cn = safe_id(camel_names[pname])
+        lines.append(f"        '{pname}': {_to_json(pname, pschema, prop_types[pname], registry, name, cn)},")
     lines.append(f'    }};')
     lines.append('}')
     lines.append('')
@@ -433,10 +455,16 @@ def _resolve_model_type(schema: dict, ts_type: str, registry: SchemaRegistry) ->
     return None
 
 
-def _from_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry, parent: str) -> str:
-    """Generate FromJSON expression for a property."""
+def _from_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry, parent: str, is_required: bool = False) -> str:
+    """Generate FromJSON expression for a property.
+
+    For required properties, don't wrap in null-check (avoids 'undefined is not assignable' errors).
+    For optional properties, return undefined if the JSON value is null/missing.
+    """
     model = _resolve_model_type(schema, ts_type, registry)
     if model:
+        if is_required:
+            return f"{model}FromJSON(json['{pname}'])"
         return f"json['{pname}'] == null ? undefined : {model}FromJSON(json['{pname}'])"
 
     if schema.get('type') == 'array':
@@ -448,17 +476,24 @@ def _from_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry,
                 canon = registry._canonical(items)
                 item_model = registry._canon_map.get(canon)
         if item_model:
+            if is_required:
+                return f"((json['{pname}'] as Array<any>).map({item_model}FromJSON))"
             return f"json['{pname}'] == null ? undefined : ((json['{pname}'] as Array<any>).map({item_model}FromJSON))"
 
+    if is_required:
+        return f"json['{pname}']"
     return f"json['{pname}'] == null ? undefined : json['{pname}']"
 
 
-def _to_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry, parent: str) -> str:
-    """Generate ToJSON expression for a property."""
-    sid = safe_id(pname)
+def _to_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry, parent: str, camel_name: str = '') -> str:
+    """Generate ToJSON expression for a property.
+
+    Reads from value['camelCaseName'] and outputs to 'original_name'.
+    """
+    cn = camel_name or safe_id(pname)
     model = _resolve_model_type(schema, ts_type, registry)
     if model:
-        return f"{model}ToJSON(value['{sid}'])"
+        return f"{model}ToJSON(value['{cn}'])"
 
     if schema.get('type') == 'array':
         items = schema.get('items', {})
@@ -468,12 +503,20 @@ def _to_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry, p
                 canon = registry._canonical(items)
                 item_model = registry._canon_map.get(canon)
         if item_model:
-            return f"value['{sid}'] == null ? undefined : ((value['{sid}'] as Array<any>).map({item_model}ToJSON))"
+            return f"value['{cn}'] == null ? undefined : ((value['{cn}'] as Array<any>).map({item_model}ToJSON))"
 
-    return f"value['{sid}']"
+    return f"value['{cn}']"
 
 
 # ─── API class generator ─────────────────────────────────────────────────────────
+
+def _iface_name(oid: str, registry: SchemaRegistry) -> str:
+    """Generate a unique request interface name that won't collide with model names."""
+    candidate = pascal(oid) + 'Request'
+    if candidate in registry.models:
+        return pascal(oid) + 'OperationRequest'
+    return candidate
+
 
 def gen_api(tag: str, operations: list[dict], registry: SchemaRegistry, header: str) -> str:
     """Generate an API class file for a tag."""
@@ -498,15 +541,16 @@ def gen_api(tag: str, operations: list[dict], registry: SchemaRegistry, header: 
 
     lines.append('')
 
-    # Request interfaces
+    # Request interfaces — use camelCase param names for TS convention
     for op in operations:
         params = op.get('params', [])
         if params:
-            iface = pascal(op['id']) + 'Request'
+            iface = _iface_name(op['id'], registry)
             lines.append(f'export interface {iface} {{')
             for p in params:
                 opt = '' if p['required'] else '?'
-                lines.append(f"    {safe_id(p['name'])}{opt}: {p['ts']};")
+                cn = camel(p['name'])
+                lines.append(f"    {safe_id(cn)}{opt}: {p['ts']};")
             lines.append('}')
             lines.append('')
 
@@ -538,7 +582,8 @@ def _gen_operation(lines: list[str], op: dict, registry: SchemaRegistry):
     resp_item = op.get('resp_item')
 
     has_params = bool(params)
-    iface = pascal(oid) + 'Request' if has_params else None
+    has_required_params = any(p['required'] for p in params)
+    iface = _iface_name(oid, registry) if has_params else None
 
     # ── Raw method ──
     lines.append('    /**')
@@ -547,16 +592,25 @@ def _gen_operation(lines: list[str], op: dict, registry: SchemaRegistry):
     if summary:
         lines.append(f'     * {summary}')
     lines.append('     */')
-    sig = f'requestParameters: {iface}, ' if has_params else ''
+    if has_params:
+        opt_mark = '' if has_required_params else '?'
+        sig = f'requestParameters{opt_mark}: {iface}, '
+    else:
+        sig = ''
     lines.append(f'    async {oid}Raw({sig}initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<{resp_type}>> {{')
+
+    # Guard for optional requestParameters
+    if has_params and not has_required_params:
+        lines.append(f'        requestParameters = requestParameters || {{}};')
+        lines.append('')
 
     for p in params:
         if p['required']:
-            pn = safe_id(p['name'])
-            lines.append(f"        if (requestParameters['{pn}'] == null) {{")
+            cn = safe_id(camel(p['name']))
+            lines.append(f"        if (requestParameters['{cn}'] == null) {{")
             lines.append(f'            throw new runtime.RequiredError(')
-            lines.append(f"                '{pn}',")
-            lines.append(f"                'Required parameter \"{pn}\" was null or undefined when calling {oid}().'")
+            lines.append(f"                '{cn}',")
+            lines.append(f"                'Required parameter \"{cn}\" was null or undefined when calling {oid}().'")
             lines.append(f'            );')
             lines.append(f'        }}')
             lines.append('')
@@ -564,18 +618,18 @@ def _gen_operation(lines: list[str], op: dict, registry: SchemaRegistry):
     lines.append('        const queryParameters: any = {};')
     for p in params:
         if p['in'] == 'query':
-            pn = safe_id(p['name'])
-            lines.append(f"        if (requestParameters['{pn}'] != null) {{")
-            lines.append(f"            queryParameters['{p['name']}'] = requestParameters['{pn}'];")
+            cn = safe_id(camel(p['name']))
+            lines.append(f"        if (requestParameters['{cn}'] != null) {{")
+            lines.append(f"            queryParameters['{p['name']}'] = requestParameters['{cn}'];")
             lines.append(f'        }}')
     lines.append('')
 
     lines.append('        const headerParameters: runtime.HTTPHeaders = {};')
     for p in params:
         if p['in'] == 'header':
-            pn = safe_id(p['name'])
-            lines.append(f"        if (requestParameters['{pn}'] != null) {{")
-            lines.append(f"            headerParameters['{p['name']}'] = String(requestParameters['{pn}']);")
+            cn = safe_id(camel(p['name']))
+            lines.append(f"        if (requestParameters['{cn}'] != null) {{")
+            lines.append(f"            headerParameters['{p['name']}'] = String(requestParameters['{cn}']);")
             lines.append(f'        }}')
     lines.append('')
 
@@ -593,8 +647,8 @@ def _gen_operation(lines: list[str], op: dict, registry: SchemaRegistry):
     lines.append(f"        let urlPath = `{path}`;")
     for p in params:
         if p['in'] == 'path':
-            pn = safe_id(p['name'])
-            lines.append(f'        urlPath = urlPath.replace(`{{{p["name"]}}}`, encodeURIComponent(String(requestParameters[\'{pn}\'])));')
+            cn = safe_id(camel(p['name']))
+            lines.append(f'        urlPath = urlPath.replace(`{{{p["name"]}}}`, encodeURIComponent(String(requestParameters[\'{cn}\'])));')
     lines.append('')
 
     body_param = next((p for p in params if p['in'] == 'body'), None)
@@ -608,7 +662,7 @@ def _gen_operation(lines: list[str], op: dict, registry: SchemaRegistry):
     lines.append('            headers: headerParameters,')
     lines.append('            query: queryParameters,')
     if body_param:
-        bn = safe_id(body_param['name'])
+        bn = safe_id(camel(body_param['name']))
         bt = body_param['ts']
         if bt in registry.models:
             lines.append(f"            body: {bt}ToJSON(requestParameters['{bn}']),")
@@ -637,7 +691,8 @@ def _gen_operation(lines: list[str], op: dict, registry: SchemaRegistry):
         lines.append(f'     * {summary}')
     lines.append('     */')
     if has_params:
-        lines.append(f'    async {oid}(requestParameters: {iface}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{resp_type}> {{')
+        opt_mark = '' if has_required_params else '?'
+        lines.append(f'    async {oid}(requestParameters{opt_mark}: {iface}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{resp_type}> {{')
         lines.append(f'        const response = await this.{oid}Raw(requestParameters, initOverrides);')
     else:
         lines.append(f'    async {oid}(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{resp_type}> {{')
@@ -767,8 +822,9 @@ def generate(spec_path: str, output_dir: str):
                 'resp_item': resp_item,
                 '_refs': refs,
             }
-            for tag in tags:
-                tag_ops[tag].append(op_data)
+            # Assign to first tag only (like Java generator) to avoid
+            # duplicate request interface exports across API classes.
+            tag_ops[tags[0]].append(op_data)
 
     # ── Phase 2: Generate files ──────────────────────────────────────────────
     out = Path(output_dir)
@@ -785,7 +841,7 @@ def generate(spec_path: str, output_dir: str):
         content = gen_model(name, schema, registry, header)
         (models_dir / f'{name}.ts').write_text(content, encoding='utf-8')
         model_files.append(name)
-        print(f'   \u2705 models/{name}.ts')
+        print(f'   [ok] models/{name}.ts')
 
     # Models index
     idx = '/* tslint:disable */\n/* eslint-disable */\n'
@@ -802,7 +858,7 @@ def generate(spec_path: str, output_dir: str):
         (apis_dir / f'{cls}.ts').write_text(content, encoding='utf-8')
         api_files.append(cls)
         total_ops += len(ops)
-        print(f'   \u2705 apis/{cls}.ts ({len(ops)} operations)')
+        print(f'   [ok] apis/{cls}.ts ({len(ops)} operations)')
 
     # APIs index
     idx = '/* tslint:disable */\n/* eslint-disable */\n'
@@ -810,21 +866,25 @@ def generate(spec_path: str, output_dir: str):
         idx += f"export * from './{n}';\n"
     (apis_dir / 'index.ts').write_text(idx, encoding='utf-8')
 
-    # runtime.ts — update BASE_PATH + version in-place
+    # runtime.ts — copy from template, update BASE_PATH + version
     runtime_path = out / 'runtime.ts'
-    if runtime_path.exists():
+    template_path = Path(__file__).parent / 'runtime-template.ts'
+    if template_path.exists():
+        rt = template_path.read_text(encoding='utf-8')
+    elif runtime_path.exists():
         rt = runtime_path.read_text(encoding='utf-8')
-        rt = re.sub(r'export const BASE_PATH = "[^"]*"', f'export const BASE_PATH = "{base_path}"', rt)
-        rt = re.sub(r'The version of the OpenAPI document: [^\n]*', f'The version of the OpenAPI document: {version}', rt)
-        rt = re.sub(
-            r'NOTE: This class is auto generated by OpenAPI Generator.*\n.*openapi-generator\.tech\n.*Do not edit the class manually\.',
-            'NOTE: This class is auto generated by generate-ts-fetch-client.py\n * Do not edit the class manually.',
-            rt
-        )
-        runtime_path.write_text(rt, encoding='utf-8')
-        print(f'   \u2705 runtime.ts (updated)')
     else:
-        print(f'   \u26a0\ufe0f  runtime.ts not found — keeping existing')
+        print(f'   [ERROR] runtime-template.ts not found next to generator and runtime.ts not found in output!')
+        sys.exit(1)
+    rt = re.sub(r'export const BASE_PATH = "[^"]*"', f'export const BASE_PATH = "{base_path}"', rt)
+    rt = re.sub(r'The version of the OpenAPI document: [^\n]*', f'The version of the OpenAPI document: {version}', rt)
+    rt = re.sub(
+        r'NOTE: This class is auto generated by OpenAPI Generator.*\n.*openapi-generator\.tech\n.*Do not edit the class manually\.',
+        'NOTE: This class is auto generated by generate-ts-fetch-client.py\n * Do not edit the class manually.',
+        rt
+    )
+    runtime_path.write_text(rt, encoding='utf-8')
+    print(f'   [ok] runtime.ts ({"created" if not runtime_path.exists() else "updated"})')
 
     # Top-level index.ts
     (out / 'index.ts').write_text(
@@ -832,7 +892,7 @@ def generate(spec_path: str, output_dir: str):
         encoding='utf-8'
     )
 
-    print(f'\n\u2705 Generated {len(model_files)} models, {len(api_files)} API classes, {total_ops} operations')
+    print(f'\n[ok] Generated {len(model_files)} models, {len(api_files)} API classes, {total_ops} operations')
     return model_files, api_files
 
 

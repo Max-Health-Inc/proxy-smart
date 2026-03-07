@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - "dev/*"
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
   workflow_call:
     inputs:
       run_tests:
