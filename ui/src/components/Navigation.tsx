@@ -32,7 +32,8 @@ import {
   BarChart3,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  DoorOpen
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAIChatStore } from '../stores/aiChatStore';
@@ -162,6 +163,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('Monitoring'), 
       description: t('Flow Analytics'),
       icon: BarChart3
+    },
+    { 
+      id: 'access-control', 
+      label: t('Access Control'), 
+      description: t('Door Management'),
+      icon: DoorOpen
     },
   ];
 
