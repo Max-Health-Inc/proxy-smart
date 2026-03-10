@@ -272,7 +272,7 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('Add Member')}</DialogTitle>
-            <DialogDescription>{t('Register a new member for access control')}</DialogDescription>
+            <DialogDescription>{t('Register a new member for door management')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -330,7 +330,7 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
           <DialogHeader>
             <DialogTitle>{t('Sync Members from Keycloak')}</DialogTitle>
             <DialogDescription>
-              {t('This will sync Keycloak users to the access control provider. Existing members will be skipped.')}
+              {t('This will sync Keycloak users to the door management provider. Existing members will be skipped.')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

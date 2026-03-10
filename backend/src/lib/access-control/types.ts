@@ -131,13 +131,13 @@ export interface AccessOverview {
 
 /** Flags indicating which optional features a provider supports */
 export interface ProviderCapabilities {
-  /** Can manage access groups (Kisi: yes, UniFi: no) */
+  /** Can manage access groups */
   groups: boolean
-  /** Can manage individual members (Kisi: yes, UniFi: no) */
+  /** Can manage individual members */
   members: boolean
   /** Can sync users from Keycloak (requires members) */
   sync: boolean
-  /** Can query audit events (Kisi: yes, UniFi: via WebSocket only) */
+  /** Can query audit events */
   events: boolean
   /** Can assign doors to groups */
   groupDoors: boolean

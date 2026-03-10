@@ -165,9 +165,9 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       icon: BarChart3
     },
     { 
-      id: 'access-control', 
-      label: t('Access Control'), 
-      description: t('Door Management'),
+      id: 'door-management', 
+      label: t('Door Management'), 
+      description: t('Physical Access'),
       icon: DoorOpen
     },
   ];
@@ -200,10 +200,10 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
           </div>
           
           {/* Navigation - Takes available space */}
-          <div className="flex-1 flex justify-center px-2 lg:px-4 min-w-0 overflow-hidden">
+          <div className="flex-1 flex justify-center px-2 lg:px-4 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:block w-full">
-              <NavigationMenuList className="flex flex-wrap justify-center gap-1">
+            <NavigationMenu className="hidden lg:block w-full max-w-full">
+              <NavigationMenuList className="flex flex-nowrap justify-start gap-1 w-max min-w-full px-1">
                 {tabs.map((tab) => {
                   const IconComponent = tab.icon;
                   return (
@@ -211,7 +211,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                       <Button
                         variant={activeTab === tab.id ? 'default' : 'ghost'}
                         onClick={() => onTabChange(tab.id)}
-                        className={`group flex items-center space-x-1 h-9 px-2 lg:px-3 rounded-lg transition-all duration-300 ${
+                        className={`group flex shrink-0 items-center space-x-1 h-9 px-2 lg:px-3 rounded-lg transition-all duration-300 ${
                           activeTab === tab.id 
                             ? 'bg-foreground text-background' 
                             : 'hover:bg-muted text-foreground'
@@ -220,7 +220,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                         <IconComponent className={`w-4 h-4 flex-shrink-0 ${
                           activeTab === tab.id ? 'scale-110' : 'group-hover:scale-105'
                         }`} />
-                        <span className="hidden xl:block text-xs font-semibold whitespace-nowrap">{tab.label}</span>
+                        <span className="hidden 2xl:block text-xs font-semibold whitespace-nowrap">{tab.label}</span>
                       </Button>
                     </NavigationMenuItem>
                   );

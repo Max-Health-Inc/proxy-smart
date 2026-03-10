@@ -18,7 +18,7 @@ import { Spinner } from './ui/spinner';
 import { useTranslation } from 'react-i18next';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { IdPManager } from './IdPManager/IdPManager';
-import { AccessControlManager } from './AccessControlManager/AccessControlManager';
+import { DoorManagement } from './DoorManagement/DoorManagement';
 
 // Valid tab routes
 const VALID_TABS = [
@@ -31,7 +31,7 @@ const VALID_TABS = [
     'scopes',
     'launch-context',
     'oauth-monitoring',
-    'access-control'
+    'door-management'
 ] as const;
 
 type ValidTab = typeof VALID_TABS[number];
@@ -146,7 +146,7 @@ export function AdminApp() {
                             {currentTab === 'scopes' && <ScopeManager />}
                             {currentTab === 'launch-context' && <LaunchContextManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
-                            {currentTab === 'access-control' && <AccessControlManager />}
+                            {currentTab === 'door-management' && <DoorManagement />}
                         </Panel>
                     </div>
                 </div>

@@ -9,11 +9,13 @@
  */
 
 import { Elysia, t } from 'elysia'
-import { accessControlPlugin } from '@/lib/access-control/plugin'
-import { detectProvider } from '@/lib/access-control/factory'
+import { accessControlPlugin, resetAccessControlPlugin } from '@/lib/access-control/plugin'
+import { detectProvider, createProvider } from '@/lib/access-control/factory'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin } from '@/lib/admin-utils'
+import { validateToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { config } from '@/config'
 import { ErrorResponse, PaginationQuery } from '@/schemas'
 import {
   AccessLocationSchema,
@@ -35,15 +37,138 @@ import {
   SyncResponse,
   OverviewResponse,
   AccessHealthResponse,
+  AccessControlConfigStatus,
+  TestAccessControlConfigRequest,
+  TestAccessControlConfigResponse,
+  SaveAccessControlConfigRequest,
+  SaveAccessControlConfigResponse,
   IdParam,
 } from '@/schemas/admin/access-control'
-import type { SyncResponseType, AccessHealthResponseType } from '@/schemas/admin/access-control'
+import type { SyncResponseType, AccessHealthResponseType, AccessControlConfigStatusType, TestAccessControlConfigResponseType, SaveAccessControlConfigResponseType } from '@/schemas/admin/access-control'
 import type { ErrorResponseType } from '@/schemas'
-import type { KeycloakUserIdentity } from '@/lib/access-control/types'
+import type { KeycloakUserIdentity, AccessControlProvider, AccessMember, AccessGroupDoor } from '@/lib/access-control/types'
+import fs from 'fs'
+import path from 'path'
+
+type DecisionEventRecorder = {
+  recordDecisionEvent?: (input: {
+    allowed: boolean
+    actorEmail?: string
+    actorId?: string
+    doorId: string
+    reason: string
+  }) => void
+}
 
 const TAG = 'access-control'
 const TAGS = ['admin', TAG]
 const NOT_SUPPORTED = { error: 'Not supported by current provider', details: 'This capability is not available with the active access control provider.' }
+
+const ENV_FILE_PATH = path.join(process.cwd(), '.env')
+
+async function getAllMembers(provider: AccessControlProvider): Promise<AccessMember[]> {
+  if (!provider.getMembers) return []
+
+  const data: AccessMember[] = []
+  let offset = 0
+  const batchSize = 200
+
+  while (true) {
+    const page = await provider.getMembers({ limit: batchSize, offset })
+    data.push(...page.data)
+    offset += page.data.length
+
+    if (page.data.length === 0 || offset >= page.pagination.count) {
+      break
+    }
+  }
+
+  return data
+}
+
+async function getAllGroupDoors(provider: AccessControlProvider): Promise<AccessGroupDoor[]> {
+  if (!provider.getGroupDoors) return []
+
+  const data: AccessGroupDoor[] = []
+  let offset = 0
+  const batchSize = 200
+
+  while (true) {
+    const page = await provider.getGroupDoors({ limit: batchSize, offset })
+    data.push(...page.data)
+    offset += page.data.length
+
+    if (page.data.length === 0 || offset >= page.pagination.count) {
+      break
+    }
+  }
+
+  return data
+}
+
+/**
+ * Update access control environment variables in .env file and process.env
+ */
+function updateAccessControlConfig(body: {
+  provider: 'kisi' | 'unifi-access'
+  kisiApiKey?: string
+  kisiBaseUrl?: string
+  unifiHost?: string
+  unifiUsername?: string
+  unifiPassword?: string
+}): void {
+  let envContent = ''
+  if (fs.existsSync(ENV_FILE_PATH)) {
+    envContent = fs.readFileSync(ENV_FILE_PATH, 'utf-8')
+  }
+
+  // Parse existing env vars, preserving comments and structure
+  const envVars = new Map<string, string>()
+  envContent.split('\n').forEach(line => {
+    const trimmed = line.trim()
+    if (trimmed && !trimmed.startsWith('#')) {
+      const eqIdx = trimmed.indexOf('=')
+      if (eqIdx > 0) {
+        envVars.set(trimmed.slice(0, eqIdx).trim(), trimmed.slice(eqIdx + 1).trim())
+      }
+    }
+  })
+
+  // Set provider
+  envVars.set('ACCESS_CONTROL_PROVIDER', body.provider)
+  process.env.ACCESS_CONTROL_PROVIDER = body.provider
+
+  if (body.provider === 'kisi') {
+    if (body.kisiApiKey) {
+      envVars.set('KISI_API_KEY', body.kisiApiKey)
+      process.env.KISI_API_KEY = body.kisiApiKey
+    }
+    if (body.kisiBaseUrl) {
+      envVars.set('KISI_BASE_URL', body.kisiBaseUrl)
+      process.env.KISI_BASE_URL = body.kisiBaseUrl
+    }
+  } else {
+    if (body.unifiHost) {
+      envVars.set('UNIFI_ACCESS_HOST', body.unifiHost)
+      process.env.UNIFI_ACCESS_HOST = body.unifiHost
+    }
+    if (body.unifiUsername) {
+      envVars.set('UNIFI_ACCESS_USERNAME', body.unifiUsername)
+      process.env.UNIFI_ACCESS_USERNAME = body.unifiUsername
+    }
+    if (body.unifiPassword) {
+      envVars.set('UNIFI_ACCESS_PASSWORD', body.unifiPassword)
+      process.env.UNIFI_ACCESS_PASSWORD = body.unifiPassword
+    }
+  }
+
+  // Rebuild .env – keep all existing keys, overwrite the ones we touched
+  const lines: string[] = []
+  for (const [key, value] of envVars) {
+    lines.push(`${key}=${value}`)
+  }
+  fs.writeFileSync(ENV_FILE_PATH, lines.join('\n') + '\n')
+}
 
 /**
  * Access Control admin routes — mounted under /admin/access-control
@@ -166,11 +291,98 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     detail: { summary: 'Get Door', tags: TAGS }
   })
 
-  .post('/doors/:id/unlock', async ({ getAccessControl, params, set }) => {
+  .post('/doors/:id/unlock', async ({ getAccessControl, params, headers, set }) => {
     try {
       const provider = getAccessControl()
+      const decisionRecorder = provider as AccessControlProvider & DecisionEventRecorder
+
+      // Enforce group-based unlock authorization for UniFi before unlock execution.
+      if (provider.name === 'unifi-access' && provider.getMembers && provider.getGroupDoors) {
+        const token = extractBearerToken(headers)
+        if (!token) {
+          decisionRecorder.recordDecisionEvent?.({
+            allowed: false,
+            doorId: params.id,
+            reason: 'Unlock denied: missing bearer token',
+          })
+          set.status = 401
+          return UNAUTHORIZED_RESPONSE
+        }
+
+        const jwtPayload = await validateToken(token)
+        const actorEmail = typeof jwtPayload.email === 'string'
+          ? jwtPayload.email.toLowerCase()
+          : null
+        const actorId = typeof jwtPayload.sub === 'string' ? jwtPayload.sub : undefined
+
+        if (!actorEmail) {
+          decisionRecorder.recordDecisionEvent?.({
+            allowed: false,
+            actorId,
+            doorId: params.id,
+            reason: 'Unlock denied: token missing email claim',
+          })
+          set.status = 403
+          return { error: 'Unlock denied', details: 'Token does not include a user email claim.' }
+        }
+
+        const [members, groupDoors] = await Promise.all([
+          getAllMembers(provider),
+          getAllGroupDoors(provider),
+        ])
+
+        const member = members.find(m => m.email.toLowerCase() === actorEmail && (m.enabled ?? true))
+        if (!member) {
+          decisionRecorder.recordDecisionEvent?.({
+            allowed: false,
+            actorEmail,
+            actorId,
+            doorId: params.id,
+            reason: 'Unlock denied: no active door management membership',
+          })
+          set.status = 403
+          return { error: 'Unlock denied', details: 'No active door management membership found for this user.' }
+        }
+
+        const memberGroupIds = new Set(member.groupIds ?? [])
+        const allowed = groupDoors.some(link => link.doorId === params.id && memberGroupIds.has(link.groupId))
+
+        if (!allowed) {
+          logger.warn('access-control', 'Unlock denied by group policy', {
+            provider: provider.name,
+            actorEmail,
+            doorId: params.id,
+            memberGroupIds: Array.from(memberGroupIds),
+          })
+          decisionRecorder.recordDecisionEvent?.({
+            allowed: false,
+            actorEmail,
+            actorId,
+            doorId: params.id,
+            reason: 'Unlock denied: user has no group assignment for this door',
+          })
+          set.status = 403
+          return { error: 'Unlock denied', details: 'User is not authorized for this door.' }
+        }
+
+        decisionRecorder.recordDecisionEvent?.({
+          allowed: true,
+          actorEmail,
+          actorId,
+          doorId: params.id,
+          reason: 'Unlock allowed: user group mapped to door',
+        })
+      }
+
       return await provider.unlock(params.id)
     } catch (error) {
+      const provider = getAccessControl()
+      const decisionRecorder = provider as AccessControlProvider & DecisionEventRecorder
+      decisionRecorder.recordDecisionEvent?.({
+        allowed: false,
+        doorId: params.id,
+        reason: `Unlock denied: runtime error (${String(error)})`,
+      })
       set.status = 500
       return { error: 'Failed to unlock', details: String(error) }
     }
@@ -178,6 +390,8 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     params: IdParam,
     response: {
       200: t.Object({ message: t.String() }),
+      401: ErrorResponse,
+      403: ErrorResponse,
       500: ErrorResponse,
     },
     detail: { summary: 'Unlock Door', description: 'Send an unlock command to a specific door', tags: TAGS }
@@ -437,6 +651,158 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     detail: {
       summary: 'Sync Users from Keycloak',
       description: 'Sync all Keycloak realm users to the access control provider. Optionally map Keycloak roles to access groups.',
+      tags: TAGS,
+    }
+  })
+
+  // ==================== Configuration ====================
+
+  .get('/config/status', async (): Promise<AccessControlConfigStatusType> => {
+    const providerType = detectProvider()
+    return {
+      configured: !!providerType,
+      provider: providerType,
+      kisi: {
+        hasApiKey: !!config.kisi.apiKey,
+        baseUrl: config.kisi.baseUrl,
+      },
+      unifiAccess: {
+        hasHost: !!config.unifiAccess.host,
+        hasCredentials: !!(config.unifiAccess.username && config.unifiAccess.password),
+        host: config.unifiAccess.host ? config.unifiAccess.host.replace(/\/\/([^:]+):?.*@/, '//$1:***@') : null,
+      },
+    }
+  }, {
+    response: { 200: AccessControlConfigStatus },
+    detail: {
+      summary: 'Get Door Management Config Status',
+      description: 'Get current door management provider configuration status (credentials are redacted)',
+      tags: TAGS,
+    }
+  })
+
+  .post('/config/test', async ({ body, set }): Promise<TestAccessControlConfigResponseType> => {
+    try {
+      // Temporarily set env vars to test the provider
+      const originalEnv: Record<string, string | undefined> = {}
+      const envKeys = ['ACCESS_CONTROL_PROVIDER', 'KISI_API_KEY', 'KISI_BASE_URL', 'UNIFI_ACCESS_HOST', 'UNIFI_ACCESS_USERNAME', 'UNIFI_ACCESS_PASSWORD']
+      for (const key of envKeys) {
+        originalEnv[key] = process.env[key]
+      }
+
+      try {
+        process.env.ACCESS_CONTROL_PROVIDER = body.provider
+        if (body.provider === 'kisi') {
+          if (body.kisiApiKey) process.env.KISI_API_KEY = body.kisiApiKey
+          if (body.kisiBaseUrl) process.env.KISI_BASE_URL = body.kisiBaseUrl
+        } else {
+          if (body.unifiHost) process.env.UNIFI_ACCESS_HOST = body.unifiHost
+          if (body.unifiUsername) process.env.UNIFI_ACCESS_USERNAME = body.unifiUsername
+          if (body.unifiPassword) process.env.UNIFI_ACCESS_PASSWORD = body.unifiPassword
+        }
+
+        const provider = createProvider(body.provider)
+        const healthy = await provider.isHealthy()
+
+        if (!healthy) {
+          set.status = 400
+          return { success: false, error: 'Provider is reachable but health check failed' }
+        }
+
+        return {
+          success: true,
+          message: `Successfully connected to ${body.provider} provider`,
+          provider: provider.name,
+          capabilities: provider.capabilities,
+        }
+      } finally {
+        // Restore original env vars
+        for (const key of envKeys) {
+          if (originalEnv[key] === undefined) {
+            delete process.env[key]
+          } else {
+            process.env[key] = originalEnv[key]
+          }
+        }
+      }
+    } catch (error) {
+      logger.error('access-control', 'Config test failed', { error })
+      set.status = 400
+      return { success: false, error: `Connection test failed: ${error instanceof Error ? error.message : String(error)}` }
+    }
+  }, {
+    body: TestAccessControlConfigRequest,
+    response: { 200: TestAccessControlConfigResponse, 400: TestAccessControlConfigResponse },
+    detail: {
+      summary: 'Test Door Management Config',
+      description: 'Test connection to a door management provider without saving configuration',
+      tags: TAGS,
+    }
+  })
+
+  .post('/config/configure', async ({ body, set }): Promise<SaveAccessControlConfigResponseType> => {
+    try {
+      // First test the connection with the provided credentials
+      const originalEnv: Record<string, string | undefined> = {}
+      const envKeys = ['ACCESS_CONTROL_PROVIDER', 'KISI_API_KEY', 'KISI_BASE_URL', 'UNIFI_ACCESS_HOST', 'UNIFI_ACCESS_USERNAME', 'UNIFI_ACCESS_PASSWORD']
+      for (const key of envKeys) {
+        originalEnv[key] = process.env[key]
+      }
+
+      let testPassed = false
+      try {
+        process.env.ACCESS_CONTROL_PROVIDER = body.provider
+        if (body.provider === 'kisi') {
+          if (body.kisiApiKey) process.env.KISI_API_KEY = body.kisiApiKey
+          if (body.kisiBaseUrl) process.env.KISI_BASE_URL = body.kisiBaseUrl
+        } else {
+          if (body.unifiHost) process.env.UNIFI_ACCESS_HOST = body.unifiHost
+          if (body.unifiUsername) process.env.UNIFI_ACCESS_USERNAME = body.unifiUsername
+          if (body.unifiPassword) process.env.UNIFI_ACCESS_PASSWORD = body.unifiPassword
+        }
+
+        const provider = createProvider(body.provider)
+        testPassed = await provider.isHealthy()
+      } finally {
+        // Restore before deciding
+        for (const key of envKeys) {
+          if (originalEnv[key] === undefined) {
+            delete process.env[key]
+          } else {
+            process.env[key] = originalEnv[key]
+          }
+        }
+      }
+
+      if (!testPassed) {
+        set.status = 400
+        return { success: false, error: 'Connection test failed. Please verify your credentials.' }
+      }
+
+      // Persist config to .env and process.env
+      updateAccessControlConfig(body)
+
+      // Reset cached provider so it picks up new config
+      resetAccessControlPlugin()
+
+      logger.admin.info('Door management provider configured', { provider: body.provider })
+
+      return {
+        success: true,
+        message: `${body.provider} provider configured successfully`,
+        restartRequired: false,
+      }
+    } catch (error) {
+      logger.error('access-control', 'Failed to configure provider', { error })
+      set.status = 500
+      return { success: false, error: `Failed to save configuration: ${error instanceof Error ? error.message : String(error)}` }
+    }
+  }, {
+    body: SaveAccessControlConfigRequest,
+    response: { 200: SaveAccessControlConfigResponse, 400: SaveAccessControlConfigResponse, 500: SaveAccessControlConfigResponse },
+    detail: {
+      summary: 'Configure Door Management Provider',
+      description: 'Save door management provider configuration. Tests connection first, then persists to environment.',
       tags: TAGS,
     }
   })
