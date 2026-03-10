@@ -13,6 +13,7 @@ import { aiRoutes, aiPublicRoutes } from './ai'
 import { mcpServersRoutes } from './mcp-servers'
 import { consentAdminRoutes } from './consent'
 import { accessControlRoutes } from './access-control'
+import { userFederationRoutes } from './user-federation'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 
 /**
@@ -89,6 +90,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(consentAdminRoutes)
   // Physical access control (Kisi / UniFi Access)
   .use(accessControlRoutes)
+  // LDAP User Federation management
+  .use(userFederationRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

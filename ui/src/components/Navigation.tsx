@@ -170,6 +170,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       description: t('Physical Access'),
       icon: DoorOpen
     },
+    { 
+      id: 'user-federation', 
+      label: t('User Federation'), 
+      description: t('LDAP Integration'),
+      icon: Users
+    },
   ];
 
   return (
