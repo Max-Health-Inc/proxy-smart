@@ -12,19 +12,10 @@ import { Elysia } from 'elysia'
 // Mock admin client – created fresh per test via createMockAdmin()
 // ---------------------------------------------------------------------------
 
-interface MockComponent {
-  id: string
-  name: string
-  providerId: string
-  providerType: string
-  parentId: string
-  config: Record<string, string[]>
-}
-
 const PROVIDER_TYPE = 'org.keycloak.storage.UserStorageProvider'
 const MAPPER_TYPE = 'org.keycloak.storage.ldap.mappers.LDAPStorageMapper'
 
-const sampleLdapComponent: MockComponent = {
+const sampleLdapComponent = {
   id: 'ldap-1',
   name: 'Corporate LDAP',
   providerId: 'ldap',
@@ -51,20 +42,18 @@ const sampleMapper = {
   },
 }
 
-function createMockAdmin(overrides?: {
-  components?: Partial<typeof defaultComponents>
-  userStorageProvider?: Partial<typeof defaultUserStorage>
-  realms?: Partial<typeof defaultRealms>
-}) {
-  const defaultComponents = {
+function createDefaultComponents() {
+  return {
     find: mock(async (_query?: Record<string, unknown>) => [sampleLdapComponent]),
     create: mock(async (_payload: unknown) => ({ id: 'new-ldap-id' })),
     findOne: mock(async (_query: { id: string }) => ({ ...sampleLdapComponent })),
     update: mock(async (_query: { id: string }, _payload: unknown) => {}),
     del: mock(async (_query: { id: string }) => {}),
   }
+}
 
-  const defaultUserStorage = {
+function createDefaultUserStorage() {
+  return {
     sync: mock(async (_opts: { id: string; action: string }) => ({
       added: 5,
       updated: 2,
@@ -76,15 +65,23 @@ function createMockAdmin(overrides?: {
     removeImportedUsers: mock(async (_opts: { id: string }) => {}),
     unlinkUsers: mock(async (_opts: { id: string }) => {}),
   }
+}
 
-  const defaultRealms = {
+function createDefaultRealms() {
+  return {
     testLDAPConnection: mock(async (_realmQuery: unknown, _payload: unknown) => {}),
   }
+}
 
+function createMockAdmin(overrides?: {
+  components?: Partial<ReturnType<typeof createDefaultComponents>>
+  userStorageProvider?: Partial<ReturnType<typeof createDefaultUserStorage>>
+  realms?: Partial<ReturnType<typeof createDefaultRealms>>
+}) {
   return {
-    components: { ...defaultComponents, ...overrides?.components },
-    userStorageProvider: { ...defaultUserStorage, ...overrides?.userStorageProvider },
-    realms: { ...defaultRealms, ...overrides?.realms },
+    components: { ...createDefaultComponents(), ...overrides?.components },
+    userStorageProvider: { ...createDefaultUserStorage(), ...overrides?.userStorageProvider },
+    realms: { ...createDefaultRealms(), ...overrides?.realms },
   }
 }
 
@@ -111,7 +108,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const components = await admin.components.find({ type: PROVIDER_TYPE })
-      const ldap = components.filter((c: MockComponent) => c.providerId === 'ldap')
+      const ldap = components.filter((c: any) => c.providerId === 'ldap')
       return { count: ldap.length, total: components.length }
     })
 
@@ -121,7 +118,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const components = await admin.components.find({ type: PROVIDER_TYPE })
-      return components.filter((c: MockComponent) => c.providerId === 'ldap')
+      return components.filter((c: any) => c.providerId === 'ldap')
     })
 
     // Create
@@ -129,7 +126,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       const token = headers.authorization?.replace('Bearer ', '') || null
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
-      const payload = body as { name: string; config: Record<string, unknown> }
+      const payload = body as { name: string; config: Record<string, string | string[]> }
       const { id } = await admin.components.create({
         name: payload.name,
         providerId: 'ldap',
@@ -146,7 +143,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const component = await admin.components.findOne({ id: params.id })
-      if (!component || (component as MockComponent).providerType !== PROVIDER_TYPE) {
+      if (!component || (component as any).providerType !== PROVIDER_TYPE) {
         set.status = 404
         return { error: 'User federation provider not found' }
       }
@@ -159,7 +156,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const existing = await admin.components.findOne({ id: params.id })
-      if (!existing || (existing as MockComponent).providerType !== PROVIDER_TYPE) {
+      if (!existing || (existing as any).providerType !== PROVIDER_TYPE) {
         set.status = 404
         return { error: 'User federation provider not found' }
       }
@@ -182,7 +179,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const syncBody = body as { action: string }
-      const result = await admin.userStorageProvider.sync({ id: params.id, action: syncBody.action })
+      const result = await admin.userStorageProvider.sync({ id: params.id, action: syncBody.action as any })
       return result
     })
 
@@ -416,7 +413,7 @@ describe('User Federation Routes', () => {
     })
 
     it('returns 404 when provider does not exist', async () => {
-      mockAdmin.components.findOne = mock(async () => null)
+      mockAdmin.components.findOne = mock(async () => null) as any
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/nonexistent'))
       expect(res.status).toBe(404)
@@ -447,7 +444,7 @@ describe('User Federation Routes', () => {
     })
 
     it('returns 404 when updating nonexistent provider', async () => {
-      mockAdmin.components.findOne = mock(async () => null)
+      mockAdmin.components.findOne = mock(async () => null) as any
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('PUT', '/nonexistent', { name: 'x' }))
       expect(res.status).toBe(404)
@@ -629,7 +626,7 @@ describe('User Federation Routes', () => {
       mockAdmin.components.find = mock(async (query: Record<string, unknown>) => {
         if (query?.parent) return [sampleMapper]
         return [sampleLdapComponent]
-      })
+      }) as any
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/ldap-1/mappers'))
       expect(res.status).toBe(200)
@@ -643,7 +640,7 @@ describe('User Federation Routes', () => {
       mockAdmin.components.find = mock(async (query: Record<string, unknown>) => {
         if (query?.parent) return []
         return [sampleLdapComponent]
-      })
+      }) as any
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/ldap-1/mappers'))
       const data = await res.json()
