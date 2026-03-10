@@ -314,7 +314,7 @@ export function GroupsPanel() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('Create Group')}</DialogTitle>
-            <DialogDescription>{t('Create a new access control group')}</DialogDescription>
+            <DialogDescription>{t('Create a new door group')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

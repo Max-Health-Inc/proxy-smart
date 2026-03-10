@@ -54,7 +54,7 @@ export function OverviewPanel() {
       const result = await clientApis.admin.getAdminAccessControlOverview();
       setOverview(result);
     } catch (err) {
-      console.error('Failed to fetch access control overview:', err);
+      console.error('Failed to fetch door management overview:', err);
       setError(t('Failed to load overview data'));
     } finally {
       setLoading(false);
@@ -114,7 +114,7 @@ export function OverviewPanel() {
           icon={<Layers className="h-5 w-5 text-primary" />}
           label={t('Groups')}
           value={groups.pagination.count}
-          subtitle={t('Access groups')}
+          subtitle={t('Door groups')}
         />
         <StatCard
           icon={<Users className="h-5 w-5 text-primary" />}

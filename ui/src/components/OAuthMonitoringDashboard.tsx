@@ -18,7 +18,6 @@ import {
   Search,
   Server,
   Database,
-  Network,
   CalendarDays,
   ChevronDown
 } from 'lucide-react';
@@ -30,24 +29,10 @@ import { oauthMonitoringService } from '../service/oauth-monitoring-service';
 import { getItem } from '../lib/storage';
 import { config } from '@/config';
 import type { OAuthAnalyticsTopClient } from '../lib/api-client/models/OAuthAnalyticsTopClient';
-
-interface SystemHealth {
-  oauthServer: {
-    status: 'healthy' | 'degraded' | 'down';
-    uptime: number;
-    responseTime: number;
-  };
-  tokenStore: {
-    status: 'healthy' | 'degraded' | 'down';
-    storageUsed: number;
-    activeTokens: number;
-  };
-  network: {
-    status: 'healthy' | 'degraded' | 'down';
-    throughput: string;
-    errorRate: number;
-  };
-}
+import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatusResponse';
+import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
+import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
+import { createServerApi, createAdminApi } from '../lib/apiClient';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -55,7 +40,9 @@ export function OAuthMonitoringDashboard() {
   const { t } = useTranslation();
   const [events, setEvents] = useState<OAuthEventSimple[]>([]);
   const [analytics, setAnalytics] = useState<OAuthAnalytics | null>(null);
-  const [systemHealth] = useState<SystemHealth | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
+  const [doorHealth, setDoorHealth] = useState<AccessHealthResponse | null>(null);
+  const [doorEvents, setDoorEvents] = useState<AccessEvent[]>([]);
   const [isRealTimeActive, setIsRealTimeActive] = useState(true);
   const [connectionMode, setConnectionMode] = useState<'websocket' | 'sse'>('websocket');
   const [filterType, setFilterType] = useState<string>('all');
@@ -87,6 +74,17 @@ export function OAuthMonitoringDashboard() {
   }, [analytics?.topClients]);
   const hasClientDistribution = clientDistributionData.length > 0;
   const predictiveInsights = analytics?.predictiveInsights;
+  const hasObservedTraffic = (analytics?.successfulRequests ?? 0) + (analytics?.failedRequests ?? 0) > 0;
+  const hasPredictiveForecast = Boolean(
+    predictiveInsights &&
+    (
+      hasObservedTraffic ||
+      (analytics?.totalRequests ?? 0) > 0 ||
+      (analytics?.activeTokens ?? 0) > 0 ||
+      (analytics?.successRate ?? 0) > 0 ||
+      predictiveInsights.nextHour.totalFlows > 0
+    )
+  );
   const weekdayHighlights = useMemo(() => {
     const insights = analytics?.weekdayInsights ?? [];
 
@@ -341,6 +339,31 @@ export function OAuthMonitoringDashboard() {
       }
     };
   }, []);
+
+  // Fetch system status for System Health tab
+  const fetchSystemStatus = useCallback(async () => {
+    try {
+      const token = (await getItem<{access_token: string}>('openid_tokens'))?.access_token;
+      const serverApi = createServerApi(token ?? undefined);
+      const adminApi = createAdminApi(token ?? undefined);
+      const [status, acHealth, acEvents] = await Promise.allSettled([
+        serverApi.getStatus(),
+        adminApi.getAdminAccessControlHealth(),
+        adminApi.getAdminAccessControlEvents({ limit: 5 }),
+      ]);
+      if (status.status === 'fulfilled') setSystemStatus(status.value);
+      if (acHealth.status === 'fulfilled') setDoorHealth(acHealth.value);
+      if (acEvents.status === 'fulfilled') setDoorEvents(acEvents.value.data ?? []);
+    } catch (err) {
+      console.warn('Failed to fetch system status:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSystemStatus();
+    const interval = setInterval(fetchSystemStatus, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchSystemStatus]);
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -828,84 +851,70 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
 
-                {predictiveInsights && (
-                  <div className="bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-indigo-500/10 p-6 rounded-2xl border border-sky-500/40 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-sky-500/30 to-indigo-500/40 rounded-xl flex items-center justify-center shadow-sm">
-                            <TrendingUp className="w-6 h-6 text-sky-600" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
-                        </div>
-                        <div className="text-3xl font-bold text-sky-900 dark:text-sky-200 mb-1">
-                          {predictiveInsights.nextHour.totalFlows.toLocaleString()}
-                        </div>
-                        <p className="text-sm text-sky-700 dark:text-sky-300 font-medium">
-                          {t('Projected OAuth flows in the next hour')}
-                        </p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <p className="text-muted-foreground font-medium">{t('Success rate')}</p>
-                            <p className="text-foreground font-semibold">{predictiveInsights.nextHour.successRate.toFixed(1)}%</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-muted-foreground font-medium">{t('Trend')}</p>
-                            <p className="text-foreground font-semibold">{predictiveTrendLabel}</p>
-                          </div>
-                        </div>
+                {hasPredictiveForecast && predictiveInsights && (
+                  <div className="bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-indigo-500/10 p-6 rounded-2xl border border-sky-500/40 shadow-lg overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-sky-500/30 to-indigo-500/40 rounded-xl flex items-center justify-center shadow-sm">
+                        <TrendingUp className="w-6 h-6 text-sky-600" />
                       </div>
-                      <div className="text-right space-y-2">
-                        <Badge className={`${predictiveRiskBadgeClass} font-semibold`}>{predictiveRiskLabel}</Badge>
-                        <p className="text-xs text-muted-foreground w-40 leading-snug">
-                          {predictiveInsights.anomalyReasons[0]}
-                        </p>
+                      <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
+                    </div>
+                    <div className="text-3xl font-bold text-sky-900 dark:text-sky-200 mb-1">
+                      {predictiveInsights.nextHour.totalFlows.toLocaleString()}
+                    </div>
+                    <p className="text-sm text-sky-700 dark:text-sky-300 font-medium mb-4">
+                      {t('Projected OAuth flows in the next hour')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground font-medium">{t('Success rate')}</p>
+                        <p className="text-foreground font-semibold">{predictiveInsights.nextHour.successRate.toFixed(1)}%</p>
                       </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground font-medium">{t('Trend')}</p>
+                        <p className="text-foreground font-semibold">{predictiveTrendLabel}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-start justify-between gap-3 rounded-lg bg-sky-500/10 p-3">
+                      <Badge className={`${predictiveRiskBadgeClass} font-semibold shrink-0`}>{predictiveRiskLabel}</Badge>
+                      <p className="text-xs text-muted-foreground leading-snug text-right">
+                        {predictiveInsights.anomalyReasons[0]}
+                      </p>
                     </div>
                   </div>
                 )}
 
                 {weekdayHighlights && (
-                  <div className="bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-rose-500/10 p-6 rounded-2xl border border-amber-500/40 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-amber-500/30 to-rose-500/40 rounded-xl flex items-center justify-center shadow-sm">
-                            <CalendarDays className="w-6 h-6 text-amber-600" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
-                        </div>
-                        <div className="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-1">
-                          {weekdayHighlights.busiest.label}
-                        </div>
-                        <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                          {t('Projected busiest day for OAuth volume')}
+                  <div className="bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-rose-500/10 p-6 rounded-2xl border border-amber-500/40 shadow-lg overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-amber-500/30 to-rose-500/40 rounded-xl flex items-center justify-center shadow-sm">
+                        <CalendarDays className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
+                    </div>
+                    <div className="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-1">
+                      {weekdayHighlights.busiest.label}
+                    </div>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-4">
+                      {t('Projected busiest day for OAuth volume')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground font-medium">{t('Highest success')}</p>
+                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.highestSuccess.label}</p>
+                        <p className="text-muted-foreground text-xs">{weekdayHighlights.highestSuccess.projectedSuccessRate.toFixed(1)}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground font-medium">{t('Watchlist')}</p>
+                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.attention.label}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {weekdayHighlights.attention.projectedErrorRate.toFixed(1)}%
+                          {typeof weekdayHighlights.attention.deltaFromAverage === 'number' && (
+                            <span className={`ml-1 ${weekdayHighlights.attention.deltaFromAverage > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                              ({weekdayHighlights.attention.deltaFromAverage > 0 ? '+' : ''}{weekdayHighlights.attention.deltaFromAverage.toFixed(1)}%)
+                            </span>
+                          )}
                         </p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <p className="text-muted-foreground font-medium">{t('Highest success')}</p>
-                            <p className="text-foreground font-semibold">
-                              {weekdayHighlights.highestSuccess.label}
-                              <span className="ml-2 text-muted-foreground">
-                                {weekdayHighlights.highestSuccess.projectedSuccessRate.toFixed(1)}%
-                              </span>
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-muted-foreground font-medium">{t('Watchlist')}</p>
-                            <p className="text-foreground font-semibold">
-                              {weekdayHighlights.attention.label}
-                              <span className="ml-2 text-muted-foreground">
-                                {weekdayHighlights.attention.projectedErrorRate.toFixed(1)}%
-                              </span>
-                              {typeof weekdayHighlights.attention.deltaFromAverage === 'number' && (
-                                <span className={`ml-1 ${weekdayHighlights.attention.deltaFromAverage > 0 ? 'text-red-500' : 'text-green-600'}`}>
-                                  ({weekdayHighlights.attention.deltaFromAverage > 0 ? '+' : ''}{weekdayHighlights.attention.deltaFromAverage.toFixed(1)}%)
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     </div>
                     <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
@@ -1289,153 +1298,232 @@ export function OAuthMonitoringDashboard() {
             </TabsContent>
 
             <TabsContent value="monitoring" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
+              {/* Overall status banner */}
+              <div className={`p-4 rounded-2xl border shadow-lg flex items-center justify-between ${
+                systemStatus?.overall === 'healthy' ? 'bg-green-500/10 border-green-500/30' :
+                systemStatus?.overall === 'degraded' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                systemStatus?.overall === 'unhealthy' ? 'bg-red-500/10 border-red-500/30' :
+                'bg-card/70 border-border'
+              }`}>
+                <div className="flex items-center gap-3">
+                  {systemStatus?.overall === 'healthy' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                  {systemStatus?.overall === 'degraded' && <AlertTriangle className="w-5 h-5 text-yellow-600" />}
+                  {systemStatus?.overall === 'unhealthy' && <AlertCircle className="w-5 h-5 text-red-600" />}
+                  {!systemStatus && <AlertCircle className="w-5 h-5 text-muted-foreground" />}
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {systemStatus ? t(systemStatus.overall.charAt(0).toUpperCase() + systemStatus.overall.slice(1)) : t('Loading...')}
+                    </p>
+                    {systemStatus && (
+                      <p className="text-xs text-muted-foreground">
+                        v{systemStatus.version} · {t('Uptime')}: {Math.floor(systemStatus.uptime / 3600)}{t('h')} {Math.floor((systemStatus.uptime % 3600) / 60)}{t('m')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={fetchSystemStatus}>
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                {/* Keycloak */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                      <Server className="w-6 h-6 text-green-600" />
+                      <Shield className="w-6 h-6 text-green-600" />
                     </div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('OAuth Server')}</h4>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Keycloak')}</h4>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground font-medium">{t('Status')}</span>
-                      <Badge className={systemHealth?.oauthServer?.status === 'healthy' 
-                        ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20"
-                        : systemHealth?.oauthServer?.status === 'degraded'
-                        ? "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"
-                        : systemHealth?.oauthServer?.status === 'down'
-                        ? "bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20"
+                      <Badge className={
+                        systemStatus?.keycloak?.status === 'healthy'
+                          ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                          : systemStatus?.keycloak?.status === 'degraded'
+                          ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                          : systemStatus?.keycloak
+                          ? 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20'
+                          : 'bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20'
                       }>
-                        {systemHealth?.oauthServer?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.oauthServer?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.oauthServer?.status === 'down' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {!systemHealth?.oauthServer?.status && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.oauthServer?.status ? t(systemHealth.oauthServer.status.charAt(0).toUpperCase() + systemHealth.oauthServer.status.slice(1)) : t('Unknown')}
+                        {systemStatus?.keycloak?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.keycloak?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.keycloak?.status === 'unhealthy' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {!systemStatus?.keycloak && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.keycloak?.status
+                          ? t(systemStatus.keycloak.status.charAt(0).toUpperCase() + systemStatus.keycloak.status.slice(1))
+                          : t('Unknown')}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Uptime')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.oauthServer.uptime ? 
-                          `${Math.floor(systemHealth.oauthServer.uptime / 3600)}h ${Math.floor((systemHealth.oauthServer.uptime % 3600) / 60)}m` : 
-                          'N/A'
-                        }
-                      </span>
+                      <span className="text-muted-foreground font-medium">{t('Realm')}</span>
+                      <span className="font-bold text-foreground">{systemStatus?.keycloak?.realm ?? 'N/A'}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Response Time')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.oauthServer.responseTime ? 
-                          `${systemHealth.oauthServer.responseTime.toFixed(0)}ms` : 
-                          'N/A'
-                        }
-                      </span>
+                      <span className="text-muted-foreground font-medium">{t('Accessible')}</span>
+                      <span className="font-bold text-foreground">{systemStatus?.keycloak?.accessible ? t('Yes') : t('No')}</span>
                     </div>
+                    {systemStatus?.keycloak?.lastConnected && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground font-medium">{t('Last Connected')}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {(() => { try { return format(new Date(systemStatus.keycloak.lastConnected), 'MMM dd, HH:mm'); } catch { return systemStatus.keycloak.lastConnected; } })()}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
+                {/* FHIR Servers */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
-                      <Database className="w-6 h-6 text-primary" />
+                      <Server className="w-6 h-6 text-primary" />
                     </div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Token Store')}</h4>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('FHIR Servers')}</h4>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground font-medium">{t('Status')}</span>
-                      <Badge className={systemHealth?.tokenStore?.status === 'healthy' 
-                        ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20"
-                        : systemHealth?.tokenStore?.status === 'degraded'
-                        ? "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"
-                        : systemHealth?.tokenStore?.status === 'down'
-                        ? "bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20"
+                      <Badge className={
+                        systemStatus?.fhir?.status === 'healthy'
+                          ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                          : systemStatus?.fhir?.status === 'degraded'
+                          ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                          : systemStatus?.fhir
+                          ? 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20'
+                          : 'bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20'
                       }>
-                        {systemHealth?.tokenStore?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.tokenStore?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.tokenStore?.status === 'down' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {!systemHealth?.tokenStore?.status && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.tokenStore?.status ? t(systemHealth.tokenStore.status.charAt(0).toUpperCase() + systemHealth.tokenStore.status.slice(1)) : t('Unknown')}
+                        {systemStatus?.fhir?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.fhir?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.fhir?.status === 'unhealthy' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {!systemStatus?.fhir && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.fhir?.status
+                          ? t(systemStatus.fhir.status.charAt(0).toUpperCase() + systemStatus.fhir.status.slice(1))
+                          : t('Unknown')}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Storage Used')}</span>
+                      <span className="text-muted-foreground font-medium">{t('Servers')}</span>
                       <span className="font-bold text-foreground">
-                        {systemHealth?.tokenStore.storageUsed ? 
-                          `${systemHealth.tokenStore.storageUsed}%` : 
-                          'N/A'
-                        }
+                        {systemStatus?.fhir ? `${systemStatus.fhir.healthyServers}/${systemStatus.fhir.totalServers} ${t('healthy')}` : 'N/A'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Active Tokens')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.tokenStore.activeTokens ?? analytics?.activeTokens ?? 0}
-                      </span>
-                    </div>
+                    {systemStatus?.fhir?.servers?.map((server, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm border-t border-border pt-2">
+                        <span className="text-muted-foreground truncate max-w-[60%]" title={server.url}>{server.name}</span>
+                        <Badge variant="secondary" className={
+                          server.status === 'healthy' ? 'bg-green-500/10 text-green-700 dark:text-green-300' :
+                          server.status === 'degraded' ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300' :
+                          'bg-red-500/10 text-red-700 dark:text-red-300'
+                        }>
+                          {server.version ?? 'N/A'}
+                        </Badge>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
+                {/* Memory */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                      <Network className="w-6 h-6 text-purple-600" />
+                      <Database className="w-6 h-6 text-purple-600" />
                     </div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Network')}</h4>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Memory')}</h4>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Heap Used')}</span>
+                      <span className="font-bold text-foreground">
+                        {systemStatus?.memory ? `${systemStatus.memory.used} MB` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Heap Total')}</span>
+                      <span className="font-bold text-foreground">
+                        {systemStatus?.memory ? `${systemStatus.memory.total} MB` : 'N/A'}
+                      </span>
+                    </div>
+                    {systemStatus?.memory && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{t('Usage')}</span>
+                          <span>{Math.round((systemStatus.memory.used / systemStatus.memory.total) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              (systemStatus.memory.used / systemStatus.memory.total) > 0.85 ? 'bg-red-500' :
+                              (systemStatus.memory.used / systemStatus.memory.total) > 0.65 ? 'bg-yellow-500' :
+                              'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(100, Math.round((systemStatus.memory.used / systemStatus.memory.total) * 100))}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Active Tokens')}</span>
+                      <span className="font-bold text-foreground">{analytics?.activeTokens ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Door Management */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                      <Shield className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Door Management')}</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Provider')}</span>
+                      <span className="font-bold text-foreground">{doorHealth?.provider ?? t('Not configured')}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span className="text-muted-foreground font-medium">{t('Status')}</span>
-                      <Badge className={systemHealth?.network?.status === 'healthy' 
-                        ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20"
-                        : systemHealth?.network?.status === 'degraded'
-                        ? "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"
-                        : systemHealth?.network?.status === 'down'
-                        ? "bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20"
+                      <Badge className={
+                        doorHealth?.connected
+                          ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                          : doorHealth?.configured
+                          ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                          : 'bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20'
                       }>
-                        {systemHealth?.network?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.network?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.network?.status === 'down' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {!systemHealth?.network?.status && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.network?.status ? t(systemHealth.network.status.charAt(0).toUpperCase() + systemHealth.network.status.slice(1)) : t('Unknown')}
+                        {doorHealth?.connected && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {doorHealth?.configured && !doorHealth.connected && <AlertTriangle className="w-3 h-3 mr-1" />}
+                        {!doorHealth?.configured && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {doorHealth?.connected ? t('Connected') : doorHealth?.configured ? t('Disconnected') : t('Not configured')}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Throughput')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.network.throughput ?? 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Error Rate')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.network.errorRate ? 
-                          `${systemHealth.network.errorRate.toFixed(1)}%` : 
-                          'N/A'
-                        }
-                      </span>
-                    </div>
+                    {doorEvents.length > 0 && (
+                      <div className="border-t border-border pt-3 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">{t('Recent Events')}</p>
+                        {doorEvents.slice(0, 4).map((evt) => (
+                          <div key={evt.id} className="flex items-center justify-between text-xs">
+                            <span className="truncate max-w-[65%] text-foreground" title={evt.message ?? evt.action}>
+                              {evt.message ?? evt.action}
+                            </span>
+                            <span className="text-muted-foreground shrink-0 ml-2">
+                              {evt.createdAt ? (() => { try { return format(new Date(evt.createdAt), 'HH:mm'); } catch { return ''; } })() : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                    <AlertTriangle className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h4 className="text-lg font-bold text-foreground tracking-tight">{t('System Alerts')}</h4>
+              {systemStatus && (
+                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-2xl border border-border shadow-lg text-xs text-muted-foreground flex items-center justify-between">
+                  <span>{t('Last updated')}: {(() => { try { return format(new Date(systemStatus.timestamp), 'MMM dd, HH:mm:ss'); } catch { return systemStatus.timestamp; } })()}</span>
+                  <span>{t('Auto-refresh every 30s')}</span>
                 </div>
-                <div className="text-center text-muted-foreground py-8">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p>{t('No system alerts at this time')}</p>
-                  <p className="text-sm mt-2">{t('System monitoring will display real-time alerts here')}</p>
-                </div>
-              </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

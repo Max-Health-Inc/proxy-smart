@@ -187,6 +187,79 @@ export const IdParam = t.Object({
   id: t.String({ description: 'Entity ID' }),
 })
 
+// ==================== Configuration Schemas ====================
+
+export const AccessControlProviderEnum = t.Union([
+  t.Literal('kisi'),
+  t.Literal('unifi-access'),
+], { description: 'Access control provider type' })
+
+export type AccessControlProviderEnumType = Static<typeof AccessControlProviderEnum>
+
+export const AccessControlConfigStatus = t.Object({
+  configured: t.Boolean({ description: 'Whether an access control provider is configured' }),
+  provider: t.Union([t.String(), t.Null()], { description: 'Active provider type (kisi or unifi-access)' }),
+  kisi: t.Object({
+    hasApiKey: t.Boolean({ description: 'Whether KISI_API_KEY is set' }),
+    baseUrl: t.String({ description: 'Kisi API base URL' }),
+  }),
+  unifiAccess: t.Object({
+    hasHost: t.Boolean({ description: 'Whether UNIFI_ACCESS_HOST is set' }),
+    hasCredentials: t.Boolean({ description: 'Whether username and password are set' }),
+    host: t.Union([t.String(), t.Null()], { description: 'UniFi Access host (redacted)' }),
+  }),
+}, { title: 'AccessControlConfigStatus' })
+
+export type AccessControlConfigStatusType = Static<typeof AccessControlConfigStatus>
+
+export const TestAccessControlConfigRequest = t.Object({
+  provider: AccessControlProviderEnum,
+  kisiApiKey: t.Optional(t.String({ description: 'Kisi API key (required if provider is kisi)' })),
+  kisiBaseUrl: t.Optional(t.String({ description: 'Kisi API base URL (optional, defaults to https://api.kisi.io)' })),
+  unifiHost: t.Optional(t.String({ description: 'UniFi Access controller host (required if provider is unifi-access)' })),
+  unifiUsername: t.Optional(t.String({ description: 'UniFi Access username' })),
+  unifiPassword: t.Optional(t.String({ description: 'UniFi Access password' })),
+}, { title: 'TestAccessControlConfigRequest' })
+
+export type TestAccessControlConfigRequestType = Static<typeof TestAccessControlConfigRequest>
+
+export const TestAccessControlConfigResponse = t.Object({
+  success: t.Boolean({ description: 'Whether the connection test succeeded' }),
+  message: t.Optional(t.String({ description: 'Success message' })),
+  error: t.Optional(t.String({ description: 'Error message if connection failed' })),
+  provider: t.Optional(t.String({ description: 'Provider name returned by the backend' })),
+  capabilities: t.Optional(t.Object({
+    groups: t.Boolean(),
+    members: t.Boolean(),
+    sync: t.Boolean(),
+    events: t.Boolean(),
+    groupDoors: t.Boolean(),
+    realtime: t.Boolean(),
+  }, { description: 'Capabilities of the tested provider' })),
+}, { title: 'TestAccessControlConfigResponse' })
+
+export type TestAccessControlConfigResponseType = Static<typeof TestAccessControlConfigResponse>
+
+export const SaveAccessControlConfigRequest = t.Object({
+  provider: AccessControlProviderEnum,
+  kisiApiKey: t.Optional(t.String({ description: 'Kisi API key' })),
+  kisiBaseUrl: t.Optional(t.String({ description: 'Kisi API base URL' })),
+  unifiHost: t.Optional(t.String({ description: 'UniFi Access controller host' })),
+  unifiUsername: t.Optional(t.String({ description: 'UniFi Access username' })),
+  unifiPassword: t.Optional(t.String({ description: 'UniFi Access password' })),
+}, { title: 'SaveAccessControlConfigRequest' })
+
+export type SaveAccessControlConfigRequestType = Static<typeof SaveAccessControlConfigRequest>
+
+export const SaveAccessControlConfigResponse = t.Object({
+  success: t.Boolean({ description: 'Whether the configuration was saved' }),
+  message: t.Optional(t.String({ description: 'Success message' })),
+  error: t.Optional(t.String({ description: 'Error message if save failed' })),
+  restartRequired: t.Optional(t.Boolean({ description: 'Whether a restart is needed for full effect' })),
+}, { title: 'SaveAccessControlConfigResponse' })
+
+export type SaveAccessControlConfigResponseType = Static<typeof SaveAccessControlConfigResponse>
+
 // ==================== Backward Compat Aliases ====================
 // Keep old names available for any existing imports
 
