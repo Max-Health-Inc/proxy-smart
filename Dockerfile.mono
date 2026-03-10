@@ -9,7 +9,7 @@ RUN apt-get update -qq && \
     build-essential \
     pkg-config \
     python-is-python3 \
-    openjdk-17-jre-headless \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy all files needed for build
