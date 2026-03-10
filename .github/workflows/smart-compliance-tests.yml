@@ -819,8 +819,11 @@ jobs:
           EOF
           
           # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "proxy-smart-releaser[bot]"
+          git config user.email "proxy-smart-releaser[bot]@users.noreply.github.com"
+          
+          # Ensure we use the app token for push (survives branch switches)
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git"
           
           # Save report files before branch switch
           cp -r "$REPORT_DIR" /tmp/report-backup
@@ -853,6 +856,7 @@ jobs:
         env:
           TEST_STAGE: ${{ env.TEST_STAGE }}
           TEST_SUITE: ${{ env.TEST_SUITE }}
+          APP_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
 
       # Cleanup
       - name: Cleanup
