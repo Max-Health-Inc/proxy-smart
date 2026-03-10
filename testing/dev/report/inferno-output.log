@@ -12,7 +12,7 @@ Checking Inferno availability...
 ✓ Inferno is ready
 Launching browser for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: 54QKtwO2gNG
+✓ Created test session: 7rE9Txjd8Vx
 
 === Running SMART Discovery Tests ===
 
@@ -25,8 +25,8 @@ Available test groups:
 
 No discovery test group found, trying first group: smart_stu2_2-smart_full_standalone_launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: 116e5baa-c0d3-417c-9160-322e55e96907
-Waiting for test run 116e5baa-c0d3-417c-9160-322e55e96907 to complete (timeout: 3 minutes)...
+✓ Started test run: c64b30f6-5607-45c1-b5d8-a3ef56be5e0e
+Waiting for test run c64b30f6-5607-45c1-b5d8-a3ef56be5e0e to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
@@ -57,20 +57,24 @@ Waiting for test run 116e5baa-c0d3-417c-9160-322e55e96907 to complete (timeout: 
   [Poll #15] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
   [Poll #16] Status: running
-  Progress: 4 passed, 0 failed, 0 waiting, 4 total
-  [Poll #17] Status: waiting
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #17] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #18] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #19] Status: waiting
   Test is waiting for user action (OAuth flow)...
   Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=2ba77d0e-8a26-42a8-94da-9cf5d50bd0f7&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=1KUOBCp9uz7AwMp-1AkKEQA8Tq6gHUsKkUtzf0jWP3k&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=2ba77d0e-8a26-42a8-94da-9cf5d50bd0f7&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=1KUOBCp9uz7AwMp-1AkKEQA8Tq6gHUsKkUtzf0jWP3k&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=2ba77d0e-8a26-42a8-94da-9cf5d50bd0f7&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=1KUOBCp9uz7AwMp-1AkKEQA8Tq6gHUsKkUtzf0jWP3k&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=9198016f-2c14-492a-82a3-586a811dae5e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=I-5SOsXjymkd0oFriCl3-F3NqiydS3ZlODjvMlznVEg&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=9198016f-2c14-492a-82a3-586a811dae5e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=I-5SOsXjymkd0oFriCl3-F3NqiydS3ZlODjvMlznVEg&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=9198016f-2c14-492a-82a3-586a811dae5e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=I-5SOsXjymkd0oFriCl3-F3NqiydS3ZlODjvMlznVEg&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=2ba77d0e-8a26-42a8-94da-9cf5d50bd0f7&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=1KUOBCp9uz7AwMp-1AkKEQA8Tq6gHUsKkUtzf0jWP3k&code_challenge_method=S256
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=9198016f-2c14-492a-82a3-586a811dae5e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=I-5SOsXjymkd0oFriCl3-F3NqiydS3ZlODjvMlznVEg&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=2ba77d0e-8a26-42a8-94da-9cf5d50bd0f7&code_challenge=1KUOBCp9uz7AwMp-1AkKEQA8Tq6gHUsKkUtzf0jWP3k&code_challenge_method=S256
+  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=9198016f-2c14-492a-82a3-586a811dae5e&code_challenge=I-5SOsXjymkd0oFriCl3-F3NqiydS3ZlODjvMlznVEg&code_challenge_method=S256
   On Keycloak login page, entering credentials...
   Filled username
   Filled password
@@ -78,7 +82,7 @@ Handling OAuth flow...
   ✓ OAuth flow completed, redirected back to Inferno
   OAuth flow completed, continuing to poll...
   Progress: 5 passed, 1 failed, 3 waiting, 9 total
-  [Poll #18] Status: done
+  [Poll #20] Status: done
 Test completed with status: done
 
 ========================================
