@@ -168,20 +168,19 @@ describe('UnifiAccessProvider', () => {
     })
 
     it('reports correct capabilities', () => {
-      expect(provider.capabilities.groups).toBe(false)
-      expect(provider.capabilities.members).toBe(false)
-      expect(provider.capabilities.sync).toBe(false)
-      expect(provider.capabilities.events).toBe(false)
+      expect(provider.capabilities.groups).toBe(true)
+      expect(provider.capabilities.members).toBe(true)
+      expect(provider.capabilities.sync).toBe(true)
+      expect(provider.capabilities.events).toBe(true)
+      expect(provider.capabilities.groupDoors).toBe(true)
       expect(provider.capabilities.realtime).toBe(true)
     })
 
-    it('does not have optional methods', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const p = provider as any
-      expect(p.getGroups).toBeUndefined()
-      expect(p.getMembers).toBeUndefined()
-      expect(p.syncUsersFromKeycloak).toBeUndefined()
-      expect(p.getEvents).toBeUndefined()
+    it('has optional methods for groups, members, sync and events', () => {
+      expect(typeof provider.getGroups).toBe('function')
+      expect(typeof provider.getMembers).toBe('function')
+      expect(typeof provider.syncUsersFromKeycloak).toBe('function')
+      expect(typeof provider.getEvents).toBe('function')
     })
   })
 
