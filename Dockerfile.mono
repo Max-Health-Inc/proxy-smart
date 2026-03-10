@@ -16,6 +16,7 @@ RUN apt-get update -qq && \
 COPY package.json bun.lock ./
 COPY backend/ ./backend/
 COPY ui/ ./ui/
+COPY infra/ ./infra/
 COPY scripts/ ./scripts/
 
 # Install dependencies for all workspaces
