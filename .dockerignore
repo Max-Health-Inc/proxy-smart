@@ -65,6 +65,8 @@ keycloak/
 # Scripts (exclude most but allow build scripts needed for mono mode)
 scripts/
 !scripts/copy-ui-dist.js
+!scripts/generate-ts-fetch-client.py
+!scripts/package.json
 
 # Agent (if not needed in production)
 agent/
