@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { IdPManager } from './IdPManager/IdPManager';
 import { DoorManagement } from './DoorManagement/DoorManagement';
+import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 
 // Valid tab routes
 const VALID_TABS = [
@@ -31,7 +32,8 @@ const VALID_TABS = [
     'scopes',
     'launch-context',
     'oauth-monitoring',
-    'door-management'
+    'door-management',
+    'user-federation'
 ] as const;
 
 type ValidTab = typeof VALID_TABS[number];
@@ -147,6 +149,7 @@ export function AdminApp() {
                             {currentTab === 'launch-context' && <LaunchContextManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
+                            {currentTab === 'user-federation' && <UserFederationManager />}
                         </Panel>
                     </div>
                 </div>

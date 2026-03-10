@@ -21,6 +21,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -31,7 +38,7 @@ jobs:
           PR_EXISTS=$(gh pr list --base develop --head ${{ github.ref_name }} --state open --json number --jq length)
           echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if develop branch exists
         id: check-branch
@@ -46,7 +53,7 @@ jobs:
             echo "needs_branch_creation=true" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create develop branch if it doesn't exist
         if: steps.check-branch.outputs.needs_branch_creation == 'true' && steps.check-pr.outputs.pr_exists == '0'
@@ -62,7 +69,7 @@ jobs:
           fi
           git push origin develop
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if branches differ
         id: check-diff
@@ -95,7 +102,7 @@ jobs:
           echo "todo_count=$TODO_COUNT" >> $GITHUB_OUTPUT
           echo "Found $TODO_COUNT TODOs in the codebase"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'true'
         run: |
@@ -114,7 +121,7 @@ jobs:
           
           **Review:** Please review the changes before merging."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Skip PR creation - no changes
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'false'
@@ -145,7 +152,7 @@ jobs:
           
           echo "Updated PR #$PR_NUMBER with latest commit and TODO counts"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
   pr-to-test:
     name: Create/Update PR from develop → test
@@ -153,6 +160,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -163,7 +177,7 @@ jobs:
           PR_EXISTS=$(gh pr list --base test --head develop --state open --json number --jq length)
           echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if test branch exists
         id: check-branch
@@ -178,7 +192,7 @@ jobs:
             echo "needs_branch_creation=true" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create test branch if it doesn't exist
         if: steps.check-branch.outputs.needs_branch_creation == 'true' && steps.check-pr.outputs.pr_exists == '0'
@@ -194,7 +208,7 @@ jobs:
           fi
           git push origin test
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if branches differ
         id: check-diff
@@ -223,7 +237,7 @@ jobs:
           echo "todo_count=$TODO_COUNT" >> $GITHUB_OUTPUT
           echo "Found $TODO_COUNT TODOs in the codebase"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'true'
@@ -238,7 +252,7 @@ jobs:
             Commits behind test: ${{ steps.check-diff.outputs.commits_behind }}
             TODOs remaining in codebase: ${{ steps.check-diff.outputs.todo_count }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Skip PR creation – no changes
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'false'
@@ -263,7 +277,7 @@ jobs:
           
           echo "Updated PR #$PR_NUMBER with latest commit and TODO counts"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
   pr-to-main:
     name: Create/Update PR from test → main
@@ -271,6 +285,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -281,7 +302,7 @@ jobs:
           PR_EXISTS=$(gh pr list --base main --head test --state open --json number --jq length)
           echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if branches differ
         id: check-diff
@@ -320,7 +341,7 @@ jobs:
           echo "todo_count=$TODO_COUNT" >> $GITHUB_OUTPUT
           echo "Found $TODO_COUNT TODOs in the codebase"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'true'
@@ -340,7 +361,7 @@ jobs:
           
           **Review:** Please review the changes before merging."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Skip PR creation - no changes
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'false'
@@ -371,7 +392,7 @@ jobs:
           
           echo "Updated PR #$PR_NUMBER with latest commit and TODO counts"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
   ai-dev-to-ai-test:
     name: Create/Update PR from ai/dev/* → ai/test/*
@@ -379,6 +400,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -398,7 +426,7 @@ jobs:
           PR_EXISTS=$(gh pr list --base ${{ steps.extract-branch.outputs.target_branch }} --head ${{ github.ref_name }} --state open --json number --jq length)
           echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if target branch exists
         id: check-branch
@@ -413,7 +441,7 @@ jobs:
             echo "needs_branch_creation=true" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create target branch if it doesn't exist
         if: steps.check-branch.outputs.needs_branch_creation == 'true' && steps.check-pr.outputs.pr_exists == '0'
@@ -423,7 +451,7 @@ jobs:
           git push origin ${{ steps.extract-branch.outputs.target_branch }}
           echo "Created ${{ steps.extract-branch.outputs.target_branch }} branch from current ai/dev branch"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if branches differ
         id: check-diff
@@ -460,7 +488,7 @@ jobs:
           
           **Review:** AI-generated code - please review carefully before merging."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Update existing PR
         if: steps.check-pr.outputs.pr_exists != '0'
@@ -478,7 +506,7 @@ jobs:
           
           _Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
   ai-test-to-dev:
     name: Create/Update PR from ai/test/* → dev/*
@@ -486,6 +514,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -505,7 +540,7 @@ jobs:
           PR_EXISTS=$(gh pr list --base ${{ steps.extract-branch.outputs.target_branch }} --head ${{ github.ref_name }} --state open --json number --jq length)
           echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if target branch exists
         id: check-branch
@@ -520,7 +555,7 @@ jobs:
             echo "needs_branch_creation=true" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create target branch if it doesn't exist
         if: steps.check-branch.outputs.needs_branch_creation == 'true' && steps.check-pr.outputs.pr_exists == '0'
@@ -540,7 +575,7 @@ jobs:
           fi
           git push origin ${{ steps.extract-branch.outputs.target_branch }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if branches differ
         id: check-diff
@@ -577,7 +612,7 @@ jobs:
           
           **Review:** AI-generated tests and code - please review test coverage and implementation."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Update existing PR
         if: steps.check-pr.outputs.pr_exists != '0'
@@ -595,7 +630,7 @@ jobs:
           
           _Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
   ai-checklist-to-ai-dev:
     name: Create/Update PR from ai/checklist/* → ai/dev/*
@@ -603,6 +638,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -622,7 +664,7 @@ jobs:
           PR_EXISTS=$(gh pr list --base ${{ steps.extract-branch.outputs.target_branch }} --head ${{ github.ref_name }} --state open --json number --jq length)
           echo "pr_exists=$PR_EXISTS" >> $GITHUB_OUTPUT
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if target branch exists
         id: check-branch
@@ -637,7 +679,7 @@ jobs:
             echo "needs_branch_creation=true" >> $GITHUB_OUTPUT
           fi
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Create target branch if it doesn't exist
         if: steps.check-branch.outputs.needs_branch_creation == 'true' && steps.check-pr.outputs.pr_exists == '0'
@@ -647,7 +689,7 @@ jobs:
           git push origin ${{ steps.extract-branch.outputs.target_branch }}
           echo "Created ${{ steps.extract-branch.outputs.target_branch }} branch from ${{ github.ref_name }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if branches differ
         id: check-diff
@@ -684,7 +726,7 @@ jobs:
           
           **Review:** AI-implemented checklist features - please review implementation and prepare for testing."
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Update existing PR
         if: steps.check-pr.outputs.pr_exists != '0'
@@ -702,4 +744,4 @@ jobs:
           
           _Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
