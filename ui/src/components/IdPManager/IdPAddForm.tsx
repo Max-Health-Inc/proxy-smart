@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
 import type { IdentityProviderFormData } from '@/lib/types/api';
@@ -110,17 +111,20 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
             <Label htmlFor="type" className="text-sm font-semibold text-foreground">Authentication Type</Label>
-            <select
-              id="type"
-              className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+            <Select
               value={(newIdp.providerId ?? 'saml').toUpperCase()}
-              onChange={(e) => setNewIdp({ ...newIdp, providerId: e.target.value.toLowerCase() })}
+              onValueChange={(value) => setNewIdp({ ...newIdp, providerId: value.toLowerCase() })}
             >
-              <option value="SAML">SAML 2.0</option>
-              <option value="OAUTH2">OAuth 2.0</option>
-              <option value="OIDC">OpenID Connect</option>
-              <option value="LDAP">LDAP</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SAML">SAML 2.0</SelectItem>
+                <SelectItem value="OAUTH2">OAuth 2.0</SelectItem>
+                <SelectItem value="OIDC">OpenID Connect</SelectItem>
+                <SelectItem value="LDAP">LDAP</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-3">
             <Label htmlFor="entityId" className="text-sm font-semibold text-foreground">Entity ID / Client ID</Label>
@@ -233,33 +237,39 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <Label htmlFor="signatureAlgorithm" className="text-sm font-semibold text-foreground">Signature Algorithm</Label>
-                  <select
-                    id="signatureAlgorithm"
-                    className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+                  <Select
                     value={newIdp.config.signatureAlgorithm ?? 'RS256'}
-                    onChange={(e) => updateConfig('signatureAlgorithm', e.target.value)}
+                    onValueChange={(value) => updateConfig('signatureAlgorithm', value)}
                   >
-                    <option value="RS256">RSA-SHA256</option>
-                    <option value="RS384">RSA-SHA384</option>
-                    <option value="RS512">RSA-SHA512</option>
-                    <option value="ES256">ECDSA-SHA256</option>
-                    <option value="ES384">ECDSA-SHA384</option>
-                    <option value="ES512">ECDSA-SHA512</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RS256">RSA-SHA256</SelectItem>
+                      <SelectItem value="RS384">RSA-SHA384</SelectItem>
+                      <SelectItem value="RS512">RSA-SHA512</SelectItem>
+                      <SelectItem value="ES256">ECDSA-SHA256</SelectItem>
+                      <SelectItem value="ES384">ECDSA-SHA384</SelectItem>
+                      <SelectItem value="ES512">ECDSA-SHA512</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-3">
                   <Label htmlFor="nameIdFormat" className="text-sm font-semibold text-foreground">NameID Format</Label>
-                  <select
-                    id="nameIdFormat"
-                    className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+                  <Select
                     value={newIdp.config.nameIdPolicyFormat ?? 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent'}
-                    onChange={(e) => updateConfig('nameIdPolicyFormat', e.target.value)}
+                    onValueChange={(value) => updateConfig('nameIdPolicyFormat', value)}
                   >
-                    <option value="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">Persistent</option>
-                    <option value="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">Transient</option>
-                    <option value="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">Email Address</option>
-                    <option value="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">Unspecified</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">Persistent</SelectItem>
+                      <SelectItem value="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">Transient</SelectItem>
+                      <SelectItem value="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">Email Address</SelectItem>
+                      <SelectItem value="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">Unspecified</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-3">

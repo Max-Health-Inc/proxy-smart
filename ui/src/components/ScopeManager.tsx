@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getItem, storeItem } from '@/lib/storage';
 import {
   Table,
@@ -718,20 +719,24 @@ export function ScopeManager() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold text-foreground">{t('Role-Based Templates')}</Label>
-                  <select
+                  <Select
                     value={builderState.selectedRole || 'all'}
-                    onChange={(e) => setBuilderState({ ...builderState, selectedRole: e.target.value === 'all' ? undefined : e.target.value })}
-                    className="text-xs border border-border rounded-lg px-2 py-1 bg-background text-foreground"
+                    onValueChange={(value) => setBuilderState({ ...builderState, selectedRole: value === 'all' ? undefined : value })}
                   >
-                    <option value="all">{t('All Roles')}</option>
-                    <option value="physician">{t('Physician')}</option>
-                    <option value="nurse">{t('Nurse')}</option>
-                    <option value="researcher">{t('Researcher')}</option>
-                    <option value="pharmacist">{t('Pharmacist')}</option>
-                    <option value="therapist">{t('Therapist')}</option>
-                    <option value="admin">{t('Administrator')}</option>
-                    <option value="agent">{t('Agent')}</option>
-                  </select>
+                    <SelectTrigger className="w-[160px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('All Roles')}</SelectItem>
+                      <SelectItem value="physician">{t('Physician')}</SelectItem>
+                      <SelectItem value="nurse">{t('Nurse')}</SelectItem>
+                      <SelectItem value="researcher">{t('Researcher')}</SelectItem>
+                      <SelectItem value="pharmacist">{t('Pharmacist')}</SelectItem>
+                      <SelectItem value="therapist">{t('Therapist')}</SelectItem>
+                      <SelectItem value="admin">{t('Administrator')}</SelectItem>
+                      <SelectItem value="agent">{t('Agent')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
                   {SCOPE_TEMPLATES
@@ -779,33 +784,41 @@ export function ScopeManager() {
                 {/* Context Selection */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-2 block">{t('Context')}</Label>
-                  <select
+                  <Select
                     value={builderState.context}
-                    onChange={(e) => setBuilderState({ ...builderState, context: e.target.value })}
-                    className="w-full rounded-lg border-border bg-background text-foreground"
+                    onValueChange={(value) => setBuilderState({ ...builderState, context: value })}
                   >
-                    {SCOPE_CONTEXTS.map((ctx) => (
-                      <option key={ctx.value} value={ctx.value}>
-                        {ctx.label} - {ctx.description}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SCOPE_CONTEXTS.map((ctx) => (
+                        <SelectItem key={ctx.value} value={ctx.value}>
+                          {ctx.label} - {ctx.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Resource Selection */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-2 block">{t('FHIR Resource')}</Label>
-                  <select
-                    value={builderState.resource}
-                    onChange={(e) => setBuilderState({ ...builderState, resource: e.target.value })}
-                    className="w-full rounded-lg border-border bg-background text-foreground"
+                  <Select
+                    value={builderState.resource || '__none__'}
+                    onValueChange={(value) => setBuilderState({ ...builderState, resource: value === '__none__' ? '' : value })}
                   >
-                    <option value="">{t('Select resource...')}</option>
-                    <option value="*">{t('* (All resources)')}</option>
-                    {FHIR_RESOURCES.map((resource) => (
-                      <option key={resource} value={resource}>{resource}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('Select resource...')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">{t('Select resource...')}</SelectItem>
+                      <SelectItem value="*">{t('* (All resources)')}</SelectItem>
+                      {FHIR_RESOURCES.map((resource) => (
+                        <SelectItem key={resource} value={resource}>{resource}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Permissions */}
@@ -906,15 +919,17 @@ export function ScopeManager() {
                               <div className="text-xs text-muted-foreground mb-1">{t('Suggestions:')}</div>
                               <div className="flex flex-wrap gap-1">
                                 {validation.suggestions.slice(0, 2).map((suggestion, index) => (
-                                  <button
+                                  <Button
                                     key={index}
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => {
                                       setBuilderState({ ...builderState, customScope: suggestion });
                                     }}
-                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded transition-colors"
+                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 h-auto px-2 py-1"
                                   >
                                     {suggestion}
-                                  </button>
+                                  </Button>
                                 ))}
                               </div>
                             </div>
@@ -1006,17 +1021,19 @@ export function ScopeManager() {
                               <div className="text-xs text-muted-foreground mb-1">{t('Suggestions:')}</div>
                               <div className="flex flex-wrap gap-1">
                                 {validation.suggestions.slice(0, 3).map((suggestion, suggestionIndex) => (
-                                  <button
+                                  <Button
                                     key={suggestionIndex}
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => {
                                       const newScopes = [...newScopeSet.scopes];
                                       newScopes[index] = suggestion;
                                       setNewScopeSet({ ...newScopeSet, scopes: newScopes });
                                     }}
-                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded transition-colors cursor-pointer"
+                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 h-auto px-2 py-1"
                                   >
                                     {suggestion}
-                                  </button>
+                                  </Button>
                                 ))}
                               </div>
                             </div>

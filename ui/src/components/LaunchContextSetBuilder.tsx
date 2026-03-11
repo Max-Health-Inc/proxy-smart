@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -277,20 +278,23 @@ export function LaunchContextSetBuilder({
                 <Label htmlFor="context-category" className="text-sm font-semibold text-foreground">
                   Category
                 </Label>
-                <select
-                  id="context-category"
-                  value={contextSet.category}
-                  onChange={e => setContextSet({ ...contextSet, category: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+                <Select
+                  value={contextSet.category || '__none__'}
+                  onValueChange={(value) => setContextSet({ ...contextSet, category: value === '__none__' ? '' : value })}
                 >
-                  <option value="">Select Category</option>
-                  <option value="ehr-launch">🏥 EHR Launch</option>
-                  <option value="standalone">📱 Standalone</option>
-                  <option value="workflow">⚡ Workflow</option>
-                  <option value="specialty">🔬 Specialty</option>
-                  <option value="data-collection">📊 Data Collection</option>
-                  <option value="identity">🔐 Identity</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Select Category</SelectItem>
+                    <SelectItem value="ehr-launch">EHR Launch</SelectItem>
+                    <SelectItem value="standalone">Standalone</SelectItem>
+                    <SelectItem value="workflow">Workflow</SelectItem>
+                    <SelectItem value="specialty">Specialty</SelectItem>
+                    <SelectItem value="data-collection">Data Collection</SelectItem>
+                    <SelectItem value="identity">Identity</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -369,16 +373,20 @@ export function LaunchContextSetBuilder({
                     Build Launch Context
                   </Label>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <select
-                      value={builderState.resource}
-                      onChange={e => setBuilderState({ ...builderState, resource: e.target.value })}
-                      className="flex h-10 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+                    <Select
+                      value={builderState.resource || '__none__'}
+                      onValueChange={(value) => setBuilderState({ ...builderState, resource: value === '__none__' ? '' : value })}
                     >
-                      <option value="">Select Resource</option>
-                      {LAUNCH_RESOURCES.map(r => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Resource" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Select Resource</SelectItem>
+                        {LAUNCH_RESOURCES.map(r => (
+                          <SelectItem key={r} value={r}>{r}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Input
                       placeholder="Role URI (optional)"
                       value={builderState.role}

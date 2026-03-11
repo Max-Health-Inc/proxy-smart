@@ -326,18 +326,21 @@ export function HealthcareUserAddForm({
           <div className="space-y-4">
             <div>
               <Label className="text-sm font-semibold text-foreground mb-3 block">Primary Role</Label>
-              <select
-                value={formData.primaryRole}
-                onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+              <Select
+                value={formData.primaryRole || undefined}
+                onValueChange={(value) => setFormData({ ...formData, primaryRole: value })}
               >
-                <option value="">Select primary role...</option>
-                {getAllAvailableRoles().map((role) => (
-                  <option key={role} value={role} className="capitalize">
-                    {role}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select primary role..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAllAvailableRoles().map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>

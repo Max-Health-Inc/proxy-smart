@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Plus, 
   Shield, 
@@ -277,11 +278,10 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
             <Label htmlFor="appType" className="text-sm font-semibold text-foreground">Application Type</Label>
-            <select
-              id="appType"
+            <Select
               value={newApp.appType}
-              onChange={(e) => {
-                const appType = e.target.value as SmartAppType;
+              onValueChange={(value) => {
+                const appType = value as SmartAppType;
                 setNewApp({
                   ...newApp,
                   appType,
@@ -289,28 +289,35 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   authenticationType: hasFixedAuthType(appType) ? getFixedAuthType(appType) : (newApp.authenticationType || 'symmetric')
                 });
               }}
-              className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
               required
             >
-              <option value="standalone-app">Standalone App (Interactive)</option>
-              <option value="ehr-launch">EHR Launch App (Interactive)</option>
-              <option value="backend-service">Backend Service (Non-interactive, Deterministic)</option>
-              <option value="agent">AI Agent (Non-interactive, Autonomous)</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standalone-app">Standalone App (Interactive)</SelectItem>
+                <SelectItem value="ehr-launch">EHR Launch App (Interactive)</SelectItem>
+                <SelectItem value="backend-service">Backend Service (Non-interactive, Deterministic)</SelectItem>
+                <SelectItem value="agent">AI Agent (Non-interactive, Autonomous)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {isInteractive(newApp.appType) && (
             <div className="space-y-3">
               <Label htmlFor="authenticationType" className="text-sm font-semibold text-foreground">Authentication Type</Label>
-              <select
-                id="authenticationType"
+              <Select
                 value={newApp.authenticationType}
-                onChange={(e) => setNewApp({ ...newApp, authenticationType: e.target.value as AuthenticationType })}
-                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+                onValueChange={(value) => setNewApp({ ...newApp, authenticationType: value as AuthenticationType })}
                 required
               >
-                <option value="asymmetric">Asymmetric Client Authentication</option>
-                <option value="symmetric">Symmetric Client Authentication</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asymmetric">Asymmetric Client Authentication</SelectItem>
+                  <SelectItem value="symmetric">Symmetric Client Authentication</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
           {hasFixedAuthType(newApp.appType) && (
@@ -491,26 +498,29 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
           <div className="space-y-4">
             <div className="space-y-3">
               <Label htmlFor="serverAccessType" className="text-sm font-semibold text-foreground">Server Access Type</Label>
-              <select
-                id="serverAccessType"
+              <Select
                 value={newApp.serverAccessType}
-                onChange={(e) => {
-                  const serverAccessType = e.target.value as ServerAccessType;
+                onValueChange={(value) => {
+                  const serverAccessType = value as ServerAccessType;
                   setNewApp({
                     ...newApp,
                     serverAccessType,
                     allowedServerIds: serverAccessType === 'selected-servers' ? newApp.allowedServerIds : []
                   });
                 }}
-                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
                 required
               >
-                <option value="all-servers">All Available Servers</option>
-                <option value="selected-servers">Specific Servers Only</option>
-                {newApp.appType !== 'backend-service' && (
-                  <option value="user-person-servers">Servers with User Person Records</option>
-                )}
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all-servers">All Available Servers</SelectItem>
+                  <SelectItem value="selected-servers">Specific Servers Only</SelectItem>
+                  {newApp.appType !== 'backend-service' && (
+                    <SelectItem value="user-person-servers">Servers with User Person Records</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 {getServerAccessTypeDescription(newApp.serverAccessType!)}
               </p>
@@ -625,23 +635,26 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
           <div className="space-y-4">
             <div className="space-y-3">
               <Label htmlFor="mcpAccessType" className="text-sm font-semibold text-foreground">MCP Access Type</Label>
-              <select
-                id="mcpAccessType"
+              <Select
                 value={newApp.mcpAccessType || 'none'}
-                onChange={(e) => {
-                  const mcpAccessType = e.target.value as McpAccessType;
+                onValueChange={(value) => {
+                  const mcpAccessType = value as McpAccessType;
                   setNewApp({
                     ...newApp,
                     mcpAccessType,
                     allowedMcpServerNames: mcpAccessType === 'selected-mcp-servers' ? newApp.allowedMcpServerNames : []
                   });
                 }}
-                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
               >
-                <option value="none">No MCP Access</option>
-                <option value="all-mcp-servers">All MCP Servers</option>
-                <option value="selected-mcp-servers">Specific MCP Servers Only</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No MCP Access</SelectItem>
+                  <SelectItem value="all-mcp-servers">All MCP Servers</SelectItem>
+                  <SelectItem value="selected-mcp-servers">Specific MCP Servers Only</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 {getMcpAccessTypeDescription(newApp.mcpAccessType || 'none')}
               </p>
@@ -751,17 +764,20 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <Label htmlFor="scopeSet" className="text-sm font-semibold text-foreground">Scope Template</Label>
-              <select
-                id="scopeSet"
-                value={newApp.scopeSetId}
-                onChange={(e) => setNewApp({ ...newApp, scopeSetId: e.target.value })}
-                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+              <Select
+                value={newApp.scopeSetId || "__custom__"}
+                onValueChange={(value) => setNewApp({ ...newApp, scopeSetId: value === "__custom__" ? "" : value })}
               >
-                <option value="">Custom Scopes</option>
-                {scopeSets.map(set => (
-                  <option key={set.id} value={set.id}>{set.name}</option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__custom__">Custom Scopes</SelectItem>
+                  {scopeSets.map(set => (
+                    <SelectItem key={set.id} value={set.id}>{set.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-3">

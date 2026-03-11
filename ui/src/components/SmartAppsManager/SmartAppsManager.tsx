@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -448,9 +450,8 @@ export function SmartAppsManager() {
               </div>
               <Button
                 onClick={() => setShowAddForm(true)}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
               >
-                <Plus className="h-5 h-5 mr-2" />
+                <Plus className="h-4 w-4" />
                 Register New App
               </Button>
             </div>
@@ -605,10 +606,10 @@ export function SmartAppsManager() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
                       <div className="text-sm font-semibold text-muted-foreground">Select Scope Set</div>
-                      <select
-                        value={editingApp.scopeSetId || ''}
-                        onChange={(e) => {
-                          const scopeSetId = e.target.value || null;
+                      <Select
+                        value={editingApp.scopeSetId || '__custom__'}
+                        onValueChange={(value) => {
+                          const scopeSetId = value === '__custom__' ? null : value;
                           const additionalScopes = editingApp.optionalClientScopes || [];
                           updateAppScopes(editingApp.id, scopeSetId, additionalScopes);
                           setEditingApp({
@@ -619,15 +620,19 @@ export function SmartAppsManager() {
                               : additionalScopes
                           });
                         }}
-                        className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-sm text-foreground"
                       >
-                        <option value="">Custom Scopes Only</option>
-                        {scopeSets.map((scopeSet) => (
-                          <option key={scopeSet.id} value={scopeSet.id}>
-                            {scopeSet.name} ({scopeSet.scopes.length} scopes)
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__custom__">Custom Scopes Only</SelectItem>
+                          {scopeSets.map((scopeSet) => (
+                            <SelectItem key={scopeSet.id} value={scopeSet.id}>
+                              {scopeSet.name} ({scopeSet.scopes.length} scopes)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-3">
                       <div className="text-sm font-semibold text-muted-foreground">Additional Optional Scopes</div>
@@ -681,11 +686,11 @@ export function SmartAppsManager() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Application Name</label>
-                <input
+                <Input
                   type="text"
                   value={editFormData.name || editingApp.name || ''}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full mt-1 rounded-xl border border-input bg-background px-3 py-2"
+                  className="mt-1"
                 />
               </div>
               <div>

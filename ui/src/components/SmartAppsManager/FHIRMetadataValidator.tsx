@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 /**
  * FHIRMetadataValidator
@@ -126,39 +128,39 @@ export const FHIRMetadataValidator: React.FC = () => {
   };
 
   return (
-    <div style={{ border: '1px solid #eee', padding: 12, borderRadius: 6, maxWidth: 1000 }}>
-      <h3>FHIR Metadata Validator</h3>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-        <input value={base} onChange={(e) => setBase(e.target.value)} placeholder="https://fhirserver.example" style={{ width: '70%' }} />
-        <button onClick={run} disabled={loading}>
+    <div className="border border-border rounded-lg p-4 max-w-[1000px]">
+      <h3 className="text-lg font-semibold text-foreground mb-3">FHIR Metadata Validator</h3>
+      <div className="flex gap-2 mb-3">
+        <Input value={base} onChange={(e) => setBase(e.target.value)} placeholder="https://fhirserver.example" className="flex-[0.7]" />
+        <Button onClick={run} disabled={loading}>
           {loading ? 'Checking...' : 'Fetch /metadata'}
-        </button>
+        </Button>
       </div>
-      {error && <div role="alert" style={{ color: 'red' }}>{error}</div>}
+      {error && <div role="alert" className="text-destructive text-sm mb-2">{error}</div>}
       {result && (
-        <div style={{ marginTop: 8 }}>
-          <div style={{ fontWeight: 'bold' }}>Summary: {result.ok ? 'Looks good' : 'Issues found'}</div>
-          <ul>
+        <div className="mt-3">
+          <div className="font-bold text-foreground">Summary: {result.ok ? 'Looks good' : 'Issues found'}</div>
+          <ul className="list-disc pl-5 mt-2 space-y-1">
             {result.checks.map((c) => (
-              <li key={c.id} style={{ color: c.ok ? 'green' : 'crimson' }}>
+              <li key={c.id} className={c.ok ? 'text-green-600 dark:text-green-400' : 'text-destructive'}>
                 {c.id}: {c.message}
               </li>
             ))}
           </ul>
-          <details>
-            <summary>Raw capability statement</summary>
-            <pre style={{ maxHeight: 400, overflow: 'auto' }}>{JSON.stringify(result.raw, null, 2)}</pre>
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm font-medium text-foreground">Raw capability statement</summary>
+            <pre className="max-h-[400px] overflow-auto text-xs bg-muted p-3 rounded-md mt-1">{JSON.stringify(result.raw, null, 2)}</pre>
           </details>
           {result.smartConfig && (
-            <details>
-              <summary>SMART configuration</summary>
-              <pre style={{ maxHeight: 400, overflow: 'auto' }}>{JSON.stringify(result.smartConfig, null, 2)}</pre>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm font-medium text-foreground">SMART configuration</summary>
+              <pre className="max-h-[400px] overflow-auto text-xs bg-muted p-3 rounded-md mt-1">{JSON.stringify(result.smartConfig, null, 2)}</pre>
             </details>
           )}
         </div>
       )}
 
-      <div style={{ marginTop: 8, color: '#666' }}>
+      <div className="mt-3 text-sm text-muted-foreground">
         Tip: If fetching fails in browser, the server may not allow CORS for your origin. Try a proxy or server-side check.
       </div>
     </div>

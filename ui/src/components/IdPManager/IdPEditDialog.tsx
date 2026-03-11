@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -108,17 +109,20 @@ export function IdPEditDialog({
               </div>
               <div className="space-y-3">
                 <Label htmlFor="edit-type" className="text-sm font-semibold text-foreground">Authentication Type</Label>
-                <select
-                  id="edit-type"
-                  className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+                <Select
                   value={(editingIdp.providerId ?? 'saml').toUpperCase()}
-                  onChange={(e) => setEditingIdp({ ...editingIdp, providerId: e.target.value.toLowerCase() })}
+                  onValueChange={(value) => setEditingIdp({ ...editingIdp, providerId: value.toLowerCase() })}
                 >
-                  <option value="SAML">SAML 2.0</option>
-                  <option value="OAuth2">OAuth 2.0</option>
-                  <option value="OIDC">OpenID Connect</option>
-                  <option value="LDAP">LDAP</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SAML">SAML 2.0</SelectItem>
+                    <SelectItem value="OAuth2">OAuth 2.0</SelectItem>
+                    <SelectItem value="OIDC">OpenID Connect</SelectItem>
+                    <SelectItem value="LDAP">LDAP</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-3">
                 <Label htmlFor="edit-entityId" className="text-sm font-semibold text-foreground">Entity ID / Client ID</Label>

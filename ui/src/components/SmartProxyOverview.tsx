@@ -617,33 +617,33 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                        <button
+                        <Button
                             onClick={handleRefresh}
-                            className="px-4 py-2 bg-foreground text-background text-sm font-medium rounded-lg hover:opacity-80 transition-opacity cursor-pointer"
                         >
-                            <RefreshCw className="w-4 h-4 mr-2 inline" />
+                            <RefreshCw className="w-4 h-4" />
                             {t('Refresh')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="outline"
                             onClick={handleHealthCheck}
-                            className="px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-lg hover:bg-accent transition-colors cursor-pointer"
                         >
-                            <Heart className="w-4 h-4 mr-2 inline" />
+                            <Heart className="w-4 h-4" />
                             {t('Health')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="outline"
                             onClick={handleServerRestart}
-                            className="px-4 py-2 border border-border bg-card text-foreground text-sm font-medium rounded-lg hover:bg-accent transition-colors cursor-pointer"
                         >
-                            <RotateCcw className="w-4 h-4 mr-2 inline" />
+                            <RotateCcw className="w-4 h-4" />
                             {t('Restart')}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="icon"
                             onClick={handleServerShutdown}
-                            className="px-4 py-2 border border-destructive/30 bg-destructive/10 text-destructive text-sm font-medium rounded-lg hover:bg-destructive/20 transition-colors cursor-pointer"
                         >
-                            <Power className="w-4 h-4 inline" />
-                        </button>
+                            <Power className="w-4 h-4" />
+                        </Button>
                     </div>
                 </div>
             </div>

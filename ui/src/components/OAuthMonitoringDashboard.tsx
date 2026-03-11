@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { 
   Activity, 
@@ -1042,43 +1045,45 @@ export function OAuthMonitoringDashboard() {
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
-                    <select
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                      className="border border-border rounded-xl px-3 py-2 bg-background text-foreground shadow-sm"
-                    >
-                      <option value="all">{t('All Types')}</option>
-                      <option value="authorization">{t('Authorization')}</option>
-                      <option value="token">{t('Token')}</option>
-                      <option value="refresh">{t('Refresh')}</option>
-                      <option value="error">{t('Error')}</option>
-                      <option value="revoke">{t('Revoke')}</option>
-                    </select>
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Types')}</SelectItem>
+                        <SelectItem value="authorization">{t('Authorization')}</SelectItem>
+                        <SelectItem value="token">{t('Token')}</SelectItem>
+                        <SelectItem value="refresh">{t('Refresh')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="revoke">{t('Revoke')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="border border-border rounded-xl px-3 py-2 bg-background text-foreground shadow-sm"
-                    >
-                      <option value="all">{t('All Statuses')}</option>
-                      <option value="success">{t('Success')}</option>
-                      <option value="error">{t('Error')}</option>
-                      <option value="warning">{t('Warning')}</option>
-                      <option value="pending">{t('Pending')}</option>
-                    </select>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                        <SelectItem value="success">{t('Success')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="warning">{t('Warning')}</SelectItem>
+                        <SelectItem value="pending">{t('Pending')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Search className="w-4 h-4 text-muted-foreground" />
-                    <input
+                    <Input
                       type="text"
                       placeholder={t('Search by client or user...')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border border-border rounded-xl px-3 py-2 min-w-[200px] bg-background text-foreground shadow-sm"
+                      className="min-w-[200px]"
                     />
                   </div>
                 </div>
@@ -1102,31 +1107,31 @@ export function OAuthMonitoringDashboard() {
                 </div>
                 {filteredEvents.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto text-sm">
-                      <thead>
-                        <tr className="bg-muted/50 text-muted-foreground border-b border-border">
-                          <th className="px-4 py-3 text-left font-semibold">{t('Time')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Type')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Client')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Status')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Details')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table className="text-sm">
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>{t('Time')}</TableHead>
+                          <TableHead>{t('Type')}</TableHead>
+                          <TableHead>{t('Client')}</TableHead>
+                          <TableHead>{t('Status')}</TableHead>
+                          <TableHead>{t('Details')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {filteredEvents.slice(0, 50).map((event, index) => (
-                          <tr key={event.id || index} className="border-b border-border hover:bg-muted/30 transition-colors">
-                            <td className="px-4 py-3 text-muted-foreground">
+                          <TableRow key={event.id || index}>
+                            <TableCell className="text-muted-foreground">
                               {format(new Date(event.timestamp), 'MMM dd, HH:mm:ss')}
-                            </td>
-                            <td className="px-4 py-3">
+                            </TableCell>
+                            <TableCell>
                               <Badge variant="outline" className="font-mono text-xs">
                                 {event.type || t('Unknown')}
                               </Badge>
-                            </td>
-                            <td className="px-4 py-3 font-medium text-foreground">
+                            </TableCell>
+                            <TableCell className="font-medium text-foreground">
                               {event.clientName || event.clientId || t('Unknown')}
-                            </td>
-                            <td className="px-4 py-3">
+                            </TableCell>
+                            <TableCell>
                               <Badge
                                 className={
                                   event.status === 'success'
@@ -1138,14 +1143,14 @@ export function OAuthMonitoringDashboard() {
                               >
                                 {event.status || t('Unknown')}
                               </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
+                            </TableCell>
+                            <TableCell className="text-muted-foreground max-w-xs truncate">
                               {event.errorMessage || '-'}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                     {filteredEvents.length > 50 && (
                       <div className="text-center py-4 text-muted-foreground">
                         <p className="text-sm">{t('Showing first 50 events of {{total}}', { total: filteredEvents.length })}</p>

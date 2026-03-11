@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import {
     ExternalLink,
     RefreshCw,
@@ -265,20 +266,22 @@ export function ActionButton({ action, onComplete, compact = false, formOpen, on
                                     {field.required && <span className="text-red-500 ml-1">*</span>}
                                 </Label>
                                 {field.type === 'select' && field.options ? (
-                                    <select
-                                        id={field.name}
-                                        value={formData[field.name] || ''}
-                                        onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                                        className="w-full text-sm border border-input bg-background rounded-md px-3 py-2"
+                                    <Select
+                                        value={formData[field.name] || undefined}
+                                        onValueChange={(value) => setFormData({ ...formData, [field.name]: value })}
                                         required={field.required}
                                     >
-                                        <option value="">{t('Select an option')}</option>
-                                        {field.options.map((option) => (
-                                            <option key={option} value={option}>
-                                                {option}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        <SelectTrigger className="text-sm">
+                                            <SelectValue placeholder={t('Select an option')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {field.options.map((option) => (
+                                                <SelectItem key={option} value={option}>
+                                                    {option}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 ) : (
                                     <Input
                                         id={field.name}
