@@ -16,6 +16,9 @@ import { AIChatOverlay } from './ai/AIChatOverlay';
 import { Panel } from './ui/panel';
 import { Spinner } from './ui/spinner';
 import { useTranslation } from 'react-i18next';
+import { Alert, AlertTitle, AlertDescription } from './ui/alert';
+import { Button } from './ui/button';
+import { ShieldAlert, X } from 'lucide-react';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
@@ -54,6 +57,9 @@ export function AdminApp() {
     const { isAuthenticated, loading, profile, clientApis } = useAuth();
     const { activeTab, setActiveTab, isAIAssistantEnabled, setIsAIAssistantEnabled } = useAppStore();
     const { t } = useTranslation();
+    const [bootstrapBannerDismissed, setBootstrapBannerDismissed] = useState(false);
+
+    const isBootstrapAdmin = profile?.username === 'admin';
 
     // Check AI Assistant status
     useEffect(() => {
@@ -135,6 +141,31 @@ export function AdminApp() {
                 onTabChange={handleTabChange} 
                 profile={profile} 
             />
+
+            {/* Bootstrap admin warning banner */}
+            {isBootstrapAdmin && !bootstrapBannerDismissed && (
+                <div className="px-4 sm:px-6 lg:px-8 pt-4">
+                    <div className="w-full lg:w-[90%] max-w-none mx-auto">
+                        <Alert className="bg-amber-500/10 border-amber-500/30 text-amber-900 dark:text-amber-200">
+                            <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                            <AlertTitle className="font-semibold">
+                                {t('Bootstrap Admin Account')}
+                            </AlertTitle>
+                            <AlertDescription className="mt-1">
+                                {t('You are logged in with the temporary bootstrap admin account. Please create a permanent admin user in the Identity Providers or User Federation tab. Once a permanent admin exists, Keycloak will automatically disable this bootstrap account.')}
+                            </AlertDescription>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-2 right-2 h-6 w-6 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20"
+                                onClick={() => setBootstrapBannerDismissed(true)}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </Alert>
+                    </div>
+                </div>
+            )}
             <main className="flex-1 pt-2 md:pt-4">
                 <div className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
                     <div className="w-full lg:w-[90%] max-w-none mx-auto">
