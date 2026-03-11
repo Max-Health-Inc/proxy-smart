@@ -13,6 +13,7 @@ import {
   AlertDescription,
 } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   Settings,
   Shield,
@@ -27,34 +28,6 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import type { ClientRegistrationSettings } from '@/lib/types/api';
-
-// Simple Switch component since we don't have one
-const Switch = ({ 
-  id, 
-  checked, 
-  onCheckedChange 
-}: { 
-  id: string; 
-  checked: boolean; 
-  onCheckedChange: (checked: boolean) => void 
-}) => (
-  <label htmlFor={id} className="relative inline-flex items-center cursor-pointer">
-    <input
-      type="checkbox"
-      id={id}
-      className="sr-only"
-      checked={checked}
-      onChange={(e) => onCheckedChange(e.target.checked)}
-    />
-    <div className={`w-11 h-6 rounded-full transition-colors ${
-      checked ? 'bg-blue-600' : 'bg-gray-200'
-    }`}>
-      <div className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${
-        checked ? 'translate-x-5' : 'translate-x-0'
-      } m-0.5`} />
-    </div>
-  </label>
-);
 
 const DEFAULT_SCOPES = [
   'openid',

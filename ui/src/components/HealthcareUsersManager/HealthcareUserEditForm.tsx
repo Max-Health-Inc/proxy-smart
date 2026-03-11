@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -301,12 +302,10 @@ export function HealthcareUserEditForm({
           <div className="space-y-3">
             <Label htmlFor="editEnabled" className="text-sm font-semibold text-foreground">Account Status</Label>
             <div className="flex items-center space-x-3 pt-2">
-              <input
+              <Checkbox
                 id="editEnabled"
-                type="checkbox"
                 checked={formData.enabled}
-                onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked === true })}
               />
               <Label htmlFor="editEnabled" className="text-sm text-foreground">Account enabled</Label>
             </div>
@@ -353,12 +352,11 @@ export function HealthcareUserEditForm({
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {availableRealmRoles.map((role) => (
                   <div key={role} className="flex items-center space-x-2">
-                    <input
+                    <Checkbox
                       id={`edit-realm-${role}`}
-                      type="checkbox"
                       checked={formData.realmRoles.includes(role)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                      onCheckedChange={(checked) => {
+                        if (checked === true) {
                           setFormData({
                             ...formData,
                             realmRoles: [...formData.realmRoles, role]
@@ -370,7 +368,6 @@ export function HealthcareUserEditForm({
                           });
                         }
                       }}
-                      className="rounded border-border text-primary focus:ring-primary"
                     />
                     <Label htmlFor={`edit-realm-${role}`} className="text-sm text-foreground capitalize">
                       {role}
@@ -385,13 +382,12 @@ export function HealthcareUserEditForm({
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {availableClientRoles['admin-ui']?.map((role) => (
                   <div key={role} className="flex items-center space-x-2">
-                    <input
+                    <Checkbox
                       id={`edit-client-${role}`}
-                      type="checkbox"
                       checked={formData.clientRoles['admin-ui']?.includes(role) || false}
-                      onChange={(e) => {
+                      onCheckedChange={(checked) => {
                         const currentAdminUiRoles = formData.clientRoles['admin-ui'] || [];
-                        if (e.target.checked) {
+                        if (checked === true) {
                           setFormData({
                             ...formData,
                             clientRoles: {
@@ -409,7 +405,6 @@ export function HealthcareUserEditForm({
                           });
                         }
                       }}
-                      className="rounded border-border text-primary focus:ring-primary"
                     />
                     <Label htmlFor={`edit-client-${role}`} className="text-sm text-foreground capitalize">
                       {role.replace('-', ' ')}

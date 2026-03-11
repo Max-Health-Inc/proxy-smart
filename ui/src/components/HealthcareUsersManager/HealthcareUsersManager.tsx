@@ -221,12 +221,13 @@ export function HealthcareUsersManager() {
       {error && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 mb-6">
           <div className="text-destructive font-medium">{error}</div>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setError(null)}
             className="text-destructive hover:text-destructive/80 text-sm mt-2"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       )}
 

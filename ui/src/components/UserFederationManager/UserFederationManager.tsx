@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { NotificationToast } from '../ui/NotificationToast';
 import { useAuth } from '@/stores/authStore';
@@ -148,11 +149,10 @@ function CheckboxField({ label, description, checked, onChange }: {
 }) {
   return (
     <label className="flex items-start space-x-3 cursor-pointer">
-      <input
-        type="checkbox"
+      <Checkbox
         checked={checked}
-        onChange={e => onChange(e.target.checked)}
-        className="mt-1 rounded border-border"
+        onCheckedChange={(v) => onChange(v === true)}
+        className="mt-1"
       />
       <div>
         <div className="text-sm font-medium text-foreground">{label}</div>

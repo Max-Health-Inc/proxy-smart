@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '../ui/button';
+import { Switch } from '../ui/switch';
 import { AVAILABLE_MODELS } from './constants';
 
 interface ChatSettingsProps {
@@ -66,18 +67,11 @@ export function ChatSettings({
                                 {t('Real-time response streaming')}
                             </div>
                         </div>
-                        <button
-                            onClick={onStreamingToggle}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                streamingEnabled ? 'bg-primary' : 'bg-muted'
-                            }`}
-                        >
-                            <span
-                                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                                    streamingEnabled ? 'translate-x-5' : 'translate-x-1'
-                                }`}
-                            />
-                        </button>
+                        <Switch
+                            checked={streamingEnabled}
+                            onCheckedChange={() => onStreamingToggle()}
+                            size="sm"
+                        />
                     </label>
                 </div>
             </div>

@@ -599,26 +599,32 @@ export function OAuthMonitoringDashboard() {
               {showExportMenu && (
                 <div className="absolute right-0 mt-2 w-72 bg-background border border-border rounded-2xl shadow-xl z-50">
                   <div className="p-2">
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => {
                         exportAnalytics();
                         setShowExportMenu(false);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-muted rounded-xl transition-colors"
+                      className="w-full text-left justify-start h-auto px-4 py-3 rounded-xl"
                     >
-                      <div className="font-semibold text-foreground">{t('Export Current Data')}</div>
-                      <div className="text-sm text-muted-foreground">{t('Download current dashboard analytics')}</div>
-                    </button>
-                    <button
+                      <div>
+                        <div className="font-semibold text-foreground">{t('Export Current Data')}</div>
+                        <div className="text-sm text-muted-foreground">{t('Download current dashboard analytics')}</div>
+                      </div>
+                    </Button>
+                    <Button
+                      variant="ghost"
                       onClick={() => {
                         exportServerEvents();
                         setShowExportMenu(false);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-muted rounded-xl transition-colors"
+                      className="w-full text-left justify-start h-auto px-4 py-3 rounded-xl"
                     >
-                      <div className="font-semibold text-foreground">{t('Export Server Events')}</div>
-                      <div className="text-sm text-muted-foreground">{t('Download events log from server')}</div>
-                    </button>
+                      <div>
+                        <div className="font-semibold text-foreground">{t('Export Server Events')}</div>
+                        <div className="text-sm text-muted-foreground">{t('Download events log from server')}</div>
+                      </div>
+                    </Button>
                   </div>
                 </div>
               )}

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
@@ -97,12 +98,10 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
           <div className="space-y-3">
             <Label htmlFor="enabled" className="text-sm font-semibold text-foreground">Enable Provider Immediately</Label>
             <div className="flex items-center space-x-3 h-12 px-4 rounded-xl border border-border bg-background">
-              <input
+              <Checkbox
                 id="enabled"
-                type="checkbox"
                 checked={newIdp.enabled ?? true}
-                onChange={(e) => setNewIdp({ ...newIdp, enabled: e.target.checked })}
-                className="rounded border-border"
+                onCheckedChange={(checked) => setNewIdp({ ...newIdp, enabled: checked === true })}
               />
               <span className="text-sm text-foreground">Enabled</span>
             </div>
@@ -327,23 +326,19 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
             <h5 className="text-md font-semibold text-foreground mb-4">Security Options</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id="validateSignature"
                   checked={newIdp.config.validateSignature ?? false}
-                  onChange={(e) => updateConfig('validateSignature', e.target.checked)}
-                  className="rounded border-border"
+                  onCheckedChange={(checked) => updateConfig('validateSignature', checked === true)}
                 />
                 <Label htmlFor="validateSignature" className="text-sm text-foreground">Validate Signature</Label>
               </div>
               {(newIdp.providerId ?? '').toLowerCase() === 'saml' && (
                 <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="wantAuthnRequestsSigned"
                     checked={newIdp.config.wantAuthnRequestsSigned ?? false}
-                    onChange={(e) => updateConfig('wantAuthnRequestsSigned', e.target.checked)}
-                    className="rounded border-border"
+                    onCheckedChange={(checked) => updateConfig('wantAuthnRequestsSigned', checked === true)}
                   />
                   <Label htmlFor="wantAuthnRequestsSigned" className="text-sm text-foreground">Want AuthnRequests Signed</Label>
                 </div>

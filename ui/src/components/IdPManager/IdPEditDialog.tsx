@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -148,12 +149,10 @@ export function IdPEditDialog({
           {/* Security Toggle */}
           <div className="bg-card/50 p-6 rounded-xl border border-border">
             <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
+              <Checkbox
                 id="edit-enabled"
                 checked={editingIdp.enabled ?? true}
-                onChange={(e) => setEditingIdp({ ...editingIdp, enabled: e.target.checked })}
-                className="rounded border-border"
+                onCheckedChange={(checked) => setEditingIdp({ ...editingIdp, enabled: checked === true })}
               />
               <Label htmlFor="edit-enabled" className="text-sm text-foreground">Enabled</Label>
             </div>

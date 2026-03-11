@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -636,7 +638,7 @@ export function SmartAppsManager() {
                     </div>
                     <div className="space-y-3">
                       <div className="text-sm font-semibold text-muted-foreground">Additional Optional Scopes</div>
-                      <textarea
+                      <Textarea
                         value={(editingApp.optionalClientScopes || []).join('\n')}
                         onChange={(e) => {
                           const optionalScopes = e.target.value.split('\n').filter(scope => scope.trim());
@@ -650,7 +652,7 @@ export function SmartAppsManager() {
                           });
                         }}
                         rows={5}
-                        className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm shadow-sm font-mono text-foreground placeholder:text-muted-foreground focus:border-ring focus:ring-ring"
+                        className="font-mono"
                         placeholder="patient/Patient.read&#10;patient/Observation.read&#10;openid profile"
                       />
                     </div>
@@ -685,7 +687,7 @@ export function SmartAppsManager() {
           {editingApp && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Application Name</label>
+                <Label className="text-sm font-medium">Application Name</Label>
                 <Input
                   type="text"
                   value={editFormData.name || editingApp.name || ''}
@@ -694,12 +696,12 @@ export function SmartAppsManager() {
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Description</label>
-                <textarea
+                <Label className="text-sm font-medium">Description</Label>
+                <Textarea
                   value={editFormData.description || editingApp.description || ''}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
-                  className="w-full mt-1 rounded-xl border border-input bg-background px-3 py-2"
+                  className="mt-1"
                 />
               </div>
               <div className="flex justify-end space-x-2 pt-4">

@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Plus, 
@@ -363,12 +365,12 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
 
             <div className="space-y-3">
               <Label htmlFor="publicKey" className="text-sm font-semibold text-foreground">Public Key (Alternative)</Label>
-              <textarea
+              <Textarea
                 id="publicKey"
                 placeholder="-----BEGIN PUBLIC KEY-----&#10;MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...&#10;-----END PUBLIC KEY-----"
                 value={newApp.publicKey || ''}
                 onChange={(e) => setNewApp({ ...newApp, publicKey: e.target.value })}
-                className="flex min-h-[100px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm font-mono"
+                className="min-h-[100px] rounded-xl shadow-sm font-mono"
                 rows={6}
               />
               <p className="text-xs text-muted-foreground">
@@ -544,16 +546,14 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border">
                     {servers.map((server) => (
                       <label key={server.id} className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={(newApp.allowedServerIds || []).includes(server.id)}
-                          onChange={(e) => {
-                            const serverIds = e.target.checked
+                          onCheckedChange={(checked) => {
+                            const serverIds = checked === true
                               ? [...(newApp.allowedServerIds || []), server.id]
                               : (newApp.allowedServerIds || []).filter(id => id !== server.id);
                             setNewApp({ ...newApp, allowedServerIds: serverIds });
                           }}
-                          className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
@@ -678,16 +678,14 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border">
                     {mcpServers.map((server) => (
                       <label key={server.name} className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded-lg cursor-pointer">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={(newApp.allowedMcpServerNames || []).includes(server.name)}
-                          onChange={(e) => {
-                            const serverNames = e.target.checked
+                          onCheckedChange={(checked) => {
+                            const serverNames = checked === true
                               ? [...(newApp.allowedMcpServerNames || []), server.name]
                               : (newApp.allowedMcpServerNames || []).filter(name => name !== server.name);
                             setNewApp({ ...newApp, allowedMcpServerNames: serverNames });
                           }}
-                          className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getItem, storeItem } from '@/lib/storage';
 import {
@@ -827,11 +828,10 @@ export function ScopeManager() {
                   <div className="grid grid-cols-5 gap-2">
                     {Object.entries(FHIR_PERMISSIONS).map(([key, perm]) => (
                       <label key={key} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted/50">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={builderState.permissions.includes(key)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
+                          onCheckedChange={(checked) => {
+                            if (checked === true) {
                               setBuilderState({
                                 ...builderState,
                                 permissions: [...builderState.permissions, key].sort()
@@ -843,7 +843,6 @@ export function ScopeManager() {
                               });
                             }
                           }}
-                          className="rounded text-primary"
                         />
                         <span className="text-sm font-medium text-foreground" title={perm.description}>
                           {perm.label}
