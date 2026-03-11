@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';
