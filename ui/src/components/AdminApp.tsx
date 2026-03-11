@@ -18,7 +18,6 @@ import { Spinner } from './ui/spinner';
 import { useTranslation } from 'react-i18next';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { IdPManager } from './IdPManager/IdPManager';
-import { DoorManagement } from './DoorManagement/DoorManagement';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 
 // Valid tab routes
@@ -32,7 +31,6 @@ const VALID_TABS = [
     'scopes',
     'launch-context',
     'oauth-monitoring',
-    'door-management',
     'user-federation'
 ] as const;
 
@@ -148,7 +146,6 @@ export function AdminApp() {
                             {currentTab === 'scopes' && <ScopeManager />}
                             {currentTab === 'launch-context' && <LaunchContextManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
-                            {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'user-federation' && <UserFederationManager />}
                         </Panel>
                     </div>

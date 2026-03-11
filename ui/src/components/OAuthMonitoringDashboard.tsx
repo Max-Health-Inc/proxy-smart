@@ -36,6 +36,7 @@ import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatus
 import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
 import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
 import { createServerApi, createAdminApi } from '../lib/apiClient';
+import { DoorManagement } from './DoorManagement/DoorManagement';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -782,10 +783,11 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 rounded-t-2xl">
+            <TabsList className="grid w-full grid-cols-5 bg-muted/50 rounded-t-2xl">
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="flows" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth Flows')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
+              <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
               <TabsTrigger value="monitoring" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('System Health')}</TabsTrigger>
             </TabsList>
 
@@ -1306,6 +1308,10 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            <TabsContent value="door-access" className="space-y-6">
+              <DoorManagement />
             </TabsContent>
 
             <TabsContent value="monitoring" className="space-y-6">
