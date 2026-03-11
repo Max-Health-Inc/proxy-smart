@@ -349,20 +349,20 @@ export function IdPManager() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       <NotificationToast
         notification={notification}
         onClose={() => setNotification(null)}
       />
 
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
               Identity Provider Management
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               Configure and manage identity providers for healthcare system authentication
@@ -370,7 +370,6 @@ export function IdPManager() {
           </div>
           <Button
             onClick={() => setShowAddForm(true)}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Identity Provider

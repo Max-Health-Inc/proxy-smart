@@ -56,7 +56,7 @@ export function DoorManagement() {
 
   if (loading) {
     return (
-      <div className="p-6 sm:p-8">
+      <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
         <div className="flex items-center justify-center py-20">
           <Spinner size="lg" />
           <span className="ml-3 text-muted-foreground">{t('Checking door management status...')}</span>
@@ -67,16 +67,18 @@ export function DoorManagement() {
 
   if (error || !health) {
     return (
-      <div className="p-6 sm:p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <DoorOpen className="h-6 w-6 text-foreground" />
-            <h2 className="text-2xl font-bold text-foreground">{t('Door Management')}</h2>
+      <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+        <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <DoorOpen className="h-6 w-6 text-foreground" />
+              <h1 className="text-3xl font-medium text-foreground tracking-tight">{t('Door Management')}</h1>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {t('Retry')}
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {t('Retry')}
-          </Button>
         </div>
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
@@ -91,7 +93,7 @@ export function DoorManagement() {
 
   if (!health.configured) {
     return (
-      <div className="p-6 sm:p-8">
+      <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
         <ConfigureProviderPanel onSuccess={() => {
           setLoading(true);
           fetchHealth();
@@ -107,29 +109,37 @@ export function DoorManagement() {
   const showEvents = capabilities?.events ?? false;
 
   return (
-    <div className="p-6 sm:p-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <DoorOpen className="h-6 w-6 text-foreground" />
-          <h2 className="text-2xl font-bold text-foreground">{t('Door Management')}</h2>
-          <Badge variant={health.connected ? 'default' : 'destructive'} className="ml-2">
-            {health.connected ? (
-              <><Wifi className="h-3 w-3 mr-1" />{t('Connected')}</>
-            ) : (
-              <><WifiOff className="h-3 w-3 mr-1" />{t('Disconnected')}</>
-            )}
-          </Badge>
-          {health.provider && (
-            <Badge variant="outline" className="ml-1 capitalize">
-              {health.provider}
-            </Badge>
-          )}
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <DoorOpen className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-medium text-foreground tracking-tight">{t('Door Management')}</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant={health.connected ? 'default' : 'destructive'}>
+                  {health.connected ? (
+                    <><Wifi className="h-3 w-3 mr-1" />{t('Connected')}</>
+                  ) : (
+                    <><WifiOff className="h-3 w-3 mr-1" />{t('Disconnected')}</>
+                  )}
+                </Badge>
+                {health.provider && (
+                  <Badge variant="outline" className="capitalize">
+                    {health.provider}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            {t('Refresh')}
+          </Button>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('Refresh')}
-        </Button>
       </div>
 
       {/* Sub-tabs */}

@@ -656,16 +656,16 @@ export function ScopeManager() {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
               {t('SMART Scope Management')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               {t('Build and manage FHIR resource access scopes')}
@@ -673,7 +673,6 @@ export function ScopeManager() {
           </div>
           <Button
             onClick={() => setShowBuilder(true)}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
           >
             <Plus className="h-5 w-5 mr-2" />
             {t('Create Scope Set')}
@@ -683,10 +682,10 @@ export function ScopeManager() {
 
       {/* Scope Builder Modal/Panel */}
       {showBuilder && (
-        <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border shadow-lg">
+        <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-lg">
           <div className="mb-6">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                 <Code className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -745,7 +744,7 @@ export function ScopeManager() {
                     .map((template) => (
                       <div
                         key={template.id}
-                        className="p-4 border border-border rounded-xl hover:bg-muted/50 hover:border-border/80 transition-all duration-200 cursor-pointer group"
+                        className="p-4 border border-border/50 rounded-xl hover:bg-muted/50 hover:border-border/80 transition-all duration-200 cursor-pointer group"
                         onClick={() => loadTemplate(template)}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -827,7 +826,7 @@ export function ScopeManager() {
                   <Label className="text-xs text-muted-foreground mb-2 block">{t('Permissions')}</Label>
                   <div className="grid grid-cols-5 gap-2">
                     {Object.entries(FHIR_PERMISSIONS).map(([key, perm]) => (
-                      <label key={key} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted/50">
+                      <label key={key} className="flex items-center space-x-2 p-2 border border-border/50 rounded-lg hover:bg-muted/50">
                         <Checkbox
                           checked={builderState.permissions.includes(key)}
                           onCheckedChange={(checked) => {
@@ -883,7 +882,7 @@ export function ScopeManager() {
                       const validation = previewScope ? validateScope(previewScope) : null;
 
                       return (
-                        <div className={`p-3 rounded-lg border transition-all duration-200 ${!previewScope ? 'bg-muted border-border' :
+                        <div className={`p-3 rounded-lg border transition-all duration-200 ${!previewScope ? 'bg-muted border-border/50' :
                           validation?.type === 'success' ? 'bg-green-500/10 border-green-500/20' :
                             validation?.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/20' :
                               'bg-red-500/10 border-red-500/20'
@@ -944,7 +943,7 @@ export function ScopeManager() {
             {/* Current Scope Set */}
             <div className="space-y-4">
               <Label className="text-sm font-semibold text-foreground">{t('Current Scope Set')}</Label>
-              <div className="border border-border rounded-xl p-4 max-h-96 overflow-y-auto bg-card">
+              <div className="border border-border/50 rounded-xl p-4 max-h-96 overflow-y-auto bg-card">
                 {newScopeSet.scopes.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
                     <Shield className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -962,7 +961,7 @@ export function ScopeManager() {
                           }`}>
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center space-x-2 flex-1">
-                              <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded border border-border">
+                              <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded border border-border/50">
                                 {scope}
                               </code>
                               <div className="flex items-center">
@@ -1048,7 +1047,6 @@ export function ScopeManager() {
                 <Button
                   onClick={async () => await saveScopeSet(newScopeSet)}
                   disabled={!newScopeSet.name || newScopeSet.scopes.length === 0}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500"
                 >
                   {editingScope ? t('Update') : t('Save')} {t('Scope Set')}
                 </Button>
@@ -1071,11 +1069,11 @@ export function ScopeManager() {
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                   <Database className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Scope Sets')}</h3>
@@ -1086,12 +1084,12 @@ export function ScopeManager() {
           </div>
         </div>
 
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Shield className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                  <Shield className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Custom Scope Sets')}</h3>
               </div>
@@ -1101,12 +1099,12 @@ export function ScopeManager() {
           </div>
         </div>
 
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Code className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                  <Code className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Available Templates')}</h3>
               </div>
@@ -1116,12 +1114,12 @@ export function ScopeManager() {
           </div>
         </div>
 
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Settings className="w-6 h-6 text-orange-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                  <Settings className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Scopes')}</h3>
               </div>
@@ -1133,10 +1131,10 @@ export function ScopeManager() {
           </div>
         </div>
       </div>
-      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border shadow-lg overflow-hidden">
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">
         <div className="p-8 pb-6">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
               <Database className="w-6 h-6 text-primary" />
             </div>
             <div>
@@ -1153,7 +1151,7 @@ export function ScopeManager() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-border">
+                  <TableRow className="border-border/50">
                     <TableHead className="font-semibold text-foreground">{t('Name')}</TableHead>
                     <TableHead className="font-semibold text-foreground">{t('Scopes')}</TableHead>
                     <TableHead className="font-semibold text-foreground">{t('Type')}</TableHead>
@@ -1163,7 +1161,7 @@ export function ScopeManager() {
                 </TableHeader>
                 <TableBody>
                   {scopeSets.map((scopeSet) => (
-                    <TableRow key={scopeSet.id} className="border-border hover:bg-muted/50 transition-colors duration-200">
+                    <TableRow key={scopeSet.id} className="border-border/50 hover:bg-muted/50 transition-colors duration-200">
                       <TableCell>
                         <div>
                           <div className="font-semibold text-foreground">{scopeSet.name}</div>

@@ -102,10 +102,10 @@ function StatisticsCards({ federations }: { federations: FederationWithStatus[] 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {cards.map(card => (
-        <div key={card.label} className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+        <div key={card.label} className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
           <div className="flex items-center space-x-3 mb-4">
-            <div className={`w-12 h-12 bg-gradient-to-br from-${card.color}-500/20 to-${card.color}-600/30 rounded-xl flex items-center justify-center shadow-sm`}>
-              <card.icon className={`w-6 h-6 text-${card.color}-600 dark:text-${card.color}-400`} />
+            <div className={`w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm`}>
+              <card.icon className={`w-6 h-6 text-primary`} />
             </div>
             <div className={`text-sm font-semibold text-${card.color}-800 dark:text-${card.color}-300 tracking-wide`}>
               {card.label}
@@ -568,18 +568,18 @@ export function UserFederationManager() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       <NotificationToast notification={notification} onClose={() => setNotification(null)} />
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
               {t('User Federation')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Database className="w-5 h-5 text-primary" />
               </div>
               {t('Configure LDAP user federation to sync users from external directories')}
@@ -591,7 +591,6 @@ export function UserFederationManager() {
               setEditingId(null);
               setShowAddForm(true);
             }}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl border border-blue-500/20"
           >
             <Plus className="h-5 w-5 mr-2" />
             {t('Add LDAP Provider')}
@@ -604,7 +603,7 @@ export function UserFederationManager() {
 
       {/* Add / Edit Form */}
       {(showAddForm || editingId) && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border shadow-xl p-8 space-y-6">
+        <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg p-8 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-foreground">
               {editingId ? t('Edit LDAP Provider') : t('Add LDAP Provider')}
@@ -625,7 +624,7 @@ export function UserFederationManager() {
             testing={testingConnection}
           />
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <Button
               variant="outline"
               onClick={() => { setShowAddForm(false); setEditingId(null); setForm({ ...defaultFormData }); }}
@@ -635,7 +634,6 @@ export function UserFederationManager() {
             </Button>
             <Button
               onClick={editingId ? handleUpdate : handleAdd}
-              className="px-8 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl"
             >
               {editingId ? t('Update Provider') : t('Create Provider')}
             </Button>
@@ -645,7 +643,7 @@ export function UserFederationManager() {
 
       {/* Sync Result Banner */}
       {syncResult && (
-        <div className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border shadow-lg p-6">
+        <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg p-6">
           <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
             <FolderSync className="w-5 h-5 text-primary" />
             {t('Last Sync Result')}
@@ -673,7 +671,7 @@ export function UserFederationManager() {
 
       {/* Federation Table */}
       {federations.length === 0 && !showAddForm ? (
-        <div className="text-center py-16 bg-card/50 rounded-2xl border border-dashed border-border">
+        <div className="text-center py-16 bg-card/70 rounded-2xl border border-dashed border-border/50">
           <Database className="w-16 h-16 text-muted-foreground/40 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-foreground mb-2">
             {t('No LDAP Federations Configured')}
@@ -683,7 +681,6 @@ export function UserFederationManager() {
           </p>
           <Button
             onClick={() => setShowAddForm(true)}
-            className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             {t('Add LDAP Provider')}
@@ -694,12 +691,12 @@ export function UserFederationManager() {
           {federations.map(fed => (
             <div
               key={fed.id}
-              className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border shadow-lg p-6 hover:shadow-xl transition-shadow"
+              className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg p-6 hover:shadow-xl transition-shadow"
             >
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                 <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-indigo-600/30 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Database className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Database className="w-6 h-6 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <div className="text-lg font-semibold text-foreground truncate">{fed.name ?? 'Unnamed'}</div>

@@ -36,10 +36,10 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
   };
 
   return (
-    <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
+    <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
       <div className="mb-6">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
             <Plus className="w-6 h-6 text-primary" />
           </div>
           <div>
@@ -68,7 +68,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                   },
                 }));
               }}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               required
             />
           </div>
@@ -79,7 +79,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
               placeholder="e.g., hospital-azure-ad"
               value={newIdp.alias}
               onChange={(e) => setNewIdp({ ...newIdp, alias: e.target.value })}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               required
             />
           </div>
@@ -92,12 +92,12 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
               placeholder="e.g., Microsoft Azure, Google, Okta"
               value={newIdp.vendorName ?? ''}
               onChange={(e) => setNewIdp({ ...newIdp, vendorName: e.target.value })}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
             />
           </div>
           <div className="space-y-3">
             <Label htmlFor="enabled" className="text-sm font-semibold text-foreground">Enable Provider Immediately</Label>
-            <div className="flex items-center space-x-3 h-12 px-4 rounded-xl border border-border bg-background">
+            <div className="flex items-center space-x-3 h-12 px-4 rounded-xl border border-border/50 bg-background">
               <Checkbox
                 id="enabled"
                 checked={newIdp.enabled ?? true}
@@ -132,7 +132,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
               placeholder="Entity identifier or client ID"
               value={newIdp.config.entityId ?? ''}
               onChange={(e) => updateConfig('entityId', e.target.value)}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               required
             />
           </div>
@@ -145,13 +145,13 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
             placeholder="https://login.provider.com/sso"
             value={newIdp.config.singleSignOnServiceUrl ?? ''}
             onChange={(e) => updateConfig('singleSignOnServiceUrl', e.target.value)}
-            className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+            className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
             required
           />
         </div>
 
         {/* Additional Configuration Fields */}
-        <div className="mt-8 pt-6 border-t border-border">
+        <div className="mt-8 pt-6 border-t border-border/50">
           <h4 className="text-lg font-semibold text-foreground mb-4">Additional Configuration</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -162,7 +162,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                 placeholder="Friendly name for login screens"
                 value={newIdp.config.displayName ?? ''}
                 onChange={(e) => updateConfig('displayName', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
             <div className="space-y-3">
@@ -172,7 +172,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                 placeholder="Identity provider issuer URL"
                 value={newIdp.config.issuer ?? ''}
                 onChange={(e) => updateConfig('issuer', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
           </div>
@@ -189,7 +189,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                     placeholder="OAuth2/OIDC client secret"
                     value={newIdp.config.clientSecret ?? ''}
                     onChange={(e) => updateConfig('clientSecret', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
                 <div className="space-y-3">
@@ -200,7 +200,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                     placeholder="https://login.provider.com/token"
                     value={newIdp.config.tokenUrl ?? ''}
                     onChange={(e) => updateConfig('tokenUrl', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
               </div>
@@ -213,7 +213,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                     placeholder="https://login.provider.com/userinfo"
                     value={newIdp.config.userInfoUrl ?? ''}
                     onChange={(e) => updateConfig('userInfoUrl', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
                 <div className="space-y-3">
@@ -223,7 +223,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                     placeholder="openid profile email"
                     value={newIdp.config.defaultScopes ?? ''}
                     onChange={(e) => updateConfig('defaultScopes', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                   placeholder="-----BEGIN CERTIFICATE-----&#10;MIIBIjANBgkqhkiG9w0BAQ...&#10;-----END CERTIFICATE-----"
                   value={newIdp.config.signingCertificate ?? ''}
                   onChange={(e) => updateConfig('signingCertificate', e.target.value)}
-                  className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm min-h-[120px]"
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm min-h-[120px]"
                   rows={5}
                 />
               </div>
@@ -305,7 +305,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                     },
                   }));
                 }}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
             <div className="space-y-3">
@@ -316,13 +316,13 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                 placeholder="https://login.provider.com/.well-known/metadata"
                 value={newIdp.config.metadataDescriptorUrl ?? ''}
                 onChange={(e) => updateConfig('metadataDescriptorUrl', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
           </div>
 
           {/* Security Options */}
-          <div className="mt-6 pt-4 border-t border-border">
+          <div className="mt-6 pt-4 border-t border-border/50">
             <h5 className="text-md font-semibold text-foreground mb-4">Security Options</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center space-x-3">
@@ -349,7 +349,6 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
         <div className="flex gap-4 pt-4">
           <Button 
             type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             Add Identity Provider
           </Button>
@@ -357,7 +356,6 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
             type="button" 
             variant="outline" 
             onClick={onClose}
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Cancel
           </Button>

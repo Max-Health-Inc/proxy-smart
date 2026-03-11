@@ -144,7 +144,7 @@ export function HealthcareUserAddForm({
               placeholder="e.g., john.smith"
               value={formData.username}
               onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
@@ -156,7 +156,7 @@ export function HealthcareUserAddForm({
               placeholder="john.smith@hospital.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
@@ -170,7 +170,7 @@ export function HealthcareUserAddForm({
               placeholder="e.g., John"
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
@@ -181,7 +181,7 @@ export function HealthcareUserAddForm({
               placeholder="e.g., Smith"
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
@@ -195,14 +195,14 @@ export function HealthcareUserAddForm({
               placeholder="e.g., Cardiology Department"
               value={formData.organization}
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
             />
           </div>
           <div className="space-y-3">
             <Label htmlFor="fhirPersons" className="text-sm font-semibold text-foreground">FHIR Person Associations</Label>
             <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/20">
               {(formData.fhirPersons || []).map((association, index) => (
-                <div key={index} className="space-y-3 bg-card p-4 rounded-lg border border-border">
+                <div key={index} className="space-y-3 bg-card p-4 rounded-lg border border-border/50">
                   <div className="flex items-center justify-between">
                     <h5 className="text-sm font-semibold text-foreground">FHIR Server Association #{index + 1}</h5>
                     <Button
@@ -295,7 +295,7 @@ export function HealthcareUserAddForm({
               placeholder="Leave blank for no password"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
             />
           </div>
           <div className="space-y-3">
@@ -415,7 +415,6 @@ export function HealthcareUserAddForm({
           <Button 
             type="submit"
             disabled={submitting}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {submitting ? (
               <>
@@ -431,7 +430,7 @@ export function HealthcareUserAddForm({
             variant="outline" 
             onClick={handleClose}
             disabled={submitting}
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </Button>

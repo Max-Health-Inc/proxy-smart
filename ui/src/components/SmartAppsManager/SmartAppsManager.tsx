@@ -412,7 +412,7 @@ export function SmartAppsManager() {
   };
 
   return (
-    <div className="p-8 space-y-8 bg-background">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -421,10 +421,10 @@ export function SmartAppsManager() {
       ) : (
         <>
           {/* Enhanced Header Section */}
-          <div className="bg-card/80 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-lg">
+          <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+                <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
                   SMART on FHIR Applications
                 </h1>
                 <div className="text-muted-foreground text-lg flex items-center">
@@ -554,7 +554,7 @@ export function SmartAppsManager() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <div className="text-sm font-semibold text-muted-foreground mb-2">Current Scope Set</div>
-                      <div className="p-3 bg-background rounded-lg border border-border">
+                      <div className="p-3 bg-background rounded-lg border border-border/50">
                         <span className="font-medium text-foreground">
                           {getScopeSetName(editingApp.scopeSetId)}
                         </span>
@@ -567,7 +567,7 @@ export function SmartAppsManager() {
                     </div>
                     <div>
                       <div className="text-sm font-semibold text-muted-foreground mb-2">Total Scopes</div>
-                      <div className="p-3 bg-background rounded-lg border border-border">
+                      <div className="p-3 bg-background rounded-lg border border-border/50">
                         <span className="font-bold text-2xl text-primary">{((editingApp.defaultClientScopes || []).length + (editingApp.optionalClientScopes || []).length)}</span>
                         <span className="text-sm text-muted-foreground ml-2">active scopes</span>
                       </div>
@@ -576,7 +576,7 @@ export function SmartAppsManager() {
 
                   <div>
                     <div className="text-sm font-semibold text-muted-foreground mb-2">Active Scopes</div>
-                    <div className="bg-background p-4 rounded-lg border border-border max-h-32 overflow-y-auto">
+                    <div className="bg-background p-4 rounded-lg border border-border/50 max-h-32 overflow-y-auto">
                       <div className="flex flex-wrap gap-2">
                         {/* Default Scopes */}
                         {(editingApp.defaultClientScopes || []).map((scope: string, index: number) => (
@@ -597,7 +597,7 @@ export function SmartAppsManager() {
               </Card>
 
               {/* Scope Set Selection */}
-              <Card className="bg-card border-border">
+              <Card className="bg-card border-border/50">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold text-foreground flex items-center">
                     <Shield className="w-5 h-5 mr-2 text-violet-600 dark:text-violet-400" />
@@ -880,7 +880,7 @@ export function SmartAppsManager() {
                 </CardContent>
               </Card>
 
-              <div className="bg-muted/50 p-4 rounded-xl border border-border">
+              <div className="bg-muted/50 p-4 rounded-xl border border-border/50">
                 <p className="text-sm text-muted-foreground">
                   <strong>Note:</strong> Changing authentication type requires re-registering the application 
                   to ensure proper key/secret generation. To change the auth method, delete this app and 
@@ -914,7 +914,7 @@ export function SmartAppsManager() {
           </DialogHeader>
           {editingApp && (
             <div className="space-y-4">
-              <div className="bg-muted/50 p-4 rounded-xl border border-border">
+              <div className="bg-muted/50 p-4 rounded-xl border border-border/50">
                 <div className="text-sm space-y-2">
                   <div>
                     <span className="font-medium">Application:</span> {editingApp.name}

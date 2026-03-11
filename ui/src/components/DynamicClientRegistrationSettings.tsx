@@ -194,7 +194,7 @@ export function DynamicClientRegistrationSettings() {
                 <Settings className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2 tracking-tight">
+                <h2 className="text-3xl font-medium text-foreground mb-2 tracking-tight">
                   Dynamic Client Registration
                 </h2>
                 <div className="flex items-center text-muted-foreground text-lg">
@@ -228,7 +228,6 @@ export function DynamicClientRegistrationSettings() {
             <Button 
               onClick={saveSettings}
               disabled={saving}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
             >
               {saving ? (
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />

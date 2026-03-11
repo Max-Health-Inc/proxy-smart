@@ -550,16 +550,16 @@ export function OAuthMonitoringDashboard() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* Enhanced Header Section */}
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
               {t('OAuth Flow Monitoring')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Activity className="w-5 h-5 text-primary" />
               </div>
               {t('Real-time monitoring and analytics for OAuth 2.0 flows')}
@@ -569,11 +569,6 @@ export function OAuthMonitoringDashboard() {
             <Button
               variant={isRealTimeActive ? "default" : "outline"}
               onClick={toggleRealTime}
-              className={`px-6 py-3 font-semibold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-border ${
-                isRealTimeActive 
-                  ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800' 
-                  : 'bg-background text-foreground hover:bg-muted'
-              }`}
             >
               {isRealTimeActive ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {isRealTimeActive ? t('Pause') : t('Resume')} {t('Real-time')}
@@ -581,7 +576,6 @@ export function OAuthMonitoringDashboard() {
             <Button
               variant="outline"
               onClick={refreshData}
-              className="px-6 py-3 bg-background text-foreground font-semibold rounded-2xl hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-border"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Refresh')}
@@ -590,7 +584,6 @@ export function OAuthMonitoringDashboard() {
               <Button
                 variant="outline"
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="px-6 py-3 bg-background text-foreground font-semibold rounded-2xl hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-border"
               >
                 <Download className="w-4 h-4 mr-2" />
                 {t('Export')}
@@ -636,10 +629,10 @@ export function OAuthMonitoringDashboard() {
 
       {/* Real-time Status */}
       {isRealTimeActive ? (
-        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-6 rounded-2xl border border-green-500/20 shadow-lg">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4 shadow-sm">
                 <Activity className="h-5 w-5 text-green-600 animate-pulse" />
               </div>
               <div>
@@ -703,10 +696,10 @@ export function OAuthMonitoringDashboard() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 p-6 rounded-2xl border border-orange-500/20 shadow-lg">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4 shadow-sm">
                 <Pause className="h-5 w-5 text-orange-600" />
               </div>
               <div>
@@ -770,10 +763,10 @@ export function OAuthMonitoringDashboard() {
         </div>
       )}
 
-      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border shadow-lg overflow-hidden">
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">
         <div className="p-8 pb-6">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
               <BarChart3 className="w-6 h-6 text-primary" />
             </div>
             <div>
@@ -794,11 +787,11 @@ export function OAuthMonitoringDashboard() {
             <TabsContent value="overview" className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                           <BarChart3 className="w-6 h-6 text-primary" />
                         </div>
                         <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Requests')}</h3>
@@ -809,11 +802,11 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                           <TrendingUp className="w-6 h-6 text-green-600" />
                         </div>
                         <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Success Rate')}</h3>
@@ -828,11 +821,11 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                           <Timer className="w-6 h-6 text-orange-600" />
                         </div>
                         <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Response Time')}</h3>
@@ -847,11 +840,11 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                           <Shield className="w-6 h-6 text-purple-600" />
                         </div>
                         <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Active Tokens')}</h3>
@@ -863,9 +856,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {hasPredictiveForecast && predictiveInsights && (
-                  <div className="bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-indigo-500/10 p-6 rounded-2xl border border-sky-500/40 shadow-lg overflow-hidden">
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-sky-500/30 to-indigo-500/40 rounded-xl flex items-center justify-center shadow-sm">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                         <TrendingUp className="w-6 h-6 text-sky-600" />
                       </div>
                       <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
@@ -896,9 +889,9 @@ export function OAuthMonitoringDashboard() {
                 )}
 
                 {weekdayHighlights && (
-                  <div className="bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-rose-500/10 p-6 rounded-2xl border border-amber-500/40 shadow-lg overflow-hidden">
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-amber-500/30 to-rose-500/40 rounded-xl flex items-center justify-center shadow-sm">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                         <CalendarDays className="w-6 h-6 text-amber-600" />
                       </div>
                       <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
@@ -942,9 +935,9 @@ export function OAuthMonitoringDashboard() {
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <BarChart3 className="w-6 h-6 text-primary" />
                     </div>
                     <div>
@@ -999,9 +992,9 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Shield className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
@@ -1014,7 +1007,7 @@ export function OAuthMonitoringDashboard() {
                       analytics.topClients.map((client, index) => (
                         <div key={client.clientId} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-sm shadow-sm">
                               {index + 1}
                             </div>
                             <div>
@@ -1043,9 +1036,9 @@ export function OAuthMonitoringDashboard() {
 
             <TabsContent value="flows" className="space-y-6">
               {/* Filters */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                     <Search className="w-5 h-5 text-primary" />
                   </div>
                   <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter OAuth Flows')}</h4>
@@ -1098,9 +1091,9 @@ export function OAuthMonitoringDashboard() {
               </div>
 
               {/* Events List - Simplified for brevity */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                     <Activity className="w-5 h-5 text-primary" />
                   </div>
                   <div>
@@ -1178,9 +1171,9 @@ export function OAuthMonitoringDashboard() {
             <TabsContent value="analytics" className="space-y-6">
               <div className={`grid grid-cols-1 ${predictiveInsights ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 {/* Success Rate Chart */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <TrendingUp className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
@@ -1221,9 +1214,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {/* Client Distribution Pie Chart */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Shield className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
@@ -1266,9 +1259,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {predictiveInsights && (
-                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                     <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-sky-500/20 to-indigo-500/30 rounded-xl flex items-center justify-center shadow-sm">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                         <Activity className="w-6 h-6 text-sky-600" />
                       </div>
                       <div>
@@ -1345,9 +1338,9 @@ export function OAuthMonitoringDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 {/* Keycloak */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Shield className="w-6 h-6 text-green-600" />
                     </div>
                     <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Keycloak')}</h4>
@@ -1393,9 +1386,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {/* FHIR Servers */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Server className="w-6 h-6 text-primary" />
                     </div>
                     <h4 className="text-lg font-bold text-foreground tracking-tight">{t('FHIR Servers')}</h4>
@@ -1443,9 +1436,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {/* Memory */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Database className="w-6 h-6 text-purple-600" />
                     </div>
                     <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Memory')}</h4>
@@ -1489,9 +1482,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {/* Door Management */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Shield className="w-6 h-6 text-orange-600" />
                     </div>
                     <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Door Management')}</h4>
@@ -1536,7 +1529,7 @@ export function OAuthMonitoringDashboard() {
               </div>
 
               {systemStatus && (
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-2xl border border-border shadow-lg text-xs text-muted-foreground flex items-center justify-between">
+                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg text-xs text-muted-foreground flex items-center justify-between">
                   <span>{t('Last updated')}: {(() => { try { return format(new Date(systemStatus.timestamp), 'MMM dd, HH:mm:ss'); } catch { return systemStatus.timestamp; } })()}</span>
                   <span>{t('Auto-refresh every 30s')}</span>
                 </div>

@@ -97,7 +97,7 @@ export function ServerDetails(server: FhirServerDetails) {
                   <Copy className="w-3 h-3" />
                 </Button>
               </div>
-              <p className="text-sm text-foreground bg-muted/50 p-3 rounded-xl font-mono break-all border border-border">
+              <p className="text-sm text-foreground bg-muted/50 p-3 rounded-xl font-mono break-all border border-border/50">
                 {server.url}
               </p>
             </div>
@@ -116,7 +116,7 @@ export function ServerDetails(server: FhirServerDetails) {
           </h3>
           <div className="grid grid-cols-1 gap-4">
             {Object.entries(server.endpoints).map(([key, url]) => (
-              <div key={key} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border hover:bg-muted/70 transition-all duration-200">
+              <div key={key} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl border border-border/50 hover:bg-muted/70 transition-all duration-200">
                 <div className="flex-1">
                   <p className="font-semibold text-foreground capitalize mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
                   <p className="text-sm text-muted-foreground font-mono break-all">{url}</p>

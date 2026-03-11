@@ -498,7 +498,6 @@ export function LaunchContextSetBuilder({
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Cancel
           </Button>
@@ -506,7 +505,6 @@ export function LaunchContextSetBuilder({
             type="button"
             onClick={handleSave}
             disabled={!contextSet.name.trim() || contextSet.contexts.length === 0}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {editingSet ? (
               <>

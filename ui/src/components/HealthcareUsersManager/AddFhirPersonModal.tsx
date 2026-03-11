@@ -231,8 +231,8 @@ export function AddFhirPersonModal({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-              <User className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <User className="w-6 h-6 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">

@@ -54,8 +54,8 @@ export function IdPEditDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/40 rounded-xl flex items-center justify-center shadow-sm">
-              <Edit className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <Edit className="w-6 h-6 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
@@ -73,7 +73,7 @@ export function IdPEditDialog({
           onUpdate(editingIdp);
         }} className="space-y-6">
           {/* Basic Configuration */}
-          <div className="bg-card/50 p-6 rounded-xl border border-border">
+          <div className="bg-card/70 p-6 rounded-xl border border-border/50">
             <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
               <Shield className="w-5 h-5" />
               <span>Basic Configuration</span>
@@ -85,7 +85,7 @@ export function IdPEditDialog({
                   id="edit-displayName"
                   value={editingIdp.displayName ?? ''}
                   onChange={(e) => setEditingIdp({ ...editingIdp, displayName: e.target.value })}
-                  className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                 />
               </div>
               <div className="space-y-3">
@@ -94,7 +94,7 @@ export function IdPEditDialog({
                   id="edit-alias"
                   value={editingIdp.alias}
                   readOnly
-                  className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm bg-muted"
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm bg-muted"
                 />
               </div>
             </div>
@@ -105,7 +105,7 @@ export function IdPEditDialog({
                   id="edit-vendor"
                   value={editingIdp.vendorName ?? ''}
                   onChange={(e) => setEditingIdp({ ...editingIdp, vendorName: e.target.value })}
-                  className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                 />
               </div>
               <div className="space-y-3">
@@ -131,7 +131,7 @@ export function IdPEditDialog({
                   id="edit-entityId"
                   value={editingIdp.config.entityId ?? ''}
                   onChange={(e) => updateConfig('entityId', e.target.value)}
-                  className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                 />
               </div>
             </div>
@@ -141,13 +141,13 @@ export function IdPEditDialog({
                 id="edit-ssoUrl"
                 value={editingIdp.config.singleSignOnServiceUrl ?? ''}
                 onChange={(e) => updateConfig('singleSignOnServiceUrl', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
           </div>
 
           {/* Security Toggle */}
-          <div className="bg-card/50 p-6 rounded-xl border border-border">
+          <div className="bg-card/70 p-6 rounded-xl border border-border/50">
             <div className="flex items-center space-x-3">
               <Checkbox
                 id="edit-enabled"
@@ -161,7 +161,6 @@ export function IdPEditDialog({
           <div className="flex gap-4 pt-4">
             <Button 
               type="submit" 
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Update Provider
             </Button>
@@ -169,7 +168,6 @@ export function IdPEditDialog({
               type="button" 
               variant="outline" 
               onClick={onClose} 
-              className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
             >
               Cancel
             </Button>

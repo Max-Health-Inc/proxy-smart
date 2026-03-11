@@ -149,7 +149,7 @@ export function HealthcareUsersTable({
                     <div className="flex items-center gap-4 py-2">
                       <Avatar className="h-10 w-10 border-2 border-border shadow-md">
                         <AvatarImage src={undefined} alt={user.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-sm font-semibold">
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                           {getInitials(user.name)}
                         </AvatarFallback>
                       </Avatar>

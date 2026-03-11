@@ -28,8 +28,8 @@ export function ConnectionTestDialog({
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/40 rounded-xl flex items-center justify-center shadow-sm">
-              <TestTube className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <TestTube className="w-6 h-6 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
@@ -46,7 +46,7 @@ export function ConnectionTestDialog({
           {Object.entries(connectionResults).map(([idpId, result]) => {
             const idp = idps.find((i) => (i.alias ?? '') === idpId);
             return (
-              <div key={idpId} className="bg-card/50 p-6 rounded-xl border border-border">
+              <div key={idpId} className="bg-card/70 p-6 rounded-xl border border-border/50">
                 <div className="flex items-center space-x-3 mb-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${
                     result.success 
@@ -82,7 +82,7 @@ export function ConnectionTestDialog({
           <Button 
             onClick={onClose} 
             variant="outline" 
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
+            className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Close
           </Button>

@@ -122,11 +122,11 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-3xl flex items-center justify-center shadow-2xl border border-amber-500/20">
-          <DoorOpen className="w-10 h-10 text-white" />
+        <div className="w-20 h-20 mx-auto bg-primary/10 rounded-3xl flex items-center justify-center shadow-2xl">
+          <DoorOpen className="w-10 h-10 text-primary" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-3xl font-medium text-foreground tracking-tight">
             {t('Configure Door Management')}
           </h1>
           <p className="text-muted-foreground text-lg mt-2">

@@ -30,8 +30,8 @@ export function CertificatesDialog({
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/40 rounded-xl flex items-center justify-center shadow-sm">
-              <FileText className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <FileText className="w-6 h-6 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
@@ -46,7 +46,7 @@ export function CertificatesDialog({
 
         <div className="space-y-6">
           {/* Certificate Status Overview */}
-          <div className="bg-card/50 p-6 rounded-xl border border-border">
+          <div className="bg-card/70 p-6 rounded-xl border border-border/50">
             <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
               <Shield className="w-5 h-5" />
               <span>Certificate Status</span>
@@ -91,13 +91,13 @@ export function CertificatesDialog({
           </div>
 
           {/* Certificate Details */}
-          <div className="bg-card/50 p-6 rounded-xl border border-border">
+          <div className="bg-card/70 p-6 rounded-xl border border-border/50">
             <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
               <Key className="w-5 h-5" />
               <span>Certificate Details (PEM Format)</span>
             </h4>
             <Textarea
-              className="h-48 font-mono text-xs bg-muted/30 dark:bg-muted/50 border-border rounded-xl text-foreground"
+              className="h-48 font-mono text-xs bg-muted/30 dark:bg-muted/50 border-border/50 rounded-xl text-foreground"
               readOnly
               value={`-----BEGIN CERTIFICATE-----
 MIIDXTCCAkWgAwIBAgIJAKoK/heBjcOuMA0GCSqGSIb3DQEBBQUAMEUxCzAJBgNV
@@ -115,14 +115,14 @@ CgKCAQEAvpnaPKLIKdvx98KW68lz8pGaRRcYersNGqPjpifMVjjE8LuCoXgPU0HePK
           <div className="flex space-x-3">
             <Button 
               variant="outline" 
-              className="px-6 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
+              className="px-6 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <FileText className="w-4 h-4 mr-2" />
               Download Certificate
             </Button>
             <Button 
               variant="outline"
-              className="px-6 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
+              className="px-6 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Shield className="w-4 h-4 mr-2" />
               Verify Certificate
@@ -131,7 +131,7 @@ CgKCAQEAvpnaPKLIKdvx98KW68lz8pGaRRcYersNGqPjpifMVjjE8LuCoXgPU0HePK
           <Button 
             onClick={onClose} 
             variant="outline" 
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
+            className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
             Close
           </Button>

@@ -325,7 +325,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
           {hasFixedAuthType(newApp.appType) && (
             <div className="space-y-3">
               <Label className="text-sm font-semibold text-foreground">Authentication Type</Label>
-              <div className="p-3 bg-muted/50 rounded-lg border border-border">
+              <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
                 <span className="text-sm font-medium text-foreground">Asymmetric (Required)</span>
                 <p className="text-xs text-muted-foreground mt-1">
                   {getAuthTypeDescription(newApp.appType!)}
@@ -533,17 +533,17 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <Label className="text-sm font-semibold text-foreground">Select Allowed Servers</Label>
                 {serversLoading ? (
                   <div className="p-4 text-center text-muted-foreground">
-                    <div className="animate-spin inline-block w-4 h-4 border-2 border-border border-t-primary rounded-full mr-2"></div>
+                    <div className="animate-spin inline-block w-4 h-4 border-2 border-border/50 border-t-primary rounded-full mr-2"></div>
                     Loading available servers...
                   </div>
                 ) : servers.length === 0 ? (
-                  <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border">
+                  <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border/50">
                     <Server className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm">No FHIR servers available</p>
                     <p className="text-xs text-muted-foreground">Configure FHIR servers first</p>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border">
+                  <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border/50">
                     {servers.map((server) => (
                       <label key={server.id} className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded-lg cursor-pointer">
                         <Checkbox
@@ -665,17 +665,17 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <Label className="text-sm font-semibold text-foreground">Select Allowed MCP Servers</Label>
                 {mcpServersLoading ? (
                   <div className="p-4 text-center text-muted-foreground">
-                    <div className="animate-spin inline-block w-4 h-4 border-2 border-border border-t-primary rounded-full mr-2"></div>
+                    <div className="animate-spin inline-block w-4 h-4 border-2 border-border/50 border-t-primary rounded-full mr-2"></div>
                     Loading available MCP servers...
                   </div>
                 ) : mcpServers.length === 0 ? (
-                  <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border">
+                  <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border/50">
                     <Cpu className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
                     <p className="text-sm">No MCP servers available</p>
                     <p className="text-xs text-muted-foreground">Configure MCP servers first</p>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border">
+                  <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border/50">
                     {mcpServers.map((server) => (
                       <label key={server.name} className="flex items-center space-x-3 p-2 hover:bg-muted/50 rounded-lg cursor-pointer">
                         <Checkbox
@@ -794,7 +794,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
           </div>
 
           {(newApp.scopeSetId || (newApp.optionalClientScopes || []).length > 0) && (
-            <div className="bg-card/50 p-4 rounded-lg border border-border">
+            <div className="bg-card/70 p-4 rounded-lg border border-border/50">
               <Label className="text-sm font-semibold text-foreground mb-2 block">Current Scope Preview</Label>
               <div className="text-xs text-muted-foreground mb-2">
                 Template: <span className="font-medium">{getScopeSetName(newApp.scopeSetId)}</span>

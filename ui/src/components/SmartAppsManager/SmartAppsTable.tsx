@@ -77,7 +77,7 @@ export function SmartAppsTable({
       default:
         return {
           label: 'Unknown',
-          className: 'bg-muted/50 text-muted-foreground border-border',
+          className: 'bg-muted/50 text-muted-foreground border-border/50',
           icon: AlertCircle,
         };
     }
@@ -108,7 +108,7 @@ export function SmartAppsTable({
       default:
         return {
           label: 'Unknown',
-          className: 'bg-muted/50 text-muted-foreground border-border',
+          className: 'bg-muted/50 text-muted-foreground border-border/50',
         };
     }
   };
@@ -171,15 +171,13 @@ export function SmartAppsTable({
                 return (
                   <TableRow key={app.id} className="border-border/50 hover:bg-muted/50 transition-colors duration-200">
                     <TableCell>
-                      <div className="py-2">
+                      <div className="py-2 max-w-[280px]">
                         <div className="flex items-center space-x-3">
-                          <span className="text-lg">{getAppTypeIcon(app.appType || 'standalone-app')}</span>
-                          <div>
-                            <div className="font-semibold text-foreground">{app.name}</div>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {app.description && app.description.length > 120
-                                ? `${app.description.substring(0, 120)}...`
-                                : app.description}
+                          <span className="text-lg shrink-0">{getAppTypeIcon(app.appType || 'standalone-app')}</span>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground truncate">{app.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {app.description}
                             </div>
                           </div>
                         </div>
@@ -210,7 +208,7 @@ export function SmartAppsTable({
                       })()}
                     </TableCell>
                     <TableCell>
-                      <code className="bg-muted/50 px-3 py-2 rounded-lg text-sm font-medium text-foreground shadow-sm border border-border">
+                      <code className="bg-muted/50 px-3 py-2 rounded-lg text-sm font-medium text-foreground shadow-sm border border-border/50">
                         {app.clientId}
                       </code>
                     </TableCell>
@@ -219,7 +217,7 @@ export function SmartAppsTable({
                         variant={app.status === 'active' ? 'default' : 'secondary'}
                         className={app.status === 'active'
                           ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                          : 'bg-muted/50 text-muted-foreground border-border'
+                          : 'bg-muted/50 text-muted-foreground border-border/50'
                         }
                       >
                         {app.status}

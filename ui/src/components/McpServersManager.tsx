@@ -376,7 +376,7 @@ export function McpServersManager() {
             <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
                     <div className="flex-1">
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+                        <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
                             {t('MCP Servers')}
                         </h1>
                         <div className="text-muted-foreground flex items-center text-lg">
@@ -389,15 +389,14 @@ export function McpServersManager() {
                     <div className="flex items-center space-x-3">
                         <Button
                             onClick={openAddDialog}
-                            className="px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-500 hover:to-emerald-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-green-500/20"
                         >
                             <Plus className="w-4 h-4 mr-2" />
                             {t('Add Server')}
                         </Button>
                         <Button
+                            variant="outline"
                             onClick={handleRefresh}
                             disabled={loading}
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
                         >
                             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                             {t('Refresh Status')}
@@ -411,7 +410,7 @@ export function McpServersManager() {
                 <div className="bg-card/70 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
-                            <div className="w-14 h-14 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mr-4 shadow-sm">
+                            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mr-4 shadow-sm">
                                 <Sparkles className="w-7 h-7 text-purple-600" />
                             </div>
                             <div>

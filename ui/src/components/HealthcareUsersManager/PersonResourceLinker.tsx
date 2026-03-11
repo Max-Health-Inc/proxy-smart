@@ -146,8 +146,8 @@ export function PersonResourceLinker({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-              <Link className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <Link className="w-6 h-6 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">
@@ -244,7 +244,6 @@ export function PersonResourceLinker({
                 </div>
                 <Button
                   onClick={() => setShowAddLinkForm(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-all duration-200"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Link
@@ -400,7 +399,7 @@ export function PersonResourceLinker({
                     <div key={link.id} className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                          <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
                             {getResourceTypeIcon(link.target.resourceType)}
                           </div>
                           <div>
