@@ -36,7 +36,7 @@ import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatus
 import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
 import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
 import { createServerApi, createAdminApi } from '../lib/apiClient';
-import { DoorManagement } from './DoorManagement/DoorManagement';
+import { EventsPanel } from './DoorManagement/EventsPanel';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -1311,7 +1311,7 @@ export function OAuthMonitoringDashboard() {
             </TabsContent>
 
             <TabsContent value="door-access" className="space-y-6">
-              <DoorManagement />
+              <EventsPanel />
             </TabsContent>
 
             <TabsContent value="monitoring" className="space-y-6">

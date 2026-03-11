@@ -33,6 +33,7 @@ import {
   Moon,
   Sun,
   Monitor,
+  DoorOpen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAIChatStore } from '../stores/aiChatStore';
@@ -162,6 +163,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('Monitoring'), 
       description: t('Flow Analytics'),
       icon: BarChart3
+    },
+    { 
+      id: 'door-management', 
+      label: t('Door Management'), 
+      description: t('Physical Access'),
+      icon: DoorOpen
     },
     { 
       id: 'user-federation', 

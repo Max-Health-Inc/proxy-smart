@@ -17,6 +17,7 @@ import { Panel } from './ui/panel';
 import { Spinner } from './ui/spinner';
 import { useTranslation } from 'react-i18next';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
+import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 
@@ -31,6 +32,7 @@ const VALID_TABS = [
     'scopes',
     'launch-context',
     'oauth-monitoring',
+    'door-management',
     'user-federation'
 ] as const;
 
@@ -146,6 +148,7 @@ export function AdminApp() {
                             {currentTab === 'scopes' && <ScopeManager />}
                             {currentTab === 'launch-context' && <LaunchContextManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
+                            {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'user-federation' && <UserFederationManager />}
                         </Panel>
                     </div>
