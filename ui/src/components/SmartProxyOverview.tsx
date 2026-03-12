@@ -35,6 +35,7 @@ import type {
     KeycloakConfigResponse,
     SystemStatusResponse
 } from '../lib/types/api';
+import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
 import { config } from '../config';
 
 interface SmartProxyOverviewProps {
@@ -162,6 +163,8 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
         aiAgentSearchType: 'checking'
     });
 
+    const [doorHealth, setDoorHealth] = useState<AccessHealthResponse | null>(null);
+
     // Fetch dashboard data
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -182,15 +185,18 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                 setFhirServersHealth(prev => ({ ...prev, loading: true, error: null }));
 
                 // Fetch data in parallel with correct API methods
-                const [smartApps, users, servers, identityProvidersCount, analytics, systemStatus, keycloakStatus] = await Promise.allSettled([
+                const [smartApps, users, servers, identityProvidersCount, analytics, systemStatus, keycloakStatus, acHealth] = await Promise.allSettled([
                     clientApis.smartApps.getAdminSmartApps(),
                     clientApis.healthcareUsers.getAdminHealthcareUsers(),
                     clientApis.servers.getFhirServers(),
                     clientApis.identityProviders.getAdminIdpsCount(),
                     clientApis.oauthMonitoring.getMonitoringOauthAnalytics(),
                     clientApis.server.getStatus(),
-                    clientApis.admin.getAdminKeycloakConfigStatus()
+                    clientApis.admin.getAdminKeycloakConfigStatus(),
+                    clientApis.admin.getAdminAccessControlHealth()
                 ]);
+
+                if (acHealth.status === 'fulfilled') setDoorHealth(acHealth.value);
 
                 // Update dashboard data with proper type checking
                 const appsCount = smartApps.status === 'fulfilled' ? Array.isArray(smartApps.value) ? smartApps.value.length : 0 : 0;
@@ -871,6 +877,31 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                 <span className="text-foreground font-semibold">
                                     {systemHealth.serverVersion}
                                 </span>
+                            </div>
+                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                                <span className="text-sm font-medium text-muted-foreground">{t('Door Management')}</span>
+                                <div className="flex items-center">
+                                    {doorHealth?.connected ? (
+                                        <CheckCircle className="w-5 h-5 text-foreground mr-2" />
+                                    ) : doorHealth?.configured ? (
+                                        <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
+                                    ) : (
+                                        <AlertCircle className="w-5 h-5 text-muted-foreground mr-2" />
+                                    )}
+                                    <span className={`font-semibold ${
+                                        doorHealth?.connected
+                                            ? 'text-foreground'
+                                            : doorHealth?.configured
+                                            ? 'text-yellow-600 dark:text-yellow-400'
+                                            : 'text-muted-foreground'
+                                    }`}>
+                                        {doorHealth?.connected
+                                            ? `${doorHealth.provider} — ${t('Connected')}`
+                                            : doorHealth?.configured
+                                            ? `${doorHealth.provider} — ${t('Disconnected')}`
+                                            : t('Not configured')}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
