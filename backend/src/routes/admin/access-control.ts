@@ -12,7 +12,7 @@ import { Elysia, t } from 'elysia'
 import { accessControlPlugin, resetAccessControlPlugin } from '@/lib/access-control/plugin'
 import { detectProvider, createProvider } from '@/lib/access-control/factory'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
-import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin } from '@/lib/admin-utils'
+import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, ConfigurationError } from '@/lib/admin-utils'
 import { validateToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { config } from '@/config'
@@ -176,6 +176,12 @@ function updateAccessControlConfig(body: {
 export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags: TAGS })
   .use(accessControlPlugin)
   .use(keycloakPlugin)
+  .onError(({ error, set }) => {
+    if (error instanceof ConfigurationError) {
+      set.status = 503
+      return { error: 'Access control not configured', details: error.message }
+    }
+  })
 
   // ==================== Health ====================
   .get('/health', async ({ getAccessControl }): Promise<AccessHealthResponseType> => {
