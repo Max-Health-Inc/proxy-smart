@@ -10,6 +10,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
@@ -24,6 +25,7 @@ export function EventsPanel() {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notConfigured, setNotConfigured] = useState(false);
   const [events, setEvents] = useState<AccessEvent[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -33,7 +35,16 @@ export function EventsPanel() {
     if (!clientApis) return;
     try {
       setError(null);
+      setNotConfigured(false);
       setLoading(true);
+
+      // Check if access control is configured before fetching events
+      const health = await clientApis.admin.getAdminAccessControlHealth();
+      if (!health.configured) {
+        setNotConfigured(true);
+        return;
+      }
+
       const response = await clientApis.admin.getAdminAccessControlEvents({
         limit: PAGE_SIZE,
         offset,
@@ -91,6 +102,20 @@ export function EventsPanel() {
       <div className="flex items-center justify-center py-12">
         <Spinner size="md" />
         <span className="ml-3 text-muted-foreground">{t('Loading events...')}</span>
+      </div>
+    );
+  }
+
+  if (notConfigured) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <p className="text-muted-foreground font-medium mb-2">
+          {t('Door access monitoring is not available')}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {t('Configure a door management provider (KISI or UniFi Access) to view access events.')}
+        </p>
       </div>
     );
   }
