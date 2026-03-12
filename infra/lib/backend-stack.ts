@@ -20,6 +20,18 @@ export interface BackendStackProps extends cdk.StackProps {
    * Optional FHIR server URL
    */
   fhirServerBase?: string;
+  /**
+   * Enable KISI door access integration
+   */
+  kisiEnabled?: boolean;
+  /**
+   * Override KISI API base URL (defaults to https://api.kisi.io)
+   */
+  kisiBaseUrl?: string;
+  /**
+   * Enable UniFi Access door integration
+   */
+  unifiAccessEnabled?: boolean;
 }
 
 /**
@@ -68,6 +80,31 @@ export class BackendStack extends cdk.Stack {
         passwordLength: 32,
       },
     });
+
+    // KISI API credentials (created only if KISI is enabled)
+    const kisiSecret = props.kisiEnabled
+      ? new secretsmanager.Secret(this, 'KisiApiSecret', {
+          secretName: 'proxy-smart/kisi-api',
+          description: 'KISI API key for door access control',
+        })
+      : undefined;
+
+    // UniFi Access credentials (created only if UniFi is enabled)
+    const unifiAccessSecret = props.unifiAccessEnabled
+      ? new secretsmanager.Secret(this, 'UnifiAccessSecret', {
+          secretName: 'proxy-smart/unifi-access',
+          description: 'UniFi Access controller credentials',
+          generateSecretString: {
+            secretStringTemplate: JSON.stringify({
+              host: 'REPLACE_WITH_UNIFI_HOST',
+              username: 'REPLACE_WITH_UNIFI_USERNAME',
+            }),
+            generateStringKey: 'password',
+            excludePunctuation: false,
+            passwordLength: 32,
+          },
+        })
+      : undefined;
 
     // SSL Certificate
     const certificate = new acm.Certificate(this, 'Certificate', {
@@ -144,6 +181,29 @@ export class BackendStack extends cdk.Stack {
       environment.FHIR_SERVER_BASE = props.fhirServerBase;
     }
 
+    // Add KISI config if enabled
+    if (props.kisiEnabled && props.kisiBaseUrl) {
+      environment.KISI_BASE_URL = props.kisiBaseUrl;
+    }
+
+    // Build secrets map
+    const secrets: Record<string, ecs.Secret> = {
+      KEYCLOAK_ADMIN_CLIENT_ID: ecs.Secret.fromSecretsManager(keycloakAdminSecret, 'clientId'),
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ecs.Secret.fromSecretsManager(keycloakAdminSecret, 'clientSecret'),
+    };
+
+    // Add KISI secret if enabled
+    if (kisiSecret) {
+      secrets.KISI_API_KEY = ecs.Secret.fromSecretsManager(kisiSecret);
+    }
+
+    // Add UniFi Access secrets if enabled
+    if (unifiAccessSecret) {
+      secrets.UNIFI_ACCESS_HOST = ecs.Secret.fromSecretsManager(unifiAccessSecret, 'host');
+      secrets.UNIFI_ACCESS_USERNAME = ecs.Secret.fromSecretsManager(unifiAccessSecret, 'username');
+      secrets.UNIFI_ACCESS_PASSWORD = ecs.Secret.fromSecretsManager(unifiAccessSecret, 'password');
+    }
+
     // Backend service (mono container: backend + embedded UI)
     this.service = new ecsPatterns.ApplicationLoadBalancedFargateService(
       this,
@@ -166,11 +226,7 @@ export class BackendStack extends cdk.Stack {
           image: ecs.ContainerImage.fromEcrRepository(this.repository, 'latest'),
           containerPort: 8445,
           environment,
-          secrets: {
-            // Keycloak admin credentials from Secrets Manager
-            KEYCLOAK_ADMIN_CLIENT_ID: ecs.Secret.fromSecretsManager(keycloakAdminSecret, 'clientId'),
-            KEYCLOAK_ADMIN_CLIENT_SECRET: ecs.Secret.fromSecretsManager(keycloakAdminSecret, 'clientSecret'),
-          },
+          secrets,
         },
         
         circuitBreaker: { rollback: true },

@@ -26,6 +26,10 @@ const config = {
   hostedZoneName: app.node.tryGetContext('hostedZoneName') || 'maxhealth.tech',
   // FHIR server (optional)
   fhirServerBase: app.node.tryGetContext('fhirServerBase'),
+  // Door management (optional) - enable per provider
+  kisiEnabled: app.node.tryGetContext('kisiEnabled') === 'true',
+  kisiBaseUrl: app.node.tryGetContext('kisiBaseUrl'),
+  unifiAccessEnabled: app.node.tryGetContext('unifiAccessEnabled') === 'true',
   // Production settings
   natGateways: app.node.tryGetContext('natGateways') ? parseInt(app.node.tryGetContext('natGateways')) : 1,
   multiAzDatabase: app.node.tryGetContext('multiAzDatabase') !== 'false',
@@ -94,6 +98,9 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   domainName: config.backendDomain,
   hostedZone,
   fhirServerBase: config.fhirServerBase,
+  kisiEnabled: config.kisiEnabled,
+  kisiBaseUrl: config.kisiBaseUrl,
+  unifiAccessEnabled: config.unifiAccessEnabled,
 });
 backendStack.addDependency(keycloakStack);
 
