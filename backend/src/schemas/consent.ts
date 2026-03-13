@@ -73,6 +73,28 @@ export const ConsentConfig = t.Object({
 export type ConsentConfigType = Static<typeof ConsentConfig>
 
 /**
+ * IAL (Identity Assurance Level) configuration
+ */
+export const IalLevel = t.Union([
+  t.Literal('level1'),
+  t.Literal('level2'),
+  t.Literal('level3'),
+  t.Literal('level4')
+], { description: 'Identity Assurance Level per NIST SP 800-63-3' })
+
+export const IalConfigSchema = t.Object({
+  enabled: t.Boolean({ description: 'Whether IAL verification is enabled' }),
+  minimumLevel: IalLevel,
+  sensitiveResourceTypes: t.Array(t.String(), { description: 'Resource types requiring elevated IAL' }),
+  sensitiveMinimumLevel: IalLevel,
+  verifyPatientLink: t.Boolean({ description: 'Verify smart_patient matches Person links' }),
+  allowOnPersonLookupFailure: t.Boolean({ description: 'Allow access if Person lookup fails' }),
+  cacheTtl: t.Number({ description: 'Cache TTL for Person lookups in milliseconds' })
+}, { title: 'IalConfig' })
+
+export type IalConfigSchemaType = Static<typeof IalConfigSchema>
+
+/**
  * Consent cache statistics
  */
 export const ConsentCacheStats = t.Object({

@@ -19,6 +19,7 @@ import {
   Zap, 
   Users, 
   Shield, 
+  ShieldCheck,
   LogOut, 
   User, 
   Settings,
@@ -36,7 +37,6 @@ import {
   DoorOpen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAIChatStore } from '../stores/aiChatStore';
 
 interface NavigationProps {
   activeTab: string;
@@ -46,9 +46,8 @@ interface NavigationProps {
 
 export function Navigation({ activeTab, onTabChange, profile }: NavigationProps) {
   const logout = useAuthStore((state) => state.logout);
-  const { language: currentLanguage, setLanguage, isAIAssistantEnabled } = useAppStore();
+  const { language: currentLanguage, setLanguage } = useAppStore();
   const { theme: currentTheme, setTheme } = useTheme();
-  const { setIsOpen } = useAIChatStore();
   const { t } = useTranslation();
   const [showPreferences, setShowPreferences] = useState(false);
 
@@ -135,9 +134,9 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       icon: Server
     },
     { 
-      id: 'mcp-servers', 
-      label: t('MCP Servers'), 
-      description: t('AI Tools'),
+      id: 'ai-tools', 
+      label: t('AI Tools'), 
+      description: t('MCP Servers & Skills'),
       icon: Sparkles
     },
     { 
@@ -175,6 +174,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('User Federation'), 
       description: t('LDAP Integration'),
       icon: Users
+    },
+    { 
+      id: 'consent-monitoring', 
+      label: t('Consent'), 
+      description: t('Monitoring & Settings'),
+      icon: ShieldCheck
     },
   ];
 
@@ -335,37 +340,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
 
           {/* User Profile - Compact */}
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {/* AI Assistant - Desktop */}
-            {isAIAssistantEnabled && (
-              <div className="hidden xl:flex items-center">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsOpen(true)}
-                  className="p-0 h-auto hover:bg-transparent"
-                >
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md border border-border flex items-center justify-center cursor-pointer hover:bg-accent transition-colors"
-                  >
-                    <Sparkles className="w-3 h-3 animate-pulse" />
-                  </Badge>
-                </Button>
-              </div>
-            )}
-            
-            {/* AI Assistant - Mobile */}
-            {isAIAssistantEnabled && (
-              <div className="xl:hidden flex items-center">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsOpen(true)}
-                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-full p-0 hover:bg-muted transition-all duration-300 hover:shadow-md flex-shrink-0"
-                >
-                  <Sparkles className="w-4 h-4 text-green-600 animate-pulse" />
-                </Button>
-              </div>
-            )}
-            
+
             <DropdownMenu onOpenChange={(open) => {
               if (!open) {
                 setShowPreferences(false);

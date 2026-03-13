@@ -35,7 +35,8 @@ import type { OAuthAnalyticsTopClient } from '../lib/api-client/models/OAuthAnal
 import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatusResponse';
 import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
 import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
-import { createServerApi, createAdminApi } from '../lib/apiClient';
+import type { FhirUptimeSummary } from '../lib/api-client/models/FhirUptimeSummary';
+import { createServerApi, createAdminApi, createFhirMonitoringApi } from '../lib/apiClient';
 import { EventsPanel } from './DoorManagement/EventsPanel';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
@@ -47,6 +48,7 @@ export function OAuthMonitoringDashboard() {
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
   const [doorHealth, setDoorHealth] = useState<AccessHealthResponse | null>(null);
   const [doorEvents, setDoorEvents] = useState<AccessEvent[]>([]);
+  const [fhirUptime, setFhirUptime] = useState<FhirUptimeSummary[]>([]);
   const [isRealTimeActive, setIsRealTimeActive] = useState(true);
   const [connectionMode, setConnectionMode] = useState<'websocket' | 'sse'>('websocket');
   const [filterType, setFilterType] = useState<string>('all');
@@ -350,14 +352,17 @@ export function OAuthMonitoringDashboard() {
       const token = (await getItem<{access_token: string}>('openid_tokens'))?.access_token;
       const serverApi = createServerApi(token ?? undefined);
       const adminApi = createAdminApi(token ?? undefined);
-      const [status, acHealth, acEvents] = await Promise.allSettled([
+      const fhirMonApi = createFhirMonitoringApi(token ?? undefined);
+      const [status, acHealth, acEvents, fhirSummaries] = await Promise.allSettled([
         serverApi.getStatus(),
         adminApi.getAdminAccessControlHealth(),
         adminApi.getAdminAccessControlEvents({ limit: 5 }),
+        fhirMonApi.getMonitoringFhirSummaries(),
       ]);
       if (status.status === 'fulfilled') setSystemStatus(status.value);
       if (acHealth.status === 'fulfilled') setDoorHealth(acHealth.value);
       if (acEvents.status === 'fulfilled') setDoorEvents(acEvents.value.data ?? []);
+      if (fhirSummaries.status === 'fulfilled') setFhirUptime(fhirSummaries.value.servers ?? []);
     } catch (err) {
       console.warn('Failed to fetch system status:', err);
     }
@@ -368,6 +373,32 @@ export function OAuthMonitoringDashboard() {
     const interval = setInterval(fetchSystemStatus, 30_000);
     return () => clearInterval(interval);
   }, [fetchSystemStatus]);
+
+  // SSE subscription for real-time FHIR uptime summaries
+  useEffect(() => {
+    let es: EventSource | null = null;
+    const connect = async () => {
+      const token = (await getItem<{access_token: string}>('openid_tokens'))?.access_token;
+      if (!token) return;
+      const baseUrl = config.api.baseUrl;
+      es = new EventSource(`${baseUrl}/monitoring/fhir/summaries/stream?token=${encodeURIComponent(token)}`);
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'keepalive' || data.type === 'connection') return;
+          if (Array.isArray(data)) setFhirUptime(data);
+        } catch { /* ignore parse errors */ }
+      };
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        // Reconnect after 10s
+        setTimeout(() => connect(), 10_000);
+      };
+    };
+    connect();
+    return () => { es?.close(); };
+  }, []);
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -1527,6 +1558,89 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* FHIR Server Uptime */}
+              {fhirUptime.length > 0 && (
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Activity className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('FHIR Server Uptime')}</h4>
+                      <p className="text-xs text-muted-foreground">{t('Background health checks every 30 seconds')}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {fhirUptime.map((srv) => {
+                      const chartData = [...(srv.recentChecks ?? [])].reverse().map(c => ({
+                        time: c.timestamp,
+                        ms: c.responseTimeMs,
+                        ok: c.status === 'healthy' ? 1 : 0,
+                      }));
+
+                      return (
+                        <div key={srv.serverUrl} className="border border-border/40 rounded-xl p-4 space-y-3">
+                          {/* Header row */}
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-3">
+                              {srv.currentStatus === 'healthy' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                              {srv.currentStatus === 'degraded' && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+                              {srv.currentStatus === 'unhealthy' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                              <span className="font-semibold text-foreground">{srv.serverName}</span>
+                              <span className="text-xs text-muted-foreground font-mono">{srv.serverUrl}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <Badge className={
+                                srv.uptimePercent >= 99 ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                                : srv.uptimePercent >= 95 ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                                : 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20'
+                              }>
+                                {srv.uptimePercent.toFixed(2)}% {t('uptime')}
+                              </Badge>
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <Timer className="w-3 h-3" />
+                                {srv.avgResponseTimeMs}{t('ms avg')}
+                              </span>
+                              <span className="text-muted-foreground text-xs">
+                                {srv.checksTotal} {t('checks')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Response time chart */}
+                          {chartData.length > 1 && (
+                            <div className="h-24">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+                                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                  <XAxis dataKey="time" hide />
+                                  <YAxis width={40} tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${v}ms`} />
+                                  <Tooltip
+                                    contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                                    labelFormatter={(label) => { try { return format(new Date(String(label)), 'HH:mm:ss'); } catch { return String(label); } }}
+                                    formatter={(value) => [`${value}ms`, t('Response')]}
+                                  />
+                                  <Line type="monotone" dataKey="ms" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )}
+
+                          {/* Last error */}
+                          {srv.lastError && (
+                            <div className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400 bg-red-500/5 p-2 rounded-lg">
+                              <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                              <span>{srv.lastError}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {systemStatus && (
                 <div className="bg-card/70 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg text-xs text-muted-foreground flex items-center justify-between">

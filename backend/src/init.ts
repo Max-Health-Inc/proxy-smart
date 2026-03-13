@@ -237,6 +237,13 @@ export async function initializeServer(): Promise<void> {
     
     // Check if it's a Keycloak-related error
     if (error instanceof Error && error.message.includes('Keycloak connection verification failed')) {
+      if (process.env.NODE_ENV === 'production') {
+        logger.server.error('🔐 Keycloak connection failed in production — aborting startup')
+        logger.server.error(`   Keycloak URL: ${config.keycloak.baseUrl}`)
+        logger.server.error(`   Realm: ${config.keycloak.realm}`)
+        logger.server.error(`   JWKS: ${config.keycloak.jwksUri}`)
+        throw error
+      }
       logger.server.warn('🔐 Keycloak connection failed - server will start with limited authentication')
       logger.server.warn('')
       logger.server.warn('🔍 Keycloak troubleshooting:')

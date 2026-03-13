@@ -67,6 +67,8 @@ export interface SmartAppFormData extends CreateSmartAppRequest {
   // MCP server access control (added for Issue #189)
   mcpAccessType?: 'none' | 'all-mcp-servers' | 'selected-mcp-servers';
   allowedMcpServerNames?: string[];
+  // Skills access control
+  allowedSkillNames?: string[];
 }
 
 export interface ScopeSet {

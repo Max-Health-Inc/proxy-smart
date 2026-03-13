@@ -8,6 +8,7 @@ import { statusRoutes } from './routes/status'
 import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
+import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { aiRoutes, aiPublicRoutes } from './routes/admin/ai'
@@ -157,6 +158,7 @@ const app = new Elysia({
   .use(adminRoutes)
   .use(oauthMonitoringRoutes)
   .use(oauthWebSocket)
+  .use(fhirMonitoringRoutes)
   .use(aiPublicRoutes) // Public AI health checks (no auth)
   .use(aiRoutes) // Protected AI routes (with auth)
   .use(fhirRoutes)

@@ -51,8 +51,6 @@ on:
         required: false
       DISCORD_WEBHOOK_URL:
         required: false
-      FLY_API_TOKEN:
-        required: false
       VPS_SSH_KEY:
         required: false
       VPS_HOST:
@@ -150,7 +148,7 @@ jobs:
     uses: ./.github/workflows/build-and-test.yml
     with:
       run_tests: true
-      fail_on_test_failure: false
+      fail_on_test_failure: true
 
   # Create GitHub release
   release:

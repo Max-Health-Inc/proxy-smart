@@ -51,8 +51,8 @@ export const keycloakPlugin = new Elysia()
         )
       
       // Check if user has admin access to manage users
-      // In development, we'll be more permissive
-      const isDevelopment = process.env.NODE_ENV !== 'production'
+      // Only bypass in development when explicitly opted in
+      const isDevelopment = process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true'
       
       if (!hasAdminRole) {
         logger.auth.warn('User does not have admin permissions', { 

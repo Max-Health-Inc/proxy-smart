@@ -195,7 +195,7 @@ export class BaseAPI {
         for (const middleware of this.middleware) {
             if (middleware.pre) {
                 fetchParams = await middleware.pre({
-                    fetch: this.fetchApi,
+                    fetch: this.fetchApi as FetchAPI,
                     ...fetchParams,
                 }) || fetchParams;
             }
@@ -207,7 +207,7 @@ export class BaseAPI {
             for (const middleware of this.middleware) {
                 if (middleware.onError) {
                     response = await middleware.onError({
-                        fetch: this.fetchApi,
+                        fetch: this.fetchApi as FetchAPI,
                         url: fetchParams.url,
                         init: fetchParams.init,
                         error: e,
@@ -226,7 +226,7 @@ export class BaseAPI {
         for (const middleware of this.middleware) {
             if (middleware.post) {
                 response = await middleware.post({
-                    fetch: this.fetchApi,
+                    fetch: this.fetchApi as FetchAPI,
                     url: fetchParams.url,
                     init: fetchParams.init,
                     response: response.clone(),
@@ -284,7 +284,7 @@ export const COLLECTION_FORMATS = {
     pipes: "|",
 };
 
-export type FetchAPI = WindowOrWorkerGlobalScope['fetch'];
+export type FetchAPI = typeof globalThis.fetch;
 
 export type Json = any;
 export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS' | 'HEAD';

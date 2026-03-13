@@ -126,7 +126,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // Login page redirect - provides a simple login endpoint for UIs
   .get('/login', ({ query, redirect }) => {
-    const state = query.state || Math.random().toString(36).substring(2, 15)
+    const state = query.state || crypto.randomUUID()
     const clientId = query.client_id || 'admin-ui'
     const redirectUri = query.redirect_uri || `${config.baseUrl}/`
     const scope = query.scope || 'openid profile email'
@@ -160,7 +160,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // Logout endpoint - proxy to Keycloak logout
   .get('/logout', ({ query, redirect }) => {
-    logger.auth.debug('Logout endpoint called', { query })
+    logger.auth.debug('Logout endpoint called', { post_logout_redirect_uri: query.post_logout_redirect_uri })
 
     const postLogoutRedirectUri = query.post_logout_redirect_uri || `${config.baseUrl}/`
 

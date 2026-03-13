@@ -9,6 +9,8 @@ import { statusRoutes } from './routes/status'
 import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
+import { consentMonitoringRoutes } from './routes/consent-monitoring'
+import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
@@ -57,6 +59,8 @@ export function createApp() {
                     { name: 'oauth-sse-monitoring', description: 'OAuth monitoring via Server-Sent Events' },
                     { name: 'ai', description: 'AI assistant endpoints with unified internal and MCP tools' },
                     { name: 'mcp-management', description: 'MCP server management endpoints' },
+                    { name: 'consent-monitoring', description: 'Consent decision monitoring and analytics' },
+                    { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
                 ],
                 servers: [
                     { url: config.baseUrl, description: 'Development server' }
@@ -80,6 +84,8 @@ export function createApp() {
         .use(adminRoutes)
         .use(oauthMonitoringRoutes)
         .use(oauthWebSocket)
+        .use(consentMonitoringRoutes)
+        .use(fhirMonitoringRoutes)
         .use(fhirRoutes)
 
     return app

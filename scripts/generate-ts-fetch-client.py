@@ -79,6 +79,18 @@ def operation_id(method: str, path: str, op: dict) -> str:
     return camel(method + ''.join(cleaned))
 
 
+# ─── OpenAPI 3.1 type normalization ──────────────────────────────────────────────
+
+def norm_type(schema: dict) -> tuple[str | None, bool]:
+    """Normalize OpenAPI 3.1 type arrays like ["array", "null"]. Returns (type_str, nullable)."""
+    raw = schema.get('type')
+    if isinstance(raw, list):
+        non_null = [t for t in raw if t != 'null']
+        nullable = len(non_null) < len(raw)
+        return (non_null[0] if non_null else 'null'), nullable
+    return raw, schema.get('nullable', False) or raw == 'null'
+
+
 # ─── Schema registry with dedup & nested extraction ─────────────────────────────
 
 class SchemaRegistry:
@@ -188,14 +200,17 @@ class SchemaRegistry:
 
                 child_name = parent_name + pascal(pname)
 
+                ptype, _ = norm_type(pschema)
+
                 # Object property with properties → extract as separate model
-                if pschema.get('type') == 'object' and pschema.get('properties'):
+                if ptype == 'object' and pschema.get('properties'):
                     self.register_schema(pschema, child_name)
 
                 # Array property with object items → extract with "Inner" suffix
-                elif pschema.get('type') == 'array':
+                elif ptype == 'array':
                     items = pschema.get('items', {})
-                    if isinstance(items, dict) and items.get('type') == 'object' and items.get('properties'):
+                    item_type, _ = norm_type(items) if isinstance(items, dict) else (None, False)
+                    if isinstance(items, dict) and item_type == 'object' and items.get('properties'):
                         self.register_schema(items, child_name + 'Inner')
 
                 # anyOf/oneOf with embedded objects
@@ -237,8 +252,7 @@ class SchemaRegistry:
                     ts += ' | null'
                 return ts
 
-        schema_type = schema.get('type')
-        nullable = schema.get('nullable', False) or schema_type == 'null'
+        schema_type, nullable = norm_type(schema)
 
         # Enum values
         if 'enum' in schema:
@@ -385,7 +399,7 @@ def gen_model(name: str, schema: dict, registry: SchemaRegistry, header: str) ->
             lines.append(f' */')
             lines.append(f'export const {enum_name} = {{')
             for val in pschema['enum']:
-                key = pascal(str(val))
+                key = safe_id(pascal(str(val)))
                 lines.append(f"    {key}: '{val}'," if isinstance(val, str) else f"    {key}: {json.dumps(val)},")
             lines.append('} as const;')
             lines.append(f'export type {enum_name} = typeof {enum_name}[keyof typeof {enum_name}];')
@@ -467,12 +481,14 @@ def _from_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry,
             return f"{model}FromJSON(json['{pname}'])"
         return f"json['{pname}'] == null ? undefined : {model}FromJSON(json['{pname}'])"
 
-    if schema.get('type') == 'array':
+    stype, _ = norm_type(schema)
+    if stype == 'array':
         items = schema.get('items', {})
         item_model = _resolve_model_type(items, '', registry)
         if not item_model:
             # Check by canonical form
-            if isinstance(items, dict) and items.get('type') == 'object' and items.get('properties'):
+            itype, _ = norm_type(items) if isinstance(items, dict) else (None, False)
+            if isinstance(items, dict) and itype == 'object' and items.get('properties'):
                 canon = registry._canonical(items)
                 item_model = registry._canon_map.get(canon)
         if item_model:
@@ -495,11 +511,13 @@ def _to_json(pname: str, schema: dict, ts_type: str, registry: SchemaRegistry, p
     if model:
         return f"{model}ToJSON(value['{cn}'])"
 
-    if schema.get('type') == 'array':
+    stype, _ = norm_type(schema)
+    if stype == 'array':
         items = schema.get('items', {})
         item_model = _resolve_model_type(items, '', registry)
         if not item_model:
-            if isinstance(items, dict) and items.get('type') == 'object' and items.get('properties'):
+            itype, _ = norm_type(items) if isinstance(items, dict) else (None, False)
+            if isinstance(items, dict) and itype == 'object' and items.get('properties'):
                 canon = registry._canonical(items)
                 item_model = registry._canon_map.get(canon)
         if item_model:
@@ -721,7 +739,11 @@ HEADER_TPL = '''/* tslint:disable */
 def generate(spec_path: str, output_dir: str):
     """Main entry: read spec, walk operations, generate files."""
     with open(spec_path, 'r', encoding='utf-8') as f:
-        spec = json.load(f)
+        if spec_path.endswith(('.yaml', '.yml')):
+            import yaml
+            spec = yaml.safe_load(f)
+        else:
+            spec = json.load(f)
 
     info = spec.get('info', {})
     title = info.get('title', 'API')
@@ -800,7 +822,8 @@ def generate(spec_path: str, output_dir: str):
                     ctx = f'{op_pascal}{resp_code or ""}Response'
                 resp_type = registry.ts_type(resp_schema, ctx)
                 refs |= model_refs(resp_type, registry)
-                if resp_schema.get('type') == 'array':
+                resp_type_str, _ = norm_type(resp_schema)
+                if resp_type_str == 'array':
                     resp_array = True
                     items = resp_schema.get('items', {})
                     item_ctx = items.get('title') if isinstance(items.get('title'), str) else None

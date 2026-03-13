@@ -56,7 +56,10 @@ export const SmartApp = t.Object({
     t.Literal('all-mcp-servers'),
     t.Literal('selected-mcp-servers')
   ], { description: 'MCP server access control type' })),
-  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' }))
+  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
+  
+  // Skills access control
+  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' }))
 }, { title: 'SmartApp' })
 
 export const CreateSmartAppRequest = t.Object({
@@ -105,7 +108,10 @@ export const CreateSmartAppRequest = t.Object({
     t.Literal('all-mcp-servers'),
     t.Literal('selected-mcp-servers')
   ], { description: 'MCP server access control type (none = no MCP access, all-mcp-servers = access all, selected-mcp-servers = specific servers only)' })),
-  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' }))
+  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
+  
+  // Skills access control
+  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' }))
 }, { title: 'CreateSmartAppRequest' })
 
 export const UpdateSmartAppRequest = t.Object({
@@ -154,7 +160,10 @@ export const UpdateSmartAppRequest = t.Object({
     t.Literal('all-mcp-servers'),
     t.Literal('selected-mcp-servers')
   ], { description: 'MCP server access control type' })),
-  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names' }))
+  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names' })),
+  
+  // Skills access control
+  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' }))
 }, { title: 'UpdateSmartAppRequest' })
 
 export const ClientIdParam = t.Object({

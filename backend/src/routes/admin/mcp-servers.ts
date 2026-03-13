@@ -2,6 +2,10 @@ import { Elysia, t } from 'elysia'
 import { logger } from '../../lib/logger'
 import { ErrorResponse } from '../../schemas'
 import { validateToken } from '@/lib/auth'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { join } from 'path'
+import { Configuration, ServersApi } from '../../lib/mcp-registry-client'
+import { checkMcpHealth, listMcpTools } from '../../lib/mcp-client'
 
 /**
  * MCP Server Management Endpoints
@@ -81,8 +85,38 @@ type McpServerToolsResponseType = typeof McpServerToolsResponse.static
 type McpServerCreateType = typeof McpServerCreate.static
 type McpServerUpdateType = typeof McpServerUpdate.static
 
-// In-memory storage for dynamically added servers
-const dynamicServers = new Map<string, { url: string; description?: string }>()
+// ─── File-backed MCP server persistence ─────────────────────────────
+
+interface McpServerEntry { url: string; description?: string }
+
+const MCP_JSON_PATH = join(process.cwd(), 'mcp.json')
+
+function loadDynamicServers(): Map<string, McpServerEntry> {
+  try {
+    if (!existsSync(MCP_JSON_PATH)) return new Map()
+    const raw = readFileSync(MCP_JSON_PATH, 'utf-8')
+    const data = JSON.parse(raw)
+    if (!data || typeof data.servers !== 'object') return new Map()
+    return new Map(Object.entries(data.servers as Record<string, McpServerEntry>))
+  } catch (error) {
+    logger.server.warn('Failed to load mcp.json, starting with empty server list', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+    return new Map()
+  }
+}
+
+function saveDynamicServers(servers: Map<string, McpServerEntry>): void {
+  const data = {
+    $schema: 'mcp-servers-runtime',
+    updatedAt: new Date().toISOString(),
+    servers: Object.fromEntries(servers)
+  }
+  writeFileSync(MCP_JSON_PATH, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// Load once at module init, write-through on every mutation
+const dynamicServers = loadDynamicServers()
 
 // In-memory cache of server statuses
 const serverStatusCache = new Map<string, {
@@ -93,19 +127,21 @@ const serverStatusCache = new Map<string, {
 }>()
 
 /**
- * Get configured MCP servers
+ * Get configured MCP servers (env + dynamically added via UI)
  */
-function getConfiguredServers(): Array<{ name: string; url: string; type: 'internal' | 'external' | 'generated'; description?: string }> {
+export function getConfiguredServers(): Array<{ name: string; url: string; type: 'internal' | 'external' | 'generated'; description?: string }> {
   const servers: Array<{ name: string; url: string; type: 'internal' | 'external' | 'generated'; description?: string }> = []
   
-  // Generated MCP server (Python FastMCP exposing backend API)
-  const generatedMcpUrl = process.env.GENERATED_MCP_URL || 'http://localhost:8081'
-  servers.push({
-    name: 'generated-backend',
-    url: generatedMcpUrl,
-    type: 'generated',
-    description: 'Auto-generated MCP server exposing backend API routes as tools'
-  })
+  // Generated MCP server (Python FastMCP exposing backend API) — only if explicitly configured
+  const generatedMcpUrl = process.env.GENERATED_MCP_URL
+  if (generatedMcpUrl) {
+    servers.push({
+      name: 'generated-backend',
+      url: generatedMcpUrl,
+      type: 'generated',
+      description: 'Auto-generated MCP server exposing backend API routes as tools'
+    })
+  }
 
   // External MCP servers from environment
   const externalServers = process.env.EXTERNAL_MCP_SERVERS
@@ -143,68 +179,10 @@ function getConfiguredServers(): Array<{ name: string; url: string; type: 'inter
 }
 
 /**
- * Check MCP server health
+ * Check MCP server health using the official MCP SDK client
  */
-async function checkServerHealth(url: string, timeout = 5000): Promise<{
-  status: 'healthy' | 'unhealthy' | 'unreachable'
-  responseTime?: number
-  toolCount?: number
-  error?: string
-}> {
-  const startTime = Date.now()
-  
-  try {
-    // Try to call the actual MCP endpoint (listTools) to verify it's a real MCP server
-    const toolsResponse = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'listTools' }),
-      signal: AbortSignal.timeout(timeout)
-    })
-    
-    const responseTime = Date.now() - startTime
-    
-    if (!toolsResponse.ok) {
-      return {
-        status: 'unhealthy',
-        responseTime,
-        error: `HTTP ${toolsResponse.status}: ${toolsResponse.statusText}`
-      }
-    }
-    
-    // Try to parse the response to verify it's actually an MCP server
-    let toolCount: number | undefined
-    try {
-      const data = await toolsResponse.json() as { tools?: unknown[] }
-      if (data.tools && Array.isArray(data.tools)) {
-        toolCount = data.tools.length
-      } else {
-        // Response doesn't look like an MCP server
-        return {
-          status: 'unhealthy',
-          responseTime,
-          error: 'Server responded but not with valid MCP protocol'
-        }
-      }
-    } catch (parseError) {
-      return {
-        status: 'unhealthy',
-        responseTime,
-        error: `Invalid MCP response: ${parseError instanceof Error ? parseError.message : String(parseError)}`
-      }
-    }
-    
-    return {
-      status: 'healthy',
-      responseTime,
-      toolCount
-    }
-  } catch (error) {
-    return {
-      status: 'unreachable',
-      error: error instanceof Error ? error.message : String(error)
-    }
-  }
+async function checkServerHealth(url: string, timeout = 5000) {
+  return checkMcpHealth(url, timeout)
 }
 
 export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp-management'] })
@@ -409,23 +387,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     try {
-      const response = await fetch(server.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'listTools' }),
-        signal: AbortSignal.timeout(10000)
-      })
-      
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}: ${response.statusText}`)
-      }
-      
-      const data = await response.json() as { tools?: Array<{ function: { name: string; description: string; parameters: Record<string, unknown> } }> }
-      const tools = (data.tools || []).map(tool => ({
-        name: tool.function.name,
-        description: tool.function.description,
-        parameters: tool.function.parameters
-      }))
+      const tools = await listMcpTools(server.url)
       
       return {
         server: name,
@@ -547,8 +509,9 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       throw new Error('Invalid URL format')
     }
     
-    // Add to dynamic servers
+    // Add to dynamic servers and persist
     dynamicServers.set(name, { url, description })
+    saveDynamicServers(dynamicServers)
     
     // Check initial health
     const health = await checkServerHealth(url)
@@ -626,6 +589,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     dynamicServers.set(name, existing)
+    saveDynamicServers(dynamicServers)
     
     // Re-check health
     const health = await checkServerHealth(existing.url)
@@ -687,6 +651,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     dynamicServers.delete(name)
+    saveDynamicServers(dynamicServers)
     serverStatusCache.delete(name)
     
     logger.server.info('Deleted MCP server', { name })
@@ -708,6 +673,113 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       }),
       401: ErrorResponse,
       404: ErrorResponse,
+      500: ErrorResponse
+    }
+  })
+
+  /**
+   * Search the public MCP Registry for servers
+   * Uses the generated typed client from the official MCP Registry OpenAPI spec
+   */
+  .get('/registry/search', async ({ headers, query }): Promise<{
+    servers: Array<{
+      name: string
+      title?: string
+      description: string
+      version: string
+      url: string
+      transport: string
+      websiteUrl?: string
+      publishedAt?: string
+    }>
+    total: number
+    hasMore: boolean
+  }> => {
+    // Validate authentication
+    const authHeader = headers['authorization']
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw new Error('Unauthorized')
+    }
+
+    const token = authHeader.substring(7)
+    await validateToken(token)
+
+    const searchQuery = (query as { q?: string; cursor?: string; limit?: string }).q || ''
+    const cursor = (query as { cursor?: string }).cursor
+    const limit = Math.min(parseInt((query as { limit?: string }).limit || '50', 10), 100)
+
+    const registryBaseUrl = process.env.MCP_REGISTRY_URL || 'https://registry.modelcontextprotocol.io'
+    const registryClient = new ServersApi(new Configuration({ basePath: registryBaseUrl }))
+
+    try {
+      const data = await registryClient.listServersV01({
+        search: searchQuery || undefined,
+        version: 'latest',
+        limit,
+        cursor: cursor || undefined,
+      }, { signal: AbortSignal.timeout(10000) })
+
+      // Filter to only servers with streamable-http remotes
+      const streamableServers = (data.servers ?? [])
+        .filter(entry => entry.server.remotes?.some(r => r.type === 'streamable-http'))
+        .map(entry => {
+          const remote = entry.server.remotes!.find(r => r.type === 'streamable-http')!
+          return {
+            name: entry.server.name,
+            title: entry.server.title,
+            description: entry.server.description,
+            version: entry.server.version,
+            url: remote.url!,
+            transport: 'streamable-http',
+            websiteUrl: entry.server.websiteUrl,
+            publishedAt: entry.meta?.io_modelcontextprotocol_registry_official?.publishedAt
+          }
+        })
+
+      logger.server.info('MCP registry search completed', {
+        query: searchQuery,
+        totalFromRegistry: data.servers?.length ?? 0,
+        streamableCount: streamableServers.length
+      })
+
+      return {
+        servers: streamableServers,
+        total: streamableServers.length,
+        hasMore: !!data.metadata.nextCursor
+      }
+    } catch (error) {
+      logger.server.error('Failed to search MCP registry', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+      throw error
+    }
+  }, {
+    query: t.Object({
+      q: t.Optional(t.String({ description: 'Search query' })),
+      cursor: t.Optional(t.String({ description: 'Pagination cursor' })),
+      limit: t.Optional(t.String({ description: 'Max results (default 50, max 100)' }))
+    }),
+    detail: {
+      summary: 'Search public MCP registry',
+      description: 'Search the official MCP registry (registry.modelcontextprotocol.io) for servers with streamable-http transport, suitable for direct connection.',
+      tags: ['mcp-management']
+    },
+    response: {
+      200: t.Object({
+        servers: t.Array(t.Object({
+          name: t.String(),
+          title: t.Optional(t.String()),
+          description: t.String(),
+          version: t.String(),
+          url: t.String(),
+          transport: t.String(),
+          websiteUrl: t.Optional(t.String()),
+          publishedAt: t.Optional(t.String())
+        })),
+        total: t.Number(),
+        hasMore: t.Boolean()
+      }),
+      401: ErrorResponse,
       500: ErrorResponse
     }
   })

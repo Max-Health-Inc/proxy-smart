@@ -1,5 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
+import { extractBearerToken } from '@/lib/admin-utils'
+import { validateToken } from '@/lib/auth'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
@@ -11,6 +13,7 @@ import { clientRegistrationSettingsRoutes } from './client-registration-settings
 import { keycloakConfigRoutes } from './keycloak-config'
 import { aiRoutes, aiPublicRoutes } from './ai'
 import { mcpServersRoutes } from './mcp-servers'
+import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
@@ -29,8 +32,11 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     }
   })
   // Operational: Shutdown server
-  .post('/shutdown', async ({ set }) => {
+  .post('/shutdown', async ({ set, headers }) => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+      await validateToken(token)
       logger.server.info('🛑 Shutdown requested via admin API')
       setTimeout(() => {
         logger.server.info('🛑 Shutting down server...')
@@ -53,8 +59,11 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     }
   })
   // Operational: Restart server
-  .post('/restart', async ({ set }) => {
+  .post('/restart', async ({ set, headers }) => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+      await validateToken(token)
       logger.server.info('🔄 Restart requested via admin API')
       setTimeout(() => {
         logger.server.info('🔄 Restarting server...')
@@ -86,6 +95,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(keycloakConfigRoutes)
   // MCP servers management
   .use(mcpServersRoutes)
+  // AI Tools — Skills management
+  .use(aiToolsSkillsRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
   // Physical access control (Kisi / UniFi Access)

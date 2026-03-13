@@ -5,3 +5,5 @@ Never write fetch functions in the frontend, always generate from openapi backen
 check in package.json how to generate client apis in doubt
 
 follow the concept of DRY! and use existing code patterns
+
+mind that we use ui\src\i18n\translations

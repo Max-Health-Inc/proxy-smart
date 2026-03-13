@@ -48,6 +48,11 @@ const createEmptyFormData = (): IdentityProviderFormData => ({
   enabled: true,
   config: createDefaultConfig(),
   vendorName: '',
+  firstBrokerLoginFlowAlias: 'first broker login',
+  postBrokerLoginFlowAlias: '',
+  trustEmail: false,
+  linkOnly: false,
+  hideOnLogin: false,
 });
 
 const sanitizeConfig = (config: IdentityProviderConfig): IdentityProviderConfig => {
@@ -93,6 +98,11 @@ const formDataFromStats = (provider: IdentityProviderWithStats): IdentityProvide
     ...((provider.config as IdentityProviderConfig) ?? {}),
   },
   vendorName: provider.vendorName,
+  firstBrokerLoginFlowAlias: provider.firstBrokerLoginFlowAlias ?? 'first broker login',
+  postBrokerLoginFlowAlias: provider.postBrokerLoginFlowAlias ?? '',
+  trustEmail: provider.trustEmail ?? false,
+  linkOnly: provider.linkOnly ?? false,
+  hideOnLogin: provider.hideOnLogin ?? false,
 });
 
 export function IdPManager() {
@@ -153,6 +163,11 @@ export function IdPManager() {
           displayName: formData.displayName?.trim() || undefined,
           enabled: formData.enabled,
           config: sanitizeConfig(configWithDisplayName),
+          firstBrokerLoginFlowAlias: formData.firstBrokerLoginFlowAlias || undefined,
+          postBrokerLoginFlowAlias: formData.postBrokerLoginFlowAlias || undefined,
+          trustEmail: formData.trustEmail,
+          linkOnly: formData.linkOnly,
+          hideOnLogin: formData.hideOnLogin,
         };
 
         await clientApis.identityProviders.postAdminIdps({
@@ -204,6 +219,11 @@ export function IdPManager() {
           displayName: updatedIdp.displayName,
           enabled: updatedIdp.enabled,
           config: Object.keys(sanitizedConfig).length ? sanitizedConfig : undefined,
+          firstBrokerLoginFlowAlias: updatedIdp.firstBrokerLoginFlowAlias || undefined,
+          postBrokerLoginFlowAlias: updatedIdp.postBrokerLoginFlowAlias || undefined,
+          trustEmail: updatedIdp.trustEmail,
+          linkOnly: updatedIdp.linkOnly,
+          hideOnLogin: updatedIdp.hideOnLogin,
         };
 
         await clientApis.identityProviders.putAdminIdpsByAlias({

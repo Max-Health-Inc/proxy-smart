@@ -345,6 +345,73 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
               )}
             </div>
           </div>
+
+          {/* Identity Linking */}
+          <div className="mt-6 pt-4 border-t border-border/50">
+            <h5 className="text-md font-semibold text-foreground mb-2">Identity Linking</h5>
+            <p className="text-sm text-muted-foreground mb-4">
+              Controls how Keycloak links accounts when a user logs in via this provider for the first time.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-3">
+                <Label htmlFor="firstBrokerLoginFlowAlias" className="text-sm font-semibold text-foreground">First Broker Login Flow</Label>
+                <Input
+                  id="firstBrokerLoginFlowAlias"
+                  placeholder="first broker login"
+                  value={newIdp.firstBrokerLoginFlowAlias ?? ''}
+                  onChange={(e) => setNewIdp((prev) => ({ ...prev, firstBrokerLoginFlowAlias: e.target.value }))}
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
+                />
+                <p className="text-xs text-muted-foreground">Authentication flow triggered on first login via this IdP.</p>
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="postBrokerLoginFlowAlias" className="text-sm font-semibold text-foreground">Post Broker Login Flow</Label>
+                <Input
+                  id="postBrokerLoginFlowAlias"
+                  placeholder="(optional)"
+                  value={newIdp.postBrokerLoginFlowAlias ?? ''}
+                  onChange={(e) => setNewIdp((prev) => ({ ...prev, postBrokerLoginFlowAlias: e.target.value }))}
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
+                />
+                <p className="text-xs text-muted-foreground">Authentication flow triggered after every broker login.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="trustEmail"
+                  checked={newIdp.trustEmail ?? false}
+                  onCheckedChange={(checked) => setNewIdp((prev) => ({ ...prev, trustEmail: checked === true }))}
+                />
+                <div>
+                  <Label htmlFor="trustEmail" className="text-sm text-foreground">Trust Email</Label>
+                  <p className="text-xs text-muted-foreground">Auto-verify email from this IdP and use it for account linking.</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="linkOnly"
+                  checked={newIdp.linkOnly ?? false}
+                  onCheckedChange={(checked) => setNewIdp((prev) => ({ ...prev, linkOnly: checked === true }))}
+                />
+                <div>
+                  <Label htmlFor="linkOnly" className="text-sm text-foreground">Link Only</Label>
+                  <p className="text-xs text-muted-foreground">Only link to existing accounts, never create new users.</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="hideOnLogin"
+                  checked={newIdp.hideOnLogin ?? false}
+                  onCheckedChange={(checked) => setNewIdp((prev) => ({ ...prev, hideOnLogin: checked === true }))}
+                />
+                <div>
+                  <Label htmlFor="hideOnLogin" className="text-sm text-foreground">Hide on Login Page</Label>
+                  <p className="text-xs text-muted-foreground">Hide this IdP from the Keycloak login page.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex gap-4 pt-4">
           <Button 

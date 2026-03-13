@@ -92,12 +92,12 @@ jobs:
           cat > backend/.env << ENVEOF
           NODE_ENV=beta
           VERSION=${{ inputs.app_version }}
-          BASE_URL=https://beta.proxy-smart.your-domain.com
+          BASE_URL=${BASE_URL:?Set BASE_URL}
           PORT=3002
-          FHIR_SERVER_BASE=https://hapi.fhir.org/baseR4
-          KEYCLOAK_BASE_URL=https://auth-beta.proxy-smart.your-domain.com
+          FHIR_SERVER_BASE=${FHIR_SERVER_BASE:-https://hapi.fhir.org/baseR4}
+          KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL:?Set KEYCLOAK_BASE_URL}
           KEYCLOAK_REALM=proxy-smart
-          DATABASE_URL=postgresql://proxyuser:secure_password@localhost:5432/proxy_smart_beta
+          DATABASE_URL=${DATABASE_URL:?Set DATABASE_URL}
           ENVEOF
           
           # Restart services

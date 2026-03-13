@@ -61,8 +61,8 @@ Then open:
 | Service | URL |
 |---|---|
 | Admin UI | http://localhost:3000 |
-| Backend API | http://localhost:8080 |
-| Keycloak | http://localhost:8090 |
+| Backend API | http://localhost:8445 |
+| Keycloak | http://localhost:8080 |
 
 See the [Getting Started Guide](docs/tutorials/getting-started.md) for initial configuration.
 

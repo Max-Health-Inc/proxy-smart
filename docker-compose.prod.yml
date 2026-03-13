@@ -12,7 +12,7 @@ services:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: postgres
-      KC_DB_PASSWORD: postgres
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?Set KC_DB_PASSWORD}
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true
       KC_METRICS_ENABLED: true
@@ -32,7 +32,7 @@ services:
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./keycloak/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -59,7 +59,7 @@ services:
       KEYCLOAK_REALM: proxy-smart
       KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
-      KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
       FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly # Multiple FHIR servers can be specified, separated by commas
     ports:
       - "8445:8445"

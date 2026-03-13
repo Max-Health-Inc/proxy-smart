@@ -837,6 +837,29 @@ export function SmartAppsManager() {
                 </CardContent>
               </Card>
 
+              {/* Skills Access Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm">Skills (AI Knowledge Packages)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {(editingApp.allowedSkillNames && editingApp.allowedSkillNames.length > 0) ? (
+                      <div>
+                        <div className="text-xs font-medium mb-1">Assigned Skills:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {editingApp.allowedSkillNames.map((name, i) => (
+                            <Badge key={i} variant="outline" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">{name}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No skills assigned</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               <div className="flex justify-end pt-4">
                 <Button onClick={() => setShowConfigDialog(false)}>Close</Button>
               </div>

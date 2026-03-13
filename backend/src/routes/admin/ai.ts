@@ -26,6 +26,7 @@ import { typeboxToZod } from '@/lib/schemas/typebox-to-zod'
 import { validateToken } from '@/lib/auth'
 import type { JwtPayload } from 'jsonwebtoken'
 import { config } from '@/config'
+import { getConfiguredServers } from './mcp-servers'
 
 // Keycloak-flavored OIDC JWT payload shape (subset)
 type KeycloakJwtPayload = JwtPayload & {
@@ -103,34 +104,10 @@ async function loadSystemPrompt(reqId?: string): Promise<string> {
 }
 
 /**
- * Get configured external MCP servers
+ * Get all configured MCP servers (env + dynamically added via UI)
  */
 function getConfiguredMcpServers(): Array<{ name: string; url: string }> {
-  const servers: Array<{ name: string; url: string }> = []
-  
-  // External MCP servers from environment (user-configured)
-  const externalServersEnv = process.env.EXTERNAL_MCP_SERVERS
-  if (externalServersEnv) {
-    try {
-      const externalServers = JSON.parse(externalServersEnv)
-      if (Array.isArray(externalServers)) {
-        for (const server of externalServers) {
-          if (server.name && server.url) {
-            servers.push({
-              name: server.name,
-              url: server.url
-            })
-          }
-        }
-      }
-    } catch (error) {
-      logger.server.warn('Failed to parse EXTERNAL_MCP_SERVERS', {
-        error: error instanceof Error ? error.message : String(error)
-      })
-    }
-  }
-  
-  return servers
+  return getConfiguredServers().map(s => ({ name: s.name, url: s.url }))
 }
 
 /**

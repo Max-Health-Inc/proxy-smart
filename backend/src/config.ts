@@ -214,7 +214,7 @@ export const config = {
       const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) || [];
       
       // In development mode, allow all localhost origins
-      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV === 'development') {
         const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
         return allOrigins.filter(Boolean);
       }

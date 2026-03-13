@@ -23,6 +23,7 @@ import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
+import { ConsentMonitoringDashboard } from './ConsentMonitoringDashboard';
 
 // Valid tab routes
 const VALID_TABS = [
@@ -30,13 +31,14 @@ const VALID_TABS = [
     'smart-apps',
     'users',
     'fhir-servers',
-    'mcp-servers',
+    'ai-tools',
     'idp',
     'scopes',
     'launch-context',
     'oauth-monitoring',
     'door-management',
-    'user-federation'
+    'user-federation',
+    'consent-monitoring'
 ] as const;
 
 type ValidTab = typeof VALID_TABS[number];
@@ -174,13 +176,14 @@ export function AdminApp() {
                             {currentTab === 'smart-apps' && <SmartAppsManager />}
                             {currentTab === 'users' && <HealthcareUsersManager />}
                             {currentTab === 'fhir-servers' && <FhirServersManager />}
-                            {currentTab === 'mcp-servers' && <McpServersManager />}
+                            {currentTab === 'ai-tools' && <McpServersManager />}
                             {currentTab === 'idp' && <IdPManager />}
                             {currentTab === 'scopes' && <ScopeManager />}
                             {currentTab === 'launch-context' && <LaunchContextManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'user-federation' && <UserFederationManager />}
+                            {currentTab === 'consent-monitoring' && <ConsentMonitoringDashboard />}
                         </Panel>
                     </div>
                 </div>

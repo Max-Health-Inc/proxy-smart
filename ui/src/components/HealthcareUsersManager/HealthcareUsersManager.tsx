@@ -10,6 +10,7 @@ import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } fr
 import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
+import { IALSettings } from '../IALSettings';
 
 // Extend the API type to include our UI-specific computed properties
 type HealthcareUserWithPersons = HealthcareUser & {
@@ -387,6 +388,9 @@ export function HealthcareUsersManager() {
       )}
 
       {/* Add FHIR Person Modal */}
+      {/* ─── IAL Settings (Identity Assurance) ─── */}
+      <IALSettings />
+
       {selectedUserForPerson && (() => {
         const mappedServers = fhirServers.map(server => ({
           id: server.id,
