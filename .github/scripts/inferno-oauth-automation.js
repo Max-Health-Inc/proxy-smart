@@ -360,6 +360,14 @@ async function waitForSimpleTestCompletion(sessionId, runId, browser = null) {
     // Handle waiting status (OAuth required)
     if (runStatus.status === 'waiting' && browser && !oauthAttempted && oauthAttemptCount < MAX_OAUTH_ATTEMPTS) {
       oauthAttemptCount++;
+      
+      // Exponential backoff between retry attempts (0s, 15s, 30s)
+      if (oauthAttemptCount > 1) {
+        const backoffMs = (oauthAttemptCount - 1) * 15000;
+        console.log(`  Waiting ${backoffMs / 1000}s before OAuth retry (backoff)...`);
+        await sleep(backoffMs);
+      }
+      
       console.log(`  Test is waiting for user action (OAuth flow, attempt ${oauthAttemptCount}/${MAX_OAUTH_ATTEMPTS})...`);
       
       // Look for OAuth redirect URL in the waiting results
@@ -609,6 +617,23 @@ async function main() {
   try {
     // Wait for Inferno to be ready
     await waitForInferno();
+    
+    // Pre-flight warm-up: ensure FHIR server and auth endpoints are responsive
+    // (Northflank services may have gone cold during CI tool setup)
+    if (FHIR_SERVER_URL.startsWith('https')) {
+      console.log('Pre-flight warm-up (deployed mode)...');
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const fhirResp = await fetch(`${FHIR_SERVER_URL}/metadata`);
+          console.log(`  FHIR /metadata: ${fhirResp.status} (attempt ${attempt})`);
+          if (fhirResp.ok) break;
+        } catch (e) {
+          console.log(`  FHIR /metadata: ${e.message} (attempt ${attempt})`);
+        }
+        if (attempt < 3) await sleep(5000);
+      }
+      console.log('');
+    }
     
     // Launch browser for OAuth automation
     console.log('Launching headless Chromium for OAuth automation...');
