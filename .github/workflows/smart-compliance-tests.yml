@@ -428,22 +428,38 @@ jobs:
           echo "Keycloak: $KC_URL"
           echo "Realm: $KC_REALM"
           
-          # Check backend health
+          # Check backend health (with retries — Northflank may be cold-starting)
           echo "Checking backend health..."
-          if curl -sf "$BACKEND_URL/health" > /dev/null 2>&1; then
-            echo "✓ Backend is healthy"
-          else
-            echo "ERROR: Backend not reachable at $BACKEND_URL/health"
+          BACKEND_OK=false
+          for i in $(seq 1 20); do
+            if curl -sf --max-time 10 "$BACKEND_URL/health" > /dev/null 2>&1; then
+              echo "✓ Backend is healthy (attempt $i)"
+              BACKEND_OK=true
+              break
+            fi
+            echo "  Attempt $i/20 — not ready, waiting 10s..."
+            sleep 10
+          done
+          if [ "$BACKEND_OK" = "false" ]; then
+            echo "ERROR: Backend not reachable at $BACKEND_URL/health after 20 attempts"
             echo "Make sure the service is scaled up on Northflank"
             exit 1
           fi
           
-          # Check Keycloak realm
+          # Check Keycloak realm (with retries)
           echo "Checking Keycloak realm..."
-          if curl -sf "$KC_URL/realms/$KC_REALM" > /dev/null 2>&1; then
-            echo "✓ Keycloak realm $KC_REALM is accessible"
-          else
-            echo "ERROR: Keycloak realm not reachable at $KC_URL/realms/$KC_REALM"
+          KC_OK=false
+          for i in $(seq 1 20); do
+            if curl -sf --max-time 10 "$KC_URL/realms/$KC_REALM" > /dev/null 2>&1; then
+              echo "✓ Keycloak realm $KC_REALM is accessible (attempt $i)"
+              KC_OK=true
+              break
+            fi
+            echo "  Attempt $i/20 — not ready, waiting 10s..."
+            sleep 10
+          done
+          if [ "$KC_OK" = "false" ]; then
+            echo "ERROR: Keycloak realm not reachable at $KC_URL/realms/$KC_REALM after 20 attempts"
             echo "Make sure Keycloak is scaled up and realm exists"
             exit 1
           fi
