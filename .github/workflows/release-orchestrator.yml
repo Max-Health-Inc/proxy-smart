@@ -42,6 +42,8 @@ on:
         required: true
       APP_PRIVATE_KEY:
         required: true
+      OPENAI_API_KEY:
+        required: false
       DISCORD_WEBHOOK_URL:
         required: false
       VPS_SSH_KEY:
@@ -64,13 +66,13 @@ jobs:
       APP_ID: ${{ secrets.APP_ID }}
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
-  # Extract changelog from CHANGELOG.md
+  # Generate or extract changelog
   changelog:
-    name: Extract Changelog
+    name: Generate Changelog
     needs: [version]
     runs-on: ubuntu-latest
     outputs:
-      changelog: ${{ steps.extract.outputs.changelog }}
+      changelog: ${{ steps.final.outputs.changelog }}
 
     steps:
       - name: Checkout code
@@ -78,7 +80,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract changelog for version
+      - name: Try to extract from CHANGELOG.md
         id: extract
         run: |
           python3 << 'PYEOF'
@@ -93,25 +95,84 @@ jobs:
               with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
                   content = f.read()
           except FileNotFoundError:
-              print(f"⚠️  CHANGELOG.md not found, using default", file=sys.stderr)
-              with open('changelog.txt', 'w') as f:
-                  f.write(f"Release {version_base}")
+              print("found=false", file=sys.stderr)
               sys.exit(0)
 
           pattern = rf'## \[{re.escape(version_base)}[^\]]*\][^\n]*\n(.*?)(?=\n## \[|$)'
           match = re.search(pattern, content, re.DOTALL)
 
-          if match:
+          if match and match.group(1).strip():
               notes = match.group(1).strip()
+              with open('changelog.txt', 'w', encoding='utf-8') as f:
+                  f.write(notes)
               print(f"✅ Extracted changelog for {version_base}", file=sys.stderr)
           else:
-              notes = f"Release {version_base}"
-              print(f"⚠️  No changelog section for {version_base}, using default", file=sys.stderr)
-
-          with open('changelog.txt', 'w', encoding='utf-8') as f:
-              f.write(notes)
+              print(f"⚠️  No changelog section for {version_base}", file=sys.stderr)
           PYEOF
 
+          if [ -s changelog.txt ]; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Python 3.11
+        if: steps.extract.outputs.found != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        if: steps.extract.outputs.found != 'true'
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        if: steps.extract.outputs.found != 'true'
+        run: uv pip install --system openai
+
+      - name: Generate changelog from commits
+        if: steps.extract.outputs.found != 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TARGET_BRANCH: ${{ inputs.source_branch }}
+        run: |
+          # Find last release tag
+          LAST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
+          if [ -z "$LAST_TAG" ]; then
+            FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+            LAST_TAG="$FIRST_COMMIT"
+          fi
+
+          echo "📊 Collecting commits from $LAST_TAG to HEAD"
+          git log $LAST_TAG..HEAD --pretty=format:"[%h] %an: %s" --no-merges > commit_messages.txt
+
+          COMMIT_COUNT=$(wc -l < commit_messages.txt)
+          echo "✅ Found $COMMIT_COUNT commits since $LAST_TAG"
+
+          # Try AI generation
+          if [ -n "$OPENAI_API_KEY" ]; then
+            python scripts/workflows/generate_changelog_ai.py && true
+          fi
+
+          # Fallback to manual categorization
+          if [ ! -s changelog_entry.txt ]; then
+            echo "📝 Falling back to manual categorization"
+            python3 scripts/workflows/categorize_commits.py
+          fi
+
+          # Copy result
+          if [ -s changelog_entry.txt ]; then
+            cp changelog_entry.txt changelog.txt
+          else
+            echo "- Release ${{ inputs.release_type }}" > changelog.txt
+          fi
+
+      - name: Output changelog
+        id: final
+        run: |
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           cat changelog.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
