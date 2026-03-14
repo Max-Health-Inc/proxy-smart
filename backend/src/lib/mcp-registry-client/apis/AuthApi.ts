@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   GitHubOIDCTokenExchangeInputBody,
   GitHubTokenExchangeInputBody,
+  OIDCTokenExchangeInputBody,
   SignatureTokenExchangeInput,
   TokenResponse,
 } from '../models/index';
@@ -25,6 +26,8 @@ import {
     GitHubOIDCTokenExchangeInputBodyToJSON,
     GitHubTokenExchangeInputBodyFromJSON,
     GitHubTokenExchangeInputBodyToJSON,
+    OIDCTokenExchangeInputBodyFromJSON,
+    OIDCTokenExchangeInputBodyToJSON,
     SignatureTokenExchangeInputFromJSON,
     SignatureTokenExchangeInputToJSON,
     TokenResponseFromJSON,

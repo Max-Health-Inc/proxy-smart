@@ -10,6 +10,7 @@ export * from './Icon';
 export * from './Input';
 export * from './KeyValueInput';
 export * from './Metadata';
+export * from './OIDCTokenExchangeInputBody';
 export * from './Package';
 export * from './PingBody';
 export * from './RegistryExtensions';
