@@ -56,6 +56,7 @@ RUN apt-get update -qq && \
 # Copy built backend
 COPY --from=backend-build /app/backend/dist ./backend/dist
 COPY --from=backend-build /app/backend/package.json ./backend/package.json
+COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-server-templates.json
 
 # Copy backend's public directory (SMART launcher only, no UI)
 COPY --from=backend-build /app/backend/public ./backend/public
