@@ -169,6 +169,14 @@ export function ActionMarkdownRenderer({ content, streaming = false, onActionCom
     // Custom components for react-markdown — only inject action placeholders when not streaming
     const components = React.useMemo(() => ({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ul: ({ children, ...props }: any) => (
+            <ul className="list-disc pl-4 my-2 space-y-1" {...props}>{children}</ul>
+        ),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ol: ({ children, ...props }: any) => (
+            <ol className="list-decimal pl-4 my-2 space-y-1" {...props}>{children}</ol>
+        ),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         p: ({ children, ...props }: any) => {
             if (!streaming) {
                 const segments = splitActionSegments(children);
