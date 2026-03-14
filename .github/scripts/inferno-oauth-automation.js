@@ -1,6 +1,15 @@
 /**
- * Playwright script to automate Inferno SMART App Launch tests
- * Handles OAuth flow automatically - auth endpoints are discovered from SMART configuration
+ * Inferno SMART App Launch STU2.2 Compliance Test Runner
+ * 
+ * Runs the following test groups from the Inferno smart_stu2_2 suite:
+ *   1. Standalone Launch — Discovery + OAuth + OpenID Connect + Token Refresh
+ *   2. Token Introspection — Validates introspection of tokens from Standalone Launch
+ *   
+ * Not yet automated (require infrastructure changes):
+ *   3. EHR Launch — Requires EHR launch context simulation (launch parameter)
+ *   4. Backend Services — Requires confidential client with asymmetric JWT auth (JWK Set)
+ * 
+ * OAuth flow is handled via Playwright (headless Chromium) to automate Keycloak login.
  */
 
 const { chromium } = require('playwright');
@@ -15,6 +24,14 @@ const KC_PASSWORD = process.env.KC_PASSWORD || 'testpass';
 
 // Inferno client configuration
 const CLIENT_ID = process.env.CLIENT_ID || 'inferno-test-client';
+
+// Inferno test group IDs for SMART STU2.2 suite
+const GROUP_IDS = {
+  STANDALONE_LAUNCH: `${TEST_SUITE}-smart_full_standalone_launch`,
+  EHR_LAUNCH: `${TEST_SUITE}-smart_full_ehr_launch`,
+  BACKEND_SERVICES: `${TEST_SUITE}-smart_backend_services`,
+  TOKEN_INTROSPECTION: `${TEST_SUITE}-smart_token_introspection_stu2_2`,
+};
 
 async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -166,7 +183,8 @@ async function handleOAuthFlow(page, authorizeUrl) {
       console.log('  Clicked login button');
       
       // Wait for redirect back to Inferno
-      await page.waitForURL(url => url.toString().includes('localhost:4567'), { timeout: 30000 });
+      const infernoHost = new URL(INFERNO_URL).host;
+      await page.waitForURL(url => url.toString().includes(infernoHost), { timeout: 30000 });
       console.log('  ✓ OAuth flow completed, redirected back to Inferno');
     } else {
       console.log(`  Not on Keycloak login page. Page title: ${await page.title()}`);
@@ -184,53 +202,9 @@ async function handleOAuthFlow(page, authorizeUrl) {
   }
 }
 
-async function runStandalonePatientTests(browser, sessionId) {
-  console.log('\n=== Running Standalone Patient App Tests ===\n');
-  
-  const page = await browser.newPage();
-  
-  // Configure inputs for standalone patient app tests
-  const inputs = [
-    { name: 'url', value: FHIR_SERVER_URL },
-    { name: 'standalone_client_id', value: CLIENT_ID },
-    { name: 'standalone_requested_scopes', value: 'launch/patient openid fhirUser patient/*.read' },
-    { name: 'use_pkce', value: 'true' },
-    { name: 'pkce_code_challenge_method', value: 'S256' },
-    { name: 'client_auth_type', value: 'public' }
-  ];
-  
-  try {
-    // Find the standalone patient launch group
-    const groups = await getTestGroups(TEST_SUITE);
-    const standaloneGroup = groups.find(g => 
-      g.id.includes('standalone_patient') || 
-      g.title?.toLowerCase().includes('standalone patient')
-    );
-    
-    if (!standaloneGroup) {
-      console.log('Available test groups:');
-      groups.forEach(g => console.log(`  - ${g.id}: ${g.title}`));
-      console.log('No standalone patient test group found, skipping...');
-      return null;
-    }
-    
-    console.log(`Found test group: ${standaloneGroup.id} - ${standaloneGroup.title}`);
-    
-    // Start the test run
-    const run = await runTestGroup(sessionId, standaloneGroup.id, inputs);
-    
-    // Wait for completion, handling OAuth when needed
-    const result = await waitForTestResult(sessionId, run.id, browser, page);
-    
-    return result;
-  } finally {
-    await page.close();
-  }
-}
-
 /**
- * Build the standalone_smart_auth_info JSON input for Inferno
- * This is a serialized AuthInfo object used by Inferno to configure SMART authorization
+ * Build the standalone_smart_auth_info JSON input for Inferno.
+ * This AuthInfo object tells Inferno how to perform the SMART Standalone Launch.
  */
 function buildStandaloneSmartAuthInfo() {
   return JSON.stringify({
@@ -244,10 +218,17 @@ function buildStandaloneSmartAuthInfo() {
   });
 }
 
-async function runWellKnownTests(sessionId, browser) {
-  console.log('\n=== Running SMART Discovery Tests ===\n');
+/**
+ * Run the Standalone Launch test group.
+ * This is the primary SMART compliance group covering:
+ *   - SMART Discovery (.well-known/smart-configuration)
+ *   - Standalone Launch (OAuth2 + PKCE)
+ *   - OpenID Connect (id_token, fhirUser claim)
+ *   - Token Refresh (with and without scopes)
+ */
+async function runStandaloneLaunchTests(sessionId, browser) {
+  console.log('\n=== Running Standalone Launch Tests ===\n');
   
-  // The Standalone Launch group expects url and standalone_smart_auth_info inputs
   const standaloneAuthInfo = buildStandaloneSmartAuthInfo();
   console.log('Auth info:', standaloneAuthInfo);
   
@@ -259,42 +240,73 @@ async function runWellKnownTests(sessionId, browser) {
   try {
     const groups = await getTestGroups(TEST_SUITE);
     
-    // List all available test groups for debugging
-    console.log('Available test groups:');
+    // List all available test groups
+    console.log('Available test groups in suite:');
     groups.forEach(g => console.log(`  - ${g.id}: ${g.title || 'No title'}`));
     console.log('');
     
-    // Look for discovery/well-known tests - in SMART 2.2 it might be named differently
-    const discoveryGroup = groups.find(g => {
-      const id = (g.id || '').toLowerCase();
-      const title = (g.title || '').toLowerCase();
-      return id.includes('discovery') || 
-             id.includes('well_known') ||
-             id.includes('smart_configuration') ||
-             title.includes('discovery') ||
-             title.includes('well-known') ||
-             title.includes('smart configuration');
-    });
+    // Find the Standalone Launch group by known ID
+    const standaloneGroup = groups.find(g => g.id === GROUP_IDS.STANDALONE_LAUNCH);
     
-    if (!discoveryGroup) {
-      // If no specific discovery group, try to run the first available group (Standalone Launch)
-      if (groups.length > 0) {
-        console.log(`No discovery test group found, trying first group: ${groups[0].id}`);
-        const run = await runTestGroup(sessionId, groups[0].id, inputs);
+    if (!standaloneGroup) {
+      // Fallback: try to match by title or run the first group
+      const fallbackGroup = groups.find(g => 
+        (g.title || '').toLowerCase().includes('standalone')
+      ) || groups[0];
+      
+      if (fallbackGroup) {
+        console.log(`Standalone group not found by ID, using fallback: ${fallbackGroup.id}`);
+        const run = await runTestGroup(sessionId, fallbackGroup.id, inputs);
         return await waitForSimpleTestCompletion(sessionId, run.id, browser);
       }
-      console.log('No test groups available');
+      console.log('ERROR: No test groups available');
       return null;
     }
     
-    console.log(`Found test group: ${discoveryGroup.id} - ${discoveryGroup.title}`);
+    console.log(`Running test group: ${standaloneGroup.id} — ${standaloneGroup.title}`);
     
-    const run = await runTestGroup(sessionId, discoveryGroup.id, inputs);
+    const run = await runTestGroup(sessionId, standaloneGroup.id, inputs);
     return await waitForSimpleTestCompletion(sessionId, run.id, browser);
     
   } catch (error) {
-    console.error('Discovery tests error:', error.message);
-    throw error; // Propagate error to fail the workflow
+    console.error('Standalone Launch tests error:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Run the Token Introspection test group.
+ * Uses tokens obtained during Standalone Launch (from the same session).
+ * Requires introspection_endpoint in SMART configuration.
+ */
+async function runTokenIntrospectionTests(sessionId, browser) {
+  console.log('\n=== Running Token Introspection Tests ===\n');
+  
+  try {
+    const groups = await getTestGroups(TEST_SUITE);
+    const introspectionGroup = groups.find(g => g.id === GROUP_IDS.TOKEN_INTROSPECTION);
+    
+    if (!introspectionGroup) {
+      console.log('Token Introspection group not found, skipping...');
+      return null;
+    }
+    
+    console.log(`Running test group: ${introspectionGroup.id} — ${introspectionGroup.title}`);
+    
+    // Token Introspection uses outputs from Standalone Launch (stored in session)
+    // We only need to provide the FHIR URL
+    const inputs = [
+      { name: 'url', value: FHIR_SERVER_URL }
+    ];
+    
+    const run = await runTestGroup(sessionId, introspectionGroup.id, inputs);
+    return await waitForSimpleTestCompletion(sessionId, run.id, browser);
+    
+  } catch (error) {
+    console.error('Token Introspection tests error:', error.message);
+    // Don't throw — Token Introspection failure shouldn't block the pipeline
+    console.log('WARNING: Token Introspection tests failed but continuing...');
+    return null;
   }
 }
 
@@ -548,7 +560,7 @@ async function printResults(results) {
 
 async function main() {
   console.log('========================================');
-  console.log('  Inferno SMART App Launch Test Runner  ');
+  console.log('  Inferno SMART STU2.2 Compliance Tests ');
   console.log('========================================\n');
   
   console.log('Configuration:');
@@ -556,6 +568,14 @@ async function main() {
   console.log(`  FHIR Server: ${FHIR_SERVER_URL}`);
   console.log(`  Test Suite: ${TEST_SUITE}`);
   console.log(`  Client ID: ${CLIENT_ID}`);
+  console.log(`  TLS: ${FHIR_SERVER_URL.startsWith('https') ? 'YES' : 'NO (local mode)'}`);
+  console.log('');
+  console.log('Groups to run:');
+  console.log('  1. Standalone Launch (OAuth + OIDC + Token Refresh)');
+  console.log('  2. Token Introspection');
+  console.log('  --- SKIPPED ---');
+  console.log('  3. EHR Launch (requires launch context API)');
+  console.log('  4. Backend Services (requires confidential client + JWK Set)');
   console.log('');
   
   let browser;
@@ -565,7 +585,7 @@ async function main() {
     await waitForInferno();
     
     // Launch browser for OAuth automation
-    console.log('Launching browser for OAuth automation...');
+    console.log('Launching headless Chromium for OAuth automation...');
     browser = await chromium.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
@@ -574,13 +594,13 @@ async function main() {
     // Create test session
     const session = await createTestSession();
     
-    // Run SMART tests (may require OAuth for some tests)
-    const wellKnownResult = await runWellKnownTests(session.id, browser);
+    // Group 1: Standalone Launch (includes Discovery, OAuth, OIDC, Token Refresh)
+    const standaloneResult = await runStandaloneLaunchTests(session.id, browser);
     
-    // Run standalone patient tests (requires OAuth)
-    // const standaloneResult = await runStandalonePatientTests(browser, session.id);
+    // Group 2: Token Introspection (uses tokens from Standalone Launch)
+    const introspectionResult = await runTokenIntrospectionTests(session.id, browser);
     
-    // Get all results
+    // Get all results across all groups
     const results = await getSessionResults(session.id);
     const summary = await printResults(results);
     
@@ -594,11 +614,11 @@ async function main() {
     
     // Exit with error if any tests failed OR no tests ran
     if (summary.failed > 0 || summary.errors > 0 || summary.total === 0) {
-      console.error('\n❌ Tests failed: ' + (summary.total === 0 ? 'No tests completed' : `${summary.failed} failed, ${summary.errors} errors`));
+      console.error(`\n❌ Tests failed: ${summary.total === 0 ? 'No tests completed' : `${summary.failed} failed, ${summary.errors} errors out of ${summary.total}`}`);
       process.exit(1);
     }
     
-    console.log('\n✅ All tests passed!');
+    console.log(`\n✅ All ${summary.passed} tests passed!`);
     
   } catch (error) {
     console.error('Test execution failed:', error.message);

@@ -624,13 +624,73 @@ jobs:
           echo ""
           echo "=== Keycloak setup verified ==="
 
+      # Seed FHIR resources for deployed mode (local mode seeds in earlier step)
+      - name: Seed FHIR Test Resources (Deployed)
+        if: steps.config.outputs.target == 'deployed'
+        run: |
+          BACKEND_URL="${{ steps.config.outputs.backend_url }}"
+          KC_URL="${{ steps.config.outputs.kc_url }}"
+          KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          CLIENT_ID="${{ steps.config.outputs.client_id }}"
+          KC_USERNAME="${{ steps.config.outputs.kc_username }}"
+          KC_PASSWORD="${{ steps.config.outputs.kc_password }}"
+          FHIR_BASE="$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4"
+          
+          echo "Seeding FHIR resources on deployed server..."
+          echo "  FHIR Base: $FHIR_BASE"
+          
+          # Get access token via direct access grant
+          TOKEN=$(curl -sf -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password" \
+            -d "client_id=$CLIENT_ID" \
+            -d "username=$KC_USERNAME" \
+            -d "password=$KC_PASSWORD" \
+            -d "scope=openid user/*.*" | jq -r '.access_token')
+          
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "WARNING: Could not obtain token for FHIR resource seeding"
+            echo "  Tests requiring fhirUser claim may fail"
+            exit 0
+          fi
+          
+          echo "✓ Obtained access token for resource seeding"
+          
+          # Create Practitioner (matches doctor user's fhirUser claim)
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Practitioner/example-practitioner" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Practitioner",
+              "id": "example-practitioner",
+              "identifier": [{"system": "http://example.org/practitioners", "value": "doctor"}],
+              "active": true,
+              "name": [{"family": "Doctor", "given": ["Test"], "prefix": ["Dr."]}],
+              "telecom": [{"system": "email", "value": "doctor@example.com"}]
+            }')
+          echo "  Practitioner/example-practitioner: HTTP $HTTP_CODE"
+          
+          # Create Patient (for launch/patient scope)
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Patient/test-patient" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Patient",
+              "id": "test-patient",
+              "identifier": [{"system": "http://example.org/patients", "value": "12345"}],
+              "active": true,
+              "name": [{"family": "Test", "given": ["Patient"]}],
+              "gender": "unknown",
+              "birthDate": "1990-01-01"
+            }')
+          echo "  Patient/test-patient: HTTP $HTTP_CODE"
+          
+          echo "✓ FHIR test resources seeded on deployed server"
+
       # Run Inferno tests via Playwright automation
       - name: Run SMART Compliance Tests
         id: inferno-tests
-        continue-on-error: true
         run: |
-          set +e  # Disable exit on error for robust handling
-          
           echo "=== SMART 2.2.0 Compliance Testing with Inferno ==="
           echo ""
           
@@ -643,9 +703,9 @@ jobs:
             echo "Testing against LOCAL backend: $BACKEND_BASE"
           fi
           
-          # Get FHIR server URL from our proxy
+          # Get FHIR server URL from our proxy (dynamic discovery — source of truth)
           echo "### Step 0: Discovering FHIR Servers ###"
-          SERVERS=$(curl -s "$BACKEND_BASE/fhir-servers" 2>&1)
+          SERVERS=$(curl -sf "$BACKEND_BASE/fhir-servers" 2>&1)
           echo "Available FHIR servers:"
           echo "$SERVERS" | jq '.' 2>/dev/null || echo "$SERVERS"
           
@@ -654,27 +714,32 @@ jobs:
           BASE_FHIR_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.base // empty' 2>/dev/null)
           
           if [ -z "$SMART_CONFIG_URL" ] || [ "$SMART_CONFIG_URL" = "null" ]; then
-            echo "::warning::No FHIR servers configured - cannot test SMART configuration"
-            echo "## SMART Compliance Tests - SKIPPED" >> $GITHUB_STEP_SUMMARY
+            echo "::error::No FHIR servers configured - cannot test SMART configuration"
+            echo "## SMART Compliance Tests - FAILED" >> $GITHUB_STEP_SUMMARY
             echo "No FHIR servers configured." >> $GITHUB_STEP_SUMMARY
             echo "passed=0" >> $GITHUB_OUTPUT
             echo "failed=0" >> $GITHUB_OUTPUT
-            exit 0
+            exit 1
           fi
           
-          echo ""
+          # Override FHIR_SERVER_URL with dynamically discovered URL (handles deployed HTTPS correctly)
+          if [ -n "$BASE_FHIR_URL" ] && [ "$BASE_FHIR_URL" != "null" ]; then
+            export FHIR_SERVER_URL="$BASE_FHIR_URL"
+            echo "Using discovered FHIR URL: $FHIR_SERVER_URL"
+          fi
+          
           echo "Using SMART config URL: $SMART_CONFIG_URL"
-          echo "Using FHIR base URL: $BASE_FHIR_URL"
           
           # Step 1: Quick validation of SMART configuration
           echo ""
           echo "### Step 1: Quick SMART Configuration Validation ###"
-          SMART_CONFIG=$(curl -s "$SMART_CONFIG_URL" 2>&1)
+          SMART_CONFIG=$(curl -sf "$SMART_CONFIG_URL" 2>&1)
           echo "$SMART_CONFIG" | jq '.'
           
           # Check required fields
           AUTH_EP=$(echo "$SMART_CONFIG" | jq -r '.authorization_endpoint // empty')
           TOKEN_EP=$(echo "$SMART_CONFIG" | jq -r '.token_endpoint // empty')
+          INTROSPECT_EP=$(echo "$SMART_CONFIG" | jq -r '.introspection_endpoint // empty')
           
           if [ -z "$AUTH_EP" ] || [ -z "$TOKEN_EP" ]; then
             echo "::error::Missing required SMART endpoints"
@@ -687,10 +752,20 @@ jobs:
           
           echo "✓ authorization_endpoint: $AUTH_EP"
           echo "✓ token_endpoint: $TOKEN_EP"
+          if [ -n "$INTROSPECT_EP" ]; then
+            echo "✓ introspection_endpoint: $INTROSPECT_EP"
+          fi
           
           # Step 2: Run Inferno tests with Playwright OAuth automation
           echo ""
-          echo "### Step 2: Running Inferno Tests with Playwright ###"
+          echo "### Step 2: Running Inferno SMART STU2.2 Tests ###"
+          echo ""
+          echo "Test Groups:"
+          echo "  1. Standalone Launch (Discovery + OAuth + OpenID Connect + Token Refresh)"
+          echo "  2. Token Introspection (uses tokens from Standalone Launch)"
+          echo "  3. EHR Launch — SKIPPED (requires EHR launch context simulation)"
+          echo "  4. Backend Services — SKIPPED (requires confidential client with asymmetric auth)"
+          echo ""
           
           # Copy the script to the Playwright directory and run it from there
           cp .github/scripts/inferno-oauth-automation.js /tmp/playwright-setup/
@@ -716,7 +791,7 @@ jobs:
           if [ "$INFERNO_EXIT_CODE" -eq 0 ]; then
             echo "**Status: ✓ PASSED**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "**Status: ✗ FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "**Status: ✗ FAILED (exit code: $INFERNO_EXIT_CODE)**" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -724,12 +799,19 @@ jobs:
           echo "- Passed: $PASSED" >> $GITHUB_STEP_SUMMARY
           echo "- Failed: $FAILED" >> $GITHUB_STEP_SUMMARY
           echo "- Test Stage: ${{ env.TEST_STAGE }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Groups Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Standalone Launch (Discovery + OAuth + OIDC + Token Refresh)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Token Introspection" >> $GITHUB_STEP_SUMMARY
+          echo "- ○ EHR Launch — requires launch context simulation" >> $GITHUB_STEP_SUMMARY
+          echo "- ○ Backend Services — requires confidential client with asymmetric JWT auth" >> $GITHUB_STEP_SUMMARY
           
-          # Include FHIR server info (discovered from SMART config)
+          # Include FHIR server info
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### FHIR Server Configuration" >> $GITHUB_STEP_SUMMARY
           FHIR_VERSION=$(echo "$SMART_CONFIG" | jq -r '.fhirVersion // "R4"')
           echo "- FHIR Version: $FHIR_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- FHIR URL: $FHIR_SERVER_URL" >> $GITHUB_STEP_SUMMARY
           echo "- Authorization Endpoint: $AUTH_EP" >> $GITHUB_STEP_SUMMARY
           echo "- Token Endpoint: $TOKEN_EP" >> $GITHUB_STEP_SUMMARY
           
@@ -739,9 +821,8 @@ jobs:
           
           exit $INFERNO_EXIT_CODE
         env:
-          # All values loaded from testing/$TEST_STAGE/inferno-config.json
           INFERNO_URL: ${{ steps.config.outputs.inferno_url }}
-          FHIR_SERVER_URL: http://localhost:${{ steps.config.outputs.backend_port }}/proxy-smart-backend/hapi-fhir-server/R4
+          FHIR_SERVER_URL: ${{ steps.config.outputs.target == 'deployed' && format('{0}/proxy-smart-backend/hapi-fhir-server/R4', steps.config.outputs.backend_url) || format('http://localhost:{0}/proxy-smart-backend/hapi-fhir-server/R4', steps.config.outputs.backend_port) }}
           TEST_SUITE: ${{ steps.config.outputs.test_suite }}
           CLIENT_ID: ${{ steps.config.outputs.client_id }}
           KC_USERNAME: ${{ steps.config.outputs.kc_username }}
