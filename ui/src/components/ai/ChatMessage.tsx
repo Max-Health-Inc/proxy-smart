@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { FileText, Copy, Check } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CopyButton } from '../ui/copy-button';
 import { ActionMarkdownRenderer } from './ActionMarkdownRenderer';
 import type { ChatMessage as ChatMessageType } from '../../lib/ai-assistant';
 import type { DocumentChunk, ToolExecution } from '../../lib/api-client';
@@ -13,14 +13,6 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, isProcessing, onActionComplete }: ChatMessageProps) {
     const { t } = useTranslation();
-    const [copied, setCopied] = useState(false);
-
-    const handleCopy = async () => {
-        if (!message.content) return;
-        await navigator.clipboard.writeText(message.content);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-    };
 
     return (
         <div className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -133,17 +125,13 @@ export function ChatMessage({ message, isProcessing, onActionComplete }: ChatMes
                 {/* Copy button */}
                 {message.content && !message.streaming && (
                     <div className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'} mt-1.5`}>
-                        <button
-                            onClick={handleCopy}
-                            className="flex items-center gap-1 text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                        <CopyButton
+                            value={message.content}
+                            variant="text"
+                            label={t('Copy')}
+                            copiedLabel={t('Copied')}
                             title={t('Copy message')}
-                        >
-                            {copied ? (
-                                <><Check className="w-3 h-3" />{t('Copied')}</>
-                            ) : (
-                                <><Copy className="w-3 h-3" />{t('Copy')}</>
-                            )}
-                        </button>
+                        />
                     </div>
                 )}
             </div>

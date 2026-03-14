@@ -34,6 +34,7 @@ import {
   Play,
   Loader2
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useTranslation } from 'react-i18next';
 
 // FHIR Resource types for scope building
@@ -621,9 +622,7 @@ export function ScopeManager() {
     });
   };
 
-  const copyScope = (scope: string) => {
-    navigator.clipboard.writeText(scope);
-  };
+
 
   const testScope = async (scope: string) => {
     // In production, this would test the scope against the FHIR server
@@ -977,15 +976,7 @@ export function ScopeManager() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-1 ml-2">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => copyScope(scope)}
-                                className="p-1 h-8 w-8 hover:bg-muted"
-                                title={t('Copy scope')}
-                              >
-                                <Copy className="w-3 h-3" />
-                              </Button>
+                              <CopyButton value={scope} variant="icon-sm" className="p-1 h-8 w-8" title={t('Copy scope')} />
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -1202,7 +1193,7 @@ export function ScopeManager() {
                               <Edit className="w-4 h-4 mr-2" />
                               {t('Edit')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => copyScope(scopeSet.scopes.join(' '))}>
+                            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(scopeSet.scopes.join(' '))}>
                               <Copy className="w-4 h-4 mr-2" />
                               {t('Copy Scopes')}
                             </DropdownMenuItem>

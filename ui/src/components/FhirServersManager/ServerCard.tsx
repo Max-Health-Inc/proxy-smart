@@ -5,7 +5,6 @@ import {
   ExternalLink,
   RefreshCw,
   AlertTriangle,
-  Copy,
   Eye,
   Edit,
   Shield,
@@ -14,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerWithState } from '@/lib/types/api';
 
 interface ServerCardProps {
@@ -33,11 +33,6 @@ export function ServerCard({
   onCheckSecurity,
   onEditServer
 }: ServerCardProps) {
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
-  };
-
   return (
     <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
       <div className="flex items-center justify-between mb-6">
@@ -132,14 +127,7 @@ export function ServerCard({
                   <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   Proxy URL:
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(server.endpoints.base)}
-                  className="h-8 px-3 rounded-lg hover:bg-muted transition-colors duration-200"
-                >
-                  <Copy className="w-3 h-3" />
-                </Button>
+                <CopyButton value={server.endpoints.base} variant="icon-sm" />
               </div>
               <a
                 href={server.endpoints.base}
@@ -153,14 +141,7 @@ export function ServerCard({
           )}
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">Origin URL:</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => copyToClipboard(server.url)}
-              className="h-6 px-2 rounded-lg hover:bg-muted transition-colors duration-200"
-            >
-              <Copy className="w-2.5 h-2.5" />
-            </Button>
+            <CopyButton value={server.url} variant="icon-xs" />
           </div>
           <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg font-mono break-all border border-border/30">
             {server.url}

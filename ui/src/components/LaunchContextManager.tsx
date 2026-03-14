@@ -14,7 +14,6 @@ import {
   Rocket,
   Settings,
   Copy,
-  Check,
   Eye,
   Target,
   AlertCircle,
@@ -23,6 +22,7 @@ import {
   FileText,
   Shield
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
 
 // Pre-built launch context templates based on SMART on FHIR specification
 const LAUNCH_CONTEXT_TEMPLATES = [
@@ -403,10 +403,6 @@ export function LaunchContextManager() {
     setShowBuilder(true);
   };
 
-  // Copy context to clipboard
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
 
   if (loading) {
     return (
@@ -581,12 +577,11 @@ export function LaunchContextManager() {
                             <Badge
                               variant="outline"
                               className="text-xs bg-muted hover:bg-muted/80 cursor-pointer transition-colors"
-                              onClick={() => copyToClipboard(ctx)}
+                              onClick={() => navigator.clipboard.writeText(ctx)}
                             >
                               {ctx}
                             </Badge>
-                            <Copy className="w-3 h-3 ml-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                              onClick={() => copyToClipboard(ctx)} />
+                            <CopyButton value={ctx} variant="icon-xs" className="h-auto p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         ))}
                       </div>
@@ -648,12 +643,11 @@ export function LaunchContextManager() {
                           <Badge
                             variant="outline"
                             className="text-xs bg-muted hover:bg-muted/80 cursor-pointer transition-colors"
-                            onClick={() => copyToClipboard(ctx)}
+                            onClick={() => navigator.clipboard.writeText(ctx)}
                           >
                             {ctx}
                           </Badge>
-                          <Copy className="w-3 h-3 ml-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                            onClick={() => copyToClipboard(ctx)} />
+                          <CopyButton value={ctx} variant="icon-xs" className="h-auto p-0 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
                       ))}
                     </div>
@@ -671,7 +665,7 @@ export function LaunchContextManager() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => copyToClipboard(template.contexts.join(' '))}
+                      onClick={() => navigator.clipboard.writeText(template.contexts.join(' '))}
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
