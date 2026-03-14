@@ -122,7 +122,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
     { 
       id: 'users', 
       label: t('Users'), 
-      description: t('User Management'),
+      description: t('Users & Federation'),
       icon: Users
     },
     { 
@@ -160,12 +160,6 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('Door Management'), 
       description: t('Physical Access'),
       icon: DoorOpen
-    },
-    { 
-      id: 'user-federation', 
-      label: t('User Federation'), 
-      description: t('LDAP Integration'),
-      icon: Users
     },
 
   ];

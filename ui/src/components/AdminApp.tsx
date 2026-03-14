@@ -5,7 +5,7 @@ import { SmartProxyOverview } from './SmartProxyOverview';
 import { McpServersManager } from './McpServersManager';
 import { useState, useEffect } from 'react';
 import { Navigation } from './Navigation';
-import { HealthcareUsersManager } from './HealthcareUsersManager/HealthcareUsersManager';
+import { UsersAndFederationManager } from './UsersAndFederationManager';
 import { useAuth } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
 import { LoginForm } from './LoginForm';
@@ -21,7 +21,7 @@ import { ShieldAlert, X } from 'lucide-react';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
-import { UserFederationManager } from './UserFederationManager/UserFederationManager';
+
 
 // Valid tab routes
 const VALID_TABS = [
@@ -34,7 +34,6 @@ const VALID_TABS = [
     'smart-config',
     'oauth-monitoring',
     'door-management',
-    'user-federation',
 ] as const;
 
 type ValidTab = typeof VALID_TABS[number];
@@ -150,7 +149,7 @@ export function AdminApp() {
                                 {t('Bootstrap Admin Account')}
                             </AlertTitle>
                             <AlertDescription className="mt-1">
-                                {t('You are logged in with the temporary bootstrap admin account. Please create a permanent admin user in the Identity Providers or User Federation tab. Once a permanent admin exists, Keycloak will automatically disable this bootstrap account.')}
+                                {t('You are logged in with the temporary bootstrap admin account. Please create a permanent admin user in the Identity Providers or Users tab. Once a permanent admin exists, Keycloak will automatically disable this bootstrap account.')}
                             </AlertDescription>
                             <Button
                                 variant="ghost"
@@ -170,14 +169,13 @@ export function AdminApp() {
                         <Panel className={cn("min-h-[600px] shadow-2xl border-0 bg-background backdrop-blur-sm rounded-3xl overflow-hidden border border-border/20 animate-fade-in w-full max-w-none", "max-w-none w-full")}>
                             {currentTab === 'dashboard' && <SmartProxyOverview onNavigate={handleTabChange} />}
                             {currentTab === 'smart-apps' && <SmartAppsManager />}
-                            {currentTab === 'users' && <HealthcareUsersManager />}
+                            {currentTab === 'users' && <UsersAndFederationManager />}
                             {currentTab === 'fhir-servers' && <FhirServersManager />}
                             {currentTab === 'ai-tools' && <McpServersManager />}
                             {currentTab === 'idp' && <IdPManager />}
                             {currentTab === 'smart-config' && <SmartConfigManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
-                            {currentTab === 'user-federation' && <UserFederationManager />}
                         </Panel>
                     </div>
                 </div>
