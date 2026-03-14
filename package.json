@@ -105,7 +105,6 @@
     "version:set": "node scripts/version.js set",
     "version:check": "node scripts/version.js check",
     "version:base": "node scripts/version.js base",
-    "ai:commit-comment": "cd scripts && node ai-commit-comment.mjs",
     "precommit": "bun run version:sync",
     "infra:synth": "cd infra && npx cdk synth",
     "infra:diff": "cd infra && npx cdk diff",

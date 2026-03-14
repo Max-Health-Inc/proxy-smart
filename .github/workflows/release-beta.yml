@@ -27,11 +27,9 @@ jobs:
       target_branch: 'test'
       should_bump_version: false
       is_prerelease: true
-      commit_limit: 10
     secrets:
       APP_ID: ${{ secrets.APP_ID }}
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
 
   # Deploy after successful release

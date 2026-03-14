@@ -1,0 +1,200 @@
+# Automatically update CHANGELOG.md when PR is merged to beta or production
+# Summarizes commit messages from the PR and adds them to the changelog
+name: Update Changelog
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - beta
+      - production
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true
+    name: Generate and Update Changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout target branch
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.base.ref }}
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+
+    - name: Install OpenAI package
+      run: uv pip install --system openai
+
+    - name: Get version from package.json
+      id: get_version
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "📦 Version: $VERSION"
+
+    - name: Find last release tag
+      id: last_release
+      run: |
+        LAST_STABLE=$(git tag -l 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+        LAST_ANY=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
+        if [ -n "$LAST_STABLE" ]; then
+          echo "last_tag=$LAST_STABLE" >> $GITHUB_OUTPUT
+          echo "📌 Last stable release: $LAST_STABLE"
+        elif [ -n "$LAST_ANY" ]; then
+          echo "last_tag=$LAST_ANY" >> $GITHUB_OUTPUT
+          echo "📌 Last release (pre-release): $LAST_ANY"
+        else
+          FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
+          echo "last_tag=$FIRST_COMMIT" >> $GITHUB_OUTPUT
+          echo "📌 No releases found, using first commit"
+        fi
+
+    - name: Get all commits since last release
+      id: get_commits
+      run: |
+        LAST_TAG="${{ steps.last_release.outputs.last_tag }}"
+        TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+        echo "📊 Collecting commits from $LAST_TAG to HEAD on $TARGET_BRANCH"
+
+        git log $LAST_TAG..HEAD --pretty=format:"[%h] %an: %s" --no-merges > commit_messages.txt
+
+        COMMIT_COUNT=$(wc -l < commit_messages.txt)
+        echo "✅ Found $COMMIT_COUNT commits since $LAST_TAG"
+        echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+        echo "📝 Sample commits:"
+        head -10 commit_messages.txt
+
+    - name: Generate AI-powered changelog
+      id: ai_summary
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_TITLE: ${{ github.event.pull_request.title }}
+        PR_BODY: ${{ github.event.pull_request.body }}
+        PR_URL: ${{ github.event.pull_request.html_url }}
+        TARGET_BRANCH: ${{ github.event.pull_request.base.ref }}
+      run: python scripts/workflows/generate_changelog_ai.py
+      continue-on-error: true
+
+    - name: Fallback to manual categorization
+      if: always()
+      id: manual_categorize
+      run: |
+        if [ -s changelog_entry.txt ]; then
+          echo "✅ Using AI-generated changelog"
+          exit 0
+        fi
+        echo "📝 Falling back to manual commit categorization"
+        python3 scripts/workflows/categorize_commits.py
+
+    - name: Update CHANGELOG.md
+      id: update
+      run: |
+        python << 'EOF'
+        import json
+        import re
+        from datetime import datetime
+
+        with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        with open('changelog_entry.txt', 'r', encoding='utf-8') as f:
+            new_entry = f.read()
+
+        with open('package.json', encoding='utf-8') as f:
+            version = json.load(f).get('version', 'unknown')
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        version_base = version.split('+')[0]
+
+        version_pattern = rf'## \[{re.escape(version_base)}[^\]]*\]'
+        version_match = re.search(version_pattern, content)
+
+        if version_match:
+            header_end = content.find('\n', version_match.end())
+            next_section = re.search(r'\n## \[', content[header_end:])
+            insert_pos = header_end + next_section.start() if next_section else len(content)
+            new_content = content[:insert_pos] + '\n' + new_entry + '\n' + content[insert_pos:]
+        else:
+            unreleased_match = re.search(r'## \[Unreleased\].*?\n', content)
+            if unreleased_match:
+                insert_pos = unreleased_match.end()
+            else:
+                first_heading = re.search(r'^# .*?\n', content, re.MULTILINE)
+                insert_pos = first_heading.end() if first_heading else 0
+
+            new_section = f'\n## [{version_base}] - {today}\n{new_entry}\n'
+            new_content = content[:insert_pos] + new_section + content[insert_pos:]
+
+        with open('CHANGELOG.md', 'w', encoding='utf-8') as f:
+            f.write(new_content)
+
+        print(f"✅ Updated CHANGELOG.md for version {version_base}")
+        EOF
+
+    - name: Check if changes were made
+      id: check_changes
+      run: |
+        if git diff --quiet CHANGELOG.md; then
+          echo "changed=false" >> $GITHUB_OUTPUT
+          echo "ℹ️  No changes to CHANGELOG.md"
+        else
+          echo "changed=true" >> $GITHUB_OUTPUT
+          echo "✅ CHANGELOG.md was updated"
+        fi
+
+    - name: Commit changelog updates
+      if: steps.check_changes.outputs.changed == 'true'
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+
+        git add CHANGELOG.md
+        git commit -m "docs: update CHANGELOG.md for PR #${{ github.event.pull_request.number }} [skip ci]"
+
+        for i in {1..3}; do
+          if git push origin $TARGET_BRANCH; then
+            echo "✅ Successfully pushed changelog update"
+            break
+          else
+            echo "⚠️  Push failed, attempt $i/3. Pulling latest changes..."
+            git pull --rebase origin $TARGET_BRANCH
+            if [ $i -eq 3 ]; then
+              echo "❌ Failed to push after 3 attempts"
+              exit 1
+            fi
+          fi
+        done
+
+    - name: Summary
+      if: always()
+      run: |
+        echo "=========================================="
+        echo "CHANGELOG UPDATE SUMMARY"
+        echo "=========================================="
+        echo "PR: #${{ github.event.pull_request.number }}"
+        echo "Target: ${{ github.event.pull_request.base.ref }}"
+        echo "Version: ${{ steps.get_version.outputs.version }}"
+        if [ "${{ steps.check_changes.outputs.changed }}" == "true" ]; then
+          echo "Status: ✅ CHANGELOG.md updated"
+        else
+          echo "Status: ℹ️  No changes needed"
+        fi
+        echo "=========================================="
