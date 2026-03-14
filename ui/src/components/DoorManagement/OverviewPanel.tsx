@@ -11,33 +11,10 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Spinner } from '../ui/spinner';
+import { StatCard } from '../ui/stat-card';
+import { PageLoadingState } from '../ui/page-loading-state';
+import { PageErrorState } from '../ui/page-error-state';
 import type { AccessOverviewResponse } from '../../lib/api-client';
-
-interface StatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  subtitle?: string;
-  color?: string;
-}
-
-function StatCard({ icon, label, value, subtitle }: StatCardProps) {
-  return (
-    <div className="rounded-xl border border-border/50 bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 rounded-lg bg-primary/10">
-          {icon}
-        </div>
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      </div>
-      <div className="text-3xl font-bold text-foreground">{value}</div>
-      {subtitle && (
-        <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-      )}
-    </div>
-  );
-}
 
 export function OverviewPanel() {
   const { clientApis } = useAuth();
@@ -66,23 +43,16 @@ export function OverviewPanel() {
   }, [fetchOverview]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="md" />
-        <span className="ml-3 text-muted-foreground">{t('Loading overview...')}</span>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading overview...')} />;
   }
 
   if (error || !overview) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive mb-4">{error || t('Failed to load overview')}</p>
-        <Button variant="outline" size="sm" onClick={fetchOverview}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('Retry')}
-        </Button>
-      </div>
+      <PageErrorState
+        title={error || t('Failed to load overview')}
+        onRetry={fetchOverview}
+        retryLabel={t('Retry')}
+      />
     );
   }
 
@@ -98,30 +68,10 @@ export function OverviewPanel() {
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<MapPin className="h-5 w-5 text-primary" />}
-          label={t('Locations')}
-          value={locations.pagination.count}
-          subtitle={t('{{count}} location(s) configured', { count: locations.pagination.count })}
-        />
-        <StatCard
-          icon={<DoorOpen className="h-5 w-5 text-primary" />}
-          label={t('Doors')}
-          value={doors.pagination.count}
-          subtitle={t('{{online}} online, {{offline}} offline', { online: onlineDoors, offline: offlineDoors })}
-        />
-        <StatCard
-          icon={<Layers className="h-5 w-5 text-primary" />}
-          label={t('Groups')}
-          value={groups.pagination.count}
-          subtitle={t('Door groups')}
-        />
-        <StatCard
-          icon={<Users className="h-5 w-5 text-primary" />}
-          label={t('Members')}
-          value={members.pagination.count}
-          subtitle={t('Registered members')}
-        />
+        <StatCard icon={MapPin} label={t('Locations')} value={locations.pagination.count} subtitle={t('{{count}} location(s) configured', { count: locations.pagination.count })} color="primary" />
+        <StatCard icon={DoorOpen} label={t('Doors')} value={doors.pagination.count} subtitle={t('{{online}} online, {{offline}} offline', { online: onlineDoors, offline: offlineDoors })} color="primary" />
+        <StatCard icon={Layers} label={t('Groups')} value={groups.pagination.count} subtitle={t('Door groups')} color="primary" />
+        <StatCard icon={Users} label={t('Members')} value={members.pagination.count} subtitle={t('Registered members')} color="primary" />
       </div>
 
       {/* Door Status Summary */}

@@ -5,9 +5,13 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { StatCard } from './ui/stat-card';
+import { PageLoadingState } from './ui/page-loading-state';
+import { PageErrorState } from './ui/page-error-state';
+import { ExportMenu } from './ui/export-menu';
+import { RealTimeBanner } from './ui/realtime-banner';
 import {
   Activity,
-  AlertCircle,
   CheckCircle,
   RefreshCw,
   TrendingUp,
@@ -16,12 +20,10 @@ import {
   Timer,
   Play,
   Pause,
-  Download,
   Search,
   ShieldCheck,
   ShieldX,
   Database,
-  ChevronDown,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -43,46 +45,11 @@ import {
 import { config } from '@/config';
 import { getItem } from '../lib/storage';
 import { ConsentSettings } from './ConsentSettings';
-
-// ─── Types (mirror backend) ─────────────────────────────────────────
-
-interface ConsentDecisionEvent {
-  id: string;
-  timestamp: string;
-  decision: 'permit' | 'deny';
-  enforced: boolean;
-  mode: 'enforce' | 'audit-only' | 'disabled';
-  consentId: string | null;
-  patientId: string | null;
-  clientId: string;
-  resourceType: string | null;
-  resourcePath: string;
-  serverName: string;
-  method: string;
-  reason: string;
-  cached: boolean;
-  checkDurationMs: number;
-  ial?: {
-    allowed: boolean;
-    actualLevel: string | null;
-    requiredLevel: string;
-    isSensitiveResource: boolean;
-  } | null;
-}
-
-interface ConsentAnalytics {
-  totalDecisions: number;
-  permitRate: number;
-  denyRate: number;
-  averageCheckDuration: number;
-  cacheHitRate: number;
-  decisionsByMode: Record<string, number>;
-  decisionsByResourceType: Record<string, { permit: number; deny: number }>;
-  topDeniedClients: Array<{ clientId: string; denyCount: number }>;
-  topDeniedPatients: Array<{ patientId: string; denyCount: number }>;
-  hourlyStats: Array<{ hour: string; permit: number; deny: number; total: number }>;
-  timestamp?: string;
-}
+import {
+  consentWebSocketService,
+  type ConsentDecisionEvent,
+  type ConsentAnalytics,
+} from '../service/consent-websocket-service';
 
 // ─── API helpers ─────────────────────────────────────────────────────
 
@@ -121,16 +88,15 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
   const [analytics, setAnalytics] = useState<ConsentAnalytics | null>(null);
   const [localRealTime, setLocalRealTime] = useState(true);
   const isRealTimeActive = embedded && parentRealTime !== undefined ? parentRealTime : localRealTime;
+  const [connectionMode, setConnectionMode] = useState<'websocket' | 'sse'>('websocket');
   const [filterDecision, setFilterDecision] = useState<string>('all');
   const [filterResourceType, setFilterResourceType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const isRealTimeActiveRef = useRef(isRealTimeActive);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const analyticsSourceRef = useRef<EventSource | null>(null);
+  const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
     isRealTimeActiveRef.current = isRealTimeActive;
@@ -172,83 +138,93 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
     }
   }, []);
 
-  // ─── SSE real-time connections ──────────────────────────────────
+  // ─── WebSocket / SSE real-time connection ────────────────────────
 
-  const connectSSE = useCallback(async () => {
-    // Close existing connections
-    eventSourceRef.current?.close();
-    analyticsSourceRef.current?.close();
+  const connectRealTime = useCallback(async () => {
+    try {
+      const targetMode = connectionMode;
+      
+      if (consentWebSocketService.isConnected) {
+        consentWebSocketService.disconnect();
+      }
 
-    const token = await getToken();
-    if (!token) return;
+      await consentWebSocketService.connectWithMode(targetMode === 'websocket' ? 'websocket' : 'sse');
 
-    // SSE for events
-    const eventsUrl = `${config.api.baseUrl}/monitoring/consent/events/stream?token=${encodeURIComponent(token)}`;
-    const evtSource = new EventSource(eventsUrl);
+      if (!consentWebSocketService.isUsingSSE) {
+        await consentWebSocketService.authenticate();
+      }
 
-    evtSource.onmessage = (msg) => {
-      if (!isRealTimeActiveRef.current) return;
-      try {
-        const data = JSON.parse(msg.data);
-        if (data.type === 'connection' || data.type === 'keepalive') return;
-        setEvents(prev => [data as ConsentDecisionEvent, ...prev.slice(0, 999)]);
-      } catch { /* skip malformed */ }
-    };
+      if (consentWebSocketService.isUsingSSE) {
+        setConnectionMode('sse');
+      }
 
-    evtSource.onerror = () => {
-      // SSE will auto-reconnect; no action needed
-    };
+      // Set up initial data handlers (only on first connect)
+      if (isInitialLoadRef.current) {
+        isInitialLoadRef.current = false;
 
-    eventSourceRef.current = evtSource;
+        consentWebSocketService.onEventsData((eventList) => {
+          if (isRealTimeActiveRef.current) {
+            setEvents(eventList);
+          }
+        });
 
-    // SSE for analytics
-    const analyticsUrl = `${config.api.baseUrl}/monitoring/consent/analytics/stream?token=${encodeURIComponent(token)}`;
-    const anlSource = new EventSource(analyticsUrl);
+        consentWebSocketService.onAnalyticsData((analyticsData) => {
+          if (isRealTimeActiveRef.current) {
+            setAnalytics(analyticsData);
+          }
+        });
+      }
 
-    anlSource.onmessage = (msg) => {
-      if (!isRealTimeActiveRef.current) return;
-      try {
-        const data = JSON.parse(msg.data);
-        if (data.type === 'keepalive') return;
-        if (data.totalDecisions !== undefined) setAnalytics(data as ConsentAnalytics);
-      } catch { /* skip malformed */ }
-    };
+      consentWebSocketService.onError((errorMsg) => {
+        console.error('Consent WebSocket error:', errorMsg);
+      });
 
-    analyticsSourceRef.current = anlSource;
-  }, []);
+      await consentWebSocketService.subscribe('events');
+      await consentWebSocketService.subscribe('analytics');
+    } catch (err) {
+      console.error('Failed to connect consent real-time:', err);
+    }
+  }, [connectionMode]);
 
   // ─── Lifecycle ─────────────────────────────────────────────────
 
   useEffect(() => {
-    fetchData().then(() => connectSSE());
-    return () => {
-      eventSourceRef.current?.close();
-      analyticsSourceRef.current?.close();
-    };
-  }, [fetchData, connectSSE]);
+    let eventsUnsubscribe: (() => void) | undefined;
+    let analyticsUnsubscribe: (() => void) | undefined;
 
-  // Pause / resume SSE
+    const init = async () => {
+      await fetchData();
+      await connectRealTime();
+
+      eventsUnsubscribe = consentWebSocketService.onEventsUpdate((event: ConsentDecisionEvent) => {
+        if (isRealTimeActiveRef.current) {
+          setEvents(prev => [event, ...prev.slice(0, 999)]);
+        }
+      });
+      analyticsUnsubscribe = consentWebSocketService.onAnalyticsUpdate((newAnalytics: ConsentAnalytics) => {
+        if (isRealTimeActiveRef.current) {
+          setAnalytics(newAnalytics);
+        }
+      });
+    };
+
+    init();
+
+    return () => {
+      eventsUnsubscribe?.();
+      analyticsUnsubscribe?.();
+      consentWebSocketService.disconnect();
+    };
+  }, [fetchData, connectRealTime]);
+
+  // Pause / resume real-time
   useEffect(() => {
     if (!isRealTimeActive) {
-      eventSourceRef.current?.close();
-      analyticsSourceRef.current?.close();
-      eventSourceRef.current = null;
-      analyticsSourceRef.current = null;
+      consentWebSocketService.disconnect();
     } else {
-      connectSSE();
+      connectRealTime();
     }
-  }, [isRealTimeActive, connectSSE]);
-
-  // Close export menu on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (showExportMenu && !(e.target as Element).closest('.export-menu-container')) {
-        setShowExportMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showExportMenu]);
+  }, [isRealTimeActive, connectRealTime]);
 
   // ─── Export helpers ────────────────────────────────────────────
 
@@ -334,33 +310,17 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
   // ─── Loading / error states ───────────────────────────────────
 
   if (isLoading) {
-    return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-            <p className="mt-4 text-muted-foreground">{t('Loading consent monitoring data...')}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading consent monitoring data...')} />;
   }
 
   if (error) {
     return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">{t('Failed to Load Consent Monitoring')}</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={fetchData} variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              {t('Try Again')}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageErrorState
+        title={t('Failed to Load Consent Monitoring')}
+        message={error}
+        onRetry={fetchData}
+        retryLabel={t('Try Again')}
+      />
     );
   }
 
@@ -390,39 +350,13 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Refresh')}
             </Button>
-            <div className="relative export-menu-container">
-              <Button variant="outline" onClick={() => setShowExportMenu(!showExportMenu)}>
-                <Download className="w-4 h-4 mr-2" />
-                {t('Export')}
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
-              {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-background border border-border rounded-2xl shadow-xl z-50">
-                  <div className="p-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => { exportAnalytics(); setShowExportMenu(false); }}
-                      className="w-full text-left justify-start h-auto px-4 py-3 rounded-xl"
-                    >
-                      <div>
-                        <div className="font-semibold text-foreground">{t('Export Current Data')}</div>
-                        <div className="text-sm text-muted-foreground">{t('Download current dashboard analytics')}</div>
-                      </div>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => { exportServerEvents(); setShowExportMenu(false); }}
-                      className="w-full text-left justify-start h-auto px-4 py-3 rounded-xl"
-                    >
-                      <div>
-                        <div className="font-semibold text-foreground">{t('Export Server Events')}</div>
-                        <div className="text-sm text-muted-foreground">{t('Download events log from server (JSONL)')}</div>
-                      </div>
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ExportMenu
+              label={t('Export')}
+              items={[
+                { label: t('Export Current Data'), description: t('Download current dashboard analytics'), onClick: exportAnalytics },
+                { label: t('Export Server Events'), description: t('Download events log from server (JSONL)'), onClick: exportServerEvents },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -430,40 +364,14 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
 
       {/* Real-time status banner — only shown in standalone mode */}
       {!embedded && (
-      <div className={`bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4 shadow-sm">
-              {isRealTimeActive ? (
-                <Activity className="h-5 w-5 text-green-600 animate-pulse" />
-              ) : (
-                <Pause className="h-5 w-5 text-orange-600" />
-              )}
-            </div>
-            <div>
-              <h3 className={`text-lg font-bold mb-1 ${
-                isRealTimeActive ? 'text-green-900 dark:text-green-300' : 'text-orange-900 dark:text-orange-300'
-              }`}>
-                {isRealTimeActive ? t('Real-time Monitoring Active') : t('Real-time Monitoring Paused')}
-              </h3>
-              <p className={`font-medium ${
-                isRealTimeActive ? 'text-green-800 dark:text-green-400' : 'text-orange-800 dark:text-orange-400'
-              }`}>
-                {isRealTimeActive
-                  ? t('Consent decisions are pushed in real time as they occur.')
-                  : t('Real-time updates are paused. Click Resume to continue monitoring.')}
-              </p>
-            </div>
-          </div>
-          <Badge className={
-            isRealTimeActive
-              ? 'bg-green-500/20 text-green-800 dark:text-green-300 border-green-500/30 font-semibold'
-              : 'bg-orange-500/20 text-orange-800 dark:text-orange-300 border-orange-500/30 font-semibold'
-          }>
-            {isRealTimeActive ? 'SSE Active' : 'Paused'}
-          </Badge>
-        </div>
-      </div>
+      <RealTimeBanner
+        isActive={isRealTimeActive}
+        activeTitle={t('Real-time Monitoring Active')}
+        pausedTitle={t('Real-time Monitoring Paused')}
+        activeDescription={t('Consent decisions are pushed in real time as they occur.')}
+        pausedDescription={t('Real-time updates are paused. Click Resume to continue monitoring.')}
+        badgeText={isRealTimeActive ? 'SSE Active' : 'Paused'}
+      />
       )}
 
       {/* Main dashboard area */}
@@ -492,75 +400,11 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
             <TabsContent value="overview" className="space-y-6">
               {/* Stat cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-6">
-                {/* Total Decisions */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <BarChart3 className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Decisions')}</h3>
-                  </div>
-                  <div className="text-3xl font-bold text-foreground mb-2">
-                    {(analytics?.totalDecisions ?? 0).toLocaleString()}
-                  </div>
-                  <p className="text-sm text-muted-foreground font-medium">{t('Last 24 hours')}</p>
-                </div>
-
-                {/* Permit Rate */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <ShieldCheck className="w-6 h-6 text-green-600" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Permit Rate')}</h3>
-                  </div>
-                  <div className="text-3xl font-bold text-green-900 dark:text-green-300 mb-2">
-                    {(analytics?.permitRate ?? 0).toFixed(1)}%
-                  </div>
-                  <p className="text-sm text-green-700 dark:text-green-400 font-medium">{t('Allowed access requests')}</p>
-                </div>
-
-                {/* Deny Rate */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <ShieldX className="w-6 h-6 text-red-600" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 tracking-wide">{t('Deny Rate')}</h3>
-                  </div>
-                  <div className="text-3xl font-bold text-red-900 dark:text-red-300 mb-2">
-                    {(analytics?.denyRate ?? 0).toFixed(1)}%
-                  </div>
-                  <p className="text-sm text-red-700 dark:text-red-400 font-medium">{t('Blocked access requests')}</p>
-                </div>
-
-                {/* Avg Check Duration */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <Timer className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Check Time')}</h3>
-                  </div>
-                  <div className="text-3xl font-bold text-orange-900 dark:text-orange-300 mb-2">
-                    {(analytics?.averageCheckDuration ?? 0).toFixed(0)}ms
-                  </div>
-                  <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">{t('Average consent check')}</p>
-                </div>
-
-                {/* Cache Hit Rate */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <Database className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Cache Hit Rate')}</h3>
-                  </div>
-                  <div className="text-3xl font-bold text-purple-900 dark:text-purple-300 mb-2">
-                    {(analytics?.cacheHitRate ?? 0).toFixed(1)}%
-                  </div>
-                  <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">{t('Served from cache')}</p>
-                </div>
+                <StatCard icon={BarChart3} label={t('Total Decisions')} value={(analytics?.totalDecisions ?? 0).toLocaleString()} subtitle={t('Last 24 hours')} color="primary" />
+                <StatCard icon={ShieldCheck} label={t('Permit Rate')} value={`${(analytics?.permitRate ?? 0).toFixed(1)}%`} subtitle={t('Allowed access requests')} color="green" />
+                <StatCard icon={ShieldX} label={t('Deny Rate')} value={`${(analytics?.denyRate ?? 0).toFixed(1)}%`} subtitle={t('Blocked access requests')} color="red" />
+                <StatCard icon={Timer} label={t('Avg Check Time')} value={`${(analytics?.averageCheckDuration ?? 0).toFixed(0)}ms`} subtitle={t('Average consent check')} color="orange" />
+                <StatCard icon={Database} label={t('Cache Hit Rate')} value={`${(analytics?.cacheHitRate ?? 0).toFixed(1)}%`} subtitle={t('Served from cache')} color="purple" />
               </div>
 
               {/* Charts row */}

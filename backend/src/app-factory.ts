@@ -10,6 +10,7 @@ import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
 import { consentMonitoringRoutes } from './routes/consent-monitoring'
+import { consentWebSocket } from './routes/consent-websocket'
 import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
@@ -85,6 +86,7 @@ export function createApp() {
         .use(oauthMonitoringRoutes)
         .use(oauthWebSocket)
         .use(consentMonitoringRoutes)
+        .use(consentWebSocket)
         .use(fhirMonitoringRoutes)
         .use(fhirRoutes)
 

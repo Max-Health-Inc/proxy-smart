@@ -6,7 +6,6 @@ import {
   RefreshCw,
   Plus,
   Trash2,
-  Search,
   Mail,
   CheckCircle,
   XCircle,
@@ -19,7 +18,10 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Spinner } from '../ui/spinner';
+import { SearchInput } from '../ui/search-input';
+import { PageLoadingState } from '../ui/page-loading-state';
+import { PageErrorState } from '../ui/page-error-state';
+import { EmptyState } from '../ui/empty-state';
 import {
   Dialog,
   DialogContent,
@@ -137,23 +139,16 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
   }, [clientApis, fetchData]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="md" />
-        <span className="ml-3 text-muted-foreground">{t('Loading members...')}</span>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading members...')} />;
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={fetchData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('Retry')}
-        </Button>
-      </div>
+      <PageErrorState
+        title={error}
+        onRetry={fetchData}
+        retryLabel={t('Retry')}
+      />
     );
   }
 
@@ -166,15 +161,11 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
     <div className="space-y-4">
       {/* Search, Actions */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('Search members...')}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder={t('Search members...')}
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
         <Button variant="default" size="sm" onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           {t('Add Member')}
@@ -196,12 +187,10 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
 
       {/* Members List */}
       {filteredMembers.length === 0 ? (
-        <div className="text-center py-12">
-          <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            {searchQuery ? t('No members match your search') : t('No members found. Add one or sync from Keycloak.')}
-          </p>
-        </div>
+        <EmptyState
+          icon={Users}
+          title={searchQuery ? t('No members match your search') : t('No members found. Add one or sync from Keycloak.')}
+        />
       ) : (
         <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden">
           <div className="divide-y divide-border/30">

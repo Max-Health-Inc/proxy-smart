@@ -6,7 +6,6 @@ import {
   RefreshCw,
   Plus,
   Trash2,
-  Search,
   DoorOpen,
   ChevronDown,
   ChevronRight,
@@ -17,7 +16,10 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Spinner } from '../ui/spinner';
+import { SearchInput } from '../ui/search-input';
+import { PageLoadingState } from '../ui/page-loading-state';
+import { PageErrorState } from '../ui/page-error-state';
+import { EmptyState } from '../ui/empty-state';
 import {
   Dialog,
   DialogContent,
@@ -164,23 +166,16 @@ export function GroupsPanel() {
   }, [allDoors, getGroupDoors]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="md" />
-        <span className="ml-3 text-muted-foreground">{t('Loading groups...')}</span>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading groups...')} />;
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={fetchData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('Retry')}
-        </Button>
-      </div>
+      <PageErrorState
+        title={error}
+        onRetry={fetchData}
+        retryLabel={t('Retry')}
+      />
     );
   }
 
@@ -193,15 +188,11 @@ export function GroupsPanel() {
     <div className="space-y-4">
       {/* Search, Create, Refresh */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('Search groups...')}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder={t('Search groups...')}
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
         <Button variant="default" size="sm" onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           {t('Create Group')}
@@ -217,12 +208,10 @@ export function GroupsPanel() {
 
       {/* Groups List */}
       {filteredGroups.length === 0 ? (
-        <div className="text-center py-12">
-          <Layers className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            {searchQuery ? t('No groups match your search') : t('No groups found. Create one to get started.')}
-          </p>
-        </div>
+        <EmptyState
+          icon={Layers}
+          title={searchQuery ? t('No groups match your search') : t('No groups found. Create one to get started.')}
+        />
       ) : (
         <div className="space-y-3">
           {filteredGroups.map(group => {

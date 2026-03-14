@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Loader2, Shield } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
@@ -358,14 +359,7 @@ export function IdPManager() {
   };
 
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[300px]">
-        <div className="flex items-center space-x-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <div className="text-muted-foreground">Loading Identity Providers...</div>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message="Loading Identity Providers..." className="min-h-[300px]" />;
   }
 
   return (

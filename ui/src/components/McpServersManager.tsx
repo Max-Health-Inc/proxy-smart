@@ -695,19 +695,20 @@ export function McpServersManager() {
             </div>
 
             {/* Top-level Tool Type Tabs */}
+            <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={activeToolTab} onValueChange={setActiveToolTab} className="w-full">
-                <TabsList className="w-full justify-start mb-6">
-                    <TabsTrigger value="mcp-servers" className="px-6 py-2.5">
-                        <Server className="w-4 h-4 mr-2" />
-                        {t('MCP Servers')} ({servers.length})
+                <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+                    <TabsTrigger value="mcp-servers" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                        <Server className="w-4 h-4" />
+                        <span>{t('MCP Servers')} ({servers.length})</span>
                     </TabsTrigger>
-                    <TabsTrigger value="skills" className="px-6 py-2.5">
-                        <BookOpen className="w-4 h-4 mr-2" />
-                        {t('Skills')} ({skills.length})
+                    <TabsTrigger value="skills" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                        <BookOpen className="w-4 h-4" />
+                        <span>{t('Skills')} ({skills.length})</span>
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="mcp-servers" className="mt-0 space-y-6">
+                <TabsContent value="mcp-servers" className="p-6 space-y-6">
 
             {/* Quick Setup Templates */}
             {templates && templates.templates.length > 0 && (
@@ -1066,7 +1067,7 @@ export function McpServersManager() {
                 </TabsContent>
 
                 {/* Skills Tab */}
-                <TabsContent value="skills" className="mt-0 space-y-6">
+                <TabsContent value="skills" className="p-6 space-y-6">
                     <div className="bg-card/70 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-2xl border border-border/50 shadow-lg">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center">
@@ -1172,6 +1173,7 @@ export function McpServersManager() {
                     </div>
                 </TabsContent>
             </Tabs>
+            </div>
 
             {/* Add Server Dialog */}
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>

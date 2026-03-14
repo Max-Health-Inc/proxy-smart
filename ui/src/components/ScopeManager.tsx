@@ -31,10 +31,10 @@ import {
   CheckCircle,
   AlertCircle,
   Copy,
-  Play,
-  Loader2
+  Play
 } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copy-button';
+import { StatCard } from '@/components/ui/stat-card';
 import { useTranslation } from 'react-i18next';
 
 // FHIR Resource types for scope building
@@ -343,7 +343,7 @@ interface ScopeSet {
   isTemplate: boolean;
 }
 
-export function ScopeManager() {
+export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const [scopeSets, setScopeSets] = useState<ScopeSet[]>([]);
   const [loading, setLoading] = useState(false);
@@ -655,29 +655,36 @@ export function ScopeManager() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
       {/* Header */}
-      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-              {t('SMART Scope Management')}
-            </h1>
-            <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              {t('Build and manage FHIR resource access scopes')}
-            </div>
-          </div>
-          <Button
-            onClick={() => setShowBuilder(true)}
-          >
+      {embedded ? (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowBuilder(true)}>
             <Plus className="h-5 w-5 mr-2" />
             {t('Create Scope Set')}
           </Button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
+            <div className="flex-1">
+              <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+                {t('SMART Scope Management')}
+              </h1>
+              <div className="text-muted-foreground text-lg flex items-center">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                  <Shield className="w-5 h-5 text-primary" />
+                </div>
+                {t('Build and manage FHIR resource access scopes')}
+              </div>
+            </div>
+            <Button onClick={() => setShowBuilder(true)}>
+              <Plus className="h-5 w-5 mr-2" />
+              {t('Create Scope Set')}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Scope Builder Modal/Panel */}
       {showBuilder && (
@@ -1060,67 +1067,34 @@ export function ScopeManager() {
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Database className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Scope Sets')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{scopeSets.length}</div>
-              <p className="text-sm text-muted-foreground font-medium">{t('Custom & templates')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Shield className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Custom Scope Sets')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-green-900 dark:text-green-300 mb-2">{scopeSets.filter(s => !s.isTemplate).length}</div>
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">{t('User created')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Code className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Available Templates')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-purple-900 dark:text-purple-300 mb-2">{SCOPE_TEMPLATES.length}</div>
-              <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">{t('Role-based')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Settings className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Scopes')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-orange-900 dark:text-orange-300 mb-2">
-                {scopeSets.length > 0 ? Math.round(scopeSets.reduce((sum, s) => sum + s.scopes.length, 0) / scopeSets.length) : 0}
-              </div>
-              <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">{t('Per scope set')}</p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon={Database}
+          label={t('Total Scope Sets')}
+          value={scopeSets.length}
+          subtitle={t('Custom & templates')}
+          color="primary"
+        />
+        <StatCard
+          icon={Shield}
+          label={t('Custom Scope Sets')}
+          value={scopeSets.filter(s => !s.isTemplate).length}
+          subtitle={t('User created')}
+          color="green"
+        />
+        <StatCard
+          icon={Code}
+          label={t('Available Templates')}
+          value={SCOPE_TEMPLATES.length}
+          subtitle={t('Role-based')}
+          color="purple"
+        />
+        <StatCard
+          icon={Settings}
+          label={t('Avg Scopes')}
+          value={scopeSets.length > 0 ? Math.round(scopeSets.reduce((sum, s) => sum + s.scopes.length, 0) / scopeSets.length) : 0}
+          subtitle={t('Per scope set')}
+          color="orange"
+        />
       </div>
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">
         <div className="p-8 pb-6">
@@ -1136,7 +1110,7 @@ export function ScopeManager() {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : (
             <div className="overflow-x-auto">

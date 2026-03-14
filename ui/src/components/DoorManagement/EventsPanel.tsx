@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import {
   Activity,
   RefreshCw,
-  Search,
   Clock,
   DoorOpen,
   User,
@@ -14,8 +13,10 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Spinner } from '../ui/spinner';
+import { SearchInput } from '../ui/search-input';
+import { PageLoadingState } from '../ui/page-loading-state';
+import { PageErrorState } from '../ui/page-error-state';
+import { EmptyState } from '../ui/empty-state';
 import type { AccessEvent } from '../../lib/api-client';
 
 const PAGE_SIZE = 25;
@@ -98,37 +99,26 @@ export function EventsPanel() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   if (loading && events.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="md" />
-        <span className="ml-3 text-muted-foreground">{t('Loading events...')}</span>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading events...')} />;
   }
 
   if (notConfigured) {
     return (
-      <div className="text-center py-12">
-        <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground font-medium mb-2">
-          {t('Door access monitoring is not available')}
-        </p>
-        <p className="text-sm text-muted-foreground">
-          {t('Configure a door management provider (KISI or UniFi Access) to view access events.')}
-        </p>
-      </div>
+      <EmptyState
+        icon={AlertCircle}
+        title={t('Door access monitoring is not available')}
+        description={t('Configure a door management provider (KISI or UniFi Access) to view access events.')}
+      />
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={fetchData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('Retry')}
-        </Button>
-      </div>
+      <PageErrorState
+        title={error}
+        onRetry={fetchData}
+        retryLabel={t('Retry')}
+      />
     );
   }
 
@@ -136,15 +126,11 @@ export function EventsPanel() {
     <div className="space-y-4">
       {/* Search and Refresh */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('Search events...')}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder={t('Search events...')}
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
         <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           {t('Refresh')}
@@ -156,12 +142,10 @@ export function EventsPanel() {
 
       {/* Events List */}
       {filteredEvents.length === 0 ? (
-        <div className="text-center py-12">
-          <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            {searchQuery ? t('No events match your search') : t('No events recorded yet')}
-          </p>
-        </div>
+        <EmptyState
+          icon={Activity}
+          title={searchQuery ? t('No events match your search') : t('No events recorded yet')}
+        />
       ) : (
         <div className="rounded-xl border border-border/50 bg-card shadow-sm overflow-hidden">
           <div className="divide-y divide-border/30">

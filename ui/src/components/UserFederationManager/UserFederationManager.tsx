@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { NotificationToast } from '../ui/NotificationToast';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
@@ -346,7 +347,7 @@ function LdapForm({ form, setForm, onTestConnection, testing }: {
 
 // ==================== Main Component ====================
 
-export function UserFederationManager() {
+export function UserFederationManager({ embedded }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
   const [federations, setFederations] = useState<FederationWithStatus[]>([]);
@@ -557,34 +558,16 @@ export function UserFederationManager() {
   // ==================== Render ====================
 
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[300px]">
-        <div className="flex items-center space-x-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <div className="text-muted-foreground">{t('Loading User Federations...')}</div>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading User Federations...')} className="min-h-[300px]" />;
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
       <NotificationToast notification={notification} onClose={() => setNotification(null)} />
 
       {/* Header */}
-      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-              {t('User Federation')}
-            </h1>
-            <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
-                <Database className="w-5 h-5 text-primary" />
-              </div>
-              {t('Configure LDAP user federation to sync users from external directories')}
-            </div>
-          </div>
+      {embedded ? (
+        <div className="flex justify-end">
           <Button
             onClick={() => {
               setForm({ ...defaultFormData });
@@ -596,7 +579,33 @@ export function UserFederationManager() {
             {t('Add LDAP Provider')}
           </Button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
+            <div className="flex-1">
+              <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+                {t('User Federation')}
+              </h1>
+              <div className="text-muted-foreground text-lg flex items-center">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                  <Database className="w-5 h-5 text-primary" />
+                </div>
+                {t('Configure LDAP user federation to sync users from external directories')}
+              </div>
+            </div>
+            <Button
+              onClick={() => {
+                setForm({ ...defaultFormData });
+                setEditingId(null);
+                setShowAddForm(true);
+              }}
+            >
+              <Plus className="h-5 w-5 mr-2" />
+              {t('Add LDAP Provider')}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Statistics */}
       <StatisticsCards federations={federations} />

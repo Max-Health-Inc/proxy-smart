@@ -5,9 +5,12 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { PageLoadingState } from './ui/page-loading-state';
+import { PageErrorState } from './ui/page-error-state';
+import { ExportMenu } from './ui/export-menu';
+import { StatCard } from './ui/stat-card';
 import { 
   Activity, 
-  AlertCircle, 
   CheckCircle, 
   RefreshCw, 
   TrendingUp, 
@@ -17,12 +20,10 @@ import {
   AlertTriangle, 
   Play, 
   Pause, 
-  Download, 
   Search,
   Server,
   Database,
   CalendarDays,
-  ChevronDown
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -57,7 +58,6 @@ export function OAuthMonitoringDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Track whether this is the initial data load
   const isInitialLoadRef = useRef(true);
@@ -401,21 +401,6 @@ export function OAuthMonitoringDashboard() {
     return () => { es?.close(); };
   }, []);
 
-  // Close export menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (showExportMenu && !target.closest('.export-menu-container')) {
-        setShowExportMenu(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showExportMenu]);
-
   const refreshData = async () => {
     // Reset the initial load flag when manually refreshing
     isInitialLoadRef.current = true;
@@ -551,33 +536,17 @@ export function OAuthMonitoringDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">{t('Loading OAuth monitoring data...')}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading OAuth monitoring data...')} />;
   }
 
   if (error) {
     return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">{t('Failed to Load OAuth Monitoring Data')}</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={refreshData} variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              {t('Try Again')}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageErrorState
+        title={t('Failed to Load OAuth Monitoring Data')}
+        message={error}
+        onRetry={refreshData}
+        retryLabel={t('Try Again')}
+      />
     );
   }
 
@@ -612,49 +581,13 @@ export function OAuthMonitoringDashboard() {
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Refresh')}
             </Button>
-            <div className="relative export-menu-container">
-              <Button
-                variant="outline"
-                onClick={() => setShowExportMenu(!showExportMenu)}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {t('Export')}
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
-              
-              {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-background border border-border rounded-2xl shadow-xl z-50">
-                  <div className="p-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        exportAnalytics();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full text-left justify-start h-auto px-4 py-3 rounded-xl"
-                    >
-                      <div>
-                        <div className="font-semibold text-foreground">{t('Export Current Data')}</div>
-                        <div className="text-sm text-muted-foreground">{t('Download current dashboard analytics')}</div>
-                      </div>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        exportServerEvents();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full text-left justify-start h-auto px-4 py-3 rounded-xl"
-                    >
-                      <div>
-                        <div className="font-semibold text-foreground">{t('Export Server Events')}</div>
-                        <div className="text-sm text-muted-foreground">{t('Download events log from server')}</div>
-                      </div>
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ExportMenu
+              label={t('Export')}
+              items={[
+                { label: t('Export Current Data'), description: t('Download current dashboard analytics'), onClick: exportAnalytics },
+                { label: t('Export Server Events'), description: t('Download events log from server'), onClick: exportServerEvents },
+              ]}
+            />
           </div>
         </div>
       </div>
@@ -819,73 +752,10 @@ export function OAuthMonitoringDashboard() {
             <TabsContent value="overview" className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                          <BarChart3 className="w-6 h-6 text-primary" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Requests')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-foreground mb-2">{analytics?.totalRequests ? analytics.totalRequests.toLocaleString() : '0'}</div>
-                      <p className="text-sm text-muted-foreground font-medium">{t('Last 24 hours')}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                          <TrendingUp className="w-6 h-6 text-green-600" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Success Rate')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-green-900 dark:text-green-300 mb-2">
-                        {analytics?.successRate ? analytics.successRate.toFixed(1) : '0.0'}%
-                      </div>
-                      <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                        {t('Current success rate')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                          <Timer className="w-6 h-6 text-orange-600" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Response Time')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-orange-900 dark:text-orange-300 mb-2">
-                        {analytics?.averageResponseTime ? analytics.averageResponseTime.toFixed(0) : '0'}ms
-                      </div>
-                      <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
-                        {t('Average response time')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                          <Shield className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Active Tokens')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-purple-900 dark:text-purple-300 mb-2">{analytics?.activeTokens ?? 0}</div>
-                      <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">{t('Currently valid')}</p>
-                    </div>
-                  </div>
-                </div>
+                <StatCard icon={BarChart3} label={t('Total Requests')} value={analytics?.totalRequests ? analytics.totalRequests.toLocaleString() : '0'} subtitle={t('Last 24 hours')} color="primary" />
+                <StatCard icon={TrendingUp} label={t('Success Rate')} value={`${analytics?.successRate ? analytics.successRate.toFixed(1) : '0.0'}%`} subtitle={t('Current success rate')} color="green" />
+                <StatCard icon={Timer} label={t('Avg Response Time')} value={`${analytics?.averageResponseTime ? analytics.averageResponseTime.toFixed(0) : '0'}ms`} subtitle={t('Average response time')} color="orange" />
+                <StatCard icon={Shield} label={t('Active Tokens')} value={analytics?.activeTokens ?? 0} subtitle={t('Currently valid')} color="purple" />
 
                 {hasPredictiveForecast && predictiveInsights && (
                   <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">

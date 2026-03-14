@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';
 import { HealthcareUsersStats } from './HealthcareUsersStats';
 import { HealthcareUserAddForm } from './HealthcareUserAddForm';
@@ -104,7 +105,7 @@ function transformApiUser(apiUser: HealthcareUser): HealthcareUserWithPersons {
   }
 }
 
-export function HealthcareUsersManager() {
+export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}) {
   const { isAuthenticated, clientApis } = useAuth();
   
   // Store hooks for FHIR servers and healthcare users
@@ -210,13 +211,10 @@ export function HealthcareUsersManager() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
       {/* Show loading state */}
       {loading && (
-        <div className="flex justify-center items-center p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Loading healthcare users...</span>
-        </div>
+        <PageLoadingState message="Loading healthcare users..." className="min-h-[200px]" />
       )}
 
       {/* Show error state */}
@@ -234,7 +232,16 @@ export function HealthcareUsersManager() {
       )}
 
       {/* Header Section */}
-      <HealthcareUsersHeader onAddUser={() => setShowAddForm(true)} />
+      {embedded ? (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="h-5 w-5 mr-2" />
+            Add New User
+          </Button>
+        </div>
+      ) : (
+        <HealthcareUsersHeader onAddUser={() => setShowAddForm(true)} />
+      )}
 
       {/* Statistics Cards */}
       {!loading && (

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Card,
   CardContent,
@@ -147,12 +148,7 @@ export function IALSettings() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600" />
-        <span className="ml-3 text-muted-foreground">Loading IAL settings...</span>
-      </div>
-    );
+    return <PageLoadingState message="Loading IAL settings..." />;
   }
 
   return (

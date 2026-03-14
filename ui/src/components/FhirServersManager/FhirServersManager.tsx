@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Database,
   RefreshCw,
-  AlertCircle,
   Plus,
   Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
+import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';
 import type { 
   FhirServerWithState
@@ -293,40 +294,17 @@ export function FhirServersManager() {
   }, [fetchServers]);
 
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Loading FHIR Servers</h2>
-          <p className="text-muted-foreground font-medium">Fetching server information...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message="Loading FHIR Servers..." />;
   }
 
   if (error) {
     return (
-      <div className="p-8">
-        <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-destructive" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-destructive">Error Loading Servers</h3>
-              <p className="text-destructive/80">{error}</p>
-            </div>
-          </div>
-          <Button
-            onClick={fetchServers}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
+      <PageErrorState
+        title="Error Loading Servers"
+        message={error}
+        onRetry={fetchServers}
+        retryLabel="Retry"
+      />
     );
   }
 

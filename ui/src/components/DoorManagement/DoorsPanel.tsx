@@ -12,12 +12,13 @@ import {
   Loader2,
   CheckCircle,
   AlertCircle,
-  Search,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Spinner } from '../ui/spinner';
+import { SearchInput } from '../ui/search-input';
+import { PageLoadingState } from '../ui/page-loading-state';
+import { PageErrorState } from '../ui/page-error-state';
+import { EmptyState } from '../ui/empty-state';
 import type {
   AccessDoor,
   AccessLocation,
@@ -81,23 +82,16 @@ export function DoorsPanel() {
   }, [locations]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="md" />
-        <span className="ml-3 text-muted-foreground">{t('Loading doors...')}</span>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading doors...')} />;
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-destructive mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={fetchData}>
-          <RefreshCw className="h-4 w-4 mr-2" />
-          {t('Retry')}
-        </Button>
-      </div>
+      <PageErrorState
+        title={error}
+        onRetry={fetchData}
+        retryLabel={t('Retry')}
+      />
     );
   }
 
@@ -123,15 +117,11 @@ export function DoorsPanel() {
     <div className="space-y-4">
       {/* Search and Refresh */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('Search doors...')}
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder={t('Search doors...')}
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
         <Button variant="outline" size="sm" onClick={fetchData}>
           <RefreshCw className="h-4 w-4 mr-2" />
           {t('Refresh')}
@@ -143,12 +133,10 @@ export function DoorsPanel() {
 
       {/* Doors grouped by location */}
       {filteredDoors.length === 0 ? (
-        <div className="text-center py-12">
-          <DoorOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">
-            {searchQuery ? t('No doors match your search') : t('No doors found')}
-          </p>
-        </div>
+        <EmptyState
+          icon={DoorOpen}
+          title={searchQuery ? t('No doors match your search') : t('No doors found')}
+        />
       ) : (
         <div className="space-y-6">
           {sortedLocationIds.map(locationId => (

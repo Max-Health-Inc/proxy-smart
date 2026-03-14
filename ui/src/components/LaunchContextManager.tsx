@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { LaunchContextSetBuilder } from './LaunchContextSetBuilder';
 import { useLaunchContextSets } from '../stores/smartStore';
 import { useAuth } from '@/stores/authStore';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
+import { StatCard } from '@/components/ui/stat-card';
 import {
   Plus,
   Edit,
@@ -18,7 +20,6 @@ import {
   Eye,
   Target,
   AlertCircle,
-  Loader2,
   Users,
   FileText,
   Shield
@@ -226,7 +227,7 @@ const SAMPLE_USERS: LaunchContextUser[] = [
   }
 ];
 
-export function LaunchContextManager() {
+export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) {
   // Use fhirStore for context sets management
   const { contextSets, addContextSet, updateContextSet, deleteContextSet } = useLaunchContextSets();
 
@@ -406,119 +407,80 @@ export function LaunchContextManager() {
 
 
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Loading Launch Contexts</h2>
-          <p className="text-muted-foreground font-medium">Fetching context configurations...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message="Loading Launch Contexts..." className="min-h-[400px]" />;
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
       {/* Enhanced Header */}
-      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-              Launch Context Management
-            </h1>
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
-                <Rocket className="w-5 h-5 text-primary" />
+      {embedded ? (
+        <div className="flex justify-end space-x-3">
+          <Button onClick={() => setShowBuilder(true)}>
+            <Plus className="w-5 h-5 mr-2" />
+            New Context Set
+          </Button>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RefreshCw className="w-5 h-5 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      ) : (
+        <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
+            <div className="flex-1">
+              <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+                Launch Context Management
+              </h1>
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                  <Rocket className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-muted-foreground text-lg">
+                  Configure SMART on FHIR launch contexts and scope templates
+                </p>
               </div>
-              <p className="text-muted-foreground text-lg">
-                Configure SMART on FHIR launch contexts and scope templates
-              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Button onClick={() => setShowBuilder(true)}>
+                <Plus className="w-5 h-5 mr-2" />
+                New Context Set
+              </Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                <RefreshCw className="w-5 h-5 mr-2" />
+                Refresh
+              </Button>
             </div>
           </div>
-          <div className="flex space-x-3">
-            <Button
-              onClick={() => setShowBuilder(true)}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              New Context Set
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => window.location.reload()}
-            >
-              <RefreshCw className="w-5 h-5 mr-2" />
-              Refresh
-            </Button>
-          </div>
         </div>
-      </div>
+      )}
 
       {/* Enhanced Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Target className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-sm font-semibold text-blue-800 dark:text-blue-300 tracking-wide">Total Context Sets</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{contextSets.length}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Settings className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-sm font-semibold text-blue-800 dark:text-blue-300 tracking-wide">Templates</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">
-                {contextSets.filter(s => s.isTemplate).length}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Check className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">Custom Sets</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">
-                {contextSets.filter(s => !s.isTemplate).length}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Rocket className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-sm font-semibold text-indigo-800 dark:text-indigo-300 tracking-wide">Launch Scopes</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">
-                {contextSets.reduce((total, set) => total + set.contexts.length, 0)}
-              </div>
-              <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Total scopes</p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon={Target}
+          label="Total Context Sets"
+          value={contextSets.length}
+          color="blue"
+        />
+        <StatCard
+          icon={Settings}
+          label="Templates"
+          value={contextSets.filter(s => s.isTemplate).length}
+          color="blue"
+        />
+        <StatCard
+          icon={Check}
+          label="Custom Sets"
+          value={contextSets.filter(s => !s.isTemplate).length}
+          color="green"
+        />
+        <StatCard
+          icon={Rocket}
+          label="Launch Scopes"
+          value={contextSets.reduce((total, set) => total + set.contexts.length, 0)}
+          subtitle="Total scopes"
+          color="purple"
+        />
       </div>
 
       {/* Enhanced Main Content */}
@@ -690,14 +652,7 @@ export function LaunchContextManager() {
               </div>
             </div>
 
-            {launchContextsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
-                  <p className="text-muted-foreground">Loading launch contexts...</p>
-                </div>
-              </div>
-            ) : error ? (
+            {launchContextsLoading ? (\n              <PageLoadingState message=\"Loading launch contexts...\" className=\"min-h-[200px]\" />\n            ) : error ? (
               <div className="space-y-6">
                 <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-4">

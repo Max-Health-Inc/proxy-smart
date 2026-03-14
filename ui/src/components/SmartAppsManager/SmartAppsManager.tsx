@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
@@ -414,10 +415,7 @@ export function SmartAppsManager() {
   return (
     <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-muted-foreground">Loading SMART applications...</span>
-        </div>
+        <PageLoadingState message="Loading SMART applications..." />
       ) : (
         <>
           {/* Enhanced Header Section */}
