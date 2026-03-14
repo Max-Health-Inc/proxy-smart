@@ -1,7 +1,6 @@
 import { SmartAppsManager } from './SmartAppsManager/SmartAppsManager';
 import { FhirServersManager } from './FhirServersManager/FhirServersManager';
-import { ScopeManager } from './ScopeManager';
-import { LaunchContextManager } from './LaunchContextManager';
+import { SmartConfigManager } from './SmartConfigManager';
 import { SmartProxyOverview } from './SmartProxyOverview';
 import { McpServersManager } from './McpServersManager';
 import { useState, useEffect } from 'react';
@@ -32,8 +31,7 @@ const VALID_TABS = [
     'fhir-servers',
     'ai-tools',
     'idp',
-    'scopes',
-    'launch-context',
+    'smart-config',
     'oauth-monitoring',
     'door-management',
     'user-federation',
@@ -176,8 +174,7 @@ export function AdminApp() {
                             {currentTab === 'fhir-servers' && <FhirServersManager />}
                             {currentTab === 'ai-tools' && <McpServersManager />}
                             {currentTab === 'idp' && <IdPManager />}
-                            {currentTab === 'scopes' && <ScopeManager />}
-                            {currentTab === 'launch-context' && <LaunchContextManager />}
+                            {currentTab === 'smart-config' && <SmartConfigManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'user-federation' && <UserFederationManager />}

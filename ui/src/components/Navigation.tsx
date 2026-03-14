@@ -28,7 +28,6 @@ import {
   Languages,
   Check,
   Target,
-  Play,
   BarChart3,
   Moon,
   Sun,
@@ -145,16 +144,10 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       icon: Shield
     },
     { 
-      id: 'scopes', 
-      label: t('Scope Management'), 
-      description: t('SMART Scopes'),
+      id: 'smart-config', 
+      label: t('SMART Config'), 
+      description: t('Scopes & Launch Context'),
       icon: Target
-    },
-    { 
-      id: 'launch-context', 
-      label: t('Launch Context'), 
-      description: t('Context Configuration'),
-      icon: Play
     },
     { 
       id: 'oauth-monitoring', 
