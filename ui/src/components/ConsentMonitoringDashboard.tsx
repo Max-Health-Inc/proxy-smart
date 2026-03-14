@@ -108,11 +108,19 @@ const CHART_COLORS = [
 
 // ─── Component ───────────────────────────────────────────────────────
 
-export function ConsentMonitoringDashboard() {
+interface ConsentMonitoringDashboardProps {
+  /** When true, hides the standalone header/banner (used inside OAuthMonitoringDashboard) */
+  embedded?: boolean;
+  /** Parent's real-time state — controls SSE pause/resume when embedded */
+  isRealTimeActive?: boolean;
+}
+
+export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentRealTime }: ConsentMonitoringDashboardProps = {}) {
   const { t } = useTranslation();
   const [events, setEvents] = useState<ConsentDecisionEvent[]>([]);
   const [analytics, setAnalytics] = useState<ConsentAnalytics | null>(null);
-  const [isRealTimeActive, setIsRealTimeActive] = useState(true);
+  const [localRealTime, setLocalRealTime] = useState(true);
+  const isRealTimeActive = embedded && parentRealTime !== undefined ? parentRealTime : localRealTime;
   const [filterDecision, setFilterDecision] = useState<string>('all');
   const [filterResourceType, setFilterResourceType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -357,8 +365,9 @@ export function ConsentMonitoringDashboard() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
-      {/* Header */}
+    <div className={embedded ? 'space-y-6' : 'p-4 sm:p-6 space-y-6 bg-background min-h-full'}>
+      {/* Header — only shown in standalone mode */}
+      {!embedded && (
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
@@ -373,7 +382,7 @@ export function ConsentMonitoringDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant={isRealTimeActive ? 'default' : 'outline'} onClick={() => setIsRealTimeActive(p => !p)}>
+            <Button variant={isRealTimeActive ? 'default' : 'outline'} onClick={() => setLocalRealTime(p => !p)}>
               {isRealTimeActive ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {isRealTimeActive ? t('Pause') : t('Resume')} {t('Real-time')}
             </Button>
@@ -417,8 +426,10 @@ export function ConsentMonitoringDashboard() {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Real-time status banner */}
+      {/* Real-time status banner — only shown in standalone mode */}
+      {!embedded && (
       <div className={`bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center">
@@ -453,6 +464,7 @@ export function ConsentMonitoringDashboard() {
           </Badge>
         </div>
       </div>
+      )}
 
       {/* Main dashboard area */}
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">

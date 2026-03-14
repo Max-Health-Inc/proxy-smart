@@ -1650,7 +1650,7 @@ export function OAuthMonitoringDashboard() {
             </TabsContent>
 
             <TabsContent value="consent" className="space-y-6">
-              <ConsentMonitoringDashboard />
+              <ConsentMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
             </TabsContent>
           </Tabs>
         </div>
