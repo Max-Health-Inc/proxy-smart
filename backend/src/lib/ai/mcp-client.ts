@@ -1,6 +1,9 @@
 /**
  * MCP Client - Connect to MCP servers (internal or external)
  * 
+ * Uses the official @modelcontextprotocol/sdk for proper JSON-RPC 2.0
+ * communication with any standard MCP server (Streamable HTTP + SSE fallback).
+ * 
  * This client can:
  * 1. Connect to our internal MCP server (/mcp) for backend tool execution
  * 2. Connect to external MCP servers (like filesystem, database, etc.)
@@ -10,6 +13,8 @@
 
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { connectMcpClient } from '@/lib/mcp-client'
+import type { Client } from '@modelcontextprotocol/sdk/client'
 
 export interface McpTool {
   type: 'function'
@@ -34,12 +39,22 @@ export interface McpServerConfig {
 
 export class McpClient {
   private serverConfig: McpServerConfig
+  private client: Client | null = null
   private toolsCache: McpTool[] | null = null
   private toolsCacheTimestamp = 0
   private readonly CACHE_TTL = 60000 // 1 minute
 
   constructor(serverConfig: McpServerConfig) {
     this.serverConfig = serverConfig
+  }
+
+  /**
+   * Get or create the SDK client connection
+   */
+  private async getClient(): Promise<Client> {
+    if (this.client) return this.client
+    this.client = await connectMcpClient(this.serverConfig.url)
+    return this.client
   }
 
   /**
@@ -53,32 +68,21 @@ export class McpClient {
     }
 
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      }
+      const client = await this.getClient()
+      const { tools } = await client.listTools()
 
-      if (this.serverConfig.auth?.type === 'bearer') {
-        headers['Authorization'] = `Bearer ${this.serverConfig.auth.token}`
-      }
-
-      const response = await fetch(this.serverConfig.url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          type: 'listTools'
-        }),
-        signal: AbortSignal.timeout(10000)
-      })
-
-      if (!response.ok) {
-        throw new Error(`MCP server ${this.serverConfig.name} returned ${response.status}`)
-      }
-
-      const data = await response.json() as { tools?: McpTool[] }
-      this.toolsCache = data.tools || []
+      // Convert SDK tool format to OpenAI-style function format
+      this.toolsCache = tools.map(t => ({
+        type: 'function' as const,
+        function: {
+          name: t.name,
+          description: t.description ?? '',
+          parameters: (t.inputSchema ?? {}) as Record<string, unknown>,
+        }
+      }))
       this.toolsCacheTimestamp = now
 
-      logger.server.info('MCP tools fetched', {
+      logger.server.info('MCP tools fetched via SDK', {
         server: this.serverConfig.name,
         toolCount: this.toolsCache.length
       })
@@ -100,37 +104,22 @@ export class McpClient {
     content: Array<{ type: 'text'; text: string }>
     duration?: number
   }> {
+    const start = Date.now()
     try {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
+      const client = await this.getClient()
+      const result = await client.callTool({ name, arguments: args })
+
+      // Convert SDK response to expected format
+      const content = (result.content as Array<{ type: string; text?: string }>)
+        .filter(c => c.type === 'text' && c.text)
+        .map(c => ({ type: 'text' as const, text: c.text! }))
+
+      // If no text content, stringify the whole result
+      if (content.length === 0) {
+        content.push({ type: 'text', text: JSON.stringify(result.content) })
       }
 
-      if (this.serverConfig.auth?.type === 'bearer') {
-        headers['Authorization'] = `Bearer ${this.serverConfig.auth.token}`
-      }
-
-      const response = await fetch(this.serverConfig.url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          type: 'callTool',
-          name,
-          args
-        }),
-        signal: AbortSignal.timeout(30000)
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error')
-        throw new Error(`MCP tool call failed (${response.status}): ${errorText}`)
-      }
-
-      const data = await response.json() as {
-        content: Array<{ type: 'text'; text: string }>
-        duration?: number
-      }
-
-      return data
+      return { content, duration: Date.now() - start }
     } catch (error) {
       logger.server.error('Failed to call MCP tool', {
         server: this.serverConfig.name,
@@ -139,6 +128,14 @@ export class McpClient {
       })
       throw error
     }
+  }
+
+  /**
+   * Close the underlying SDK client connection
+   */
+  async close(): Promise<void> {
+    try { await this.client?.close() } catch { /* best-effort cleanup */ }
+    this.client = null
   }
 
   /**
@@ -245,9 +242,23 @@ export class McpConnectionManager {
   }
 
   /**
-   * Remove a server connection
+   * Remove a server connection and close it
    */
-  removeServer(name: string): void {
-    this.clients.delete(name)
+  async removeServer(name: string): Promise<void> {
+    const client = this.clients.get(name)
+    if (client) {
+      await client.close()
+      this.clients.delete(name)
+    }
+  }
+
+  /**
+   * Close all connections
+   */
+  async closeAll(): Promise<void> {
+    for (const client of this.clients.values()) {
+      await client.close()
+    }
+    this.clients.clear()
   }
 }
