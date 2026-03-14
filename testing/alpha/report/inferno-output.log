@@ -25,7 +25,7 @@ Pre-flight warm-up (deployed mode)...
 
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: e8F7plnt7Rd
+✓ Created test session: iTmMsmFzJWu
 
 === Running Standalone Launch Tests ===
 
@@ -38,8 +38,8 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: 0ec69d7d-8f60-42bb-a549-13cd43a1128d
-Waiting for test run 0ec69d7d-8f60-42bb-a549-13cd43a1128d to complete (timeout: 3 minutes)...
+✓ Started test run: 02279459-4b1f-4573-8e33-1834da5e2959
+Waiting for test run 02279459-4b1f-4573-8e33-1834da5e2959 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: running
   Progress: 5 passed, 0 failed, 0 waiting, 5 total
@@ -49,14 +49,18 @@ Waiting for test run 0ec69d7d-8f60-42bb-a549-13cd43a1128d to complete (timeout: 
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=8c261d65-f911-40fa-a7f2-c716d428e4be&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=8c261d65-f911-40fa-a7f2-c716d428e4be&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=XU9Zv30iVnBIHQB2aRzbo
-  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=8c261d65-f911-40fa-a7f2-c716d428e4be&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=XU9Zv30iVnBIHQB2aRzbojmxN56t1kGD8YoHmoRxQK0&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e416e2fc-12ef-4d7f-b788-115b995e9fa9&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e416e2fc-12ef-4d7f-b788-115b995e9fa9&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=q-PlqKhXC6wgHcLcjWkPN
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e416e2fc-12ef-4d7f-b788-115b995e9fa9&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=q-PlqKhXC6wgHcLcjWkPNI2q_qdesczwMCHWYacYz3E&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=8c261d65-f911-40fa-a7f2-c716d428e4be&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=XU9Zv30iVnBIHQB2aRzbojmxN56t1kGD8YoHmoRxQK0&code_challenge_method=S256
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e416e2fc-12ef-4d7f-b788-115b995e9fa9&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=q-PlqKhXC6wgHcLcjWkPNI2q_qdesczwMCHWYacYz3E&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:4567/smart_stu2_2/e8F7plnt7Rd#smart_stu2_2-smart_full_standalone_launch
-  Not on Keycloak login page. Page title: SMART App Launch STU2.2 Test Session
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e416e2fc-12ef-4d7f-b788-115b995e9fa9&code_challenge=q-PlqKhXC6wgHcLcjWkPNI2q_qdesczwMCHWYacYz3E&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  Filled username
+  Filled password
+  Clicked login button
+  ✓ OAuth flow completed, redirected back to Inferno
   OAuth flow completed, continuing to poll...
   Progress: 6 passed, 0 failed, 3 waiting, 9 total
   [Poll #4] Status: done
@@ -66,8 +70,8 @@ Test completed with status: done
 
 Running test group: smart_stu2_2-smart_token_introspection_stu2_2 — Token Introspection
 Starting test group: smart_stu2_2-smart_token_introspection_stu2_2
-✓ Started test run: 6814cab9-62e2-49a4-bd1c-42cbd8b125e0
-Waiting for test run 6814cab9-62e2-49a4-bd1c-42cbd8b125e0 to complete (timeout: 3 minutes)...
+✓ Started test run: 3a535d89-b6ae-42d7-8185-37a79723cb02
+Waiting for test run 3a535d89-b6ae-42d7-8185-37a79723cb02 to complete (timeout: 3 minutes)...
   [Poll #1] Status: running
   [Poll #2] Status: running
   Progress: 5 passed, 0 failed, 0 waiting, 5 total
@@ -77,23 +81,21 @@ Waiting for test run 6814cab9-62e2-49a4-bd1c-42cbd8b125e0 to complete (timeout: 
   result_message (first 500 chars): 
 ### Request New Access Token to Introspect
 
-[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=692bb656-5544-4674-b63a-7ca31916afc0&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhap
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=692bb656-5544-4674-b63a-7ca31916afc0&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=5yuGPQ2fZZ55XWqPE6BzB
-  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=692bb656-5544-4674-b63a-7ca31916afc0&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=5yuGPQ2fZZ55XWqPE6BzBCg-bEMNc5Rbtit5-e7EMVQ&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=341d54c5-d6a6-4286-aef7-92fa245d516f&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhap
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=341d54c5-d6a6-4286-aef7-92fa245d516f&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=ltJtVPZpP4iEgMQw1suuZ
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=341d54c5-d6a6-4286-aef7-92fa245d516f&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=ltJtVPZpP4iEgMQw1suuZDoNbs3VOKcSJKI5PGe6Dkg&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=692bb656-5544-4674-b63a-7ca31916afc0&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=5yuGPQ2fZZ55XWqPE6BzBCg-bEMNc5Rbtit5-e7EMVQ&code_challenge_method=S256
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=341d54c5-d6a6-4286-aef7-92fa245d516f&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=ltJtVPZpP4iEgMQw1suuZDoNbs3VOKcSJKI5PGe6Dkg&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:4567/smart_stu2_2/e8F7plnt7Rd#smart_stu2_2-smart_token_introspection_stu2_2
-  Not on Keycloak login page. Page title: SMART App Launch STU2.2 Test Session
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=341d54c5-d6a6-4286-aef7-92fa245d516f&code_challenge=ltJtVPZpP4iEgMQw1suuZDoNbs3VOKcSJKI5PGe6Dkg&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  Filled username
+  Filled password
+  Clicked login button
+  ✓ OAuth flow completed, redirected back to Inferno
   OAuth flow completed, continuing to poll...
   Progress: 6 passed, 0 failed, 5 waiting, 11 total
-  [Poll #4] Status: running
-  Progress: 9 passed, 5 failed, 4 waiting, 22 total
-  [Poll #5] Status: running
-  Progress: 9 passed, 5 failed, 4 waiting, 22 total
-  [Poll #6] Status: running
-  Progress: 9 passed, 5 failed, 4 waiting, 22 total
-  [Poll #7] Status: done
+  [Poll #4] Status: done
 Test completed with status: done
 
 ========================================
@@ -107,17 +109,16 @@ Test completed with status: done
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
 ✓ PASS: Unknown test
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received
-    Reason: No `code` parameter received
+✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_token_tls
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
-    Reason: Input 'standalone_code' is nil, skipping test.
+✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
+    Reason: Unexpected response status: expected 200, but received 400
 ○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_body_stu2_2
-    Reason: Request `standalone_token` was not made in a previous test as expected.
+    Reason: Token exchange was unsuccessful
 ○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_headers
-    Reason: Request `standalone_token` was not made in a previous test as expected.
+    Reason: Token exchange was unsuccessful
 ○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_cors_token_exchange
-    Reason: Request `standalone_token` was not made in a previous test as expected.
+    Reason: Previous request was unsuccessful, cannot check for CORS support
 ✗ FAIL: Unknown test
 ○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_decode_id_token
     Reason: Input 'standalone_id_token' is nil, skipping test.
@@ -158,23 +159,22 @@ Test completed with status: done
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-standalone_auth_tls
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
 ✓ PASS: Unknown test
-✗ FAIL: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_code_received
-    Reason: No `code` parameter received
+✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_code_received
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-standalone_token_tls
-○ SKIP: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
-    Reason: Input 'standalone_code' is nil, skipping test.
+✗ FAIL: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
+    Reason: Unexpected response status: expected 200, but received 400
 ○ SKIP: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_token_response_body_stu2_2
-    Reason: Request `standalone_token` was not made in a previous test as expected.
+    Reason: Token exchange was unsuccessful
 ○ SKIP: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_token_response_headers
-    Reason: Request `standalone_token` was not made in a previous test as expected.
+    Reason: Token exchange was unsuccessful
 ○ SKIP: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_cors_token_exchange
-    Reason: Request `standalone_token` was not made in a previous test as expected.
+    Reason: Previous request was unsuccessful, cannot check for CORS support
 ✗ FAIL: Unknown test
 ✗ FAIL: Unknown test
 ✗ FAIL: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_request_group-Test01
-    Reason: Unexpected response status: expected 200, but received 503
+    Reason: Unexpected response status: expected 200, but received 422
 ✗ FAIL: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_request_group-Test02
-    Reason: Unexpected response status: expected 200, but received 503
+    Reason: Unexpected response status: expected 200, but received 422
 ✗ FAIL: Unknown test
 ○ SKIP: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_response_group-Test01
     Reason: Input 'standalone_received_scopes' is nil, skipping test.
@@ -184,7 +184,7 @@ Test completed with status: done
 ✗ FAIL: Unknown test
 
 ========================================
-Total: 54 | Passed: 16 | Failed: 10 | Skipped: 28 | Errors: 0
+Total: 54 | Passed: 18 | Failed: 10 | Skipped: 26 | Errors: 0
 ========================================
 
 
@@ -193,17 +193,16 @@ Total: 54 | Passed: 16 | Failed: 10 | Skipped: 28 | Errors: 0
 ========================================
 
 
---- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received
+--- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2 ---
+Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
 
 Result Message:
-No `code` parameter received
+Unexpected response status: expected 200, but received 400
 
-Outputs:
-  0: [object Object]
-
-Recent HTTP Requests (last 1):
-  get http://localhost:4567/custom/smart_stu2_2/redirect?error=invalid_scope&error_description=Invalid+scopes%3A+launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=8c261d65-f911-40fa-a7f2-c716d428e4be&iss=https%3A%2F%2Fp01--keycloak-alpha--776jg9nwd8rw.code.run%2Frealms%2Fproxy-smart
+Recent HTTP Requests (last 2):
+  get http://localhost:4567/custom/smart_stu2_2/redirect?state=e416e2fc-12ef-4d7f-b788-115b995e9fa9&session_state=21034f9a-8b52-2569-3939-038aceb27753&iss=https%3A%2F%2Fp01--keycloak-alpha--776jg9nwd8rw.code.run%2Frealms%2Fproxy-smart&code=8a18ad2d-7b60-c680-19e0-79fbeff2c776.21034f9a-8b52-2569-3939-038aceb27753.f5b065b0-e194-4f4b-9cd0-bc7553c533e1
+  post https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/token
+    Response Status: 400
 
 --------------------------------------------------
 
@@ -217,17 +216,16 @@ Test ID: undefined
 
 --------------------------------------------------
 
---- smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_code_received ---
-Test ID: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_code_received
+--- smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2 ---
+Test ID: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
 
 Result Message:
-No `code` parameter received
+Unexpected response status: expected 200, but received 400
 
-Outputs:
-  0: [object Object]
-
-Recent HTTP Requests (last 1):
-  get http://localhost:4567/custom/smart_stu2_2/redirect?error=invalid_scope&error_description=Invalid+scopes%3A+launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=692bb656-5544-4674-b63a-7ca31916afc0&iss=https%3A%2F%2Fp01--keycloak-alpha--776jg9nwd8rw.code.run%2Frealms%2Fproxy-smart
+Recent HTTP Requests (last 2):
+  get http://localhost:4567/custom/smart_stu2_2/redirect?state=341d54c5-d6a6-4286-aef7-92fa245d516f&session_state=574ede9b-f38d-22a8-e03b-a7dff37ca274&iss=https%3A%2F%2Fp01--keycloak-alpha--776jg9nwd8rw.code.run%2Frealms%2Fproxy-smart&code=3a0cbd0c-4bc5-d47c-8bdc-9660cef210fa.574ede9b-f38d-22a8-e03b-a7dff37ca274.f5b065b0-e194-4f4b-9cd0-bc7553c533e1
+  post https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/token
+    Response Status: 400
 
 --------------------------------------------------
 
@@ -245,11 +243,11 @@ Test ID: undefined
 Test ID: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_request_group-Test01
 
 Result Message:
-Unexpected response status: expected 200, but received 503
+Unexpected response status: expected 200, but received 422
 
 Recent HTTP Requests (last 1):
   post https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/introspect
-    Response Status: 503
+    Response Status: 422
 
 --------------------------------------------------
 
@@ -257,11 +255,11 @@ Recent HTTP Requests (last 1):
 Test ID: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_request_group-Test02
 
 Result Message:
-Unexpected response status: expected 200, but received 503
+Unexpected response status: expected 200, but received 422
 
 Recent HTTP Requests (last 1):
   post https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/introspect
-    Response Status: 503
+    Response Status: 422
 
 --------------------------------------------------
 
