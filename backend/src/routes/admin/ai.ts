@@ -19,7 +19,7 @@ import {
 import { getToolRegistry, createToolExecutor } from '@/lib/ai/tool-registry'
 import { type AIContext } from '@/lib/ai/assistant'
 import { McpClient, McpConnectionManager } from '@/lib/ai/mcp-client'
-import { streamText, generateText, jsonSchema, type Tool as AiSdkTool, type LanguageModel } from 'ai'
+import { streamText, generateText, jsonSchema, stepCountIs, type Tool as AiSdkTool, type LanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { typeboxToZod } from '@/lib/schemas/typebox-to-zod'
@@ -200,7 +200,7 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
           : z.object({})
         sdkTools[toolName] = {
           description: `[MCP] ${mcpTool.function.description}`,
-          parameters: mcpInputSchema,
+          inputSchema: mcpInputSchema,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           execute: async (args: any) => {
             logger.server.debug('Executing MCP tool', { reqId, tool: mcpTool.function.name, args })
@@ -479,7 +479,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
         system: systemPrompt,
         messages,
         tools: sdkTools,
-        maxSteps: 5,
+        stopWhen: stepCountIs(5),
         onFinish: async ({ text, toolCalls, usage, finishReason }) => {
           logger.server.info('AI stream finished', {
             reqId,
@@ -629,7 +629,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
         system: systemPrompt,
         messages,
         tools: sdkTools,
-        maxSteps: 5,
+        stopWhen: stepCountIs(5),
       })
 
       logger.server.info('AI chat completed', { 
