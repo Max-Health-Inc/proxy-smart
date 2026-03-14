@@ -76,11 +76,10 @@ async function loadSystemPrompt(reqId?: string): Promise<string> {
     for (const promptPath of candidatePaths) {
       try {
         const promptContent = await fs.readFile(promptPath, 'utf-8')
+        // Only strip the top-level H1 title, keep everything else intact
+        // (headings, code fences, examples are all meaningful to the model)
         return promptContent
           .replace(/^# SMART on FHIR Platform AI Assistant - System Prompt\n\n/, '')
-          .replace(/##\s+/g, '')
-          .replace(/```[^\n]*\n/g, '')
-          .replace(/```/g, '')
           .trim()
       } catch (error) {
         errors.push({
