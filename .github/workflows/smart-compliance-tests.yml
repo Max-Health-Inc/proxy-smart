@@ -409,6 +409,8 @@ jobs:
           NODE_ENV: production
           KEYCLOAK_BASE_URL: http://localhost:8080
           KEYCLOAK_REALM: proxy-smart
+          KEYCLOAK_ADMIN_CLIENT_ID: admin-service
+          KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
           # Point to HAPI FHIR server running in GitHub Actions service container
           FHIR_SERVER_BASE: http://localhost:8081/fhir
 
@@ -548,6 +550,7 @@ jobs:
             \"clientId\": \"$CLIENT_ID\",
             \"name\": \"Inferno Test Client\",
             \"protocol\": \"openid-connect\",
+            \"clientAuthenticatorType\": \"client-secret\",
             \"publicClient\": true,
             \"bearerOnly\": false,
             \"consentRequired\": false,
@@ -559,6 +562,7 @@ jobs:
             \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
             \"webOrigins\": [\"http://localhost:4567\", \"*\"],
             \"fullScopeAllowed\": true,
+            \"defaultClientScopes\": [\"web-origins\", \"acr\", \"profile\", \"roles\", \"email\", \"openid\"],
             \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\", \"oauth2.device.authorization.grant.enabled\": \"false\", \"oidc.ciba.grant.enabled\": \"false\", \"backchannel.logout.session.required\": \"true\"}
           }"
           

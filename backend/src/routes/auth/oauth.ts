@@ -488,12 +488,29 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   // proxy introspection
   .post('/introspect', async ({ body, set }) => {
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token/introspect`
-    logger.auth.debug('Introspect request received', { bodyKeys: Object.keys(body as Record<string, unknown>) })
+    const bodyObj = body as Record<string, string>
+    logger.auth.debug('Introspect request received', { bodyKeys: Object.keys(bodyObj) })
+
+    // RFC 7662: The introspection endpoint requires client authentication.
+    // If the caller didn't provide client credentials, authenticate as the
+    // proxy's admin-service client so Keycloak accepts the request.
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    const hasClientAuth = bodyObj.client_id || bodyObj.client_secret
+    if (!hasClientAuth && config.keycloak.adminClientId && config.keycloak.adminClientSecret) {
+      const credentials = Buffer.from(
+        `${config.keycloak.adminClientId}:${config.keycloak.adminClientSecret}`
+      ).toString('base64')
+      headers['Authorization'] = `Basic ${credentials}`
+      logger.auth.debug('Using admin-service credentials for introspection')
+    }
 
     const resp = await fetch(kcUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(body as Record<string, string>).toString()
+      headers,
+      body: new URLSearchParams(bodyObj).toString()
     })
 
     const data = await resp.json()
