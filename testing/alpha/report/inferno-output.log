@@ -25,7 +25,7 @@ Pre-flight warm-up (deployed mode)...
 
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: 92bRvxGZuaP
+✓ Created test session: 13TTNfSVIGQ
 
 === Running Standalone Launch Tests ===
 
@@ -38,24 +38,26 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: b0d85cc7-dc74-480f-ae39-401dba0989f8
-Waiting for test run b0d85cc7-dc74-480f-ae39-401dba0989f8 to complete (timeout: 3 minutes)...
+✓ Started test run: e46fc775-95a6-4e21-b785-bb72cd9f275d
+Waiting for test run e46fc775-95a6-4e21-b785-bb72cd9f275d to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: running
   Progress: 0 passed, 2 failed, 0 waiting, 3 total
-  [Poll #3] Status: done
+  [Poll #3] Status: running
+  Progress: 0 passed, 2 failed, 0 waiting, 3 total
+  [Poll #4] Status: running
+  Progress: 0 passed, 2 failed, 0 waiting, 3 total
+  [Poll #5] Status: done
 Test completed with status: done
 
 === Running Token Introspection Tests ===
 
 Running test group: smart_stu2_2-smart_token_introspection_stu2_2 — Token Introspection
 Starting test group: smart_stu2_2-smart_token_introspection_stu2_2
-✓ Started test run: 7554521f-d3ee-4e14-ab34-088c961b9e51
-Waiting for test run 7554521f-d3ee-4e14-ab34-088c961b9e51 to complete (timeout: 3 minutes)...
+✓ Started test run: 97e9b749-0e56-4856-9b6d-009ba602664c
+Waiting for test run 97e9b749-0e56-4856-9b6d-009ba602664c to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
-  [Poll #2] Status: running
-  Progress: 0 passed, 2 failed, 0 waiting, 3 total
-  [Poll #3] Status: done
+  [Poll #2] Status: done
 Test completed with status: done
 
 ========================================
