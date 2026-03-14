@@ -4,7 +4,7 @@
 
 Configuration:
   Inferno URL: http://localhost:4567
-  FHIR Server: http://localhost:8445/proxy-smart-backend/hapi-fhir-server/R4
+  FHIR Server: http://localhost:/proxy-smart-backend/hapi-fhir-server/R4
   Test Suite: smart_stu2_2
   Client ID: inferno-test-client
 
@@ -12,7 +12,7 @@ Checking Inferno availability...
 ✓ Inferno is ready
 Launching browser for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: 35sjLZ8fFBN
+✓ Created test session: 5XQs2YYxLzq
 
 === Running SMART Discovery Tests ===
 
@@ -25,106 +25,79 @@ Available test groups:
 
 No discovery test group found, trying first group: smart_stu2_2-smart_full_standalone_launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: fd2355ad-689a-4c9a-a4f1-1920f1620174
-Waiting for test run fd2355ad-689a-4c9a-a4f1-1920f1620174 to complete (timeout: 3 minutes)...
+✓ Started test run: a7532188-9afa-4325-9a60-c05ec2323f94
+Waiting for test run a7532188-9afa-4325-9a60-c05ec2323f94 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
-  [Poll #2] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #3] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #4] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #5] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #6] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #7] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #8] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #9] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #10] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #11] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #12] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #13] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #14] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #15] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #16] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #17] Status: running
-  Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #18] Status: waiting
-  Test is waiting for user action (OAuth flow)...
-  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
-  result_message (first 500 chars): 
-### Standalone Launch
-
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7df89e16-baba-43c5-bccc-1a1b26bb3c05&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=X8PDhZrjIFJRPZ19Nj8tjA_rNXtrVNJm5gc_c6F_VAA&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7df89e16-baba-43c5-bccc-1a1b26bb3c05&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=X8PDhZrjIFJRPZ19Nj8tjA_rNXtrVNJm5gc_c6F_VAA&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7df89e16-baba-43c5-bccc-1a1b26bb3c05&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=X8PDhZrjIFJRPZ19Nj8tjA_rNXtrVNJm5gc_c6F_VAA&code_challenge_method=S256
-Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7df89e16-baba-43c5-bccc-1a1b26bb3c05&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=X8PDhZrjIFJRPZ19Nj8tjA_rNXtrVNJm5gc_c6F_VAA&code_challenge_method=S256
-  Navigation response status: 200
-  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7df89e16-baba-43c5-bccc-1a1b26bb3c05&code_challenge=X8PDhZrjIFJRPZ19Nj8tjA_rNXtrVNJm5gc_c6F_VAA&code_challenge_method=S256
-  On Keycloak login page, entering credentials...
-  Filled username
-  Filled password
-  Clicked login button
-  ✓ OAuth flow completed, redirected back to Inferno
-  OAuth flow completed, continuing to poll...
-  Progress: 5 passed, 1 failed, 3 waiting, 9 total
-  [Poll #19] Status: done
+  [Poll #2] Status: done
 Test completed with status: done
 
 ========================================
           TEST RESULTS SUMMARY          
 ========================================
 
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_capabilities_stu2
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls
-    Reason: Server did not support any allowed TLS versions.
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
-✓ PASS: Unknown test
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_token_tls
-    Reason: Server did not support any allowed TLS versions.
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_body_stu2_2
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_headers
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_cors_token_exchange
+✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint
+    Reason: Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_capabilities_stu2
+    Reason: Input 'well_known_configuration' is nil, skipping test.
+✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint
+    Reason: Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
+⚠ ERROR: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request
+    Error: Error: Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
+
+/opt/hostedtoolcache/Ruby/3.3.10/x64/lib/ruby/3.3.0/net/http.rb:1603:in `initialize'
 ✗ FAIL: Unknown test
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_decode_id_token
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_retrieve_configuration
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_required_configuration_fields
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_retrieve_jwks
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_token_header
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_token_payload
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_fhir_user_claim
-    Reason: Unexpected resource type: expected Practitioner, but received 
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_cors_openid_fhir_user_claim
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls
+    Reason: Could not verify when no url provided.
+✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
+    Reason: OAuth2 Authorization Endpoint '' is not a valid URI
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received
+    Reason: Request `standalone_redirect` was not made in a previous test as expected.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_token_tls
+    Reason: Could not verify when no url provided.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
+    Reason: Input 'standalone_code' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_body_stu2_2
+    Reason: Request `standalone_token` was not made in a previous test as expected.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_headers
+    Reason: Request `standalone_token` was not made in a previous test as expected.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_cors_token_exchange
+    Reason: Request `standalone_token` was not made in a previous test as expected.
 ✗ FAIL: Unknown test
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_stu2
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_body
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_response_headers
-✓ PASS: Unknown test
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_stu2
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_body
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_response_headers
-✓ PASS: Unknown test
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_decode_id_token
+    Reason: Input 'standalone_id_token' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_retrieve_configuration
+    Reason: Input 'id_token_payload_json' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_required_configuration_fields
+    Reason: Input 'openid_configuration_json' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_retrieve_jwks
+    Reason: Input 'openid_jwks_uri' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_token_header
+    Reason: Input 'id_token_header_json' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_token_payload
+    Reason: Input 'standalone_id_token' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_fhir_user_claim
+    Reason: Input 'id_token_payload_json' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_cors_openid_fhir_user_claim
+    Reason: Input 'id_token_fhir_user' is nil, skipping test.
+○ SKIP: Unknown test
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_stu2
+    Reason: Input 'standalone_received_scopes' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_body
+    Reason: Input 'standalone_received_scopes' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_response_headers
+    Reason: Request `token_refresh` was not made in a previous test as expected.
+○ SKIP: Unknown test
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_stu2
+    Reason: Input 'standalone_received_scopes' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_body
+    Reason: Input 'standalone_received_scopes' is nil, skipping test.
+○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_response_headers
+    Reason: Request `token_refresh` was not made in a previous test as expected.
+○ SKIP: Unknown test
 ✗ FAIL: Unknown test
 
 ========================================
-Total: 32 | Passed: 26 | Failed: 6 | Skipped: 0 | Errors: 0
+Total: 32 | Passed: 0 | Failed: 6 | Skipped: 25 | Errors: 1
 ========================================
 
 
@@ -133,35 +106,19 @@ Total: 32 | Passed: 26 | Failed: 6 | Skipped: 0 | Errors: 0
 ========================================
 
 
---- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls
+--- smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint ---
+Test ID: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint
 
 Result Message:
-Server did not support any allowed TLS versions.
-
-Messages:
-  [1] info: http://localhost:8445/auth/authorize correctly denied SSL 2.0 connection as required.
-  [2] info: http://localhost:8445/auth/authorize correctly denied SSL 3.0 connection as required.
-  [3] info: http://localhost:8445/auth/authorize correctly denied TLS 1.0 connection as required.
-  [4] info: http://localhost:8445/auth/authorize correctly denied TLS 1.1 connection as required.
-  [5] info: http://localhost:8445/auth/authorize denied TLS 1.2 connection.
-  [6] info: http://localhost:8445/auth/authorize denied TLS 1.3 connection.
+Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
 
 --------------------------------------------------
 
---- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_token_tls ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_token_tls
+--- smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint ---
+Test ID: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint
 
 Result Message:
-Server did not support any allowed TLS versions.
-
-Messages:
-  [1] info: http://localhost:8445/auth/token correctly denied SSL 2.0 connection as required.
-  [2] info: http://localhost:8445/auth/token correctly denied SSL 3.0 connection as required.
-  [3] info: http://localhost:8445/auth/token correctly denied TLS 1.0 connection as required.
-  [4] info: http://localhost:8445/auth/token correctly denied TLS 1.1 connection as required.
-  [5] info: http://localhost:8445/auth/token denied TLS 1.2 connection.
-  [6] info: http://localhost:8445/auth/token denied TLS 1.3 connection.
+Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
 
 --------------------------------------------------
 
@@ -170,18 +127,11 @@ Test ID: undefined
 
 --------------------------------------------------
 
---- smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_fhir_user_claim ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_fhir_user_claim
+--- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2 ---
+Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
 
 Result Message:
-Unexpected resource type: expected Practitioner, but received 
-
-Outputs:
-  0: [object Object]
-
-Recent HTTP Requests (last 1):
-  get http://localhost:8445/proxy-smart-backend/hapi-fhir-server/R4/Practitioner/example-practitioner
-    Response Status: 200
+OAuth2 Authorization Endpoint '' is not a valid URI
 
 --------------------------------------------------
 
@@ -195,4 +145,4 @@ Test ID: undefined
 
 --------------------------------------------------
 
-❌ Tests failed: 6 failed, 0 errors
+❌ Tests failed: 6 failed, 1 errors
