@@ -618,20 +618,40 @@ async function main() {
     // Wait for Inferno to be ready
     await waitForInferno();
     
-    // Pre-flight warm-up: ensure FHIR server and auth endpoints are responsive
+    // Pre-flight warm-up: ensure FHIR server endpoints are responsive
     // (Northflank services may have gone cold during CI tool setup)
     if (FHIR_SERVER_URL.startsWith('https')) {
       console.log('Pre-flight warm-up (deployed mode)...');
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      const smartConfigUrl = `${FHIR_SERVER_URL}/.well-known/smart-configuration`;
+      let serviceReady = false;
+      
+      // Wait for SMART config endpoint (the first thing Inferno hits)
+      for (let attempt = 1; attempt <= 24; attempt++) {
         try {
-          const fhirResp = await fetch(`${FHIR_SERVER_URL}/metadata`);
-          console.log(`  FHIR /metadata: ${fhirResp.status} (attempt ${attempt})`);
-          if (fhirResp.ok) break;
+          const resp = await fetch(smartConfigUrl);
+          console.log(`  SMART config: ${resp.status} (attempt ${attempt}/24)`);
+          if (resp.ok) {
+            serviceReady = true;
+            break;
+          }
         } catch (e) {
-          console.log(`  FHIR /metadata: ${e.message} (attempt ${attempt})`);
+          console.log(`  SMART config: ${e.message} (attempt ${attempt}/24)`);
         }
-        if (attempt < 3) await sleep(5000);
+        await sleep(10000); // 10s between attempts = up to 4 minutes total
       }
+      
+      if (!serviceReady) {
+        throw new Error('Deployed SMART configuration endpoint never became healthy — aborting tests');
+      }
+      
+      // Also warm up FHIR metadata
+      try {
+        const metaResp = await fetch(`${FHIR_SERVER_URL}/metadata`);
+        console.log(`  FHIR /metadata: ${metaResp.status}`);
+      } catch (e) {
+        console.log(`  FHIR /metadata: ${e.message}`);
+      }
+      console.log('  ✓ Pre-flight warm-up complete');
       console.log('');
     }
     

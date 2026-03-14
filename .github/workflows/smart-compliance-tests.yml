@@ -769,39 +769,58 @@ jobs:
           BACKEND_URL="${{ steps.config.outputs.backend_url }}"
           KC_URL="${{ steps.config.outputs.kc_url }}"
           KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          SMART_CONFIG="$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4/.well-known/smart-configuration"
           
           echo "Warming up deployed services before test run..."
           
-          # Wait for backend to become healthy (Northflank cold start can take 30-60s)
-          echo "Waiting for backend to become healthy..."
-          for i in $(seq 1 30); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health" 2>/dev/null || echo "000")
+          # Step 1: Wait for backend /health
+          echo "Step 1: Waiting for backend /health..."
+          for i in $(seq 1 40); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$BACKEND_URL/health" 2>/dev/null || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "✓ Backend is healthy (attempt $i)"
+              echo "✓ Backend /health is up (attempt $i)"
               break
             fi
-            echo "  Attempt $i/30 — Backend returned HTTP $HTTP_CODE, waiting..."
+            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
             sleep 5
           done
           
-          # Wait for Keycloak to become healthy
-          echo "Waiting for Keycloak to become healthy..."
-          for i in $(seq 1 30); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$KC_URL/realms/$KC_REALM" 2>/dev/null || echo "000")
+          # Step 2: Wait for Keycloak
+          echo "Step 2: Waiting for Keycloak..."
+          for i in $(seq 1 40); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$KC_URL/realms/$KC_REALM" 2>/dev/null || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "✓ Keycloak is healthy (attempt $i)"
+              echo "✓ Keycloak realm is up (attempt $i)"
               break
             fi
-            echo "  Attempt $i/30 — Keycloak returned HTTP $HTTP_CODE, waiting..."
+            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
             sleep 5
           done
           
-          # Hit additional endpoints to fully warm up critical paths
-          curl -sf -o /dev/null "$BACKEND_URL/fhir-servers" || true
-          curl -sf -o /dev/null "$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4/.well-known/smart-configuration" || true
-          curl -sf -o /dev/null "$BACKEND_URL/auth/authorize" || true
+          # Step 3: Wait for SMART configuration (the actual endpoint Inferno hits first)
+          # This depends on BOTH backend + Keycloak being fully functional
+          echo "Step 3: Waiting for SMART configuration endpoint..."
+          SMART_READY=false
+          for i in $(seq 1 40); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$SMART_CONFIG" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ SMART configuration is responding (attempt $i)"
+              SMART_READY=true
+              break
+            fi
+            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
+            sleep 5
+          done
           
-          echo "✓ Services warmed up"
+          if [ "$SMART_READY" = "false" ]; then
+            echo "ERROR: SMART configuration endpoint never became healthy"
+            echo "  Last HTTP code: $HTTP_CODE"
+            echo "  URL: $SMART_CONFIG"
+            echo "  The deployed backend may not be functioning correctly"
+            exit 1
+          fi
+          
+          echo "✓ All services warmed up and responding"
 
       # Run Inferno tests via Playwright automation
       - name: Run SMART Compliance Tests
