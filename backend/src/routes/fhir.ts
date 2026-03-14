@@ -104,10 +104,18 @@ async function proxyFHIR({ params, request, set }: any) {
     set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
 
     const text = await resp.text()
-    return text.replaceAll(
+    const replaced = text.replaceAll(
       serverUrl,
       `${config.baseUrl}/${config.name}/${params.server_name}/${params.fhir_version}`
     )
+    // Parse JSON so Elysia's response schema validation preserves all properties.
+    // Returning a raw string with a t.Object() response schema causes Elysia to
+    // encode/strip the response, breaking FHIR resource fields like resourceType.
+    const contentType = resp.headers.get('content-type') || ''
+    if (contentType.includes('json')) {
+      try { return JSON.parse(replaced) } catch { /* fall through to string */ }
+    }
+    return replaced
   } catch (error) {
     logger.fhir.error('FHIR proxy error', { server: params.server_name, error })
     set.status = 500

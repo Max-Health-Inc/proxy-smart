@@ -33,7 +33,7 @@ export const IntrospectRequest = t.Object({
   token_type_hint: t.Optional(t.String({ description: 'Hint about token type (access_token, refresh_token)' })),
   client_id: t.Optional(t.String({ description: 'OAuth2 client ID' })),
   client_secret: t.Optional(t.String({ description: 'OAuth2 client secret' }))
-}, { title: 'IntrospectRequest' })
+}, { title: 'IntrospectRequest', additionalProperties: true })
 export type IntrospectRequestType = Static<typeof IntrospectRequest>
 
 export const IntrospectResponse = t.Object({
@@ -42,7 +42,7 @@ export const IntrospectResponse = t.Object({
   aud: t.Optional(t.String({ description: 'Audience (intended recipient)' })),
   exp: t.Optional(t.Number({ description: 'Expiration time (Unix timestamp)' })),
   scope: t.Optional(t.String({ description: 'Granted scopes (space-separated)' }))
-}, { title: 'IntrospectResponse' })
+}, { title: 'IntrospectResponse', additionalProperties: true })
 export type IntrospectResponseType = Static<typeof IntrospectResponse>
 
 // ==================== OAuth Query Parameters ====================

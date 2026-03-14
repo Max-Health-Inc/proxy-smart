@@ -772,18 +772,34 @@ jobs:
           
           echo "Warming up deployed services before test run..."
           
-          # Hit multiple endpoints to ensure both services are fully warm
-          for i in 1 2 3; do
-            echo "Warm-up round $i/3..."
-            curl -sf -o /dev/null -w "  Backend /health: HTTP %{http_code} (%{time_total}s)\n" "$BACKEND_URL/health" || true
-            curl -sf -o /dev/null -w "  Backend /fhir-servers: HTTP %{http_code} (%{time_total}s)\n" "$BACKEND_URL/fhir-servers" || true
-            curl -sf -o /dev/null -w "  Keycloak realm: HTTP %{http_code} (%{time_total}s)\n" "$KC_URL/realms/$KC_REALM" || true
-            curl -sf -o /dev/null -w "  Backend SMART config: HTTP %{http_code} (%{time_total}s)\n" "$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4/.well-known/smart-configuration" || true
-            [ $i -lt 3 ] && sleep 3
+          # Wait for backend to become healthy (Northflank cold start can take 30-60s)
+          echo "Waiting for backend to become healthy..."
+          for i in $(seq 1 30); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ Backend is healthy (attempt $i)"
+              break
+            fi
+            echo "  Attempt $i/30 — Backend returned HTTP $HTTP_CODE, waiting..."
+            sleep 5
           done
           
-          # Final check — the auth/authorize endpoint itself (without valid params, just wake it up)
-          curl -sf -o /dev/null -w "  Auth endpoint: HTTP %{http_code} (%{time_total}s)\n" "$BACKEND_URL/auth/authorize" || true
+          # Wait for Keycloak to become healthy
+          echo "Waiting for Keycloak to become healthy..."
+          for i in $(seq 1 30); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$KC_URL/realms/$KC_REALM" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ Keycloak is healthy (attempt $i)"
+              break
+            fi
+            echo "  Attempt $i/30 — Keycloak returned HTTP $HTTP_CODE, waiting..."
+            sleep 5
+          done
+          
+          # Hit additional endpoints to fully warm up critical paths
+          curl -sf -o /dev/null "$BACKEND_URL/fhir-servers" || true
+          curl -sf -o /dev/null "$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4/.well-known/smart-configuration" || true
+          curl -sf -o /dev/null "$BACKEND_URL/auth/authorize" || true
           
           echo "✓ Services warmed up"
 
