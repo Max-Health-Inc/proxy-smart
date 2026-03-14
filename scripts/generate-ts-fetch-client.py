@@ -143,13 +143,19 @@ class SchemaRegistry:
         return parts[-1], obj
 
     def _register_direct(self, name: str, schema: dict) -> str:
-        """Register with the given name, no title override. Used for components."""
+        """Register with the given name, no title override. Used for components.
+
+        Unlike inline schemas, named component schemas are ALWAYS registered
+        under their declared name — even if another component has an identical
+        structure.  Dedup is only recorded when no prior mapping exists so that
+        later *inline* schemas can still be collapsed into a component.
+        """
         canon = self._canonical(schema)
-        if canon in self._canon_map:
-            return self._canon_map[canon]
         name = self._unique_name(name)
         self.models[name] = schema
-        self._canon_map[canon] = name
+        # Only seed the dedup map if no entry yet — never skip a named component
+        if canon not in self._canon_map:
+            self._canon_map[canon] = name
         self._extract_nested(name, schema)
         return name
 

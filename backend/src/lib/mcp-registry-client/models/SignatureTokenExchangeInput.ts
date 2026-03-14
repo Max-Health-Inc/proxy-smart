@@ -43,9 +43,9 @@ export interface SignatureTokenExchangeInput {
  * Check if a given object implements the SignatureTokenExchangeInput interface.
  */
 export function instanceOfSignatureTokenExchangeInput(value: object): value is SignatureTokenExchangeInput {
-    if (!('timestamp' in value) || value['timestamp'] === undefined) return false;
     if (!('signedTimestamp' in value) || value['signedTimestamp'] === undefined) return false;
     if (!('domain' in value) || value['domain'] === undefined) return false;
+    if (!('timestamp' in value) || value['timestamp'] === undefined) return false;
     return true;
 }
 

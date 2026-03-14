@@ -126,9 +126,9 @@ export interface ServerJSON {
  * Check if a given object implements the ServerJSON interface.
  */
 export function instanceOfServerJSON(value: object): value is ServerJSON {
-    if (!('$schema' in value) || value['$schema'] === undefined) return false;
-    if (!('name' in value) || value['name'] === undefined) return false;
     if (!('version' in value) || value['version'] === undefined) return false;
+    if (!('name' in value) || value['name'] === undefined) return false;
+    if (!('$schema' in value) || value['$schema'] === undefined) return false;
     if (!('description' in value) || value['description'] === undefined) return false;
     return true;
 }

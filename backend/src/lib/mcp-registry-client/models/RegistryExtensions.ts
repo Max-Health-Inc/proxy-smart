@@ -71,10 +71,10 @@ export type RegistryExtensionsStatusEnum = typeof RegistryExtensionsStatusEnum[k
  * Check if a given object implements the RegistryExtensions interface.
  */
 export function instanceOfRegistryExtensions(value: object): value is RegistryExtensions {
-    if (!('isLatest' in value) || value['isLatest'] === undefined) return false;
-    if (!('status' in value) || value['status'] === undefined) return false;
-    if (!('publishedAt' in value) || value['publishedAt'] === undefined) return false;
     if (!('statusChangedAt' in value) || value['statusChangedAt'] === undefined) return false;
+    if (!('isLatest' in value) || value['isLatest'] === undefined) return false;
+    if (!('publishedAt' in value) || value['publishedAt'] === undefined) return false;
+    if (!('status' in value) || value['status'] === undefined) return false;
     return true;
 }
 

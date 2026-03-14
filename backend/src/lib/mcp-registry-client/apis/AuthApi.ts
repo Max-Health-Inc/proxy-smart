@@ -309,7 +309,7 @@ export class AuthApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: requestParameters['oIDCTokenExchangeInputBody'],
+            body: OIDCTokenExchangeInputBodyToJSON(requestParameters['oIDCTokenExchangeInputBody']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TokenResponseFromJSON(jsonValue));
@@ -554,7 +554,7 @@ export class AuthApi extends runtime.BaseAPI {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: requestParameters['oIDCTokenExchangeInputBody'],
+            body: OIDCTokenExchangeInputBodyToJSON(requestParameters['oIDCTokenExchangeInputBody']),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TokenResponseFromJSON(jsonValue));

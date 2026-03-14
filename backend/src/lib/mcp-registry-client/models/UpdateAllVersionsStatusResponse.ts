@@ -44,8 +44,8 @@ export interface UpdateAllVersionsStatusResponse {
  * Check if a given object implements the UpdateAllVersionsStatusResponse interface.
  */
 export function instanceOfUpdateAllVersionsStatusResponse(value: object): value is UpdateAllVersionsStatusResponse {
-    if (!('servers' in value) || value['servers'] === undefined) return false;
     if (!('updatedCount' in value) || value['updatedCount'] === undefined) return false;
+    if (!('servers' in value) || value['servers'] === undefined) return false;
     return true;
 }
 

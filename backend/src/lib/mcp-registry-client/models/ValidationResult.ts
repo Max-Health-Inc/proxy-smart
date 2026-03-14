@@ -42,8 +42,8 @@ export interface ValidationResult {
  * Check if a given object implements the ValidationResult interface.
  */
 export function instanceOfValidationResult(value: object): value is ValidationResult {
-    if (!('valid' in value) || value['valid'] === undefined) return false;
     if (!('issues' in value) || value['issues'] === undefined) return false;
+    if (!('valid' in value) || value['valid'] === undefined) return false;
     return true;
 }
 

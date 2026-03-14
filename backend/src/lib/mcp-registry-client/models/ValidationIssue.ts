@@ -50,11 +50,11 @@ export interface ValidationIssue {
  * Check if a given object implements the ValidationIssue interface.
  */
 export function instanceOfValidationIssue(value: object): value is ValidationIssue {
-    if (!('message' in value) || value['message'] === undefined) return false;
     if (!('path' in value) || value['path'] === undefined) return false;
-    if (!('type' in value) || value['type'] === undefined) return false;
-    if (!('reference' in value) || value['reference'] === undefined) return false;
     if (!('severity' in value) || value['severity'] === undefined) return false;
+    if (!('reference' in value) || value['reference'] === undefined) return false;
+    if (!('message' in value) || value['message'] === undefined) return false;
+    if (!('type' in value) || value['type'] === undefined) return false;
     return true;
 }
 

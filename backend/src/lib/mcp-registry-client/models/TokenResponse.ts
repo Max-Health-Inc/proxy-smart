@@ -35,8 +35,8 @@ export interface TokenResponse {
  * Check if a given object implements the TokenResponse interface.
  */
 export function instanceOfTokenResponse(value: object): value is TokenResponse {
-    if (!('expiresAt' in value) || value['expiresAt'] === undefined) return false;
     if (!('registryToken' in value) || value['registryToken'] === undefined) return false;
+    if (!('expiresAt' in value) || value['expiresAt'] === undefined) return false;
     return true;
 }
 

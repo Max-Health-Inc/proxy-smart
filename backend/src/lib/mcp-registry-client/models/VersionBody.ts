@@ -43,9 +43,9 @@ export interface VersionBody {
  * Check if a given object implements the VersionBody interface.
  */
 export function instanceOfVersionBody(value: object): value is VersionBody {
+    if (!('version' in value) || value['version'] === undefined) return false;
     if (!('buildTime' in value) || value['buildTime'] === undefined) return false;
     if (!('gitCommit' in value) || value['gitCommit'] === undefined) return false;
-    if (!('version' in value) || value['version'] === undefined) return false;
     return true;
 }
 
