@@ -14,6 +14,7 @@ import {
   Rocket,
   Settings,
   Copy,
+  Check,
   Eye,
   Target,
   AlertCircle,
