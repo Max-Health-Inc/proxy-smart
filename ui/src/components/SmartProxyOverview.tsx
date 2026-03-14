@@ -967,7 +967,9 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                                 </span>
                                             </div>
                                             <div className="text-xs text-muted-foreground mt-1">
-                                                {server.endpoints?.base || server.url}
+                                                <a href={server.endpoints?.base || server.url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground hover:underline transition-colors">
+                                                    {server.endpoints?.base || server.url}
+                                                </a>
                                             </div>
                                             {server.error && (
                                                 <div className="text-xs text-red-600 dark:text-red-400 mt-1">

@@ -6,7 +6,8 @@ import {
   AlertTriangle,
   Copy,
   Info,
-  Database
+  Database,
+  Lock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -86,18 +87,44 @@ export function ServerDetails(server: FhirServerDetails) {
               Connection
             </h3>
             <div className="space-y-3">
+              {server.endpoints?.base && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      Proxy URL:
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(server.endpoints?.base || '')}
+                      className="h-8 px-3 rounded-lg hover:bg-muted transition-colors duration-200"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </Button>
+                  </div>
+                  <a
+                    href={server.endpoints.base}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-sm text-foreground bg-emerald-500/5 dark:bg-emerald-400/5 p-3 rounded-xl font-mono break-all border border-emerald-500/20 dark:border-emerald-400/20 hover:bg-emerald-500/10 transition-colors"
+                  >
+                    {server.endpoints.base}
+                  </a>
+                </>
+              )}
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-muted-foreground">Base URL:</span>
+                <span className="text-xs font-medium text-muted-foreground">Origin URL:</span>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => copyToClipboard(server.url || '')}
-                  className="h-8 px-3 rounded-lg hover:bg-muted transition-colors duration-200"
+                  className="h-6 px-2 rounded-lg hover:bg-muted transition-colors duration-200"
                 >
-                  <Copy className="w-3 h-3" />
+                  <Copy className="w-2.5 h-2.5" />
                 </Button>
               </div>
-              <p className="text-sm text-foreground bg-muted/50 p-3 rounded-xl font-mono break-all border border-border/50">
+              <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-lg font-mono break-all border border-border/30">
                 {server.url}
               </p>
             </div>
