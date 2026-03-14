@@ -160,7 +160,23 @@ async function handleOAuthFlow(page, authorizeUrl) {
   try {
     // Navigate to the authorize URL
     const response = await page.goto(authorizeUrl, { waitUntil: 'networkidle', timeout: 30000 });
-    console.log(`  Navigation response status: ${response?.status()}`);
+    const httpStatus = response?.status();
+    console.log(`  Navigation response status: ${httpStatus}`);
+    
+    // Check for error responses (503 = service unavailable, 400 = bad request)
+    if (httpStatus >= 400) {
+      const pageContent = await page.content();
+      const isKeycloakError = pageContent.includes('Invalid redirect_uri') || 
+                               pageContent.includes('Client not found') ||
+                               pageContent.includes('Invalid parameter');
+      if (isKeycloakError) {
+        console.error(`  Keycloak returned ${httpStatus} — likely invalid redirect_uri or missing client`);
+        console.error(`  Page content (first 500 chars): ${pageContent.substring(0, 500)}`);
+      } else {
+        console.error(`  Server returned ${httpStatus} error`);
+      }
+      throw new Error(`OAuth endpoint returned HTTP ${httpStatus}`);
+    }
     
     // Check if we're on Keycloak login page
     const currentUrl = page.url();
@@ -293,10 +309,12 @@ async function runTokenIntrospectionTests(sessionId, browser) {
     
     console.log(`Running test group: ${introspectionGroup.id} — ${introspectionGroup.title}`);
     
-    // Token Introspection uses outputs from Standalone Launch (stored in session)
-    // We only need to provide the FHIR URL
+    // Token Introspection requires standalone_smart_auth_info as input
+    // (same as Standalone Launch — it uses it to configure the introspection client)
+    const standaloneAuthInfo = buildStandaloneSmartAuthInfo();
     const inputs = [
-      { name: 'url', value: FHIR_SERVER_URL }
+      { name: 'url', value: FHIR_SERVER_URL },
+      { name: 'standalone_smart_auth_info', value: standaloneAuthInfo }
     ];
     
     const run = await runTestGroup(sessionId, introspectionGroup.id, inputs);
@@ -316,6 +334,8 @@ async function waitForSimpleTestCompletion(sessionId, runId, browser = null) {
   let pollCount = 0;
   let page = null;
   let oauthAttempted = false;
+  let oauthAttemptCount = 0;
+  const MAX_OAUTH_ATTEMPTS = 3;
   
   console.log(`Waiting for test run ${runId} to complete (timeout: 3 minutes)...`);
   
@@ -338,8 +358,9 @@ async function waitForSimpleTestCompletion(sessionId, runId, browser = null) {
     }
     
     // Handle waiting status (OAuth required)
-    if (runStatus.status === 'waiting' && browser && !oauthAttempted) {
-      console.log(`  Test is waiting for user action (OAuth flow)...`);
+    if (runStatus.status === 'waiting' && browser && !oauthAttempted && oauthAttemptCount < MAX_OAUTH_ATTEMPTS) {
+      oauthAttemptCount++;
+      console.log(`  Test is waiting for user action (OAuth flow, attempt ${oauthAttemptCount}/${MAX_OAUTH_ATTEMPTS})...`);
       
       // Look for OAuth redirect URL in the waiting results
       const results = runStatus.results || [];
@@ -415,7 +436,12 @@ async function waitForSimpleTestCompletion(sessionId, runId, browser = null) {
         console.log(`  Found ${waitResults.length} waiting result(s) but no OAuth URL found`);
       }
     } else if (runStatus.status === 'waiting') {
-      console.log(`  Test is waiting (OAuth ${oauthAttempted ? 'already attempted' : 'no browser available'})`);
+      if (oauthAttemptCount >= MAX_OAUTH_ATTEMPTS) {
+        console.error(`  OAuth failed after ${MAX_OAUTH_ATTEMPTS} attempts — aborting wait`);
+        if (page) await page.close();
+        throw new Error(`OAuth automation failed after ${MAX_OAUTH_ATTEMPTS} attempts`);
+      }
+      console.log(`  Test is waiting (OAuth ${oauthAttempted ? 'already completed' : 'no browser available'})`);
     }
     
     // Log current progress

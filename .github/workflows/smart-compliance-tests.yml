@@ -451,6 +451,81 @@ jobs:
           echo "DEPLOYED_KC_URL=$KC_URL" >> $GITHUB_ENV
           echo "DEPLOYED_KC_REALM=$KC_REALM" >> $GITHUB_ENV
 
+      # Ensure inferno-test-client exists on deployed Keycloak
+      - name: Ensure Inferno Test Client (Deployed)
+        if: steps.config.outputs.target == 'deployed'
+        run: |
+          KC_URL="${{ steps.config.outputs.kc_url }}"
+          KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          CLIENT_ID="${{ steps.config.outputs.client_id }}"
+          
+          # Get admin token via admin-service client (client_credentials grant)
+          ADMIN_TOKEN=$(curl -sf -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=client_credentials" \
+            -d "client_id=admin-service" \
+            -d "client_secret=${{ secrets.KC_ADMIN_SERVICE_SECRET || 'admin-service-secret' }}" \
+            | jq -r '.access_token')
+          
+          if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
+            echo "WARNING: Could not get admin token — trying master realm admin"
+            # Fallback: try master realm admin credentials
+            ADMIN_TOKEN=$(curl -sf -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=password" \
+              -d "client_id=admin-cli" \
+              -d "username=admin" \
+              -d "password=admin" | jq -r '.access_token')
+          fi
+          
+          if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
+            echo "WARNING: Cannot authenticate to Keycloak admin API"
+            echo "  inferno-test-client may not exist — OAuth tests will likely fail"
+            exit 0
+          fi
+          
+          # Check if inferno-test-client exists
+          EXISTING=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq 'length')
+          
+          if [ "$EXISTING" -gt 0 ]; then
+            echo "✓ $CLIENT_ID already exists in deployed Keycloak"
+            
+            # Ensure redirect URIs include Inferno's localhost callback
+            INTERNAL_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
+            
+            # Update redirect URIs to include Inferno callback
+            curl -sf -X PUT "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"clientId\": \"$CLIENT_ID\",
+                \"publicClient\": true,
+                \"standardFlowEnabled\": true,
+                \"directAccessGrantsEnabled\": true,
+                \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
+                \"webOrigins\": [\"http://localhost:4567\", \"*\"],
+                \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\"}
+              }" && echo "✓ Updated $CLIENT_ID redirect URIs"
+          else
+            echo "Creating $CLIENT_ID in deployed Keycloak..."
+            curl -sf -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{
+                \"clientId\": \"$CLIENT_ID\",
+                \"name\": \"Inferno Test Client\",
+                \"publicClient\": true,
+                \"standardFlowEnabled\": true,
+                \"directAccessGrantsEnabled\": true,
+                \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
+                \"webOrigins\": [\"http://localhost:4567\", \"*\"],
+                \"fullScopeAllowed\": true,
+                \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\"}
+              }" && echo "✓ Created $CLIENT_ID in deployed Keycloak"
+          fi
+
       # Setup Node.js for Playwright
       - name: Setup Node.js
         uses: actions/setup-node@v4
