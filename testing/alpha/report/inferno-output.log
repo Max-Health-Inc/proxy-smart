@@ -1,148 +1,372 @@
 ========================================
-  Inferno SMART App Launch Test Runner  
+  Inferno SMART STU2.2 Compliance Tests 
 ========================================
 
 Configuration:
   Inferno URL: http://localhost:4567
-  FHIR Server: http://localhost:/proxy-smart-backend/hapi-fhir-server/R4
+  FHIR Server: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/proxy-smart-backend/hapi-fhir-server/R4
   Test Suite: smart_stu2_2
   Client ID: inferno-test-client
+  TLS: YES
+
+Groups to run:
+  1. Standalone Launch (OAuth + OIDC + Token Refresh)
+  2. Token Introspection
+  --- SKIPPED ---
+  3. EHR Launch (requires launch context API)
+  4. Backend Services (requires confidential client + JWK Set)
 
 Checking Inferno availability...
 ✓ Inferno is ready
-Launching browser for OAuth automation...
+Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: 5XQs2YYxLzq
+✓ Created test session: 5vTgQiZhal6
 
-=== Running SMART Discovery Tests ===
+=== Running Standalone Launch Tests ===
 
 Auth info: {"auth_type":"public","use_discovery":"true","client_id":"inferno-test-client","requested_scopes":"launch/patient openid fhirUser offline_access patient/*.read","pkce_support":"enabled","pkce_code_challenge_method":"S256","auth_request_method":"GET"}
-Available test groups:
+Available test groups in suite:
   - smart_stu2_2-smart_full_standalone_launch: Standalone Launch
   - smart_stu2_2-smart_full_ehr_launch: EHR Launch
   - smart_stu2_2-smart_backend_services: Backend Services
   - smart_stu2_2-smart_token_introspection_stu2_2: Token Introspection
 
-No discovery test group found, trying first group: smart_stu2_2-smart_full_standalone_launch
+Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: a7532188-9afa-4325-9a60-c05ec2323f94
-Waiting for test run a7532188-9afa-4325-9a60-c05ec2323f94 to complete (timeout: 3 minutes)...
+✓ Started test run: fa34a62c-96d2-436b-98ea-b168be876f50
+Waiting for test run fa34a62c-96d2-436b-98ea-b168be876f50 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
-  [Poll #2] Status: done
-Test completed with status: done
+  [Poll #2] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #3] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #4] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #5] Status: running
+  Progress: 4 passed, 1 failed, 0 waiting, 5 total
+  [Poll #6] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
-========================================
-          TEST RESULTS SUMMARY          
-========================================
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 503
+  Current URL after navigation: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint
-    Reason: Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_capabilities_stu2
-    Reason: Input 'well_known_configuration' is nil, skipping test.
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint
-    Reason: Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
-⚠ ERROR: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request
-    Error: Error: Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-/opt/hostedtoolcache/Ruby/3.3.10/x64/lib/ruby/3.3.0/net/http.rb:1603:in `initialize'
-✗ FAIL: Unknown test
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls
-    Reason: Could not verify when no url provided.
-✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
-    Reason: OAuth2 Authorization Endpoint '' is not a valid URI
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_code_received
-    Reason: Request `standalone_redirect` was not made in a previous test as expected.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_token_tls
-    Reason: Could not verify when no url provided.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
-    Reason: Input 'standalone_code' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_body_stu2_2
-    Reason: Request `standalone_token` was not made in a previous test as expected.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_response_headers
-    Reason: Request `standalone_token` was not made in a previous test as expected.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_cors_token_exchange
-    Reason: Request `standalone_token` was not made in a previous test as expected.
-✗ FAIL: Unknown test
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_decode_id_token
-    Reason: Input 'standalone_id_token' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_retrieve_configuration
-    Reason: Input 'id_token_payload_json' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_required_configuration_fields
-    Reason: Input 'openid_configuration_json' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_retrieve_jwks
-    Reason: Input 'openid_jwks_uri' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_token_header
-    Reason: Input 'id_token_header_json' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_token_payload
-    Reason: Input 'standalone_id_token' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_openid_fhir_user_claim
-    Reason: Input 'id_token_payload_json' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_openid_connect_stu2_2-smart_cors_openid_fhir_user_claim
-    Reason: Input 'id_token_fhir_user' is nil, skipping test.
-○ SKIP: Unknown test
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_stu2
-    Reason: Input 'standalone_received_scopes' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_refresh_body
-    Reason: Input 'standalone_received_scopes' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_without_scopes-smart_token_response_headers
-    Reason: Request `token_refresh` was not made in a previous test as expected.
-○ SKIP: Unknown test
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_stu2
-    Reason: Input 'standalone_received_scopes' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_refresh_body
-    Reason: Input 'standalone_received_scopes' is nil, skipping test.
-○ SKIP: smart_stu2_2-smart_full_standalone_launch-smart_standalone_refresh_with_scopes-smart_token_response_headers
-    Reason: Request `token_refresh` was not made in a previous test as expected.
-○ SKIP: Unknown test
-✗ FAIL: Unknown test
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #7] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
-========================================
-Total: 32 | Passed: 0 | Failed: 6 | Skipped: 25 | Errors: 1
-========================================
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 503
+  Current URL after navigation: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-========================================
-       DETAILED FAILURE ANALYSIS        
-========================================
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #8] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 503
+  Current URL after navigation: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---- smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-Result Message:
-Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #9] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
---------------------------------------------------
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---- smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-Result Message:
-Failed to open TCP connection to localhost:80 (Connection refused - connect(2) for "localhost" port 80)
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #10] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
---------------------------------------------------
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---- Unknown test ---
-Test ID: undefined
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---------------------------------------------------
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #11] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
---- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2 ---
-Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-Result Message:
-OAuth2 Authorization Endpoint '' is not a valid URI
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---------------------------------------------------
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #12] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
---- Unknown test ---
-Test ID: undefined
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---------------------------------------------------
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
---- Unknown test ---
-Test ID: undefined
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #13] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
 
---------------------------------------------------
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
 
-❌ Tests failed: 6 failed, 1 errors
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #14] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #15] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #16] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+  [Poll #17] Status: waiting
+  Test is waiting for user action (OAuth flow)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&co
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9Zsjd
+  Found OAuth URL in result_message: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&aud=https%3A%2F%2Fp02--proxy-smart-alpha--776jg9nwd8rw.code.run%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  Navigation response status: 400
+  Current URL after navigation: https://p01--keycloak-alpha--776jg9nwd8rw.code.run/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=7a814272-c2fd-4c56-a19f-5b818fb1fd6d&code_challenge=nX2K88je5CYHyJFm9ZsjdbCfaQHkh3f9hjVCSF1JRWU&code_challenge_method=S256
+  On Keycloak login page, entering credentials...
+  OAuth flow error: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('#username, input[name="username"]') to be visible
+
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 1 failed, 3 waiting, 9 total
+Standalone Launch tests error: Test run timed out
+Test execution failed: Test run timed out
