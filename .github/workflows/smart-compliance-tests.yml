@@ -451,7 +451,7 @@ jobs:
           echo "DEPLOYED_KC_URL=$KC_URL" >> $GITHUB_ENV
           echo "DEPLOYED_KC_REALM=$KC_REALM" >> $GITHUB_ENV
 
-      # Ensure inferno-test-client exists on deployed Keycloak
+      # Ensure inferno-test-client and SMART scopes exist on deployed Keycloak
       - name: Ensure Inferno Test Client (Deployed)
         if: steps.config.outputs.target == 'deployed'
         run: |
@@ -469,7 +469,6 @@ jobs:
           
           if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
             echo "WARNING: Could not get admin token — trying master realm admin"
-            # Fallback: try master realm admin credentials
             ADMIN_TOKEN=$(curl -sf -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
               -H "Content-Type: application/x-www-form-urlencoded" \
               -d "grant_type=password" \
@@ -484,47 +483,134 @@ jobs:
             exit 0
           fi
           
-          # Check if inferno-test-client exists
+          echo "✓ Keycloak admin token obtained"
+          
+          # ── Step 1: Ensure SMART client scopes exist ──
+          # These scopes are imported from realm-export.json for local but don't exist on deployed
+          SMART_SCOPES='["launch/patient","fhirUser","patient/*.read","offline_access"]'
+          
+          for SCOPE_NAME in "launch/patient" "fhirUser" "patient/*.read" "offline_access"; do
+            # URL-encode the scope name for the query
+            ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SCOPE_NAME', safe=''))")
+            
+            EXISTING=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r --arg name "$SCOPE_NAME" '.[] | select(.name == $name) | .id')
+            
+            if [ -n "$EXISTING" ]; then
+              echo "  ✓ Scope '$SCOPE_NAME' already exists (id: $EXISTING)"
+            else
+              echo "  Creating scope '$SCOPE_NAME'..."
+              
+              # Build scope definition based on name
+              SCOPE_DEF="{\"name\": \"$SCOPE_NAME\", \"protocol\": \"openid-connect\", \"attributes\": {\"include.in.token.scope\": \"true\", \"display.on.consent.screen\": \"true\"}}"
+              
+              # fhirUser needs a protocol mapper to include the claim
+              if [ "$SCOPE_NAME" = "fhirUser" ]; then
+                SCOPE_DEF="{
+                  \"name\": \"fhirUser\",
+                  \"protocol\": \"openid-connect\",
+                  \"attributes\": {\"include.in.token.scope\": \"true\", \"display.on.consent.screen\": \"true\"},
+                  \"protocolMappers\": [{
+                    \"name\": \"fhirUser-mapper\",
+                    \"protocol\": \"openid-connect\",
+                    \"protocolMapper\": \"oidc-usermodel-attribute-mapper\",
+                    \"consentRequired\": false,
+                    \"config\": {
+                      \"userinfo.token.claim\": \"true\",
+                      \"user.attribute\": \"fhirUser\",
+                      \"id.token.claim\": \"true\",
+                      \"access.token.claim\": \"true\",
+                      \"claim.name\": \"fhirUser\",
+                      \"jsonType.label\": \"String\"
+                    }
+                  }]
+                }"
+              fi
+              
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+                -H "Authorization: Bearer $ADMIN_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "$SCOPE_DEF")
+              
+              if [ "$HTTP_CODE" = "201" ]; then
+                echo "  ✓ Created scope '$SCOPE_NAME'"
+              else
+                echo "  WARNING: Failed to create scope '$SCOPE_NAME' (HTTP $HTTP_CODE)"
+              fi
+            fi
+          done
+          
+          # ── Step 2: Ensure inferno-test-client exists ──
           EXISTING=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
             -H "Authorization: Bearer $ADMIN_TOKEN" | jq 'length')
           
+          CLIENT_DEF="{
+            \"clientId\": \"$CLIENT_ID\",
+            \"name\": \"Inferno Test Client\",
+            \"publicClient\": true,
+            \"standardFlowEnabled\": true,
+            \"directAccessGrantsEnabled\": true,
+            \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
+            \"webOrigins\": [\"http://localhost:4567\", \"*\"],
+            \"fullScopeAllowed\": true,
+            \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\"}
+          }"
+          
           if [ "$EXISTING" -gt 0 ]; then
-            echo "✓ $CLIENT_ID already exists in deployed Keycloak"
-            
-            # Ensure redirect URIs include Inferno's localhost callback
+            echo "✓ $CLIENT_ID already exists"
             INTERNAL_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
               -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
-            
-            # Update redirect URIs to include Inferno callback
             curl -sf -X PUT "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
               -H "Authorization: Bearer $ADMIN_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"clientId\": \"$CLIENT_ID\",
-                \"publicClient\": true,
-                \"standardFlowEnabled\": true,
-                \"directAccessGrantsEnabled\": true,
-                \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
-                \"webOrigins\": [\"http://localhost:4567\", \"*\"],
-                \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\"}
-              }" && echo "✓ Updated $CLIENT_ID redirect URIs"
+              -d "$CLIENT_DEF" && echo "  ✓ Updated $CLIENT_ID"
           else
-            echo "Creating $CLIENT_ID in deployed Keycloak..."
+            echo "Creating $CLIENT_ID..."
             curl -sf -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
               -H "Authorization: Bearer $ADMIN_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{
-                \"clientId\": \"$CLIENT_ID\",
-                \"name\": \"Inferno Test Client\",
-                \"publicClient\": true,
-                \"standardFlowEnabled\": true,
-                \"directAccessGrantsEnabled\": true,
-                \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
-                \"webOrigins\": [\"http://localhost:4567\", \"*\"],
-                \"fullScopeAllowed\": true,
-                \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\"}
-              }" && echo "✓ Created $CLIENT_ID in deployed Keycloak"
+              -d "$CLIENT_DEF" && echo "  ✓ Created $CLIENT_ID"
           fi
+          
+          # ── Step 3: Assign SMART scopes to the client as optional client scopes ──
+          INTERNAL_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
+          
+          if [ -z "$INTERNAL_ID" ] || [ "$INTERNAL_ID" = "null" ]; then
+            echo "WARNING: Could not find client internal ID"
+            exit 0
+          fi
+          
+          echo "Assigning SMART scopes to $CLIENT_ID (internal: $INTERNAL_ID)..."
+          
+          # Get current optional scopes for the client
+          CURRENT_SCOPES=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID/optional-client-scopes" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[].name' 2>/dev/null)
+          
+          for SCOPE_NAME in "launch/patient" "fhirUser" "patient/*.read" "offline_access"; do
+            if echo "$CURRENT_SCOPES" | grep -qF "$SCOPE_NAME"; then
+              echo "  ✓ Scope '$SCOPE_NAME' already assigned"
+            else
+              # Get scope ID
+              SCOPE_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+                -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r --arg name "$SCOPE_NAME" '.[] | select(.name == $name) | .id')
+              
+              if [ -n "$SCOPE_ID" ] && [ "$SCOPE_ID" != "null" ]; then
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+                  "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID/optional-client-scopes/$SCOPE_ID" \
+                  -H "Authorization: Bearer $ADMIN_TOKEN")
+                if [ "$HTTP_CODE" = "204" ]; then
+                  echo "  ✓ Assigned scope '$SCOPE_NAME' to client"
+                else
+                  echo "  WARNING: Failed to assign scope '$SCOPE_NAME' (HTTP $HTTP_CODE)"
+                fi
+              else
+                echo "  WARNING: Scope '$SCOPE_NAME' not found in realm"
+              fi
+            fi
+          done
+          
+          echo "✓ Inferno test client configured with SMART scopes"
 
       # Setup Node.js for Playwright
       - name: Setup Node.js
