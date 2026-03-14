@@ -751,10 +751,14 @@ jobs:
       - name: Save Test Results
         if: always()
         run: |
+          set +e  # Don't fail on individual commands — this is best-effort artifact collection
           mkdir -p test-results
           
+          # Use deployed URL when available, otherwise localhost
+          BASE_URL="${DEPLOYED_BACKEND_URL:-http://localhost:8445}"
+          
           # Discover servers and get SMART config URL
-          SERVERS=$(curl -s "http://localhost:8445/fhir-servers" 2>&1)
+          SERVERS=$(curl -sf "$BASE_URL/fhir-servers" 2>&1) || SERVERS='{"error":"backend unreachable"}'
           SMART_CONFIG_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.smartConfig // empty' 2>/dev/null)
           METADATA_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.metadata // empty' 2>/dev/null)
           
@@ -763,14 +767,14 @@ jobs:
           
           # Save SMART configuration if URL available
           if [ -n "$SMART_CONFIG_URL" ] && [ "$SMART_CONFIG_URL" != "null" ]; then
-            curl -s "$SMART_CONFIG_URL" > test-results/smart-configuration.json 2>/dev/null || echo "{}" > test-results/smart-configuration.json
+            curl -sf "$SMART_CONFIG_URL" > test-results/smart-configuration.json 2>/dev/null || echo "{}" > test-results/smart-configuration.json
           else
             echo "{\"note\": \"No FHIR servers configured\"}" > test-results/smart-configuration.json
           fi
           
           # Save FHIR metadata if URL available
           if [ -n "$METADATA_URL" ] && [ "$METADATA_URL" != "null" ]; then
-            curl -s "$METADATA_URL" > test-results/fhir-metadata.json 2>/dev/null || echo "{}" > test-results/fhir-metadata.json
+            curl -sf "$METADATA_URL" > test-results/fhir-metadata.json 2>/dev/null || echo "{}" > test-results/fhir-metadata.json
           else
             echo "{\"note\": \"No FHIR servers configured\"}" > test-results/fhir-metadata.json
           fi
@@ -781,7 +785,7 @@ jobs:
           # Save Playwright screenshots if any
           cp oauth-error.png test-results/oauth-error.png 2>/dev/null || true
           
-          # Also save service logs
+          # Also save service logs (only exists for local targets)
           docker logs keycloak > test-results/keycloak.log 2>&1 || true
 
       - name: Upload Artifacts
