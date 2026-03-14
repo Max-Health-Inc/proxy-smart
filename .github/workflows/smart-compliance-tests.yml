@@ -547,29 +547,46 @@ jobs:
           CLIENT_DEF="{
             \"clientId\": \"$CLIENT_ID\",
             \"name\": \"Inferno Test Client\",
+            \"protocol\": \"openid-connect\",
             \"publicClient\": true,
+            \"bearerOnly\": false,
+            \"consentRequired\": false,
             \"standardFlowEnabled\": true,
+            \"implicitFlowEnabled\": false,
             \"directAccessGrantsEnabled\": true,
+            \"serviceAccountsEnabled\": false,
+            \"authorizationServicesEnabled\": false,
             \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
             \"webOrigins\": [\"http://localhost:4567\", \"*\"],
             \"fullScopeAllowed\": true,
-            \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\"}
+            \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\", \"oauth2.device.authorization.grant.enabled\": \"false\", \"oidc.ciba.grant.enabled\": \"false\", \"backchannel.logout.session.required\": \"true\"}
           }"
           
           if [ "$EXISTING" -gt 0 ]; then
-            echo "✓ $CLIENT_ID already exists"
+            # Delete and recreate to ensure clean state (PUT can leave stale settings)
             INTERNAL_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
               -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
-            curl -sf -X PUT "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
-              -H "Authorization: Bearer $ADMIN_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$CLIENT_DEF" && echo "  ✓ Updated $CLIENT_ID"
+            echo "Deleting existing $CLIENT_ID (internal: $INTERNAL_ID) for clean recreation..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+              "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
+              -H "Authorization: Bearer $ADMIN_TOKEN")
+            echo "  Delete response: HTTP $HTTP_CODE"
+          fi
+          
+          echo "Creating $CLIENT_ID..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$CLIENT_DEF")
+          if [ "$HTTP_CODE" = "201" ]; then
+            echo "  ✓ Created $CLIENT_ID (HTTP $HTTP_CODE)"
           else
-            echo "Creating $CLIENT_ID..."
-            curl -sf -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
+            echo "  ✗ Failed to create $CLIENT_ID (HTTP $HTTP_CODE)"
+            # Show error for debugging
+            curl -s -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
               -H "Authorization: Bearer $ADMIN_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "$CLIENT_DEF" && echo "  ✓ Created $CLIENT_ID"
+              -d "$CLIENT_DEF" | jq '.' 2>/dev/null || true
           fi
           
           # ── Step 3: Assign SMART scopes to the client as optional client scopes ──
@@ -611,6 +628,38 @@ jobs:
           done
           
           echo "✓ Inferno test client configured with SMART scopes"
+          
+          # ── Step 4: Verify client configuration ──
+          echo ""
+          echo "Verifying client configuration..."
+          CLIENT_CONFIG=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
+            -H "Authorization: Bearer $ADMIN_TOKEN")
+          echo "  publicClient: $(echo $CLIENT_CONFIG | jq '.publicClient')"
+          echo "  consentRequired: $(echo $CLIENT_CONFIG | jq '.consentRequired')"
+          echo "  standardFlowEnabled: $(echo $CLIENT_CONFIG | jq '.standardFlowEnabled')"
+          echo "  directAccessGrantsEnabled: $(echo $CLIENT_CONFIG | jq '.directAccessGrantsEnabled')"
+          echo "  redirectUris: $(echo $CLIENT_CONFIG | jq -c '.redirectUris')"
+          echo "  pkce.code.challenge.method: $(echo $CLIENT_CONFIG | jq -r '.attributes["pkce.code.challenge.method"]')"
+          
+          # ── Step 5: Quick token test via direct access grant ──
+          echo ""
+          echo "Testing token endpoint (direct access grant)..."
+          BACKEND_URL="${{ steps.config.outputs.fhir_url }}"
+          # Extract base URL (remove the FHIR path)
+          BASE_URL=$(echo "$BACKEND_URL" | sed 's|/proxy-smart-backend.*||')
+          TOKEN_RESP=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/auth/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password&client_id=$CLIENT_ID&username=testuser&password=testpass&scope=openid")
+          TOKEN_HTTP=$(echo "$TOKEN_RESP" | tail -1)
+          TOKEN_BODY=$(echo "$TOKEN_RESP" | head -n -1)
+          if [ "$TOKEN_HTTP" = "200" ]; then
+            echo "  ✓ Token exchange works (HTTP $TOKEN_HTTP)"
+            echo "  has access_token: $(echo $TOKEN_BODY | jq 'has("access_token")')"
+          else
+            echo "  ✗ Token exchange FAILED (HTTP $TOKEN_HTTP)"
+            echo "  Error: $(echo $TOKEN_BODY | jq -r '.error // .message // "unknown"')"
+            echo "  Description: $(echo $TOKEN_BODY | jq -r '.error_description // "none"')"
+          fi
 
       # Setup Node.js for Playwright
       - name: Setup Node.js

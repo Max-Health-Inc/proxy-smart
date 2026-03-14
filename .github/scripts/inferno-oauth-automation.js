@@ -578,10 +578,20 @@ async function printResults(results) {
           }
           if (req.response_body) {
             const bodyPreview = typeof req.response_body === 'string' 
-              ? req.response_body.substring(0, 300) 
-              : JSON.stringify(req.response_body).substring(0, 300);
-            console.log(`    Response Body: ${bodyPreview}...`);
+              ? req.response_body.substring(0, 500) 
+              : JSON.stringify(req.response_body).substring(0, 500);
+            console.log(`    Response Body: ${bodyPreview}`);
           }
+          // Show request body for token/introspect requests (helps debug 400/422 errors)
+          if (req.request_body && (req.url?.includes('/token') || req.url?.includes('/introspect'))) {
+            const reqBody = typeof req.request_body === 'string'
+              ? req.request_body.substring(0, 300)
+              : JSON.stringify(req.request_body).substring(0, 300);
+            console.log(`    Request Body: ${reqBody}`);
+          }
+          // Show all available keys for debugging
+          const reqKeys = Object.keys(req).filter(k => req[k] != null);
+          console.log(`    Available fields: ${reqKeys.join(', ')}`);
         }
       }
       

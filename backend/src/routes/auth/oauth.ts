@@ -314,7 +314,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       logger.auth.debug('Keycloak response received', {
         status: resp.status,
         hasAccessToken: !!data.access_token,
-        error: data.error
+        error: data.error,
+        error_description: data.error_description
       })
 
       // Log OAuth event
@@ -485,14 +486,33 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     })
 
   // proxy introspection
-  .post('/introspect', async ({ body }) => {
+  .post('/introspect', async ({ body, set }) => {
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token/introspect`
+    logger.auth.debug('Introspect request received', { bodyKeys: Object.keys(body as Record<string, unknown>) })
+
     const resp = await fetch(kcUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(body as Record<string, string>).toString()
     })
-    return resp.json()
+
+    const data = await resp.json()
+    set.status = resp.status
+    set.headers['Cache-Control'] = 'no-store'
+    set.headers['Pragma'] = 'no-cache'
+    set.headers['Access-Control-Allow-Origin'] = '*'
+    set.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+
+    if (data.error) {
+      logger.auth.warn('Introspection error from Keycloak', {
+        error: data.error,
+        description: data.error_description,
+        status: resp.status
+      })
+    }
+
+    return data
   }, {
     body: IntrospectRequest,
     response: {
