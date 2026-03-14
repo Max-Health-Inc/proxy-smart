@@ -1,12 +1,12 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-03-14 02:59:56,018 INFO  [io.qua.dep.QuarkusAugmentor] (main) Quarkus augmentation completed in 9901ms
-2026-03-14 02:59:59,382 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Starting Infinispan embedded cache manager
-2026-03-14 02:59:59,522 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for sessions to 10000 entries.
-2026-03-14 02:59:59,522 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for clientSessions to 10000 entries.
-2026-03-14 02:59:59,522 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for offlineSessions to 10000 entries.
-2026-03-14 02:59:59,522 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for offlineClientSessions to 10000 entries.
-2026-03-14 02:59:59,869 INFO  [org.infinispan.CONTAINER] (ForkJoinPool.commonPool-worker-1) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-03-14 03:00:01,429 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-03-14 03:14:49,303 INFO  [io.qua.dep.QuarkusAugmentor] (main) Quarkus augmentation completed in 9349ms
+2026-03-14 03:14:52,943 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Starting Infinispan embedded cache manager
+2026-03-14 03:14:53,096 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for sessions to 10000 entries.
+2026-03-14 03:14:53,096 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for clientSessions to 10000 entries.
+2026-03-14 03:14:53,096 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for offlineSessions to 10000 entries.
+2026-03-14 03:14:53,096 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for offlineClientSessions to 10000 entries.
+2026-03-14 03:14:53,437 INFO  [org.infinispan.CONTAINER] (ForkJoinPool.commonPool-worker-1) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-03-14 03:14:55,212 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
 
 UPDATE SUMMARY
 Run:                        144
@@ -15,23 +15,23 @@ Filtered out:                 0
 -------------------------------
 Total change sets:          144
 
-2026-03-14 03:00:07,176 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 3 ResultSet(s) and 0 Statement(s)
-2026-03-14 03:00:07,177 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 150 ResultSet(s) and 0 Statement(s)
-2026-03-14 03:00:07,532 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_859347, Site name: null
-2026-03-14 03:00:07,695 INFO  [org.keycloak.broker.provider.AbstractIdentityProviderMapper] (main) Registering class org.keycloak.broker.provider.mappersync.ConfigSyncEventListener
-2026-03-14 03:00:07,852 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
-2026-03-14 03:00:07,857 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
-2026-03-14 03:00:09,742 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
-2026-03-14 03:00:12,308 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
-2026-03-14 03:00:12,308 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: OVERWRITE_EXISTING
-2026-03-14 03:00:12,308 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
-2026-03-14 03:00:12,309 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
-2026-03-14 03:00:12,309 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
-2026-03-14 03:00:12,386 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
-2026-03-14 03:00:12,434 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 3 ResultSet(s) and 0 Statement(s)
-2026-03-14 03:00:12,546 INFO  [io.quarkus] (main) Keycloak 26.0.5 on JVM (powered by Quarkus 3.15.1) started in 16.384s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
-2026-03-14 03:00:12,546 INFO  [io.quarkus] (main) Profile dev activated. 
-2026-03-14 03:00:12,546 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
-2026-03-14 03:00:12,549 WARN  [org.keycloak.quarkus.runtime.KeycloakMain] (main) Running the server in development mode. DO NOT use this configuration in production.
-2026-03-14 03:01:53,996 WARN  [org.keycloak.events] (executor-thread-1) type="INTROSPECT_TOKEN_ERROR", realmId="f9ac79ba-0127-46bb-a63f-ebc77f19194f", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="token_introspection_failed", reason="Access token JWT check failed", client_auth_method="client-secret"
-2026-03-14 03:01:53,997 WARN  [org.keycloak.events] (executor-thread-1) type="INTROSPECT_TOKEN_ERROR", realmId="f9ac79ba-0127-46bb-a63f-ebc77f19194f", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="token_introspection_failed", reason="Access token JWT check failed", client_auth_method="client-secret"
+2026-03-14 03:15:01,398 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 3 ResultSet(s) and 0 Statement(s)
+2026-03-14 03:15:01,399 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 150 ResultSet(s) and 0 Statement(s)
+2026-03-14 03:15:01,732 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_952231, Site name: null
+2026-03-14 03:15:01,931 INFO  [org.keycloak.broker.provider.AbstractIdentityProviderMapper] (main) Registering class org.keycloak.broker.provider.mappersync.ConfigSyncEventListener
+2026-03-14 03:15:02,095 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-03-14 03:15:02,100 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-03-14 03:15:03,683 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
+2026-03-14 03:15:06,231 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
+2026-03-14 03:15:06,231 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: OVERWRITE_EXISTING
+2026-03-14 03:15:06,231 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
+2026-03-14 03:15:06,232 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
+2026-03-14 03:15:06,232 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
+2026-03-14 03:15:06,308 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
+2026-03-14 03:15:06,358 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 3 ResultSet(s) and 0 Statement(s)
+2026-03-14 03:15:06,483 INFO  [io.quarkus] (main) Keycloak 26.0.5 on JVM (powered by Quarkus 3.15.1) started in 17.014s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
+2026-03-14 03:15:06,483 INFO  [io.quarkus] (main) Profile dev activated. 
+2026-03-14 03:15:06,483 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
+2026-03-14 03:15:06,489 WARN  [org.keycloak.quarkus.runtime.KeycloakMain] (main) Running the server in development mode. DO NOT use this configuration in production.
+2026-03-14 03:16:47,033 WARN  [org.keycloak.events] (executor-thread-2) type="INTROSPECT_TOKEN_ERROR", realmId="44fe50f9-bfe0-4c7b-a5ea-9499dcd08828", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="token_introspection_failed", reason="Access token JWT check failed", client_auth_method="client-secret"
+2026-03-14 03:16:47,034 WARN  [org.keycloak.events] (executor-thread-2) type="INTROSPECT_TOKEN_ERROR", realmId="44fe50f9-bfe0-4c7b-a5ea-9499dcd08828", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="token_introspection_failed", reason="Access token JWT check failed", client_auth_method="client-secret"
