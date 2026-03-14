@@ -550,7 +550,7 @@ jobs:
             \"clientId\": \"$CLIENT_ID\",
             \"name\": \"Inferno Test Client\",
             \"protocol\": \"openid-connect\",
-            \"clientAuthenticatorType\": \"client-secret\",
+            \"clientAuthenticatorType\": \"client-dummy\",
             \"publicClient\": true,
             \"bearerOnly\": false,
             \"consentRequired\": false,
