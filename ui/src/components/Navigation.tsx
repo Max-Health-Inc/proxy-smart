@@ -19,7 +19,6 @@ import {
   Zap, 
   Users, 
   Shield, 
-  ShieldCheck,
   LogOut, 
   User, 
   Settings,
@@ -175,12 +174,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       description: t('LDAP Integration'),
       icon: Users
     },
-    { 
-      id: 'consent-monitoring', 
-      label: t('Consent'), 
-      description: t('Monitoring & Settings'),
-      icon: ShieldCheck
-    },
+
   ];
 
   return (
