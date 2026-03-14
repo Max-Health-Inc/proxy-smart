@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "@m2d/react-markdown": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -46,6 +45,7 @@
     "react-dom": "^19.2.4",
     "react-hook-form": "^7.71.2",
     "react-i18next": "^16.5.8",
+    "react-markdown": "^10.1.0",
     "recharts": "^3.8.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.5.0",

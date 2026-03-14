@@ -5,17 +5,24 @@ import { logger } from './logger'
 
 const CLIENT_INFO = { name: 'proxy-smart', version: '1.0.0' }
 
+export interface ConnectMcpOptions {
+  timeout?: number
+  headers?: Record<string, string>
+}
+
 /**
  * Connect to an MCP server using Streamable HTTP, falling back to SSE for legacy servers.
  * Caller is responsible for closing the client via `client.close()`.
  */
-export async function connectMcpClient(url: string, timeout = 10_000): Promise<Client> {
+export async function connectMcpClient(url: string, options?: ConnectMcpOptions | number): Promise<Client> {
+  const { timeout = 10_000, headers } = typeof options === 'number' ? { timeout: options } : (options ?? {})
   const baseUrl = new URL(url)
+  const requestInit = headers ? { headers } : undefined
 
   // Try Streamable HTTP first (modern MCP protocol)
   try {
     const client = new Client(CLIENT_INFO)
-    const transport = new StreamableHTTPClientTransport(baseUrl)
+    const transport = new StreamableHTTPClientTransport(baseUrl, { requestInit })
     await client.connect(transport)
     return client
   } catch {
@@ -24,7 +31,7 @@ export async function connectMcpClient(url: string, timeout = 10_000): Promise<C
   }
 
   const client = new Client(CLIENT_INFO)
-  const transport = new SSEClientTransport(baseUrl)
+  const transport = new SSEClientTransport(baseUrl, { requestInit })
   await client.connect(transport)
   return client
 }

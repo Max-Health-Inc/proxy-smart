@@ -53,7 +53,13 @@ export class McpClient {
    */
   private async getClient(): Promise<Client> {
     if (this.client) return this.client
-    this.client = await connectMcpClient(this.serverConfig.url)
+    const headers: Record<string, string> = {}
+    if (this.serverConfig.auth?.token) {
+      headers['Authorization'] = `Bearer ${this.serverConfig.auth.token}`
+    }
+    this.client = await connectMcpClient(this.serverConfig.url, {
+      headers: Object.keys(headers).length > 0 ? headers : undefined
+    })
     return this.client
   }
 

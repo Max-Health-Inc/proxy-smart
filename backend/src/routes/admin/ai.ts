@@ -19,7 +19,7 @@ import {
 import { getToolRegistry, createToolExecutor } from '@/lib/ai/tool-registry'
 import { type AIContext } from '@/lib/ai/assistant'
 import { McpClient, McpConnectionManager } from '@/lib/ai/mcp-client'
-import { streamText, generateText, type Tool as AiSdkTool, type LanguageModel } from 'ai'
+import { streamText, generateText, jsonSchema, type Tool as AiSdkTool, type LanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { typeboxToZod } from '@/lib/schemas/typebox-to-zod'
@@ -195,21 +195,27 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
       for (const mcpTool of mcpTools) {
         // Use short prefix "m_" to stay within OpenAI's 64-char tool name limit
         const toolName = `m_${mcpTool.function.name}`
+        // Pass the real JSON Schema from the MCP server so the model knows what parameters to send
+        const mcpInputSchema = mcpTool.function.parameters && Object.keys(mcpTool.function.parameters).length > 0
+          ? jsonSchema(mcpTool.function.parameters as Parameters<typeof jsonSchema>[0])
+          : z.object({})
         sdkTools[toolName] = {
           description: `[MCP] ${mcpTool.function.description}`,
-          inputSchema: z.object({}), // MCP tools use their own parameter validation
+          parameters: mcpInputSchema,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          execute: async ({ input }: any) => {
-            logger.server.debug('Executing MCP tool', { reqId, tool: mcpTool.function.name, input })
+          execute: async (args: any) => {
+            logger.server.debug('Executing MCP tool', { reqId, tool: mcpTool.function.name, args })
             const start = Date.now()
             try {
-              const result = await mcpManager.callTool(mcpTool.function.name, input || {})
+              const result = await mcpManager.callTool(mcpTool.function.name, args || {})
               logger.server.debug('MCP tool completed', {
                 reqId,
                 tool: mcpTool.function.name,
-                duration: Date.now() - start
+                duration: Date.now() - start,
+                contentCount: result.content.length,
               })
-              return result.content[0]?.text || ''
+              // Concatenate all text content from the MCP response
+              return result.content.map(c => c.text).join('\n\n') || ''
             } catch (error) {
               logger.server.error('MCP tool failed', {
                 reqId,
@@ -474,6 +480,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
         system: systemPrompt,
         messages,
         tools: sdkTools,
+        maxSteps: 5,
         onFinish: async ({ text, toolCalls, usage, finishReason }) => {
           logger.server.info('AI stream finished', {
             reqId,
@@ -623,6 +630,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
         system: systemPrompt,
         messages,
         tools: sdkTools,
+        maxSteps: 5,
       })
 
       logger.server.info('AI chat completed', { 
