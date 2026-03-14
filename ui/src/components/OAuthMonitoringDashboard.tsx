@@ -807,12 +807,11 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/50 rounded-t-2xl">
+            <TabsList className="grid w-full grid-cols-4 bg-muted/50 rounded-t-2xl">
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="flows" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth Flows')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
               <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
-              <TabsTrigger value="monitoring" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('System Health')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -1063,283 +1062,8 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
               </div>
-            </TabsContent>
 
-            <TabsContent value="flows" className="space-y-6">
-              {/* Filters */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                    <Search className="w-5 h-5 text-primary" />
-                  </div>
-                  <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter OAuth Flows')}</h4>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
-                    <Select value={filterType} onValueChange={setFilterType}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('All Types')}</SelectItem>
-                        <SelectItem value="authorization">{t('Authorization')}</SelectItem>
-                        <SelectItem value="token">{t('Token')}</SelectItem>
-                        <SelectItem value="refresh">{t('Refresh')}</SelectItem>
-                        <SelectItem value="error">{t('Error')}</SelectItem>
-                        <SelectItem value="revoke">{t('Revoke')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
-                        <SelectItem value="success">{t('Success')}</SelectItem>
-                        <SelectItem value="error">{t('Error')}</SelectItem>
-                        <SelectItem value="warning">{t('Warning')}</SelectItem>
-                        <SelectItem value="pending">{t('Pending')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder={t('Search by client or user...')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="min-w-[200px]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Events List - Simplified for brevity */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                    <Activity className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Recent OAuth Events')}</h4>
-                    <p className="text-muted-foreground font-medium">
-                      {t('Showing {{count}} of {{total}} events', { 
-                        count: filteredEvents.length, 
-                        total: events.length 
-                      })}
-                    </p>
-                  </div>
-                </div>
-                {filteredEvents.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table className="text-sm">
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead>{t('Time')}</TableHead>
-                          <TableHead>{t('Type')}</TableHead>
-                          <TableHead>{t('Client')}</TableHead>
-                          <TableHead>{t('Status')}</TableHead>
-                          <TableHead>{t('Details')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredEvents.slice(0, 50).map((event, index) => (
-                          <TableRow key={event.id || index}>
-                            <TableCell className="text-muted-foreground">
-                              {format(new Date(event.timestamp), 'MMM dd, HH:mm:ss')}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="font-mono text-xs">
-                                {event.type || t('Unknown')}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-medium text-foreground">
-                              {event.clientName || event.clientId || t('Unknown')}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  event.status === 'success'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                                    : event.status === 'error'
-                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
-                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
-                                }
-                              >
-                                {event.status || t('Unknown')}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground max-w-xs truncate">
-                              {event.errorMessage || '-'}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    {filteredEvents.length > 50 && (
-                      <div className="text-center py-4 text-muted-foreground">
-                        <p className="text-sm">{t('Showing first 50 events of {{total}}', { total: filteredEvents.length })}</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="font-medium">{t('No events match your filters')}</p>
-                    <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-6">
-              <div className={`grid grid-cols-1 ${predictiveInsights ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
-                {/* Success Rate Chart */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <TrendingUp className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Success Rate')}</h4>
-                      <p className="text-muted-foreground font-medium">{t('OAuth flow success over time')}</p>
-                    </div>
-                  </div>
-                  <div className="h-[300px]">
-                    {/* TODO: hourlyStats not available in current API response */}
-                    {analytics?.hourlyStats && analytics.hourlyStats.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analytics.hourlyStats}>
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                          <XAxis
-                            dataKey="hour"
-                            tickFormatter={(hour) => format(new Date(hour), 'HH:mm')}
-                            className="text-muted-foreground"
-                          />
-                          <YAxis className="text-muted-foreground" />
-                          <Tooltip
-                            labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
-                            contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                          <Bar dataKey="success" fill="hsl(var(--primary))" />
-                          <Bar dataKey="error" fill="#ef4444" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center">
-                        <p className="text-muted-foreground">{t('No success rate data available')}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Client Distribution Pie Chart */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <Shield className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Client Distribution')}</h4>
-                      <p className="text-muted-foreground font-medium">{t('OAuth clients by usage')}</p>
-                    </div>
-                  </div>
-                  <div className="h-[300px]">
-                    {hasClientDistribution ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={clientDistributionData}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={100}
-                            fill="hsl(var(--primary))"
-                            dataKey="count"
-                            label={({ payload }) => `${payload?.clientName}: ${payload?.count}`}
-                          >
-                            {clientDistributionData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={`hsl(${(index * 45) % 360}, 70%, 50%)`} />
-                            ))}
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
-                              borderRadius: '8px'
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center">
-                        <p className="text-muted-foreground">{t('No client distribution data available')}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {predictiveInsights && (
-                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                    <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                        <Activity className="w-6 h-6 text-sky-600" />
-                      </div>
-                      <div>
-                        <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Predictive Insights')}</h4>
-                        <p className="text-muted-foreground font-medium">{t('Early warning indicators for OAuth reliability')}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground font-medium">{t('Forecast generated')}</span>
-                        <span className="text-foreground font-semibold">
-                          {format(new Date(predictiveInsights.generatedAt), 'MMM dd, HH:mm')}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground font-medium">{t('Confidence')}</span>
-                        <span className="text-foreground font-semibold">{Math.round(predictiveInsights.trendConfidence * 100)}%</span>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground font-medium mb-2">{t('Key signals')}</p>
-                        <ul className="space-y-2 text-sm">
-                          {predictiveInsights.anomalyReasons.slice(0, 3).map((reason, idx) => (
-                            <li key={`insight-reason-${idx}`} className="flex items-start gap-2">
-                              <span className="mt-1 h-2 w-2 rounded-full bg-sky-500" aria-hidden />
-                              <span className="text-foreground leading-relaxed">{reason}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      {predictiveInsights.notes && (
-                        <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-sm text-sky-900 dark:text-sky-200">
-                          <p className="font-semibold mb-1">{t('Recommended action')}</p>
-                          <p className="leading-relaxed">{predictiveInsights.notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="door-access" className="space-y-6">
-              <EventsPanel />
-            </TabsContent>
-
-            <TabsContent value="monitoring" className="space-y-6">
-              {/* Overall status banner */}
+              {/* System Health */}
               <div className={`p-4 rounded-2xl border shadow-lg flex items-center justify-between ${
                 systemStatus?.overall === 'healthy' ? 'bg-green-500/10 border-green-500/30' :
                 systemStatus?.overall === 'degraded' ? 'bg-yellow-500/10 border-yellow-500/30' :
@@ -1648,6 +1372,279 @@ export function OAuthMonitoringDashboard() {
                   <span>{t('Auto-refresh every 30s')}</span>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="flows" className="space-y-6">
+              {/* Filters */}
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                    <Search className="w-5 h-5 text-primary" />
+                  </div>
+                  <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter OAuth Flows')}</h4>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Types')}</SelectItem>
+                        <SelectItem value="authorization">{t('Authorization')}</SelectItem>
+                        <SelectItem value="token">{t('Token')}</SelectItem>
+                        <SelectItem value="refresh">{t('Refresh')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="revoke">{t('Revoke')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                        <SelectItem value="success">{t('Success')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="warning">{t('Warning')}</SelectItem>
+                        <SelectItem value="pending">{t('Pending')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder={t('Search by client or user...')}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="min-w-[200px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Events List - Simplified for brevity */}
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                    <Activity className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Recent OAuth Events')}</h4>
+                    <p className="text-muted-foreground font-medium">
+                      {t('Showing {{count}} of {{total}} events', { 
+                        count: filteredEvents.length, 
+                        total: events.length 
+                      })}
+                    </p>
+                  </div>
+                </div>
+                {filteredEvents.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table className="text-sm">
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>{t('Time')}</TableHead>
+                          <TableHead>{t('Type')}</TableHead>
+                          <TableHead>{t('Client')}</TableHead>
+                          <TableHead>{t('Status')}</TableHead>
+                          <TableHead>{t('Details')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEvents.slice(0, 50).map((event, index) => (
+                          <TableRow key={event.id || index}>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(event.timestamp), 'MMM dd, HH:mm:ss')}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {event.type || t('Unknown')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-medium text-foreground">
+                              {event.clientName || event.clientId || t('Unknown')}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  event.status === 'success'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                                    : event.status === 'error'
+                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
+                                }
+                              >
+                                {event.status || t('Unknown')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground max-w-xs truncate">
+                              {event.errorMessage || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {filteredEvents.length > 50 && (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p className="text-sm">{t('Showing first 50 events of {{total}}', { total: filteredEvents.length })}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="font-medium">{t('No events match your filters')}</p>
+                    <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="space-y-6">
+              <div className={`grid grid-cols-1 ${predictiveInsights ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
+                {/* Success Rate Chart */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <TrendingUp className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Success Rate')}</h4>
+                      <p className="text-muted-foreground font-medium">{t('OAuth flow success over time')}</p>
+                    </div>
+                  </div>
+                  <div className="h-[300px]">
+                    {/* TODO: hourlyStats not available in current API response */}
+                    {analytics?.hourlyStats && analytics.hourlyStats.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analytics.hourlyStats}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis
+                            dataKey="hour"
+                            tickFormatter={(hour) => format(new Date(hour), 'HH:mm')}
+                            className="text-muted-foreground"
+                          />
+                          <YAxis className="text-muted-foreground" />
+                          <Tooltip
+                            labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Bar dataKey="success" fill="hsl(var(--primary))" />
+                          <Bar dataKey="error" fill="#ef4444" />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <p className="text-muted-foreground">{t('No success rate data available')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Client Distribution Pie Chart */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Shield className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Client Distribution')}</h4>
+                      <p className="text-muted-foreground font-medium">{t('OAuth clients by usage')}</p>
+                    </div>
+                  </div>
+                  <div className="h-[300px]">
+                    {hasClientDistribution ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={clientDistributionData}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={100}
+                            fill="hsl(var(--primary))"
+                            dataKey="count"
+                            label={({ payload }) => `${payload?.clientName}: ${payload?.count}`}
+                          >
+                            {clientDistributionData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={`hsl(${(index * 45) % 360}, 70%, 50%)`} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: 'hsl(var(--card))',
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <p className="text-muted-foreground">{t('No client distribution data available')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {predictiveInsights && (
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                    <div className="flex items-center space-x-3 mb-6">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                        <Activity className="w-6 h-6 text-sky-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Predictive Insights')}</h4>
+                        <p className="text-muted-foreground font-medium">{t('Early warning indicators for OAuth reliability')}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground font-medium">{t('Forecast generated')}</span>
+                        <span className="text-foreground font-semibold">
+                          {format(new Date(predictiveInsights.generatedAt), 'MMM dd, HH:mm')}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground font-medium">{t('Confidence')}</span>
+                        <span className="text-foreground font-semibold">{Math.round(predictiveInsights.trendConfidence * 100)}%</span>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground font-medium mb-2">{t('Key signals')}</p>
+                        <ul className="space-y-2 text-sm">
+                          {predictiveInsights.anomalyReasons.slice(0, 3).map((reason, idx) => (
+                            <li key={`insight-reason-${idx}`} className="flex items-start gap-2">
+                              <span className="mt-1 h-2 w-2 rounded-full bg-sky-500" aria-hidden />
+                              <span className="text-foreground leading-relaxed">{reason}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      {predictiveInsights.notes && (
+                        <div className="rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-sm text-sky-900 dark:text-sky-200">
+                          <p className="font-semibold mb-1">{t('Recommended action')}</p>
+                          <p className="leading-relaxed">{predictiveInsights.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="door-access" className="space-y-6">
+              <EventsPanel />
             </TabsContent>
           </Tabs>
         </div>
