@@ -21,7 +21,17 @@ export interface SkillsShEntry {
   githubUrl: string
   skillsshUrl: string
   installed: boolean
+  /** false if the skill requires CLI/shell access that this agent cannot provide */
+  compatible: boolean
+  /** Reason the skill is incompatible (undefined when compatible) */
+  incompatibleReason?: string
 }
+
+/**
+ * Patterns in skill id/name that indicate CLI/shell/filesystem dependency.
+ * These skills won't work in an HTTP-only agent runtime.
+ */
+const CLI_INDICATOR_PATTERNS = /\b(bash|shell|terminal|cli|command[- ]?line|exec|subprocess|filesystem|file[- ]?system|docker|kubectl|ssh|git(?!hub)|brew|npm|pip|cargo|make|cmake|ansible|terraform|puppet|vagrant|tmux|screen|systemctl|journalctl|cron|sed|awk|grep|curl|wget|rsync|scp|ffmpeg|imagemagick|pandoc)\b/i
 
 interface SkillsShSearchResult {
   id: string
@@ -64,6 +74,11 @@ function parseEntry(entry: SkillsShSearchResult, installedIds: Set<string>): Ski
 
   const skillSlug = parts[parts.length - 1] ?? entry.name
 
+  // Check if the skill name/id suggests CLI dependency
+  const textToCheck = `${entry.id} ${entry.name}`
+  const cliMatch = textToCheck.match(CLI_INDICATOR_PATTERNS)
+  const compatible = !cliMatch
+
   return {
     id: entry.id,
     name: entry.name,
@@ -74,6 +89,8 @@ function parseEntry(entry: SkillsShSearchResult, installedIds: Set<string>): Ski
     githubUrl: `https://github.com/${owner}/${repo}`,
     skillsshUrl: `https://skills.sh/${entry.id}`,
     installed: installedIds.has(skillSlug) || installedIds.has(entry.id),
+    compatible,
+    ...(!compatible && { incompatibleReason: `Requires CLI tool: ${cliMatch![0]}` }),
   }
 }
 

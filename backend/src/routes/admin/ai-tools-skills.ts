@@ -45,7 +45,9 @@ const SkillsShEntrySchema = t.Object({
   installs: t.Number({ description: 'Weekly install count' }),
   githubUrl: t.String({ description: 'GitHub URL' }),
   skillsshUrl: t.String({ description: 'skills.sh URL' }),
-  installed: t.Boolean({ description: 'Whether already installed locally' })
+  installed: t.Boolean({ description: 'Whether already installed locally' }),
+  compatible: t.Boolean({ description: 'Whether compatible with HTTP-only agent runtime (false if requires CLI/shell)' }),
+  incompatibleReason: t.Optional(t.String({ description: 'Why the skill is incompatible (e.g. "Requires CLI tool: bash")' })),
 })
 
 const SkillsShBrowseResponse = t.Object({

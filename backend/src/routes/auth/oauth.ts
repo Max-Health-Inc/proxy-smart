@@ -361,10 +361,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       set.headers['Cache-Control'] = 'no-store'
       set.headers['Pragma'] = 'no-cache'
 
-      // CORS headers for token endpoint (required by SMART)
-      set.headers['Access-Control-Allow-Origin'] = '*'
-      set.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+      // CORS is handled by the global @elysiajs/cors plugin
 
       // If there's an error, return it with the proper status code
       if (data.error) {
@@ -517,9 +514,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     set.status = resp.status
     set.headers['Cache-Control'] = 'no-store'
     set.headers['Pragma'] = 'no-cache'
-    set.headers['Access-Control-Allow-Origin'] = '*'
-    set.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-    set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    // CORS is handled by the global @elysiajs/cors plugin
 
     if (data.error) {
       logger.auth.warn('Introspection error from Keycloak', {

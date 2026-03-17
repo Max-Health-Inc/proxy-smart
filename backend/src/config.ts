@@ -205,7 +205,9 @@ export const config = {
     // Defaults to common development origins
     get origins() {
       const defaultOrigins = [
-        'http://localhost:5173', // Vite dev server
+        'http://localhost:5173', // Vite dev server (admin UI)
+        'http://localhost:5174', // Vite dev server (consent app)
+        'http://localhost:5175', // Vite dev server (DTR app)
         'http://localhost:3000', // React dev server  
         'http://localhost:8445', // App server
         config.baseUrl // Fallback to base URL
@@ -213,14 +215,14 @@ export const config = {
       
       const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) || [];
       
-      // In development mode, allow all localhost origins
-      if (process.env.NODE_ENV === 'development') {
-        const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
-        return allOrigins.filter(Boolean);
+      // In production with explicit CORS_ORIGINS, use only those
+      if (process.env.NODE_ENV === 'production' && envOrigins.length > 0) {
+        return envOrigins;
       }
       
-      // In production, only use explicitly configured origins or fallback to base URL
-      return envOrigins.length > 0 ? envOrigins : [config.baseUrl];
+      // Otherwise include all default + env origins
+      const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+      return allOrigins.filter(Boolean);
     }
   }
 } as const

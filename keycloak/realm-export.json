@@ -612,6 +612,117 @@
       ]
     },
     {
+      "clientId": "consent-app",
+      "name": "Consent Management App",
+      "description": "SMART on FHIR consent management application",
+      "enabled": true,
+      "clientAuthenticatorType": "client-dummy",
+      "redirectUris": [
+        "http://localhost:5174/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5174",
+        "*"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "consentRequired": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "openid"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "launch/patient",
+        "launch",
+        "fhirUser",
+        "online_access",
+        "patient/*.read",
+        "patient/*.write",
+        "patient/*.*",
+        "user/*.read",
+        "user/*.write",
+        "user/*.*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true"
+      }
+    },
+    {
+      "clientId": "dtr-app",
+      "name": "Prior Authorization DTR App",
+      "description": "Da Vinci DTR — Documentation Templates & Rules for prior authorization",
+      "enabled": true,
+      "clientAuthenticatorType": "client-dummy",
+      "redirectUris": [
+        "http://localhost:5175/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5175",
+        "*"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "consentRequired": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "openid"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "launch/patient",
+        "launch/encounter",
+        "launch",
+        "fhirUser",
+        "online_access",
+        "patient/*.read",
+        "patient/*.write",
+        "patient/*.*",
+        "user/*.read",
+        "user/*.write",
+        "user/*.*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true"
+      }
+    },
+    {
       "clientId": "inferno-test-client",
       "name": "Inferno Test Client",
       "description": "SMART on FHIR test client for Inferno compliance testing",

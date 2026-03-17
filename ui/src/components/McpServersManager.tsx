@@ -26,7 +26,8 @@ import {
     ChevronDown,
     Link2,
     AppWindow,
-    BookOpen
+    BookOpen,
+    AlertTriangle
 } from 'lucide-react';
 import { Button } from './ui/button';
 import {
@@ -1559,7 +1560,7 @@ export function McpServersManager() {
                             skillsRegistryResults.map((skill) => (
                                 <div
                                     key={skill.id}
-                                    className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                                    className={`border rounded-lg p-4 transition-colors ${skill.compatible !== false ? 'hover:bg-muted/50' : 'opacity-60 bg-muted/20'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex-1 min-w-0">
@@ -1573,6 +1574,12 @@ export function McpServersManager() {
                                                 {skill.installed && (
                                                     <Badge variant="outline" className="shrink-0 text-xs bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20">
                                                         Installed
+                                                    </Badge>
+                                                )}
+                                                {skill.compatible === false && (
+                                                    <Badge variant="outline" className="shrink-0 text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                                                        <AlertTriangle className="h-3 w-3 mr-1" />
+                                                        {skill.incompatibleReason || 'Requires CLI'}
                                                     </Badge>
                                                 )}
                                             </div>
@@ -1601,13 +1608,16 @@ export function McpServersManager() {
                                         </div>
                                         <Button
                                             size="sm"
-                                            disabled={skill.installed || installingSkillId === skill.id}
+                                            disabled={skill.installed || skill.compatible === false || installingSkillId === skill.id}
                                             onClick={() => handleSkillsRegistryInstall(skill)}
+                                            title={skill.compatible === false ? (skill.incompatibleReason || 'Incompatible — requires CLI access') : undefined}
                                         >
                                             {installingSkillId === skill.id ? (
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                             ) : skill.installed ? (
                                                 <>{t('Installed')}</>
+                                            ) : skill.compatible === false ? (
+                                                <>{t('Incompatible')}</>
                                             ) : (
                                                 <>
                                                     <Download className="h-4 w-4 mr-1" />

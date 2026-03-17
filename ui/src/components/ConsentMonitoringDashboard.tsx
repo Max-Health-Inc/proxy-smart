@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   ShieldX,
   Database,
+  AlertCircle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';

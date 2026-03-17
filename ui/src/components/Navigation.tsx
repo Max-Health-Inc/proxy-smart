@@ -132,12 +132,6 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       icon: Server
     },
     { 
-      id: 'ai-tools', 
-      label: t('AI Tools'), 
-      description: t('MCP Servers & Skills'),
-      icon: Sparkles
-    },
-    { 
       id: 'idp', 
       label: t('Identity Providers'), 
       description: t('IdP Management'),
@@ -160,6 +154,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('Door Management'), 
       description: t('Physical Access'),
       icon: DoorOpen
+    },
+    { 
+      id: 'ai-tools', 
+      label: t('AI Tools'), 
+      description: t('MCP Servers & Skills'),
+      icon: Sparkles
     },
 
   ];

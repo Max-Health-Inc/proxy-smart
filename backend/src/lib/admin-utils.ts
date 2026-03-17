@@ -32,6 +32,7 @@ export class AuthenticationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'AuthenticationError';
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 
@@ -42,6 +43,7 @@ export class ConfigurationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = 'ConfigurationError';
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 }
 

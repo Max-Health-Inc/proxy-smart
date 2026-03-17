@@ -1,0 +1,129 @@
+import { useEffect, useRef, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { smartAuth } from "@/lib/smart-auth"
+import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import { Dashboard } from "@/components/Dashboard"
+import { FileCheck, LogOut, LogIn } from "lucide-react"
+import "./index.css"
+
+type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error"
+
+export default function App() {
+  const [state, setState] = useState<AppState>("loading")
+  const [error, setError] = useState<string | null>(null)
+  const [launchMode, setLaunchMode] = useState<LaunchMode>("standalone")
+  const callbackHandled = useRef(false)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+
+    // Handle OAuth callback
+    if (params.has("code")) {
+      if (callbackHandled.current) return
+      callbackHandled.current = true
+
+      setState("callback")
+      smartAuth.handleCallback()
+        .then(() => {
+          window.history.replaceState({}, "", window.location.pathname)
+          setLaunchMode(smartAuth.getLaunchMode())
+          setState("authenticated")
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Auth callback failed")
+          setState("error")
+        })
+      return
+    }
+
+    // Handle EHR launch (has `launch` + `iss` params)
+    if (params.has("launch") && params.has("iss")) {
+      const launch = params.get("launch")!
+      const iss = params.get("iss")!
+      smartAuth.startEhrLaunch(launch, iss).catch((err) => {
+        setError(err instanceof Error ? err.message : "EHR launch failed")
+        setState("error")
+      })
+      return
+    }
+
+    // Check existing token
+    if (smartAuth.isAuthenticated()) {
+      setLaunchMode(smartAuth.getLaunchMode())
+      setState("authenticated")
+    } else {
+      setState("unauthenticated")
+    }
+  }, [])
+
+  const handleLogin = () => {
+    smartAuth.startStandaloneLaunch().catch((err) => {
+      setError(err instanceof Error ? err.message : "Failed to start SMART launch")
+      setState("error")
+    })
+  }
+
+  const handleLogout = () => {
+    smartAuth.logout()
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileCheck className="size-5 text-maxhealth" />
+            <h1 className="font-semibold">Prior Authorization</h1>
+            {state === "authenticated" && (
+              <span className="text-xs text-muted-foreground ml-2 border rounded px-1.5 py-0.5">
+                {launchMode === "ehr" ? "EHR Launch" : "Standalone"}
+              </span>
+            )}
+          </div>
+          {state === "authenticated" && (
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="size-4" />
+              Sign Out
+            </Button>
+          )}
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="max-w-5xl mx-auto px-4 py-6">
+        {state === "loading" || state === "callback" ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <Spinner size="lg" />
+            <p className="text-muted-foreground">
+              {state === "callback" ? "Completing sign in..." : "Loading..."}
+            </p>
+          </div>
+        ) : state === "error" ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <p className="text-destructive font-medium">Authentication Error</p>
+            <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
+            <Button onClick={handleLogin}>Try Again</Button>
+          </div>
+        ) : state === "unauthenticated" ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-6">
+            <div className="text-center space-y-2">
+              <FileCheck className="size-16 mx-auto text-muted-foreground/30" />
+              <h2 className="text-2xl font-semibold">Prior Authorization</h2>
+              <p className="text-muted-foreground max-w-md">
+                Submit and track prior authorization requests. Sign in to access patient records and documentation forms.
+              </p>
+            </div>
+            <Button size="lg" onClick={handleLogin}>
+              <LogIn className="size-4" />
+              Sign In with SMART
+            </Button>
+          </div>
+        ) : (
+          <Dashboard launchMode={launchMode} />
+        )}
+      </main>
+    </div>
+  )
+}

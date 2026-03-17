@@ -80,16 +80,24 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       const admin = await getAdmin(token)
       let clients = await admin.clients.find()
 
-      // Filter for SMART on FHIR applications only
+      // Keycloak built-in / internal clients that should never appear in the SMART app list
+      const INTERNAL_CLIENTS = new Set([
+        'account',
+        'account-console',
+        'admin-cli',
+        'broker',
+        'realm-management',
+        'security-admin-console',
+        'admin-ui',
+      ])
+
+      // Include any openid-connect client that isn't a Keycloak internal client
+      // and isn't bearer-only (which are service-level tokens, not SMART apps)
       clients = clients.filter(client =>
         client.protocol === 'openid-connect' &&
-        (client.attributes?.['smart_app']?.includes('true') ||
-          client.attributes?.['client_type']?.includes('agent') ||
-          client.clientId?.includes('smart'))
+        !client.bearerOnly &&
+        !INTERNAL_CLIENTS.has(client.clientId ?? '')
       )
-
-      // Filter out admin-ui if it somehow gets through
-      clients = clients.filter(client => client.clientId !== 'admin-ui')
 
       // Enrich clients with actual scope information
       const enrichedClients = await Promise.all(

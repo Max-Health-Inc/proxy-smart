@@ -652,7 +652,9 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
               </div>
             </div>
 
-            {launchContextsLoading ? (\n              <PageLoadingState message=\"Loading launch contexts...\" className=\"min-h-[200px]\" />\n            ) : error ? (
+            {launchContextsLoading ? (
+              <PageLoadingState message="Loading launch contexts..." className="min-h-[200px]" />
+            ) : error ? (
               <div className="space-y-6">
                 <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6">
                   <div className="flex items-center space-x-3 mb-4">

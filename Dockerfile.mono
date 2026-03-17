@@ -16,11 +16,16 @@ RUN apt-get update -qq && \
 COPY package.json bun.lock ./
 COPY backend/ ./backend/
 COPY ui/ ./ui/
+COPY dtr-app/ ./dtr-app/
+COPY consent-app/ ./consent-app/
 COPY infra/ ./infra/
 COPY scripts/ ./scripts/
 
 # Install dependencies for all workspaces
 RUN bun install --frozen-lockfile
+# Install deps for sub-apps (not in workspace)
+RUN cd dtr-app && bun install --frozen-lockfile
+RUN cd consent-app && bun install --frozen-lockfile
 
 RUN bun run generate:ui
 # Use the mono build script which handles:

@@ -76,6 +76,13 @@ export function createApp() {
         }))
         .get('/webapp', () => Bun.file('public/webapp/index.html'))
         .get('/webapp/', () => Bun.file('public/webapp/index.html'))
+        // SPA fallbacks for sub-apps under /apps/*
+        .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
+        .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
+        .get('/apps/dtr/*', () => Bun.file('public/apps/dtr/index.html'))
+        .get('/apps/consent', () => Bun.file('public/apps/consent/index.html'))
+        .get('/apps/consent/', () => Bun.file('public/apps/consent/index.html'))
+        .get('/apps/consent/*', () => Bun.file('public/apps/consent/index.html'))
         .use(keycloakPlugin)
         .use(docsRoutes)
         .use(mcpMetadataRoutes)

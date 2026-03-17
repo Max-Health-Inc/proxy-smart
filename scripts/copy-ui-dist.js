@@ -9,11 +9,16 @@ const __dirname = path.dirname(__filename);
 
 // Paths
 const projectRoot = path.resolve(__dirname, '..');
-const uiDistPath = path.join(projectRoot, 'ui', 'dist');
 const backendPublicPath = path.join(projectRoot, 'backend', 'public');
-const webappPath = path.join(backendPublicPath, 'webapp');
 
-console.log('🔄 Copying UI dist to backend public directory...');
+// App definitions: [sourceDistDir, mountPath]
+const apps = [
+  { name: 'Admin UI',    src: path.join(projectRoot, 'ui', 'dist'),          dest: path.join(backendPublicPath, 'webapp') },
+  { name: 'DTR App',     src: path.join(projectRoot, 'dtr-app', 'dist'),     dest: path.join(backendPublicPath, 'apps', 'dtr') },
+  { name: 'Consent App', src: path.join(projectRoot, 'consent-app', 'dist'), dest: path.join(backendPublicPath, 'apps', 'consent') },
+];
+
+console.log('🔄 Copying app dists to backend public directory...');
 
 // Ensure the destination directory is recreated from scratch so no stale files linger
 function ensureCleanDirectory(dir) {
@@ -49,33 +54,31 @@ function copyDirectorySync(src, dest) {
 }
 
 try {
-  // Check if UI dist exists
-  if (!fs.existsSync(uiDistPath)) {
-    console.error('❌ UI dist directory not found. Please run "bun run build:ui" first.');
-    process.exit(1);
-  }
-
   // Ensure backend public directory exists
   if (!fs.existsSync(backendPublicPath)) {
     fs.mkdirSync(backendPublicPath, { recursive: true });
     console.log('📁 Created backend public directory');
   }
 
-  // Clean destination to guarantee a fresh copy (no stale hashed assets)
-  ensureCleanDirectory(webappPath);
+  for (const app of apps) {
+    if (!fs.existsSync(app.src)) {
+      console.warn(`⚠️  ${app.name} dist not found at ${app.src} — skipping`);
+      continue;
+    }
 
-  // Copy UI dist to webapp
-  copyDirectorySync(uiDistPath, webappPath);
-  
-  console.log('✅ Successfully copied UI dist to backend/public/webapp/');
-  console.log(`   Source: ${uiDistPath}`);
-  console.log(`   Destination: ${webappPath}`);
-  
-  // List copied files for verification
-  const copiedFiles = fs.readdirSync(webappPath);
-  console.log(`📦 Copied files: ${copiedFiles.join(', ')}`);
+    // Clean destination to guarantee a fresh copy (no stale hashed assets)
+    ensureCleanDirectory(app.dest);
+
+    // Copy dist
+    copyDirectorySync(app.src, app.dest);
+
+    const copiedFiles = fs.readdirSync(app.dest);
+    console.log(`✅ ${app.name} → ${path.relative(projectRoot, app.dest)}/ (${copiedFiles.length} entries)`);
+  }
+
+  console.log('🎉 All app dists copied successfully.');
 
 } catch (error) {
-  console.error('❌ Error copying UI dist:', error.message);
+  console.error('❌ Error copying app dists:', error.message);
   process.exit(1);
 }
