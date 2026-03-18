@@ -72,7 +72,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
           : 'default'
 
     return {
-      enabled: cfg.enabled && config.mcp.enabled,
+      enabled: cfg.enabled || config.mcp.enabled,
       configSource,
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
@@ -115,7 +115,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
 
     return {
-      enabled: cfg.enabled && config.mcp.enabled,
+      enabled: cfg.enabled || config.mcp.enabled,
       configSource: 'file',
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
