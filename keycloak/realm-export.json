@@ -618,10 +618,12 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:5174/*"
+        "http://localhost:5174/*",
+        "http://localhost:8445/apps/consent/*"
       ],
       "webOrigins": [
         "http://localhost:5174",
+        "http://localhost:8445",
         "*"
       ],
       "protocol": "openid-connect",
@@ -673,10 +675,12 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:5175/*"
+        "http://localhost:5175/*",
+        "http://localhost:8445/apps/dtr/*"
       ],
       "webOrigins": [
         "http://localhost:5175",
+        "http://localhost:8445",
         "*"
       ],
       "protocol": "openid-connect",

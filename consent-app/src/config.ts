@@ -2,8 +2,8 @@
  * Consent App configuration — resolved from env vars at build time.
  */
 export const config = {
-  /** Proxy Smart base URL (e.g. http://localhost:8445) */
-  proxyBase: import.meta.env.VITE_PROXY_BASE ?? "http://localhost:8445",
+  /** Proxy Smart base URL (defaults to same origin for mono-mode deployments) */
+  proxyBase: import.meta.env.VITE_PROXY_BASE ?? window.location.origin,
 
   /** FHIR proxy route prefix (backend package name) */
   proxyPrefix: import.meta.env.VITE_PROXY_PREFIX ?? "proxy-smart-backend",
@@ -18,7 +18,7 @@ export const config = {
   clientId: import.meta.env.VITE_CLIENT_ID ?? "consent-app",
 
   /** Redirect URI for SMART callback */
-  redirectUri: import.meta.env.VITE_REDIRECT_URI ?? `${window.location.origin}/callback`,
+  redirectUri: import.meta.env.VITE_REDIRECT_URI ?? `${window.location.origin}${import.meta.env.BASE_URL}callback`,
 
   /** Scopes to request */
   scopes: import.meta.env.VITE_SCOPES ?? "openid fhirUser patient/*.*",
