@@ -76,6 +76,10 @@ export function createApp() {
         }))
         .get('/webapp', () => Bun.file('public/webapp/index.html'))
         .get('/webapp/', () => Bun.file('public/webapp/index.html'))
+        .get('/', () => Bun.file('public/index.html'))
+        // SMART apps directory
+        .get('/apps', () => Bun.file('public/apps/index.html'))
+        .get('/apps/', () => Bun.file('public/apps/index.html'))
         // SPA fallbacks for sub-apps under /apps/*
         .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
         .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
