@@ -3,6 +3,7 @@ import { openapi, fromTypes } from '@elysiajs/openapi'
 import { cors } from '@elysiajs/cors'
 import staticPlugin from '@elysiajs/static'
 import { join } from 'path'
+import { readdirSync, readFileSync, existsSync } from 'fs'
 import { keycloakPlugin } from './lib/keycloak-plugin'
 import { fhirRoutes } from './routes/fhir'
 import { statusRoutes } from './routes/status'
@@ -17,6 +18,35 @@ import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { docsRoutes } from './routes/docs'
+
+/** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
+function discoverApps() {
+    const appsDir = join(import.meta.dir, '..', 'public', 'apps')
+    if (!existsSync(appsDir)) return []
+
+    return readdirSync(appsDir, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => {
+            const manifestPath = join(appsDir, d.name, 'smart-manifest.json')
+            if (!existsSync(manifestPath)) return null
+            try {
+                const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+                return {
+                    id: d.name,
+                    launch_url: `/apps/${d.name}/`,
+                    client_id: manifest.client_id ?? d.name,
+                    client_name: manifest.client_name ?? d.name,
+                    description: manifest.description ?? '',
+                    scope: manifest.scope ?? '',
+                    category: manifest.category ?? 'other',
+                    icon: manifest.icon ?? 'app-window',
+                    grant_types: manifest.grant_types ?? ['authorization_code'],
+                    token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
+                }
+            } catch { return null }
+        })
+        .filter(Boolean)
+}
 
 export function createApp() {
     const app = new Elysia({
@@ -80,6 +110,8 @@ export function createApp() {
         // SMART apps directory
         .get('/apps', () => Bun.file('public/apps/index.html'))
         .get('/apps/', () => Bun.file('public/apps/index.html'))
+        // Public SMART app discovery endpoint
+        .get('/apps.json', () => ({ apps: discoverApps() }))
         // SPA fallbacks for sub-apps under /apps/*
         .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
         .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
