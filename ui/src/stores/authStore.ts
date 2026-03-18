@@ -449,5 +449,23 @@ export const useAuth = () => {
     }
   }, [store]);
 
+  // Handle bfcache restoration (e.g., pressing Back from Keycloak login page).
+  // When the browser restores a page from bfcache, the in-memory state still has
+  // loading: true from initiateLogin() but nothing will ever resolve it.
+  React.useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        const state = useAuthStore.getState();
+        if (state.loading && !state.isInitializing) {
+          // Reset stuck loading state and re-initialize
+          useAuthStore.setState({ loading: false, isInitializing: true });
+          useAuthStore.getState().initialize();
+        }
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
+
   return store;
 };

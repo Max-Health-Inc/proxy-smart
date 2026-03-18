@@ -619,11 +619,13 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:5174/*",
-        "http://localhost:8445/apps/consent/*"
+        "http://localhost:8445/apps/consent/*",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/consent/*"
       ],
       "webOrigins": [
         "http://localhost:5174",
         "http://localhost:8445",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
         "*"
       ],
       "protocol": "openid-connect",
@@ -676,11 +678,13 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:5175/*",
-        "http://localhost:8445/apps/dtr/*"
+        "http://localhost:8445/apps/dtr/*",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/dtr/*"
       ],
       "webOrigins": [
         "http://localhost:5175",
         "http://localhost:8445",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
         "*"
       ],
       "protocol": "openid-connect",
