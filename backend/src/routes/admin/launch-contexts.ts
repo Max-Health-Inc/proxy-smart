@@ -54,7 +54,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       const users = await admin.users.find()
       const filteredUsers = users
         .filter(user => 
-          user.attributes?.['smart_fhir_user'] || 
+          user.attributes?.['fhirUser'] || 
           user.attributes?.['smart_patient'] || 
           user.attributes?.['smart_encounter'] ||
           user.attributes?.['smart_fhir_context'] ||
@@ -69,7 +69,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
         .map(user => ({
           userId: user.id ?? '',
           username: user.username ?? '',
-          fhirUser: getUserAttribute(user, 'smart_fhir_user'),
+          fhirUser: getUserAttribute(user, 'fhirUser'),
           patient: getUserAttribute(user, 'smart_patient'),
           encounter: getUserAttribute(user, 'smart_encounter'),
           fhirContext: getUserAttribute(user, 'smart_fhir_context'),
@@ -120,7 +120,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
 
       const admin = await getValidatedAdmin(getAdmin, token)
-      await setUserAttribute(admin, params.userId, 'smart_fhir_user', params.fhirUserId)
+      await setUserAttribute(admin, params.userId, 'fhirUser', params.fhirUserId)
       
       logger.admin.info('Successfully set FHIR user context', { 
         userId: params.userId, 
@@ -294,7 +294,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       const admin = await getAdmin(token)
       const user = await admin.users.findOne({ id: params.userId })
       if (user?.attributes) {
-        delete user.attributes.smart_fhir_user
+        delete user.attributes.fhirUser
         await admin.users.update({ id: params.userId }, { attributes: user.attributes })
       }
       return { success: true }
