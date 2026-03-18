@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react"
-import { getPerson, getPatient, type Person, type Patient } from "@/lib/fhir-client"
+import { getPerson, getPatient, getPractitioner, type Person, type Patient, type Practitioner } from "@/lib/fhir-client"
 import { smartAuth } from "@/lib/smart-auth"
 
 export type FhirUserResult = 
   | { resourceType: "Person"; resource: Person }
   | { resourceType: "Patient"; resource: Patient }
+  | { resourceType: "Practitioner"; resource: Practitioner }
 
 export function usePerson() {
   const [result, setResult] = useState<FhirUserResult | null>(null)
@@ -20,7 +21,7 @@ export function usePerson() {
       if (!token?.fhirUser) {
         throw new Error("No fhirUser claim in token")
       }
-      // fhirUser is a FHIR reference like "Patient/test-patient" or "Person/123"
+      // fhirUser is a FHIR reference like "Patient/test-patient" or "Person/123" or "Practitioner/456"
       const [resourceType, id] = token.fhirUser.split("/")
       if (!resourceType || !id) {
         throw new Error(`Invalid fhirUser reference: ${token.fhirUser}`)
@@ -29,6 +30,9 @@ export function usePerson() {
       if (resourceType === "Patient") {
         const resource = await getPatient(id)
         setResult({ resourceType: "Patient", resource })
+      } else if (resourceType === "Practitioner") {
+        const resource = await getPractitioner(id)
+        setResult({ resourceType: "Practitioner", resource })
       } else {
         const resource = await getPerson(id)
         setResult({ resourceType: "Person", resource })

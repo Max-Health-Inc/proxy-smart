@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/componen
 import { Spinner } from "@/components/ui/spinner"
 import { PersonCard } from "@/components/PersonCard"
 import { PatientDetail } from "@/components/PatientDetail"
+import { PractitionerDashboard } from "@/components/PractitionerDashboard"
 import { usePerson } from "@/hooks/usePerson"
 import { usePatients } from "@/hooks/usePatients"
 import { formatHumanName } from "@/lib/fhir-client"
@@ -20,6 +21,11 @@ export function Dashboard() {
   const personResource = result?.resourceType === "Person" ? result.resource : null
   const { patients: linkedPatients, loading: patientsLoading } = usePatients(personResource)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+
+  // Practitioner fhirUser → show practitioner dashboard
+  if (result?.resourceType === "Practitioner") {
+    return <PractitionerDashboard practitioner={result.resource} />
+  }
 
   // When fhirUser IS the Patient, go directly to PatientDetail (no list)
   const directPatient = result?.resourceType === "Patient" ? result.resource : null

@@ -8,10 +8,11 @@ import type {
   Person,
   Consent,
   Practitioner,
+  Task,
   HumanName,
 } from "fhir/r4"
 
-export type { Patient, Person, Consent, Practitioner }
+export type { Patient, Person, Consent, Practitioner, Task }
 
 // ── Generated FHIR client with authenticated fetch ───────────────────────────
 
@@ -22,6 +23,8 @@ const patients = new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", authFet
 const practitioners = new FhirResourceReader<Practitioner>(fhirBaseUrl, "Practitioner", authFetch)
 const consents = new FhirResourceReader<Consent>(fhirBaseUrl, "Consent", authFetch)
 const consentWriter = new FhirResourceWriterImpl<Consent>(fhirBaseUrl, "Consent", authFetch)
+const tasks = new FhirResourceReader<Task>(fhirBaseUrl, "Task", authFetch)
+const taskWriter = new FhirResourceWriterImpl<Task>(fhirBaseUrl, "Task", authFetch)
 
 // ── Resource operations ──────────────────────────────────────────────────────
 
@@ -60,6 +63,40 @@ export async function updateConsent(id: string, consent: Consent): Promise<Conse
 export async function revokeConsent(id: string, consent: Consent): Promise<Consent> {
   const revoked: Consent = { ...consent, status: "inactive" }
   return updateConsent(id, revoked)
+}
+
+// ── Task operations ──────────────────────────────────────────────────────────
+
+export async function searchTasksByPatient(patientId: string): Promise<Task[]> {
+  return tasks.searchAll({
+    patient: `Patient/${patientId}`,
+    code: "access-request",
+    _count: 50,
+    _sort: "-authored-on",
+  })
+}
+
+export async function searchTasksByRequester(practitionerRef: string): Promise<Task[]> {
+  return tasks.searchAll({
+    requester: practitionerRef,
+    code: "access-request",
+    _count: 50,
+    _sort: "-authored-on",
+  })
+}
+
+export async function createTask(task: Task): Promise<Task> {
+  return taskWriter.create(task)
+}
+
+export async function updateTask(id: string, task: Task): Promise<Task> {
+  return taskWriter.update({ ...task, id } as Task & { id: string })
+}
+
+// ── Patient search (for practitioner use) ────────────────────────────────────
+
+export async function searchPatients(query: string): Promise<Patient[]> {
+  return patients.searchAll({ name: query, _count: 20 })
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
