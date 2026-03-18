@@ -283,7 +283,7 @@ export function McpEndpointSettings() {
                 return (
                   <label
                     key={tool.name}
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
                       isDisabled
                         ? 'border-border/30 bg-muted/20 opacity-60'
                         : 'border-primary/20 bg-primary/5 hover:bg-primary/10'
