@@ -64,6 +64,9 @@ COPY --from=backend-build /app/backend/public ./backend/public
 # Copy root node_modules (monorepo structure)
 COPY --from=backend-build /app/node_modules ./node_modules
 
+# Copy system prompt for AI assistant
+COPY prompts/ ./prompts/
+
 # Expose backend port
 EXPOSE 8445
 

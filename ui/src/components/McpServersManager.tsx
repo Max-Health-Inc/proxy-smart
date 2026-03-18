@@ -27,8 +27,10 @@ import {
     Link2,
     AppWindow,
     BookOpen,
-    AlertTriangle
+    AlertTriangle,
+    Radio
 } from 'lucide-react';
+import { McpEndpointSettings } from './McpEndpointSettings';
 import { Button } from './ui/button';
 import {
     Dialog,
@@ -698,10 +700,14 @@ export function McpServersManager() {
             {/* Top-level Tool Type Tabs */}
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={activeToolTab} onValueChange={setActiveToolTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+                <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
                     <TabsTrigger value="mcp-servers" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                         <Server className="w-4 h-4" />
                         <span>{t('MCP Servers')} ({servers.length})</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="mcp-endpoint" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                        <Radio className="w-4 h-4" />
+                        <span>{t('MCP Endpoint')}</span>
                     </TabsTrigger>
                     <TabsTrigger value="skills" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                         <BookOpen className="w-4 h-4" />
@@ -1065,6 +1071,11 @@ export function McpServersManager() {
                     )}
                 </div>
             </div>
+                </TabsContent>
+
+                {/* MCP Endpoint Tab */}
+                <TabsContent value="mcp-endpoint" className="p-6 space-y-6">
+                    <McpEndpointSettings />
                 </TabsContent>
 
                 {/* Skills Tab */}

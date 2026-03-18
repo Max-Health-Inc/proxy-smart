@@ -17,6 +17,7 @@ import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
+import { mcpEndpointRoutes } from './routes/mcp-endpoint'
 import { docsRoutes } from './routes/docs'
 
 /** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
@@ -64,7 +65,7 @@ export function createApp() {
             origin: config.cors.origins,
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']
         }))
         .use(openapi({
             references: fromTypes(
@@ -90,6 +91,7 @@ export function createApp() {
                     { name: 'oauth-sse-monitoring', description: 'OAuth monitoring via Server-Sent Events' },
                     { name: 'ai', description: 'AI assistant endpoints with unified internal and MCP tools' },
                     { name: 'mcp-management', description: 'MCP server management endpoints' },
+                    { name: 'mcp-endpoint', description: 'Built-in MCP Streamable HTTP server endpoint' },
                     { name: 'consent-monitoring', description: 'Consent decision monitoring and analytics' },
                     { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
                 ],
@@ -131,6 +133,7 @@ export function createApp() {
         .use(consentMonitoringRoutes)
         .use(consentWebSocket)
         .use(fhirMonitoringRoutes)
+        .use(mcpEndpointRoutes)
         .use(fhirRoutes)
 
     return app

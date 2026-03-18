@@ -294,6 +294,11 @@ export async function displayServerEndpoints(): Promise<void> {
     logger.server.info(`AI Assistant available at ${config.baseUrl}/admin/ai/chat`)
   }
 
+  // Display MCP endpoint status
+  if (config.mcp.enabled) {
+    logger.server.info(`MCP Streamable HTTP endpoint available at ${config.baseUrl}${config.mcp.path}`)
+  }
+
   // Get server info from store for display
   try {
     const serverInfos = await getAllServers()
