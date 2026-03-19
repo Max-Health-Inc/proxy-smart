@@ -1,9 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
-import {
-  FhirClient,
-  FhirResourceReader,
-  FhirResourceWriterImpl,
-} from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import { FhirClient } from "@babelfhir-ts/client-r4"
 import type {
   Patient,
   Practitioner,
@@ -55,58 +51,49 @@ export type {
   PASResponseBundle,
 }
 
-// ── Generated FHIR client with authenticated fetch ───────────────────────────
+// ── FHIR client with authenticated fetch (@babelfhir-ts/client-r4) ──────────
 
 const authFetch = smartAuth.createAuthenticatedFetch()
 const client = new FhirClient(fhirBaseUrl, authFetch)
 
-// Generic readers/writers for base R4 types not profiled in PAS
-const patients = new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", authFetch)
-const practitioners = new FhirResourceReader<Practitioner>(fhirBaseUrl, "Practitioner", authFetch)
-const questionnaires = new FhirResourceReader<Questionnaire>(fhirBaseUrl, "Questionnaire", authFetch)
-const questionnaireResponses = new FhirResourceReader<QuestionnaireResponse>(fhirBaseUrl, "QuestionnaireResponse", authFetch)
-const questionnaireResponseWriter = new FhirResourceWriterImpl<QuestionnaireResponse>(fhirBaseUrl, "QuestionnaireResponse", authFetch)
-const conditions = new FhirResourceReader<Condition>(fhirBaseUrl, "Condition", authFetch)
-const serviceRequests = new FhirResourceReader<ServiceRequest>(fhirBaseUrl, "ServiceRequest", authFetch)
-
 // ── Patient ──────────────────────────────────────────────────────────────────
 
 export async function getPatient(id: string): Promise<Patient> {
-  return patients.read(id)
+  return client.read().patient().read(id)
 }
 
 export async function searchPatients(query: string): Promise<Patient[]> {
-  return patients.searchAll({ name: query, _count: 20, _sort: "-_lastUpdated" })
+  return client.read().patient().searchAll({ name: query, _count: 20, _sort: "-_lastUpdated" })
 }
 
 export async function searchPatientByIdentifier(identifier: string): Promise<Patient[]> {
-  return patients.searchAll({ identifier, _count: 10 })
+  return client.read().patient().searchAll({ identifier, _count: 10 })
 }
 
 // ── Practitioner ─────────────────────────────────────────────────────────────
 
 export async function getPractitioner(id: string): Promise<Practitioner> {
-  return practitioners.read(id)
+  return client.read().practitioner().read(id)
 }
 
 export async function searchPractitioners(name: string): Promise<Practitioner[]> {
-  return practitioners.searchAll({ name, _count: 20 })
+  return client.read().practitioner().searchAll({ name, _count: 20 })
 }
 
 // ── Coverage (PAS-profiled — use generated client) ───────────────────────────
 
 export async function searchCoverage(patientId: string): Promise<PASCoverage[]> {
-  return client.read().pASCoverage().searchAll({
+  return client.read().coverage().searchAll({
     patient: `Patient/${patientId}`,
     status: "active",
     _count: 20,
-  })
+  }) as Promise<PASCoverage[]>
 }
 
 // ── ServiceRequest ───────────────────────────────────────────────────────────
 
 export async function searchServiceRequests(patientId: string): Promise<ServiceRequest[]> {
-  return serviceRequests.searchAll({
+  return client.read().serviceRequest().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-authored",
@@ -114,13 +101,13 @@ export async function searchServiceRequests(patientId: string): Promise<ServiceR
 }
 
 export async function createServiceRequest(sr: PASServiceRequest): Promise<PASServiceRequest> {
-  return client.write().pASServiceRequest().create(sr)
+  return client.write().serviceRequest().create(sr) as Promise<PASServiceRequest>
 }
 
 // ── Conditions ───────────────────────────────────────────────────────────────
 
 export async function searchConditions(patientId: string): Promise<Condition[]> {
-  return conditions.searchAll({
+  return client.read().condition().searchAll({
     patient: `Patient/${patientId}`,
     "clinical-status": "active",
     _count: 50,
@@ -130,11 +117,11 @@ export async function searchConditions(patientId: string): Promise<Condition[]> 
 // ── Questionnaire ────────────────────────────────────────────────────────────
 
 export async function getQuestionnaire(id: string): Promise<Questionnaire> {
-  return questionnaires.read(id)
+  return client.read().questionnaire().read(id)
 }
 
 export async function searchQuestionnaires(context?: string): Promise<Questionnaire[]> {
-  return questionnaires.searchAll({
+  return client.read().questionnaire().searchAll({
     _count: 50,
     _sort: "-date",
     ...(context ? { context } : {}),
@@ -146,13 +133,13 @@ export async function searchQuestionnaires(context?: string): Promise<Questionna
 export async function createQuestionnaireResponse(
   qr: QuestionnaireResponse
 ): Promise<QuestionnaireResponse> {
-  return questionnaireResponseWriter.create(qr)
+  return client.write().questionnaireResponse().create(qr)
 }
 
 export async function searchQuestionnaireResponses(
   patientId: string
 ): Promise<QuestionnaireResponse[]> {
-  return questionnaireResponses.searchAll({
+  return client.read().questionnaireResponse().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-authored",
@@ -179,29 +166,26 @@ export async function submitClaim(claim: PASClaim): Promise<PASClaimResponse> {
 }
 
 export async function searchClaims(patientId: string): Promise<PASClaim[]> {
-  // Claim isn't profiled in the generated PAS client reader, use generic reader
-  const claimReader = new FhirResourceReader<PASClaim>(fhirBaseUrl, "Claim", authFetch)
-  return claimReader.searchAll({
+  return client.read().claim().searchAll({
     patient: `Patient/${patientId}`,
     use: "preauthorization",
     _count: 50,
     _sort: "-created",
-  })
+  }) as Promise<PASClaim[]>
 }
 
 export async function searchClaimResponses(patientId: string): Promise<PASClaimResponse[]> {
-  const crReader = new FhirResourceReader<PASClaimResponse>(fhirBaseUrl, "ClaimResponse", authFetch)
-  return crReader.searchAll({
+  return client.read().claimResponse().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-created",
-  })
+  }) as Promise<PASClaimResponse[]>
 }
 
 // ── Organization ─────────────────────────────────────────────────────────────
 
 export async function getOrganization(id: string): Promise<PASOrganization> {
-  return client.read().pASOrganization().read(id)
+  return client.read().organization().read(id) as Promise<PASOrganization>
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
