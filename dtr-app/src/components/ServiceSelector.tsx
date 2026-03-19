@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react"
 import type { Questionnaire } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Spinner } from "@proxy-smart/shared-ui"
 import {
   Select,
   SelectContent,
@@ -11,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Spinner } from "@/components/ui/spinner"
 import { searchConditions, searchQuestionnaires, type Condition } from "@/lib/fhir-client"
 import { COMMON_PROCEDURES, type ProcedureCode } from "@/lib/procedure-codes"
 import { ArrowRight, Stethoscope, FileQuestion } from "lucide-react"

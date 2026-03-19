@@ -6,10 +6,7 @@ import type {
   QuestionnaireItem,
   QuestionnaireResponseItem,
 } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge } from "@proxy-smart/shared-ui"
 import {
   Select,
   SelectContent,
@@ -17,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { formatHumanName } from "@/lib/fhir-client"
 import { type SelectedService } from "@/components/ServiceSelector"

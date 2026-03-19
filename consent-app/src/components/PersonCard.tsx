@@ -1,6 +1,5 @@
 import { formatHumanName, type Person } from "@/lib/fhir-client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { User, Mail, Phone, Calendar } from "lucide-react"
 
 export function PersonCard({ person }: { person: Person }) {

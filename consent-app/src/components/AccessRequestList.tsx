@@ -1,7 +1,5 @@
 import type { Task } from "fhir/r4"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardAction } from "@/components/ui/card"
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, CardAction } from "@proxy-smart/shared-ui"
 import {
   getRequestResourceTypes,
   getRequestAction,

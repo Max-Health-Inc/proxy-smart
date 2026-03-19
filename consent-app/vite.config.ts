@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@proxy-smart/shared-ui': path.resolve(__dirname, '../shared-ui/src'),
     },
   },
   build: {

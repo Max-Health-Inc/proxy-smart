@@ -7,7 +7,10 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@proxy-smart/shared-ui": ["../shared-ui/src/index.ts"],
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"]
     },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,

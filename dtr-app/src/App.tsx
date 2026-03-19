@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { Button, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import { Dashboard } from "@/components/Dashboard"

@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@proxy-smart/shared-ui"
 import { ShieldCheck, ShieldOff, AlertTriangle, FileStack } from "lucide-react"
 
 interface ConsentStatsProps {

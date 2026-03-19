@@ -8,7 +8,7 @@ import { PatientBanner } from "@/components/PatientBanner"
 import { PaRequestList } from "@/components/PaRequestList"
 import { NewPaWorkflow } from "@/components/NewPaWorkflow"
 import { usePatientContext } from "@/hooks/usePatientContext"
-import { Spinner } from "@/components/ui/spinner"
+import { Spinner } from "@proxy-smart/shared-ui"
 
 interface DashboardProps {
   launchMode: LaunchMode

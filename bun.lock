@@ -19,7 +19,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.0.2-alpha.202603141659.6b89384f",
+      "version": "0.0.2-alpha.202603191928.18d9a934",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.41",
         "@elysiajs/cors": "^1.4.1",
@@ -58,25 +58,43 @@
     },
     "infra": {
       "name": "proxy-smart-infra",
-      "version": "0.0.2-alpha.202603141659.6b89384f",
+      "version": "0.0.2-alpha.202603191928.18d9a934",
       "dependencies": {
-        "aws-cdk-lib": "latest",
-        "constructs": "latest",
+        "aws-cdk-lib": "^2.243.0",
+        "constructs": "^10.5.1",
       },
       "devDependencies": {
-        "@eslint/js": "latest",
-        "@types/node": "latest",
-        "aws-cdk": "latest",
-        "eslint": "latest",
-        "globals": "latest",
-        "tsx": "latest",
-        "typescript": "latest",
-        "typescript-eslint": "latest",
+        "@eslint/js": "^10.0.1",
+        "@types/node": "^25.5.0",
+        "aws-cdk": "^2.1111.0",
+        "eslint": "^10.0.3",
+        "globals": "^17.4.0",
+        "tsx": "^4.21.0",
+        "typescript": "5.9.3",
+        "typescript-eslint": "^8.57.1",
+      },
+    },
+    "shared-ui": {
+      "name": "@proxy-smart/shared-ui",
+      "version": "0.0.1",
+      "dependencies": {
+        "@radix-ui/react-slot": "^1.2.3",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "tailwind-merge": "^3.3.0",
+      },
+      "devDependencies": {
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+      },
+      "peerDependencies": {
+        "react": "^18.0.0 || ^19.0.0",
+        "react-dom": "^18.0.0 || ^19.0.0",
       },
     },
     "ui": {
       "name": "proxy-smart-ui",
-      "version": "0.0.2-alpha.202603141659.6b89384f",
+      "version": "0.0.2-alpha.202603191928.18d9a934",
       "dependencies": {
         "@hookform/resolvers": "^5.2.2",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -420,6 +438,8 @@
     "@oxc-project/types": ["@oxc-project/types@0.115.0", "", {}, "sha512-4n91DKnebUS4yjUHl2g3/b2T+IUdCfmoZGhmwsovZCDaJSs+QkVAM+0AqqTxHSsHfeiMuueT75cZaZcT/m0pSw=="],
 
     "@playwright/test": ["@playwright/test@1.58.2", "", { "dependencies": { "playwright": "1.58.2" }, "bin": { "playwright": "cli.js" } }, "sha512-akea+6bHYBBfA9uQqSYmlJXn61cTa+jbO87xVLCWbTqbWadRVmhxlXATaOjOgcBaWU4ePo0wB41KMFv3o35IXA=="],
+
+    "@proxy-smart/shared-ui": ["@proxy-smart/shared-ui@workspace:shared-ui"],
 
     "@radix-ui/number": ["@radix-ui/number@1.1.1", "", {}, ""],
 

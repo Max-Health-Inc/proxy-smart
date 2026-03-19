@@ -1,7 +1,5 @@
 import type { Consent } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
 import { ArrowLeft, ShieldCheck, ShieldOff, Clock, User, Eye, FileJson } from "lucide-react"
 import { useState } from "react"

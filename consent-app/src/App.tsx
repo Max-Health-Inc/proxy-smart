@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Dashboard } from "@/components/Dashboard"
-import { Button } from "@/components/ui/button"
-import { Spinner } from "@/components/ui/spinner"
+import { Button, Spinner } from "@proxy-smart/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"

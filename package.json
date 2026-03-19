@@ -124,6 +124,7 @@
   "workspaces": [
     "backend",
     "ui",
-    "infra"
+    "infra",
+    "shared-ui"
   ]
 }
