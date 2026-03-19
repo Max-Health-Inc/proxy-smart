@@ -2,11 +2,9 @@ import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { FhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
   Patient,
-  Practitioner,
   Questionnaire,
   QuestionnaireResponse,
   HumanName,
-  ServiceRequest,
   Condition,
   QuestionnaireItem,
   QuestionnaireResponseItem,
@@ -29,12 +27,10 @@ import type { PASClaimResponse } from "hl7.fhir.us.davinci-pas-generated/PASClai
 
 export type {
   Patient,
-  Practitioner,
   Questionnaire,
   QuestionnaireResponse,
   QuestionnaireItem,
   QuestionnaireResponseItem,
-  ServiceRequest,
   Condition,
   PASClaim,
   PASClaimResponse,
@@ -70,14 +66,14 @@ export async function searchPatientByIdentifier(identifier: string): Promise<Pat
   return client.read().patient().searchAll({ identifier, _count: 10 })
 }
 
-// ── Practitioner ─────────────────────────────────────────────────────────────
+// ── Practitioner (PAS-profiled) ──────────────────────────────────────────────
 
-export async function getPractitioner(id: string): Promise<Practitioner> {
-  return client.read().practitioner().read(id)
+export async function getPractitioner(id: string): Promise<PASPractitioner> {
+  return client.read().pASPractitioner().read(id)
 }
 
-export async function searchPractitioners(name: string): Promise<Practitioner[]> {
-  return client.read().practitioner().searchAll({ name, _count: 20 })
+export async function searchPractitioners(name: string): Promise<PASPractitioner[]> {
+  return client.read().pASPractitioner().searchAll({ name, _count: 20 })
 }
 
 // ── Coverage (PAS-profiled — use generated client) ───────────────────────────
@@ -90,10 +86,10 @@ export async function searchCoverage(patientId: string): Promise<PASCoverage[]> 
   })
 }
 
-// ── ServiceRequest ───────────────────────────────────────────────────────────
+// ── ServiceRequest (PAS-profiled) ────────────────────────────────────────────
 
-export async function searchServiceRequests(patientId: string): Promise<ServiceRequest[]> {
-  return client.read().serviceRequest().searchAll({
+export async function searchServiceRequests(patientId: string): Promise<PASServiceRequest[]> {
+  return client.read().pASServiceRequest().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-authored",
