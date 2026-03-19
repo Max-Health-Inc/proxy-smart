@@ -15,6 +15,7 @@ RUN apt-get update -qq && \
 # Copy all files needed for build
 COPY package.json bun.lock ./
 COPY backend/ ./backend/
+COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
 COPY dtr-app/ ./dtr-app/
 COPY consent-app/ ./consent-app/

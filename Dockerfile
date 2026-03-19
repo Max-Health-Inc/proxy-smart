@@ -16,6 +16,7 @@ COPY package.json bun.lock ./
 
 # Copy workspace package files
 COPY backend/package.json ./backend/
+COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
 
 # Install dependencies for all workspaces
@@ -33,6 +34,7 @@ RUN bun run build
 # UI build stage
 FROM build-deps AS ui-build
 # Copy UI source code
+COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
 
 # Build UI
