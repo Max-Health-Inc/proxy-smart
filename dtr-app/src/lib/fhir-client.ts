@@ -1,5 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
-import { FhirClient } from "@babelfhir-ts/client-r4"
+import { FhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
   Patient,
   Practitioner,
@@ -83,11 +83,11 @@ export async function searchPractitioners(name: string): Promise<Practitioner[]>
 // ── Coverage (PAS-profiled — use generated client) ───────────────────────────
 
 export async function searchCoverage(patientId: string): Promise<PASCoverage[]> {
-  return client.read().coverage().searchAll({
+  return client.read().pASCoverage().searchAll({
     patient: `Patient/${patientId}`,
     status: "active",
     _count: 20,
-  }) as Promise<PASCoverage[]>
+  })
 }
 
 // ── ServiceRequest ───────────────────────────────────────────────────────────
@@ -101,7 +101,7 @@ export async function searchServiceRequests(patientId: string): Promise<ServiceR
 }
 
 export async function createServiceRequest(sr: PASServiceRequest): Promise<PASServiceRequest> {
-  return client.write().serviceRequest().create(sr) as Promise<PASServiceRequest>
+  return client.write().pASServiceRequest().create(sr)
 }
 
 // ── Conditions ───────────────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ export async function searchClaimResponses(patientId: string): Promise<PASClaimR
 // ── Organization ─────────────────────────────────────────────────────────────
 
 export async function getOrganization(id: string): Promise<PASOrganization> {
-  return client.read().organization().read(id) as Promise<PASOrganization>
+  return client.read().pASOrganization().read(id)
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
