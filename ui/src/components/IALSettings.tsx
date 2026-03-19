@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
+import { useTranslation } from 'react-i18next';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -85,6 +86,7 @@ async function apiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: un
 // ─── Component ───────────────────────────────────────────────────────
 
 export function IALSettings() {
+  const { t } = useTranslation();
   const [ial, setIal] = useState<IalConfig>(DEFAULT_IAL);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -153,10 +155,10 @@ export function IALSettings() {
             </div>
             <div>
               <h3 className="text-xl font-bold text-foreground tracking-tight">
-                Identity Assurance Level (IAL)
+                {t('Identity Assurance Level (IAL)')}
               </h3>
               <p className="text-muted-foreground font-medium">
-                Person→Patient link verification (NIST SP 800-63-3)
+                {t('Person→Patient link verification (NIST SP 800-63-3)')}
               </p>
             </div>
             <Badge variant={ial.enabled ? 'default' : 'secondary'} className="px-3 py-1 ml-4">
@@ -166,7 +168,7 @@ export function IALSettings() {
           <div className="flex space-x-3">
             <Button variant="outline" size="sm" onClick={loadSettings} disabled={saving}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Reload
+              {t('Reload')}
             </Button>
             <Button size="sm" onClick={saveSettings} disabled={saving}>
               {saving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
@@ -207,16 +209,16 @@ export function IALSettings() {
                 <Fingerprint className="w-5 h-5 text-violet-600 dark:text-violet-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Assurance Levels</h3>
-                <p className="text-muted-foreground font-medium">Minimum identity verification requirements</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Assurance Levels')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Minimum identity verification requirements')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="ial-enabled">Enable IAL Verification</Label>
-                <p className="text-sm text-muted-foreground">Verify identity assurance via Person resources</p>
+                <Label htmlFor="ial-enabled">{t('Enable IAL Verification')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Verify identity assurance via Person resources')}</p>
               </div>
               <Switch
                 id="ial-enabled"
@@ -226,7 +228,7 @@ export function IALSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Minimum Level (General)</Label>
+              <Label>{t('Minimum Level (General)')}</Label>
               <Select
                 value={ial.minimumLevel}
                 onValueChange={(v: IalLevel) => setIal(prev => ({ ...prev, minimumLevel: v }))}
@@ -243,7 +245,7 @@ export function IALSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Minimum Level (Sensitive Resources)</Label>
+              <Label>{t('Minimum Level (Sensitive Resources)')}</Label>
               <Select
                 value={ial.sensitiveMinimumLevel}
                 onValueChange={(v: IalLevel) => setIal(prev => ({ ...prev, sensitiveMinimumLevel: v }))}
@@ -260,7 +262,7 @@ export function IALSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ial-cache-ttl">Person Cache TTL (ms)</Label>
+              <Label htmlFor="ial-cache-ttl">{t('Person Cache TTL (ms)')}</Label>
               <Input
                 id="ial-cache-ttl"
                 type="number"
@@ -269,7 +271,7 @@ export function IALSettings() {
                 onChange={e => setIal(prev => ({ ...prev, cacheTtl: parseInt(e.target.value) || 0 }))}
               />
               <p className="text-xs text-muted-foreground">
-                How long Person resources are cached. 300000 = 5 minutes.
+                {t('How long Person resources are cached. 300000 = 5 minutes.')}
               </p>
             </div>
           </CardContent>
@@ -283,17 +285,17 @@ export function IALSettings() {
                 <ShieldCheck className="w-5 h-5 text-orange-600 dark:text-orange-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">IAL Policies</h3>
-                <p className="text-muted-foreground font-medium">Patient link and failure behaviour</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('IAL Policies')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Patient link and failure behaviour')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="verify-patient-link">Verify Patient Link</Label>
+                <Label htmlFor="verify-patient-link">{t('Verify Patient Link')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Ensure token&apos;s smart_patient matches Person.link[]
+                  {t('Ensure token&apos;s smart_patient matches Person.link[]')}
                 </p>
               </div>
               <Switch
@@ -305,9 +307,9 @@ export function IALSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="allow-on-lookup-failure">Allow on Person Lookup Failure</Label>
+                <Label htmlFor="allow-on-lookup-failure">{t('Allow on Person Lookup Failure')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Allow access when Person resource cannot be resolved (default: deny)
+                  {t('Allow access when Person resource cannot be resolved (default: deny)')}
                 </p>
               </div>
               <Switch
@@ -319,16 +321,16 @@ export function IALSettings() {
 
             {/* Sensitive Resource Types */}
             <div className="space-y-2">
-              <Label>Sensitive Resource Types</Label>
+              <Label>{t('Sensitive Resource Types')}</Label>
               <p className="text-xs text-muted-foreground">
-                Resource types requiring elevated IAL (e.g. MedicationRequest, DiagnosticReport)
+                {t('Resource types requiring elevated IAL (e.g. MedicationRequest, DiagnosticReport)')}
               </p>
               <div className="flex gap-2">
                 <Input
                   value={newSensitiveType}
                   onChange={e => setNewSensitiveType(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSensitiveType())}
-                  placeholder="Add sensitive resource type…"
+                  placeholder={t('Add sensitive resource type…')}
                   className="flex-1"
                 />
                 <Button type="button" variant="outline" size="icon" onClick={addSensitiveType} className="shrink-0">

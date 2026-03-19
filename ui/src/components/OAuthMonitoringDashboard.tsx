@@ -610,7 +610,7 @@ export function OAuthMonitoringDashboard() {
             </div>
             <div className="text-right space-y-3">
               <div>
-                <div className="text-sm text-green-700 dark:text-green-400 mb-2">Connection Mode</div>
+                <div className="text-sm text-green-700 dark:text-green-400 mb-2">{t('Connection Mode')}</div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant={connectionMode === 'websocket' ? "default" : "ghost"}
@@ -677,7 +677,7 @@ export function OAuthMonitoringDashboard() {
             </div>
             <div className="text-right space-y-3">
               <div>
-                <div className="text-sm text-orange-700 dark:text-orange-400 mb-2">Connection Mode</div>
+                <div className="text-sm text-orange-700 dark:text-orange-400 mb-2">{t('Connection Mode')}</div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant={connectionMode === 'websocket' ? "default" : "ghost"}

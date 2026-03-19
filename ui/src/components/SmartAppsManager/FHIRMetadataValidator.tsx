@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input } from '@proxy-smart/shared-ui';
+import { useTranslation } from 'react-i18next';
 
 /**
  * FHIRMetadataValidator
@@ -49,6 +50,7 @@ async function fetchJson(url: string) {
 }
 
 export const FHIRMetadataValidator: React.FC = () => {
+  const { t } = useTranslation();
   const [base, setBase] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ValidationResult | null>(null);
@@ -128,7 +130,7 @@ export const FHIRMetadataValidator: React.FC = () => {
 
   return (
     <div className="border border-border rounded-lg p-4 max-w-[1000px]">
-      <h3 className="text-lg font-semibold text-foreground mb-3">FHIR Metadata Validator</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-3">{t('FHIR Metadata Validator')}</h3>
       <div className="flex gap-2 mb-3">
         <Input value={base} onChange={(e) => setBase(e.target.value)} placeholder="https://fhirserver.example" className="flex-[0.7]" />
         <Button onClick={run} disabled={loading}>
@@ -147,12 +149,12 @@ export const FHIRMetadataValidator: React.FC = () => {
             ))}
           </ul>
           <details className="mt-3">
-            <summary className="cursor-pointer text-sm font-medium text-foreground">Raw capability statement</summary>
+            <summary className="cursor-pointer text-sm font-medium text-foreground">{t('Raw capability statement')}</summary>
             <pre className="max-h-[400px] overflow-auto text-xs bg-muted p-3 rounded-md mt-1">{JSON.stringify(result.raw, null, 2)}</pre>
           </details>
           {result.smartConfig && (
             <details className="mt-3">
-              <summary className="cursor-pointer text-sm font-medium text-foreground">SMART configuration</summary>
+              <summary className="cursor-pointer text-sm font-medium text-foreground">{t('SMART configuration')}</summary>
               <pre className="max-h-[400px] overflow-auto text-xs bg-muted p-3 rounded-md mt-1">{JSON.stringify(result.smartConfig, null, 2)}</pre>
             </details>
           )}
@@ -160,7 +162,7 @@ export const FHIRMetadataValidator: React.FC = () => {
       )}
 
       <div className="mt-3 text-sm text-muted-foreground">
-        Tip: If fetching fails in browser, the server may not allow CORS for your origin. Try a proxy or server-side check.
+        {t('Tip: If fetching fails in browser, the server may not allow CORS for your origin. Try a proxy or server-side check.')}
       </div>
     </div>
   );

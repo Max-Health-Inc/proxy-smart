@@ -24,8 +24,10 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { Button } from '@proxy-smart/shared-ui';
+import { useTranslation } from 'react-i18next';
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableIdps, setAvailableIdps] = useState<PublicIdentityProvider[]>([]);
@@ -224,8 +226,8 @@ export function LoginForm() {
             <div className="w-12 h-12 mx-auto mb-6 border border-border rounded-lg flex items-center justify-center">
               <Loader2 className="w-5 h-5 text-foreground animate-spin" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">Authenticating</h3>
-            <p className="text-muted-foreground text-sm">Please wait while we verify your credentials...</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">{t('Authenticating')}</h3>
+            <p className="text-muted-foreground text-sm">{t('Please wait while we verify your credentials...')}</p>
           </div>
         </div>
       </div>
@@ -240,8 +242,8 @@ export function LoginForm() {
           <div className="w-12 h-12 mx-auto mb-6 border border-border rounded-lg flex items-center justify-center">
             <Heart className="w-6 h-6 text-foreground" />
           </div>
-          <h1 className="text-2xl font-medium tracking-tight text-foreground mb-1">Proxy Smart</h1>
-          <p className="text-muted-foreground text-sm">Healthcare Administration</p>
+          <h1 className="text-2xl font-medium tracking-tight text-foreground mb-1">{t('Proxy Smart')}</h1>
+          <p className="text-muted-foreground text-sm">{t('Healthcare Administration')}</p>
         </div>
         
         {/* Content */}
@@ -259,7 +261,7 @@ export function LoginForm() {
           {(loadingIdps || authAvailable === null) && (
             <div className="text-center py-6">
               <Loader2 className="w-4 h-4 animate-spin mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Loading authentication options...</p>
+              <p className="text-sm text-muted-foreground">{t('Loading authentication options...')}</p>
             </div>
           )}
 
@@ -269,9 +271,9 @@ export function LoginForm() {
               <div className="w-12 h-12 mx-auto mb-4 border border-border rounded-lg flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-foreground" />
               </div>
-              <h3 className="text-base font-medium text-foreground mb-2">Authentication Not Configured</h3>
+              <h3 className="text-base font-medium text-foreground mb-2">{t('Authentication Not Configured')}</h3>
               <p className="text-muted-foreground text-sm mb-6">
-                Keycloak is not yet configured on this server.
+                {t('Keycloak is not yet configured on this server.')}
               </p>
               
               <Button
@@ -279,7 +281,7 @@ export function LoginForm() {
                 className="w-full py-3"
               >
                 <Settings className="w-4 h-4" />
-                Configure Keycloak
+                {t('Configure Keycloak')}
               </Button>
             </div>
           )}
@@ -338,7 +340,7 @@ export function LoginForm() {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Signing in...
+                    {t('Signing in...')}
                   </>
                 ) : (
                   <>
@@ -356,7 +358,7 @@ export function LoginForm() {
           <div className="flex items-start gap-3">
             <Lock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Secure authentication via OpenID Connect. Your credentials are never stored on this application.
+              {t('Secure authentication via OpenID Connect. Your credentials are never stored on this application.')}
             </p>
           </div>
         </div>
@@ -365,11 +367,11 @@ export function LoginForm() {
         <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Stethoscope className="w-3.5 h-3.5" />
-            <span>FHIR Compliant</span>
+            <span>{t('FHIR Compliant')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Globe className="w-3.5 h-3.5" />
-            <span>SMART on FHIR</span>
+            <span>{t('SMART on FHIR')}</span>
           </div>
         </div>
 

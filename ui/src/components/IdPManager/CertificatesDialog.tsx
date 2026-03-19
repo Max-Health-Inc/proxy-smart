@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { FileText, Key, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface CertificatesDialogProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function CertificatesDialog({
   showCertificates, 
   idps 
 }: CertificatesDialogProps) {
+  const { t } = useTranslation();
   const idp = idps.find((i) => (i.alias ?? '') === showCertificates);
 
   return (
@@ -35,7 +37,7 @@ export function CertificatesDialog({
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
-                Identity Provider Certificates
+                {t('Identity Provider Certificates')}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium mt-1">
                 View and manage certificates for {idp?.displayName ?? idp?.alias ?? 'the selected provider'}
@@ -49,7 +51,7 @@ export function CertificatesDialog({
           <div className="bg-card/70 p-6 rounded-xl border border-border/50">
             <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
               <Shield className="w-5 h-5" />
-              <span>Certificate Status</span>
+              <span>{t('Certificate Status')}</span>
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-200 dark:border-green-800/50">
@@ -58,15 +60,15 @@ export function CertificatesDialog({
                     <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-green-900 dark:text-green-100">Signing Certificate</h5>
-                    <span className="text-sm text-green-700 dark:text-green-300">Valid & Active</span>
+                    <h5 className="font-semibold text-green-900 dark:text-green-100">{t('Signing Certificate')}</h5>
+                    <span className="text-sm text-green-700 dark:text-green-300">{t('Valid & Active')}</span>
                   </div>
                 </div>
                 <div className="space-y-1 text-sm text-green-800 dark:text-green-200">
-                  <p><span className="font-medium">Subject:</span> CN=hospital.example.com</p>
-                  <p><span className="font-medium">Issuer:</span> DigiCert Inc</p>
-                  <p><span className="font-medium">Valid Until:</span> 2025-12-31</p>
-                  <p><span className="font-medium">Algorithm:</span> RSA-SHA256</p>
+                  <p><span className="font-medium">{t('Subject:')}</span> {t('CN=hospital.example.com')}</p>
+                  <p><span className="font-medium">{t('Issuer:')}</span> {t('DigiCert Inc')}</p>
+                  <p><span className="font-medium">{t('Valid Until:')}</span> 2025-12-31</p>
+                  <p><span className="font-medium">{t('Algorithm:')}</span> {t('RSA-SHA256')}</p>
                 </div>
               </div>
               
@@ -76,15 +78,15 @@ export function CertificatesDialog({
                     <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div>
-                    <h5 className="font-semibold text-amber-900 dark:text-amber-100">Encryption Certificate</h5>
-                    <span className="text-sm text-amber-700 dark:text-amber-300">Expires Soon</span>
+                    <h5 className="font-semibold text-amber-900 dark:text-amber-100">{t('Encryption Certificate')}</h5>
+                    <span className="text-sm text-amber-700 dark:text-amber-300">{t('Expires Soon')}</span>
                   </div>
                 </div>
                 <div className="space-y-1 text-sm text-amber-800 dark:text-amber-200">
-                  <p><span className="font-medium">Subject:</span> CN=hospital.example.com</p>
-                  <p><span className="font-medium">Issuer:</span> DigiCert Inc</p>
-                  <p><span className="font-medium">Valid Until:</span> 2025-01-15</p>
-                  <p><span className="font-medium">Algorithm:</span> RSA-SHA256</p>
+                  <p><span className="font-medium">{t('Subject:')}</span> {t('CN=hospital.example.com')}</p>
+                  <p><span className="font-medium">{t('Issuer:')}</span> {t('DigiCert Inc')}</p>
+                  <p><span className="font-medium">{t('Valid Until:')}</span> 2025-01-15</p>
+                  <p><span className="font-medium">{t('Algorithm:')}</span> {t('RSA-SHA256')}</p>
                 </div>
               </div>
             </div>
@@ -94,7 +96,7 @@ export function CertificatesDialog({
           <div className="bg-card/70 p-6 rounded-xl border border-border/50">
             <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
               <Key className="w-5 h-5" />
-              <span>Certificate Details (PEM Format)</span>
+              <span>{t('Certificate Details (PEM Format)')}</span>
             </h4>
             <Textarea
               className="h-48 font-mono text-xs bg-muted/30 dark:bg-muted/50 border-border/50 rounded-xl text-foreground"
@@ -118,14 +120,14 @@ CgKCAQEAvpnaPKLIKdvx98KW68lz8pGaRRcYersNGqPjpifMVjjE8LuCoXgPU0HePK
               className="px-6 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <FileText className="w-4 h-4 mr-2" />
-              Download Certificate
+              {t('Download Certificate')}
             </Button>
             <Button 
               variant="outline"
               className="px-6 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <Shield className="w-4 h-4 mr-2" />
-              Verify Certificate
+              {t('Verify Certificate')}
             </Button>
           </div>
           <Button 
@@ -133,7 +135,7 @@ CgKCAQEAvpnaPKLIKdvx98KW68lz8pGaRRcYersNGqPjpifMVjjE8LuCoXgPU0HePK
             variant="outline" 
             className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

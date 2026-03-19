@@ -23,6 +23,7 @@ import {
   Shield
 } from 'lucide-react';
 import { CopyButton } from '@/components/ui/copy-button';
+import { useTranslation } from 'react-i18next';
 
 // Pre-built launch context templates based on SMART on FHIR specification
 const LAUNCH_CONTEXT_TEMPLATES = [
@@ -226,6 +227,7 @@ const SAMPLE_USERS: LaunchContextUser[] = [
 ];
 
 export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) {
+  const { t } = useTranslation();
   // Use fhirStore for context sets management
   const { contextSets, addContextSet, updateContextSet, deleteContextSet } = useLaunchContextSets();
 
@@ -415,11 +417,11 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
         <div className="flex justify-end space-x-3">
           <Button onClick={() => setShowBuilder(true)}>
             <Plus className="w-5 h-5 mr-2" />
-            New Context Set
+            {t('New Context Set')}
           </Button>
           <Button variant="outline" onClick={() => window.location.reload()}>
             <RefreshCw className="w-5 h-5 mr-2" />
-            Refresh
+            {t('Refresh')}
           </Button>
         </div>
       ) : (
@@ -427,25 +429,25 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
             <div className="flex-1">
               <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-                Launch Context Management
+                {t('Launch Context Management')}
               </h1>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                   <Rocket className="w-5 h-5 text-primary" />
                 </div>
                 <p className="text-muted-foreground text-lg">
-                  Configure SMART on FHIR launch contexts and scope templates
+                  {t('Configure SMART on FHIR launch contexts and scope templates')}
                 </p>
               </div>
             </div>
             <div className="flex space-x-3">
               <Button onClick={() => setShowBuilder(true)}>
                 <Plus className="w-5 h-5 mr-2" />
-                New Context Set
+                {t('New Context Set')}
               </Button>
               <Button variant="outline" onClick={() => window.location.reload()}>
                 <RefreshCw className="w-5 h-5 mr-2" />
-                Refresh
+                {t('Refresh')}
               </Button>
             </div>
           </div>
@@ -456,27 +458,27 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
           icon={Target}
-          label="Total Context Sets"
+          label={t('Total Context Sets')}
           value={contextSets.length}
           color="blue"
         />
         <StatCard
           icon={Settings}
-          label="Templates"
+          label={t('Templates')}
           value={contextSets.filter(s => s.isTemplate).length}
           color="blue"
         />
         <StatCard
           icon={Check}
-          label="Custom Sets"
+          label={t('Custom Sets')}
           value={contextSets.filter(s => !s.isTemplate).length}
           color="green"
         />
         <StatCard
           icon={Rocket}
-          label="Launch Scopes"
+          label={t('Launch Scopes')}
           value={contextSets.reduce((total, set) => total + set.contexts.length, 0)}
-          subtitle="Total scopes"
+          subtitle={t('Total scopes')}
           color="purple"
         />
       </div>
@@ -485,10 +487,10 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={`grid w-full ${profile?.roles?.includes('admin') ? 'grid-cols-3' : 'grid-cols-2'} bg-muted/50 rounded-t-2xl`}>
-            <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">Context Overview</TabsTrigger>
-            <TabsTrigger value="templates" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">Template Library</TabsTrigger>
+            <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Context Overview')}</TabsTrigger>
+            <TabsTrigger value="templates" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Template Library')}</TabsTrigger>
             {profile?.roles?.includes('admin') && (
-              <TabsTrigger value="users" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">User Contexts</TabsTrigger>
+              <TabsTrigger value="users" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('User Contexts')}</TabsTrigger>
             )}
           </TabsList>
 
@@ -498,15 +500,15 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                 <div className="w-16 h-16 mx-auto mb-6 bg-muted rounded-2xl flex items-center justify-center shadow-sm">
                   <Target className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-3">No Custom Context Sets</h3>
+                <h3 className="text-xl font-bold text-foreground mb-3">{t('No Custom Context Sets')}</h3>
                 <p className="text-muted-foreground mb-6 font-medium">
-                  Create your first launch context set or use a template from the Template Library
+                  {t('Create your first launch context set or use a template from the Template Library')}
                 </p>
                 <Button
                   onClick={() => setShowBuilder(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Context Set
+                  {t('Create Context Set')}
                 </Button>
               </div>
             ) : (
@@ -531,7 +533,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                     </div>
 
                     <div className="space-y-3 mb-4">
-                      <h4 className="text-sm font-semibold text-foreground">Launch Contexts:</h4>
+                      <h4 className="text-sm font-semibold text-foreground">{t('Launch Contexts:')}</h4>
                       <div className="flex flex-wrap gap-2">
                         {set.contexts.map((ctx) => (
                           <div key={ctx} className="flex items-center group">
@@ -559,7 +561,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                         className="flex-1"
                       >
                         <Edit className="w-4 h-4 mr-2" />
-                        Edit
+                        {t('Edit')}
                       </Button>
                       <Button
                         size="sm"
@@ -592,12 +594,12 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       </div>
                     </div>
                     <Badge className="bg-primary/10 text-primary border-primary/30">
-                      Template
+                      {t('Template')}
                     </Badge>
                   </div>
 
                   <div className="space-y-3 mb-4">
-                    <h4 className="text-sm font-semibold text-foreground">Launch Contexts:</h4>
+                    <h4 className="text-sm font-semibold text-foreground">{t('Launch Contexts:')}</h4>
                     <div className="flex flex-wrap gap-2">
                       {template.contexts.map((ctx) => (
                         <div key={ctx} className="flex items-center group">
@@ -621,7 +623,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       className="flex-1"
                     >
                       <Copy className="w-4 h-4 mr-2" />
-                      Use Template
+                      {t('Use Template')}
                     </Button>
                     <Button
                       size="sm"
@@ -642,9 +644,9 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                   <Users className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-foreground">User Launch Contexts</h3>
+                  <h3 className="text-sm font-semibold text-foreground">{t('User Launch Contexts')}</h3>
                   <p className="text-xs text-muted-foreground">
-                    View users with configured SMART launch context attributes.
+                    {t('View users with configured SMART launch context attributes.')}
                   </p>
                 </div>
               </div>
@@ -658,15 +660,14 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                   <div className="flex items-center space-x-3 mb-4">
                     <AlertCircle className="w-6 h-6 text-destructive" />
                     <div>
-                      <h3 className="text-lg font-semibold text-destructive">Unable to Load Launch Contexts</h3>
+                      <h3 className="text-lg font-semibold text-destructive">{t('Unable to Load Launch Contexts')}</h3>
                       <p className="text-destructive/80">{error}</p>
                     </div>
                   </div>
                   {error.includes('admin privileges') && (
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mt-4">
                       <p className="text-sm text-amber-700 dark:text-amber-300">
-                        <strong>Note:</strong> To view user launch contexts, you need admin privileges in Keycloak.
-                        Contact your system administrator to grant you the necessary permissions.
+                        <strong>{t('Note:')}</strong> {t('To view user launch contexts, you need admin privileges in Keycloak. Contact your system administrator to grant you the necessary permissions.')}
                       </p>
                     </div>
                   )}
@@ -676,13 +677,13 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       className="bg-destructive hover:bg-destructive/90"
                     >
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      Retry
+                      {t('Retry')}
                     </Button>
                     <Button
                       onClick={() => setError(null)}
                       variant="outline"
                     >
-                      Dismiss
+                      {t('Dismiss')}
                     </Button>
                   </div>
                 </div>
@@ -694,9 +695,9 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Sample User Launch Contexts</h3>
+                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">{t('Sample User Launch Contexts')}</h3>
                       <p className="text-xs text-blue-700 dark:text-blue-300">
-                        Here are example users with various SMART launch context configurations for demonstration.
+                        {t('Here are example users with various SMART launch context configurations for demonstration.')}
                       </p>
                     </div>
                   </div>
@@ -708,7 +709,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       {/* Sample Badge */}
                       <div className="absolute top-4 right-4">
                         <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20">
-                          Sample Data
+                          {t('Sample Data')}
                         </Badge>
                       </div>
 
@@ -727,37 +728,37 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         {user.fhirUser && (
                           <div className="bg-muted/50 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">FHIR User</Label>
+                            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('FHIR User')}</Label>
                             <p className="text-sm font-mono text-foreground mt-1">{user.fhirUser}</p>
                           </div>
                         )}
                         {user.patient && (
                           <div className="bg-blue-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Patient Context</Label>
+                            <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">{t('Patient Context')}</Label>
                             <p className="text-sm font-mono text-blue-900 dark:text-blue-100 mt-1">{user.patient}</p>
                           </div>
                         )}
                         {user.encounter && (
                           <div className="bg-green-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Encounter Context</Label>
+                            <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">{t('Encounter Context')}</Label>
                             <p className="text-sm font-mono text-green-900 dark:text-green-100 mt-1">{user.encounter}</p>
                           </div>
                         )}
                         {user.intent && (
                           <div className="bg-purple-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Intent</Label>
+                            <Label className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">{t('Intent')}</Label>
                             <p className="text-sm font-mono text-purple-900 dark:text-purple-100 mt-1">{user.intent}</p>
                           </div>
                         )}
                         {user.smartStyleUrl && (
                           <div className="bg-orange-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Style URL</Label>
+                            <Label className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">{t('Style URL')}</Label>
                             <p className="text-sm font-mono text-orange-900 dark:text-orange-100 mt-1 truncate">{user.smartStyleUrl}</p>
                           </div>
                         )}
                         {user.tenant && (
                           <div className="bg-indigo-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Tenant</Label>
+                            <Label className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">{t('Tenant')}</Label>
                             <p className="text-sm font-mono text-indigo-900 dark:text-indigo-100 mt-1">{user.tenant}</p>
                           </div>
                         )}
@@ -765,7 +766,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
 
                       {user.fhirContext && (
                         <div className="bg-yellow-500/10 p-3 rounded-lg mb-4">
-                          <Label className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">FHIR Context</Label>
+                          <Label className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">{t('FHIR Context')}</Label>
                           <div className="mt-2">
                             <Badge variant="outline" className="text-xs bg-background">
                               <FileText className="w-3 h-3 mr-1" />
@@ -796,15 +797,15 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                   <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-muted to-muted/70 rounded-2xl flex items-center justify-center shadow-sm">
                     <Users className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-xl font-bold text-foreground mb-3">No Users with Launch Contexts</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-3">{t('No Users with Launch Contexts')}</h3>
                   <p className="text-muted-foreground mb-6 font-medium">
-                    No users currently have launch context attributes configured in your system
+                    {t('No users currently have launch context attributes configured in your system')}
                   </p>
                   <Button
                     onClick={retryLoadLaunchContexts}
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh Launch Contexts
+                    {t('Refresh Launch Contexts')}
                   </Button>
                 </div>
 
@@ -815,9 +816,9 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Sample User Launch Contexts</h3>
+                      <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-100">{t('Sample User Launch Contexts')}</h3>
                       <p className="text-xs text-blue-700 dark:text-blue-300">
-                        Here are example users with various SMART launch context configurations for demonstration.
+                        {t('Here are example users with various SMART launch context configurations for demonstration.')}
                       </p>
                     </div>
                   </div>
@@ -829,7 +830,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       {/* Sample Badge */}
                       <div className="absolute top-4 right-4">
                         <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/20">
-                          Sample Data
+                          {t('Sample Data')}
                         </Badge>
                       </div>
 
@@ -848,37 +849,37 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         {user.fhirUser && (
                           <div className="bg-muted/50 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">FHIR User</Label>
+                            <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('FHIR User')}</Label>
                             <p className="text-sm font-mono text-foreground mt-1">{user.fhirUser}</p>
                           </div>
                         )}
                         {user.patient && (
                           <div className="bg-blue-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Patient Context</Label>
+                            <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">{t('Patient Context')}</Label>
                             <p className="text-sm font-mono text-blue-900 dark:text-blue-100 mt-1">{user.patient}</p>
                           </div>
                         )}
                         {user.encounter && (
                           <div className="bg-green-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Encounter Context</Label>
+                            <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">{t('Encounter Context')}</Label>
                             <p className="text-sm font-mono text-green-900 dark:text-green-100 mt-1">{user.encounter}</p>
                           </div>
                         )}
                         {user.intent && (
                           <div className="bg-purple-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Intent</Label>
+                            <Label className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">{t('Intent')}</Label>
                             <p className="text-sm font-mono text-purple-900 dark:text-purple-100 mt-1">{user.intent}</p>
                           </div>
                         )}
                         {user.smartStyleUrl && (
                           <div className="bg-orange-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Style URL</Label>
+                            <Label className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">{t('Style URL')}</Label>
                             <p className="text-sm font-mono text-orange-900 dark:text-orange-100 mt-1 truncate">{user.smartStyleUrl}</p>
                           </div>
                         )}
                         {user.tenant && (
                           <div className="bg-indigo-500/10 p-3 rounded-lg">
-                            <Label className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Tenant</Label>
+                            <Label className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">{t('Tenant')}</Label>
                             <p className="text-sm font-mono text-indigo-900 dark:text-indigo-100 mt-1">{user.tenant}</p>
                           </div>
                         )}
@@ -886,7 +887,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
 
                       {user.fhirContext && (
                         <div className="bg-yellow-500/10 p-3 rounded-lg mb-4">
-                          <Label className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">FHIR Context</Label>
+                          <Label className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">{t('FHIR Context')}</Label>
                           <div className="mt-2">
                             <Badge variant="outline" className="text-xs bg-background">
                               <FileText className="w-3 h-3 mr-1" />
@@ -930,37 +931,37 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {user.fhirUser && (
                         <div className="bg-muted/50 p-3 rounded-lg">
-                          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">FHIR User</Label>
+                          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('FHIR User')}</Label>
                           <p className="text-sm font-mono text-foreground mt-1">{user.fhirUser}</p>
                         </div>
                       )}
                       {user.patient && (
                         <div className="bg-blue-500/10 p-3 rounded-lg">
-                          <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Patient Context</Label>
+                          <Label className="text-xs font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">{t('Patient Context')}</Label>
                           <p className="text-sm font-mono text-blue-900 dark:text-blue-100 mt-1">{user.patient}</p>
                         </div>
                       )}
                       {user.encounter && (
                         <div className="bg-green-500/10 p-3 rounded-lg">
-                          <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">Encounter Context</Label>
+                          <Label className="text-xs font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide">{t('Encounter Context')}</Label>
                           <p className="text-sm font-mono text-green-900 dark:text-green-100 mt-1">{user.encounter}</p>
                         </div>
                       )}
                       {user.intent && (
                         <div className="bg-purple-500/10 p-3 rounded-lg">
-                          <Label className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">Intent</Label>
+                          <Label className="text-xs font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide">{t('Intent')}</Label>
                           <p className="text-sm font-mono text-purple-900 dark:text-purple-100 mt-1">{user.intent}</p>
                         </div>
                       )}
                       {user.smartStyleUrl && (
                         <div className="bg-orange-500/10 p-3 rounded-lg">
-                          <Label className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">Style URL</Label>
+                          <Label className="text-xs font-semibold text-orange-600 dark:text-orange-400 uppercase tracking-wide">{t('Style URL')}</Label>
                           <p className="text-sm font-mono text-orange-900 dark:text-orange-100 mt-1 truncate">{user.smartStyleUrl}</p>
                         </div>
                       )}
                       {user.tenant && (
                         <div className="bg-indigo-500/10 p-3 rounded-lg">
-                          <Label className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">Tenant</Label>
+                          <Label className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide">{t('Tenant')}</Label>
                           <p className="text-sm font-mono text-indigo-900 dark:text-indigo-100 mt-1">{user.tenant}</p>
                         </div>
                       )}
@@ -968,11 +969,11 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
 
                     {user.fhirContext && (
                       <div className="bg-yellow-500/10 p-3 rounded-lg mb-4">
-                        <Label className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">FHIR Context</Label>
+                        <Label className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 uppercase tracking-wide">{t('FHIR Context')}</Label>
                         <div className="mt-2">
                           <Badge variant="outline" className="text-xs bg-background">
                             <FileText className="w-3 h-3 mr-1" />
-                            View JSON
+                            {t('View JSON')}
                           </Badge>
                         </div>
                       </div>

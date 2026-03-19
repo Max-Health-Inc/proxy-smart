@@ -12,6 +12,7 @@ import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
 import { IALSettings } from '../IALSettings';
+import { useTranslation } from 'react-i18next';
 
 // Extend the API type to include our UI-specific computed properties
 type HealthcareUserWithPersons = HealthcareUser & {
@@ -106,6 +107,7 @@ function transformApiUser(apiUser: HealthcareUser): HealthcareUserWithPersons {
 }
 
 export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}) {
+  const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
   
   // Store hooks for FHIR servers and healthcare users
@@ -226,7 +228,7 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
             onClick={() => setError(null)}
             className="text-destructive hover:text-destructive/80 text-sm mt-2"
           >
-            Dismiss
+            {t('Dismiss')}
           </Button>
         </div>
       )}
@@ -236,7 +238,7 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
         <div className="flex justify-end">
           <Button onClick={() => setShowAddForm(true)}>
             <Plus className="h-5 w-5 mr-2" />
-            Add New User
+            {t('Add New User')}
           </Button>
         </div>
       ) : (

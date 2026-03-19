@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
+import { useTranslation } from 'react-i18next';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ async function apiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: un
 // ─── Component ───────────────────────────────────────────────────────
 
 export function ConsentSettings() {
+  const { t } = useTranslation();
   const [consent, setConsent] = useState<ConsentConfig>(DEFAULT_CONSENT);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -146,8 +148,8 @@ export function ConsentSettings() {
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground tracking-tight">Consent Enforcement</h3>
-              <p className="text-muted-foreground font-medium">FHIR Consent-based access control policy</p>
+              <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Consent Enforcement')}</h3>
+              <p className="text-muted-foreground font-medium">{t('FHIR Consent-based access control policy')}</p>
             </div>
             <Badge variant={consent.enabled ? 'default' : 'secondary'} className="px-3 py-1 ml-4">
               {consent.enabled ? consent.mode : 'Disabled'}
@@ -156,7 +158,7 @@ export function ConsentSettings() {
           <div className="flex space-x-3">
             <Button variant="outline" size="sm" onClick={loadSettings} disabled={saving}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Reload
+              {t('Reload')}
             </Button>
             <Button size="sm" onClick={saveSettings} disabled={saving}>
               {saving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
@@ -197,16 +199,16 @@ export function ConsentSettings() {
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Enforcement</h3>
-                <p className="text-muted-foreground font-medium">Mode and caching</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Enforcement')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Mode and caching')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="consent-enabled">Enable Consent Enforcement</Label>
-                <p className="text-sm text-muted-foreground">Check FHIR Consent resources before proxying requests</p>
+                <Label htmlFor="consent-enabled">{t('Enable Consent Enforcement')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Check FHIR Consent resources before proxying requests')}</p>
               </div>
               <Switch
                 id="consent-enabled"
@@ -216,7 +218,7 @@ export function ConsentSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label>Enforcement Mode</Label>
+              <Label>{t('Enforcement Mode')}</Label>
               <Select
                 value={consent.mode}
                 onValueChange={(v: ConsentConfig['mode']) => setConsent(prev => ({ ...prev, mode: v }))}
@@ -225,15 +227,15 @@ export function ConsentSettings() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="enforce">Enforce — block requests without valid consent</SelectItem>
-                  <SelectItem value="audit-only">Audit Only — log decisions but allow all</SelectItem>
-                  <SelectItem value="disabled">Disabled — no consent checking</SelectItem>
+                  <SelectItem value="enforce">{t('Enforce — block requests without valid consent')}</SelectItem>
+                  <SelectItem value="audit-only">{t('Audit Only — log decisions but allow all')}</SelectItem>
+                  <SelectItem value="disabled">{t('Disabled — no consent checking')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="consent-cache-ttl">Cache TTL (ms)</Label>
+              <Label htmlFor="consent-cache-ttl">{t('Cache TTL (ms)')}</Label>
               <Input
                 id="consent-cache-ttl"
                 type="number"
@@ -242,7 +244,7 @@ export function ConsentSettings() {
                 onChange={e => setConsent(prev => ({ ...prev, cacheTtl: parseInt(e.target.value) || 0 }))}
               />
               <p className="text-xs text-muted-foreground">
-                How long consent decisions are cached. 60000 = 1 minute.
+                {t('How long consent decisions are cached. 60000 = 1 minute.')}
               </p>
             </div>
           </CardContent>
@@ -256,15 +258,15 @@ export function ConsentSettings() {
                 <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Consent Scoping</h3>
-                <p className="text-muted-foreground font-medium">Exempt clients &amp; resource types</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Consent Scoping')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Exempt clients &amp; resource types')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <TagListField
-              label="Exempt Clients"
-              description="Client IDs that skip consent checks"
+              label={t('Exempt Clients')}
+              description={t('Client IDs that skip consent checks')}
               items={consent.exemptClients}
               inputValue={newExemptClient}
               onInputChange={setNewExemptClient}
@@ -273,8 +275,8 @@ export function ConsentSettings() {
             />
 
             <TagListField
-              label="Required For Resource Types"
-              description="Only these resource types need consent (empty = all types)"
+              label={t('Required For Resource Types')}
+              description={t('Only these resource types need consent (empty = all types)')}
               items={consent.requiredForResourceTypes}
               inputValue={newRequiredType}
               onInputChange={setNewRequiredType}
@@ -283,8 +285,8 @@ export function ConsentSettings() {
             />
 
             <TagListField
-              label="Exempt Resource Types"
-              description="Resource types that never require consent"
+              label={t('Exempt Resource Types')}
+              description={t('Resource types that never require consent')}
               items={consent.exemptResourceTypes}
               inputValue={newExemptType}
               onInputChange={setNewExemptType}

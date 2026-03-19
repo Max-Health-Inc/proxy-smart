@@ -24,6 +24,7 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface IdPTableProps {
   idps: IdentityProviderWithStats[];
@@ -46,6 +47,7 @@ export function IdPTable({
   onViewCertificates,
   onDelete
 }: IdPTableProps) {
+  const { t } = useTranslation();
   const getTypeBadgeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'saml':
@@ -66,10 +68,10 @@ export function IdPTable({
       {/* Header */}
       <div className="mb-8">
         <h3 className="text-2xl font-medium text-foreground mb-2">
-          Identity Providers
+          {t('Identity Providers')}
         </h3>
         <p className="text-muted-foreground">
-          View and manage all configured identity providers
+          {t('View and manage all configured identity providers')}
         </p>
       </div>
 
@@ -78,11 +80,11 @@ export function IdPTable({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/70 border-b border-border/50">
-              <TableHead className="font-semibold text-foreground">Provider</TableHead>
-              <TableHead className="font-semibold text-foreground">Type</TableHead>
-              <TableHead className="font-semibold text-foreground">Status</TableHead>
-              <TableHead className="font-semibold text-foreground">Users</TableHead>
-              <TableHead className="font-semibold text-foreground">Last Used</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Provider')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Type')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Status')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Users')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Last Used')}</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -154,7 +156,7 @@ export function IdPTable({
                       <DropdownMenuItem onClick={() => onEdit(idp)} className="hover:bg-muted/50">
                         <div className="flex items-center">
                           <Edit className="h-4 w-4 mr-2" />
-                          Edit Configuration
+                          {t('Edit Configuration')}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
@@ -180,7 +182,7 @@ export function IdPTable({
                       <DropdownMenuItem onClick={() => onViewCertificates(idp)} className="hover:bg-muted/50">
                         <div className="flex items-center">
                           <FileText className="h-4 w-4 mr-2" />
-                          View Certificates
+                          {t('View Certificates')}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
@@ -190,7 +192,7 @@ export function IdPTable({
                       >
                         <div className="flex items-center">
                           <XCircle className="h-4 w-4 mr-2" />
-                          Remove Provider
+                          {t('Remove Provider')}
                         </div>
                       </DropdownMenuItem>
                     </DropdownMenuContent>

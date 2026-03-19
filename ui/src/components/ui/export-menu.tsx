@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Download } from 'lucide-react';
 import { Button } from '@proxy-smart/shared-ui';
+import { useTranslation } from 'react-i18next';
 
 interface ExportMenuItem {
   label: string;
@@ -13,7 +14,9 @@ interface ExportMenuProps {
   label?: string;
 }
 
-function ExportMenu({ items, label = 'Export' }: ExportMenuProps) {
+function ExportMenu({ items, label }: ExportMenuProps) {
+  const { t } = useTranslation();
+  const resolvedLabel = label ?? t('Export');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -32,7 +35,7 @@ function ExportMenu({ items, label = 'Export' }: ExportMenuProps) {
     <div className="relative" ref={ref}>
       <Button variant="outline" onClick={() => setOpen(!open)}>
         <Download className="w-4 h-4 mr-2" />
-        {label}
+        {resolvedLabel}
         <ChevronDown className="w-4 h-4 ml-2" />
       </Button>
       {open && (

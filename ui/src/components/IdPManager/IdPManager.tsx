@@ -20,6 +20,7 @@ import type {
   UpdateIdentityProviderRequest,
   CreateIdentityProviderRequest
 } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 const DEFAULT_NAME_ID_FORMAT = 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent';
 
@@ -107,6 +108,7 @@ const formDataFromStats = (provider: IdentityProviderWithStats): IdentityProvide
 });
 
 export function IdPManager() {
+  const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
   const [idps, setIdps] = useState<IdentityProviderWithStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -373,20 +375,20 @@ export function IdPManager() {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
             <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-              Identity Provider Management
+              {t('Identity Provider Management')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
               <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Shield className="w-5 h-5 text-primary" />
               </div>
-              Configure and manage identity providers for healthcare system authentication
+              {t('Configure and manage identity providers for healthcare system authentication')}
             </div>
           </div>
           <Button
             onClick={() => setShowAddForm(true)}
           >
             <Plus className="h-5 w-5 mr-2" />
-            Add Identity Provider
+            {t('Add Identity Provider')}
           </Button>
         </div>
       </div>

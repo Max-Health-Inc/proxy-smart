@@ -22,13 +22,13 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.243.0",
+    "aws-cdk-lib": "^2.244.0",
     "constructs": "^10.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
-    "aws-cdk": "^2.1111.0",
+    "aws-cdk": "^2.1112.0",
     "eslint": "^10.0.3",
     "globals": "^17.4.0",
     "tsx": "^4.21.0",

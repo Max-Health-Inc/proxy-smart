@@ -18,6 +18,7 @@ import { useFhirServers } from '@/stores/smartStore';
 import { useAuth } from '@/stores/authStore';
 import type { ScopeSet, SmartAppFormData } from '@/lib/types/api';
 import type { GetAdminMcpServers200ResponseServersInner, GetAdminAiToolsSkills200ResponseSkillsInner } from '@/lib/api-client';
+import { useTranslation } from 'react-i18next';
 
 type SmartAppType = 'backend-service' | 'standalone-app' | 'ehr-launch' | 'agent';
 type AuthenticationType = 'asymmetric' | 'symmetric' | 'none';
@@ -32,6 +33,7 @@ interface SmartAppAddFormProps {
 }
 
 export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartAppAddFormProps) {
+  const { t } = useTranslation();
   const { servers, loading: serversLoading } = useFhirServers();
   const { clientApis } = useAuth();
   
@@ -267,8 +269,8 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
             <Plus className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Register New SMART on FHIR Application</h3>
-            <p className="text-muted-foreground font-medium">Add a new healthcare application to your system</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Register New SMART on FHIR Application')}</h3>
+            <p className="text-muted-foreground font-medium">{t('Add a new healthcare application to your system')}</p>
           </div>
         </div>
       </div>
@@ -276,7 +278,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="name" className="text-sm font-semibold text-foreground">Application Name</Label>
+            <Label htmlFor="name" className="text-sm font-semibold text-foreground">{t('Application Name')}</Label>
             <Input
               id="name"
               placeholder="e.g., Clinical Decision Support"
@@ -287,7 +289,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="clientId" className="text-sm font-semibold text-foreground">Client ID</Label>
+            <Label htmlFor="clientId" className="text-sm font-semibold text-foreground">{t('Client ID')}</Label>
             <Input
               id="clientId"
               placeholder="e.g., app-client-123"
@@ -301,7 +303,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="appType" className="text-sm font-semibold text-foreground">Application Type</Label>
+            <Label htmlFor="appType" className="text-sm font-semibold text-foreground">{t('Application Type')}</Label>
             <Select
               value={newApp.appType}
               onValueChange={(value) => {
@@ -319,16 +321,16 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="standalone-app">Standalone App (Interactive)</SelectItem>
-                <SelectItem value="ehr-launch">EHR Launch App (Interactive)</SelectItem>
-                <SelectItem value="backend-service">Backend Service (Non-interactive, Deterministic)</SelectItem>
-                <SelectItem value="agent">AI Agent (Non-interactive, Autonomous)</SelectItem>
+                <SelectItem value="standalone-app">{t('Standalone App (Interactive)')}</SelectItem>
+                <SelectItem value="ehr-launch">{t('EHR Launch App (Interactive)')}</SelectItem>
+                <SelectItem value="backend-service">{t('Backend Service (Non-interactive, Deterministic)')}</SelectItem>
+                <SelectItem value="agent">{t('AI Agent (Non-interactive, Autonomous)')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {isInteractive(newApp.appType) && (
             <div className="space-y-3">
-              <Label htmlFor="authenticationType" className="text-sm font-semibold text-foreground">Authentication Type</Label>
+              <Label htmlFor="authenticationType" className="text-sm font-semibold text-foreground">{t('Authentication Type')}</Label>
               <Select
                 value={newApp.authenticationType}
                 onValueChange={(value) => setNewApp({ ...newApp, authenticationType: value as AuthenticationType })}
@@ -338,17 +340,17 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="asymmetric">Asymmetric Client Authentication</SelectItem>
-                  <SelectItem value="symmetric">Symmetric Client Authentication</SelectItem>
+                  <SelectItem value="asymmetric">{t('Asymmetric Client Authentication')}</SelectItem>
+                  <SelectItem value="symmetric">{t('Symmetric Client Authentication')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           )}
           {hasFixedAuthType(newApp.appType) && (
             <div className="space-y-3">
-              <Label className="text-sm font-semibold text-foreground">Authentication Type</Label>
+              <Label className="text-sm font-semibold text-foreground">{t('Authentication Type')}</Label>
               <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
-                <span className="text-sm font-medium text-foreground">Asymmetric (Required)</span>
+                <span className="text-sm font-medium text-foreground">{t('Asymmetric (Required)')}</span>
                 <p className="text-xs text-muted-foreground mt-1">
                   {getAuthTypeDescription(newApp.appType!)}
                 </p>
@@ -365,13 +367,13 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-foreground tracking-tight">Asymmetric Authentication</h4>
-                <p className="text-muted-foreground text-sm font-medium">Provide JWKS URI or public key for JWT signature verification</p>
+                <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Asymmetric Authentication')}</h4>
+                <p className="text-muted-foreground text-sm font-medium">{t('Provide JWKS URI or public key for JWT signature verification')}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="jwksUri" className="text-sm font-semibold text-foreground">JWKS URI</Label>
+              <Label htmlFor="jwksUri" className="text-sm font-semibold text-foreground">{t('JWKS URI')}</Label>
               <Input
                 id="jwksUri"
                 type="url"
@@ -381,12 +383,12 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 className="rounded-xl border-input focus:border-ring focus:ring-ring shadow-sm"
               />
               <p className="text-xs text-muted-foreground">
-                URL endpoint where the proxy can fetch your app's public keys for JWT verification
+                {t('URL endpoint where the proxy can fetch your app\'s public keys for JWT verification')}
               </p>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="publicKey" className="text-sm font-semibold text-foreground">Public Key (Alternative)</Label>
+              <Label htmlFor="publicKey" className="text-sm font-semibold text-foreground">{t('Public Key (Alternative)')}</Label>
               <Textarea
                 id="publicKey"
                 placeholder="-----BEGIN PUBLIC KEY-----&#10;MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...&#10;-----END PUBLIC KEY-----"
@@ -396,7 +398,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 rows={6}
               />
               <p className="text-xs text-muted-foreground">
-                Provide a public key directly if not using JWKS URI. Supports PEM format (RSA, EC).
+                {t('Provide a public key directly if not using JWKS URI. Supports PEM format (RSA, EC).')}
               </p>
             </div>
 
@@ -404,10 +406,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <div className="flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
-                  <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">Authentication Options</p>
+                  <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">{t('Authentication Options')}</p>
                   <p className="text-blue-700 dark:text-blue-400 text-xs">
-                    You can provide either a JWKS URI or a public key directly. The JWKS URI is recommended as it allows for key rotation.
-                    If both are provided, the JWKS URI takes precedence.
+                    {t('You can provide either a JWKS URI or a public key directly. The JWKS URI is recommended as it allows for key rotation. If both are provided, the JWKS URI takes precedence.')}
                   </p>
                 </div>
               </div>
@@ -422,23 +423,23 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <Shield className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-foreground tracking-tight">Symmetric Authentication</h4>
-                <p className="text-muted-foreground text-sm font-medium">Store a shared secret for client authentication</p>
+                <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Symmetric Authentication')}</h4>
+                <p className="text-muted-foreground text-sm font-medium">{t('Store a shared secret for client authentication')}</p>
               </div>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="clientSecret" className="text-sm font-semibold text-foreground">Client Secret</Label>
+              <Label htmlFor="clientSecret" className="text-sm font-semibold text-foreground">{t('Client Secret')}</Label>
               <Input
                 id="clientSecret"
                 type="password"
-                placeholder="Enter shared secret"
+                placeholder={t('Enter shared secret')}
                 value={newApp.secret || ''}
                 onChange={(e) => setNewApp({ ...newApp, secret: e.target.value })}
                 className="rounded-xl border-input focus:border-ring focus:ring-ring shadow-sm font-mono"
               />
               <p className="text-xs text-muted-foreground">
-                A shared secret used for symmetric client authentication. Keep this secure and never expose it in client-side code.
+                {t('A shared secret used for symmetric client authentication. Keep this secure and never expose it in client-side code.')}
               </p>
             </div>
 
@@ -446,10 +447,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <div className="flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
-                  <p className="font-semibold text-amber-800 dark:text-amber-300 mb-1">Security Warning</p>
+                  <p className="font-semibold text-amber-800 dark:text-amber-300 mb-1">{t('Security Warning')}</p>
                   <p className="text-amber-700 dark:text-amber-400 text-xs">
-                    Symmetric authentication (client secrets) is less secure than asymmetric authentication (JWT with public/private keys).
-                    Use asymmetric authentication when possible, especially for production deployments.
+                    {t('Symmetric authentication (client secrets) is less secure than asymmetric authentication (JWT with public/private keys). Use asymmetric authentication when possible, especially for production deployments.')}
                   </p>
                 </div>
               </div>
@@ -458,7 +458,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
         )}
 
         <div className="space-y-3">
-          <Label htmlFor="redirectUri" className="text-sm font-semibold text-foreground">Redirect URI</Label>
+          <Label htmlFor="redirectUri" className="text-sm font-semibold text-foreground">{t('Redirect URI')}</Label>
           <Input
             id="redirectUri"
             type="url"
@@ -480,15 +480,15 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <div className="flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
                 <div className="text-sm">
-                  <p className="font-semibold text-purple-800 dark:text-purple-300 mb-1">Agent Flow Characteristics</p>
+                  <p className="font-semibold text-purple-800 dark:text-purple-300 mb-1">{t('Agent Flow Characteristics')}</p>
                   <p className="text-purple-700 dark:text-purple-400 mb-2">
-                    Autonomous agents operate like backend services (no user login) but with non-deterministic, self-initiated behavior:
+                    {t('Autonomous agents operate like backend services (no user login) but with non-deterministic, self-initiated behavior:')}
                   </p>
                   <ul className="text-purple-700 dark:text-purple-400 text-xs space-y-1 ml-4 list-disc">
-                    <li><strong>No interactive login</strong> - Uses client credentials like backend services</li>
-                    <li><strong>Non-deterministic</strong> - Makes autonomous decisions based on environmental triggers</li>
-                    <li><strong>Dynamic identity</strong> - fhirUser resolved to specific Device resource at runtime</li>
-                    <li><strong>Self-initiated</strong> - Actions triggered by AI/ML algorithms, not scheduled tasks</li>
+                    <li><strong>{t('No interactive login')}</strong> - Uses client credentials like backend services</li>
+                    <li><strong>{t('Non-deterministic')}</strong> - Makes autonomous decisions based on environmental triggers</li>
+                    <li><strong>{t('Dynamic identity')}</strong> - fhirUser resolved to specific Device resource at runtime</li>
+                    <li><strong>{t('Self-initiated')}</strong> - Actions triggered by AI/ML algorithms, not scheduled tasks</li>
                   </ul>
                 </div>
               </div>
@@ -497,10 +497,10 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
         </div>
 
         <div className="space-y-3">
-          <Label htmlFor="description" className="text-sm font-semibold text-foreground">Description</Label>
+          <Label htmlFor="description" className="text-sm font-semibold text-foreground">{t('Description')}</Label>
           <Input
             id="description"
-            placeholder="Brief description of the application"
+            placeholder={t('Brief description of the application')}
             value={newApp.description}
             onChange={(e) => setNewApp({ ...newApp, description: e.target.value })}
             className="rounded-xl border-input focus:border-ring focus:ring-ring shadow-sm"
@@ -514,14 +514,14 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <Server className="w-4 h-4 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-foreground tracking-tight">Server Access Configuration</h4>
-              <p className="text-muted-foreground text-sm font-medium">Control which FHIR servers this application can access</p>
+              <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Server Access Configuration')}</h4>
+              <p className="text-muted-foreground text-sm font-medium">{t('Control which FHIR servers this application can access')}</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-3">
-              <Label htmlFor="serverAccessType" className="text-sm font-semibold text-foreground">Server Access Type</Label>
+              <Label htmlFor="serverAccessType" className="text-sm font-semibold text-foreground">{t('Server Access Type')}</Label>
               <Select
                 value={newApp.serverAccessType}
                 onValueChange={(value) => {
@@ -538,10 +538,10 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-servers">All Available Servers</SelectItem>
-                  <SelectItem value="selected-servers">Specific Servers Only</SelectItem>
+                  <SelectItem value="all-servers">{t('All Available Servers')}</SelectItem>
+                  <SelectItem value="selected-servers">{t('Specific Servers Only')}</SelectItem>
                   {newApp.appType !== 'backend-service' && (
-                    <SelectItem value="user-person-servers">Servers with User Person Records</SelectItem>
+                    <SelectItem value="user-person-servers">{t('Servers with User Person Records')}</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -552,17 +552,17 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
 
             {newApp.serverAccessType === 'selected-servers' && (
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">Select Allowed Servers</Label>
+                <Label className="text-sm font-semibold text-foreground">{t('Select Allowed Servers')}</Label>
                 {serversLoading ? (
                   <div className="p-4 text-center text-muted-foreground">
                     <div className="animate-spin inline-block w-4 h-4 border-2 border-border/50 border-t-primary rounded-full mr-2"></div>
-                    Loading available servers...
+                    {t('Loading available servers...')}
                   </div>
                 ) : servers.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border/50">
                     <Server className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm">No FHIR servers available</p>
-                    <p className="text-xs text-muted-foreground">Configure FHIR servers first</p>
+                    <p className="text-sm">{t('No FHIR servers available')}</p>
+                    <p className="text-xs text-muted-foreground">{t('Configure FHIR servers first')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border/50">
@@ -610,15 +610,15 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <div className="flex items-start space-x-2">
                   <Users className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-semibold text-purple-800 dark:text-purple-300 mb-1">User Person Server Access</p>
+                    <p className="font-semibold text-purple-800 dark:text-purple-300 mb-1">{t('User Person Server Access')}</p>
                     <p className="text-purple-700 dark:text-purple-400 mb-2">
-                      This app will only be able to access FHIR servers where the authenticated user has an associated Person resource.
+                      {t('This app will only be able to access FHIR servers where the authenticated user has an associated Person resource.')}
                     </p>
                     <ul className="text-purple-700 dark:text-purple-400 text-xs space-y-1 ml-4 list-disc">
-                      <li>Server access is determined dynamically at runtime</li>
-                      <li>Based on the user's Person resource links</li>
-                      <li>Provides automatic data governance and access control</li>
-                      <li>Only available for interactive applications (not backend services)</li>
+                      <li>{t('Server access is determined dynamically at runtime')}</li>
+                      <li>{t('Based on the user\'s Person resource links')}</li>
+                      <li>{t('Provides automatic data governance and access control')}</li>
+                      <li>{t('Only available for interactive applications (not backend services)')}</li>
                     </ul>
                   </div>
                 </div>
@@ -630,10 +630,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <div className="flex items-start space-x-2">
                   <Globe className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-semibold text-green-800 dark:text-green-300 mb-1">All Server Access</p>
+                    <p className="font-semibold text-green-800 dark:text-green-300 mb-1">{t('All Server Access')}</p>
                     <p className="text-green-700 dark:text-green-400 text-xs">
-                      This app will have access to all FHIR servers configured behind the Proxy. 
-                      Use this option for apps that need broad access across all healthcare data sources.
+                      {t('This app will have access to all FHIR servers configured behind the Proxy. Use this option for apps that need broad access across all healthcare data sources.')}
                     </p>
                   </div>
                 </div>
@@ -649,14 +648,14 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <Cpu className="w-4 h-4 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-foreground tracking-tight">MCP Server Access (AI Capabilities)</h4>
-              <p className="text-muted-foreground text-sm font-medium">Control which AI/MCP servers this application can use</p>
+              <h4 className="text-lg font-bold text-foreground tracking-tight">{t('MCP Server Access (AI Capabilities)')}</h4>
+              <p className="text-muted-foreground text-sm font-medium">{t('Control which AI/MCP servers this application can use')}</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="space-y-3">
-              <Label htmlFor="mcpAccessType" className="text-sm font-semibold text-foreground">MCP Access Type</Label>
+              <Label htmlFor="mcpAccessType" className="text-sm font-semibold text-foreground">{t('MCP Access Type')}</Label>
               <Select
                 value={newApp.mcpAccessType || 'none'}
                 onValueChange={(value) => {
@@ -672,9 +671,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No MCP Access</SelectItem>
-                  <SelectItem value="all-mcp-servers">All MCP Servers</SelectItem>
-                  <SelectItem value="selected-mcp-servers">Specific MCP Servers Only</SelectItem>
+                  <SelectItem value="none">{t('No MCP Access')}</SelectItem>
+                  <SelectItem value="all-mcp-servers">{t('All MCP Servers')}</SelectItem>
+                  <SelectItem value="selected-mcp-servers">{t('Specific MCP Servers Only')}</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
@@ -684,17 +683,17 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
 
             {newApp.mcpAccessType === 'selected-mcp-servers' && (
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">Select Allowed MCP Servers</Label>
+                <Label className="text-sm font-semibold text-foreground">{t('Select Allowed MCP Servers')}</Label>
                 {mcpServersLoading ? (
                   <div className="p-4 text-center text-muted-foreground">
                     <div className="animate-spin inline-block w-4 h-4 border-2 border-border/50 border-t-primary rounded-full mr-2"></div>
-                    Loading available MCP servers...
+                    {t('Loading available MCP servers...')}
                   </div>
                 ) : mcpServers.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border/50">
                     <Cpu className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm">No MCP servers available</p>
-                    <p className="text-xs text-muted-foreground">Configure MCP servers first</p>
+                    <p className="text-sm">{t('No MCP servers available')}</p>
+                    <p className="text-xs text-muted-foreground">{t('Configure MCP servers first')}</p>
                   </div>
                 ) : (
                   <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border/50">
@@ -744,9 +743,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <div className="flex items-start space-x-2">
                   <Cpu className="w-4 h-4 text-slate-600 dark:text-slate-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-semibold text-slate-800 dark:text-slate-300 mb-1">No MCP Access</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-300 mb-1">{t('No MCP Access')}</p>
                     <p className="text-slate-700 dark:text-slate-400 text-xs">
-                      This app will not have access to any MCP servers. AI-powered features will be unavailable.
+                      {t('This app will not have access to any MCP servers. AI-powered features will be unavailable.')}
                     </p>
                   </div>
                 </div>
@@ -758,9 +757,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                 <div className="flex items-start space-x-2">
                   <Cpu className="w-4 h-4 text-violet-600 dark:text-violet-400 mt-0.5 flex-shrink-0" />
                   <div className="text-sm">
-                    <p className="font-semibold text-violet-800 dark:text-violet-300 mb-1">Full MCP Access</p>
+                    <p className="font-semibold text-violet-800 dark:text-violet-300 mb-1">{t('Full MCP Access')}</p>
                     <p className="text-violet-700 dark:text-violet-400 text-xs">
-                      This app will have access to all MCP servers configured in the system, enabling full AI capabilities.
+                      {t('This app will have access to all MCP servers configured in the system, enabling full AI capabilities.')}
                     </p>
                   </div>
                 </div>
@@ -776,8 +775,8 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <BookOpen className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-foreground tracking-tight">Skills (AI Knowledge Packages)</h4>
-              <p className="text-muted-foreground text-sm font-medium">Assign AI skill packages this application can use</p>
+              <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Skills (AI Knowledge Packages)')}</h4>
+              <p className="text-muted-foreground text-sm font-medium">{t('Assign AI skill packages this application can use')}</p>
             </div>
           </div>
 
@@ -785,13 +784,13 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
             {skillsLoading ? (
               <div className="p-4 text-center text-muted-foreground">
                 <div className="animate-spin inline-block w-4 h-4 border-2 border-border/50 border-t-primary rounded-full mr-2"></div>
-                Loading available skills...
+                {t('Loading available skills...')}
               </div>
             ) : skills.length === 0 ? (
               <div className="p-4 text-center text-muted-foreground bg-muted/50 rounded-lg border border-border/50">
                 <BookOpen className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm">No skills installed</p>
-                <p className="text-xs text-muted-foreground">Install skills from the AI Tools page first</p>
+                <p className="text-sm">{t('No skills installed')}</p>
+                <p className="text-xs text-muted-foreground">{t('Install skills from the AI Tools page first')}</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto p-3 bg-card rounded-lg border border-border/50">
@@ -841,14 +840,14 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
               <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h4 className="text-lg font-bold text-foreground tracking-tight">Scope Configuration</h4>
-              <p className="text-muted-foreground text-sm font-medium">Define what data this application can access</p>
+              <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Scope Configuration')}</h4>
+              <p className="text-muted-foreground text-sm font-medium">{t('Define what data this application can access')}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <Label htmlFor="scopeSet" className="text-sm font-semibold text-foreground">Scope Template</Label>
+              <Label htmlFor="scopeSet" className="text-sm font-semibold text-foreground">{t('Scope Template')}</Label>
               <Select
                 value={newApp.scopeSetId || "__custom__"}
                 onValueChange={(value) => setNewApp({ ...newApp, scopeSetId: value === "__custom__" ? "" : value })}
@@ -857,7 +856,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__custom__">Custom Scopes</SelectItem>
+                  <SelectItem value="__custom__">{t('Custom Scopes')}</SelectItem>
                   {scopeSets.map(set => (
                     <SelectItem key={set.id} value={set.id}>{set.name}</SelectItem>
                   ))}
@@ -866,7 +865,7 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="customScopes" className="text-sm font-semibold text-foreground">Additional Scopes</Label>
+              <Label htmlFor="customScopes" className="text-sm font-semibold text-foreground">{t('Additional Scopes')}</Label>
               <Input
                 id="customScopes"
                 placeholder="patient/Patient.read, user/Observation.read"
@@ -882,9 +881,9 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
 
           {(newApp.scopeSetId || (newApp.optionalClientScopes || []).length > 0) && (
             <div className="bg-card/70 p-4 rounded-lg border border-border/50">
-              <Label className="text-sm font-semibold text-foreground mb-2 block">Current Scope Preview</Label>
+              <Label className="text-sm font-semibold text-foreground mb-2 block">{t('Current Scope Preview')}</Label>
               <div className="text-xs text-muted-foreground mb-2">
-                Template: <span className="font-medium">{getScopeSetName(newApp.scopeSetId)}</span>
+                {t('Template:')} <span className="font-medium">{getScopeSetName(newApp.scopeSetId)}</span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {/* Show template scopes */}
@@ -911,14 +910,14 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
             onClick={handleCancel}
             className="flex-1 rounded-xl py-3 font-semibold"
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="submit"
             className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold rounded-xl py-3 shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Register Application
+            {t('Register Application')}
           </Button>
         </div>
       </form>

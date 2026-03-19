@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Input } from '@proxy-smart/shared-ui';
+import { useTranslation } from 'react-i18next';
 
 /**
  * PermissionMatrix
@@ -48,6 +49,7 @@ function isValidScope(scope: string) {
 }
 
 export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], onSave }) => {
+  const { t } = useTranslation();
   const [scopes, setScopes] = useState<string[]>(initialScopes.length ? initialScopes : DEFAULT_SCOPES);
   const [customScope, setCustomScope] = useState('');
   const [status, setStatus] = useState<string | null>(null);
@@ -106,11 +108,11 @@ export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], o
 
   return (
     <div className="border border-border rounded-lg p-4 max-w-[1000px]">
-      <h3 className="text-lg font-semibold text-foreground mb-3">Permission Matrix</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-3">{t('Permission Matrix')}</h3>
 
       <div className="grid gap-3 mb-4">
         <div>
-          <strong className="text-foreground">Current Scopes</strong>
+          <strong className="text-foreground">{t('Current Scopes')}</strong>
           <div className="flex gap-2 flex-wrap mt-2">
             {scopes.map((s) => (
               <div key={s} className="bg-muted px-2 py-1.5 rounded-md flex items-center gap-2">
@@ -124,7 +126,7 @@ export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], o
         </div>
 
         <div>
-          <strong className="text-foreground">Add Scope</strong>
+          <strong className="text-foreground">{t('Add Scope')}</strong>
           <div className="flex gap-2 mt-2 flex-wrap">
             <Input
               value={customScope}
@@ -132,13 +134,13 @@ export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], o
               placeholder="e.g. patient/Observation.read"
               className="flex-1 min-w-[260px]"
             />
-            <Button onClick={addCustomScope}>Add</Button>
+            <Button onClick={addCustomScope}>{t('Add')}</Button>
           </div>
           {status && <div className={`mt-1.5 text-sm ${status.startsWith('Invalid') ? 'text-destructive' : 'text-foreground'}`}>{status}</div>}
         </div>
 
         <details>
-          <summary className="cursor-pointer text-sm font-medium text-foreground">Quick Add</summary>
+          <summary className="cursor-pointer text-sm font-medium text-foreground">{t('Quick Add')}</summary>
           <div className="grid grid-cols-2 gap-2 mt-2">
             {(['patient', 'user'] as const).map((who) => (
               <div key={who} className="border border-border p-2 rounded">
@@ -169,10 +171,10 @@ export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], o
       </div>
 
       <details className="mt-3">
-        <summary className="cursor-pointer text-sm font-medium text-foreground">Help</summary>
+        <summary className="cursor-pointer text-sm font-medium text-foreground">{t('Help')}</summary>
         <div className="p-2 text-sm text-muted-foreground">
-          <p>Use SMART scopes like patient/Observation.read, user/*.write, offline_access. The backend should enforce policies.</p>
-          <p className="mt-1">For refresh tokens include offline_access. For patient context, prefer patient/Resource.access scopes.</p>
+          <p>{t('Use SMART scopes like patient/Observation.read, user/*.write, offline_access. The backend should enforce policies.')}</p>
+          <p className="mt-1">{t('For refresh tokens include offline_access. For patient context, prefer patient/Resource.access scopes.')}</p>
         </div>
       </details>
     </div>

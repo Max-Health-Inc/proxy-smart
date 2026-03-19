@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Users, Server, Plus, MoreHorizontal } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 // TODO: dont use custom interfaces for backend models, use or inherit the existing generated API models instead
 interface HealthcareUser {
@@ -113,6 +114,7 @@ export function HealthcareUsersTable({
   onDeleteUser,
   onAddFhirPerson
 }: HealthcareUsersTableProps) {
+  const { t } = useTranslation();
   return (
     <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
       <div className="p-8 pb-6">
@@ -121,8 +123,8 @@ export function HealthcareUsersTable({
             <Users className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Healthcare Users</h3>
-            <p className="text-muted-foreground font-medium">View and manage all healthcare professionals and administrative users</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Healthcare Users')}</h3>
+            <p className="text-muted-foreground font-medium">{t('View and manage all healthcare professionals and administrative users')}</p>
           </div>
         </div>
         
@@ -130,14 +132,14 @@ export function HealthcareUsersTable({
           <Table>
             <TableHeader>
               <TableRow className="border-border/50">
-                <TableHead className="font-semibold text-muted-foreground">User</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Primary Role</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">All Roles</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Organization</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">FHIR Associations</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Status</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Created</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Last Login</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('User')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Primary Role')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('All Roles')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Organization')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('FHIR Associations')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Status')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Created')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Last Login')}</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -198,7 +200,7 @@ export function HealthcareUsersTable({
                           })
                         ) : (
                           <div className="text-sm text-muted-foreground">
-                            No associations
+                            {t('No associations')}
                           </div>
                         )}
                         {user.fhirPersons.length > 2 && (
@@ -214,7 +216,7 @@ export function HealthcareUsersTable({
                         className="text-xs h-6 px-2 text-primary hover:text-primary hover:bg-primary/10"
                       >
                         <Plus className="w-3 h-3 mr-1" />
-                        Add FHIR Person
+                        {t('Add FHIR Person')}
                       </Button>
                     </div>
                   </TableCell>
@@ -241,13 +243,13 @@ export function HealthcareUsersTable({
                           {user.enabled ? 'Deactivate' : 'Activate'}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onEditUser(user)} className="rounded-lg">
-                          Edit Profile
+                          {t('Edit Profile')}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => onDeleteUser(user.id)}
                           className="text-destructive rounded-lg hover:bg-destructive/10"
                         >
-                          Delete User
+                          {t('Delete User')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

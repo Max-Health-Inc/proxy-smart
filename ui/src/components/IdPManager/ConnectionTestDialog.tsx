@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { TestTube, CheckCircle, XCircle } from 'lucide-react';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface ConnectionTestDialogProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function ConnectionTestDialog({
   connectionResults, 
   idps 
 }: ConnectionTestDialogProps) {
+  const { t } = useTranslation();
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -32,10 +34,10 @@ export function ConnectionTestDialog({
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
-                Connection Test Results
+                {t('Connection Test Results')}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium mt-1">
-                Results from testing identity provider connections
+                {t('Results from testing identity provider connections')}
               </DialogDescription>
             </div>
           </div>
@@ -83,7 +85,7 @@ export function ConnectionTestDialog({
             variant="outline" 
             className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            Close
+            {t('Close')}
           </Button>
         </div>
       </DialogContent>

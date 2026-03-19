@@ -617,7 +617,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                             <TableCell>
                               <Badge variant="secondary" className="text-xs">
                                 {event.mode}
-                                {event.cached && <span className="ml-1" title="Served from cache">⚡</span>}
+                                {event.cached && <span className="ml-1" title={t('Served from cache')}>⚡</span>}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground">{event.checkDurationMs}ms</TableCell>

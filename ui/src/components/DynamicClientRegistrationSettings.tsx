@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import type { ClientRegistrationSettings } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 const DEFAULT_SCOPES = [
   'openid',
@@ -42,6 +43,7 @@ const DEFAULT_REDIRECT_PATTERNS = [
 ];
 
 export function DynamicClientRegistrationSettings() {
+  const { t } = useTranslation();
   const { clientApis } = useAuth();
   const [settings, setSettings] = useState<ClientRegistrationSettings>({
     enabled: true,
@@ -182,13 +184,13 @@ export function DynamicClientRegistrationSettings() {
               </div>
               <div className="flex-1">
                 <h2 className="text-3xl font-medium text-foreground mb-2 tracking-tight">
-                  Dynamic Client Registration
+                  {t('Dynamic Client Registration')}
                 </h2>
                 <div className="flex items-center text-muted-foreground text-lg">
                   <div className="w-6 h-6 bg-primary/10 rounded-lg flex items-center justify-center mr-3 shadow-sm">
                     <Shield className="w-4 h-4 text-primary" />
                   </div>
-                  <span>Configure RFC 7591 automated app registration settings</span>
+                  <span>{t('Configure RFC 7591 automated app registration settings')}</span>
                 </div>
               </div>
             </div>
@@ -198,7 +200,7 @@ export function DynamicClientRegistrationSettings() {
               </Badge>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <ExternalLink className="w-4 h-4" />
-                <span>Public endpoint: <code className="bg-muted px-2 py-1 rounded">/auth/register</code></span>
+                <span>{t('Public endpoint:')} <code className="bg-muted px-2 py-1 rounded">/auth/register</code></span>
               </div>
             </div>
           </div>
@@ -210,7 +212,7 @@ export function DynamicClientRegistrationSettings() {
               className="px-8 py-3 rounded-xl"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Reset Defaults
+              {t('Reset Defaults')}
             </Button>
             <Button 
               onClick={saveSettings}
@@ -250,7 +252,7 @@ export function DynamicClientRegistrationSettings() {
                 <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                   <Settings className="w-6 h-6 text-primary" />
                 </div>
-                <div className="text-sm font-semibold text-primary tracking-wide">Registration</div>
+                <div className="text-sm font-semibold text-primary tracking-wide">{t('Registration')}</div>
               </div>
               <div className="text-3xl font-bold text-foreground mb-2">{settings.enabled ? 'Active' : 'Inactive'}</div>
             </div>
@@ -264,7 +266,7 @@ export function DynamicClientRegistrationSettings() {
                 <div className="w-12 h-12 bg-emerald-500/10 dark:bg-emerald-400/20 rounded-xl flex items-center justify-center shadow-sm">
                   <Shield className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 tracking-wide">Allowed Scopes</div>
+                <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 tracking-wide">{t('Allowed Scopes')}</div>
               </div>
               <div className="text-3xl font-bold text-foreground mb-2">{settings.allowedScopes.length}</div>
             </div>
@@ -278,7 +280,7 @@ export function DynamicClientRegistrationSettings() {
                 <div className="w-12 h-12 bg-violet-500/10 dark:bg-violet-400/20 rounded-xl flex items-center justify-center shadow-sm">
                   <Clock className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                 </div>
-                <div className="text-sm font-semibold text-violet-700 dark:text-violet-300 tracking-wide">Client Lifetime</div>
+                <div className="text-sm font-semibold text-violet-700 dark:text-violet-300 tracking-wide">{t('Client Lifetime')}</div>
               </div>
               <div className="text-3xl font-bold text-foreground mb-2">{settings.maxClientLifetime || '∞'}</div>
               <div className="text-sm text-violet-600 dark:text-violet-400">{settings.maxClientLifetime ? 'days' : 'unlimited'}</div>
@@ -293,7 +295,7 @@ export function DynamicClientRegistrationSettings() {
                 <div className="w-12 h-12 bg-orange-500/10 dark:bg-orange-400/20 rounded-xl flex items-center justify-center shadow-sm">
                   <Globe className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 </div>
-                <div className="text-sm font-semibold text-orange-700 dark:text-orange-300 tracking-wide">URI Patterns</div>
+                <div className="text-sm font-semibold text-orange-700 dark:text-orange-300 tracking-wide">{t('URI Patterns')}</div>
               </div>
               <div className="text-3xl font-bold text-foreground mb-2">{settings.allowedRedirectUriPatterns.length}</div>
             </div>
@@ -310,16 +312,16 @@ export function DynamicClientRegistrationSettings() {
                 <Shield className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Basic Settings</h3>
-                <p className="text-muted-foreground font-medium">Core configuration for dynamic client registration</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Basic Settings')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Core configuration for dynamic client registration')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">{/* ... existing content ... */}
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="enabled">Enable Dynamic Registration</Label>
-                <p className="text-sm text-muted-foreground">Allow apps to register automatically via public endpoint</p>
+                <Label htmlFor="enabled">{t('Enable Dynamic Registration')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Allow apps to register automatically via public endpoint')}</p>
               </div>
               <Switch
                 id="enabled"
@@ -330,8 +332,8 @@ export function DynamicClientRegistrationSettings() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="requireHttps">Require HTTPS</Label>
-                  <p className="text-sm text-muted-foreground">Enforce HTTPS for redirect URIs (localhost exempted)</p>
+                  <Label htmlFor="requireHttps">{t('Require HTTPS')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('Enforce HTTPS for redirect URIs (localhost exempted)')}</p>
                 </div>
                 <Switch
                   id="requireHttps"
@@ -342,8 +344,8 @@ export function DynamicClientRegistrationSettings() {
 
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label htmlFor="adminApproval">Admin Approval Required</Label>
-                  <p className="text-sm text-muted-foreground">New clients need manual approval before activation</p>
+                  <Label htmlFor="adminApproval">{t('Admin Approval Required')}</Label>
+                  <p className="text-sm text-muted-foreground">{t('New clients need manual approval before activation')}</p>
                 </div>
                 <Switch
                   id="adminApproval"
@@ -352,7 +354,7 @@ export function DynamicClientRegistrationSettings() {
                 />
               </div>            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="rateLimit">Rate Limit (per minute)</Label>
+                <Label htmlFor="rateLimit">{t('Rate Limit (per minute)')}</Label>
                 <Input
                   id="rateLimit"
                   type="number"
@@ -363,7 +365,7 @@ export function DynamicClientRegistrationSettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxRedirectUris">Max Redirect URIs</Label>
+                <Label htmlFor="maxRedirectUris">{t('Max Redirect URIs')}</Label>
                 <Input
                   id="maxRedirectUris"
                   type="number"
@@ -385,16 +387,16 @@ export function DynamicClientRegistrationSettings() {
                 <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Allowed Client Types</h3>
-                <p className="text-muted-foreground font-medium">Which types of OAuth2 clients can register</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Allowed Client Types')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Which types of OAuth2 clients can register')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">{/* ... existing content ... */}
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="allowPublic">Public Clients</Label>
-                <p className="text-sm text-muted-foreground">Web apps, mobile apps (no client secret)</p>
+                <Label htmlFor="allowPublic">{t('Public Clients')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Web apps, mobile apps (no client secret)')}</p>
               </div>
               <Switch
                 id="allowPublic"
@@ -405,8 +407,8 @@ export function DynamicClientRegistrationSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="allowConfidential">Confidential Clients</Label>
-                <p className="text-sm text-muted-foreground">Server-side apps with client secret</p>
+                <Label htmlFor="allowConfidential">{t('Confidential Clients')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Server-side apps with client secret')}</p>
               </div>
               <Switch
                 id="allowConfidential"
@@ -417,8 +419,8 @@ export function DynamicClientRegistrationSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="allowBackend">Backend Services</Label>
-                <p className="text-sm text-muted-foreground">System-to-system integrations (client_credentials)</p>
+                <Label htmlFor="allowBackend">{t('Backend Services')}</Label>
+                <p className="text-sm text-muted-foreground">{t('System-to-system integrations (client_credentials)')}</p>
               </div>
               <Switch
                 id="allowBackend"
@@ -429,8 +431,8 @@ export function DynamicClientRegistrationSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="requireTos">Require Terms of Service</Label>
-                <p className="text-sm text-muted-foreground">Apps must provide TOS URI</p>
+                <Label htmlFor="requireTos">{t('Require Terms of Service')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Apps must provide TOS URI')}</p>
               </div>
               <Switch
                 id="requireTos"
@@ -441,8 +443,8 @@ export function DynamicClientRegistrationSettings() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label htmlFor="requirePrivacy">Require Privacy Policy</Label>
-                <p className="text-sm text-muted-foreground">Apps must provide privacy policy URI</p>
+                <Label htmlFor="requirePrivacy">{t('Require Privacy Policy')}</Label>
+                <p className="text-sm text-muted-foreground">{t('Apps must provide privacy policy URI')}</p>
               </div>
               <Switch
                 id="requirePrivacy"
@@ -461,14 +463,14 @@ export function DynamicClientRegistrationSettings() {
                 <Clock className="w-5 h-5 text-violet-600 dark:text-violet-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Lifetime & Notifications</h3>
-                <p className="text-muted-foreground font-medium">Client expiration and notification settings</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Lifetime & Notifications')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Client expiration and notification settings')}</p>
               </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">{/* ... existing content ... */}
             <div className="space-y-2">
-              <Label htmlFor="lifetime">Client Lifetime (days)</Label>
+              <Label htmlFor="lifetime">{t('Client Lifetime (days)')}</Label>
               <Input
                 id="lifetime"
                 type="number"
@@ -476,7 +478,7 @@ export function DynamicClientRegistrationSettings() {
                 max="3650"
                 value={settings.maxClientLifetime}
                 onChange={(e) => setSettings(prev => ({ ...prev, maxClientLifetime: parseInt(e.target.value) || 0 }))}
-                placeholder="0 = no expiration"
+                placeholder={t('0 = no expiration')}
               />
               <p className="text-sm text-muted-foreground">
                 {settings.maxClientLifetime === 0 ? 'Clients never expire' : `Clients expire after ${settings.maxClientLifetime} days`}
@@ -484,7 +486,7 @@ export function DynamicClientRegistrationSettings() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notificationEmail">Notification Email</Label>
+              <Label htmlFor="notificationEmail">{t('Notification Email')}</Label>
               <Input
                 id="notificationEmail"
                 type="email"
@@ -493,7 +495,7 @@ export function DynamicClientRegistrationSettings() {
                 placeholder="admin@example.com"
               />
               <p className="text-sm text-muted-foreground">
-                Get notified when new clients register
+                {t('Get notified when new clients register')}
               </p>
             </div>
           </CardContent>
@@ -507,8 +509,8 @@ export function DynamicClientRegistrationSettings() {
                 <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-foreground tracking-tight">Allowed Scopes</h3>
-                <p className="text-muted-foreground font-medium">SMART scopes that can be requested during registration</p>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Allowed Scopes')}</h3>
+                <p className="text-muted-foreground font-medium">{t('SMART scopes that can be requested during registration')}</p>
               </div>
             </CardTitle>
           </CardHeader>
@@ -520,7 +522,7 @@ export function DynamicClientRegistrationSettings() {
                 placeholder="e.g., patient/*.write"
                 onKeyDown={(e) => e.key === 'Enter' && addScope()}
               />
-              <Button onClick={addScope} size="sm">Add</Button>
+              <Button onClick={addScope} size="sm">{t('Add')}</Button>
             </div>
             <div className="max-h-48 overflow-y-auto space-y-2">
               {settings.allowedScopes.map((scope) => (
@@ -532,7 +534,7 @@ export function DynamicClientRegistrationSettings() {
                     onClick={() => removeScope(scope)}
                     className="text-destructive hover:text-destructive"
                   >
-                    Remove
+                    {t('Remove')}
                   </Button>
                 </div>
               ))}
@@ -549,8 +551,8 @@ export function DynamicClientRegistrationSettings() {
               <Globe className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-foreground tracking-tight">Allowed Redirect URI Patterns</h3>
-              <p className="text-muted-foreground font-medium">Regular expression patterns for validating redirect URIs</p>
+              <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Allowed Redirect URI Patterns')}</h3>
+              <p className="text-muted-foreground font-medium">{t('Regular expression patterns for validating redirect URIs')}</p>
             </div>
           </CardTitle>
         </CardHeader>
@@ -562,7 +564,7 @@ export function DynamicClientRegistrationSettings() {
               placeholder="e.g., https://myapp\\.example\\.com/.*"
               onKeyDown={(e) => e.key === 'Enter' && addPattern()}
             />
-            <Button onClick={addPattern} size="sm">Add Pattern</Button>
+            <Button onClick={addPattern} size="sm">{t('Add Pattern')}</Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {settings.allowedRedirectUriPatterns.map((pattern, index) => (
@@ -574,7 +576,7 @@ export function DynamicClientRegistrationSettings() {
                   onClick={() => removePattern(pattern)}
                   className="text-destructive hover:text-destructive"
                 >
-                  Remove
+                  {t('Remove')}
                 </Button>
               </div>
             ))}

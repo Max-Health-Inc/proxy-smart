@@ -14,6 +14,7 @@ import type {
   HealthcareUserFormData
 } from '@/lib/types/api';
 import { createPersonResource } from '@/services/fhirService';
+import { useTranslation } from 'react-i18next';
 
 interface HealthcareUserAddFormProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export function HealthcareUserAddForm({
   availableClientRoles,
   getAllAvailableRoles
 }: HealthcareUserAddFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<HealthcareUserFormData>(initialFormData);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,8 +129,8 @@ export function HealthcareUserAddForm({
             <Plus className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Add New Healthcare User</h3>
-            <p className="text-muted-foreground font-medium">Create a new user account for healthcare professionals</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Add New Healthcare User')}</h3>
+            <p className="text-muted-foreground font-medium">{t('Create a new user account for healthcare professionals')}</p>
           </div>
         </div>
       </div>
@@ -136,7 +138,7 @@ export function HealthcareUserAddForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="username" className="text-sm font-semibold text-foreground">Username</Label>
+            <Label htmlFor="username" className="text-sm font-semibold text-foreground">{t('Username')}</Label>
             <Input
               id="username"
               placeholder="e.g., john.smith"
@@ -147,7 +149,7 @@ export function HealthcareUserAddForm({
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="email" className="text-sm font-semibold text-foreground">Email Address</Label>
+            <Label htmlFor="email" className="text-sm font-semibold text-foreground">{t('Email Address')}</Label>
             <Input
               id="email"
               type="email"
@@ -162,7 +164,7 @@ export function HealthcareUserAddForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="firstName" className="text-sm font-semibold text-foreground">First Name</Label>
+            <Label htmlFor="firstName" className="text-sm font-semibold text-foreground">{t('First Name')}</Label>
             <Input
               id="firstName"
               placeholder="e.g., John"
@@ -173,7 +175,7 @@ export function HealthcareUserAddForm({
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="lastName" className="text-sm font-semibold text-foreground">Last Name</Label>
+            <Label htmlFor="lastName" className="text-sm font-semibold text-foreground">{t('Last Name')}</Label>
             <Input
               id="lastName"
               placeholder="e.g., Smith"
@@ -187,7 +189,7 @@ export function HealthcareUserAddForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="organization" className="text-sm font-semibold text-foreground">Organization</Label>
+            <Label htmlFor="organization" className="text-sm font-semibold text-foreground">{t('Organization')}</Label>
             <Input
               id="organization"
               placeholder="e.g., Cardiology Department"
@@ -197,7 +199,7 @@ export function HealthcareUserAddForm({
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="fhirPersons" className="text-sm font-semibold text-foreground">FHIR Person Associations</Label>
+            <Label htmlFor="fhirPersons" className="text-sm font-semibold text-foreground">{t('FHIR Person Associations')}</Label>
             <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/20">
               {(formData.fhirPersons || []).map((association, index) => (
                 <div key={index} className="space-y-3 bg-card p-4 rounded-lg border border-border/50">
@@ -215,13 +217,13 @@ export function HealthcareUserAddForm({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-medium text-muted-foreground">FHIR Server</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('FHIR Server')}</Label>
                       <Select
                         value={association.serverId}
                         onValueChange={(value) => updateFhirPersonAssociation(index, 'serverId', value)}
                       >
                         <SelectTrigger className="rounded-lg">
-                          <SelectValue placeholder="Select FHIR server" />
+                          <SelectValue placeholder={t('Select FHIR server')} />
                         </SelectTrigger>
                         <SelectContent>
                           {fhirServers.map(server => (
@@ -237,7 +239,7 @@ export function HealthcareUserAddForm({
                     </div>
                     <div className="flex space-x-2">
                       <div className="flex-1">
-                        <Label className="text-xs font-medium text-muted-foreground">Person ID</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">{t('Person ID')}</Label>
                         <Input
                           placeholder="e.g., Person/12345"
                           value={association.personId}
@@ -264,7 +266,7 @@ export function HealthcareUserAddForm({
                           className="rounded-lg"
                         >
                           <Database className="w-4 h-4 mr-1" />
-                          Create
+                          {t('Create')}
                         </Button>
                       </div>
                     </div>
@@ -278,7 +280,7 @@ export function HealthcareUserAddForm({
                 className="w-full rounded-lg border-dashed border-primary/30 text-primary hover:bg-primary/10"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add FHIR Server Association
+                {t('Add FHIR Server Association')}
               </Button>
             </div>
           </div>
@@ -286,11 +288,11 @@ export function HealthcareUserAddForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="password" className="text-sm font-semibold text-foreground">Password (Optional)</Label>
+            <Label htmlFor="password" className="text-sm font-semibold text-foreground">{t('Password (Optional)')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Leave blank for no password"
+              placeholder={t('Leave blank for no password')}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
@@ -303,7 +305,7 @@ export function HealthcareUserAddForm({
                 checked={formData.temporaryPassword}
                 onCheckedChange={(checked) => setFormData({ ...formData, temporaryPassword: checked === true })}
               />
-              <Label htmlFor="temporaryPassword" className="text-sm text-foreground">Temporary password</Label>
+              <Label htmlFor="temporaryPassword" className="text-sm text-foreground">{t('Temporary password')}</Label>
             </div>
           </div>
         </div>
@@ -315,20 +317,20 @@ export function HealthcareUserAddForm({
               <Shield className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">Role Management</h4>
-              <p className="text-sm text-muted-foreground">Assign roles to control user permissions</p>
+              <h4 className="font-semibold text-foreground">{t('Role Management')}</h4>
+              <p className="text-sm text-muted-foreground">{t('Assign roles to control user permissions')}</p>
             </div>
           </div>
           
           <div className="space-y-4">
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-3 block">Primary Role</Label>
+              <Label className="text-sm font-semibold text-foreground mb-3 block">{t('Primary Role')}</Label>
               <Select
                 value={formData.primaryRole || undefined}
                 onValueChange={(value) => setFormData({ ...formData, primaryRole: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select primary role..." />
+                  <SelectValue placeholder={t('Select primary role...')} />
                 </SelectTrigger>
                 <SelectContent>
                   {getAllAvailableRoles().map((role) => (
@@ -341,7 +343,7 @@ export function HealthcareUserAddForm({
             </div>
             
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-3 block">Realm Roles</Label>
+              <Label className="text-sm font-semibold text-foreground mb-3 block">{t('Realm Roles')}</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {availableRealmRoles.map((role) => (
                   <div key={role} className="flex items-center space-x-2">
@@ -371,7 +373,7 @@ export function HealthcareUserAddForm({
             </div>
             
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-3 block">Admin UI Roles</Label>
+              <Label className="text-sm font-semibold text-foreground mb-3 block">{t('Admin UI Roles')}</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {availableClientRoles['admin-ui']?.map((role) => (
                   <div key={role} className="flex items-center space-x-2">
@@ -417,7 +419,7 @@ export function HealthcareUserAddForm({
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating...
+                {t('Creating...')}
               </>
             ) : (
               'Add User'
@@ -430,7 +432,7 @@ export function HealthcareUserAddForm({
             disabled={submitting}
             className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('Cancel')}
           </Button>
         </div>
       </form>

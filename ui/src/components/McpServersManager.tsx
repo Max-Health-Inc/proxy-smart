@@ -1491,7 +1491,7 @@ export function McpServersManager() {
                                 id="skill-description"
                                 value={skillFormData.description}
                                 onChange={(e) => setSkillFormData(prev => ({ ...prev, description: e.target.value }))}
-                                placeholder="Patient health record access via SMART on FHIR"
+                                placeholder={t('Patient health record access via SMART on FHIR')}
                             />
                         </div>
                         <div className="space-y-2">

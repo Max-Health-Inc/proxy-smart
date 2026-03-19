@@ -28,6 +28,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { SmartApp, ScopeSet, SmartAppType } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 // UI-only type for display purposes
 type AuthenticationType = 'asymmetric' | 'symmetric' | 'none';
@@ -53,6 +54,7 @@ export function SmartAppsTable({
   onViewConfig,
   onEditAuth,
 }: SmartAppsTableProps) {
+  const { t } = useTranslation();
   const getServerAccessBadge = (app: SmartApp) => {
     switch (app.serverAccessType) {
       case 'all-servers':
@@ -141,8 +143,8 @@ export function SmartAppsTable({
             <Settings className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Registered Applications</h3>
-            <p className="text-muted-foreground font-medium">View and manage all SMART on FHIR applications</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Registered Applications')}</h3>
+            <p className="text-muted-foreground font-medium">{t('View and manage all SMART on FHIR applications')}</p>
           </div>
         </div>
 
@@ -150,13 +152,13 @@ export function SmartAppsTable({
           <Table>
             <TableHeader>
               <TableRow className="border-border/50">
-                <TableHead className="font-semibold text-muted-foreground">Application</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Type & Auth</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Server Access</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Client ID</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Status</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Scopes</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Last Used</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Application')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Type & Auth')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Server Access')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Client ID')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Status')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Scopes')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Last Used')}</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -283,19 +285,19 @@ export function SmartAppsTable({
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onOpenScopeEditor(app)} className="rounded-lg">
                             <Shield className="w-4 h-4 mr-2 text-primary" />
-                            Manage Scopes
+                            {t('Manage Scopes')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEditApp(app)} className="rounded-lg">
                             <Edit className="w-4 h-4 mr-2 text-muted-foreground" />
-                            Edit Details
+                            {t('Edit Details')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onViewConfig(app)} className="rounded-lg">
                             <Eye className="w-4 h-4 mr-2 text-muted-foreground" />
-                            View Configuration
+                            {t('View Configuration')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEditAuth(app)} className="rounded-lg">
                             <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
-                            Authentication Settings
+                            {t('Authentication Settings')}
                           </DropdownMenuItem>
                           {app.clientId !== 'ai-assistant-agent' && (
                             <DropdownMenuItem
@@ -303,7 +305,7 @@ export function SmartAppsTable({
                               className="text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
+                              {t('Delete')}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>

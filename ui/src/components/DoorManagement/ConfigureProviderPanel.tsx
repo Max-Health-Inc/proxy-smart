@@ -209,8 +209,8 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="kisi">Kisi (Cloud)</SelectItem>
-                <SelectItem value="unifi-access">UniFi Access (Local)</SelectItem>
+                <SelectItem value="kisi">{t('Kisi (Cloud)')}</SelectItem>
+                <SelectItem value="unifi-access">{t('UniFi Access (Local)')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -237,7 +237,7 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
               <Input
                 id="kisiApiKey"
                 type="password"
-                placeholder="Enter your Kisi API key"
+                placeholder={t('Enter your Kisi API key')}
                 value={kisiApiKey}
                 onChange={(e) => setKisiApiKey(e.target.value)}
                 disabled={testing || saving}
@@ -310,7 +310,7 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
                 <Input
                   id="unifiPassword"
                   type="password"
-                  placeholder="Enter password"
+                  placeholder={t('Enter password')}
                   value={unifiPassword}
                   onChange={(e) => setUnifiPassword(e.target.value)}
                   disabled={testing || saving}

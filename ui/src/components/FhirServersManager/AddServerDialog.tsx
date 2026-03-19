@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useTranslation } from 'react-i18next';
 
 interface AddServerDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function AddServerDialog({
   error,
   urlError
 }: AddServerDialogProps) {
+  const { t } = useTranslation();
   const [newServerUrl, setNewServerUrl] = useState('');
   const [localUrlError, setLocalUrlError] = useState<string | null>(null);
 
@@ -68,15 +70,15 @@ export function AddServerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New FHIR Server</DialogTitle>
+          <DialogTitle>{t('Add New FHIR Server')}</DialogTitle>
           <DialogDescription>
-            Enter the base URL of the FHIR server. The server name and details will be automatically retrieved from the server's metadata.
+            {t('Enter the base URL of the FHIR server. The server name and details will be automatically retrieved from the server\'s metadata.')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="server-url" className="text-right">
-              Server URL
+              {t('Server URL')}
             </Label>
             <Input
               id="server-url"
@@ -107,7 +109,7 @@ export function AddServerDialog({
             onClick={handleClose}
             disabled={loading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -118,12 +120,12 @@ export function AddServerDialog({
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Adding Server...
+                {t('Adding Server...')}
               </>
             ) : (
               <>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Server
+                {t('Add Server')}
               </>
             )}
           </Button>

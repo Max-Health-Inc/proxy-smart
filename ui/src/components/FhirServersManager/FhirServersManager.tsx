@@ -21,6 +21,7 @@ import { ServerDetails } from './ServerDetails';
 import { AddServerDialog } from './AddServerDialog';
 import { EditServerDialog } from './EditServerDialog';
 import { MtlsConfigDialog } from './MtlsConfigDialog';
+import { useTranslation } from 'react-i18next';
 
 // mTLS Configuration type
 interface MtlsConfig {
@@ -38,6 +39,7 @@ interface MtlsConfig {
 }
 
 export function FhirServersManager() {
+  const { t } = useTranslation();
   const { clientApis } = useAuth();
   const [servers, setServers] = useState<FhirServerWithState[]>([]);
   const [loading, setLoading] = useState(true);
@@ -300,7 +302,7 @@ export function FhirServersManager() {
   if (error) {
     return (
       <PageErrorState
-        title="Error Loading Servers"
+        title={t('Error Loading Servers')}
         message={error}
         onRetry={fetchServers}
         retryLabel="Retry"
@@ -315,13 +317,13 @@ export function FhirServersManager() {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
             <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-              FHIR Server Management
+              {t('FHIR Server Management')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
               <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Database className="w-5 h-5 text-primary" />
               </div>
-              Manage and monitor FHIR server connections
+              {t('Manage and monitor FHIR server connections')}
             </div>
           </div>
           <div className="flex space-x-3">
@@ -329,14 +331,14 @@ export function FhirServersManager() {
               onClick={() => setShowAddDialog(true)}
             >
               <Plus className="w-5 h-5 mr-2" />
-              Add Server
+              {t('Add Server')}
             </Button>
             <Button
               variant="outline"
               onClick={fetchServers}
             >
               <RefreshCw className="w-5 h-5 mr-2" />
-              Refresh
+              {t('Refresh')}
             </Button>
           </div>
         </div>
@@ -350,10 +352,10 @@ export function FhirServersManager() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
             <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-              Server Overview
+              {t('Server Overview')}
             </TabsTrigger>
             <TabsTrigger value="details" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-              Server Details
+              {t('Server Details')}
             </TabsTrigger>
           </TabsList>
 
@@ -376,9 +378,9 @@ export function FhirServersManager() {
                 <div className="w-16 h-16 mx-auto mb-6 bg-muted/50 rounded-2xl flex items-center justify-center shadow-sm">
                   <Info className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-3">No Server Selected</h3>
+                <h3 className="text-xl font-bold text-foreground mb-3">{t('No Server Selected')}</h3>
                 <p className="text-muted-foreground mb-6 font-medium">
-                  Select a server from the overview tab to view detailed information
+                  {t('Select a server from the overview tab to view detailed information')}
                 </p>
                 {loadingServerDetail && (
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
