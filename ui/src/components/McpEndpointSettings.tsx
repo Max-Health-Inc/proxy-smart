@@ -251,7 +251,7 @@ export function McpEndpointSettings() {
 
       {/* ── Tool Selection ────────────────────────────────────────────── */}
       {status.enabled && (
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h4 className="text-lg font-semibold text-foreground">
