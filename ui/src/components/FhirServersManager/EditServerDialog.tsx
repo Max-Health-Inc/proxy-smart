@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Edit, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Dialog,
   DialogContent,
@@ -9,8 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { FhirServerWithState } from '@/lib/types/api';
 
 interface EditServerDialogProps {

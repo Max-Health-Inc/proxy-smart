@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Loader2, Shield } from 'lucide-react';

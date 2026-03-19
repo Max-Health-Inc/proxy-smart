@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 import { Plus, Users } from 'lucide-react';
 
 interface HealthcareUsersHeaderProps {

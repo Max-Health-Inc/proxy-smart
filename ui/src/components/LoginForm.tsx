@@ -23,7 +23,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 
 export function LoginForm() {
   const [loading, setLoading] = useState(false);

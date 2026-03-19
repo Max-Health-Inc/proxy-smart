@@ -13,8 +13,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';

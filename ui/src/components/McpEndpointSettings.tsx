@@ -20,8 +20,7 @@ import {
   Info,
   ShieldCheck,
 } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import { Checkbox } from './ui/checkbox';
 
 // ── Types ────────────────────────────────────────────────────────────────────

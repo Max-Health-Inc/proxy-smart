@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link2, Loader2, AppWindow } from 'lucide-react';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import { Checkbox } from './ui/checkbox';
 import {
     Dialog,

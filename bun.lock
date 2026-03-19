@@ -19,7 +19,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.0.2-alpha.202603191928.18d9a934",
+      "version": "0.0.2-alpha.202603191934.f741ef1d",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.41",
         "@elysiajs/cors": "^1.4.1",
@@ -58,7 +58,7 @@
     },
     "infra": {
       "name": "proxy-smart-infra",
-      "version": "0.0.2-alpha.202603191928.18d9a934",
+      "version": "0.0.2-alpha.202603191934.f741ef1d",
       "dependencies": {
         "aws-cdk-lib": "^2.243.0",
         "constructs": "^10.5.1",
@@ -76,7 +76,7 @@
     },
     "shared-ui": {
       "name": "@proxy-smart/shared-ui",
-      "version": "0.0.1",
+      "version": "0.0.2-alpha.202603191934.f741ef1d",
       "dependencies": {
         "@radix-ui/react-slot": "^1.2.3",
         "class-variance-authority": "^0.7.1",
@@ -94,9 +94,10 @@
     },
     "ui": {
       "name": "proxy-smart-ui",
-      "version": "0.0.2-alpha.202603191928.18d9a934",
+      "version": "0.0.2-alpha.202603191934.f741ef1d",
       "dependencies": {
         "@hookform/resolvers": "^5.2.2",
+        "@proxy-smart/shared-ui": "workspace:*",
         "@radix-ui/react-accordion": "^1.2.12",
         "@radix-ui/react-avatar": "^1.1.11",
         "@radix-ui/react-dialog": "^1.1.15",

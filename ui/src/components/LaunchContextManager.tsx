@@ -1,7 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Badge, Button, Label } from '@proxy-smart/shared-ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { LaunchContextSetBuilder } from './LaunchContextSetBuilder';
 import { useLaunchContextSets } from '../stores/smartStore';

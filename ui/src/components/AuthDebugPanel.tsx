@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@proxy-smart/shared-ui';
 import { useAuthStore } from '../stores/authStore';
 import { getItem, removeItem, getSessionItem, removeSessionItem, clearAuthorizationCodeData } from '../lib/storage';
 import { AlertCircle, RefreshCw, Trash2 } from 'lucide-react';

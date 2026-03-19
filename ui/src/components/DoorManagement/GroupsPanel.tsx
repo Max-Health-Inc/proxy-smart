@@ -12,10 +12,7 @@ import {
   X,
   Loader2,
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
 import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';

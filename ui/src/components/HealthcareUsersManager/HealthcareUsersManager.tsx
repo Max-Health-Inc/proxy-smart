@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 import { Plus } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { PageLoadingState } from '@/components/ui/page-loading-state';

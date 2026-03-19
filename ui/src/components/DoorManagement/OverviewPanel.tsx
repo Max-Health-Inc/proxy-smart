@@ -10,7 +10,7 @@ import {
   WifiOff,
   RefreshCw,
 } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 import { StatCard } from '../ui/stat-card';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';

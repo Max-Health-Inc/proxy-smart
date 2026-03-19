@@ -12,9 +12,7 @@ import {
   User,
   Lock,
 } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Select,
   SelectContent,

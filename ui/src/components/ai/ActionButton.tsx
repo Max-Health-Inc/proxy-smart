@@ -1,7 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import {
     ExternalLink,

@@ -8,8 +8,7 @@ import {
   Database,
   Lock
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerDetails } from '@/lib/types/api';
 
