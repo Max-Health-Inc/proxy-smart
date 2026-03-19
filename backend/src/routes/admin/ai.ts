@@ -27,6 +27,7 @@ import { validateToken } from '@/lib/auth'
 import type { JwtPayload } from 'jsonwebtoken'
 import { config } from '@/config'
 import { getConfiguredServers } from './mcp-servers'
+import { getInstalledSkills } from './ai-tools-skills'
 
 // Keycloak-flavored OIDC JWT payload shape (subset)
 type KeycloakJwtPayload = JwtPayload & {
@@ -100,6 +101,37 @@ async function loadSystemPrompt(reqId?: string): Promise<string> {
     })
   }
   return fallback
+}
+
+/**
+ * Append dynamic context (installed skills, MCP servers) to the system prompt.
+ */
+function enrichSystemPrompt(basePrompt: string): string {
+  const sections: string[] = [basePrompt]
+
+  // Installed skills
+  const skills = getInstalledSkills().filter(s => s.enabled)
+  if (skills.length > 0) {
+    const skillLines = skills.map(s => {
+      const parts = [`- **${s.name}** (${s.type}): ${s.description}`]
+      if (s.sourceUrl) parts.push(`  Source: ${s.sourceUrl}`)
+      return parts.join('\n')
+    })
+    sections.push(
+      `\n\n## INSTALLED SKILLS\n\nThe platform has the following AI skills installed. You should know about these and be able to answer questions about them:\n\n${skillLines.join('\n')}`
+    )
+  }
+
+  // Configured MCP servers
+  const mcpServers = getConfiguredMcpServers()
+  if (mcpServers.length > 0) {
+    const serverLines = mcpServers.map(s => `- **${s.name}**: ${s.url}`)
+    sections.push(
+      `\n\n## CONNECTED MCP SERVERS\n\n${serverLines.join('\n')}`
+    )
+  }
+
+  return sections.join('')
 }
 
 /**
@@ -476,7 +508,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
       // Stream with AI SDK
       const result = await streamText({
         model: openai(modelToUse) as unknown as LanguageModel,
-        system: systemPrompt,
+        system: enrichSystemPrompt(systemPrompt),
         messages,
         tools: sdkTools,
         stopWhen: stepCountIs(5),
@@ -626,7 +658,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
       const startTime = Date.now()
       const result = await generateText({
         model: openai(modelToUse) as unknown as LanguageModel,
-        system: systemPrompt,
+        system: enrichSystemPrompt(systemPrompt),
         messages,
         tools: sdkTools,
         stopWhen: stepCountIs(5),
