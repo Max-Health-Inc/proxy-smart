@@ -1,104 +1,384 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SMART Apps — Proxy Smart</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'smart-blue': '#667eea',
-            'smart-purple': '#764ba2',
-          }
-        }
-      }
-    }
-  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>App Store — Proxy Smart</title>
+  <meta name="description" content="Browse and launch SMART on FHIR applications registered on this Proxy Smart instance." />
+  <meta name="theme-color" content="#000000" />
   <style>
+    /* ── Reset ────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens ───────────────────────────────────────────────────────── */
+    :root {
+      --background: #000000;
+      --foreground: #ffffff;
+      --muted: #171717;
+      --muted-foreground: #a3a3a3;
+      --border: #262626;
+      --card: #0a0a0a;
+      --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* ── Base ─────────────────────────────────────────────────────────── */
+    html { color-scheme: dark; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      font-weight: 300;
+      background: var(--background);
+      color: var(--foreground);
+      line-height: 1.625;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    body::-webkit-scrollbar { width: 0; background: transparent; }
+    ::selection { background: #fff; color: #000; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Noise ────────────────────────────────────────────────────────── */
+    .noise {
+      position: fixed; inset: 0;
+      opacity: .015;
+      pointer-events: none;
+      z-index: 50;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* ── Animations ───────────────────────────────────────────────────── */
     @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out; }
-    .app-card { transition: all 0.2s ease; }
-    .app-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+    .fade-in { animation: fadeInUp .6s ease-out both; }
+    .fade-in-d1 { animation: fadeInUp .6s ease-out .1s both; }
+    .fade-in-d2 { animation: fadeInUp .6s ease-out .2s both; }
+
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Nav ──────────────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(0, 0, 0, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      padding: .75rem 1.5rem;
+    }
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-brand { font-weight: 400; font-size: .95rem; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .4);
+      transition: color .3s;
+    }
+    .nav-links a:hover { color: rgba(255, 255, 255, .7); }
+
+    /* ── Header ───────────────────────────────────────────────────────── */
+    .page-header {
+      padding: 4rem 0 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: .75rem;
+    }
+    .page-title {
+      font-weight: 300;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: .75rem;
+    }
+    .page-subtitle {
+      color: rgba(255, 255, 255, .45);
+      font-size: .9rem;
+      max-width: 560px;
+      line-height: 1.7;
+    }
+
+    /* ── Stats ────────────────────────────────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: 2rem;
+      padding: 1.25rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+    }
+    .stat { display: flex; flex-direction: column; }
+    .stat-value { font-size: 1.25rem; font-weight: 300; letter-spacing: -0.02em; }
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .35);
+    }
+
+    /* ── App Grid ─────────────────────────────────────────────────────── */
+    .apps-section { padding: 2rem 0 4rem; }
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .app-card {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      padding: 1.5rem;
+      gap: .75rem;
+      transition: border-color .3s, background .3s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .app-card:hover {
+      border-color: rgba(255, 255, 255, .2);
+      background: rgba(255, 255, 255, .04);
+    }
+    .app-card-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .app-card-icon {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255, 255, 255, .1);
+      background: rgba(255, 255, 255, .03);
+      flex-shrink: 0;
+    }
+    .app-card-icon svg {
+      width: 20px; height: 20px;
+      stroke: rgba(255, 255, 255, .5);
+      fill: none;
+    }
+    .app-card-meta { display: flex; flex-direction: column; min-width: 0; }
+    .app-card-name {
+      font-weight: 400;
+      font-size: .95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .app-card-id {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      color: rgba(255, 255, 255, .3);
+    }
+    .app-card-desc {
+      font-size: .85rem;
+      color: rgba(255, 255, 255, .45);
+      line-height: 1.6;
+      flex: 1;
+    }
+    .app-card-scopes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin-top: auto;
+    }
+    .scope-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      color: rgba(255, 255, 255, .35);
+      border: 1px solid rgba(255, 255, 255, .06);
+      padding: .2rem .5rem;
+      background: rgba(255, 255, 255, .02);
+    }
+    .app-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: .5rem;
+      border-top: 1px solid rgba(255, 255, 255, .05);
+    }
+    .app-card-category {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, .3);
+    }
+    .app-card-launch {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, .5);
+      transition: color .3s;
+    }
+    .app-card:hover .app-card-launch { color: rgba(255, 255, 255, .9); }
+
+    /* ── Empty / Loading / Error ──────────────────────────────────────── */
+    .state-msg {
+      text-align: center;
+      padding: 4rem 0;
+      color: rgba(255, 255, 255, .35);
+      font-size: .9rem;
+    }
+    .state-msg .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255, 255, 255, .1);
+      border-top-color: rgba(255, 255, 255, .5);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-bottom: .75rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid rgba(255, 255, 255, .05);
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: .5rem;
+    }
+    footer span, footer a {
+      font-family: var(--font-mono); font-size: 11px;
+      color: rgba(255, 255, 255, .3); letter-spacing: 0.05em;
+    }
+    footer a { color: rgba(255, 255, 255, .4); transition: color .3s; }
+    footer a:hover { color: rgba(255, 255, 255, .7); }
+
+    /* ── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .stats-bar { flex-wrap: wrap; gap: 1rem; }
+      .nav-links { gap: .75rem; }
+    }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-smart-blue to-smart-purple flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl animate-fade-in-up">
-    <div class="text-center mb-8">
-      <div class="inline-block p-3 bg-gradient-to-br from-smart-blue to-smart-purple rounded-full mb-4">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-        </svg>
-      </div>
-      <h1 class="text-3xl font-bold text-gray-800 mb-2">SMART Apps</h1>
-      <p class="text-gray-600 text-sm">Available SMART on FHIR applications</p>
+<body>
+  <div class="noise"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">Proxy Smart</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/webapp/">Admin</a></li>
+        <li><a href="https://github.com/max-health-inc/proxy-smart">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="page-header fade-in">
+      <div class="section-label">Proxy Smart App Store</div>
+      <h1 class="page-title">SMART on FHIR Applications</h1>
+      <p class="page-subtitle">
+        Browse and launch registered SMART apps on this instance. Each app gets OAuth 2.0 + PKCE, scope-based access control, and FHIR server routing.
+      </p>
     </div>
 
-    <div id="apps-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div class="col-span-full text-center py-8 text-gray-400">
-        <svg class="w-6 h-6 mx-auto animate-spin mb-2" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-        </svg>
-        Discovering apps…
+    <!-- Stats Bar -->
+    <div class="stats-bar fade-in-d1" id="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="stat-total">&mdash;</span>
+        <span class="stat-label">Apps</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="stat-categories">&mdash;</span>
+        <span class="stat-label">Categories</span>
       </div>
     </div>
 
-    <div class="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center text-sm text-gray-500">
-      <a href="/" class="hover:text-smart-blue transition-colors">&larr; Launcher</a>
-      <a href="/webapp/" class="hover:text-smart-blue transition-colors">Admin Dashboard &rarr;</a>
+    <!-- App Grid -->
+    <div class="apps-section fade-in-d2">
+      <div class="app-grid" id="app-grid">
+        <div class="state-msg" style="grid-column: 1 / -1;">
+          <div class="spinner"></div>
+          <div>Discovering apps&hellip;</div>
+        </div>
+      </div>
     </div>
+
+    <footer>
+      <div class="footer-inner">
+        <span>&copy; 2025 Max Health Inc.</span>
+        <div style="display: flex; gap: 1.5rem;">
+          <a href="/">Home</a>
+          <a href="/webapp/">Admin Dashboard</a>
+          <a href="https://github.com/max-health-inc/proxy-smart">GitHub</a>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <script>
     const ICONS = {
-      'document-text': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
-      'shield-check': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
-      'app-window': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>',
-    };
-    const COLORS = {
-      clinical: { bg: 'bg-blue-100', text: 'text-blue-600' },
-      administrative: { bg: 'bg-green-100', text: 'text-green-600' },
-      other: { bg: 'bg-gray-100', text: 'text-gray-600' },
+      'document-text': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+      'shield-check': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
+      'app-window': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>',
     };
 
     fetch('/apps.json')
       .then(r => r.json())
       .then(({ apps }) => {
-        const grid = document.getElementById('apps-grid');
+        const grid = document.getElementById('app-grid');
+        const statTotal = document.getElementById('stat-total');
+        const statCategories = document.getElementById('stat-categories');
+
         if (!apps || apps.length === 0) {
-          grid.innerHTML = '<p class="col-span-full text-center py-8 text-gray-400">No apps discovered.</p>';
+          grid.innerHTML = '<div class="state-msg" style="grid-column:1/-1;">No apps discovered. Register apps via the Admin Dashboard.</div>';
+          statTotal.textContent = '0';
+          statCategories.textContent = '0';
           return;
         }
-        grid.innerHTML = apps.map(app => {
-          const c = COLORS[app.category] || COLORS.other;
-          const iconPath = ICONS[app.icon] || ICONS['app-window'];
+
+        statTotal.textContent = apps.length;
+        const cats = new Set(apps.map(a => a.category));
+        statCategories.textContent = cats.size;
+
+        grid.innerHTML = apps.map((app, i) => {
+          const iconSvg = ICONS[app.icon] || ICONS['app-window'];
+          const scopes = app.scope ? app.scope.split(' ').slice(0, 4) : [];
+          const extra = app.scope ? app.scope.split(' ').length - 4 : 0;
           return `
-            <a href="${app.launch_url}" class="app-card block border border-gray-200 rounded-lg p-6 bg-white hover:border-smart-blue">
-              <div class="flex items-center space-x-3 mb-3">
-                <div class="p-2 ${c.bg} rounded-lg">
-                  <svg class="w-6 h-6 ${c.text}" fill="none" stroke="currentColor" viewBox="0 0 24 24">${iconPath}</svg>
+            <a href="${app.launch_url}" class="app-card" style="animation-delay:${i * 0.05}s;">
+              <div class="app-card-header">
+                <div class="app-card-icon">
+                  <svg viewBox="0 0 24 24">${iconSvg}</svg>
                 </div>
-                <div>
-                  <h2 class="text-lg font-semibold text-gray-800">${app.client_name}</h2>
-                  <span class="text-xs text-gray-400">${app.client_id}</span>
+                <div class="app-card-meta">
+                  <div class="app-card-name">${app.client_name}</div>
+                  <div class="app-card-id">${app.client_id}</div>
                 </div>
               </div>
-              <p class="text-sm text-gray-600">${app.description}</p>
-              <div class="mt-3 flex flex-wrap gap-1">
-                ${app.scope.split(' ').map(s => `<span class="inline-block text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">${s}</span>`).join('')}
+              <div class="app-card-desc">${app.description || 'No description.'}</div>
+              ${scopes.length ? `<div class="app-card-scopes">
+                ${scopes.map(s => `<span class="scope-tag">${s}</span>`).join('')}
+                ${extra > 0 ? `<span class="scope-tag">+${extra}</span>` : ''}
+              </div>` : ''}
+              <div class="app-card-footer">
+                <span class="app-card-category">${app.category}</span>
+                <span class="app-card-launch">Launch &rarr;</span>
               </div>
             </a>`;
         }).join('');
       })
       .catch(() => {
-        document.getElementById('apps-grid').innerHTML =
-          '<p class="col-span-full text-center py-8 text-red-400">Failed to load apps.</p>';
+        document.getElementById('app-grid').innerHTML =
+          '<div class="state-msg" style="grid-column:1/-1;color:rgba(255,100,100,.6);">Failed to load apps.</div>';
       });
   </script>
 </body>
