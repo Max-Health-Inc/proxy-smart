@@ -22,8 +22,8 @@ To maintain our dual licensing model and ensure we can provide both open source 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/quotentiroler/smart-on-fhir-proxy
-cd smart-on-fhir-proxy
+git clone https://github.com/quotentiroler/proxy-smart
+cd proxy-smart
 ```
 
 ### 2. Create a Development Branch

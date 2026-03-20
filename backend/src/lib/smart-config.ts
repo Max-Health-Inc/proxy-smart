@@ -69,7 +69,7 @@ class SmartConfigService {
             const response = await fetch(this.keycloakDiscoveryUrl, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'SMART-on-FHIR-Proxy/1.0'
+                    'User-Agent': 'proxy-smart/1.0'
                 },
                 // Add timeout to prevent hanging
                 signal: AbortSignal.timeout(10000) // 10 second timeout
