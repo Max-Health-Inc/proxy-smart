@@ -51,10 +51,13 @@ code, pre, kbd, samp {
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -97,7 +100,7 @@ code, pre, kbd, samp {
  * Matches inverted maxhealth.tech aesthetic
  */
 :root {
-  --radius: 0.5rem;
+  --radius: 0;
   /* Core colors - crisp white/black for high contrast */
   --background: oklch(0.995 0 0);
   --foreground: oklch(0.09 0 0);
@@ -351,7 +354,7 @@ code, pre, kbd, samp {
     background-color: var(--background);
     color: var(--foreground);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -413,7 +416,7 @@ code, pre, kbd, samp {
     background-color: oklch(var(--color-background));
     color: oklch(var(--color-foreground));
     border: 1px solid oklch(var(--color-border));
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -467,7 +470,7 @@ code, pre, kbd, samp {
     background-color: oklch(var(--color-background));
     color: oklch(var(--color-foreground));
     border: 1px solid oklch(var(--color-border));
-    border-radius: var(--radius-lg);
+    border-radius: 0;
   }
   
   .dark form input,

@@ -1,674 +1,656 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SMART on FHIR Launcher</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'smart-blue': '#667eea',
-            'smart-purple': '#764ba2',
-          }
-        }
-      }
-    }
-  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Proxy Smart — SMART on FHIR Proxy</title>
+  <meta name="description" content="Open-source stateless proxy that adds OAuth 2.0 and SMART App Launch 2.2.0 authorization to any FHIR server." />
+  <meta name="theme-color" content="#000000" />
   <style>
-    /* Custom animations */
+    /* ── Reset ────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Tokens (maxhealth.tech dark) ─────────────────────────────────── */
+    :root {
+      --background: #000000;
+      --foreground: #ffffff;
+      --muted: #171717;
+      --muted-foreground: #a3a3a3;
+      --border: #262626;
+      --card: #0a0a0a;
+      --card-foreground: #fafafa;
+      --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Geist Mono', 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* ── Base ─────────────────────────────────────────────────────────── */
+    html { color-scheme: dark; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      font-weight: 300;
+      background: var(--background);
+      color: var(--foreground);
+      line-height: 1.625;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+    body::-webkit-scrollbar { width: 0; background: transparent; }
+    ::selection { background: #fff; color: #000; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Animations ───────────────────────────────────────────────────── */
     @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.7;
-      }
+    @keyframes lineGrow {
+      from { width: 0; }
+      to { width: 32px; }
     }
-    
-    .animate-fade-in-up {
-      animation: fadeInUp 0.6s ease-out;
+    @keyframes pulseGlow {
+      0%, 100% { opacity: .5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: .8; transform: translate(-50%, -50%) scale(1.1); }
     }
-    
-    .animate-pulse-slow {
-      animation: pulse 2s ease-in-out infinite;
+    @keyframes scrollBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(8px); }
     }
-    
-    /* Custom scrollbar for scope selection */
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 8px;
+    .fade-in { animation: fadeInUp .8s ease-out both; }
+    .fade-in-d1 { animation: fadeInUp .8s ease-out .2s both; }
+    .fade-in-d2 { animation: fadeInUp .8s ease-out .4s both; }
+    .fade-in-d3 { animation: fadeInUp .8s ease-out .6s both; }
+    .fade-in-d4 { animation: fadeInUp .8s ease-out .8s both; }
+    .fade-in-d5 { animation: fadeInUp .8s ease-out 1s both; }
+
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
+
+    /* ── Noise Overlay ────────────────────────────────────────────────── */
+    .noise {
+      position: fixed; inset: 0;
+      opacity: .015;
+      pointer-events: none;
+      z-index: 50;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     }
-    
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 4px;
+
+    /* ── Nav ──────────────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(0, 0, 0, .85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      padding: .75rem 1.5rem;
     }
-    
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
+    .nav-inner {
+      max-width: 1080px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
+    .nav-brand { font-weight: 400; font-size: .95rem; }
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .4);
+      transition: color .3s;
+    }
+    .nav-links a:hover { color: rgba(255, 255, 255, .7); }
+
+    /* ── Hero ─────────────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 6rem 1.5rem;
+      overflow: hidden;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      opacity: .03;
+      background-image:
+        linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px);
+      background-size: 100px 100px;
+    }
+    .hero-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 800px;
+      background: var(--muted);
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: pulseGlow 8s ease-in-out infinite;
+    }
+    .hero-content {
+      position: relative;
+      max-width: 720px;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 12px;
+      margin-bottom: 3rem;
+    }
+    .hero-eyebrow span {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: rgba(255, 255, 255, .5);
+    }
+    .hero-eyebrow-line {
+      display: inline-block;
+      height: 1px;
+      background: rgba(255, 255, 255, .2);
+      animation: lineGrow .8s ease-out 1s both;
+    }
+    .hero h1 {
+      font-weight: 300;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      letter-spacing: -0.03em;
+      line-height: .95;
+      margin-bottom: 2rem;
+    }
+    .hero h1 .dim { color: rgba(255, 255, 255, .2); }
+    .hero-sub {
+      color: rgba(255, 255, 255, .5);
+      font-size: 1.1rem;
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 480px;
+      margin: 0 auto 2.5rem;
+    }
+    .hero-sub strong { color: rgba(255, 255, 255, .7); font-weight: 400; }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-family: var(--font-mono); font-size: 11px;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      padding: .75rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, .1);
+      background: transparent;
+      color: rgba(255, 255, 255, .5);
+      transition: all .3s;
+      cursor: pointer;
+    }
+    .btn:hover {
+      border-color: rgba(255, 255, 255, .3);
+      color: rgba(255, 255, 255, .9);
+      background: rgba(255, 255, 255, .05);
+    }
+    .scroll-indicator {
+      position: absolute; bottom: 3rem;
+      left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    }
+    .scroll-indicator span {
+      font-family: var(--font-mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: .3em;
+      color: rgba(255, 255, 255, .4);
+    }
+    .scroll-indicator-line {
+      width: 1px; height: 32px;
+      background: linear-gradient(to bottom, rgba(255,255,255,.4), transparent);
+      animation: scrollBounce 1.5s ease-in-out infinite;
+    }
+
+    /* ── Section ──────────────────────────────────────────────────────── */
+    section { padding: 5rem 0; border-top: 1px solid rgba(255, 255, 255, .05); }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Stats Row ────────────────────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      padding: 1.25rem;
+    }
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: .25rem;
+    }
+    .stat-value { font-size: 1.75rem; font-weight: 300; letter-spacing: -0.03em; }
+    .stat-detail { font-size: .8rem; color: rgba(255, 255, 255, .35); font-family: var(--font-mono); margin-top: .25rem; }
+
+    /* ── Features ─────────────────────────────────────────────────────── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .feature-card {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      padding: 1.5rem;
+      transition: border-color .3s;
+    }
+    .feature-card:hover { border-color: rgba(255, 255, 255, .15); }
+    .feature-number {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: rgba(255, 255, 255, .4);
+      letter-spacing: .3em;
+      margin-bottom: .75rem;
+    }
+    .feature-title { font-weight: 400; font-size: .95rem; margin-bottom: .5rem; }
+    .feature-desc { font-size: .85rem; color: rgba(255, 255, 255, .5); line-height: 1.6; }
+
+    /* ── Big Statement ────────────────────────────────────────────────── */
+    .statement {
+      padding: 8rem 0;
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, .05);
+      position: relative;
+      overflow: hidden;
+    }
+    .statement-glow {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 500px; height: 500px;
+      background: rgba(255, 255, 255, .1);
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: .1;
+    }
+    .statement p {
+      position: relative;
+      font-size: clamp(1.5rem, 3.5vw, 3rem);
+      font-weight: 300;
+      color: rgba(255, 255, 255, .4);
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .statement .highlight { color: rgba(255, 255, 255, .9); }
+
+    /* ── Code Block ───────────────────────────────────────────────────── */
+    .code-block {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+    .code-block pre {
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, .75);
+    }
+    .code-block .c { color: rgba(255, 255, 255, .3); }
+    .code-block .k { color: #c084fc; }
+    .code-block .s { color: #22c55e; }
+    .code-block .t { color: #60a5fa; }
+    .code-block .f { color: #fbbf24; }
+
+    /* ── Architecture ─────────────────────────────────────────────────── */
+    .arch {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1.5rem; flex-wrap: wrap; padding: 2rem 0;
+    }
+    .arch-box {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      padding: 1rem 1.5rem;
+      text-align: center;
+      min-width: 140px;
+    }
+    .arch-box-label {
+      font-family: var(--font-mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: .25rem;
+    }
+    .arch-box-value { font-weight: 400; font-size: .9rem; }
+    .arch-box-accent { border-color: rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .05); }
+    .arch-arrow { font-size: 1.5rem; color: rgba(255, 255, 255, .2); }
+
+    /* ── Table ────────────────────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    thead th {
+      font-family: var(--font-mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .4);
+      text-align: left; padding: .75rem .5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      font-weight: 400;
+    }
+    tbody td { padding: .75rem .5rem; border-bottom: 1px solid rgba(255, 255, 255, .05); }
+    tbody tr:hover { background: rgba(255, 255, 255, .02); }
+    .td-label { font-weight: 400; }
+    .td-value { font-family: var(--font-mono); font-size: .8rem; color: rgba(255, 255, 255, .5); }
+
+    /* ── Quick Start Steps ────────────────────────────────────────────── */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .step {
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: rgba(255, 255, 255, .02);
+      padding: 1.25rem;
+      transition: border-color .3s;
+    }
+    .step:hover { border-color: rgba(255, 255, 255, .15); }
+    .step-number {
+      font-family: var(--font-mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, .4);
+      margin-bottom: .5rem;
+    }
+    .step-title { font-weight: 400; font-size: .9rem; margin-bottom: .35rem; }
+    .step-cmd {
+      font-family: var(--font-mono); font-size: .75rem;
+      color: rgba(255, 255, 255, .5); word-break: break-all;
+    }
+
+    /* ── Divider Line ─────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+      margin: 0;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      padding: 3rem 0 2rem;
+      border-top: 1px solid rgba(255, 255, 255, .05);
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: .5rem;
+    }
+    footer span, footer a {
+      font-family: var(--font-mono); font-size: 11px;
+      color: rgba(255, 255, 255, .3); letter-spacing: 0.05em;
+    }
+    footer a { color: rgba(255, 255, 255, .4); transition: color .3s; }
+    footer a:hover { color: rgba(255, 255, 255, .7); }
+
+    /* ── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 2rem; }
+      .stat-value { font-size: 1.5rem; }
+      .arch { flex-direction: column; }
+      .arch-arrow { transform: rotate(90deg); }
+      .nav-links { gap: .75rem; }
+      table { font-size: .8rem; }
+      .statement p { font-size: 1.25rem; }
     }
   </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-smart-blue to-smart-purple flex items-center justify-center p-4">
-  <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-xl animate-fade-in-up">
-    <div class="text-center mb-8">
-      <div class="inline-block p-3 bg-gradient-to-br from-smart-blue to-smart-purple rounded-full mb-4">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-      </div>
-      <h1 class="text-3xl font-bold text-gray-800 mb-2">SMART Launcher</h1>
-      <p class="text-gray-600 text-sm">Configure your SMART on FHIR application launch</p>
+<body>
+  <!-- Noise texture overlay -->
+  <div class="noise"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-inner">
+      <span class="nav-brand">Proxy Smart</span>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="https://github.com/max-health-inc/smart-on-fhir-proxy">GitHub</a></li>
+      </ul>
     </div>
-    
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 p-4 mb-6 rounded-lg">
-      <div class="flex items-start space-x-3">
-        <div class="flex-shrink-0">
-          <svg class="w-5 h-5 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <div>
-          <p class="text-sm text-blue-800">
-            <span class="font-semibold">Quick Start:</span> Fill in your app details and select the permissions you need. This will redirect you to the OAuth authorization endpoint.
-          </p>
-        </div>
-      </div>
-    </div>
-    
-    <form id="launchForm" class="space-y-8">
-      <!-- Basic Configuration -->
-      <div class="space-y-6">
-        <div class="border-b border-gray-200 pb-4">
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Application Configuration</h3>
-          <p class="text-sm text-gray-600">Basic details for your SMART on FHIR application</p>
-        </div>
-        
-        <div class="grid grid-cols-1 gap-6">
-          <div class="group">
-            <label for="client_id" class="block text-sm font-medium text-gray-700 mb-2">
-              <span class="flex items-center space-x-2">
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 0a2 2 0 012 2m-2-2a2 2 0 00-2 2m2-2V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2m0 0a2 2 0 00-2 2m2-2a2 2 0 012 2m0 0V9a2 2 0 002-2m-2 2H7a2 2 0 00-2-2"/>
-                </svg>
-                <span>Client ID</span>
-              </span>
-            </label>
-            <input 
-              id="client_id" 
-              name="client_id" 
-              placeholder="e.g. my-smart-app" 
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-smart-blue focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white group-hover:border-gray-400"
-            >
-          </div>
-          
-          <div class="group">
-            <label for="redirect_uri" class="block text-sm font-medium text-gray-700 mb-2">
-              <span class="flex items-center space-x-2">
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-                </svg>
-                <span>Redirect URI</span>
-              </span>
-            </label>
-            <input 
-              id="redirect_uri" 
-              name="redirect_uri" 
-              type="url"
-              placeholder="e.g. https://app.example.com/callback" 
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-smart-blue focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white group-hover:border-gray-400"
-            >
-          </div>
-          
-          <div class="group">
-            <label for="fhir_server_choice" class="block text-sm font-medium text-gray-700 mb-2">
-              <span class="flex items-center space-x-2">
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
-                </svg>
-                <span>FHIR Server</span>
-              </span>
-            </label>
-            
-            <!-- Toggle between manual input and server selection -->
-            <div class="mb-3">
-              <div class="flex items-center space-x-4">
-                <label class="flex items-center">
-                  <input type="radio" name="fhir_input_type" value="manual" checked class="text-smart-blue focus:ring-smart-blue mr-2">
-                  <span class="text-sm text-gray-700">Manual URL</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" name="fhir_input_type" value="select" class="text-smart-blue focus:ring-smart-blue mr-2">
-                  <span class="text-sm text-gray-700">Choose from available servers</span>
-                </label>
-              </div>
-            </div>
-            
-            <!-- Manual input -->
-            <div id="manual_fhir_input" class="mb-0">
-              <input 
-                id="aud" 
-                name="aud" 
-                type="url"
-                placeholder="e.g. https://fhir.example.com" 
-                required
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-smart-blue focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white group-hover:border-gray-400"
-              >
-            </div>
-            
-            <!-- Server selection -->
-            <div id="server_selection" class="hidden">
-              <div class="flex items-center space-x-2 mb-2">
-                <select 
-                  id="fhir_server_select" 
-                  name="fhir_server_select"
-                  class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-smart-blue focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                >
-                  <option value="">Loading available servers...</option>
-                </select>
-                <button type="button" id="refresh_servers" class="px-3 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" title="Refresh server list">
-                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                  </svg>
-                </button>
-              </div>
-              <div id="server_status" class="text-xs text-gray-500"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Scopes Configuration -->
-      <div class="space-y-4">
-        <div class="border-b border-gray-200 pb-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 mb-1">Permissions & Scopes</h3>
-              <p class="text-sm text-gray-600">Select the data access permissions your app needs</p>
-            </div>
-            <div class="flex space-x-2">
-              <button type="button" id="selectAll" class="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                Select All
-              </button>
-              <button type="button" id="clearAll" class="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                Clear All
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-1">
-          <div class="bg-white rounded-lg p-4">
-            <div class="space-y-4 max-h-80 overflow-y-auto custom-scrollbar pr-2">
-              <!-- Identity & Launch Context -->
-              <div class="border border-gray-200 rounded-lg p-4 hover:border-smart-blue/30 transition-colors">
-                <div class="flex items-center space-x-2 mb-3">
-                  <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Identity & Launch</h4>
-                </div>
-                <div class="space-y-3">
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="openid" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <div class="flex items-center space-x-2">
-                        <span class="text-sm font-medium text-gray-900">openid</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Essential</span>
-                      </div>
-                      <p class="text-xs text-gray-600 mt-1">Request user authentication</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="fhirUser" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <div class="flex items-center space-x-2">
-                        <span class="text-sm font-medium text-gray-900">fhirUser</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Recommended</span>
-                      </div>
-                      <p class="text-xs text-gray-600 mt-1">Get FHIR resource for current user</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="launch" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">launch</span>
-                      <p class="text-xs text-gray-600 mt-1">Get launch context from EHR</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="launch/patient" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">launch/patient</span>
-                      <p class="text-xs text-gray-600 mt-1">Request patient selection at launch</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="launch/encounter" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">launch/encounter</span>
-                      <p class="text-xs text-gray-600 mt-1">Get encounter context at launch</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-          
-              <!-- Patient Access -->
-              <div class="border border-gray-200 rounded-lg p-4 hover:border-smart-blue/30 transition-colors">
-                <div class="flex items-center space-x-2 mb-3">
-                  <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Patient Data Access</h4>
-                </div>
-                <div class="space-y-3">
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/*.cruds" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <div class="flex items-center space-x-2">
-                        <span class="text-sm font-medium text-gray-900">patient/*.cruds</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Full Access</span>
-                      </div>
-                      <p class="text-xs text-gray-600 mt-1">Complete access to all patient data</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/*.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <div class="flex items-center space-x-2">
-                        <span class="text-sm font-medium text-gray-900">patient/*.rs</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Read Only</span>
-                      </div>
-                      <p class="text-xs text-gray-600 mt-1">Read/search all patient data</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/Patient.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">patient/Patient.rs</span>
-                      <p class="text-xs text-gray-600 mt-1">Read patient demographics</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/Observation.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">patient/Observation.rs</span>
-                      <p class="text-xs text-gray-600 mt-1">Read patient observations (labs, vitals)</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/Condition.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">patient/Condition.rs</span>
-                      <p class="text-xs text-gray-600 mt-1">Read patient conditions/diagnoses</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/MedicationRequest.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">patient/MedicationRequest.rs</span>
-                      <p class="text-xs text-gray-600 mt-1">Read patient medication requests</p>
-                    </div>
-                  </label>
-                  <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <input type="checkbox" name="scopes" value="patient/AllergyIntolerance.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                    <div class="flex-1">
-                      <span class="text-sm font-medium text-gray-900">patient/AllergyIntolerance.rs</span>
-                      <p class="text-xs text-gray-600 mt-1">Read patient allergies</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-          
-              <!-- User Access & Token Refresh -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="border border-gray-200 rounded-lg p-4 hover:border-smart-blue/30 transition-colors">
-                  <div class="flex items-center space-x-2 mb-3">
-                    <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">User Access</h4>
-                  </div>
-                  <div class="space-y-3">
-                    <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <input type="checkbox" name="scopes" value="user/*.cruds" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-gray-900">user/*.cruds</span>
-                        <p class="text-xs text-gray-600 mt-1">Full access to user data</p>
-                      </div>
-                    </label>
-                    <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <input type="checkbox" name="scopes" value="user/*.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-gray-900">user/*.rs</span>
-                        <p class="text-xs text-gray-600 mt-1">Read user accessible data</p>
-                      </div>
-                    </label>
-                    <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <input type="checkbox" name="scopes" value="user/Patient.rs" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-gray-900">user/Patient.rs</span>
-                        <p class="text-xs text-gray-600 mt-1">Allow patient selection</p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                
-                <div class="border border-gray-200 rounded-lg p-4 hover:border-smart-blue/30 transition-colors">
-                  <div class="flex items-center space-x-2 mb-3">
-                    <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <h4 class="text-sm font-semibold text-gray-700 uppercase tracking-wide">Token Refresh</h4>
-                  </div>
-                  <div class="space-y-3">
-                    <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <input type="checkbox" name="scopes" value="offline_access" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                      <div class="flex-1">
-                        <div class="flex items-center space-x-2">
-                          <span class="text-sm font-medium text-gray-900">offline_access</span>
-                          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Popular</span>
-                        </div>
-                        <p class="text-xs text-gray-600 mt-1">Long-term refresh token</p>
-                      </div>
-                    </label>
-                    <label class="flex items-start space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <input type="checkbox" name="scopes" value="online_access" class="mt-1 text-smart-blue focus:ring-smart-blue focus:ring-offset-0 rounded">
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-gray-900">online_access</span>
-                        <p class="text-xs text-gray-600 mt-1">While user online</p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow fade-in">
+        <span class="hero-eyebrow-line"></span>
+        <span>Open Source &middot; SMART App Launch 2.2.0</span>
+        <span class="hero-eyebrow-line"></span>
       </div>
 
-      <!-- Launch Configuration -->
-      <div class="space-y-4">
-        <div class="border-b border-gray-200 pb-4">
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">Launch Configuration</h3>
-          <p class="text-sm text-gray-600">Optional settings for your SMART app launch</p>
-        </div>
-        
-        <div class="group">
-          <label for="launch" class="block text-sm font-medium text-gray-700 mb-2">
-            <span class="flex items-center space-x-2">
-              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 0a2 2 0 012 2m-2-2a2 2 0 00-2 2m2-2V5a2 2 0 00-2-2H9a2 2 0 00-2 2v2m0 0a2 2 0 00-2 2m2-2a2 2 0 012 2m0 0V9a2 2 0 002-2m-2 2H7a2 2 0 00-2-2"/>
-              </svg>
-              <span>Launch Token</span>
-              <span class="text-gray-400 text-xs">(optional)</span>
-            </span>
-          </label>
-          <input 
-            id="launch" 
-            name="launch" 
-            placeholder="Leave empty for standalone launch"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-smart-blue focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white group-hover:border-gray-400"
-          >
-          <p class="text-xs text-gray-500 mt-2">For EHR-launched apps, this will be provided automatically</p>
-        </div>
+      <h1>
+        <span class="fade-in-d1">Proxy Smart</span><br>
+        <span class="fade-in-d2 dim">Healthcare Auth,</span><br>
+        <span class="fade-in-d2 dim">Solved.</span>
+      </h1>
+
+      <p class="hero-sub fade-in-d3">
+        A stateless proxy that adds SMART on FHIR authorization to any
+        FHIR server. Pair with <strong>BabelFHIR-TS</strong> for type-safe,
+        profile-aware TypeScript — and go from zero to production-ready
+        SMART app in minutes.
+      </p>
+
+      <div class="hero-actions fade-in-d4">
+        <a href="#quickstart" class="btn">Get Started &rarr;</a>
+        <a href="https://github.com/max-health-inc/smart-on-fhir-proxy" class="btn">View on GitHub</a>
       </div>
-      
-      <!-- Submit Button -->
-      <div class="pt-4">
-        <button 
-          type="submit"
-          id="launchButton"
-          class="w-full relative bg-gradient-to-r from-smart-blue to-smart-purple text-white font-semibold py-4 px-6 rounded-lg hover:shadow-xl hover:-translate-y-1 transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-smart-blue/25 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-        >
-          <span class="flex items-center justify-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            </svg>
-            <span>Launch SMART App</span>
-          </span>
-          <div id="loadingSpinner" class="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity">
-            <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        </button>
-        
-        <!-- Selected Scopes Summary -->
-        <div id="scopesSummary" class="mt-4 p-3 bg-gray-50 rounded-lg hidden">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Permissions:</h4>
-          <div id="selectedScopes" class="flex flex-wrap gap-1"></div>
-        </div>
-      </div>
-    </form>
+    </div>
+
+    <div class="scroll-indicator fade-in-d5">
+      <span>Scroll</span>
+      <div class="scroll-indicator-line"></div>
+    </div>
   </div>
 
-  <script>
-    // DOM elements
-    const form = document.getElementById('launchForm');
-    const selectAllBtn = document.getElementById('selectAll');
-    const clearAllBtn = document.getElementById('clearAll');
-    const launchButton = document.getElementById('launchButton');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const scopesSummary = document.getElementById('scopesSummary');
-    const selectedScopes = document.getElementById('selectedScopes');
-    
-    // FHIR server selection elements
-    const manualInput = document.getElementById('manual_fhir_input');
-    const serverSelection = document.getElementById('server_selection');
-    const fhirServerSelect = document.getElementById('fhir_server_select');
-    const refreshServersBtn = document.getElementById('refresh_servers');
-    const serverStatus = document.getElementById('server_status');
-    const audInput = document.getElementById('aud');
-    
-    // State for available servers
-    let availableServers = [];
-    
-    // Toggle between manual input and server selection
-    document.addEventListener('change', (e) => {
-      if (e.target.name === 'fhir_input_type') {
-        if (e.target.value === 'manual') {
-          manualInput.classList.remove('hidden');
-          serverSelection.classList.add('hidden');
-          audInput.required = true;
-          fhirServerSelect.required = false;
-        } else {
-          manualInput.classList.add('hidden');
-          serverSelection.classList.remove('hidden');
-          audInput.required = false;
-          fhirServerSelect.required = true;
-          loadAvailableServers();
-        }
-      }
-      
-      if (e.target.name === 'scopes') {
-        updateScopesSummary();
-      }
-    });
-    
-    // Load available FHIR servers from /status endpoint
-    async function loadAvailableServers() {
-      try {
-        serverStatus.textContent = 'Loading servers...';
-        fhirServerSelect.innerHTML = '<option value="">Loading available servers...</option>';
-        
-        const response = await fetch('/status');
-        const healthData = await response.json();
-        
-        availableServers = healthData.fhir?.servers || [];
-        
-        // Clear and populate the select dropdown
-        fhirServerSelect.innerHTML = '<option value="">Select a FHIR server...</option>';
-        
-        if (availableServers.length === 0) {
-          fhirServerSelect.innerHTML = '<option value="">No servers available</option>';
-          serverStatus.textContent = 'No FHIR servers found';
-          return;
-        }
-        
-        availableServers.forEach(server => {
-          const option = document.createElement('option');
-          option.value = server.url;
-          
-          // Create a descriptive label
-          let label = server.displayName || server.name;
-          if (server.version && server.version !== 'unknown') {
-            label += ` (FHIR ${server.version})`;
-          }
-          
-          // Add status indicator
-          const statusIcon = server.status === 'healthy' ? '🟢' : 
-                           server.status === 'degraded' ? '🟡' : '🔴';
-          option.textContent = `${statusIcon} ${label}`;
-          
-          // Disable unhealthy servers
-          if (server.status === 'unhealthy') {
-            option.disabled = true;
-            option.textContent += ' (Unavailable)';
-          }
-          
-          fhirServerSelect.appendChild(option);
-        });
-        
-        const healthyCount = availableServers.filter(s => s.status === 'healthy').length;
-        const totalCount = availableServers.length;
-        serverStatus.textContent = `${healthyCount}/${totalCount} servers available`;
-        
-      } catch (error) {
-        console.error('Failed to load FHIR servers:', error);
-        fhirServerSelect.innerHTML = '<option value="">Failed to load servers</option>';
-        serverStatus.textContent = 'Error loading servers. Please try manual input.';
-      }
-    }
-    
-    // Refresh servers button
-    refreshServersBtn.addEventListener('click', loadAvailableServers);
-    
-    // Select/Clear all functionality
-    selectAllBtn.addEventListener('click', () => {
-      document.querySelectorAll('input[name="scopes"]').forEach(checkbox => {
-        checkbox.checked = true;
-      });
-      updateScopesSummary();
-    });
-    
-    clearAllBtn.addEventListener('click', () => {
-      document.querySelectorAll('input[name="scopes"]').forEach(checkbox => {
-        checkbox.checked = false;
-      });
-      updateScopesSummary();
-    });
-    
-    // Update scopes summary display
-    function updateScopesSummary() {
-      const checkedScopes = Array.from(document.querySelectorAll('input[name="scopes"]:checked'))
-        .map(checkbox => checkbox.value);
-      
-      if (checkedScopes.length > 0) {
-        scopesSummary.classList.remove('hidden');
-        selectedScopes.innerHTML = checkedScopes.map(scope => 
-          `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-smart-blue text-white">
-            ${scope}
-          </span>`
-        ).join('');
-      } else {
-        scopesSummary.classList.add('hidden');
-      }
-    }
-    
-    // Form submission
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      
-      // Show loading state
-      launchButton.disabled = true;
-      loadingSpinner.classList.remove('opacity-0');
-      
-      // Get all form data
-      const formData = new FormData(e.target);
-      const params = new URLSearchParams();
-      
-      // Validate required fields
-      const clientId = formData.get('client_id');
-      const redirectUri = formData.get('redirect_uri');
-      
-      if (!clientId || !redirectUri) {
-        alert('Please fill in all required fields');
-        launchButton.disabled = false;
-        loadingSpinner.classList.add('opacity-0');
-        return;
-      }
-      
-      // Get FHIR server URL based on input type
-      let aud;
-      const inputType = formData.get('fhir_input_type');
-      if (inputType === 'manual') {
-        aud = formData.get('aud');
-        if (!aud) {
-          alert('Please enter a FHIR base URL');
-          launchButton.disabled = false;
-          loadingSpinner.classList.add('opacity-0');
-          return;
-        }
-      } else {
-        aud = formData.get('fhir_server_select');
-        if (!aud) {
-          alert('Please select a FHIR server');
-          launchButton.disabled = false;
-          loadingSpinner.classList.add('opacity-0');
-          return;
-        }
-      }
-      
-      // Add basic params
-      params.set('response_type', 'code');
-      params.set('client_id', clientId);
-      params.set('redirect_uri', redirectUri);
-      params.set('aud', aud);
-      
-      // Get selected scopes
-      const selectedScopesList = Array.from(e.target.querySelectorAll('input[name="scopes"]:checked'))
-        .map(checkbox => checkbox.value);
-      
-      // Add default scopes if none selected
-      if (selectedScopesList.length === 0) {
-        selectedScopesList.push('openid', 'fhirUser', 'launch/patient');
-      }
-      
-      params.set('scope', selectedScopesList.join(' '));
-      
-      // Add launch token if provided
-      const launchToken = formData.get('launch');
-      if (launchToken && launchToken.trim()) {
-        params.set('launch', launchToken.trim());
-      }
-      
-      const url = '/auth/authorize?' + params.toString();
-      
-      // Small delay for better UX
-      setTimeout(() => {
-        window.location.href = url;
-      }, 500);
-    });
-    
-    // Initialize
-    updateScopesSummary();
-    
-    // Load servers on page load if needed (optional - could be done on radio button change instead)
-    // loadAvailableServers();
-  </script>
+  <div class="container">
+
+    <!-- At a Glance -->
+    <section>
+      <div class="section-label">At a Glance</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-label">Spec</span>
+          <span class="stat-value">2.2.0</span>
+          <span class="stat-detail">SMART App Launch</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Data Stored</span>
+          <span class="stat-value">Zero</span>
+          <span class="stat-detail">Stateless proxy — no PHI</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">License</span>
+          <span class="stat-value">AGPL-3</span>
+          <span class="stat-detail">Commercial license available</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Deploy</span>
+          <span class="stat-value">1 cmd</span>
+          <span class="stat-detail">Docker Compose included</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features">
+      <div class="section-label">Features</div>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-number">01</div>
+          <div class="feature-title">Stateless FHIR Proxy</div>
+          <div class="feature-desc">
+            No clinical data touches the proxy. Requests pass through to your FHIR server — smaller attack surface, simpler HIPAA/GDPR compliance.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">02</div>
+          <div class="feature-title">SMART App Launch 2.2.0</div>
+          <div class="feature-desc">
+            Full spec implementation: OAuth 2.0 + PKCE, JWT validation, scope-based access control, refresh token rotation, enterprise SSO.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">03</div>
+          <div class="feature-title">Admin Dashboard</div>
+          <div class="feature-desc">
+            Built-in React UI to manage SMART apps, FHIR server connections, users, and scopes. No manual config editing required.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">04</div>
+          <div class="feature-title">BabelFHIR-TS Integration</div>
+          <div class="feature-desc">
+            Generate type-safe TypeScript from any FHIR Implementation Guide. Profile-aware interfaces, runtime validation, and a type-safe FHIR client.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">05</div>
+          <div class="feature-title">AI Assistant &amp; MCP</div>
+          <div class="feature-desc">
+            Built-in AI assistant with RAG, plus an MCP server generated from the OpenAPI spec for programmatic AI-tool integration.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">06</div>
+          <div class="feature-title">Docker-Ready</div>
+          <div class="feature-desc">
+            One-command dev and prod deployments. Mono-container and multi-container Docker Compose setups included.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Big Statement -->
+    <div class="statement">
+      <div class="statement-glow"></div>
+      <p>
+        The hardest part of building a healthcare app
+        isn't the <span class="highlight">clinical logic</span> —
+        it's the authentication, authorization, and
+        <span class="highlight">interoperability</span>.
+        We handle that.
+      </p>
+    </div>
+
+    <!-- Architecture -->
+    <section id="architecture">
+      <div class="section-label">How It Works</div>
+      <div class="arch">
+        <div class="arch-box">
+          <div class="arch-box-label">Your App</div>
+          <div class="arch-box-value">SMART App</div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box arch-box-accent">
+          <div class="arch-box-label">Proxy</div>
+          <div class="arch-box-value">Proxy Smart</div>
+        </div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-box">
+          <div class="arch-box-label">Server</div>
+          <div class="arch-box-value">FHIR Server</div>
+        </div>
+      </div>
+      <p style="text-align: center; color: rgba(255,255,255,.4); font-size: .85rem; margin-top: -1rem; margin-bottom: 2rem;">
+        Keycloak handles OAuth &middot; Your FHIR server keeps all clinical data
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="td-label">Backend</td><td class="td-value">Bun, Elysia, TypeScript</td></tr>
+          <tr><td class="td-label">Frontend</td><td class="td-value">React 19, Vite, Tailwind CSS</td></tr>
+          <tr><td class="td-label">Identity</td><td class="td-value">Keycloak + PostgreSQL</td></tr>
+          <tr><td class="td-label">FHIR Types</td><td class="td-value">BabelFHIR-TS, @babelfhir-ts/client-r4</td></tr>
+          <tr><td class="td-label">Testing</td><td class="td-value">Vitest, Playwright</td></tr>
+          <tr><td class="td-label">Infra</td><td class="td-value">Docker, AWS CDK</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- BabelFHIR-TS -->
+    <section>
+      <div class="section-label">Powered by BabelFHIR-TS</div>
+      <p style="color: rgba(255,255,255,.5); font-size: .9rem; margin-bottom: 1.25rem; max-width: 640px; line-height: 1.7;">
+        Install any FHIR Implementation Guide as a node module. Get type-safe interfaces, runtime validation, and a generated FHIR client — all from a single command.
+      </p>
+      <div class="code-block">
+<pre><span class="c">// Install US Core profiles into your project</span>
+<span class="k">$</span> npx babelfhir-ts install hl7.fhir.us.core@8.0.0
+
+<span class="c">// Use the generated type-safe FHIR client</span>
+<span class="k">import</span> { <span class="t">FhirClient</span> } <span class="k">from</span> <span class="s">"./output/fhir-client"</span>;
+
+<span class="k">const</span> client = <span class="k">new</span> <span class="t">FhirClient</span>(<span class="s">"https://proxy-smart.example.com/fhir"</span>);
+
+<span class="c">// Profile-specific methods — fully typed</span>
+<span class="k">const</span> patient = <span class="k">await</span> client.<span class="f">read</span>().<span class="f">usCorePatient</span>().<span class="f">read</span>(<span class="s">"123"</span>);
+<span class="k">const</span> bundle  = <span class="k">await</span> client.<span class="f">read</span>().<span class="f">usCoreCondition</span>().<span class="f">search</span>({ <span class="t">patient</span>: <span class="s">"123"</span> });
+
+<span class="c">// Validate against profile constraints at runtime</span>
+<span class="k">const</span> { errors, warnings } = <span class="k">await</span> patient.<span class="f">validate</span>();</pre>
+      </div>
+    </section>
+
+    <!-- Quick Start -->
+    <section id="quickstart">
+      <div class="section-label">Quick Start</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">01</div>
+          <div class="step-title">Clone</div>
+          <div class="step-cmd">git clone https://github.com/max-health-inc/smart-on-fhir-proxy.git</div>
+        </div>
+        <div class="step">
+          <div class="step-number">02</div>
+          <div class="step-title">Start Services</div>
+          <div class="step-cmd">bun docker:dev</div>
+        </div>
+        <div class="step">
+          <div class="step-number">03</div>
+          <div class="step-title">Install &amp; Run</div>
+          <div class="step-cmd">bun install &amp;&amp; bun run dev</div>
+        </div>
+        <div class="step">
+          <div class="step-number">04</div>
+          <div class="step-title">Open Admin UI</div>
+          <div class="step-cmd">http://localhost:3000</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="footer-inner">
+        <span>&copy; 2025 Max Health Inc.</span>
+        <div style="display: flex; gap: 1.5rem;">
+          <a href="https://github.com/max-health-inc/smart-on-fhir-proxy">GitHub</a>
+          <a href="https://www.npmjs.com/package/babelfhir-ts">BabelFHIR-TS</a>
+          <a href="https://discord.gg/FshSApM7">Discord</a>
+        </div>
+      </div>
+      <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.05); text-align: center;">
+        <span style="font-family: var(--font-mono); font-size: 10px; color: rgba(255,255,255,.3);">
+          &copy; 2025 Max Health Inc. All rights reserved.
+        </span>
+      </div>
+    </footer>
+
+  </div>
 </body>
 </html>

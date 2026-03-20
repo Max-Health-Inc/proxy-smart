@@ -284,7 +284,7 @@ export async function initializeServer(): Promise<void> {
  * Display server endpoints after successful startup
  */
 export async function displayServerEndpoints(): Promise<void> {
-  logger.server.info(`SMART Launcher available at ${config.baseUrl}`)
+  logger.server.info(`Proxy Smart available at ${config.baseUrl}`)
   logger.server.info(`Health check available at ${config.baseUrl}/health`)
   logger.server.info(`API Documentation available at ${config.baseUrl}/swagger`)
   logger.server.info(`Server Discovery available at ${config.baseUrl}/fhir-servers`)

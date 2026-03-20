@@ -81,26 +81,26 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300',
+        'bg-card/70 border border-border/50 p-3 transition-colors duration-200',
         className,
       )}
     >
-      <div className="flex items-center space-x-3 mb-4">
+      <div className="flex items-center gap-2 mb-1.5">
         <div
           className={cn(
-            'w-12 h-12 rounded-xl flex items-center justify-center shadow-sm',
+            'w-7 h-7 flex items-center justify-center',
             colors.bg,
           )}
         >
-          {iconElement ?? <Icon className={cn('w-6 h-6', colors.text)} />}
+          {iconElement ?? <Icon className={cn('w-3.5 h-3.5', colors.text)} />}
         </div>
-        <div className={cn('text-sm font-semibold tracking-wide', colors.label)}>
+        <div className={cn('text-[10px] font-mono uppercase tracking-[0.15em]', colors.label)}>
           {label}
         </div>
       </div>
-      <div className="text-3xl font-bold text-foreground mb-2">{value}</div>
+      <div className="text-xl font-light text-foreground">{value}</div>
       {subtitle && (
-        <p className={cn('text-sm font-medium', colors.label)}>{subtitle}</p>
+        <p className="text-xs text-muted-foreground font-light">{subtitle}</p>
       )}
     </div>
   );

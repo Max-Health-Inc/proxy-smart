@@ -538,7 +538,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
         <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
             {/* Notification Toast */}
             {notification && (
-                <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border ${notification.type === 'success'
+                <div className={`fixed top-4 right-4 z-50 p-3 border ${notification.type === 'success'
                     ? 'bg-card border-border text-foreground'
                     : 'bg-destructive/10 dark:bg-destructive/20 border-destructive/30 text-foreground'
                     } animate-in slide-in-from-top-2 duration-300`}>
@@ -562,15 +562,15 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
             )}
 
             {/* Header Section */}
-            <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-6 lg:space-y-0">
+            <div className="bg-muted/50 p-4 border border-border/50">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
                     <div className="flex-1">
-                        <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+                        <h1 className="text-xl font-light text-foreground mb-1 tracking-tight">
                             {t('Proxy Smart Dashboard')}
                         </h1>
-                        <div className="text-muted-foreground flex items-center text-lg">
-                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
-                                <Stethoscope className="w-5 h-5 text-primary" />
+                        <div className="text-muted-foreground flex items-center text-sm">
+                            <div className="w-6 h-6 bg-primary/10 flex items-center justify-center mr-2">
+                                <Stethoscope className="w-3.5 h-3.5 text-primary" />
                             </div>
                             {t('Welcome back, {{name}}', {
                                 name: profile?.firstName && profile?.lastName
@@ -580,7 +580,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                         </div>
                         
                         {/* AI Agent Status */}
-                        <div className="mt-4 flex items-center space-x-3 p-3 bg-muted/20 rounded-xl border border-border/30">
+                        <div className="mt-3 flex items-center space-x-3 p-2 bg-muted/20 border border-border/30">
                             {systemHealth.aiAgentStatus === 'connected' ? (
                                 <Bot className="w-5 h-5 text-foreground" />
                             ) : systemHealth.aiAgentStatus === 'fallback' ? (
@@ -654,81 +654,81 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                 </div>
             </div>
 
-            {/* Key Metrics Cards - Compact and Professional */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Zap className="w-4 h-4 text-primary" />
+            {/* Key Metrics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-primary/10 flex items-center justify-center">
+                            <Zap className="w-3 h-3 text-primary" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('SMART Apps')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('SMART Apps')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {dashboardData.loading ? '...' : dashboardData.smartAppsCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Active')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Active')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <Users className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <Users className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('Users')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('Users')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {dashboardData.loading ? '...' : dashboardData.usersCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Registered')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Registered')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <Database className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <Database className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('FHIR Servers')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('FHIR Servers')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {dashboardData.loading ? '...' : dashboardData.serversCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Connected')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Connected')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <Shield className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('Identity Providers')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('Identity Providers')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {dashboardData.loading ? '...' : dashboardData.identityProvidersCount}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Active')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Active')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <BarChart3 className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <BarChart3 className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('OAuth Flows')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('OAuth Flows')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {oauthAnalytics.loading ? '...' : oauthAnalytics.totalFlows.toLocaleString()}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Processed')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Processed')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <CheckCircle className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <CheckCircle className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('Success Rate')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('Success Rate')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {oauthAnalytics.loading
                             ? '...'
                             : oauthAnalytics.totalFlows === 0
@@ -736,17 +736,17 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                 : `${oauthAnalytics.successRate.toFixed(1)}%`
                         }
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('OAuth Success')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('OAuth Success')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <Clock className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <Clock className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('Avg Response')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('Avg Response')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {oauthAnalytics.loading
                             ? '...'
                             : oauthAnalytics.totalFlows === 0
@@ -754,38 +754,38 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                 : `${oauthAnalytics.averageResponseTime}ms`
                         }
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Performance')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Performance')}</p>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-xl border border-border/50 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105">
-                    <div className="flex items-center space-x-2 mb-2">
-                        <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-foreground" />
+                <div className="bg-card/70 p-3 border border-border/50 transition-colors duration-200">
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-6 h-6 bg-secondary flex items-center justify-center">
+                            <Shield className="w-3 h-3 text-foreground" />
                         </div>
-                        <h3 className="text-xs font-medium text-muted-foreground">{t('Active Tokens')}</h3>
+                        <h3 className="text-[10px] font-mono uppercase tracking-[0.1em] text-muted-foreground">{t('Active Tokens')}</h3>
                     </div>
-                    <div className="text-2xl font-bold text-foreground">
+                    <div className="text-lg font-light text-foreground">
                         {oauthAnalytics.loading ? '...' : oauthAnalytics.activeTokens.toLocaleString()}
                     </div>
-                    <p className="text-xs text-muted-foreground">{t('Valid')}</p>
+                    <p className="text-[10px] text-muted-foreground">{t('Valid')}</p>
                 </div>
             </div>
 
             {/* System Information */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <div className="flex items-center justify-between mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="bg-card/70 p-4 border border-border/50">
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
-                            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mr-4 shadow-sm">
-                                <Activity className="w-7 h-7 text-primary" />
+                            <div className="w-8 h-8 bg-primary/10 flex items-center justify-center mr-3">
+                                <Activity className="w-4 h-4 text-primary" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('System Health')}</h3>
+                            <h3 className="text-sm font-medium text-foreground">{t('System Health')}</h3>
                         </div>
                         <Button
                             variant={keycloakConfig.hasAdminClient ? "default" : "outline"}
                             size="sm"
                             onClick={handleKeycloakConfig}
-                            className={`rounded-xl px-4 py-2 transition-all duration-200 ${
+                            className={`px-3 py-1.5 transition-all duration-200 ${
                                 keycloakConfig.hasAdminClient
                                     ? 'bg-foreground hover:bg-foreground/90 text-background border-transparent'
                                     : 'bg-muted/50 hover:bg-muted border-border text-foreground'
@@ -797,14 +797,14 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                     </div>
                     <div className="divide-y divide-border/50">
                         <div className="space-y-4">
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('API Response Time')}</span>
                                 <span className="text-foreground font-semibold flex items-center">
                                     <div className="w-3 h-3 bg-foreground rounded-full mr-3 animate-pulse shadow-lg"></div>
                                     {systemHealth.apiResponseTime > 0 ? `${systemHealth.apiResponseTime}ms` : '...'}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Keycloak Database')}</span>
                                 <div className="flex items-center">
                                     <CheckCircle className="w-5 h-5 text-foreground mr-2" />
@@ -813,7 +813,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Dynamic Client Registration')}</span>
                                 <div className="flex items-center">
                                     {keycloakConfig.hasAdminClient ? (
@@ -834,7 +834,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                     </span>
                                 </div>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Keycloak Realm')}</span>
                                 <span className="text-foreground font-semibold">
                                     {keycloakConfig.loading
@@ -843,7 +843,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                     }
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Keycloak URL')}</span>
                                 <span className="text-foreground font-semibold text-xs">
                                     {keycloakConfig.loading
@@ -854,31 +854,31 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                     }
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Keycloak Last Connected')}</span>
                                 <span className="text-foreground font-semibold">
                                     {systemHealth.keycloakLastConnected}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('System Uptime')}</span>
                                 <span className="text-foreground font-semibold">
                                     {systemHealth.systemUptime}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Memory Usage')}</span>
                                 <span className="text-foreground font-semibold">
                                     {systemHealth.memoryUsage}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Server Version')}</span>
                                 <span className="text-foreground font-semibold">
                                     {systemHealth.serverVersion}
                                 </span>
                             </div>
-                            <div className="flex justify-between items-center p-4 bg-muted/30 rounded-xl">
+                            <div className="flex justify-between items-center py-2 px-3 bg-muted/20">
                                 <span className="text-sm font-medium text-muted-foreground">{t('Door Management')}</span>
                                 <div className="flex items-center">
                                     {doorHealth?.connected ? (
@@ -907,19 +907,19 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                     </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-4 sm:p-6 lg:p-8 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="bg-card/70 p-4 border border-border/50">
+                    <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center">
-                            <div className="w-14 h-14 bg-orange-500/10 dark:bg-orange-400/20 rounded-2xl flex items-center justify-center mr-4 shadow-sm">
-                                <Database className="w-7 h-7 text-orange-600 dark:text-orange-400" />
+                            <div className="w-8 h-8 bg-orange-500/10 dark:bg-orange-400/20 flex items-center justify-center mr-3">
+                                <Database className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('FHIR Servers Health')}</h3>
+                            <h3 className="text-sm font-medium text-foreground">{t('FHIR Servers Health')}</h3>
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={() => onNavigate('fhir-servers')}
-                            className="bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/30 text-orange-700 dark:text-orange-300 rounded-xl px-4 py-2 transition-all duration-200"
+                            className="bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/30 text-orange-700 dark:text-orange-300 px-3 py-1.5 transition-all duration-200"
                         >
                             <Database className="w-4 h-4 mr-2" />
                             {t('Manage Servers')}
@@ -942,7 +942,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                             </div>
                         ) : fhirServersHealth.servers.length > 0 ? (
                             fhirServersHealth.servers.map((server, index) => (
-                                <div key={server.id || index} className={`flex items-center justify-between py-4 px-5 rounded-xl transition-all duration-200 border ${
+                                <div key={server.id || index} className={`flex items-center justify-between py-2.5 px-3 transition-colors duration-200 border ${
                                     server.supported && !server.error
                                         ? 'bg-emerald-500/5 dark:bg-emerald-400/10 hover:bg-emerald-500/10 dark:hover:bg-emerald-400/20 border-emerald-500/20 dark:border-emerald-400/30'
                                         : server.error
@@ -1015,20 +1015,20 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
             </div>
 
             {/* Enhanced Footer Info */}
-            <div className="bg-card/90 backdrop-blur-sm border border-border/50 rounded-2xl p-4 sm:p-6 shadow-lg">
+            <div className="bg-card/90 border border-border/50 p-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-xl">
-                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-primary" />
+                    <div className="flex items-center space-x-3 py-2 px-3 bg-muted/20">
+                        <div className="w-7 h-7 bg-primary/10 flex items-center justify-center">
+                            <Shield className="w-3.5 h-3.5 text-primary" />
                         </div>
                         <div>
                             <div className="text-sm font-semibold text-muted-foreground">{t('Platform (UI) Version')}</div>
                             <div className="text-lg font-bold text-foreground">v{config.version}</div>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-3 p-4 bg-muted/30 rounded-xl">
-                        <div className="w-10 h-10 bg-foreground/10 rounded-lg flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-foreground" />
+                    <div className="flex items-center space-x-3 py-2 px-3 bg-muted/20">
+                        <div className="w-7 h-7 bg-foreground/10 flex items-center justify-center">
+                            <CheckCircle className="w-3.5 h-3.5 text-foreground" />
                         </div>
                         <div>
                             <div className="text-sm font-semibold text-muted-foreground">{t('Environment')}</div>
