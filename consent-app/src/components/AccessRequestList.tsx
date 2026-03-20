@@ -9,7 +9,7 @@ import {
 import { format } from "date-fns"
 import {
   ShieldCheck,
-  ShieldOff,
+  Stethoscope,
   User,
   Clock,
   Eye,
@@ -19,6 +19,7 @@ import {
   Ban,
   FileText,
   Info,
+  AppWindow,
 } from "lucide-react"
 
 interface AccessRequestListProps {
@@ -76,29 +77,77 @@ function getStatusBadge(status?: string) {
   }
 }
 
-function getRequesterDisplay(task: Task): string {
-  // Try requester first, then owner, then code display
-  if (task.requester?.display) return task.requester.display
-  if (task.owner?.display) return task.owner.display
+/** Determine the requester type from the Task references */
+function getRequesterType(task: Task): "practitioner" | "app" | "unknown" {
+  const ref = task.requester?.reference ?? ""
+  if (ref.startsWith("Practitioner/")) return "practitioner"
+  // If requester is a Patient/ or Device/ reference, this likely came from an app on their behalf
+  if (ref.startsWith("Patient/") || ref.startsWith("Device/") || ref.startsWith("Organization/")) return "app"
+  return "unknown"
+}
+
+/** Get a meaningful requester name, avoiding confusing "Patient" labels */
+function getRequesterDisplay(task: Task): { name: string; source?: string } {
+  const requesterRef = task.requester?.reference ?? ""
+  const requesterDisplay = task.requester?.display ?? ""
+  const ownerDisplay = task.owner?.display ?? ""
+  const type = getRequesterType(task)
+
+  // Best case: requester is a Practitioner with a display name
+  if (type === "practitioner" && requesterDisplay) {
+    return { name: requesterDisplay }
+  }
+  if (type === "practitioner" && requesterRef) {
+    return { name: requesterRef.replace("Practitioner/", "Dr. ") }
+  }
+
+  // If the owner is a Practitioner (task was created by a practitioner app)
+  const ownerRef = task.owner?.reference ?? ""
+  if (ownerRef.startsWith("Practitioner/")) {
+    return { name: ownerDisplay || ownerRef.replace("Practitioner/", "Dr. ") }
+  }
+
+  // Requester is a Patient or Device — this came from an app
+  // Show the app/source info instead of the confusing "Patient ..." label
+  const sourceApp = task.meta?.source
+  if (sourceApp) {
+    return { name: sourceApp, source: "via app" }
+  }
+
   // For DTR tasks, try to get a meaningful name from the code
   const codeDisplay = task.code?.coding?.[0]?.display
-  if (codeDisplay && codeDisplay !== "Access Request") return codeDisplay
-  if (task.requester?.reference) {
-    // Extract readable reference like "Practitioner/123" → "Practitioner 123"
-    return task.requester.reference.replace(/\//g, " ")
+  if (codeDisplay && codeDisplay !== "Access Request") {
+    return { name: codeDisplay }
   }
-  return "Unknown requester"
+
+  // If the display contains "via" (e.g. "Patient via Dora Health App"),
+  // extract the app name as the meaningful part
+  if (requesterDisplay.toLowerCase().includes("via ")) {
+    const appName = requesterDisplay.split(/via\s+/i)[1]
+    if (appName) return { name: appName.trim(), source: "via app" }
+  }
+
+  // Last resort: show the reference type cleanly
+  if (requesterDisplay) return { name: requesterDisplay }
+  if (requesterRef) return { name: requesterRef.replace(/\//g, " ") }
+
+  return { name: "Unknown" }
 }
 
 /** Return a human-readable explanation of what the task is asking the patient to do */
 function getTaskExplanation(task: Task): string | null {
   const isDTR = task.code?.coding?.some(c => c.code === "complete-questionnaire" || c.system?.includes("dtr"))
   const isAccessRequest = task.code?.coding?.some(c => c.code === "access-request")
+  const type = getRequesterType(task)
+  const fromApp = type === "app" || type === "unknown"
 
   if (isDTR || task.description?.toLowerCase().includes("questionnaire")) {
-    return "A healthcare provider is asking you to complete a form. This may be required for prior authorization or documentation of a treatment."
+    return "You are being asked to complete a form. This may be required for prior authorization or documentation of a treatment."
   }
   if (isAccessRequest) {
+    if (fromApp) {
+      return "An application is requesting permission to access your health records on behalf of a care provider. Review the details and decide whether to approve."
+    }
     return "A healthcare provider is requesting permission to view your health records. You can approve or reject this request."
   }
   if (task.status === "requested" || task.status === "ready") {
@@ -116,6 +165,12 @@ function getPeriod(task: Task): string {
   return `${startFmt} — ${endFmt}`
 }
 
+function RequesterIcon({ type }: { type: "practitioner" | "app" | "unknown" }) {
+  if (type === "practitioner") return <Stethoscope className="size-4 text-primary" />
+  if (type === "app") return <AppWindow className="size-4 text-muted-foreground" />
+  return <User className="size-4 text-muted-foreground" />
+}
+
 export function AccessRequestList({
   requests,
   onApprove,
@@ -127,7 +182,7 @@ export function AccessRequestList({
         <ShieldCheck className="size-12 mx-auto mb-4 opacity-30" />
         <p className="text-lg font-medium">No access requests</p>
         <p className="text-sm">
-          When a practitioner requests access to your data, it will appear here.
+          When someone requests access to your data, it will appear here for your approval.
         </p>
       </div>
     )
@@ -140,13 +195,22 @@ export function AccessRequestList({
         const resourceTypes = getRequestResourceTypes(task)
         const action = getRequestAction(task)
         const explanation = getTaskExplanation(task)
+        const requesterType = getRequesterType(task)
+        const requester = getRequesterDisplay(task)
 
         return (
           <Card key={task.id}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <User className="size-4" />
-                {getRequesterDisplay(task)}
+                <RequesterIcon type={requesterType} />
+                <span>
+                  {requester.name}
+                  {requester.source && (
+                    <span className="text-xs font-normal text-muted-foreground ml-1.5">
+                      ({requester.source})
+                    </span>
+                  )}
+                </span>
               </CardTitle>
               <CardAction>{getStatusBadge(task.status)}</CardAction>
             </CardHeader>
@@ -196,7 +260,7 @@ export function AccessRequestList({
                     onClick={() => onApprove(task)}
                   >
                     <CheckCircle className="size-4" />
-                    Approve
+                    Grant Access
                   </Button>
                   <Button
                     size="sm"
@@ -204,7 +268,7 @@ export function AccessRequestList({
                     onClick={() => onReject(task)}
                   >
                     <XCircle className="size-4" />
-                    Reject
+                    Deny
                   </Button>
                 </div>
               )}
