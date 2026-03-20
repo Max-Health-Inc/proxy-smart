@@ -111,7 +111,7 @@ export function AdminApp() {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <Panel className="max-w-md mx-auto">
-                    <div className="text-center p-8">
+                    <div className="flex flex-col items-center text-center p-8">
                         <Spinner size="lg" />
                         <h2 className="mt-4 text-lg font-semibold text-foreground">
                             {t('Loading Admin Panel...')}
