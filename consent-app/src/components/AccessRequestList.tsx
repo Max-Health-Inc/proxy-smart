@@ -17,6 +17,8 @@ import {
   XCircle,
   Send,
   Ban,
+  FileText,
+  Info,
 } from "lucide-react"
 
 interface AccessRequestListProps {
@@ -31,6 +33,18 @@ function getStatusBadge(status?: string) {
       return (
         <Badge variant="warning">
           <Send className="size-3" /> Pending
+        </Badge>
+      )
+    case "ready":
+      return (
+        <Badge variant="warning">
+          <FileText className="size-3" /> Action Required
+        </Badge>
+      )
+    case "draft":
+      return (
+        <Badge variant="outline">
+          <FileText className="size-3" /> Draft
         </Badge>
       )
     case "accepted":
@@ -51,13 +65,46 @@ function getStatusBadge(status?: string) {
           <Ban className="size-3" /> Cancelled
         </Badge>
       )
+    case "completed":
+      return (
+        <Badge variant="success">
+          <CheckCircle className="size-3" /> Completed
+        </Badge>
+      )
     default:
       return <Badge variant="outline">{status ?? "unknown"}</Badge>
   }
 }
 
 function getRequesterDisplay(task: Task): string {
-  return task.requester?.display ?? task.requester?.reference ?? "Unknown practitioner"
+  // Try requester first, then owner, then code display
+  if (task.requester?.display) return task.requester.display
+  if (task.owner?.display) return task.owner.display
+  // For DTR tasks, try to get a meaningful name from the code
+  const codeDisplay = task.code?.coding?.[0]?.display
+  if (codeDisplay && codeDisplay !== "Access Request") return codeDisplay
+  if (task.requester?.reference) {
+    // Extract readable reference like "Practitioner/123" → "Practitioner 123"
+    return task.requester.reference.replace(/\//g, " ")
+  }
+  return "Unknown requester"
+}
+
+/** Return a human-readable explanation of what the task is asking the patient to do */
+function getTaskExplanation(task: Task): string | null {
+  const isDTR = task.code?.coding?.some(c => c.code === "complete-questionnaire" || c.system?.includes("dtr"))
+  const isAccessRequest = task.code?.coding?.some(c => c.code === "access-request")
+
+  if (isDTR || task.description?.toLowerCase().includes("questionnaire")) {
+    return "A healthcare provider is asking you to complete a form. This may be required for prior authorization or documentation of a treatment."
+  }
+  if (isAccessRequest) {
+    return "A healthcare provider is requesting permission to view your health records. You can approve or reject this request."
+  }
+  if (task.status === "requested" || task.status === "ready") {
+    return "A request has been made that requires your review and decision."
+  }
+  return null
 }
 
 function getPeriod(task: Task): string {
@@ -89,9 +136,10 @@ export function AccessRequestList({
   return (
     <div className="space-y-3">
       {requests.map((task) => {
-        const isPending = task.status === "requested"
+        const isActionable = task.status === "requested" || task.status === "ready"
         const resourceTypes = getRequestResourceTypes(task)
         const action = getRequestAction(task)
+        const explanation = getTaskExplanation(task)
 
         return (
           <Card key={task.id}>
@@ -103,6 +151,14 @@ export function AccessRequestList({
               <CardAction>{getStatusBadge(task.status)}</CardAction>
             </CardHeader>
             <CardContent>
+              {/* Contextual explanation */}
+              {explanation && (
+                <div className="flex gap-2 items-start text-sm text-muted-foreground bg-muted/50 border border-border/50 p-3 mb-3">
+                  <Info className="size-4 shrink-0 mt-0.5" />
+                  <span>{explanation}</span>
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground mb-3">
                 <span className="flex items-center gap-1.5">
                   <Clock className="size-3.5" />
@@ -115,13 +171,15 @@ export function AccessRequestList({
               </div>
 
               {/* Resource types */}
-              <div className="flex flex-wrap gap-1 mb-3">
-                {resourceTypes.map((rt) => (
-                  <Badge key={rt} variant="outline" className="text-xs">
-                    {rt}
-                  </Badge>
-                ))}
-              </div>
+              {resourceTypes.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {resourceTypes.map((rt) => (
+                    <Badge key={rt} variant="outline" className="text-xs">
+                      {rt}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               {/* Reason */}
               {task.description && task.description !== "Request to access patient data" && (
@@ -130,8 +188,8 @@ export function AccessRequestList({
                 </p>
               )}
 
-              {/* Actions for pending requests */}
-              {isPending && (
+              {/* Actions for pending/ready requests */}
+              {isActionable && (
                 <div className="flex gap-2 pt-2 border-t">
                   <Button
                     size="sm"
