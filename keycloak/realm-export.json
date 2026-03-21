@@ -514,10 +514,14 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://vscode.dev/redirect",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/*"
       ],
       "webOrigins": [
         "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://vscode.dev",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
       ],
       "protocol": "openid-connect",
