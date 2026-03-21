@@ -59,11 +59,18 @@ export async function getPatient(id: string): Promise<Patient> {
 }
 
 export async function searchPatients(query: string): Promise<Patient[]> {
-  return client.read().patient().searchAll({ name: query, _count: 20, _sort: "-_lastUpdated" })
+  const bundle = await client.read().patient().search({ name: query, _count: 20, _sort: "-_lastUpdated" })
+  const patients = bundle.entry?.filter(e => e.resource).map(e => e.resource!) ?? []
+  // Deduplicate by id (some servers return the same patient across search results)
+  const seen = new Set<string>()
+  return patients.filter(p => p.id && !seen.has(p.id) && seen.add(p.id))
 }
 
 export async function searchPatientByIdentifier(identifier: string): Promise<Patient[]> {
-  return client.read().patient().searchAll({ identifier, _count: 10 })
+  const bundle = await client.read().patient().search({ identifier, _count: 10 })
+  const patients = bundle.entry?.filter(e => e.resource).map(e => e.resource!) ?? []
+  const seen = new Set<string>()
+  return patients.filter(p => p.id && !seen.has(p.id) && seen.add(p.id))
 }
 
 // ── Practitioner (PAS-profiled) ──────────────────────────────────────────────

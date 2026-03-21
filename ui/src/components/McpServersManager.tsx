@@ -112,7 +112,7 @@ export function McpServersManager() {
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
     // Top-level tab state (MCP Servers vs Skills)
-    const [activeToolTab, setActiveToolTab] = useState<string>('mcp-servers');
+    const [activeToolTab, setActiveToolTab] = useState<string>('mcp-endpoint');
 
     // Skills state
     const [skills, setSkills] = useState<Skill[]>([]);
