@@ -27,16 +27,25 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Check if merge commit
+    - name: Check if skippable commit
       id: check_merge
       run: |
         PARENT_COUNT=$(git rev-list --parents -n 1 ${{ github.sha }} | awk '{print NF-1}')
+        COMMIT_MSG=$(git log -1 --pretty=format:"%s" ${{ github.sha }})
+        COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an" ${{ github.sha }})
+        
         if [ "$PARENT_COUNT" -gt 1 ]; then
           echo "is_merge=true" >> $GITHUB_OUTPUT
-          echo "⚠️  This is a merge commit - skipping AI summary"
+          echo "⚠️  Merge commit - skipping AI summary"
+        elif echo "$COMMIT_AUTHOR" | grep -qi "github-actions\|bot"; then
+          echo "is_merge=true" >> $GITHUB_OUTPUT
+          echo "⚠️  Bot commit ($COMMIT_AUTHOR) - skipping AI summary"
+        elif echo "$COMMIT_MSG" | grep -qiE "^🔄 Update version|^\[skip ci\]|^chore: update version"; then
+          echo "is_merge=true" >> $GITHUB_OUTPUT
+          echo "⚠️  Automated commit - skipping AI summary"
         else
           echo "is_merge=false" >> $GITHUB_OUTPUT
-          echo "✅ This is a regular commit - will generate AI summary"
+          echo "✅ Regular commit - will generate AI summary"
         fi
 
     - name: Set up Python 3.11
