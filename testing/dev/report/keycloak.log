@@ -1,28 +1,15 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-03-21 18:15:03,664 INFO  [io.qua.dep.QuarkusAugmentor] (main) Quarkus augmentation completed in 8059ms
-2026-03-21 18:15:06,724 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Starting Infinispan embedded cache manager
-2026-03-21 18:15:06,829 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for sessions to 10000 entries.
-2026-03-21 18:15:06,830 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for clientSessions to 10000 entries.
-2026-03-21 18:15:06,830 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for offlineSessions to 10000 entries.
-2026-03-21 18:15:06,830 INFO  [org.keycloak.quarkus.runtime.storage.infinispan.CacheManagerFactory] (main) Persistent user sessions enabled and no memory limit found in configuration. Setting max entries for offlineClientSessions to 10000 entries.
-2026-03-21 18:15:07,152 INFO  [org.infinispan.CONTAINER] (ForkJoinPool.commonPool-worker-1) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-03-21 18:15:07,706 INFO  [org.keycloak.broker.provider.AbstractIdentityProviderMapper] (main) Registering class org.keycloak.broker.provider.mappersync.ConfigSyncEventListener
-2026-03-21 18:15:08,618 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-
-UPDATE SUMMARY
-Run:                        144
-Previously run:               0
-Filtered out:                 0
--------------------------------
-Total change sets:          144
-
-2026-03-21 18:15:14,081 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 3 ResultSet(s) and 0 Statement(s)
-2026-03-21 18:15:14,082 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 150 ResultSet(s) and 0 Statement(s)
-2026-03-21 18:15:14,354 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_624656, Site name: null
-2026-03-21 18:15:14,654 WARN  [io.agroal.pool] (main) Datasource '<default>': JDBC resources leaked: 3 ResultSet(s) and 0 Statement(s)
-2026-03-21 18:15:14,660 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
-2026-03-21 18:15:14,681 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
-2026-03-21 18:15:14,681 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to run import
-2026-03-21 18:15:14,681 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Unrecognized field "userProfile" (class org.keycloak.representations.idm.RealmRepresentation), not marked as ignorable (144 known properties: "userFederationMappers", "rememberMe", "duplicateEmailsAllowed", "adminEventsDetailsEnabled", "users", "clientOfflineSessionMaxLifespan", "webAuthnPolicyRequireResidentKey", "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister", "components", "otpPolicyType", "accessCodeLifespanUserAction", "id", "webAuthnPolicyAttestationConveyancePreference", "enabledEventTypes", "applications", "webAuthnPolicyPasswordlessSignatureAlgorithms", "eventsListeners", "ssoSessionMaxLifespanRememberMe", "defaultDefaultClientScopes", "webAuthnPolicyPasswordlessCreateTimeout", "clientOfflineSessionIdleTimeout", "notBefore", "publicKey", "smtpServer", "clientPolicies", "resetPasswordAllowed", "webAuthnPolicyAvoidSameAuthenticatorRegister", "accessTokenLifespanForImplicitFlow", "webAuthnPolicyPasswordlessUserVerificationRequirement", "clientScopes", "internationalizationEnabled", "defaultRole", "accessTokenLifespan", "passwordCredentialGrantAllowed", "federatedUsers", "applicationScopeMappings" [truncated]])
+2026-03-21 18:33:53,563 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 13557ms
+Running the server in development mode. DO NOT use this configuration in production.
+2026-03-21 18:33:57,171 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
+2026-03-21 18:33:57,989 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-03-21 18:33:59,132 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-03-21 18:34:07,001 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-03-21 18:34:07,361 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_224745, Site name: null
+2026-03-21 18:34:07,566 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-03-21 18:34:07,725 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
+2026-03-21 18:34:07,749 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
+2026-03-21 18:34:07,749 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to run import
+2026-03-21 18:34:07,749 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Unrecognized field "userProfile" (class org.keycloak.representations.idm.RealmRepresentation), not marked as ignorable (148 known properties: "userFederationMappers", "rememberMe", "duplicateEmailsAllowed", "adminEventsDetailsEnabled", "users", "clientOfflineSessionMaxLifespan", "webAuthnPolicyRequireResidentKey", "webAuthnPolicyPasswordlessAvoidSameAuthenticatorRegister", "components", "otpPolicyType", "accessCodeLifespanUserAction", "id", "webAuthnPolicyAttestationConveyancePreference", "enabledEventTypes", "applications", "webAuthnPolicyPasswordlessSignatureAlgorithms", "eventsListeners", "ssoSessionMaxLifespanRememberMe", "defaultDefaultClientScopes", "webAuthnPolicyPasswordlessCreateTimeout", "clientOfflineSessionIdleTimeout", "notBefore", "publicKey", "smtpServer", "clientPolicies", "resetPasswordAllowed", "webAuthnPolicyAvoidSameAuthenticatorRegister", "accessTokenLifespanForImplicitFlow", "webAuthnPolicyPasswordlessUserVerificationRequirement", "verifiableCredentialsEnabled", "clientScopes", "internationalizationEnabled", "defaultRole", "accessTokenLifespan", "passwordCredentialGrantAllowed", "webAuthnPolicyPasswordlessPasskeysEnabled" [truncated]])
  at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 8, column: 19] (through reference chain: org.keycloak.representations.idm.RealmRepresentation["userProfile"])
-2026-03-21 18:15:14,681 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
+2026-03-21 18:34:07,749 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
