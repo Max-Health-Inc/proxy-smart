@@ -33,14 +33,14 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
   .get('/oauth-protected-resource', () => {
     const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
     const mcpPath = config.mcp?.path || '/mcp'
-    const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
-    const realm = config.keycloak.realm
 
     return {
       // RFC 9728: resource MUST match the protected resource URL
       resource: `${baseUrl}${mcpPath}`,
+      // Point to our own proxy so clients fetch our /.well-known/oauth-authorization-server
+      // which has the correct registration_endpoint (Keycloak's native DCR is blocked)
       authorization_servers: [
-        `${keycloakBase}/realms/${realm}`
+        baseUrl
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
@@ -66,13 +66,11 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
   .get('/oauth-protected-resource/*', () => {
     const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
     const mcpPath = config.mcp?.path || '/mcp'
-    const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
-    const realm = config.keycloak.realm
 
     return {
       resource: `${baseUrl}${mcpPath}`,
       authorization_servers: [
-        `${keycloakBase}/realms/${realm}`
+        baseUrl
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
