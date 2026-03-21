@@ -328,7 +328,12 @@ jobs:
                   break
                 else
                   echo "Push failed (attempt $i/3), pulling and retrying..."
-                  git pull origin ${{ inputs.source_branch }} --rebase
+                  git stash || true
+                  git pull origin ${{ inputs.source_branch }} --rebase || git rebase --abort
+                  git stash pop || true
+                  # Re-stage any unstaged changes after rebase
+                  git add -A
+                  git diff --staged --quiet || git commit --amend --no-edit
                 fi
               done
             fi
