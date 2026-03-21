@@ -67,10 +67,12 @@ async function proxyFHIR({ params, request, set }: any) {
       }
     }
 
-    // build target path
-    const parts = new URL(request.url).pathname.split('/').filter(Boolean)
+    // build target path (preserve query string for FHIR searches)
+    const requestUrl = new URL(request.url)
+    const parts = requestUrl.pathname.split('/').filter(Boolean)
     const resourcePath = parts.slice(3).join('/')
-    const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}`
+    const queryString = requestUrl.search
+    const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()
     request.headers.forEach((v: string, k: string) => k !== 'host' && k !== 'connection' && headers.set(k, v!))
