@@ -136,6 +136,7 @@ jobs:
         if: steps.extract.outputs.found != 'true'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_BRANCH: ${{ inputs.source_branch }}
         run: |
           # Find last release tag

@@ -107,11 +107,3 @@ jobs:
         echo "=========================================="
         cat summary.txt || echo "No summary generated"
         echo "=========================================="
-
-    - name: Upload summary artifact
-      if: steps.check_merge.outputs.is_merge == 'false'
-      uses: actions/upload-artifact@v4
-      with:
-        name: diff-summary-${{ github.sha }}
-        path: summary.txt
-        retention-days: 30
