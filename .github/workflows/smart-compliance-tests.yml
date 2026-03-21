@@ -63,9 +63,9 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
 
-# Only one Inferno test per branch at a time
+# Share concurrency group with releases to avoid git push races
 concurrency:
-  group: inferno-${{ github.ref }}
+  group: releases
   cancel-in-progress: false
 
 permissions:

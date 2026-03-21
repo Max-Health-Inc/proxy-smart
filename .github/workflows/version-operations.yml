@@ -321,8 +321,16 @@ jobs:
               esac
 
               git commit -m "$COMMIT_MSG"
-              git push origin HEAD
-              echo "✅ Committed version changes: $NEW_VERSION"
+              # Push with retry to handle concurrent workflow pushes
+              for i in 1 2 3; do
+                if git push origin HEAD; then
+                  echo "✅ Committed version changes: $NEW_VERSION"
+                  break
+                else
+                  echo "Push failed (attempt $i/3), pulling and retrying..."
+                  git pull origin ${{ inputs.source_branch }} --rebase
+                fi
+              done
             fi
           fi
 
