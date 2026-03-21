@@ -1206,7 +1206,9 @@ jobs:
           # Checkout develop branch and pull latest (to avoid race conditions with version updates)
           git fetch origin develop
           git checkout develop
+          git stash
           git pull origin develop --rebase || true
+          git stash pop || true
           
           # Restore and add report directory after branch switch
           cp -r /tmp/report-backup/* "$REPORT_DIR/"
@@ -1225,7 +1227,11 @@ jobs:
               break
             else
               echo "Push failed, retrying after pull..."
-              git pull origin develop --rebase
+              git stash
+              git pull origin develop --rebase || git rebase --abort
+              git stash pop || true
+              git add "$REPORT_DIR"
+              git diff --staged --quiet || git commit -m "chore(testing): update ${TEST_STAGE} SMART compliance report [skip ci]"
             fi
           done
         env:
