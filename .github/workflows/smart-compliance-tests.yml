@@ -63,10 +63,10 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
 
-# Share concurrency group with releases to avoid git push races
+# Cancel previous compliance test runs for the same trigger, but don't block releases
 concurrency:
-  group: releases
-  cancel-in-progress: false
+  group: compliance-tests-${{ github.event_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: write  # Required to commit test reports
