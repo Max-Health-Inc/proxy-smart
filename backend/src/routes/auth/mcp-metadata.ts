@@ -44,12 +44,12 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
-      // Keep scopes_supported focused on resource scopes; OIDC scopes are
-      // negotiated with the AS and need not be duplicated here
+      // Only advertise scopes that actually exist in Keycloak.
+      // MCP clients (VS Code, Claude Desktop) will request these during OAuth.
       scopes_supported: [
-        'backend:read',
-        'backend:write',
-        'backend:admin'
+        'openid',
+        'profile',
+        'email'
       ]
     }
   }, {
