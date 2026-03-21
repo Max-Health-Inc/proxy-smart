@@ -1,4 +1,4 @@
-FROM quay.io/keycloak/keycloak:26.5.2
+FROM quay.io/keycloak/keycloak:26.5.6
 
 # Copy the realm export file (will be overridden by docker-compose volume mount if needed)
 COPY keycloak/realm-export.json /opt/keycloak/data/import/realm-export.json
