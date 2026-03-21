@@ -5,59 +5,6 @@
   "attributes": {
     "userProfileEnabled": "true"
   },
-  "userProfile": {
-    "attributes": [
-      {
-        "name": "username",
-        "displayName": "${username}",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin", "user"] },
-        "multivalued": false
-      },
-      {
-        "name": "email",
-        "displayName": "${email}",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin", "user"] },
-        "multivalued": false
-      },
-      {
-        "name": "firstName",
-        "displayName": "${firstName}",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin", "user"] },
-        "multivalued": false
-      },
-      {
-        "name": "lastName",
-        "displayName": "${lastName}",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin", "user"] },
-        "multivalued": false
-      },
-      {
-        "name": "fhirUser",
-        "displayName": "FHIR User Reference",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin"] },
-        "multivalued": false
-      },
-      {
-        "name": "smart_patient",
-        "displayName": "SMART Patient Context",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin"] },
-        "multivalued": false
-      },
-      {
-        "name": "smart_encounter",
-        "displayName": "SMART Encounter Context",
-        "permissions": { "view": ["admin", "user"], "edit": ["admin"] },
-        "multivalued": false
-      }
-    ],
-    "groups": [
-      {
-        "name": "user-metadata",
-        "displayHeader": "User metadata",
-        "displayDescription": "Attributes, which refer to user metadata"
-      }
-    ]
-  },
   "displayNameHtml": "<div class=\"kc-logo-text\"><span>Proxy Smart</span></div>",
   "accessTokenLifespan": 3600,
   "accessTokenLifespanForImplicitFlow": 900,
@@ -1164,5 +1111,15 @@
         }
       ]
     }
-  ]
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "config": {
+          "kc.user.profile.config": ["{\"attributes\":[{\"name\":\"username\",\"displayName\":\"${username}\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"email\",\"displayName\":\"${email}\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"firstName\",\"displayName\":\"${firstName}\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"lastName\",\"displayName\":\"${lastName}\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\",\"user\"]},\"multivalued\":false},{\"name\":\"fhirUser\",\"displayName\":\"FHIR User Reference\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"smart_patient\",\"displayName\":\"SMART Patient Context\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false},{\"name\":\"smart_encounter\",\"displayName\":\"SMART Encounter Context\",\"permissions\":{\"view\":[\"admin\",\"user\"],\"edit\":[\"admin\"]},\"multivalued\":false}],\"groups\":[{\"name\":\"user-metadata\",\"displayHeader\":\"User metadata\",\"displayDescription\":\"Attributes, which refer to user metadata\"}]}"]
+        }
+      }
+    ]
+  }
 }
