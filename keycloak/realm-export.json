@@ -514,14 +514,10 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:*",
-        "http://127.0.0.1:*",
-        "https://vscode.dev/redirect",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/*"
       ],
       "webOrigins": [
         "http://localhost:*",
-        "http://127.0.0.1:*",
-        "https://vscode.dev",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
       ],
       "protocol": "openid-connect",
@@ -554,6 +550,71 @@
         "backchannel.logout.revoke.offline.tokens": "false",
         "use.refresh.tokens": "true",
         "exclude.session.state.from.auth.response": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "mcp-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "http://localhost:8445/mcp",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "mcp-client",
+      "name": "MCP Client",
+      "description": "Generic OAuth client for MCP-compatible tools (VS Code, Claude Desktop, IDE plugins, CLI agents)",
+      "enabled": true,
+      "clientAuthenticatorType": "client-dummy",
+      "redirectUris": [
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://vscode.dev/redirect",
+        "https://insiders.vscode.dev/redirect"
+      ],
+      "webOrigins": [
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "https://vscode.dev",
+        "https://insiders.vscode.dev"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "attributes": {
+        "smart_app": "true",
+        "smart_version": "2.0.0",
+        "client_type": "mcp-client",
+        "pkce.code.challenge.method": "S256",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true"
       },
       "protocolMappers": [
         {
