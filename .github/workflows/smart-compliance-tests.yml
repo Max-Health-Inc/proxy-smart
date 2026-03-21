@@ -664,12 +664,14 @@ jobs:
           # ── Step 5: Quick token test via direct access grant ──
           echo ""
           echo "Testing token endpoint (direct access grant)..."
-          BACKEND_URL="${{ steps.config.outputs.fhir_url }}"
-          # Extract base URL (remove the FHIR path)
-          BASE_URL=$(echo "$BACKEND_URL" | sed 's|/proxy-smart-backend.*||')
+          if [ "${{ steps.config.outputs.target }}" = "deployed" ]; then
+            BASE_URL="${{ steps.config.outputs.backend_url }}"
+          else
+            BASE_URL="http://localhost:${{ steps.config.outputs.backend_port }}"
+          fi
           TOKEN_RESP=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/auth/token" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -d "grant_type=password&client_id=$CLIENT_ID&username=testuser&password=testpass&scope=openid")
+            -d "grant_type=password&client_id=$CLIENT_ID&username=${{ steps.config.outputs.kc_username }}&password=${{ steps.config.outputs.kc_password }}&scope=openid")
           TOKEN_HTTP=$(echo "$TOKEN_RESP" | tail -1)
           TOKEN_BODY=$(echo "$TOKEN_RESP" | head -n -1)
           if [ "$TOKEN_HTTP" = "200" ]; then
