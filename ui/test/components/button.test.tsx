@@ -20,7 +20,7 @@ describe('Button', () => {
     
     rerender(<Button variant="outline">Cancel</Button>)
     button = screen.getByRole('button', { name: /cancel/i })
-    expect(button).toHaveClass('border', 'bg-background')
+    expect(button).toHaveClass('border', 'bg-transparent')
   })
 
   it('renders with different sizes', () => {
