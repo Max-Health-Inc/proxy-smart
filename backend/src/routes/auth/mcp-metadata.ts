@@ -31,21 +31,19 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
    * 5. Initiate OAuth flow
    */
   .get('/oauth-protected-resource', () => {
-    const baseUrl = config.baseUrl || 'http://localhost:3001'
+    const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+    const mcpPath = config.mcp?.path || '/mcp'
     const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
     const realm = config.keycloak.realm
 
     return {
-      resource: baseUrl,
-      // Per RFC 9728, point to the actual Authorization Server(s)
-      // so clients discover consistent metadata and issuer
+      // RFC 9728: resource MUST match the protected resource URL
+      resource: `${baseUrl}${mcpPath}`,
       authorization_servers: [
         `${keycloakBase}/realms/${realm}`
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
-      // Only advertise scopes that actually exist in Keycloak.
-      // MCP clients (VS Code, Claude Desktop) will request these during OAuth.
       scopes_supported: [
         'openid',
         'profile',
@@ -56,6 +54,38 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
     detail: {
       summary: 'Get Protected Resource Metadata',
       description: 'Returns OAuth 2.0 Protected Resource Metadata (RFC 9728) for MCP authorization discovery',
+      tags: ['mcp-authorization']
+    },
+    response: {
+      200: ProtectedResourceMetadata
+    }
+  })
+
+  // Path-based resource metadata discovery (RFC 9728 §5.1)
+  // Clients may request /.well-known/oauth-protected-resource{path} for path-scoped resources
+  .get('/oauth-protected-resource/*', () => {
+    const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+    const mcpPath = config.mcp?.path || '/mcp'
+    const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
+    const realm = config.keycloak.realm
+
+    return {
+      resource: `${baseUrl}${mcpPath}`,
+      authorization_servers: [
+        `${keycloakBase}/realms/${realm}`
+      ],
+      bearer_methods_supported: ['header'],
+      resource_documentation: `${baseUrl}/docs`,
+      scopes_supported: [
+        'openid',
+        'profile',
+        'email'
+      ]
+    }
+  }, {
+    detail: {
+      summary: 'Get Protected Resource Metadata (path-scoped)',
+      description: 'Path-scoped OAuth 2.0 Protected Resource Metadata (RFC 9728 §5.1)',
       tags: ['mcp-authorization']
     },
     response: {
