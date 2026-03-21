@@ -176,6 +176,7 @@ jobs:
           DELIMITER="CHANGELOG_$(openssl rand -hex 8)"
           echo "changelog<<${DELIMITER}" >> $GITHUB_OUTPUT
           cat changelog.txt >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
           echo "${DELIMITER}" >> $GITHUB_OUTPUT
 
   # Build and test
