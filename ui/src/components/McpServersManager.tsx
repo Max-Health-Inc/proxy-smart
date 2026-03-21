@@ -652,13 +652,13 @@ export function McpServersManager() {
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
                     <div className="flex-1">
                         <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
-                            {t('AI Tools')}
+                            {t('MCP Configuration')}
                         </h1>
                         <div className="text-muted-foreground flex items-center text-lg">
                             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                                 <Sparkles className="w-5 h-5 text-primary" />
                             </div>
-                            {t('MCP Servers & Skills')}
+                            {t('Manage MCP servers and endpoints')}
                         </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -697,19 +697,11 @@ export function McpServersManager() {
             {/* Top-level Tool Type Tabs */}
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={activeToolTab} onValueChange={setActiveToolTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
-                    <TabsTrigger value="mcp-servers" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-                        <Server className="w-4 h-4" />
-                        <span>{t('MCP Servers')} ({servers.length})</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="mcp-endpoint" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-                        <Radio className="w-4 h-4" />
-                        <span>{t('MCP Endpoint')}</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="skills" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-                        <BookOpen className="w-4 h-4" />
-                        <span>{t('Skills')} ({skills.length})</span>
-                    </TabsTrigger>
+                {/* TabsList hidden for now — can be re-enabled later when Skills tab is needed */}
+                <TabsList className="hidden">
+                    <TabsTrigger value="mcp-servers" />
+                    <TabsTrigger value="mcp-endpoint" />
+                    <TabsTrigger value="skills" />
                 </TabsList>
 
                 <TabsContent value="mcp-servers" className="p-6 space-y-6">
