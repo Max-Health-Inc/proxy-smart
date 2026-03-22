@@ -35,14 +35,14 @@ export const applyDecrypt = (cipherText: string): string => {
 
     // If decryption fails, bytes.toString() returns empty string
     if (!decrypted) {
-      console.warn("Decryption failed, returning original text");
-      return cipherText;
+      console.warn("Decryption produced empty result — clearing stale data");
+      return '';
     }
 
     return decrypted;
   } catch (error) {
     console.error("Decryption failed:", error);
-    // Return the original cipher text if decryption fails (fallback)
-    return cipherText;
+    // Return empty string so callers treat this as missing data
+    return '';
   }
 };

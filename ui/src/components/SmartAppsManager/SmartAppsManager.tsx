@@ -64,7 +64,7 @@ export function SmartAppsManager() {
     const loadScopeSets = async () => {
       try {
         const saved = await getItem<ScopeSet[]>('smart-scope-sets');
-        if (saved) {
+        if (Array.isArray(saved)) {
           setScopeSets(saved);
         }
       } catch (error) {
@@ -80,12 +80,13 @@ export function SmartAppsManager() {
       try {
         setLoading(true);
         const fetchedApps = await clientApis.smartApps.getAdminSmartApps();
+        const appsList = Array.isArray(fetchedApps) ? fetchedApps : [];
         
-        setBackendApps(fetchedApps);
+        setBackendApps(appsList);
         
-        if (fetchedApps.length > 0) {
+        if (appsList.length > 0) {
           // Convert backend apps to our format
-          const convertedApps: SmartApp[] = fetchedApps.map((backendApp: SmartApp) => ({
+          const convertedApps: SmartApp[] = appsList.map((backendApp: SmartApp) => ({
             ...backendApp, // Inherit all API model fields (includes clientAuthenticatorType)
             // UI-specific computed/helper fields
             scopeSetId: undefined,
