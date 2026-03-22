@@ -856,6 +856,41 @@
         "backchannel.logout.revoke.offline.tokens": "false",
         "use.refresh.tokens": "true"
       }
+    },
+    {
+      "clientId": "inferno-backend-services",
+      "name": "Inferno Backend Services Client",
+      "description": "Confidential SMART Backend Services client for Inferno compliance testing. Uses asymmetric JWT (RS384) for client authentication with client_credentials grant.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-jwt",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "consentRequired": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "system/*.read",
+        "system/*.write",
+        "system/*.*"
+      ],
+      "attributes": {
+        "use.jwks.string": "true",
+        "jwks.string": "{\"keys\":[{\"kty\":\"RSA\",\"n\":\"k0j6wRB70KDa9_dmmTINZau8XOVIwDJEAGFJv7j2xbSYx11ZY9FJ7QiFes9E_MxFGTo_GkO3KlQ1MlQrdo08aoraB79sN1Pmr_A-6rLO6b7Y_yq3LHLoz2B7icTcIQ2zAPnWFumlASuQtisTdfsLifrOUHPsFGggBnRYSvO3P97msCROvQVAo243THv5RfsJ2_1e4ntiw4dVyZZ4rdjxPRyXT8oVHDtjcAnvki6WHsNZg7hc3BO5__nuNvP4c089kksnzKIP_CgAn1Xkzr97dsv8PFYUVjSPBTzS_Nd4pV42M6bCvrEx21wMrWuuFOpH82G680eQ8DU6ZBLCtu6r-w\",\"e\":\"AQAB\",\"use\":\"sig\",\"alg\":\"RS384\",\"kid\":\"inferno-backend-services-key-1\"}]}",
+        "token.endpoint.auth.signing.alg": "RS384",
+        "access.token.lifespan": "300"
+      }
     }
   ],
   "users": [

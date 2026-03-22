@@ -1062,8 +1062,8 @@ jobs:
           echo "Test Groups:"
           echo "  1. Standalone Launch (Discovery + OAuth + OpenID Connect + Token Refresh)"
           echo "  2. Token Introspection (uses tokens from Standalone Launch)"
-          echo "  3. EHR Launch — SKIPPED (requires EHR launch context simulation)"
-          echo "  4. Backend Services — SKIPPED (requires confidential client with asymmetric auth)"
+          echo "  3. Backend Services (client_credentials + asymmetric JWT)"
+          echo "  4. EHR Launch — SKIPPED (requires EHR launch context simulation)"
           echo ""
           
           # Copy the script to the Playwright directory and run it from there

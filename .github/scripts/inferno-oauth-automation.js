@@ -4,12 +4,13 @@
  * Runs the following test groups from the Inferno smart_stu2_2 suite:
  *   1. Standalone Launch — Discovery + OAuth + OpenID Connect + Token Refresh
  *   2. Token Introspection — Validates introspection of tokens from Standalone Launch
+ *   3. Backend Services — Validates client_credentials grant with asymmetric JWT (RS384)
  *   
  * Not yet automated (require infrastructure changes):
- *   3. EHR Launch — Requires EHR launch context simulation (launch parameter)
- *   4. Backend Services — Requires confidential client with asymmetric JWT auth (JWK Set)
+ *   4. EHR Launch — Requires EHR launch context simulation (launch parameter)
  * 
  * OAuth flow is handled via Playwright (headless Chromium) to automate Keycloak login.
+ * Backend Services uses machine-to-machine auth (no browser needed).
  */
 
 const { chromium } = require('playwright');
@@ -24,6 +25,7 @@ const KC_PASSWORD = process.env.KC_PASSWORD || 'testpass';
 
 // Inferno client configuration
 const CLIENT_ID = process.env.CLIENT_ID || 'inferno-test-client';
+const BACKEND_SERVICES_CLIENT_ID = process.env.BACKEND_SERVICES_CLIENT_ID || 'inferno-backend-services';
 
 // Inferno test group IDs for SMART STU2.2 suite
 const GROUP_IDS = {
@@ -328,6 +330,98 @@ async function runTokenIntrospectionTests(sessionId, browser) {
   }
 }
 
+/**
+ * Build the backend_services_smart_auth_info JSON input for Inferno.
+ * Backend Services uses client_credentials grant with asymmetric JWT (RS384).
+ * The private JWKS is read from BACKEND_SERVICES_JWKS env var or a fixture file.
+ */
+function buildBackendServicesSmartAuthInfo() {
+  let privateJwksJson = process.env.BACKEND_SERVICES_JWKS;
+  if (!privateJwksJson) {
+    // Try reading from the fixture file shipped in the repo
+    // Check each test stage directory (alpha, dev, etc.)
+    const fs = require('fs');
+    const path = require('path');
+    const testStage = process.env.TEST_STAGE || 'dev';
+    const jwksFilename = 'backend-services-private-jwks.json';
+    const candidates = [
+      // Stage-specific path first (e.g. testing/alpha/)
+      path.resolve(__dirname, `../../testing/${testStage}/${jwksFilename}`),
+      // Fallback to dev
+      path.resolve(__dirname, `../../testing/dev/${jwksFilename}`),
+      // CWD-relative
+      path.resolve(process.cwd(), `testing/${testStage}/${jwksFilename}`),
+      path.resolve(process.cwd(), `testing/dev/${jwksFilename}`),
+      // CI copies the script to /tmp/playwright-setup, so try GITHUB_WORKSPACE
+      process.env.GITHUB_WORKSPACE
+        ? path.resolve(process.env.GITHUB_WORKSPACE, `testing/${testStage}/${jwksFilename}`)
+        : null,
+      process.env.GITHUB_WORKSPACE
+        ? path.resolve(process.env.GITHUB_WORKSPACE, `testing/dev/${jwksFilename}`)
+        : null
+    ].filter(Boolean);
+
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) {
+        privateJwksJson = fs.readFileSync(candidate, 'utf-8');
+        console.log(`  Loaded private JWKS from ${candidate}`);
+        break;
+      }
+    }
+  }
+
+  if (!privateJwksJson) {
+    throw new Error('Backend Services private JWKS not found. Set BACKEND_SERVICES_JWKS env var or place testing/<stage>/backend-services-private-jwks.json');
+  }
+
+  return JSON.stringify({
+    auth_type: 'backend_services',
+    client_id: BACKEND_SERVICES_CLIENT_ID,
+    requested_scopes: 'system/*.read',
+    encryption_method: 'RS384',
+    backend_services_jwks: privateJwksJson.trim()
+  });
+}
+
+/**
+ * Run the Backend Services test group.
+ * Uses client_credentials grant with JWT client assertion (RS384).
+ * This is a machine-to-machine flow — no browser/OAuth needed.
+ */
+async function runBackendServicesTests(sessionId) {
+  console.log('\n=== Running Backend Services Tests ===\n');
+
+  try {
+    const groups = await getTestGroups(TEST_SUITE);
+    const backendGroup = groups.find(g => g.id === GROUP_IDS.BACKEND_SERVICES);
+
+    if (!backendGroup) {
+      console.log('Backend Services group not found, skipping...');
+      return null;
+    }
+
+    console.log(`Running test group: ${backendGroup.id} — ${backendGroup.title}`);
+
+    const backendAuthInfo = buildBackendServicesSmartAuthInfo();
+    console.log('Auth info:', backendAuthInfo);
+
+    const inputs = [
+      { name: 'url', value: FHIR_SERVER_URL },
+      { name: 'backend_services_smart_auth_info', value: backendAuthInfo }
+    ];
+
+    const run = await runTestGroup(sessionId, backendGroup.id, inputs);
+    // No browser needed — Backend Services is non-interactive
+    return await waitForSimpleTestCompletion(sessionId, run.id);
+
+  } catch (error) {
+    console.error('Backend Services tests error:', error.message);
+    // Don't throw — Backend Services failure shouldn't block the pipeline yet
+    console.log('WARNING: Backend Services tests failed but continuing...');
+    return null;
+  }
+}
+
 async function waitForSimpleTestCompletion(sessionId, runId, browser = null) {
   const maxWait = 180000; // 3 minutes
   const startTime = Date.now();
@@ -617,9 +711,9 @@ async function main() {
   console.log('Groups to run:');
   console.log('  1. Standalone Launch (OAuth + OIDC + Token Refresh)');
   console.log('  2. Token Introspection');
+  console.log('  3. Backend Services (client_credentials + JWT assertion)');
   console.log('  --- SKIPPED ---');
-  console.log('  3. EHR Launch (requires launch context API)');
-  console.log('  4. Backend Services (requires confidential client + JWK Set)');
+  console.log('  4. EHR Launch (requires launch context API)');
   console.log('');
   
   let browser;
@@ -680,6 +774,9 @@ async function main() {
     
     // Group 2: Token Introspection (uses tokens from Standalone Launch)
     const introspectionResult = await runTokenIntrospectionTests(session.id, browser);
+    
+    // Group 3: Backend Services (client_credentials with JWT assertion — no browser needed)
+    const backendServicesResult = await runBackendServicesTests(session.id);
     
     // Get all results across all groups
     const results = await getSessionResults(session.id);

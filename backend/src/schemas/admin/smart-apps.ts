@@ -78,6 +78,7 @@ export const CreateSmartAppRequest = t.Object({
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   publicKey: t.Optional(t.String({ description: 'Public key for JWT authentication (PEM format)' })),
   jwksUri: t.Optional(t.String({ description: 'JWKS URI for JWT authentication' })),
+  jwksString: t.Optional(t.String({ description: 'Inline JWKS JSON string containing public keys for JWT authentication (alternative to jwksUri or publicKey)' })),
   systemScopes: t.Optional(t.Array(t.String(), { description: 'System-level scopes for backend services' })),
   
   // Additional UI/metadata fields
@@ -130,6 +131,7 @@ export const UpdateSmartAppRequest = t.Object({
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   publicKey: t.Optional(t.String({ description: 'Public key for JWT authentication (PEM format)' })),
   jwksUri: t.Optional(t.String({ description: 'JWKS URI for JWT authentication' })),
+  jwksString: t.Optional(t.String({ description: 'Inline JWKS JSON string containing public keys for JWT authentication (alternative to jwksUri or publicKey)' })),
   systemScopes: t.Optional(t.Array(t.String(), { description: 'System-level scopes for backend services' })),
   
   // Additional UI/metadata fields
