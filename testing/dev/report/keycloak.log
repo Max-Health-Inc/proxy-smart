@@ -1,6 +1,1 @@
-Updating the configuration and installing your custom providers, if any. Please wait.
-2026-03-22 00:25:02,182 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 11738ms
-Running the server in development mode. DO NOT use this configuration in production.
-2026-03-22 00:25:05,720 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
-2026-03-22 00:25:06,600 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-03-22 00:25:07,809 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+Error response from daemon: No such container: keycloak
