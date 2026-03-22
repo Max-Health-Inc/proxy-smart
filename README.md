@@ -11,6 +11,12 @@
   <a href="https://hl7.org/fhir/R4/"><img src="https://img.shields.io/badge/FHIR-R4%2FR4B-orange.svg" alt="FHIR R4/R4B"></a>
 </p>
 
+<!-- Compliance Badges -->
+<p align="center">
+  <a href="http://hl7.org/fhir/smart-app-launch/"><img src="https://img.shields.io/badge/SMART%20STU2.2-Compliant-2563eb?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik05IDEybDIgMiA0LTQiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjwvc3ZnPg==" alt="SMART STU2.2 Compliant"></a>
+  <a href="https://github.com/Max-Health-Inc/proxy-smart/actions/workflows/smart-compliance-tests.yml"><img src="https://github.com/Max-Health-Inc/proxy-smart/actions/workflows/smart-compliance-tests.yml/badge.svg" alt="Inferno Tests"></a>
+</p>
+
 <!-- Tech Stack Badges -->
 <p align="center">
   <img src="https://img.shields.io/badge/Bun-1.x-f9f1e1?logo=bun" alt="Bun">

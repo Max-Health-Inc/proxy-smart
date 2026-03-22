@@ -98,6 +98,27 @@
     }
     .nav-links a:hover { color: rgba(255, 255, 255, .7); }
 
+    /* ── Mobile Menu Toggle ────────────────────────────────────────────── */
+    .nav-toggle {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      padding: .5rem; margin-right: -.5rem;
+    }
+    .nav-toggle span {
+      display: block;
+      width: 20px; height: 1.5px;
+      background: rgba(255, 255, 255, .5);
+      transition: all .3s;
+    }
+    .nav-toggle span + span { margin-top: 5px; }
+    .nav-toggle[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(6.5px) rotate(45deg);
+    }
+    .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .nav-toggle[aria-expanded="true"] span:nth-child(3) {
+      transform: translateY(-6.5px) rotate(-45deg);
+    }
+
     /* ── Hero ─────────────────────────────────────────────────────────── */
     .hero {
       position: relative;
@@ -146,6 +167,34 @@
       background: rgba(255, 255, 255, .2);
       animation: lineGrow .8s ease-out 1s both;
     }
+
+    /* ── Badges ────────────────────────────────────────────────────────── */
+    .hero-badges {
+      display: flex; gap: .75rem; justify-content: center;
+      flex-wrap: wrap; margin-bottom: 2rem;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-family: var(--font-mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      padding: .35rem .75rem;
+      border: 1px solid rgba(255, 255, 255, .1);
+      background: rgba(255, 255, 255, .03);
+      color: rgba(255, 255, 255, .6);
+      transition: all .3s;
+      text-decoration: none;
+    }
+    .hero-badge:hover {
+      border-color: rgba(255, 255, 255, .25);
+      color: rgba(255, 255, 255, .9);
+      background: rgba(255, 255, 255, .06);
+    }
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .badge-dot.green { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.4); }
+    .badge-dot.blue { background: #60a5fa; box-shadow: 0 0 6px rgba(96,165,250,.4); }
     .hero h1 {
       font-weight: 300;
       font-size: clamp(2.5rem, 6vw, 5rem);
@@ -468,15 +517,78 @@
     footer a { color: rgba(255, 255, 255, .4); transition: color .3s; }
     footer a:hover { color: rgba(255, 255, 255, .7); }
 
-    /* ── Responsive ───────────────────────────────────────────────────── */
-    @media (max-width: 640px) {
-      .hero h1 { font-size: 2rem; }
-      .stat-value { font-size: 1.5rem; }
-      .arch { flex-direction: column; }
-      .arch-arrow { transform: rotate(90deg); }
-      .nav-links { gap: .75rem; }
-      table { font-size: .8rem; }
-      .statement p { font-size: 1.25rem; }
+    /* ── Responsive: Tablet (≤ 1024px) ─────────────────────────────── */
+    @media (max-width: 1024px) {
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ── Responsive: Small tablet (≤ 768px) ────────────────────────── */
+    @media (max-width: 768px) {
+      .nav-toggle { display: flex; flex-direction: column; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        flex-direction: column;
+        background: rgba(0, 0, 0, .95);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, .05);
+        padding: 1rem 1.5rem;
+        gap: 0;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links li { padding: .5rem 0; }
+      .nav-links a { font-size: 12px; }
+
+      .hero { padding: 5rem 1.25rem; min-height: 90vh; }
+      .hero-sub { font-size: 1rem; }
+      .container { padding: 0 1.25rem; }
+
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .features { grid-template-columns: 1fr; }
+      .app-store-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+
+      .statement { padding: 5rem 0; }
+      .statement p { font-size: clamp(1.25rem, 4vw, 2rem); }
+
+      .arch { gap: 1rem; }
+
+      .code-block { padding: 1rem; }
+      .code-block pre { font-size: .75rem; }
+
+      section { padding: 3.5rem 0; }
+      .footer-inner { flex-direction: column; text-align: center; gap: 1rem; }
+    }
+
+    /* ── Responsive: Phone (≤ 480px) ───────────────────────────────── */
+    @media (max-width: 480px) {
+      .hero { padding: 4rem 1rem; min-height: 85vh; }
+      .hero h1 { font-size: clamp(1.75rem, 8vw, 2.25rem); }
+      .hero-sub { font-size: .9rem; margin-bottom: 2rem; }
+      .hero-eyebrow { margin-bottom: 2rem; }
+      .hero-eyebrow span { font-size: 9px; letter-spacing: .2em; }
+      .hero-actions { flex-direction: column; align-items: center; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
+
+      .container { padding: 0 1rem; }
+      section { padding: 2.5rem 0; }
+
+      .stat-value { font-size: 1.35rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+      .arch { flex-direction: column; gap: .75rem; }
+      .arch-arrow { transform: rotate(90deg); font-size: 1.2rem; }
+      .arch-box { min-width: unset; width: 100%; }
+
+      table { font-size: .8rem; display: block; overflow-x: auto; }
+
+      .statement { padding: 3.5rem 0; }
+
+      .scroll-indicator { bottom: 1.5rem; }
+
+      .code-block { margin: 0 -1rem; border-left: none; border-right: none; }
     }
   </style>
 </head>
@@ -488,7 +600,10 @@
   <nav>
     <div class="nav-inner">
       <span class="nav-brand">Proxy Smart</span>
-      <ul class="nav-links">
+      <button class="nav-toggle" aria-expanded="false" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
         <li><a href="#features">Features</a></li>
         <li><a href="#appstore">App Store</a></li>
         <li><a href="#architecture">Architecture</a></li>
@@ -508,6 +623,17 @@
         <span class="hero-eyebrow-line"></span>
         <span>Open Source &middot; SMART App Launch 2.2.0</span>
         <span class="hero-eyebrow-line"></span>
+      </div>
+
+      <div class="hero-badges fade-in-d1">
+        <a href="http://hl7.org/fhir/smart-app-launch/" class="hero-badge" target="_blank" rel="noopener">
+          <span class="badge-dot blue"></span>
+          SMART STU2.2 Compliant
+        </a>
+        <a href="https://github.com/Max-Health-Inc/proxy-smart/actions/workflows/smart-compliance-tests.yml" class="hero-badge" target="_blank" rel="noopener">
+          <span class="badge-dot green"></span>
+          Inferno Tests Passing
+        </a>
       </div>
 
       <h1>
@@ -752,5 +878,26 @@
     </footer>
 
   </div>
+
+  <script>
+    /* Mobile nav toggle */
+    (function() {
+      var toggle = document.querySelector('.nav-toggle');
+      var links = document.getElementById('navLinks');
+      if (!toggle || !links) return;
+      toggle.addEventListener('click', function() {
+        var open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!open));
+        links.classList.toggle('open');
+      });
+      /* Close menu on link click */
+      links.querySelectorAll('a').forEach(function(a) {
+        a.addEventListener('click', function() {
+          toggle.setAttribute('aria-expanded', 'false');
+          links.classList.remove('open');
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
