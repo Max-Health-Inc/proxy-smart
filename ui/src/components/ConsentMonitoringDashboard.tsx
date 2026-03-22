@@ -62,7 +62,7 @@ async function getToken(): Promise<string | null> {
 }
 
 const CHART_COLORS = [
-  'hsl(var(--primary))',
+  'var(--primary)',
   '#10b981',
   '#f59e0b',
   '#ef4444',
@@ -434,8 +434,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                           <Tooltip
                             labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }}
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px',
                               boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                             }}
@@ -476,8 +476,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                           <YAxis dataKey="name" type="category" width={120} className="text-muted-foreground" />
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px',
                             }}
                           />
@@ -673,15 +673,15 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                           <Tooltip
                             labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }}
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px',
                             }}
                           />
                           <Legend />
                           <Line type="monotone" dataKey="permit" name={t('Permit')} stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
                           <Line type="monotone" dataKey="deny" name={t('Deny')} stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="total" name={t('Total')} stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                          <Line type="monotone" dataKey="total" name={t('Total')} stroke="var(--primary)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                         </LineChart>
                       </ResponsiveContainer>
                     ) : (
@@ -712,7 +712,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                             cx="50%"
                             cy="50%"
                             outerRadius={100}
-                            fill="hsl(var(--primary))"
+                            fill="var(--primary)"
                             dataKey="value"
                             label={({ payload }) => `${payload?.name}: ${payload?.value}`}
                           >
@@ -722,8 +722,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                           </Pie>
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px',
                             }}
                           />

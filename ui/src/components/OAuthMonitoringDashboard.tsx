@@ -866,8 +866,8 @@ export function OAuthMonitoringDashboard() {
                             labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
                             formatter={(value) => [value ?? 0, t('flows')]}
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px',
                               boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                             }}
@@ -875,10 +875,10 @@ export function OAuthMonitoringDashboard() {
                           <Line
                             type="monotone"
                             dataKey="total"
-                            stroke="hsl(var(--primary))"
+                            stroke="var(--primary)"
                             strokeWidth={2}
-                            dot={{ r: 3, fill: 'hsl(var(--primary))' }}
-                            activeDot={{ r: 5, fill: 'hsl(var(--primary))' }}
+                            dot={{ r: 3, fill: 'var(--primary)' }}
+                            activeDot={{ r: 5, fill: 'var(--primary)' }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -1217,7 +1217,7 @@ export function OAuthMonitoringDashboard() {
                                     labelFormatter={(label) => { try { return format(new Date(String(label)), 'HH:mm:ss'); } catch { return String(label); } }}
                                     formatter={(value) => [`${value}ms`, t('Response')]}
                                   />
-                                  <Line type="monotone" dataKey="ms" stroke="hsl(var(--primary))" strokeWidth={1.5} dot={false} />
+                                  <Line type="monotone" dataKey="ms" stroke="var(--primary)" strokeWidth={1.5} dot={false} />
                                 </LineChart>
                               </ResponsiveContainer>
                             </div>
@@ -1407,12 +1407,12 @@ export function OAuthMonitoringDashboard() {
                           <Tooltip
                             labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px'
                             }}
                           />
-                          <Bar dataKey="success" fill="hsl(var(--primary))" />
+                          <Bar dataKey="success" fill="var(--primary)" />
                           <Bar dataKey="error" fill="#ef4444" />
                         </BarChart>
                       </ResponsiveContainer>
@@ -1444,7 +1444,7 @@ export function OAuthMonitoringDashboard() {
                             cx="50%"
                             cy="50%"
                             outerRadius={100}
-                            fill="hsl(var(--primary))"
+                            fill="var(--primary)"
                             dataKey="count"
                             label={({ payload }) => `${payload?.clientName}: ${payload?.count}`}
                           >
@@ -1454,8 +1454,8 @@ export function OAuthMonitoringDashboard() {
                           </Pie>
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px'
                             }}
                           />
