@@ -28,6 +28,8 @@ import {
 import { loadMcpEndpointConfig, isToolExposed } from '../lib/mcp-endpoint-config'
 import type { ToolMetadata } from '../lib/ai/tool-registry'
 import { Value } from '@sinclair/typebox/value'
+import { createAdminClient } from '../lib/keycloak-plugin'
+import { getAccessControlInstance } from '../lib/access-control/plugin'
 
 // ── Session management ───────────────────────────────────────────────────────
 
@@ -110,6 +112,17 @@ function typeboxToZod(schema: unknown): z.ZodType | undefined {
   }
 }
 
+/**
+ * JSON.stringify replacer that exposes Error properties (message, name, stack)
+ * which are otherwise non-enumerable and serialize as `{}`.
+ */
+function serializeErrors(_key: string, value: unknown): unknown {
+  if (value instanceof Error) {
+    return { name: value.name, message: value.message }
+  }
+  return value
+}
+
 async function executeTool(
   toolName: string,
   meta: ToolMetadata,
@@ -137,7 +150,7 @@ async function executeTool(
     }
 
     // Build an Elysia-like context so route handlers work correctly.
-    // Route handlers expect ({ body, headers, set, params, query, ... }).
+    // Route handlers expect ({ body, headers, set, params, query, getAdmin, ... }).
     let responseStatus = 200
     const elysiaContext = {
       body: args,
@@ -158,21 +171,31 @@ async function executeTool(
           'Content-Type': 'application/json',
         },
       }),
+      // Elysia plugin decorators needed by route handlers
+      getAdmin: createAdminClient,
+      getAccessControl: getAccessControlInstance,
     }
 
     const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
     responseStatus = typeof elysiaContext.set.status === 'number' ? elysiaContext.set.status : 200
+
+    // Serialize the result — handle void/undefined and Error objects
+    const text = result === undefined || result === null
+      ? JSON.stringify({ success: true, status: responseStatus })
+      : typeof result === 'string'
+        ? result
+        : JSON.stringify(result, serializeErrors, 2)
     
     // If the handler set an error status, report it
     if (responseStatus >= 400) {
       return {
-        content: [{ type: 'text' as const, text: typeof result === 'string' ? result : JSON.stringify(result, null, 2) }],
+        content: [{ type: 'text' as const, text }],
         isError: true,
       }
     }
 
     return {
-      content: [{ type: 'text' as const, text: typeof result === 'string' ? result : JSON.stringify(result, null, 2) }],
+      content: [{ type: 'text' as const, text }],
     }
   } catch (err) {
     return {

@@ -109,8 +109,8 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
     const matchesPrefix = routePrefixes.some(prefix => path.startsWith(prefix))
     if (!matchesPrefix) continue
     
-    // Skip GET requests (tools should be actions, not queries)
-    if (method === 'GET') continue
+    // Skip read-only / non-action methods (tools should be actions)
+    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') continue
     
     // Convert route path to tool name
     // e.g., /api/users/:id -> update_user_by_id (if PUT)

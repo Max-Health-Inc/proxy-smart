@@ -180,6 +180,10 @@ export function AdminApp() {
                 </div>
             </main>
 
+            <footer className="py-4 text-center text-xs text-muted-foreground">
+                &copy; {new Date().getFullYear()} Max Health Inc.
+            </footer>
+
             {/* Alert Dialogs */}
             <AlertDialogs />
 
