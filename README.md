@@ -60,11 +60,9 @@ Then open:
 
 | Service | URL |
 |---|---|
-| Admin UI | http://localhost:3000 |
+| Admin UI | http://localhost:5173 |
 | Backend API | http://localhost:8445 |
 | Keycloak | http://localhost:8080 |
-
-See the [Getting Started Guide](docs/tutorials/getting-started.md) for initial configuration.
 
 ## Features
 
@@ -141,6 +139,18 @@ graph TB
     G -.-> |OpenAI| X((API))
 ```
 
+### Workspaces
+
+| Workspace | Description |
+|---|---|
+| `backend/` | Elysia API server, FHIR proxy, OAuth endpoints |
+| `ui/` | React admin dashboard |
+| `consent-app/` | Patient consent management UI |
+| `dtr-app/` | Documentation, Templates & Rules (DTR) app |
+| `shared-ui/` | Shared React components and utilities |
+| `infra/` | AWS CDK infrastructure |
+| `mcp-server/` | Generated Python MCP server |
+
 ### Tech Stack
 
 | Layer | Technologies |
@@ -160,8 +170,6 @@ graph TB
 <td width="50%" valign="top">
 
 ### Getting Started
-- [Getting Started Guide](docs/tutorials/getting-started.md)
-- [API Documentation](docs/api/)
 - [SMART 2.2.0 Implementation Status](docs/SMART_2.2.0_CHECKLIST.md)
 
 ### Admin UI
@@ -175,9 +183,7 @@ graph TB
 <td width="50%" valign="top">
 
 ### Technical
-- [OAuth 2.0 Flows](docs/smart-on-fhir/oauth-flows.md)
-- [Launch Contexts](docs/smart-on-fhir/launch-contexts.md)
-- [Version Management](docs/VERSION_MANAGEMENT.md)
+- [Version Management](docs/tutorials/version-management.md)
 
 ### AI & MCP
 - [MCP HTTP Server](docs/MCP_HTTP_SERVER.md)
@@ -197,7 +203,7 @@ bun run docker:dev
 
 # Production (separate containers)
 bun run docker:prod
-# → Frontend: http://localhost:3000
+# → Frontend: http://localhost:5173
 # → Backend: http://localhost:8445
 ```
 
