@@ -728,6 +728,9 @@ jobs:
           export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
           export REDIS_URL="redis://localhost:6379"
           
+          # Disable TLS tests in local CI (no HTTPS) — TLS is validated on deployed environments
+          export INFERNO_DISABLE_TLS_TEST=true
+          
           # Start Sidekiq worker for background job processing (test runs)
           # Must use -r ./worker.rb to load Inferno's job classes
           bundle exec sidekiq -r ./worker.rb &

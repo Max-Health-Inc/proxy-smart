@@ -5,6 +5,7 @@ import { oauthMetricsLogger } from './lib/oauth-metrics-logger'
 import { consentMetricsLogger } from './lib/consent-metrics-logger'
 import { fhirHealthLogger } from './lib/fhir-health-logger'
 import { createApp } from './app-factory'
+import { existsSync, readFileSync } from 'fs'
 
 const app = createApp()
 
@@ -27,9 +28,20 @@ initializeServer()
     try {
       // In containerized environments (Docker), listen on all interfaces
       // In local development, default to localhost only
-      const listenOptions = process.env.NODE_ENV === 'production' || process.env.DOCKER
+      const listenOptions: Record<string, any> = process.env.NODE_ENV === 'production' || process.env.DOCKER
         ? { port: config.port, hostname: '0.0.0.0' }
         : { port: config.port };
+
+      // Enable TLS when cert/key files are provided (e.g., CI compliance testing)
+      const tlsCert = process.env.TLS_CERT_FILE
+      const tlsKey = process.env.TLS_KEY_FILE
+      if (tlsCert && tlsKey && existsSync(tlsCert) && existsSync(tlsKey)) {
+        listenOptions.tls = {
+          cert: readFileSync(tlsCert),
+          key: readFileSync(tlsKey),
+        }
+        logger.server.info('TLS enabled via TLS_CERT_FILE / TLS_KEY_FILE')
+      }
 
       app.listen(listenOptions, async () => {
         logger.server.info(`🚀 Server successfully started on port ${config.port}`)
