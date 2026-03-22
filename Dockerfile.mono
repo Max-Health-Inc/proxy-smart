@@ -21,6 +21,7 @@ COPY dtr-app/ ./dtr-app/
 COPY consent-app/ ./consent-app/
 COPY infra/ ./infra/
 COPY scripts/ ./scripts/
+COPY docs/ ./docs/
 
 # Install dependencies for all workspaces (includes dtr-app, consent-app, shared-ui)
 RUN bun install --frozen-lockfile
