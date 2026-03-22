@@ -38,6 +38,8 @@ on:
         required: false
       AWS_ACCOUNT_ID:
         required: false
+      VITE_ENCRYPTION_SECRET:
+        required: false
 
 jobs:
   deploy:
@@ -92,7 +94,7 @@ jobs:
             APP_NAME="proxy-smart-prod"
             
             # Build and push container image to Azure Container Registry
-            az acr build --registry proxysmartregistry --image proxy-smart:${{ inputs.app_version }} .
+            az acr build --registry proxysmartregistry --image proxy-smart:${{ inputs.app_version }} --build-arg VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }} .
             
             # Deploy to Azure Container Apps
             az containerapp update \
@@ -125,7 +127,7 @@ jobs:
             # Build and push to ECR
             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
             
-            docker build -t proxy-smart:${{ inputs.app_version }} .
+            docker build --build-arg VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }} -t proxy-smart:${{ inputs.app_version }} .
             docker tag proxy-smart:${{ inputs.app_version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/proxy-smart:${{ inputs.app_version }}
             docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/proxy-smart:${{ inputs.app_version }}
             

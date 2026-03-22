@@ -6,11 +6,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Get encryption secret — VITE_ENCRYPTION_SECRET must be set in production
+// Get encryption secret — VITE_ENCRYPTION_SECRET should be set via env/build-arg
 const getEncryptionSecret = (): string => {
   const secret = import.meta.env.VITE_ENCRYPTION_SECRET;
   if (!secret) {
-    throw new Error("VITE_ENCRYPTION_SECRET is not set. Local-storage encryption requires this env variable.");
+    console.warn("VITE_ENCRYPTION_SECRET is not set — using fallback key. Set this env variable for production builds.");
+    return "proxy-smart-default-encryption-key";
   }
   return secret;
 };

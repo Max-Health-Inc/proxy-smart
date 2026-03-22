@@ -73,6 +73,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: ui
+      args:
+        VITE_ENCRYPTION_SECRET: ${VITE_ENCRYPTION_SECRET:?Set VITE_ENCRYPTION_SECRET}
     container_name: proxy-smart-frontend
     environment:
       VITE_API_BASE_URL: http://localhost:8445

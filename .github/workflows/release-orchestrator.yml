@@ -188,6 +188,7 @@ jobs:
     with:
       run_tests: true
       fail_on_test_failure: true
+    secrets: inherit
 
   # Create GitHub release
   release:

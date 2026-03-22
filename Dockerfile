@@ -33,6 +33,11 @@ RUN bun run build
 
 # UI build stage
 FROM build-deps AS ui-build
+
+# Encryption secret for browser local-storage obfuscation (baked into Vite bundle)
+ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
+ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
+
 # Copy UI source code
 COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/

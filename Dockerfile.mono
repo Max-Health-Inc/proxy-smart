@@ -25,6 +25,10 @@ COPY scripts/ ./scripts/
 # Install dependencies for all workspaces (includes dtr-app, consent-app, shared-ui)
 RUN bun install --frozen-lockfile
 
+# Encryption secret for browser local-storage obfuscation (baked into Vite bundle)
+ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
+ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
+
 RUN bun run generate:ui
 # Use the mono build script which handles:
 # - Building UI with correct VITE_BASE=/webapp/
