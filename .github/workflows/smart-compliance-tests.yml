@@ -1075,12 +1075,14 @@ jobs:
           
           # Parse results from the log
           if grep -q "PASS:" inferno-output.log; then
-            PASSED=$(grep -c "✓ PASS:" inferno-output.log || echo "0")
-            FAILED=$(grep -c "✗ FAIL:" inferno-output.log || echo "0")
+            PASSED=$(grep -c "✓ PASS:" inferno-output.log || true)
+            FAILED=$(grep -c "✗ FAIL:" inferno-output.log || true)
           else
             PASSED=0
             FAILED=0
           fi
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
           
           # Write summary
           echo "" >> $GITHUB_STEP_SUMMARY
