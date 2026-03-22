@@ -5,9 +5,7 @@
  *   1. Standalone Launch — Discovery + OAuth + OpenID Connect + Token Refresh
  *   2. Token Introspection — Validates introspection of tokens from Standalone Launch
  *   3. Backend Services — Validates client_credentials grant with asymmetric JWT (RS384)
- *   
- * Not yet automated (require infrastructure changes):
- *   4. EHR Launch — Requires EHR launch context simulation (launch parameter)
+ *   4. EHR Launch — Validates EHR-initiated launch with patient context
  * 
  * OAuth flow is handled via Playwright (headless Chromium) to automate Keycloak login.
  * Backend Services uses machine-to-machine auth (no browser needed).
@@ -237,6 +235,23 @@ function buildStandaloneSmartAuthInfo() {
 }
 
 /**
+ * Build the ehr_launch_smart_auth_info JSON input for Inferno.
+ * EHR Launch uses the `launch` scope (not `launch/patient`) — patient context
+ * comes from the EHR-provided launch context, mapped via Keycloak user attributes.
+ */
+function buildEhrLaunchSmartAuthInfo() {
+  return JSON.stringify({
+    auth_type: 'public',
+    use_discovery: 'true',
+    client_id: CLIENT_ID,
+    requested_scopes: 'launch openid fhirUser patient/*.read',
+    pkce_support: 'enabled',
+    pkce_code_challenge_method: 'S256',
+    auth_request_method: 'GET'
+  });
+}
+
+/**
  * Run the Standalone Launch test group.
  * This is the primary SMART compliance group covering:
  *   - SMART Discovery (.well-known/smart-configuration)
@@ -381,6 +396,194 @@ function buildBackendServicesSmartAuthInfo() {
     encryption_algorithm: 'RS384',
     jwks: privateJwksJson.trim()
   });
+}
+
+/**
+ * Run the EHR Launch test group.
+ * EHR Launch differs from Standalone: Inferno presents a launch URL that we must
+ * navigate to (simulating the EHR initiating the launch). Inferno then adds `iss`
+ * and `launch` params and redirects to our /authorize → Keycloak → login → callback.
+ * Patient context comes from the doctor user's smart_patient Keycloak attribute.
+ */
+async function runEhrLaunchTests(sessionId, browser) {
+  console.log('\n=== Running EHR Launch Tests ===\n');
+
+  try {
+    const groups = await getTestGroups(TEST_SUITE);
+    const ehrGroup = groups.find(g => g.id === GROUP_IDS.EHR_LAUNCH);
+
+    if (!ehrGroup) {
+      console.log('EHR Launch group not found, skipping...');
+      return null;
+    }
+
+    console.log(`Running test group: ${ehrGroup.id} — ${ehrGroup.title}`);
+
+    const ehrAuthInfo = buildEhrLaunchSmartAuthInfo();
+    console.log('Auth info:', ehrAuthInfo);
+
+    const inputs = [
+      { name: 'url', value: FHIR_SERVER_URL },
+      { name: 'ehr_launch_smart_auth_info', value: ehrAuthInfo }
+    ];
+
+    const run = await runTestGroup(sessionId, ehrGroup.id, inputs);
+    return await waitForEhrLaunchCompletion(sessionId, run.id, browser);
+
+  } catch (error) {
+    console.error('EHR Launch tests error:', error.message);
+    console.log('WARNING: EHR Launch tests failed but continuing...');
+    return null;
+  }
+}
+
+/**
+ * Wait for EHR Launch test completion.
+ * Similar to waitForSimpleTestCompletion but looks for Inferno's launch URL
+ * (containing /launch) instead of an authorize URL.
+ */
+async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
+  const maxWait = 180000; // 3 minutes
+  const startTime = Date.now();
+  let pollCount = 0;
+  let page = null;
+  let launchAttempted = false;
+  let launchAttemptCount = 0;
+  const MAX_LAUNCH_ATTEMPTS = 3;
+
+  console.log(`Waiting for EHR Launch test run ${runId} to complete (timeout: 3 minutes)...`);
+
+  while (Date.now() - startTime < maxWait) {
+    pollCount++;
+    const response = await fetch(`${INFERNO_URL}/api/test_runs/${runId}?include_results=true`);
+    if (!response.ok) {
+      throw new Error(`Failed to get test run status: ${response.status} - ${response.statusText}`);
+    }
+    const runStatus = await response.json();
+
+    console.log(`  [Poll #${pollCount}] Status: ${runStatus.status}`);
+
+    if (runStatus.status === 'done' || runStatus.status === 'error' || runStatus.status === 'cancelled') {
+      console.log(`Test completed with status: ${runStatus.status}`);
+      if (page) await page.close();
+      return runStatus;
+    }
+
+    // Handle waiting status — look for Inferno launch URL
+    if (runStatus.status === 'waiting' && browser && !launchAttempted && launchAttemptCount < MAX_LAUNCH_ATTEMPTS) {
+      launchAttemptCount++;
+
+      if (launchAttemptCount > 1) {
+        const backoffMs = (launchAttemptCount - 1) * 15000;
+        console.log(`  Waiting ${backoffMs / 1000}s before launch retry (backoff)...`);
+        await sleep(backoffMs);
+      }
+
+      console.log(`  Test is waiting for EHR launch action (attempt ${launchAttemptCount}/${MAX_LAUNCH_ATTEMPTS})...`);
+
+      const results = runStatus.results || [];
+      for (const result of results) {
+        if (result.result === 'wait') {
+          // Check message fields for the Inferno launch URL
+          const messageFields = ['wait_message', 'result_message', 'messages'];
+          for (const field of messageFields) {
+            if (result[field]) {
+              const content = typeof result[field] === 'string'
+                ? result[field]
+                : JSON.stringify(result[field]);
+
+              // Look for Inferno's launch URL (e.g. http://localhost:4567/custom/smart_stu2_2/launch)
+              const launchUrlMatch = content.match(/https?:\/\/[^\s<>"')]+\/launch(?:\b|[?\s<>"')])/);
+              if (launchUrlMatch) {
+                let launchUrl = launchUrlMatch[0].replace(/[)\s<>"']+$/, '');
+                console.log(`  Found Inferno launch URL in ${field}: ${launchUrl}`);
+                try {
+                  if (!page) page = await browser.newPage();
+                  // Navigate to Inferno's launch URL — it will redirect to /authorize → Keycloak
+                  await handleOAuthFlow(page, launchUrl);
+                  launchAttempted = true;
+                  console.log('  EHR Launch OAuth flow completed, continuing to poll...');
+                } catch (launchError) {
+                  console.error(`  EHR Launch OAuth flow failed: ${launchError.message}`);
+                }
+                break;
+              }
+
+              // Fallback: also check for authorize URLs (some versions may redirect differently)
+              const authUrlMatch = content.match(/https?:\/\/[^\s<>"']+?authorize[^\s<>"')]+/);
+              if (authUrlMatch) {
+                let url = authUrlMatch[0].replace(/[.,;:!?]+$/, '');
+                console.log(`  Found authorize URL in ${field}: ${url}`);
+                try {
+                  if (!page) page = await browser.newPage();
+                  await handleOAuthFlow(page, url);
+                  launchAttempted = true;
+                  console.log('  OAuth flow completed, continuing to poll...');
+                } catch (oauthError) {
+                  console.error(`  OAuth flow failed: ${oauthError.message}`);
+                }
+                break;
+              }
+            }
+          }
+          if (launchAttempted) break;
+
+          // Also check requests for launch/authorize URLs
+          if (result.requests && result.requests.length > 0) {
+            for (const req of result.requests) {
+              if (req.direction === 'outgoing' && req.url) {
+                if (req.url.includes('/launch') || req.url.includes('authorize')) {
+                  console.log(`  Found URL in requests: ${req.url}`);
+                  try {
+                    if (!page) page = await browser.newPage();
+                    await handleOAuthFlow(page, req.url);
+                    launchAttempted = true;
+                    console.log('  OAuth flow completed via request URL, continuing to poll...');
+                  } catch (err) {
+                    console.error(`  OAuth flow failed via request URL: ${err.message}`);
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+        if (launchAttempted) break;
+      }
+
+      if (!launchAttempted) {
+        const waitResults = results.filter(r => r.result === 'wait');
+        console.log(`  Found ${waitResults.length} waiting result(s) but no launch/OAuth URL found`);
+        // Debug: dump wait result content
+        for (const wr of waitResults) {
+          for (const field of ['wait_message', 'result_message']) {
+            if (wr[field]) {
+              console.log(`    ${field} (first 300 chars): ${wr[field].substring(0, 300)}`);
+            }
+          }
+        }
+      }
+    } else if (runStatus.status === 'waiting') {
+      if (launchAttemptCount >= MAX_LAUNCH_ATTEMPTS) {
+        console.error(`  EHR Launch OAuth failed after ${MAX_LAUNCH_ATTEMPTS} attempts — aborting wait`);
+        if (page) await page.close();
+        throw new Error(`EHR Launch OAuth automation failed after ${MAX_LAUNCH_ATTEMPTS} attempts`);
+      }
+      console.log(`  Test is waiting (launch ${launchAttempted ? 'already completed' : 'no browser available'})`);
+    }
+
+    // Log progress
+    if (runStatus.results && runStatus.results.length > 0) {
+      const passed = runStatus.results.filter(r => r.result === 'pass').length;
+      const failed = runStatus.results.filter(r => r.result === 'fail').length;
+      const waiting = runStatus.results.filter(r => r.result === 'wait').length;
+      console.log(`  Progress: ${passed} passed, ${failed} failed, ${waiting} waiting, ${runStatus.results.length} total`);
+    }
+
+    await sleep(3000);
+  }
+
+  throw new Error('EHR Launch test run timed out');
 }
 
 /**
@@ -712,8 +915,7 @@ async function main() {
   console.log('  1. Standalone Launch (OAuth + OIDC + Token Refresh)');
   console.log('  2. Token Introspection');
   console.log('  3. Backend Services (client_credentials + JWT assertion)');
-  console.log('  --- SKIPPED ---');
-  console.log('  4. EHR Launch (requires launch context API)');
+  console.log('  4. EHR Launch (EHR-initiated launch with patient context)');
   console.log('');
   
   let browser;
@@ -777,6 +979,9 @@ async function main() {
     
     // Group 3: Backend Services (client_credentials with JWT assertion — no browser needed)
     const backendServicesResult = await runBackendServicesTests(session.id);
+    
+    // Group 4: EHR Launch (EHR-initiated launch with patient context)
+    const ehrLaunchResult = await runEhrLaunchTests(session.id, browser);
     
     // Get all results across all groups
     const results = await getSessionResults(session.id);

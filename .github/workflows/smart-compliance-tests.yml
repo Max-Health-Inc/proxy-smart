@@ -1063,7 +1063,7 @@ jobs:
           echo "  1. Standalone Launch (Discovery + OAuth + OpenID Connect + Token Refresh)"
           echo "  2. Token Introspection (uses tokens from Standalone Launch)"
           echo "  3. Backend Services (client_credentials + asymmetric JWT)"
-          echo "  4. EHR Launch — SKIPPED (requires EHR launch context simulation)"
+          echo "  4. EHR Launch (EHR-initiated launch with patient context)"
           echo ""
           
           # Copy the script to the Playwright directory and run it from there
@@ -1105,7 +1105,7 @@ jobs:
           echo "- ✓ Standalone Launch (Discovery + OAuth + OIDC + Token Refresh)" >> $GITHUB_STEP_SUMMARY
           echo "- ✓ Token Introspection" >> $GITHUB_STEP_SUMMARY
           echo "- ✓ Backend Services (client_credentials + asymmetric JWT)" >> $GITHUB_STEP_SUMMARY
-          echo "- ○ EHR Launch — requires launch context simulation" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ EHR Launch (EHR-initiated launch with patient context)" >> $GITHUB_STEP_SUMMARY
           
           # Include FHIR server info
           echo "" >> $GITHUB_STEP_SUMMARY

@@ -55,7 +55,23 @@
         "include.in.token.scope": "true",
         "display.on.consent.screen": "true",
         "consent.screen.text": "Launch from EHR"
-      }
+      },
+      "protocolMappers": [
+        {
+          "name": "smart_patient-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "smart_patient",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "smart_patient",
+            "jsonType.label": "String"
+          }
+        }
+      ]
     },
     {
       "name": "fhirUser",
@@ -960,7 +976,8 @@
       "email": "doctor@example.com",
       "emailVerified": true,
       "attributes": {
-        "fhirUser": ["Practitioner/example-practitioner"]
+        "fhirUser": ["Practitioner/example-practitioner"],
+        "smart_patient": ["test-patient"]
       },
       "credentials": [
         {
