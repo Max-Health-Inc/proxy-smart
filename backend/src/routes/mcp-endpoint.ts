@@ -84,11 +84,12 @@ function generateDescription(toolName: string, meta: ToolMetadata): string {
 }
 
 function toJsonSchema(schema: unknown): Record<string, unknown> {
-  const s = schema as Record<string, unknown>
-  if (s.type === 'object') {
-    return { ...s, additionalProperties: false }
+  // Strip TypeBox Symbols and produce clean JSON Schema for MCP SDK
+  const clean = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
+  if (clean.type === 'object') {
+    clean.additionalProperties = false
   }
-  return s
+  return clean
 }
 
 async function executeTool(
