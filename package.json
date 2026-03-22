@@ -125,6 +125,8 @@
     "backend",
     "ui",
     "infra",
-    "shared-ui"
+    "shared-ui",
+    "dtr-app",
+    "consent-app"
   ]
 }
