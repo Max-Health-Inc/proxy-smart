@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@proxy-smart/shared-ui"
 import { Search } from "lucide-react"
 import type { ConsentStatusFilter, ConsentSortKey } from "@/hooks/useConsents"
 

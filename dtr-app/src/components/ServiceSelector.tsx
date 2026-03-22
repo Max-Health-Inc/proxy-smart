@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@proxy-smart/shared-ui"
 import { searchConditions, searchQuestionnaires, type Condition } from "@/lib/fhir-client"
 import { COMMON_PROCEDURES, type ProcedureCode } from "@/lib/procedure-codes"
 import { ArrowRight, Stethoscope, FileQuestion } from "lucide-react"

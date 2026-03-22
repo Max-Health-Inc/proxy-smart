@@ -1,7 +1,7 @@
 import { useState } from "react"
 import type { Patient, Consent, Task } from "fhir/r4"
 import { Card, CardContent, CardHeader, CardTitle, CardAction, Badge, Button, Spinner } from "@proxy-smart/shared-ui"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@proxy-smart/shared-ui"
 import {
   Dialog,
   DialogContent,

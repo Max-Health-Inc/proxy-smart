@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Patient } from "fhir/r4"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import { PatientSearch } from "@/components/PatientSearch"

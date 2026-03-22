@@ -1,6 +1,6 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import { TooltipProvider } from "@/components/ui/tooltip"
+import { TooltipProvider } from "@proxy-smart/shared-ui"
 import { Toaster } from "@/components/ui/sonner"
 import App from "./App"
 

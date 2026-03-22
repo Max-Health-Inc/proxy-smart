@@ -13,7 +13,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@proxy-smart/shared-ui"
 import { Separator } from "@/components/ui/separator"
 import { formatHumanName } from "@/lib/fhir-client"
 import { type SelectedService } from "@/components/ServiceSelector"
