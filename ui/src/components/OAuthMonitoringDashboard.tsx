@@ -39,6 +39,7 @@ import type { FhirUptimeSummary } from '../lib/api-client/models/FhirUptimeSumma
 import { createServerApi, createAdminApi, createFhirMonitoringApi } from '@/lib/apiClient';
 import { EventsPanel } from './DoorManagement/EventsPanel';
 import { ConsentMonitoringDashboard } from './ConsentMonitoringDashboard';
+import { AdminAuditDashboard } from './AdminAuditDashboard';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -740,12 +741,13 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/50 rounded-t-2xl">
+            <TabsList className="grid w-full grid-cols-6 bg-muted/50 rounded-t-2xl">
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="flows" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth Flows')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
               <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
               <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
+              <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -1520,6 +1522,10 @@ export function OAuthMonitoringDashboard() {
 
             <TabsContent value="consent" className="space-y-6">
               <ConsentMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
+            </TabsContent>
+
+            <TabsContent value="audit-log" className="space-y-6">
+              <AdminAuditDashboard embedded isRealTimeActive={isRealTimeActive} />
             </TabsContent>
           </Tabs>
         </div>

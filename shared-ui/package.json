@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/shared-ui",
-  "version": "0.0.2-alpha.202603222016.08598cbc",
+  "version": "0.0.2-alpha.202603222301.0918f915",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
