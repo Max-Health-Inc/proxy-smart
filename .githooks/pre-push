@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+
+echo "Auto-rebasing before push..."
+
+if ! git pull --rebase --autostash --quiet; then
+  echo "❌ Auto-rebase failed (likely conflicts). Please resolve them manually (git status), then re-push."
+  exit 1
+fi
+
+echo "✅ Up to date with remote"
+exit 0
