@@ -18,6 +18,23 @@
   "offlineSessionIdleTimeout": 2592000,
   "offlineSessionMaxLifespan": 5184000,
   "offlineSessionMaxLifespanEnabled": false,
+  "eventsEnabled": true,
+  "eventsListeners": ["jboss-logging"],
+  "adminEventsEnabled": true,
+  "adminEventsDetailsEnabled": true,
+  "eventsExpiration": 604800,
+  "enabledEventTypes": [
+    "LOGIN", "LOGIN_ERROR", "LOGOUT", "LOGOUT_ERROR",
+    "REGISTER", "REGISTER_ERROR",
+    "CODE_TO_TOKEN", "CODE_TO_TOKEN_ERROR",
+    "CLIENT_LOGIN", "CLIENT_LOGIN_ERROR",
+    "REFRESH_TOKEN", "REFRESH_TOKEN_ERROR",
+    "TOKEN_EXCHANGE", "TOKEN_EXCHANGE_ERROR",
+    "INTROSPECT_TOKEN", "INTROSPECT_TOKEN_ERROR",
+    "UPDATE_PROFILE", "UPDATE_PASSWORD",
+    "GRANT_CONSENT", "REVOKE_GRANT",
+    "PERMISSION_TOKEN"
+  ],
   "defaultRole": {
     "name": "default-roles-proxy-smart",
     "description": "${role_default-roles}",

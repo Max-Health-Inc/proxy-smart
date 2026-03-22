@@ -19,11 +19,14 @@ import { consentAdminRoutes } from './consent'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
+import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
 /**
  * Admin routes aggregator - combines all admin functionality
  */
 export const adminRoutes = new Elysia({ prefix: '/admin' })
+  // Audit middleware — logs every admin mutation with actor identity
+  .use(adminAuditPlugin)
   // Add public AI health check routes first (no auth required)
   .use(aiPublicRoutes)
   // Then add authentication guard for protected routes
