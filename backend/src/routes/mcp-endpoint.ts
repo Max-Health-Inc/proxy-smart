@@ -16,6 +16,7 @@ import { Elysia } from 'elysia'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
+import * as z from 'zod'
 import { config } from '../config'
 import { validateToken } from '../lib/auth'
 import { logger } from '../lib/logger'
@@ -54,19 +55,27 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
     // Permission: skip admin-only tools when caller has no admin role
     if (!meta.public && !userRoles.includes('admin')) continue
 
-    // Build JSON-schema for the tool parameters
-    const inputSchema = meta.schema
-      ? toJsonSchema(meta.schema)
-      : { type: 'object' as const, properties: {} }
+    // MCP SDK expects Zod schemas — convert TypeBox JSON Schema to Zod shape
+    const zodShape = meta.schema ? typeboxToZodShape(meta.schema) : undefined
 
-    server.tool(
-      toolName,
-      generateDescription(toolName, meta),
-      inputSchema,
-      async (args: Record<string, unknown>) => {
-        return executeTool(toolName, meta, args, authToken)
-      },
-    )
+    if (zodShape && Object.keys(zodShape).length > 0) {
+      server.tool(
+        toolName,
+        generateDescription(toolName, meta),
+        zodShape,
+        async (args: Record<string, unknown>) => {
+          return executeTool(toolName, meta, args, authToken)
+        },
+      )
+    } else {
+      server.tool(
+        toolName,
+        generateDescription(toolName, meta),
+        async (args: Record<string, unknown>) => {
+          return executeTool(toolName, meta, args, authToken)
+        },
+      )
+    }
   }
 }
 
@@ -83,13 +92,85 @@ function generateDescription(toolName: string, meta: ToolMetadata): string {
   return `${descs[action] ?? action} ${resource}. ${meta.public ? '(Public)' : '(Admin only)'}`
 }
 
-function toJsonSchema(schema: unknown): Record<string, unknown> {
-  // Strip TypeBox Symbols and produce clean JSON Schema for MCP SDK
-  const clean = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
-  if (clean.type === 'object') {
-    clean.additionalProperties = false
+/**
+ * Convert a TypeBox JSON Schema object to a Zod v4 "raw shape" (Record<string, z.ZodType>).
+ * The MCP SDK expects Zod schemas, not raw JSON Schema — it runs toJSONSchema() internally.
+ */
+function typeboxToZodShape(schema: unknown): Record<string, z.ZodType> | undefined {
+  const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
+  if (jsonSchema.type !== 'object' || !jsonSchema.properties) return undefined
+
+  const props = jsonSchema.properties as Record<string, Record<string, unknown>>
+  const required = new Set((jsonSchema.required as string[]) ?? [])
+  const shape: Record<string, z.ZodType> = {}
+
+  for (const [key, prop] of Object.entries(props)) {
+    let field = jsonSchemaPropToZod(prop)
+    if (!required.has(key)) {
+      field = field.optional()
+    }
+    shape[key] = field
   }
-  return clean
+
+  return shape
+}
+
+/** Convert a single JSON Schema property to a Zod type */
+function jsonSchemaPropToZod(prop: Record<string, unknown>): z.ZodType {
+  // Handle anyOf / oneOf (union types)
+  const anyOf = (prop.anyOf ?? prop.oneOf) as Record<string, unknown>[] | undefined
+  if (anyOf && Array.isArray(anyOf)) {
+    const members = anyOf.map(s => jsonSchemaPropToZod(s))
+    if (members.length === 1) return members[0]
+    if (members.length >= 2) return z.union([members[0], members[1], ...members.slice(2)] as [z.ZodType, z.ZodType, ...z.ZodType[]])
+    return z.unknown()
+  }
+
+  switch (prop.type) {
+    case 'string': {
+      let s = z.string()
+      if (typeof prop.minLength === 'number') s = s.min(prop.minLength)
+      if (typeof prop.maxLength === 'number') s = s.max(prop.maxLength)
+      if (typeof prop.description === 'string') s = s.describe(prop.description)
+      if (prop.enum && Array.isArray(prop.enum)) return z.enum(prop.enum as [string, ...string[]])
+      return s
+    }
+    case 'number':
+    case 'integer': {
+      let n = z.number()
+      if (prop.type === 'integer') n = n.int()
+      if (typeof prop.minimum === 'number') n = n.min(prop.minimum)
+      if (typeof prop.maximum === 'number') n = n.max(prop.maximum)
+      if (typeof prop.description === 'string') n = n.describe(prop.description)
+      return n
+    }
+    case 'boolean': {
+      let b = z.boolean()
+      if (typeof prop.description === 'string') b = b.describe(prop.description)
+      return b
+    }
+    case 'array': {
+      const items = prop.items as Record<string, unknown> | undefined
+      const inner = items ? jsonSchemaPropToZod(items) : z.unknown()
+      let a = z.array(inner)
+      if (typeof prop.description === 'string') a = a.describe(prop.description)
+      return a
+    }
+    case 'object': {
+      const nested = prop.properties as Record<string, Record<string, unknown>> | undefined
+      if (!nested) return z.record(z.string(), z.unknown())
+      const nestedRequired = new Set((prop.required as string[]) ?? [])
+      const nestedShape: Record<string, z.ZodType> = {}
+      for (const [k, v] of Object.entries(nested)) {
+        let f = jsonSchemaPropToZod(v)
+        if (!nestedRequired.has(k)) f = f.optional()
+        nestedShape[k] = f
+      }
+      return z.object(nestedShape)
+    }
+    default:
+      return z.unknown()
+  }
 }
 
 async function executeTool(
