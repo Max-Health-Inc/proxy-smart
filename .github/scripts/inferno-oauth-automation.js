@@ -378,8 +378,8 @@ function buildBackendServicesSmartAuthInfo() {
     auth_type: 'backend_services',
     client_id: BACKEND_SERVICES_CLIENT_ID,
     requested_scopes: 'system/*.read',
-    encryption_method: 'RS384',
-    backend_services_jwks: privateJwksJson.trim()
+    encryption_algorithm: 'RS384',
+    jwks: privateJwksJson.trim()
   });
 }
 

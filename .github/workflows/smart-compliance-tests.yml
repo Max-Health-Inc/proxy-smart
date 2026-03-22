@@ -1104,8 +1104,8 @@ jobs:
           echo "### Groups Tested" >> $GITHUB_STEP_SUMMARY
           echo "- ✓ Standalone Launch (Discovery + OAuth + OIDC + Token Refresh)" >> $GITHUB_STEP_SUMMARY
           echo "- ✓ Token Introspection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Backend Services (client_credentials + asymmetric JWT)" >> $GITHUB_STEP_SUMMARY
           echo "- ○ EHR Launch — requires launch context simulation" >> $GITHUB_STEP_SUMMARY
-          echo "- ○ Backend Services — requires confidential client with asymmetric JWT auth" >> $GITHUB_STEP_SUMMARY
           
           # Include FHIR server info
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -1125,6 +1125,7 @@ jobs:
           INFERNO_URL: ${{ steps.config.outputs.inferno_url }}
           FHIR_SERVER_URL: ${{ steps.config.outputs.target == 'deployed' && format('{0}/proxy-smart-backend/hapi-fhir-server/R4', steps.config.outputs.backend_url) || format('http://localhost:{0}/proxy-smart-backend/hapi-fhir-server/R4', steps.config.outputs.backend_port) }}
           TEST_SUITE: ${{ steps.config.outputs.test_suite }}
+          TEST_STAGE: ${{ env.TEST_STAGE }}
           CLIENT_ID: ${{ steps.config.outputs.client_id }}
           KC_USERNAME: ${{ steps.config.outputs.kc_username }}
           KC_PASSWORD: ${{ steps.config.outputs.kc_password }}
