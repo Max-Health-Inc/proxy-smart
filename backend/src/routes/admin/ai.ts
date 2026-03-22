@@ -27,6 +27,7 @@ import type { JwtPayload } from 'jsonwebtoken'
 import { config } from '@/config'
 import { getConfiguredServers } from './mcp-servers'
 import { getInstalledSkills } from './ai-tools-skills'
+import { searchDocumentation } from '@/lib/ai/rag-tools'
 
 // Keycloak-flavored OIDC JWT payload shape (subset)
 type KeycloakJwtPayload = JwtPayload & {
@@ -271,6 +272,43 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
       })
     }
   }
+
+  // 3. Add RAG documentation search tool
+  sdkTools['search_documentation'] = {
+    description: 'Search the platform documentation knowledge base using semantic similarity. Use this tool when the user asks about platform features, configuration, SMART on FHIR concepts, admin UI usage, OAuth flows, or any question that could be answered by the documentation.',
+    inputSchema: z.object({
+      query: z.string().describe('The search query to find relevant documentation'),
+      limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
+    }),
+    execute: async ({ query, limit }) => {
+      logger.server.debug('Executing RAG documentation search', { reqId, query, limit })
+      const start = Date.now()
+      try {
+        const result = await searchDocumentation(query, limit ?? 5)
+        logger.server.debug('RAG search completed', {
+          reqId,
+          query,
+          results: result.total_results,
+          duration: Date.now() - start
+        })
+        if (result.total_results === 0) {
+          return 'No relevant documentation found for this query.'
+        }
+        return result.documents
+          .map(doc => `## ${doc.title}\n\n${doc.content}\n\n_Source: ${doc.source}_`)
+          .join('\n\n---\n\n')
+      } catch (error) {
+        logger.server.error('RAG search failed', {
+          reqId,
+          query,
+          duration: Date.now() - start,
+          error: error instanceof Error ? error.message : String(error)
+        })
+        return 'Documentation search is temporarily unavailable.'
+      }
+    }
+  }
+  toolSources.internal++
 
   logger.server.info('Tool setup completed', {
     reqId,

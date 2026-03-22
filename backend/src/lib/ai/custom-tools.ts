@@ -3,11 +3,9 @@
  * 
  * This module defines special-purpose tools that integrate with external services.
  * 
- * Note: Documentation search has been moved to public HTTP routes:
- * - GET /docs → Table of contents
- * - GET /docs/:filename → Raw markdown files
- * - GET /docs/search/keyword?q=query → Keyword search
- * - GET /docs/search/semantic?q=query → Semantic/vector search
+ * Documentation search is available via:
+ * - Public HTTP routes: GET /docs/search/semantic?q=query, GET /docs/search/keyword?q=query
+ * - AI assistant tool: search_documentation (registered in routes/admin/ai.ts setupTools)
  */
 
 import type { ToolMetadata } from './tool-registry'
