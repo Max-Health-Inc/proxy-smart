@@ -222,6 +222,7 @@ export const config = {
         'http://localhost:5174', // Vite dev server (consent app)
         'http://localhost:5175', // Vite dev server (DTR app)
         'http://localhost:3000', // React dev server  
+        'http://localhost:4567', // Inferno SMART compliance test runner
         'http://localhost:8445', // App server
         config.baseUrl // Fallback to base URL
       ];

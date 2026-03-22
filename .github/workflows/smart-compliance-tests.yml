@@ -413,6 +413,8 @@ jobs:
           KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
           # Point to HAPI FHIR server running in GitHub Actions service container
           FHIR_SERVER_BASE: http://localhost:8081/fhir
+          # Allow Inferno test runner origin for CORS compliance tests
+          CORS_ORIGINS: http://localhost:4567,http://localhost:8445,http://localhost:5173
 
       # For deployed targets, verify the remote services are reachable
       - name: Verify Deployed Services
