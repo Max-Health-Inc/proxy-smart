@@ -1,6 +1,7 @@
 import { config } from './config'
 import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
+import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
 let keycloakAccessible = false
@@ -197,6 +198,80 @@ export async function initializeFhirServers(): Promise<void> {
 }
 
 /**
+ * Ensure Keycloak realm has event logging enabled.
+ * Uses the service-account admin credentials (KEYCLOAK_ADMIN_CLIENT_ID/SECRET)
+ * to update the realm configuration via the Admin REST API.
+ * This is idempotent — safe to call on every startup.
+ */
+async function ensureKeycloakEventLogging(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping Keycloak event-logging setup — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) {
+      logger.keycloak.warn('Could not read realm — skipping event-logging setup')
+      return
+    }
+
+    const needsUpdate =
+      !realm.eventsEnabled ||
+      !realm.adminEventsEnabled ||
+      !realm.adminEventsDetailsEnabled
+
+    if (!needsUpdate) {
+      logger.keycloak.info('✅ Keycloak event logging already enabled')
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      {
+        eventsEnabled: true,
+        adminEventsEnabled: true,
+        adminEventsDetailsEnabled: true,
+        eventsExpiration: 604800, // 7 days
+        eventsListeners: realm.eventsListeners?.length
+          ? realm.eventsListeners
+          : ['jboss-logging'],
+        enabledEventTypes: [
+          'LOGIN', 'LOGIN_ERROR', 'LOGOUT', 'LOGOUT_ERROR',
+          'REGISTER', 'REGISTER_ERROR',
+          'CODE_TO_TOKEN', 'CODE_TO_TOKEN_ERROR',
+          'CLIENT_LOGIN', 'CLIENT_LOGIN_ERROR',
+          'REFRESH_TOKEN', 'REFRESH_TOKEN_ERROR',
+          'TOKEN_EXCHANGE', 'TOKEN_EXCHANGE_ERROR',
+          'INTROSPECT_TOKEN', 'INTROSPECT_TOKEN_ERROR',
+          'UPDATE_PROFILE', 'UPDATE_PASSWORD',
+          'GRANT_CONSENT', 'REVOKE_GRANT',
+          'PERMISSION_TOKEN',
+        ],
+      },
+    )
+
+    logger.keycloak.info('✅ Keycloak event logging enabled via Admin API')
+  } catch (error) {
+    // Non-fatal — realm-export.json already has the config for fresh provisioning
+    logger.keycloak.warn('Could not auto-enable Keycloak event logging', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Initialize all server components (Keycloak + FHIR servers)
  */
 export async function initializeServer(): Promise<void> {
@@ -212,6 +287,9 @@ export async function initializeServer(): Promise<void> {
       
       // Check Keycloak connection before proceeding
       await checkKeycloakConnection()
+      
+      // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
+      await ensureKeycloakEventLogging()
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')
