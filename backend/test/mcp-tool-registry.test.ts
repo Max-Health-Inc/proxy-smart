@@ -312,146 +312,70 @@ describe('Tool Registry — Tool Name Generation', () => {
   })
 })
 
-// ── TypeBox to Zod Conversion ────────────────────────────────────────────────
+// ── TypeBox to Zod via z.fromJSONSchema ──────────────────────────────────────
 
-describe('Tool Registry — TypeBox to Zod Conversion', () => {
-  // Reimplementation matching mcp-endpoint.ts typeboxToZodShape + jsonSchemaPropToZod
-  function jsonSchemaPropToZod(prop: Record<string, unknown>): z.ZodType {
-    const anyOf = (prop.anyOf ?? prop.oneOf) as Record<string, unknown>[] | undefined
-    if (anyOf && Array.isArray(anyOf)) {
-      const members = anyOf.map(s => jsonSchemaPropToZod(s))
-      if (members.length === 1) return members[0]
-      if (members.length >= 2) return z.union([members[0], members[1], ...members.slice(2)] as [z.ZodType, z.ZodType, ...z.ZodType[]])
-      return z.unknown()
-    }
-    switch (prop.type) {
-      case 'string': {
-        let s = z.string()
-        if (typeof prop.minLength === 'number') s = s.min(prop.minLength)
-        if (typeof prop.maxLength === 'number') s = s.max(prop.maxLength)
-        if (typeof prop.description === 'string') s = s.describe(prop.description)
-        if (prop.enum && Array.isArray(prop.enum)) return z.enum(prop.enum as [string, ...string[]])
-        return s
-      }
-      case 'number':
-      case 'integer': {
-        let n = z.number()
-        if (prop.type === 'integer') n = n.int()
-        if (typeof prop.minimum === 'number') n = n.min(prop.minimum)
-        if (typeof prop.maximum === 'number') n = n.max(prop.maximum)
-        if (typeof prop.description === 'string') n = n.describe(prop.description)
-        return n
-      }
-      case 'boolean': return z.boolean()
-      case 'array': {
-        const items = prop.items as Record<string, unknown> | undefined
-        return z.array(items ? jsonSchemaPropToZod(items) : z.unknown())
-      }
-      case 'object': {
-        const nested = prop.properties as Record<string, Record<string, unknown>> | undefined
-        if (!nested) return z.record(z.string(), z.unknown())
-        const nestedRequired = new Set((prop.required as string[]) ?? [])
-        const nestedShape: Record<string, z.ZodType> = {}
-        for (const [k, v] of Object.entries(nested)) {
-          let f = jsonSchemaPropToZod(v)
-          if (!nestedRequired.has(k)) f = f.optional()
-          nestedShape[k] = f
-        }
-        return z.object(nestedShape)
-      }
-      default: return z.unknown()
-    }
-  }
-
-  function typeboxToZodShape(schema: unknown): Record<string, z.ZodType> | undefined {
+describe('Tool Registry — TypeBox to Zod Conversion (z.fromJSONSchema)', () => {
+  // Same approach as mcp-endpoint.ts typeboxToZod
+  function typeboxToZod(schema: unknown): z.ZodType | undefined {
     const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
-    if (jsonSchema.type !== 'object' || !jsonSchema.properties) return undefined
-    const props = jsonSchema.properties as Record<string, Record<string, unknown>>
-    const required = new Set((jsonSchema.required as string[]) ?? [])
-    const shape: Record<string, z.ZodType> = {}
-    for (const [key, prop] of Object.entries(props)) {
-      let field = jsonSchemaPropToZod(prop)
-      if (!required.has(key)) field = field.optional()
-      shape[key] = field
-    }
-    return shape
+    if (jsonSchema.type !== 'object') return undefined
+    return z.fromJSONSchema(jsonSchema)
   }
 
-  it('converts TypeBox object schema to Zod shape with correct keys', () => {
+  it('converts TypeBox object schema to a Zod v4 type', () => {
     const schema = t.Object({
       message: t.String({ minLength: 1 }),
       count: t.Optional(t.Number()),
     })
-    const shape = typeboxToZodShape(schema)
-    expect(shape).toBeDefined()
-    expect(Object.keys(shape!)).toEqual(['message', 'count'])
+    const zodSchema = typeboxToZod(schema)
+    expect(zodSchema).toBeDefined()
+    expect((zodSchema as unknown as { _zod: unknown })._zod).toBeDefined()
   })
 
-  it('produces Zod types recognized by MCP SDK (has _zod property)', () => {
-    const schema = t.Object({
-      message: t.String({ minLength: 1 }),
-    })
-    const shape = typeboxToZodShape(schema)!
-    // Zod v4 schemas have _zod property
-    expect((shape.message as unknown as { _zod: unknown })._zod).toBeDefined()
-  })
-
-  it('marks required fields as non-optional in the Zod shape', () => {
+  it('validates required fields correctly', () => {
     const schema = t.Object({
       message: t.String({ minLength: 1 }),
       optField: t.Optional(t.String()),
     })
-    const shape = typeboxToZodShape(schema)!
-    // message should be required (ZodString)
-    const msgResult = (shape.message as z.ZodType).safeParse('hello')
-    expect(msgResult.success).toBe(true)
-    const msgEmpty = (shape.message as z.ZodType).safeParse(undefined)
-    expect(msgEmpty.success).toBe(false)
-    // optField should accept undefined
-    const optResult = (shape.optField as z.ZodType).safeParse(undefined)
-    expect(optResult.success).toBe(true)
+    const zodSchema = typeboxToZod(schema)!
+
+    const valid = z.safeParse(zodSchema, { message: 'hello' })
+    expect(valid.success).toBe(true)
+
+    const missingRequired = z.safeParse(zodSchema, { optField: 'test' })
+    expect(missingRequired.success).toBe(false)
+
+    const emptyMessage = z.safeParse(zodSchema, { message: '' })
+    expect(emptyMessage.success).toBe(false)
   })
 
-  it('handles nested objects correctly', () => {
+  it('handles nested objects and arrays', () => {
     const schema = t.Object({
       messages: t.Array(t.Object({
         role: t.String(),
         content: t.String(),
       })),
     })
-    const shape = typeboxToZodShape(schema)!
-    expect(shape.messages).toBeDefined()
-    const valid = (shape.messages as z.ZodType).safeParse([{ role: 'user', content: 'hi' }])
+    const zodSchema = typeboxToZod(schema)!
+    const valid = z.safeParse(zodSchema, { messages: [{ role: 'user', content: 'hi' }] })
     expect(valid.success).toBe(true)
-    const invalid = (shape.messages as z.ZodType).safeParse([{ role: 123 }])
+    const invalid = z.safeParse(zodSchema, { messages: [{ role: 123 }] })
     expect(invalid.success).toBe(false)
   })
 
-  it('handles enum strings', () => {
-    const schema = t.Object({
-      model: t.Optional(t.Union([t.Literal('gpt-4'), t.Literal('gpt-3.5')])),
-    })
-    const shape = typeboxToZodShape(schema)
-    expect(shape).toBeDefined()
-  })
-
   it('returns undefined for non-object schemas', () => {
-    expect(typeboxToZodShape(t.String())).toBeUndefined()
-    expect(typeboxToZodShape(t.Number())).toBeUndefined()
+    expect(typeboxToZod(t.String())).toBeUndefined()
+    expect(typeboxToZod(t.Number())).toBeUndefined()
   })
 
-  it('Zod shape can be used with MCP SDK objectFromShape', async () => {
-    // Simulate what the MCP SDK does: objectFromShape → toJSONSchema
+  it('round-trips through MCP SDK toJSONSchema correctly', async () => {
     const z4mini = await import('zod/v4-mini')
     const schema = t.Object({
       message: t.String({ minLength: 1, description: 'User message' }),
       count: t.Optional(t.Number()),
     })
-    const shape = typeboxToZodShape(schema)!
-    // SDK calls objectFromShape which wraps in z.object()
-    const zodObj = z.object(shape)
-    // Then SDK calls toJSONSchema to produce wire format
-    const jsonSchema = z4mini.toJSONSchema(zodObj, { target: 'draft-7' }) as Record<string, unknown>
+    const zodSchema = typeboxToZod(schema)!
+    const jsonSchema = z4mini.toJSONSchema(zodSchema, { target: 'draft-7' }) as Record<string, unknown>
     expect(jsonSchema.type).toBe('object')
     const props = jsonSchema.properties as Record<string, Record<string, unknown>>
     expect(props.message).toBeDefined()
@@ -459,5 +383,9 @@ describe('Tool Registry — TypeBox to Zod Conversion', () => {
     expect(props.message.minLength).toBe(1)
     expect(props.count).toBeDefined()
     expect(props.count.type).toBe('number')
+    // required should include message but not count
+    const required = jsonSchema.required as string[]
+    expect(required).toContain('message')
+    expect(required).not.toContain('count')
   })
 })
