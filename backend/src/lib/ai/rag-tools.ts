@@ -54,7 +54,8 @@ const MIN_CHARS = Number.parseInt(process.env.RAG_MIN_CHUNK_SIZE || '200', 10)
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const BACKEND_ROOT = join(__dirname, '../../..')
-const DOCS_DIR = join(BACKEND_ROOT, 'docs')
+const REPO_ROOT = join(BACKEND_ROOT, '..')
+const DOCS_DIR = process.env.RAG_DOCS_DIR || join(REPO_ROOT, 'docs')
 const CACHE_PATH = join(BACKEND_ROOT, 'logs', 'rag-cache.json')
 
 let knowledgeBase: KnowledgeChunk[] = []
