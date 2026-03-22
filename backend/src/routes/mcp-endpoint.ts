@@ -65,16 +65,16 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
           description: generateDescription(toolName, meta),
           inputSchema: zodSchema,
         },
-        async (args: Record<string, unknown>) => {
-          return executeTool(toolName, meta, args, authToken)
+        async (args: unknown) => {
+          return executeTool(toolName, meta, args as Record<string, unknown>, authToken)
         },
       )
     } else {
       server.tool(
         toolName,
         generateDescription(toolName, meta),
-        async (args: Record<string, unknown>) => {
-          return executeTool(toolName, meta, args, authToken)
+        async () => {
+          return executeTool(toolName, meta, {}, authToken)
         },
       )
     }
@@ -105,7 +105,7 @@ function typeboxToZod(schema: unknown): z.ZodType | undefined {
     if (jsonSchema.type !== 'object') return undefined
     return z.fromJSONSchema(jsonSchema)
   } catch (err) {
-    logger.warn('Failed to convert TypeBox schema to Zod:', err)
+    logger.warn('Failed to convert TypeBox schema to Zod:', err instanceof Error ? err.message : String(err))
     return undefined
   }
 }
