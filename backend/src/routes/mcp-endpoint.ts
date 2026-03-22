@@ -83,9 +83,10 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
     }
   }
 
-  // Register RAG documentation search tool
-  server.registerTool(
-    'search_documentation',
+  // Register RAG documentation search tool (respects admin expose config)
+  if (isToolExposed('search_documentation')) {
+    server.registerTool(
+      'search_documentation',
     {
       description:
         'Search the platform documentation knowledge base using semantic similarity. Use this when asked about platform features, configuration, SMART on FHIR concepts, admin UI, OAuth flows, or anything the docs might cover.',
@@ -112,6 +113,7 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
       }
     },
   )
+  }
 }
 
 function generateDescription(toolName: string, meta: ToolMetadata): string {

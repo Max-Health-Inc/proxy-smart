@@ -113,7 +113,7 @@ function buildToolList(cfg: McpEndpointConfig) {
   const registry = getToolRegistry()
   const defs = generateToolDefinitions(registry, ['admin'])
 
-  return defs.map((d) => {
+  const tools = defs.map((d) => {
     const name = d.function.name
     let exposed: boolean
     if (cfg.enabledTools !== null) {
@@ -123,4 +123,20 @@ function buildToolList(cfg: McpEndpointConfig) {
     }
     return { name, description: d.function.description, exposed }
   })
+
+  // Include the RAG search_documentation tool (registered directly on McpServer, not in route registry)
+  const ragName = 'search_documentation'
+  let ragExposed: boolean
+  if (cfg.enabledTools !== null) {
+    ragExposed = cfg.enabledTools.includes(ragName)
+  } else {
+    ragExposed = !cfg.disabledTools.includes(ragName)
+  }
+  tools.push({
+    name: ragName,
+    description: 'Search the platform documentation knowledge base using semantic similarity.',
+    exposed: ragExposed,
+  })
+
+  return tools
 }
