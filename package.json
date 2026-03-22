@@ -15,7 +15,8 @@
     "rollup": "^4.59.1",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.57.1",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "vitepress": "^1.6.4"
   },
   "description": "Proxy Smart - Healthcare interoperability proxy with Keycloak integration",
   "engines": {
@@ -82,6 +83,9 @@
     "lint:fix": "concurrently \"bun run lint:fix:backend\" \"bun run lint:fix:ui\"",
     "lint:fix:backend": "cd backend && bun run lint:fix",
     "lint:fix:ui": "cd ui && bun run lint:fix",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
     "check": "bun run typecheck && bun run lint",
     "clean": "bun run clean:backend && bun run clean:ui",
     "clean:backend": "cd backend && rm -rf node_modules dist",

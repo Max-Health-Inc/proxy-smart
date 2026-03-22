@@ -1,3 +1,33 @@
+---
+layout: home
+
+hero:
+  name: Proxy Smart
+  text: Healthcare Interoperability Proxy
+  tagline: SMART App Launch 2.2.0, OAuth 2.0, MCP Server & AI-Powered Admin
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /admin-ui/dashboard
+    - theme: alt
+      text: MCP & AI
+      link: /MCP_HTTP_SERVER
+
+features:
+  - title: SMART App Launch 2.2.0
+    details: Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, and refresh token rotation.
+  - title: Stateless FHIR Proxy
+    details: No clinical data stored — requests pass through to your FHIR servers with full audit logging.
+  - title: MCP Server
+    details: Streamable HTTP endpoint at /mcp exposing all admin tools and documentation search to AI clients.
+  - title: AI Assistant & RAG
+    details: Built-in assistant with semantic documentation search powered by OpenAI embeddings.
+  - title: Admin Dashboard
+    details: React UI for managing apps, users, servers, scopes, identity providers, and consent.
+  - title: Docker-Ready
+    details: Mono-container and multi-container deployments with automatic version management.
+---
+
 # Proxy Smart — Documentation
 
 Comprehensive documentation for the Proxy Smart platform: a stateless FHIR proxy with OAuth 2.0, SMART App Launch 2.2.0, and an intelligent admin interface.
