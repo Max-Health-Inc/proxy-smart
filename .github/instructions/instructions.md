@@ -1,4 +1,4 @@
-ALWAYS use generated client apis to call the backend REST APIs.
+ALWAYS use generated client apis to call the backend REST APIs. Dont forget to regenerate if necessary
 
 Never write fetch functions in the frontend, always generate from openapi backend specs!
 

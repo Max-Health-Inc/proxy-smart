@@ -15,25 +15,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Users, Server, Plus, MoreHorizontal } from 'lucide-react';
-import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
+import type { FhirPersonAssociation, FhirServer, HealthcareUser } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
-
-// TODO: dont use custom interfaces for backend models, use or inherit the existing generated API models instead
-interface HealthcareUser {
-  id: string;
-  name: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  organization?: string;
-  enabled: boolean;
-  realmRoles: string[];
-  clientRoles: Record<string, string[]>;
-  primaryRole?: string;
-  fhirPersons: FhirPersonAssociation[];
-  createdAt: string;
-  lastLogin?: string;
-}
 
 interface HealthcareUsersTableProps {
   users: HealthcareUser[];
@@ -59,8 +42,7 @@ function getInitials(name: string): string {
 /**
  * Get primary role from user roles
  */
-function getPrimaryRole(realmRoles: string[], clientRoles: { [client: string]: string[] }, primaryRole?: string): string {
-  if (primaryRole) return primaryRole;
+function getPrimaryRole(realmRoles: string[] | undefined, clientRoles: { [client: string]: string[] } | undefined): string {
   
   // Priority order for roles
   const rolePriority = ['admin', 'administrator', 'practitioner', 'nurse', 'researcher', 'user'];
@@ -149,20 +131,20 @@ export function HealthcareUsersTable({
                   <TableCell>
                     <div className="flex items-center gap-4 py-2">
                       <Avatar className="h-10 w-10 border-2 border-border shadow-md">
-                        <AvatarImage src={undefined} alt={user.name} />
+                        <AvatarImage src={undefined} alt={`${user.firstName} ${user.lastName}`} />
                         <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                          {getInitials(user.name)}
+                          {getInitials(`${user.firstName} ${user.lastName}`)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-semibold text-foreground">{user.name}</div>
+                        <div className="font-semibold text-foreground">{`${user.firstName} ${user.lastName}`.trim()}</div>
                         <div className="text-sm text-muted-foreground mt-1">{user.email}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${getRoleBadgeColor(getPrimaryRole(user.realmRoles, user.clientRoles, user.primaryRole))} border-0 shadow-sm font-medium`}>
-                      {getPrimaryRole(user.realmRoles, user.clientRoles, user.primaryRole)}
+                    <Badge className={`${getRoleBadgeColor(getPrimaryRole(user.realmRoles, user.clientRoles))} border-0 shadow-sm font-medium`}>
+                      {getPrimaryRole(user.realmRoles, user.clientRoles)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -185,8 +167,8 @@ export function HealthcareUsersTable({
                   <TableCell>
                     <div className="space-y-2">
                       <div className="space-y-1">
-                        {user.fhirPersons.length > 0 ? (
-                          user.fhirPersons.slice(0, 2).map((association: FhirPersonAssociation, index: number) => {
+                        {(user.fhirPersons?.length ?? 0) > 0 ? (
+                          user.fhirPersons!.slice(0, 2).map((association: FhirPersonAssociation, index: number) => {
                             const serverName = fhirServers.find(s => s.id === association.serverId)?.name || association.serverId;
                             return (
                               <div key={index} className="flex items-center space-x-2 text-xs">
@@ -203,9 +185,9 @@ export function HealthcareUsersTable({
                             {t('No associations')}
                           </div>
                         )}
-                        {user.fhirPersons.length > 2 && (
+                        {(user.fhirPersons?.length ?? 0) > 2 && (
                           <div className="text-xs text-muted-foreground">
-                            +{user.fhirPersons.length - 2} more
+                            +{user.fhirPersons!.length - 2} more
                           </div>
                         )}
                       </div>
@@ -226,7 +208,7 @@ export function HealthcareUsersTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not available'}
+                    {user.createdTimestamp ? new Date(user.createdTimestamp).toLocaleDateString() : 'Not available'}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select';
 import { Shield, Loader2, Server, Database, Trash2 } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
-import { createPersonResource } from '@/services/fhirService';
+import { createPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
 
 interface EditUserFormData {

@@ -2,7 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { openidService } from '../service/openid-service';
-import { createClientApis, setAuthErrorHandler } from '../lib/apiClient';
+import { createClientApis, setAuthErrorHandler } from '@/lib/apiClient';
 import { registerRefreshHandler } from '../lib/tokenRefresh';
 import { 
   getItem, 
@@ -12,7 +12,7 @@ import {
   removeSessionItem,
   clearAllAuthData,
   clearAuthorizationCodeData
-} from '../lib/storage';
+} from '@/lib/storage';
 import type { UserProfile } from '@/lib/types/api';
 
 interface TokenData {

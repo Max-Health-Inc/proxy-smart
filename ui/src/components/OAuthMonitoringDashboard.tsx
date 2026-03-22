@@ -29,14 +29,14 @@ import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { oauthWebSocketService, type OAuthAnalytics, type OAuthEventSimple, type WeekdayInsight } from '../service/oauth-websocket-service';
 import { oauthMonitoringService } from '../service/oauth-monitoring-service';
-import { getItem } from '../lib/storage';
+import { getItem } from '@/lib/storage';
 import { config } from '@/config';
 import type { OAuthAnalyticsTopClient } from '../lib/api-client/models/OAuthAnalyticsTopClient';
 import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatusResponse';
 import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
 import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
 import type { FhirUptimeSummary } from '../lib/api-client/models/FhirUptimeSummary';
-import { createServerApi, createAdminApi, createFhirMonitoringApi } from '../lib/apiClient';
+import { createServerApi, createAdminApi, createFhirMonitoringApi } from '@/lib/apiClient';
 import { EventsPanel } from './DoorManagement/EventsPanel';
 import { ConsentMonitoringDashboard } from './ConsentMonitoringDashboard';
 

@@ -2,46 +2,19 @@ import { Elysia, t } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { validateToken } from '@/lib/auth'
 import { getConsentCacheStats, consentCache } from '@/lib/consent'
-import { CommonErrorResponses, ConsentConfig, ConsentCacheStats, IalConfigSchema } from '@/schemas'
-import { ErrorResponse } from '@/schemas'
+import {
+  CommonErrorResponses,
+  ConsentConfig,
+  ConsentCacheStats,
+  IalConfigSchema,
+  ErrorResponse,
+  ConsentConfigUpdateResponse,
+  IalConfigUpdateResponse,
+  ConsentCacheInvalidateRequest,
+  ConsentCacheInvalidateResponse,
+} from '@/schemas'
 import { logger } from '@/lib/logger'
 import { getRuntimeConsentConfig, getRuntimeIalConfig, saveConsentConfig, saveIalConfig, loadRuntimeConfig, isRuntimeConfigLoaded } from '@/lib/runtime-config'
-
-/**
- * Consent response for config update
- */
-const ConsentConfigUpdateResponse = t.Object({
-  message: t.String(),
-  config: ConsentConfig,
-  timestamp: t.String()
-})
-
-/**
- * IAL config response
- */
-const IalConfigUpdateResponse = t.Object({
-  message: t.String(),
-  config: IalConfigSchema,
-  timestamp: t.String()
-})
-
-/**
- * Consent cache invalidation request
- */
-const ConsentCacheInvalidateRequest = t.Object({
-  patientId: t.Optional(t.String({ description: 'Patient ID to invalidate (optional)' })),
-  serverName: t.Optional(t.String({ description: 'Server name to invalidate (optional)' })),
-  all: t.Optional(t.Boolean({ description: 'Clear entire cache (default: false)' }))
-})
-
-/**
- * Consent cache invalidation response
- */
-const ConsentCacheInvalidateResponse = t.Object({
-  message: t.String(),
-  entriesInvalidated: t.Number(),
-  timestamp: t.String()
-})
 
 /**
  * Consent Admin Routes

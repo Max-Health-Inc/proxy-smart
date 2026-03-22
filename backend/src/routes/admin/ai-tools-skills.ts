@@ -4,6 +4,14 @@ import { validateToken } from '@/lib/auth'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { browseLeaderboard, searchSkills, type SkillsShEntry } from '../../lib/skillssh-client'
+import {
+  SkillInfo,
+  SkillsListResponse,
+  CreateSkillRequest,
+  SkillsShEntrySchema,
+  SkillsShBrowseResponse,
+  InstallFromRegistryRequest,
+} from '../../schemas'
 
 /**
  * AI Tools — Skills Management
@@ -11,60 +19,6 @@ import { browseLeaderboard, searchSkills, type SkillsShEntry } from '../../lib/s
  * Manages AI skill packages (Claude Skills, custom skills) that can be
  * assigned to SMART apps alongside MCP servers.
  */
-
-// Schemas
-const SkillInfo = t.Object({
-  name: t.String({ description: 'Skill identifier' }),
-  description: t.String({ description: 'Skill description' }),
-  sourceUrl: t.Optional(t.String({ description: 'Source URL (e.g. GitHub repo)' })),
-  type: t.Union([
-    t.Literal('claude-skill'),
-    t.Literal('custom')
-  ], { description: 'Skill type' }),
-  installedAt: t.Optional(t.String({ description: 'ISO timestamp when skill was installed' })),
-  enabled: t.Boolean({ description: 'Whether the skill is enabled' })
-})
-
-const SkillsListResponse = t.Object({
-  skills: t.Array(SkillInfo, { description: 'List of installed skills' }),
-  totalSkills: t.Number({ description: 'Total number of skills' })
-})
-
-const CreateSkillRequest = t.Object({
-  name: t.String({ description: 'Skill name (unique identifier)' }),
-  description: t.Optional(t.String({ description: 'Skill description' })),
-  sourceUrl: t.Optional(t.String({ description: 'Source URL (e.g. GitHub repo)' }))
-})
-
-const SkillsShEntrySchema = t.Object({
-  id: t.String({ description: 'Skill ID (owner/repo/name)' }),
-  name: t.String({ description: 'Skill name' }),
-  description: t.String({ description: 'Skill description' }),
-  owner: t.String({ description: 'GitHub owner' }),
-  repo: t.String({ description: 'GitHub repository' }),
-  installs: t.Number({ description: 'Weekly install count' }),
-  githubUrl: t.String({ description: 'GitHub URL' }),
-  skillsshUrl: t.String({ description: 'skills.sh URL' }),
-  installed: t.Boolean({ description: 'Whether already installed locally' }),
-  compatible: t.Boolean({ description: 'Whether compatible with HTTP-only agent runtime (false if requires CLI/shell)' }),
-  incompatibleReason: t.Optional(t.String({ description: 'Why the skill is incompatible (e.g. "Requires CLI tool: bash")' })),
-})
-
-const SkillsShBrowseResponse = t.Object({
-  skills: t.Array(SkillsShEntrySchema, { description: 'Skills from skills.sh' }),
-  total: t.Number({ description: 'Total results returned' }),
-  source: t.String({ description: 'Data source identifier' })
-})
-
-const InstallFromRegistryRequest = t.Object({
-  id: t.String({ description: 'Skill ID from skills.sh (owner/repo/name)' }),
-  name: t.String({ description: 'Short name for local installation' }),
-  description: t.Optional(t.String({ description: 'Skill description' })),
-  owner: t.String({ description: 'GitHub owner' }),
-  repo: t.String({ description: 'GitHub repo' }),
-  githubUrl: t.String({ description: 'GitHub URL' }),
-  skillsshUrl: t.String({ description: 'skills.sh URL' })
-})
 
 // Types
 interface SkillEntry {

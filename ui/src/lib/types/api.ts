@@ -63,12 +63,6 @@ export interface HealthcareUserFormData extends CreateHealthcareUserRequest {
 // authenticationType is UI-only - backend infers from jwksUri/publicKey/secret presence
 export interface SmartAppFormData extends CreateSmartAppRequest {
   authenticationType?: 'asymmetric' | 'symmetric' | 'none'; // UI-only field for form UX
-  secret?: string; // Temporary fix until TypeScript client is regenerated
-  // MCP server access control (added for Issue #189)
-  mcpAccessType?: 'none' | 'all-mcp-servers' | 'selected-mcp-servers';
-  allowedMcpServerNames?: string[];
-  // Skills access control
-  allowedSkillNames?: string[];
 }
 
 export interface ScopeSet {

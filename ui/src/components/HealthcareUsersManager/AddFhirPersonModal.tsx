@@ -19,20 +19,9 @@ import {
   CheckCircle,
   Loader2
 } from 'lucide-react';
-import type { FhirPersonAssociation } from '@/lib/types/api';
-import { createPersonResource, searchPersonResources, getPersonResource } from '@/services/fhirService';
+import type { FhirPersonAssociation, HealthcareUser } from '@/lib/types/api';
+import { createPersonResource, searchPersonResources, getPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
-
-// TODO: dont use custom interfaces for backend models, use or inherit the existing generated API models instead
-interface HealthcareUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  organization?: string;
-  fhirPersons?: FhirPersonAssociation[];
-}
 
 interface AddFhirPersonModalProps {
   isOpen: boolean;

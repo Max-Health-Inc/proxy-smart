@@ -11,7 +11,7 @@ import {
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
 import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
-import { useTheme } from '../hooks/use-theme';
+import { useTheme } from '../hooks/useTheme';
 import type { UserProfile } from '@/lib/types/api';
 import { 
   LayoutDashboard, 

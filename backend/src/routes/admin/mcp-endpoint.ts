@@ -9,7 +9,7 @@
 import { Elysia, t } from 'elysia'
 import { validateToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
-import { ErrorResponse } from '@/schemas'
+import { ErrorResponse, McpEndpointStatusResponse, McpEndpointUpdateBody } from '@/schemas'
 import {
   loadMcpEndpointConfig,
   saveMcpEndpointConfig,
@@ -17,35 +17,6 @@ import {
 } from '@/lib/mcp-endpoint-config'
 import { getToolRegistry, isToolRegistryInitialized, generateToolDefinitions } from '@/lib/ai/tool-registry'
 import { config } from '@/config'
-
-// ── Response schemas ─────────────────────────────────────────────────────────
-
-const McpEndpointToolInfo = t.Object({
-  name: t.String({ description: 'Tool name' }),
-  description: t.String({ description: 'Tool description' }),
-  exposed: t.Boolean({ description: 'Whether tool is currently exposed via MCP' }),
-})
-
-const McpEndpointStatusResponse = t.Object({
-  enabled: t.Boolean({ description: 'Whether the MCP endpoint is active' }),
-  configSource: t.String({ description: 'Where the enabled flag comes from (env | file | default)' }),
-  endpointPath: t.String({ description: 'URL path where MCP is mounted' }),
-  endpointUrl: t.String({ description: 'Full URL of the MCP endpoint' }),
-  tools: t.Array(McpEndpointToolInfo, { description: 'Available tools and their exposure status' }),
-  disabledTools: t.Array(t.String(), { description: 'Blocklisted tool names' }),
-  enabledTools: t.Union([t.Array(t.String()), t.Null()], {
-    description: 'Allowlisted tool names (null = blocklist mode)',
-  }),
-  updatedAt: t.String({ description: 'Last config update timestamp' }),
-})
-
-const McpEndpointUpdateBody = t.Object({
-  enabled: t.Optional(t.Boolean({ description: 'Enable or disable MCP endpoint' })),
-  disabledTools: t.Optional(t.Array(t.String(), { description: 'Tools to block from MCP exposure' })),
-  enabledTools: t.Optional(
-    t.Union([t.Array(t.String()), t.Null()], { description: 'Tools to allow (null = blocklist mode)' }),
-  ),
-})
 
 // ── Route ────────────────────────────────────────────────────────────────────
 

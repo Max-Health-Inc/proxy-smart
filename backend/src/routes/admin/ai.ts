@@ -22,7 +22,6 @@ import { McpClient, McpConnectionManager } from '@/lib/ai/mcp-client'
 import { streamText, generateText, jsonSchema, stepCountIs, type Tool as AiSdkTool, type LanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
-import { typeboxToZod } from '@/lib/schemas/typebox-to-zod'
 import { validateToken } from '@/lib/auth'
 import type { JwtPayload } from 'jsonwebtoken'
 import { config } from '@/config'
@@ -164,7 +163,12 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
     const prefixedName = `i_${toolName}`
     sdkTools[prefixedName] = {
       description: `[Internal] Auto-generated tool for ${meta.method} ${meta.path}`,
-      inputSchema: meta.schema ? typeboxToZod(meta.schema) : z.object({}).strict(),
+      inputSchema: meta.schema ? (() => {
+        try {
+          const jsonSchema = JSON.parse(JSON.stringify(meta.schema))
+          return jsonSchema.type === 'object' ? z.fromJSONSchema(jsonSchema) : z.object({}).strict()
+        } catch { return z.object({}).strict() }
+      })() : z.object({}).strict(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       execute: async ({ input }: any) => {
         logger.server.debug('Executing internal tool', { reqId, tool: toolName, input })

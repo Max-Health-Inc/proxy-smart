@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/stores/appStore';
 import { getStoredToken } from '@/lib/apiClient';
+import { config } from '@/config';
 
 // Action types that the AI can suggest
 export type ActionType = 'navigate' | 'refresh' | 'api-call' | 'form' | 'external-link';
@@ -107,7 +108,6 @@ export function ActionButton({ action, onComplete, compact = false, formOpen, on
         setResult(null);
 
         try {
-            const baseUrl = import.meta.env.VITE_API_BASE_URL || window.location.origin;
             const token = await getStoredToken();
             const headers: Record<string, string> = {
                 'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export function ActionButton({ action, onComplete, compact = false, formOpen, on
                 headers['Authorization'] = `Bearer ${token}`;
             }
 
-            const response = await fetch(`${baseUrl}${action.endpoint}`, {
+            const response = await fetch(`${config.api.baseUrl}${action.endpoint}`, {
                 method: action.method || 'GET',
                 headers,
                 body: action.method !== 'GET' ? JSON.stringify(formData) : undefined,

@@ -6,15 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Default encryption secret fallback (should not be used in production)
-const DEFAULT_ENCRYPTION_SECRET = "proxy-smart-default-secret-key";
-
-// Get encryption secret with fallback
+// Get encryption secret — VITE_ENCRYPTION_SECRET must be set in production
 const getEncryptionSecret = (): string => {
   const secret = import.meta.env.VITE_ENCRYPTION_SECRET;
   if (!secret) {
-    console.warn("VITE_ENCRYPTION_SECRET not found, using default secret. This is NOT secure for production!");
-    return DEFAULT_ENCRYPTION_SECRET;
+    throw new Error("VITE_ENCRYPTION_SECRET is not set. Local-storage encryption requires this env variable.");
   }
   return secret;
 };

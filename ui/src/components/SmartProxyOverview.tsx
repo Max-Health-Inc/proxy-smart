@@ -36,7 +36,7 @@ import type {
     SystemStatusResponse
 } from '../lib/types/api';
 import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
-import { config } from '../config';
+import { config } from '@/config';
 
 interface SmartProxyOverviewProps {
     onNavigate: (tab: string) => void;

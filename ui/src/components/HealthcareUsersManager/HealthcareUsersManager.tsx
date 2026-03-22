@@ -361,21 +361,7 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
       {/* Users Table */}
       {!loading && (
         <HealthcareUsersTable
-          users={users.map(user => ({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            organization: user.organization,
-            enabled: user.enabled,
-            realmRoles: user.realmRoles || [],
-            clientRoles: user.clientRoles || {},
-            primaryRole: user.primaryRole || getPrimaryRole(user.realmRoles || [], user.clientRoles || {}),
-            fhirPersons: user.fhirPersons || [],
-            createdAt: user.createdTimestamp ? new Date(user.createdTimestamp).toISOString() : new Date().toISOString(),
-            lastLogin: user.lastLogin ? new Date(user.lastLogin).toISOString() : undefined
-          }))}
+          users={users}
           fhirServers={fhirServers}
           onEditUser={(user) => {
             const originalUser = users.find(u => u.id === user.id);

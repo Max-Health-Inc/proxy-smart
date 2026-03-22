@@ -6,7 +6,8 @@
 
 import type { PersonR3, PersonR4, PersonR5 } from '../lib/fhir-types';
 import type { ContactPoint } from '../lib/fhir-types';
-import { getStoredToken } from '../lib/apiClient';
+import { getStoredToken } from '@/lib/apiClient';
+import { config } from '@/config';
 
 // Union type for all FHIR Person versions
 type AnyPerson = PersonR3 | PersonR4 | PersonR5;
@@ -111,8 +112,7 @@ export async function createPersonResource(
   }
 
   // Make the request to the FHIR proxy with the correct version path
-  const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-  const fhirProxyUrl = `${baseUrl}/proxy/${serverId}/${versionPath}/Person`;
+  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person`;
 
   const response = await fetch(fhirProxyUrl, {
     method: 'POST',
@@ -179,8 +179,7 @@ export async function searchPersonResources(
     params.append('telecom', `email|${searchParams.email}`);
   }
 
-  const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-  const fhirProxyUrl = `${baseUrl}/proxy/${serverId}/${versionPath}/Person?${params.toString()}`;
+  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person?${params.toString()}`;
 
   const response = await fetch(fhirProxyUrl, {
     method: 'GET',
@@ -236,8 +235,7 @@ export async function getPersonResource(
   // Remove "Person/" prefix if present
   const cleanId = personId.startsWith('Person/') ? personId.substring(7) : personId;
 
-  const baseUrl = import.meta.env.VITE_API_URL || window.location.origin;
-  const fhirProxyUrl = `${baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
+  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
 
   const response = await fetch(fhirProxyUrl, {
     method: 'GET',

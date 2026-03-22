@@ -13,7 +13,7 @@ import type {
   FhirServer,
   HealthcareUserFormData
 } from '@/lib/types/api';
-import { createPersonResource } from '@/services/fhirService';
+import { createPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
 
 interface HealthcareUserAddFormProps {

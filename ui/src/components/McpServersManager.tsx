@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../stores/authStore';
-import { getStoredToken } from '../lib/apiClient';
+import { getStoredToken } from '@/lib/apiClient';
 import { useTranslation } from 'react-i18next';
 import {
     Server,

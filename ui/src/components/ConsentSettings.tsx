@@ -26,17 +26,9 @@ import {
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
 import { useTranslation } from 'react-i18next';
+import type { ConsentConfig } from '@/lib/types/api';
 
-// ─── Types ───────────────────────────────────────────────────────────
-
-interface ConsentConfig {
-  enabled: boolean;
-  mode: 'enforce' | 'audit-only' | 'disabled';
-  cacheTtl: number;
-  exemptClients: string[];
-  requiredForResourceTypes: string[];
-  exemptResourceTypes: string[];
-}
+// ─── Defaults ────────────────────────────────────────────────────────
 
 const DEFAULT_CONSENT: ConsentConfig = {
   enabled: false,

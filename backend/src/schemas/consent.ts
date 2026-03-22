@@ -121,3 +121,33 @@ export const ConsentDeniedResponse = t.Object({
 }, { title: 'ConsentDeniedResponse' })
 
 export type ConsentDeniedResponseType = Static<typeof ConsentDeniedResponse>
+
+// ── Admin response/request wrappers ─────────────────────────────────────────
+
+/** Consent config update response */
+export const ConsentConfigUpdateResponse = t.Object({
+  message: t.String(),
+  config: ConsentConfig,
+  timestamp: t.String()
+})
+
+/** IAL config update response */
+export const IalConfigUpdateResponse = t.Object({
+  message: t.String(),
+  config: IalConfigSchema,
+  timestamp: t.String()
+})
+
+/** Consent cache invalidation request */
+export const ConsentCacheInvalidateRequest = t.Object({
+  patientId: t.Optional(t.String({ description: 'Patient ID to invalidate (optional)' })),
+  serverName: t.Optional(t.String({ description: 'Server name to invalidate (optional)' })),
+  all: t.Optional(t.Boolean({ description: 'Clear entire cache (default: false)' }))
+})
+
+/** Consent cache invalidation response */
+export const ConsentCacheInvalidateResponse = t.Object({
+  message: t.String(),
+  entriesInvalidated: t.Number(),
+  timestamp: t.String()
+})

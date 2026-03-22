@@ -26,20 +26,11 @@ import {
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
 import { useTranslation } from 'react-i18next';
+import type { IalConfig, IalConfigMinimumLevelEnum } from '@/lib/types/api';
 
-// ─── Types ───────────────────────────────────────────────────────────
+// ─── Defaults ────────────────────────────────────────────────────────
 
-type IalLevel = 'level1' | 'level2' | 'level3' | 'level4';
-
-interface IalConfig {
-  enabled: boolean;
-  minimumLevel: IalLevel;
-  sensitiveResourceTypes: string[];
-  sensitiveMinimumLevel: IalLevel;
-  verifyPatientLink: boolean;
-  allowOnPersonLookupFailure: boolean;
-  cacheTtl: number;
-}
+type IalLevel = IalConfigMinimumLevelEnum;
 
 const DEFAULT_IAL: IalConfig = {
   enabled: false,

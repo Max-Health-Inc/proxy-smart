@@ -42,7 +42,7 @@ import {
   Legend,
 } from 'recharts';
 import { config } from '@/config';
-import { getItem } from '../lib/storage';
+import { getItem } from '@/lib/storage';
 import { ConsentSettings } from './ConsentSettings';
 import {
   consentWebSocketService,

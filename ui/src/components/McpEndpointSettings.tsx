@@ -5,7 +5,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getStoredToken } from '../lib/apiClient';
+import { getStoredToken } from '@/lib/apiClient';
+import { config } from '@/config';
 import { useTranslation } from 'react-i18next';
 import {
   Server,
@@ -44,11 +45,9 @@ interface McpEndpointStatus {
 
 // ── API helpers ──────────────────────────────────────────────────────────────
 
-const API_BASE = (import.meta.env.VITE_API_BASE ?? '') as string;
-
 async function fetchEndpointStatus(): Promise<McpEndpointStatus> {
   const token = await getStoredToken();
-  const res = await fetch(`${API_BASE}/admin/mcp-endpoint`, {
+  const res = await fetch(`${config.api.baseUrl}/admin/mcp-endpoint`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error(`Failed to fetch MCP endpoint status: ${res.status}`);
@@ -59,7 +58,7 @@ async function updateEndpointConfig(
   body: Partial<{ enabled: boolean; disabledTools: string[]; enabledTools: string[] | null }>,
 ): Promise<McpEndpointStatus> {
   const token = await getStoredToken();
-  const res = await fetch(`${API_BASE}/admin/mcp-endpoint`, {
+  const res = await fetch(`${config.api.baseUrl}/admin/mcp-endpoint`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),

@@ -4,7 +4,7 @@
  */
 import { useAuthStore } from '../stores/authStore';
 import { config } from '@/config';
-import { getItem } from '../lib/storage';
+import { getItem } from '@/lib/storage';
 
 // ─── Types (mirror backend) ─────────────────────────────────────────
 
