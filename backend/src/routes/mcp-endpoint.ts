@@ -42,7 +42,7 @@ const sessions = new Map<string, McpSession>()
 /**
  * Register all exposed tools from the tool-registry onto an McpServer instance.
  */
-function registerTools(server: McpServer, userRoles: string[]): void {
+function registerTools(server: McpServer, userRoles: string[], authToken?: string): void {
   if (!isToolRegistryInitialized()) return
 
   const registry = getToolRegistry()
@@ -64,7 +64,7 @@ function registerTools(server: McpServer, userRoles: string[]): void {
       generateDescription(toolName, meta),
       inputSchema,
       async (args: Record<string, unknown>) => {
-        return executeTool(toolName, meta, args)
+        return executeTool(toolName, meta, args, authToken)
       },
     )
   }
@@ -95,6 +95,7 @@ async function executeTool(
   toolName: string,
   meta: ToolMetadata,
   args: Record<string, unknown>,
+  authToken?: string,
 ) {
   try {
     // Validate args
@@ -116,7 +117,41 @@ async function executeTool(
       }
     }
 
-    const result = await (meta.handler as (a: unknown, ctx: unknown) => unknown)(args, {})
+    // Build an Elysia-like context so route handlers work correctly.
+    // Route handlers expect ({ body, headers, set, params, query, ... }).
+    let responseStatus = 200
+    const elysiaContext = {
+      body: args,
+      headers: {
+        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
+        'content-type': 'application/json',
+      },
+      set: {
+        status: 200,
+        headers: {} as Record<string, string>,
+      },
+      params: extractPathParams(meta.path, args),
+      query: {},
+      request: new Request(`http://localhost${meta.path}`, {
+        method: meta.method,
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          'Content-Type': 'application/json',
+        },
+      }),
+    }
+
+    const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
+    responseStatus = typeof elysiaContext.set.status === 'number' ? elysiaContext.set.status : 200
+    
+    // If the handler set an error status, report it
+    if (responseStatus >= 400) {
+      return {
+        content: [{ type: 'text' as const, text: typeof result === 'string' ? result : JSON.stringify(result, null, 2) }],
+        isError: true,
+      }
+    }
+
     return {
       content: [{ type: 'text' as const, text: typeof result === 'string' ? result : JSON.stringify(result, null, 2) }],
     }
@@ -128,11 +163,30 @@ async function executeTool(
   }
 }
 
+/**
+ * Extract path parameters from route path and args.
+ * e.g. path="/admin/users/:userId", args={userId: "123"} → {userId: "123"}
+ */
+function extractPathParams(path: string, args: Record<string, unknown>): Record<string, string> {
+  const params: Record<string, string> = {}
+  const paramNames = path.match(/:(\w+)/g)
+  if (paramNames) {
+    for (const param of paramNames) {
+      const name = param.slice(1) // remove leading ':'
+      if (args[name] !== undefined) {
+        params[name] = String(args[name])
+      }
+    }
+  }
+  return params
+}
+
 // ── Auth helper ──────────────────────────────────────────────────────────────
 
 interface AuthResult {
   roles: string[]
   sub?: string
+  token?: string
 }
 
 async function authenticateRequest(request: Request): Promise<AuthResult | Response> {
@@ -149,7 +203,7 @@ async function authenticateRequest(request: Request): Promise<AuthResult | Respo
     const clientRoles: string[] = Object.values(
       (payload as Record<string, unknown> & { resource_access?: Record<string, { roles?: string[] }> }).resource_access ?? {},
     ).flatMap((r) => r?.roles ?? [])
-    return { roles: [...new Set([...realmRoles, ...clientRoles])], sub: payload.sub }
+    return { roles: [...new Set([...realmRoles, ...clientRoles])], sub: payload.sub, token }
   } catch {
     return unauthorized()
   }
@@ -226,7 +280,7 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       )
 
       // Bridge tool-registry → MCP tools
-      registerTools(server, auth.roles)
+      registerTools(server, auth.roles, auth.token)
 
       await server.connect(transport)
 
