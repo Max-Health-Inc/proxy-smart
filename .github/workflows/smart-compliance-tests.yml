@@ -89,6 +89,8 @@ jobs:
     name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ inputs.test_stage || 'alpha' }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Skip bot/releaser version-bump commits to avoid duplicate runs
+    if: ${{ github.event_name != 'push' || (!contains(github.event.head_commit.message, '🔄 Update version') && !contains(github.event.head_commit.message, '🤖 Update client APIs') && !contains(github.event.head_commit.message, 'proxy-smart-releaser')) }}
     
     outputs:
       passed: ${{ steps.inferno-tests.outputs.passed }}
