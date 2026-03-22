@@ -40,31 +40,34 @@ export function LoginForm() {
   const { initiateLogin, exchangeCodeForToken, clientApis } = useAuthStore();
 
   // Fetch available identity providers
-  const fetchAvailableIdps = useCallback(async () => {
+  const fetchAvailableIdps = useCallback(async (signal?: { aborted: boolean }) => {
     try {
       setLoadingIdps(true);
       logger.info('LoginForm: fetching identity providers...');
       const idps = await clientApis.auth.getAuthIdentityProviders();
+      if (signal?.aborted) return;
       
       // Filter to only show enabled identity providers
       const enabledIdps = idps.filter((idp: PublicIdentityProvider) => idp.enabled !== false);
       logger.info('LoginForm: identity providers fetched', { count: enabledIdps.length });
       setAvailableIdps(enabledIdps);
     } catch (error) {
+      if (signal?.aborted) return;
       console.warn('Could not fetch identity providers (this is normal for public access):', error);
       logger.warn('LoginForm: failed to fetch identity providers', error);
       // Don't show this as an error to users - it's expected when not authenticated
       setAvailableIdps([]);
     } finally {
-      setLoadingIdps(false);
+      if (!signal?.aborted) setLoadingIdps(false);
     }
   }, [clientApis.auth]);
 
   // Check if authentication is configured
-  const checkAuthAvailability = useCallback(async () => {
+  const checkAuthAvailability = useCallback(async (signal?: { aborted: boolean }) => {
     try {
       logger.info('LoginForm: checking authentication availability...');
       const available = await openidService.isAuthenticationAvailable();
+      if (signal?.aborted) return;
       setAuthAvailable(available);
       logger.info('LoginForm: auth availability', { available });
       if (!available) {
@@ -73,9 +76,10 @@ export function LoginForm() {
       } else {
         setError(null); // Clear any previous errors
         // Only fetch IdPs if authentication is available
-        fetchAvailableIdps();
+        fetchAvailableIdps(signal);
       }
     } catch (error) {
+      if (signal?.aborted) return;
       console.error('Failed to check auth availability:', error);
       logger.error('LoginForm: auth availability check failed', error);
       setAuthAvailable(false);
@@ -91,8 +95,7 @@ export function LoginForm() {
     setError(null);
     // Re-check availability and reload IdPs
     checkAuthAvailability();
-    fetchAvailableIdps();
-  }, [checkAuthAvailability, fetchAvailableIdps]);
+  }, [checkAuthAvailability]);
 
   // Handler for canceling Keycloak configuration
   const handleConfigCancel = useCallback(() => {
@@ -101,8 +104,10 @@ export function LoginForm() {
 
   // Load IdPs and check auth availability on component mount
   useEffect(() => {
+    const signal = { aborted: false };
     logger.info('LoginForm mounted');
-    checkAuthAvailability();
+    checkAuthAvailability(signal);
+    return () => { signal.aborted = true; };
   }, [checkAuthAvailability]);
 
   const handleCodeExchange = useCallback(async (code: string, state: string) => {

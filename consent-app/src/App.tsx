@@ -4,10 +4,11 @@ import { Button, Spinner } from "@proxy-smart/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"
-import { ShieldCheck, LogOut, LogIn } from "lucide-react"
+import { onAuthError } from "@/lib/auth-error"
+import { ShieldCheck, LogOut, LogIn, AlertTriangle } from "lucide-react"
 import "./index.css"
 
-type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error"
+type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error" | "session-expired"
 
 export default function App() {
   const [state, setState] = useState<AppState>("loading")
@@ -15,6 +16,12 @@ export default function App() {
   const callbackHandled = useRef(false)
 
   useEffect(() => {
+    // Subscribe to auth errors from fetch wrapper
+    onAuthError((msg) => {
+      setError(msg)
+      setState("session-expired")
+    })
+
     // Check if we're on the callback path
     const params = new URLSearchParams(window.location.search)
     if (params.has("code")) {
@@ -36,9 +43,21 @@ export default function App() {
       return
     }
 
-    // Check existing token
+    // Check existing token — validate it's not expired
     if (smartAuth.isAuthenticated()) {
-      setState("authenticated")
+      if (smartAuth.isTokenExpired()) {
+        smartAuth.refreshAccessToken().then((refreshed) => {
+          if (refreshed) {
+            setState("authenticated")
+          } else {
+            smartAuth.clearToken()
+            setState("session-expired")
+            setError("Your session has expired. Please sign in again.")
+          }
+        })
+      } else {
+        setState("authenticated")
+      }
     } else {
       setState("unauthenticated")
     }
@@ -82,6 +101,20 @@ export default function App() {
             <p className="text-muted-foreground">
               {state === "callback" ? "Completing sign in..." : "Loading..."}
             </p>
+          </div>
+        ) : state === "session-expired" ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-6">
+            <div className="text-center space-y-3">
+              <AlertTriangle className="size-12 mx-auto text-amber-500" />
+              <h2 className="text-xl font-semibold">Session Expired</h2>
+              <p className="text-muted-foreground max-w-md">
+                {error || "Your session has expired. Please sign in again to continue."}
+              </p>
+            </div>
+            <Button size="lg" onClick={handleLogin}>
+              <LogIn className="size-4" />
+              Sign In Again
+            </Button>
           </div>
         ) : state === "error" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">

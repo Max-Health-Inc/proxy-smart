@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Check,
@@ -17,8 +17,8 @@ interface KeycloakConfigFormProps {
 }
 
 export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormProps) {
-  const [baseUrl, setBaseUrl] = useState('http://localhost:8080');
-  const [realm, setRealm] = useState('proxy-smart');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [realm, setRealm] = useState('');
   const [adminClientId, setAdminClientId] = useState('');
   const [adminClientSecret, setAdminClientSecret] = useState('');
   const [testing, setTesting] = useState(false);
@@ -28,6 +28,19 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
   const { t } = useTranslation();
 
   const clientApis = createClientApis(); // No auth needed for these endpoints
+
+  // Pre-populate form with current Keycloak configuration
+  useEffect(() => {
+    clientApis.admin.getAdminKeycloakConfigStatus().then((status) => {
+      if (status.baseUrl) setBaseUrl(status.baseUrl);
+      if (status.realm) setRealm(status.realm);
+      if (status.adminClientId) setAdminClientId(status.adminClientId);
+    }).catch(() => {
+      // Fallback defaults if status endpoint is unreachable
+      setBaseUrl((prev) => prev || 'http://localhost:8080');
+      setRealm((prev) => prev || 'proxy-smart');
+    });
+  }, []);
 
   const handleTest = async () => {
     if (!baseUrl.trim() || !realm.trim()) {

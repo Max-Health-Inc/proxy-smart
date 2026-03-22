@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { Button, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
+import { onAuthError } from "@/lib/auth-error"
 import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import { Dashboard } from "@/components/Dashboard"
-import { FileCheck, LogOut, LogIn } from "lucide-react"
+import { FileCheck, LogOut, LogIn, AlertTriangle } from "lucide-react"
 import "./index.css"
 
-type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error"
+type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error" | "session-expired"
 
 export default function App() {
   const [state, setState] = useState<AppState>("loading")
@@ -15,6 +16,12 @@ export default function App() {
   const callbackHandled = useRef(false)
 
   useEffect(() => {
+    // Subscribe to auth errors from fetch wrapper
+    onAuthError((msg) => {
+      setError(msg)
+      setState("session-expired")
+    })
+
     const params = new URLSearchParams(window.location.search)
 
     // Handle OAuth callback
@@ -47,10 +54,24 @@ export default function App() {
       return
     }
 
-    // Check existing token
+    // Check existing token — validate it's not expired
     if (smartAuth.isAuthenticated()) {
-      setLaunchMode(smartAuth.getLaunchMode())
-      setState("authenticated")
+      if (smartAuth.isTokenExpired()) {
+        // Token expired — try to refresh
+        smartAuth.refreshAccessToken().then((refreshed) => {
+          if (refreshed) {
+            setLaunchMode(smartAuth.getLaunchMode())
+            setState("authenticated")
+          } else {
+            smartAuth.clearToken()
+            setState("session-expired")
+            setError("Your session has expired. Please sign in again.")
+          }
+        })
+      } else {
+        setLaunchMode(smartAuth.getLaunchMode())
+        setState("authenticated")
+      }
     } else {
       setState("unauthenticated")
     }
@@ -98,6 +119,20 @@ export default function App() {
             <p className="text-muted-foreground">
               {state === "callback" ? "Completing sign in..." : "Loading..."}
             </p>
+          </div>
+        ) : state === "session-expired" ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-6">
+            <div className="text-center space-y-3">
+              <AlertTriangle className="size-12 mx-auto text-amber-500" />
+              <h2 className="text-xl font-semibold">Session Expired</h2>
+              <p className="text-muted-foreground max-w-md">
+                {error || "Your session has expired. Please sign in again to continue."}
+              </p>
+            </div>
+            <Button size="lg" onClick={handleLogin}>
+              <LogIn className="size-4" />
+              Sign In Again
+            </Button>
           </div>
         ) : state === "error" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">

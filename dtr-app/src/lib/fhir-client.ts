@@ -1,4 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
+import { reportAuthError } from "@/lib/auth-error"
 import { FhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
   Patient,
@@ -49,7 +50,20 @@ export type {
 
 // ── FHIR client with authenticated fetch (@babelfhir-ts/client-r4) ──────────
 
-const authFetch = smartAuth.createAuthenticatedFetch()
+const baseFetch = smartAuth.createAuthenticatedFetch()
+
+/** Wraps the SMART authenticated fetch to detect permanent auth failures */
+const authFetch: typeof fetch = async (input, init) => {
+  try {
+    return await baseFetch(input, init)
+  } catch (err) {
+    if (err instanceof Error && /no valid smart token/i.test(err.message)) {
+      reportAuthError("Your session has expired. Please sign in again.")
+    }
+    throw err
+  }
+}
+
 const client = new FhirClient(fhirBaseUrl, authFetch)
 
 // ── Patient ──────────────────────────────────────────────────────────────────

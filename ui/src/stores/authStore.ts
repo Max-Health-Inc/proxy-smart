@@ -79,8 +79,13 @@ interface AuthState {
   logout: () => Promise<void>;
   clearError: () => void;
   updateClientApis: () => Promise<void>;
-  initialize: () => Promise<void>; // Add explicit initialization method
+  initialize: () => Promise<void>;
+  /** @internal */
+  _doInitialize: () => Promise<void>;
 }
+
+// Module-level lock to prevent overlapping initialize() calls (StrictMode, rehydration + effect, etc.)
+let initPromise: Promise<void> | null = null;
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -96,6 +101,20 @@ export const useAuthStore = create<AuthState>()(
       // Proper initialization method that handles all auth setup
       initialize: async () => {
         if (!get().isInitializing) return; // Already initialized
+        // Deduplicate: if an init is already in flight, wait for it instead of starting a new one
+        if (initPromise) return initPromise;
+        initPromise = (async () => {
+          try {
+            await get()._doInitialize();
+          } finally {
+            initPromise = null;
+          }
+        })();
+        return initPromise;
+      },
+
+      // Internal initialization logic (called only once via initialize())
+      _doInitialize: async () => {
         
         // If there's an active OAuth callback (code+state in URL), don't interfere —
         // let LoginForm handle the code exchange with the stored PKCE verifier.
@@ -441,13 +460,9 @@ export const useAuthStore = create<AuthState>()(
 // Custom hook that properly initializes auth state
 export const useAuth = () => {
   const store = useAuthStore();
-  
-  React.useEffect(() => {
-    // Only initialize if we haven't started initialization yet
-    if (store.isInitializing && !store.loading) {
-      store.initialize();
-    }
-  }, [store]);
+  // Initialization is triggered solely by onRehydrateStorage.
+  // No extra useEffect needed — the module-level lock in initialize()
+  // ensures it's idempotent even if called from multiple places.
 
   // Handle bfcache restoration (e.g., pressing Back from Keycloak login page).
   // When the browser restores a page from bfcache, the in-memory state still has

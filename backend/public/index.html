@@ -616,114 +616,18 @@
     <!-- App Store -->
     <section id="appstore">
       <div class="section-label">Proxy Smart App Store — by Max Health Inc.</div>
-      <p style="color: rgba(255,255,255,.45); font-size: .9rem; margin-bottom: 1.5rem; max-width: 640px; line-height: 1.7;">
+      <p style="color: rgba(255,255,255,.45); font-size: .9rem; margin-bottom: 2rem; max-width: 640px; line-height: 1.7;">
         Register, manage, and launch SMART on FHIR apps through a single admin interface. Every app gets OAuth 2.0 + PKCE, scope-based access control, and FHIR server routing out of the box.
       </p>
-      <div class="app-store-grid">
-
-        <div class="app-card">
-          <div class="app-card-header">
-            <div class="app-card-icon">🧠</div>
-            <div>
-              <div class="app-card-title">Clinical Decision Support</div>
-              <div class="app-card-type">EHR Launch &middot; JWT Auth</div>
-            </div>
-          </div>
-          <div class="app-card-desc">AI-powered clinical decision support tool that analyzes patient data in real time during encounters.</div>
-          <div class="app-card-scopes">
-            <span class="scope-tag">patient/Patient.read</span>
-            <span class="scope-tag">patient/Observation.read</span>
-          </div>
-          <div class="app-card-status"><span class="status-dot active"></span> Active</div>
-        </div>
-
-        <div class="app-card">
-          <div class="app-card-header">
-            <div class="app-card-icon">🏥</div>
-            <div>
-              <div class="app-card-title">Patient Portal</div>
-              <div class="app-card-type">Standalone &middot; Client Secret</div>
-            </div>
-          </div>
-          <div class="app-card-desc">Patient self-service portal for viewing records, conditions, medications, and upcoming appointments.</div>
-          <div class="app-card-scopes">
-            <span class="scope-tag">patient/Patient.read</span>
-            <span class="scope-tag">patient/Condition.read</span>
-            <span class="scope-tag">patient/MedicationRequest.read</span>
-          </div>
-          <div class="app-card-status"><span class="status-dot active"></span> Active</div>
-        </div>
-
-        <div class="app-card">
-          <div class="app-card-header">
-            <div class="app-card-icon">📱</div>
-            <div>
-              <div class="app-card-title">Mobile Health App</div>
-              <div class="app-card-type">Standalone &middot; JWT Auth</div>
-            </div>
-          </div>
-          <div class="app-card-desc">Mobile application for patient health monitoring with real-time vitals tracking and alerts.</div>
-          <div class="app-card-scopes">
-            <span class="scope-tag">patient/Patient.read</span>
-            <span class="scope-tag">patient/Observation.read</span>
-          </div>
-          <div class="app-card-status"><span class="status-dot active"></span> Active</div>
-        </div>
-
-        <div class="app-card">
-          <div class="app-card-header">
-            <div class="app-card-icon">🔬</div>
-            <div>
-              <div class="app-card-title">Lab Results Viewer</div>
-              <div class="app-card-type">EHR Launch &middot; Client Secret</div>
-            </div>
-          </div>
-          <div class="app-card-desc">Laboratory results visualization tool with trend analysis and abnormal value flagging.</div>
-          <div class="app-card-scopes">
-            <span class="scope-tag">patient/DiagnosticReport.read</span>
-            <span class="scope-tag">patient/Observation.read</span>
-          </div>
-          <div class="app-card-status"><span class="status-dot active"></span> Active</div>
-        </div>
-
-        <div class="app-card">
-          <div class="app-card-header">
-            <div class="app-card-icon">🤖</div>
-            <div>
-              <div class="app-card-title">Autonomous Clinical AI Agent</div>
-              <div class="app-card-type">Agent &middot; JWT Auth</div>
-            </div>
-          </div>
-          <div class="app-card-desc">Autonomous AI agent that independently analyzes patient data and creates clinical assessments and care plans.</div>
-          <div class="app-card-scopes">
-            <span class="scope-tag">agent/Patient.read</span>
-            <span class="scope-tag">agent/Condition.read</span>
-            <span class="scope-tag">agent/CarePlan.create</span>
-          </div>
-          <div class="app-card-status"><span class="status-dot active"></span> Active</div>
-        </div>
-
-        <div class="app-card">
-          <div class="app-card-header">
-            <div class="app-card-icon">📊</div>
-            <div>
-              <div class="app-card-title">Research Analytics</div>
-              <div class="app-card-type">Backend Service &middot; JWT Auth</div>
-            </div>
-          </div>
-          <div class="app-card-desc">Clinical research data analytics platform for population-level studies and cohort analysis.</div>
-          <div class="app-card-scopes">
-            <span class="scope-tag">user/Patient.read</span>
-            <span class="scope-tag">user/Observation.read</span>
-            <span class="scope-tag">user/DiagnosticReport.read</span>
-          </div>
-          <div class="app-card-status"><span class="status-dot"></span> Inactive</div>
-        </div>
-
-      </div>
-      <div class="app-store-footer">
+      <a href="/apps" style="display: inline-flex; align-items: center; gap: .75rem; padding: 1rem 2.5rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 400; letter-spacing: .01em; transition: all .3s ease; text-decoration: none;"
+         onmouseover="this.style.background='rgba(255,255,255,.12)'; this.style.borderColor='rgba(255,255,255,.25)'; this.style.transform='translateY(-2px)'"
+         onmouseout="this.style.background='rgba(255,255,255,.06)'; this.style.borderColor='rgba(255,255,255,.12)'; this.style.transform='translateY(0)'">
+        <span style="font-size: 1.5rem;">🏪</span>
+        Browse the App Store
+        <span style="opacity: .5; font-size: .9rem;">&rarr;</span>
+      </a>
+      <div class="app-store-footer" style="margin-top: 1.5rem;">
         Register your own SMART apps via the Admin Dashboard or SMART Dynamic Client Registration.
-        <br><a href="/apps" style="color: rgba(255,255,255,.5); margin-top: .5rem; display: inline-block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; border-bottom: 1px solid rgba(255,255,255,.15); padding-bottom: 2px; transition: color .3s;">Browse Live App Store &rarr;</a>
       </div>
     </section>
 

@@ -22,7 +22,6 @@ import {
   X,
   Database,
   CheckCircle,
-  AlertCircle,
   UserPlus,
   AlertTriangle,
   Trash2
@@ -38,112 +37,6 @@ import { getItem } from '@/lib/storage';
 import { createAuthenticatedClientApis } from '@/lib/apiClient';
 import type { SmartApp, ScopeSet, SmartAppFormData, SmartAppClientTypeEnum } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
-
-// Mock data for SMART on FHIR applications
-const mockApps: SmartApp[] = [
-  {
-    id: '1',
-    name: 'Clinical Decision Support',
-    clientId: 'cds-app-123',
-    redirectUris: ['https://cds.example.com/callback'],
-    defaultClientScopes: ['patient/Patient.read', 'patient/Observation.read'],
-    scopeSetId: 'physician-readonly',
-    optionalClientScopes: [],
-    status: 'active',
-    lastUsed: '2024-12-28',
-    description: 'AI-powered clinical decision support tool',
-    appType: 'ehr-launch',
-    clientAuthenticatorType: 'client-jwt',
-    serverAccessType: 'user-person-servers',
-  },
-  {
-    id: '2',
-    name: 'Patient Portal',
-    clientId: 'portal-456',
-    redirectUris: ['https://portal.example.com/auth'],
-    defaultClientScopes: ['patient/Patient.read', 'patient/Condition.read', 'patient/MedicationRequest.read'],
-    optionalClientScopes: ['patient/Appointment.read'],
-    status: 'active',
-    lastUsed: '2024-12-27',
-    description: 'Patient self-service portal',
-    appType: 'standalone-app',
-    clientAuthenticatorType: 'client-secret',
-    serverAccessType: 'all-servers',
-  },
-  {
-    id: '3',
-    name: 'Research Analytics',
-    clientId: 'research-789',
-    redirectUris: ['https://research.example.com/oauth'],
-    defaultClientScopes: ['user/Patient.read', 'user/Observation.read', 'user/DiagnosticReport.read'],
-    scopeSetId: 'researcher-population',
-    optionalClientScopes: [],
-    status: 'inactive',
-    lastUsed: '2024-12-20',
-    description: 'Clinical research data analytics platform',
-    appType: 'backend-service',
-    clientAuthenticatorType: 'client-jwt',
-    serverAccessType: 'selected-servers',
-    allowedServerIds: ['hapi-fhir-org', 'test-server-1'],
-  },
-  {
-    id: '4',
-    name: 'Mobile Health App',
-    clientId: 'mobile-health-101',
-    redirectUris: ['https://mhealth.example.com/callback'],
-    defaultClientScopes: ['patient/Patient.read', 'patient/Observation.read'],
-    optionalClientScopes: ['patient/ActivityDefinition.read'],
-    status: 'active',
-    lastUsed: '2024-12-26',
-    description: 'Mobile application for patient health monitoring',
-    appType: 'standalone-app',
-    clientAuthenticatorType: 'client-jwt',
-    serverAccessType: 'user-person-servers',
-  },
-  {
-    id: '5',
-    name: 'Lab Results Viewer',
-    clientId: 'lab-viewer-202',
-    redirectUris: ['https://labs.example.com/auth'],
-    defaultClientScopes: ['patient/DiagnosticReport.read', 'patient/Observation.read'],
-    optionalClientScopes: [],
-    status: 'active',
-    lastUsed: '2024-12-25',
-    description: 'Laboratory results visualization tool',
-    appType: 'ehr-launch',
-    clientAuthenticatorType: 'client-secret',
-    serverAccessType: 'selected-servers',
-    allowedServerIds: ['lab-server-main'],
-  },
-  {
-    id: '6',
-    name: 'Autonomous Clinical AI Agent',
-    clientId: 'ai-agent-303',
-    redirectUris: ['https://ai-assistant.example.com/callback'],
-    defaultClientScopes: ['agent/Patient.read', 'agent/Observation.read', 'agent/Condition.read', 'agent/MedicationRequest.read', 'agent/CarePlan.create'],
-    optionalClientScopes: ['agent/RiskAssessment.create', 'agent/ClinicalImpression.create'],
-    status: 'active',
-    lastUsed: '2024-12-28',
-    description: 'Autonomous AI agent that independently analyzes patient data and creates clinical assessments.',
-    appType: 'agent',
-    clientAuthenticatorType: 'client-jwt',
-    serverAccessType: 'all-servers',
-  },
-  {
-    id: '7',
-    name: 'Life Saving Lawnmower',
-    clientId: 'emergency-mower-911',
-    redirectUris: ['https://smart-lawnmower.emergency.com/callback'],
-    defaultClientScopes: ['agent/Patient.read', 'agent/Encounter.create', 'agent/Observation.create'],
-    optionalClientScopes: ['agent/EmergencyContact.read', 'agent/AllergyIntolerance.read', 'agent/MedicationStatement.read'],
-    status: 'active',
-    lastUsed: '2024-12-29',
-    description: 'Autonomous robotic lawnmower with emergency medical response capabilities.',
-    appType: 'agent',
-    clientAuthenticatorType: 'client-jwt',
-    serverAccessType: 'all-servers',
-  },
-];
 
 export function SmartAppsManager() {
   const { t } = useTranslation();
@@ -190,11 +83,7 @@ export function SmartAppsManager() {
         
         setBackendApps(fetchedApps);
         
-        // Convert backend apps to our SmartApp format or use mock apps if no real apps
-        if (fetchedApps.length === 0) {
-          // No apps from backend, show mock apps
-          setApps(mockApps);
-        } else {
+        if (fetchedApps.length > 0) {
           // Convert backend apps to our format
           const convertedApps: SmartApp[] = fetchedApps.map((backendApp: SmartApp) => ({
             ...backendApp, // Inherit all API model fields (includes clientAuthenticatorType)
@@ -211,8 +100,7 @@ export function SmartAppsManager() {
         }
       } catch (error) {
         console.error('Failed to fetch SMART apps:', error);
-        // Fallback to mock apps on error
-        setApps(mockApps);
+        setApps([]);
       } finally {
         setLoading(false);
       }
@@ -248,10 +136,7 @@ export function SmartAppsManager() {
       const updatedApps = await clientApis.smartApps.getAdminSmartApps();
       if (Array.isArray(updatedApps)) {
         setBackendApps(updatedApps);
-        // Merge backend apps with mock apps for display
-        const backendAppIds = new Set(updatedApps.map(a => a.id));
-        const remainingMockApps = mockApps.filter(app => !backendAppIds.has(app.id));
-        setApps([...updatedApps, ...remainingMockApps]);
+        setApps(updatedApps);
       }
 
       setShowAddForm(false);
@@ -262,8 +147,6 @@ export function SmartAppsManager() {
     }
   };
 
-  // Helper to determine if we're showing mock data
-  const isShowingMockData = backendApps.length === 0;
 
   const updateAppScopes = (appId: string | undefined, scopeSetId: string | null, additionalScopes: string[]) => {
     if (!appId) return;
@@ -424,14 +307,7 @@ export function SmartAppsManager() {
                   </div>
                   {t('Manage registered healthcare applications and their SMART on FHIR permissions')}
                 </div>
-                {isShowingMockData && (
-                  <div className="mt-4 flex items-center space-x-2 text-sm">
-                    <AlertCircle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                    <span className="text-orange-700 dark:text-orange-300 font-medium">
-                      {t('Showing sample applications - no real apps found in backend')}
-                    </span>
-                  </div>
-                )}
+
                 {scopeSets.length > 0 && (
                   <div className="mt-4 flex items-center space-x-2 text-sm">
                     <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />

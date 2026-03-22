@@ -1,4 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
+import { reportAuthError } from "@/lib/auth-error"
 import {
   FhirResourceReader,
   FhirResourceWriterImpl,
@@ -16,7 +17,19 @@ export type { Patient, Person, Consent, Practitioner, Task }
 
 // ── Generated FHIR client with authenticated fetch ───────────────────────────
 
-const authFetch = smartAuth.createAuthenticatedFetch()
+const baseFetch = smartAuth.createAuthenticatedFetch()
+
+/** Wraps the SMART authenticated fetch to detect permanent auth failures */
+const authFetch: typeof fetch = async (input, init) => {
+  try {
+    return await baseFetch(input, init)
+  } catch (err) {
+    if (err instanceof Error && /no valid smart token/i.test(err.message)) {
+      reportAuthError("Your session has expired. Please sign in again.")
+    }
+    throw err
+  }
+}
 
 const persons = new FhirResourceReader<Person>(fhirBaseUrl, "Person", authFetch)
 const patients = new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", authFetch)
