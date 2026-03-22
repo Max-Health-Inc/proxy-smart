@@ -27,6 +27,7 @@ import {
 } from '../lib/ai/tool-registry'
 import { loadMcpEndpointConfig, isToolExposed } from '../lib/mcp-endpoint-config'
 import type { ToolMetadata } from '../lib/ai/tool-registry'
+import { searchDocumentation } from '../lib/ai/rag-tools'
 import { Value } from '@sinclair/typebox/value'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
@@ -81,6 +82,36 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
       )
     }
   }
+
+  // Register RAG documentation search tool
+  server.registerTool(
+    'search_documentation',
+    {
+      description:
+        'Search the platform documentation knowledge base using semantic similarity. Use this when asked about platform features, configuration, SMART on FHIR concepts, admin UI, OAuth flows, or anything the docs might cover.',
+      inputSchema: z.object({
+        query: z.string().describe('The search query to find relevant documentation'),
+        limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
+      }),
+    },
+    async ({ query, limit }) => {
+      try {
+        const result = await searchDocumentation(query, (limit as number | undefined) ?? 5)
+        if (result.total_results === 0) {
+          return { content: [{ type: 'text' as const, text: 'No relevant documentation found.' }] }
+        }
+        const text = result.documents
+          .map((doc) => `## ${doc.title}\n\n${doc.content}\n\n_Source: ${doc.source}_`)
+          .join('\n\n---\n\n')
+        return { content: [{ type: 'text' as const, text }] }
+      } catch (err) {
+        return {
+          content: [{ type: 'text' as const, text: `Documentation search failed: ${err instanceof Error ? err.message : String(err)}` }],
+          isError: true,
+        }
+      }
+    },
+  )
 }
 
 function generateDescription(toolName: string, meta: ToolMetadata): string {
