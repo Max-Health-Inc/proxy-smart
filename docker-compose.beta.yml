@@ -87,7 +87,7 @@ services:
       CORS_ORIGINS: https://beta.proxy-smart.com
     labels:
       caddy: beta.proxy-smart.com
-      caddy.@backend.path: "/.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers/* /docs/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /webapp /webapp/ /webapp/* /swagger /swagger/* /openapi.json"
+      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers/* /docs/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi.json"
       caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
     depends_on:
       - keycloak
@@ -102,13 +102,15 @@ services:
       target: ui
       args:
         VITE_ENCRYPTION_SECRET: ${VITE_ENCRYPTION_SECRET:-proxy-smart-beta-encryption-key}
+        VITE_BASE: /webapp/
     container_name: proxy-smart-frontend-beta
     restart: unless-stopped
     environment:
       VITE_API_BASE_URL: https://beta.proxy-smart.com
     labels:
       caddy: beta.proxy-smart.com
-      caddy.2_reverse_proxy: "{{upstreams 80}}"
+      caddy.@webapp.path: "/webapp /webapp/*"
+      caddy.2_reverse_proxy: "@webapp {{upstreams 80}}"
     depends_on:
       - backend
     networks:

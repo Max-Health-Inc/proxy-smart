@@ -49,6 +49,10 @@ FROM build-deps AS ui-build
 ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
 ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 
+# Base path for the UI (/ for mono, /webapp/ for split deployment)
+ARG VITE_BASE=/
+ENV VITE_BASE=${VITE_BASE}
+
 # Copy UI source code
 COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
@@ -97,20 +101,24 @@ CMD ["bun", "run", "dist/index.js"]
 FROM nginx:alpine AS ui
 WORKDIR /usr/share/nginx/html
 
-# Copy built UI
-COPY --from=ui-build /app/ui/dist .
+# Copy built UI into /webapp/ subdirectory
+COPY --from=ui-build /app/ui/dist /usr/share/nginx/html/webapp
 
-# Copy custom nginx config for SPA routing
+# Copy custom nginx config for SPA routing under /webapp/
 COPY <<EOF /etc/nginx/conf.d/default.conf
 server {
     listen 80;
     server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
 
-    # Handle client-side routing
-    location / {
-        try_files \$uri \$uri/ /index.html;
+    # Serve the Admin SPA under /webapp/
+    location /webapp/ {
+        alias /usr/share/nginx/html/webapp/;
+        try_files \$uri \$uri/ /webapp/index.html;
+    }
+
+    # Redirect /webapp to /webapp/
+    location = /webapp {
+        return 301 /webapp/;
     }
 
     # Cache static assets
