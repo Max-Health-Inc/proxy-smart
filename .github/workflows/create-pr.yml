@@ -251,6 +251,10 @@ jobs:
             Commits ahead of test: ${{ steps.check-diff.outputs.commits_ahead }}
             Commits behind test: ${{ steps.check-diff.outputs.commits_behind }}
             TODOs remaining in codebase: ${{ steps.check-diff.outputs.todo_count }}"
+
+          # Enable auto-merge — PR will merge once all required checks pass
+          PR_NUMBER=$(gh pr list --base test --head develop --state open --json number --jq '.[0].number')
+          gh pr merge $PR_NUMBER --auto --merge || echo "⚠️ Auto-merge could not be enabled (may need repo setting)"
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
@@ -274,6 +278,9 @@ jobs:
             TODOs remaining in codebase: ${{ steps.check-diff.outputs.todo_count }}
             
             _Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_"
+          
+          # Ensure auto-merge is enabled
+          gh pr merge $PR_NUMBER --auto --merge || echo "⚠️ Auto-merge already enabled or could not be set"
           
           echo "Updated PR #$PR_NUMBER with latest commit and TODO counts"
         env:
