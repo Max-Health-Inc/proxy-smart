@@ -1,0 +1,14 @@
+{
+  "client_name": "DTR App",
+  "client_id": "dtr-app",
+  "description": "Documentation, Templates & Rules — Prior Authorization workflow with questionnaire rendering",
+  "client_uri": "http://localhost:5175",
+  "logo_uri": "http://localhost:5175/vite.svg",
+  "redirect_uris": ["http://localhost:5175/callback"],
+  "scope": "openid fhirUser launch user/*.read patient/*.read",
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "category": "clinical",
+  "icon": "document-text"
+}

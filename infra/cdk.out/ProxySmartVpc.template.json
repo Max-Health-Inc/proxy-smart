@@ -1,0 +1,1083 @@
+{
+ "Description": "Proxy Smart - VPC with public, private, and isolated subnets",
+ "Resources": {
+  "ProxySmartVpc5E0F3CCC": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/Resource"
+   }
+  },
+  "ProxySmartVpcPublicSubnet1Subnet8F6B16CA": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "ProxySmartVpcPublicSubnet1RouteTable2FE6FABC": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "ProxySmartVpcPublicSubnet1RouteTableAssociation3AE7AF42": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPublicSubnet1RouteTable2FE6FABC"
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcPublicSubnet1Subnet8F6B16CA"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "ProxySmartVpcPublicSubnet1DefaultRoute0D20EB37": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "ProxySmartVpcIGWB382B659"
+    },
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPublicSubnet1RouteTable2FE6FABC"
+    }
+   },
+   "DependsOn": [
+    "ProxySmartVpcVPCGW4B361B7D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "ProxySmartVpcPublicSubnet1EIP057B7EF0": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1/EIP"
+   }
+  },
+  "ProxySmartVpcPublicSubnet1NATGatewayC5E1736D": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "ProxySmartVpcPublicSubnet1EIP057B7EF0",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcPublicSubnet1Subnet8F6B16CA"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "DependsOn": [
+    "ProxySmartVpcPublicSubnet1DefaultRoute0D20EB37",
+    "ProxySmartVpcPublicSubnet1RouteTableAssociation3AE7AF42"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet1/NATGateway"
+   }
+  },
+  "ProxySmartVpcPublicSubnet2Subnet45BA1AEA": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PublicSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet2/Subnet"
+   }
+  },
+  "ProxySmartVpcPublicSubnet2RouteTable468F5F39": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PublicSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet2/RouteTable"
+   }
+  },
+  "ProxySmartVpcPublicSubnet2RouteTableAssociation4F885554": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPublicSubnet2RouteTable468F5F39"
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcPublicSubnet2Subnet45BA1AEA"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet2/RouteTableAssociation"
+   }
+  },
+  "ProxySmartVpcPublicSubnet2DefaultRoute11BAD4C5": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "ProxySmartVpcIGWB382B659"
+    },
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPublicSubnet2RouteTable468F5F39"
+    }
+   },
+   "DependsOn": [
+    "ProxySmartVpcVPCGW4B361B7D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PublicSubnet2/DefaultRoute"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet1SubnetF39FDD5A": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.2.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/Subnet"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet1RouteTable36D9E768": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/RouteTable"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet1RouteTableAssociationAAD4185E": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPrivateSubnet1RouteTable36D9E768"
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcPrivateSubnet1SubnetF39FDD5A"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/RouteTableAssociation"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet1DefaultRouteE1E8B465": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "ProxySmartVpcPublicSubnet1NATGatewayC5E1736D"
+    },
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPrivateSubnet1RouteTable36D9E768"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/DefaultRoute"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet2SubnetB84177BE": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.3.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/Subnet"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet2RouteTable1E06BC3F": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/RouteTable"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet2RouteTableAssociation0E09235B": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPrivateSubnet2RouteTable1E06BC3F"
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcPrivateSubnet2SubnetB84177BE"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/RouteTableAssociation"
+   }
+  },
+  "ProxySmartVpcPrivateSubnet2DefaultRoute28BAD69F": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "ProxySmartVpcPublicSubnet1NATGatewayC5E1736D"
+    },
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcPrivateSubnet2RouteTable1E06BC3F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/DefaultRoute"
+   }
+  },
+  "ProxySmartVpcIsolatedSubnet1SubnetF7961167": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.4.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1/Subnet"
+   }
+  },
+  "ProxySmartVpcIsolatedSubnet1RouteTable1627F471": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1/RouteTable"
+   }
+  },
+  "ProxySmartVpcIsolatedSubnet1RouteTableAssociationC4FD0B1E": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcIsolatedSubnet1RouteTable1627F471"
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcIsolatedSubnet1SubnetF7961167"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1/RouteTableAssociation"
+   }
+  },
+  "ProxySmartVpcIsolatedSubnet2Subnet8AC08863": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.5.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2/Subnet"
+   }
+  },
+  "ProxySmartVpcIsolatedSubnet2RouteTable6CD5D3E9": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2/RouteTable"
+   }
+  },
+  "ProxySmartVpcIsolatedSubnet2RouteTableAssociation564A8A14": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "ProxySmartVpcIsolatedSubnet2RouteTable6CD5D3E9"
+    },
+    "SubnetId": {
+     "Ref": "ProxySmartVpcIsolatedSubnet2Subnet8AC08863"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2/RouteTableAssociation"
+   }
+  },
+  "ProxySmartVpcIGWB382B659": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/IGW"
+   }
+  },
+  "ProxySmartVpcVPCGW4B361B7D": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "ProxySmartVpcIGWB382B659"
+    },
+    "VpcId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/VPCGW"
+   }
+  },
+  "ProxySmartVpcFlowLogCloudWatchIAMRole934C638A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "vpc-flow-logs.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/IAMRole/Resource"
+   }
+  },
+  "ProxySmartVpcFlowLogCloudWatchIAMRoleDefaultPolicy22C9DC35": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "ProxySmartVpcFlowLogCloudWatchLogGroup10F962BB",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ProxySmartVpcFlowLogCloudWatchIAMRoleDefaultPolicy22C9DC35",
+    "Roles": [
+     {
+      "Ref": "ProxySmartVpcFlowLogCloudWatchIAMRole934C638A"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/IAMRole/DefaultPolicy/Resource"
+   }
+  },
+  "ProxySmartVpcFlowLogCloudWatchLogGroup10F962BB": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "RetentionInDays": 731,
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/LogGroup/Resource"
+   }
+  },
+  "ProxySmartVpcFlowLogCloudWatchFlowLog0BA1847F": {
+   "Type": "AWS::EC2::FlowLog",
+   "Properties": {
+    "DeliverLogsPermissionArn": {
+     "Fn::GetAtt": [
+      "ProxySmartVpcFlowLogCloudWatchIAMRole934C638A",
+      "Arn"
+     ]
+    },
+    "LogDestinationType": "cloud-watch-logs",
+    "LogGroupName": {
+     "Ref": "ProxySmartVpcFlowLogCloudWatchLogGroup10F962BB"
+    },
+    "ResourceId": {
+     "Ref": "ProxySmartVpc5E0F3CCC"
+    },
+    "ResourceType": "VPC",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Environment",
+      "Value": "production"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "TrafficType": "ALL"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/FlowLog"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WOQW/CMAyFfwv3NGNB4o7QhpDQFpWJ6+QGrwTSuEocqqnqf5/SMnp6n5+fn6ykWq3lcgFdLMz5Vjhbyf7IYG4Cuvjdo1GyP7VGbH/8SW+FTpWz5pgqj5y9mUpKjF9QOZz92dvESMYCW/LPcIa3vc7yAbwDxg5+hQ72Doxz8d4zBo/PwPTJY9owg7k06Fm8O+oOVOf9AwdhoZF9SdNPo2py1owlEw3CUR1lf6B6Fyi1efPPwyBKjJSCGe8/E7eJB+HpjPIaX+5KyVcll4trtLYIybNtUJaT/gHcokUBWQEAAA=="
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartVpc/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "VpcId": {
+   "Description": "VPC ID",
+   "Value": {
+    "Ref": "ProxySmartVpc5E0F3CCC"
+   },
+   "Export": {
+    "Name": "ProxySmartVpcId"
+   }
+  },
+  "VpcCidr": {
+   "Description": "VPC CIDR Block",
+   "Value": {
+    "Fn::GetAtt": [
+     "ProxySmartVpc5E0F3CCC",
+     "CidrBlock"
+    ]
+   }
+  },
+  "ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F": {
+   "Value": {
+    "Ref": "ProxySmartVpc5E0F3CCC"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
+   }
+  },
+  "ExportsOutputRefProxySmartVpcIsolatedSubnet1SubnetF7961167B5404B04": {
+   "Value": {
+    "Ref": "ProxySmartVpcIsolatedSubnet1SubnetF7961167"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpcIsolatedSubnet1SubnetF7961167B5404B04"
+   }
+  },
+  "ExportsOutputRefProxySmartVpcIsolatedSubnet2Subnet8AC08863F0C4664F": {
+   "Value": {
+    "Ref": "ProxySmartVpcIsolatedSubnet2Subnet8AC08863"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpcIsolatedSubnet2Subnet8AC08863F0C4664F"
+   }
+  },
+  "ExportsOutputRefProxySmartVpcPublicSubnet1Subnet8F6B16CA1AE1F4E9": {
+   "Value": {
+    "Ref": "ProxySmartVpcPublicSubnet1Subnet8F6B16CA"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPublicSubnet1Subnet8F6B16CA1AE1F4E9"
+   }
+  },
+  "ExportsOutputRefProxySmartVpcPublicSubnet2Subnet45BA1AEAF7569C1B": {
+   "Value": {
+    "Ref": "ProxySmartVpcPublicSubnet2Subnet45BA1AEA"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPublicSubnet2Subnet45BA1AEAF7569C1B"
+   }
+  },
+  "ExportsOutputRefProxySmartVpcPrivateSubnet1SubnetF39FDD5ABDD4ADE6": {
+   "Value": {
+    "Ref": "ProxySmartVpcPrivateSubnet1SubnetF39FDD5A"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPrivateSubnet1SubnetF39FDD5ABDD4ADE6"
+   }
+  },
+  "ExportsOutputRefProxySmartVpcPrivateSubnet2SubnetB84177BE0B210505": {
+   "Value": {
+    "Ref": "ProxySmartVpcPrivateSubnet2SubnetB84177BE"
+   },
+   "Export": {
+    "Name": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPrivateSubnet2SubnetB84177BE0B210505"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
