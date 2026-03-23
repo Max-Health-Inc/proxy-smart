@@ -16,13 +16,11 @@ The version management system consists of:
 
 The project is a monorepo with multiple packages:
 ```
-├── package.json                    # Root package (master version)
-├── backend/package.json            # Backend service
-├── ui/package.json                 # Frontend React application
-├── testing/package.json            # Testing utilities
-├── testing/alpha/package.json      # Alpha testing environment
-├── testing/beta/package.json       # Beta testing environment
-└── testing/production/package.json # Production testing environment
+├── package.json            # Root package (master version)
+├── backend/package.json    # Backend service
+├── ui/package.json         # Frontend React application
+├── infra/package.json      # CDK infrastructure
+└── scripts/package.json    # Build & CI scripts
 ```
 
 All packages must maintain version consistency, with the root `package.json` serving as the source of truth.
@@ -193,31 +191,86 @@ Allows manual version bumping through GitHub Actions:
 
 ## Release Process
 
-### Alpha Releases
+### Branch Flow
 
-Alpha releases are created automatically during development:
+The project uses a three-stage promotion model:
 
-1. **Trigger**: Push to feature branches
-2. **Version Logic**: 
-   - If current base version matches main: bump patch and add alpha suffix
-   - If already different: keep current base and add alpha suffix
-3. **Format**: `X.Y.Z-alpha.YYYYMMDDHHMM.SHA`
+```
+develop (alpha) ──auto-PR──▶ test (beta) ──manual-PR──▶ main (production)
+```
 
-### Beta Releases
+Each branch has its own version suffix. When code is pushed, the release workflow creates a version-stamped tag and GitHub Release automatically.
 
-Beta releases are created from the develop branch:
+### Alpha Releases (develop)
 
-1. **Trigger**: Push to develop branch
-2. **Version Logic**: Use current base version with beta suffix
-3. **Format**: `X.Y.Z-beta.YYYYMMDDHHMM.SHA`
+Alpha releases are created automatically on every push to `develop`:
 
-### Production Releases
+1. **Trigger**: Push to `develop` branch (excluding bot commits)
+2. **Workflow**: `release-alpha.yml` → `release-orchestrator.yml` → `version-operations.yml`
+3. **Version Logic**: Current base version + alpha suffix with build number + short SHA
+4. **Format**: `X.Y.Z-alpha.YYYYMMDDHHMM.SHA`
+5. **Example**: `0.0.2-alpha.202603231607.00c7934f`
 
-Production releases are created from the main branch:
+### Beta Releases (test)
 
-1. **Trigger**: Push to main branch
-2. **Version Logic**: Use base version with RELEASE suffix
-3. **Format**: `X.Y.Z-RELEASE`
+Beta releases are created when code merges from `develop` into `test`:
+
+1. **Trigger**: Push to `test` branch (excluding bot commits)
+2. **Workflow**: `release-beta.yml` → `release-orchestrator.yml` → `version-operations.yml`
+3. **Version Logic**: Current base version + beta suffix with build number + short SHA
+4. **Format**: `X.Y.Z-beta.YYYYMMDDHHMM.SHA`
+5. **Deploy**: Beta releases trigger deployment to the staging VPS via `deploy-beta.yml`
+
+### Production Releases (main)
+
+Production releases are created when code merges from `test` into `main`:
+
+1. **Trigger**: Push to `main` branch
+2. **Workflow**: `release-production.yml` → `release-orchestrator.yml` → `version-operations.yml`
+3. **Version Logic**: Base version with RELEASE suffix
+4. **Format**: `X.Y.Z-RELEASE`
+
+## Automated PR Promotion
+
+### Auto-PR Creation (`create-pr.yml`)
+
+When code is pushed to `develop`, the `create-pr.yml` workflow automatically:
+
+1. Creates (or updates) a PR from `develop` → `test`
+2. Enables GitHub auto-merge on the PR
+3. The PR merges automatically once all required checks pass
+
+Similarly, when code merges to `test`, a PR from `test` → `main` is created — but this one requires manual review before merge.
+
+### Version Conflict Auto-Resolution
+
+Because each branch has different version suffixes (alpha vs beta vs production), the 5 `package.json` files always conflict between branches. The `create-pr.yml` workflow resolves this automatically:
+
+1. **Detection**: The workflow checks if the source branch is behind the target (`commits_behind != 0`)
+2. **Merge**: It merges the target branch into the source using `git merge -X ours` (keeping the source's versions)
+3. **Rationale**: The source's version strings are ephemeral anyway — `version-operations.yml` will immediately re-stamp the correct stage version after merge
+4. **Bot commit**: The merge commit includes `[proxy-smart-releaser]` to prevent re-triggering release workflows
+
+Example flow for `develop` → `test`:
+```
+1. develop has: 0.0.2-alpha.202603231607.00c7934f
+2. test has:    0.0.2-beta.202603231553.5d372300
+3. Workflow merges origin/test into develop with -X ours
+4. Push → PR becomes conflict-free → auto-merge
+5. version-operations re-stamps test as 0.0.2-beta.{new-build}.{new-sha}
+```
+
+### Skip Conditions
+
+Bot-generated commits are filtered to prevent infinite loops:
+
+| Commit message contains | Alpha Release | Create PR | Compliance Tests |
+|---|---|---|---|
+| `proxy-smart-releaser` | Skipped | Skipped | Skipped (push only) |
+| `🔄 Update version` | Skipped | Skipped | Skipped (push only) |
+| `🤖 Update client APIs` | Skipped | Skipped | Skipped (push only) |
+
+These workflows still run when triggered via `workflow_dispatch`, `workflow_call`, or schedule.
 
 ## Best Practices
 
@@ -242,10 +295,10 @@ Production releases are created from the main branch:
 
 ### 4. Release Workflow
 
-1. **Development**: Work on feature branches (auto alpha versions)
-2. **Integration**: Merge to develop (beta versions)
-3. **Release**: Merge to main (production versions)
-4. **Hotfixes**: Direct to main with manual version bump
+1. **Development**: Work on feature branches, merge to `develop` (auto alpha versions)
+2. **Staging**: Auto-PR promotes `develop` → `test` (auto-merge, beta versions, VPS deploy)
+3. **Production**: PR promotes `test` → `main` (manual review, production versions)
+4. **Hotfixes**: Direct to `main` with manual version bump
 
 ## Troubleshooting
 
@@ -315,12 +368,16 @@ const isConsistent = checkConsistency();
 
 ## Integration with CI/CD
 
-The version management system integrates seamlessly with CI/CD pipelines:
+The version management system is deeply integrated with the CI/CD pipeline:
 
-1. **Pull Request Validation**: Ensures version consistency
-2. **Automated Releases**: Handles version bumping for different environments
-3. **Build Numbering**: Provides unique identifiers for builds
-4. **Release Notes**: Uses version information for changelog generation
+1. **Pre-commit Hook**: Synchronizes all package.json files before every commit
+2. **PR Validation**: `version-check.yml` ensures version consistency on pull requests
+3. **Auto-Release**: Push to `develop`/`test`/`main` triggers stage-specific release workflows
+4. **Auto-PR**: `create-pr.yml` promotes code through branches with conflict resolution
+5. **Auto-Merge**: `develop` → `test` PRs merge automatically after checks pass
+6. **Changelog**: AI-powered changelog generation from commit history (OpenAI)
+7. **Compliance**: SMART Inferno compliance tests run on real code merges
+8. **Deploy**: Beta releases deploy to the staging VPS automatically
 
 ## Conclusion
 
