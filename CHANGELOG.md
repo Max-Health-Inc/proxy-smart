@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603231553.7ab93fa3] - 2026-03-23
+
+- 🔧 Chores & Improvements: Refined tool-call handling to trigger only on exact type 'tool-call' with a present toolName; updated comment to reflect start-only behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/206
+
+
 ## [0.0.2-alpha.202603231549.74ce61a0] - 2026-03-23
 
 - ✨ Features
