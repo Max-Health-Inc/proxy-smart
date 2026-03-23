@@ -293,7 +293,7 @@ jobs:
 
             # Add files to commit
             FILES_TO_ADD="package.json"
-            for file in backend/package.json ui/package.json infra/package.json testing/alpha/package.json testing/beta/package.json testing/production/package.json scripts/package.json README.md; do
+            for file in backend/package.json ui/package.json infra/package.json consent-app/package.json dtr-app/package.json shared-ui/package.json testing/alpha/package.json testing/beta/package.json testing/production/package.json scripts/package.json README.md; do
               if [ -f "$file" ]; then
                 FILES_TO_ADD="$FILES_TO_ADD $file"
               fi
