@@ -155,6 +155,9 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Discord Deployment Success Notification
         uses: ./.github/actions/discord-notify
         if: env.DISCORD_WEBHOOK_URL != ''
@@ -185,6 +188,9 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Discord Deployment Failure Notification
         uses: ./.github/actions/discord-notify
         if: env.DISCORD_WEBHOOK_URL != ''
