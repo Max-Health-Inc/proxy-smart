@@ -63,8 +63,8 @@ jobs:
       - name: Configure SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy via Docker Compose
@@ -81,7 +81,7 @@ jobs:
 
           DEPLOY_DIR="/opt/proxy-smart-beta"
           VPS_URL="https://beta.proxy-smart.com"
-          SSH_CMD="ssh ${VPS_USER}@${VPS_HOST}"
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST}"
 
           # Ensure deploy directory and repo exist on VPS
           ${SSH_CMD} "
