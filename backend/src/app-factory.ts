@@ -123,6 +123,14 @@ export function createApp() {
         .get('/apps/consent', () => Bun.file('public/apps/consent/index.html'))
         .get('/apps/consent/', () => Bun.file('public/apps/consent/index.html'))
         .get('/apps/consent/*', () => Bun.file('public/apps/consent/index.html'))
+        // VitePress docs SPA fallback
+        .get('/docs', () => Bun.file('public/docs/index.html'))
+        .get('/docs/', () => Bun.file('public/docs/index.html'))
+        .get('/docs/*', ({ params }) => {
+            const path = (params as { '*': string })['*']
+            // Serve the exact file if it exists (e.g. assets/style.css), otherwise SPA fallback
+            return Bun.file(`public/docs/${path}`)
+        })
         .use(keycloakPlugin)
         .use(docsRoutes)
         .use(mcpMetadataRoutes)

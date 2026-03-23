@@ -4,7 +4,7 @@
  * This module defines special-purpose tools that integrate with external services.
  * 
  * Documentation search is available via:
- * - Public HTTP routes: GET /docs/search/semantic?q=query, GET /docs/search/keyword?q=query
+ * - Public HTTP routes: GET /docs-api/search/semantic?q=query, GET /docs-api/search/keyword?q=query
  * - AI assistant tool: search_documentation (registered in routes/admin/ai.ts setupTools)
  */
 
