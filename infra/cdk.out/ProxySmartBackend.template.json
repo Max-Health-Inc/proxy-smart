@@ -1,0 +1,1442 @@
+{
+ "Description": "Proxy Smart - Backend API on ECS Fargate",
+ "Resources": {
+  "BackendRepo7FFBAD06": {
+   "Type": "AWS::ECR::Repository",
+   "Properties": {
+    "ImageScanningConfiguration": {
+     "ScanOnPush": true
+    },
+    "LifecyclePolicy": {
+     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Keep last 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}"
+    },
+    "RepositoryName": "proxy-smart-backend",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendRepo/Resource"
+   }
+  },
+  "KeycloakAdminSecret02FB07E0": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "Keycloak admin credentials for backend service",
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "clientSecret",
+     "PasswordLength": 32,
+     "SecretStringTemplate": "{\"clientId\":\"admin-cli\"}"
+    },
+    "Name": "proxy-smart/backend-keycloak-admin",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/KeycloakAdminSecret/Resource"
+   }
+  },
+  "Certificate4E7ABB08": {
+   "Type": "AWS::CertificateManager::Certificate",
+   "Properties": {
+    "DomainName": "api.auth.maxhealth.tech",
+    "DomainValidationOptions": [
+     {
+      "DomainName": "api.auth.maxhealth.tech",
+      "HostedZoneId": "REPLACE_WITH_HOSTED_ZONE_ID"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Name",
+      "Value": "ProxySmartBackend/Certificate"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "ValidationMethod": "DNS"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/Certificate/Resource"
+   }
+  },
+  "BackendWaf": {
+   "Type": "AWS::WAFv2::WebACL",
+   "Properties": {
+    "DefaultAction": {
+     "Allow": {}
+    },
+    "Rules": [
+     {
+      "Name": "AWSManagedRulesCommonRuleSet",
+      "OverrideAction": {
+       "None": {}
+      },
+      "Priority": 1,
+      "Statement": {
+       "ManagedRuleGroupStatement": {
+        "Name": "AWSManagedRulesCommonRuleSet",
+        "VendorName": "AWS"
+       }
+      },
+      "VisibilityConfig": {
+       "CloudWatchMetricsEnabled": true,
+       "MetricName": "CommonRuleSetMetrics",
+       "SampledRequestsEnabled": true
+      }
+     },
+     {
+      "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+      "OverrideAction": {
+       "None": {}
+      },
+      "Priority": 2,
+      "Statement": {
+       "ManagedRuleGroupStatement": {
+        "Name": "AWSManagedRulesKnownBadInputsRuleSet",
+        "VendorName": "AWS"
+       }
+      },
+      "VisibilityConfig": {
+       "CloudWatchMetricsEnabled": true,
+       "MetricName": "KnownBadInputsMetrics",
+       "SampledRequestsEnabled": true
+      }
+     }
+    ],
+    "Scope": "REGIONAL",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VisibilityConfig": {
+     "CloudWatchMetricsEnabled": true,
+     "MetricName": "BackendWafMetrics",
+     "SampledRequestsEnabled": true
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendWaf"
+   }
+  },
+  "ClusterEB0386A7": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": "proxy-smart-production",
+    "ClusterSettings": [
+     {
+      "Name": "containerInsights",
+      "Value": "enabled"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/Cluster/Resource"
+   }
+  },
+  "BackendServiceLB09608E98": {
+   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+   "Properties": {
+    "LoadBalancerAttributes": [
+     {
+      "Key": "deletion_protection.enabled",
+      "Value": "false"
+     }
+    ],
+    "Scheme": "internet-facing",
+    "SecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "BackendServiceLBSecurityGroup2B9BA648",
+       "GroupId"
+      ]
+     }
+    ],
+    "Subnets": [
+     {
+      "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPublicSubnet1Subnet8F6B16CA1AE1F4E9"
+     },
+     {
+      "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPublicSubnet2Subnet45BA1AEAF7569C1B"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "Type": "application"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/LB/Resource"
+   }
+  },
+  "BackendServiceLBSecurityGroup2B9BA648": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Automatically created Security Group for ELB ProxySmartBackendBackendServiceLB0A988F43",
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow from anyone on port 443",
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     },
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow from anyone on port 80",
+      "FromPort": 80,
+      "IpProtocol": "tcp",
+      "ToPort": 80
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/LB/SecurityGroup/Resource"
+   }
+  },
+  "BackendServiceLBSecurityGrouptoProxySmartBackendBackendServiceSecurityGroupFC32CA2A8445F1C3314E": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "DestinationSecurityGroupId": {
+     "Fn::GetAtt": [
+      "BackendServiceSecurityGroup7599F85E",
+      "GroupId"
+     ]
+    },
+    "FromPort": 8445,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "BackendServiceLBSecurityGroup2B9BA648",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "ToPort": 8445
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/LB/SecurityGroup/to ProxySmartBackendBackendServiceSecurityGroupFC32CA2A:8445"
+   }
+  },
+  "BackendServiceLBPublicListener2FA7FC98": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "Certificates": [
+     {
+      "CertificateArn": {
+       "Ref": "Certificate4E7ABB08"
+      }
+     }
+    ],
+    "DefaultActions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "BackendServiceLBPublicListenerECSGroupD43CD2AB"
+      },
+      "Type": "forward"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "BackendServiceLB09608E98"
+    },
+    "Port": 443,
+    "Protocol": "HTTPS",
+    "SslPolicy": "ELBSecurityPolicy-TLS13-1-2-Res-2021-06"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/LB/PublicListener/Resource"
+   }
+  },
+  "BackendServiceLBPublicListenerECSGroupD43CD2AB": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckPath": "/health",
+    "Matcher": {
+     "HttpCode": "200"
+    },
+    "Port": 80,
+    "Protocol": "HTTP",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "TargetGroupAttributes": [
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "ip",
+    "VpcId": {
+     "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/LB/PublicListener/ECSGroup/Resource"
+   }
+  },
+  "BackendServiceLBPublicRedirectListenerA2A7EC53": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "DefaultActions": [
+     {
+      "RedirectConfig": {
+       "Port": "443",
+       "Protocol": "HTTPS",
+       "StatusCode": "HTTP_301"
+      },
+      "Type": "redirect"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "BackendServiceLB09608E98"
+    },
+    "Port": 80,
+    "Protocol": "HTTP"
+   },
+   "DependsOn": [
+    "BackendServiceLBPublicListenerECSGroupD43CD2AB",
+    "BackendServiceLBPublicListener2FA7FC98"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/LB/PublicRedirectListener/Resource"
+   }
+  },
+  "BackendServiceDNS07B9A993": {
+   "Type": "AWS::Route53::RecordSet",
+   "Properties": {
+    "AliasTarget": {
+     "DNSName": {
+      "Fn::Join": [
+       "",
+       [
+        "dualstack.",
+        {
+         "Fn::GetAtt": [
+          "BackendServiceLB09608E98",
+          "DNSName"
+         ]
+        }
+       ]
+      ]
+     },
+     "HostedZoneId": {
+      "Fn::GetAtt": [
+       "BackendServiceLB09608E98",
+       "CanonicalHostedZoneID"
+      ]
+     }
+    },
+    "HostedZoneId": "REPLACE_WITH_HOSTED_ZONE_ID",
+    "Name": "api.auth.maxhealth.tech.",
+    "Type": "A"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/DNS/Resource"
+   }
+  },
+  "BackendServiceTaskDefTaskRoleD63B95BB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/TaskRole/Resource"
+   }
+  },
+  "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ssmmessages:CreateControlChannel",
+        "ssmmessages:CreateDataChannel",
+        "ssmmessages:OpenControlChannel",
+        "ssmmessages:OpenDataChannel"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "logs:DescribeLogGroups",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
+    "Roles": [
+     {
+      "Ref": "BackendServiceTaskDefTaskRoleD63B95BB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/TaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "BackendServiceTaskDef9F97F56B": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "NODE_ENV",
+        "Value": "production"
+       },
+       {
+        "Name": "MONO_MODE",
+        "Value": "true"
+       },
+       {
+        "Name": "BASE_URL",
+        "Value": "https://api.auth.maxhealth.tech"
+       },
+       {
+        "Name": "PORT",
+        "Value": "8445"
+       },
+       {
+        "Name": "KEYCLOAK_BASE_URL",
+        "Value": "https://auth.maxhealth.tech"
+       },
+       {
+        "Name": "KEYCLOAK_REALM",
+        "Value": "proxy-smart"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           4,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepo7FFBAD06",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".dkr.ecr.",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             ":",
+             {
+              "Fn::GetAtt": [
+               "BackendRepo7FFBAD06",
+               "Arn"
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         ".",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/",
+         {
+          "Ref": "BackendRepo7FFBAD06"
+         },
+         ":latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "BackendServiceTaskDefwebLogGroup614D1BFF"
+        },
+        "awslogs-stream-prefix": "BackendService",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "web",
+      "PortMappings": [
+       {
+        "ContainerPort": 8445,
+        "Protocol": "tcp"
+       }
+      ],
+      "Secrets": [
+       {
+        "Name": "KEYCLOAK_ADMIN_CLIENT_ID",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "KeycloakAdminSecret02FB07E0"
+           },
+           ":clientId::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "KEYCLOAK_ADMIN_CLIENT_SECRET",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Ref": "KeycloakAdminSecret02FB07E0"
+           },
+           ":clientSecret::"
+          ]
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "Cpu": "512",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "BackendServiceTaskDefExecutionRole15BE46B5",
+      "Arn"
+     ]
+    },
+    "Family": "ProxySmartBackendBackendServiceTaskDefCD1092CA",
+    "Memory": "1024",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "BackendServiceTaskDefTaskRoleD63B95BB",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/Resource"
+   }
+  },
+  "BackendServiceTaskDefwebLogGroup614D1BFF": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/web/LogGroup/Resource"
+   }
+  },
+  "BackendServiceTaskDefExecutionRole15BE46B5": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/ExecutionRole/Resource"
+   }
+  },
+  "BackendServiceTaskDefExecutionRoleDefaultPolicyDFB9BC56": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "BackendRepo7FFBAD06",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "BackendServiceTaskDefwebLogGroup614D1BFF",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "KeycloakAdminSecret02FB07E0"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BackendServiceTaskDefExecutionRoleDefaultPolicyDFB9BC56",
+    "Roles": [
+     {
+      "Ref": "BackendServiceTaskDefExecutionRole15BE46B5"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/ExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "BackendService2147DAF9": {
+   "Type": "AWS::ECS::Service",
+   "Properties": {
+    "Cluster": {
+     "Ref": "ClusterEB0386A7"
+    },
+    "DeploymentConfiguration": {
+     "Alarms": {
+      "AlarmNames": [],
+      "Enable": false,
+      "Rollback": false
+     },
+     "DeploymentCircuitBreaker": {
+      "Enable": true,
+      "Rollback": true
+     },
+     "MaximumPercent": 200,
+     "MinimumHealthyPercent": 100
+    },
+    "DesiredCount": 1,
+    "EnableECSManagedTags": false,
+    "EnableExecuteCommand": true,
+    "HealthCheckGracePeriodSeconds": 60,
+    "LaunchType": "FARGATE",
+    "LoadBalancers": [
+     {
+      "ContainerName": "web",
+      "ContainerPort": 8445,
+      "TargetGroupArn": {
+       "Ref": "BackendServiceLBPublicListenerECSGroupD43CD2AB"
+      }
+     }
+    ],
+    "NetworkConfiguration": {
+     "AwsvpcConfiguration": {
+      "AssignPublicIp": "DISABLED",
+      "SecurityGroups": [
+       {
+        "Fn::GetAtt": [
+         "BackendServiceSecurityGroup7599F85E",
+         "GroupId"
+        ]
+       }
+      ],
+      "Subnets": [
+       {
+        "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPrivateSubnet1SubnetF39FDD5ABDD4ADE6"
+       },
+       {
+        "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpcPrivateSubnet2SubnetB84177BE0B210505"
+       }
+      ]
+     }
+    },
+    "ServiceName": "proxy-smart-backend",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "TaskDefinition": {
+     "Ref": "BackendServiceTaskDef9F97F56B"
+    }
+   },
+   "DependsOn": [
+    "BackendServiceLBPublicListenerECSGroupD43CD2AB",
+    "BackendServiceLBPublicListener2FA7FC98",
+    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
+    "BackendServiceTaskDefTaskRoleD63B95BB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/Service/Service"
+   }
+  },
+  "BackendServiceSecurityGroup7599F85E": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "ProxySmartBackend/BackendService/Service/SecurityGroup",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
+    }
+   },
+   "DependsOn": [
+    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
+    "BackendServiceTaskDefTaskRoleD63B95BB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/Service/SecurityGroup/Resource"
+   }
+  },
+  "BackendServiceSecurityGroupfromProxySmartBackendBackendServiceLBSecurityGroupD10957FB84454F580B3B": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "FromPort": 8445,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "BackendServiceSecurityGroup7599F85E",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "BackendServiceLBSecurityGroup2B9BA648",
+      "GroupId"
+     ]
+    },
+    "ToPort": 8445
+   },
+   "DependsOn": [
+    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
+    "BackendServiceTaskDefTaskRoleD63B95BB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/Service/SecurityGroup/from ProxySmartBackendBackendServiceLBSecurityGroupD10957FB:8445"
+   }
+  },
+  "BackendServiceTaskCountTarget2134EDB2": {
+   "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+   "Properties": {
+    "MaxCapacity": 4,
+    "MinCapacity": 1,
+    "ResourceId": {
+     "Fn::Join": [
+      "",
+      [
+       "service/",
+       {
+        "Ref": "ClusterEB0386A7"
+       },
+       "/",
+       {
+        "Fn::GetAtt": [
+         "BackendService2147DAF9",
+         "Name"
+        ]
+       }
+      ]
+     ]
+    },
+    "RoleARN": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":iam::",
+       {
+        "Ref": "AWS::AccountId"
+       },
+       ":role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+      ]
+     ]
+    },
+    "ScalableDimension": "ecs:service:DesiredCount",
+    "ServiceNamespace": "ecs"
+   },
+   "DependsOn": [
+    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
+    "BackendServiceTaskDefTaskRoleD63B95BB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/Service/TaskCount/Target/Resource"
+   }
+  },
+  "BackendServiceTaskCountTargetCpuScalingB44CAB95": {
+   "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+   "Properties": {
+    "PolicyName": "ProxySmartBackendBackendServiceTaskCountTargetCpuScalingE3DAF333",
+    "PolicyType": "TargetTrackingScaling",
+    "ScalingTargetId": {
+     "Ref": "BackendServiceTaskCountTarget2134EDB2"
+    },
+    "TargetTrackingScalingPolicyConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ECSServiceAverageCPUUtilization"
+     },
+     "ScaleInCooldown": 300,
+     "ScaleOutCooldown": 60,
+     "TargetValue": 70
+    }
+   },
+   "DependsOn": [
+    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
+    "BackendServiceTaskDefTaskRoleD63B95BB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendService/Service/TaskCount/Target/CpuScaling/Resource"
+   }
+  },
+  "BackendWafAssociation": {
+   "Type": "AWS::WAFv2::WebACLAssociation",
+   "Properties": {
+    "ResourceArn": {
+     "Ref": "BackendServiceLB09608E98"
+    },
+    "WebACLArn": {
+     "Fn::GetAtt": [
+      "BackendWaf",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/BackendWafAssociation"
+   }
+  },
+  "LatencyAlarm5394FC57": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Backend API latency exceeds 2 seconds",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "LoadBalancer",
+      "Value": {
+       "Fn::GetAtt": [
+        "BackendServiceLB09608E98",
+        "LoadBalancerFullName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 3,
+    "MetricName": "TargetResponseTime",
+    "Namespace": "AWS/ApplicationELB",
+    "Period": 300,
+    "Statistic": "Average",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "Threshold": 2
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/LatencyAlarm/Resource"
+   }
+  },
+  "UnhealthyHostsAlarmE3387D4B": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Unhealthy hosts detected in backend target group",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "LoadBalancer",
+      "Value": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           1,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "BackendServiceLBPublicListener2FA7FC98"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::Select": [
+           2,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "BackendServiceLBPublicListener2FA7FC98"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "BackendServiceLBPublicListener2FA7FC98"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     {
+      "Name": "TargetGroup",
+      "Value": {
+       "Fn::GetAtt": [
+        "BackendServiceLBPublicListenerECSGroupD43CD2AB",
+        "TargetGroupFullName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "MetricName": "UnHealthyHostCount",
+    "Namespace": "AWS/ApplicationELB",
+    "Period": 300,
+    "Statistic": "Average",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "Threshold": 1
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/UnhealthyHostsAlarm/Resource"
+   }
+  },
+  "Http5xxErrorsAlarmAA393237": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "High rate of 5xx errors from backend ALB",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "LoadBalancer",
+      "Value": {
+       "Fn::GetAtt": [
+        "BackendServiceLB09608E98",
+        "LoadBalancerFullName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "MetricName": "HTTPCode_ELB_5XX_Count",
+    "Namespace": "AWS/ApplicationELB",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "backend"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "Threshold": 10
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/Http5xxErrorsAlarm/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtM7F9u55HygQoIMdYI8FI9MeG0UyJCpBIei/D5JTO+mGPfF4OlI8iZWsHj7L+zs4+43qDxtNexk7BnUQcPbPEZWTscXJemLrXkUzmDVLwqNyyP4IBkZ0MnYlz6oZJaHQMQ2kgHFRNSuXpVdpEmcYTpWMzWB+4b5utmJBtfdWETBZkwQqL2Ojg2d0pccFfgc3AuMO/OErDmQoy7PgPWMNAxl0V9yltkN3IoWziRl2CjTsdWnb2GC4DPA8ATM642U9TTrPT9ZsLfRfQINR2L9riBo8k9IW+n1RkBmz139XF1s3+bWOPKO5aN7w1fkO3Ij8w9kwzeaXNE9elY8Kjvh1kfyf+DY69P4v+tEUPglnA+OnBxnrFpV1/bwnGXV5CQiOMrZWl0ct8afVpMo6zSgJbUcv49aOywRvOAlYnUFg6xVoMqOM679kf2W8W2YOOwfqQGbs5rr17hsiCaVt6M/A6reMtQZ3zJoCUsrwKfAUWLTobXAKkzC2R/niP5yqSn6s5P3diyfauGCYjijbOf4BpJOLE2MDAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "BackendServiceLoadBalancerDNSE742582D": {
+   "Value": {
+    "Fn::GetAtt": [
+     "BackendServiceLB09608E98",
+     "DNSName"
+    ]
+   }
+  },
+  "BackendServiceServiceURLB1770053": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "BackendServiceDNS07B9A993"
+      }
+     ]
+    ]
+   }
+  },
+  "BackendUrl": {
+   "Description": "Backend API URL",
+   "Value": "https://api.auth.maxhealth.tech",
+   "Export": {
+    "Name": "ProxySmartBackendUrl"
+   }
+  },
+  "EcrRepoUri": {
+   "Description": "ECR repository URI for mono container",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      {
+       "Fn::Select": [
+        4,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "BackendRepo7FFBAD06",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".dkr.ecr.",
+      {
+       "Fn::Select": [
+        3,
+        {
+         "Fn::Split": [
+          ":",
+          {
+           "Fn::GetAtt": [
+            "BackendRepo7FFBAD06",
+            "Arn"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      ".",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "BackendRepo7FFBAD06"
+      }
+     ]
+    ]
+   },
+   "Export": {
+    "Name": "ProxySmartEcrRepoUri"
+   }
+  },
+  "ClusterName": {
+   "Description": "ECS cluster name for deployment workflows",
+   "Value": {
+    "Ref": "ClusterEB0386A7"
+   },
+   "Export": {
+    "Name": "ProxySmartClusterName"
+   }
+  },
+  "ServiceName": {
+   "Description": "ECS service name for deployment workflows",
+   "Value": {
+    "Fn::GetAtt": [
+     "BackendService2147DAF9",
+     "Name"
+    ]
+   },
+   "Export": {
+    "Name": "ProxySmartServiceName"
+   }
+  },
+  "LoadBalancerDns": {
+   "Description": "ALB DNS name",
+   "Value": {
+    "Fn::GetAtt": [
+     "BackendServiceLB09608E98",
+     "DNSName"
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

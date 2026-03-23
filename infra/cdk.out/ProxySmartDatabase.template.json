@@ -1,0 +1,392 @@
+{
+ "Description": "Proxy Smart - RDS PostgreSQL for Keycloak",
+ "Resources": {
+  "DbSecurityGroupE9D701AD": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for Keycloak PostgreSQL database",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "255.255.255.255/32",
+      "Description": "Disallow all traffic",
+      "FromPort": 252,
+      "IpProtocol": "icmp",
+      "ToPort": 86
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "10.0.2.0/24",
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "Allow PostgreSQL from private subnet ",
+         {
+          "Fn::Select": [
+           0,
+           {
+            "Fn::GetAZs": ""
+           }
+          ]
+         }
+        ]
+       ]
+      },
+      "FromPort": 5432,
+      "IpProtocol": "tcp",
+      "ToPort": 5432
+     },
+     {
+      "CidrIp": "10.0.3.0/24",
+      "Description": {
+       "Fn::Join": [
+        "",
+        [
+         "Allow PostgreSQL from private subnet ",
+         {
+          "Fn::Select": [
+           1,
+           {
+            "Fn::GetAZs": ""
+           }
+          ]
+         }
+        ]
+       ]
+      },
+      "FromPort": 5432,
+      "IpProtocol": "tcp",
+      "ToPort": 5432
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/DbSecurityGroup/Resource"
+   }
+  },
+  "DbSecret685A0FA5": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": "PostgreSQL credentials for Keycloak database",
+    "GenerateSecretString": {
+     "ExcludePunctuation": true,
+     "GenerateStringKey": "password",
+     "PasswordLength": 32,
+     "SecretStringTemplate": "{\"username\":\"keycloak\"}"
+    },
+    "Name": "proxy-smart/db-credentials",
+    "Tags": [
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/DbSecret/Resource"
+   }
+  },
+  "DbSecretAttachment0609CE05": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "DbSecret685A0FA5"
+    },
+    "TargetId": {
+     "Ref": "KeycloakDbC29913F8"
+    },
+    "TargetType": "AWS::RDS::DBInstance"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/DbSecret/Attachment/Resource"
+   }
+  },
+  "KeycloakDbSubnetGroup0DDBB8E0": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnet group for KeycloakDb database",
+    "SubnetIds": [
+     {
+      "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpcIsolatedSubnet1SubnetF7961167B5404B04"
+     },
+     {
+      "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpcIsolatedSubnet2Subnet8AC08863F0C4664F"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "keycloak-database"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/KeycloakDb/SubnetGroup/Default"
+   }
+  },
+  "KeycloakDbMonitoringRole6863D03D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "monitoring.rds.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "keycloak-database"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/KeycloakDb/MonitoringRole/Resource"
+   }
+  },
+  "KeycloakDbC29913F8": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "AllocatedStorage": "20",
+    "AutoMinorVersionUpgrade": true,
+    "BackupRetentionPeriod": 7,
+    "CopyTagsToSnapshot": true,
+    "DBInstanceClass": "db.t4g.micro",
+    "DBName": "keycloak",
+    "DBSubnetGroupName": {
+     "Ref": "KeycloakDbSubnetGroup0DDBB8E0"
+    },
+    "DeletionProtection": true,
+    "EnablePerformanceInsights": true,
+    "Engine": "postgres",
+    "EngineVersion": "16",
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DbSecret685A0FA5"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "MasterUsername": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "DbSecret685A0FA5"
+       },
+       ":SecretString:username::}}"
+      ]
+     ]
+    },
+    "MaxAllocatedStorage": 100,
+    "MonitoringInterval": 60,
+    "MonitoringRoleArn": {
+     "Fn::GetAtt": [
+      "KeycloakDbMonitoringRole6863D03D",
+      "Arn"
+     ]
+    },
+    "MultiAZ": true,
+    "PerformanceInsightsRetentionPeriod": 7,
+    "PubliclyAccessible": false,
+    "StorageEncrypted": true,
+    "StorageType": "gp2",
+    "Tags": [
+     {
+      "Key": "Application",
+      "Value": "proxy-smart"
+     },
+     {
+      "Key": "Component",
+      "Value": "keycloak-database"
+     },
+     {
+      "Key": "ManagedBy",
+      "Value": "cdk"
+     },
+     {
+      "Key": "Project",
+      "Value": "proxy-smart"
+     }
+    ],
+    "VPCSecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "DbSecurityGroupE9D701AD",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Snapshot",
+   "DeletionPolicy": "Snapshot",
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/KeycloakDb/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOywrCMBBFv8V9OmoE9z5AXAnWvUzTUaM2lczEIiH/LrUqPlbncu9ZXA16NIZBDxvOTHnKzraAmAuak8KGt5GMhpiTCd7KbeHrcFGznfsqkmIynoQrdLgn//A9yVNsU4cN+j3JRATNoSL3IfwuSfmSIc5RsECmpWNBZ0jloXAk7xvz6V/xUpOyWEFc12dqh5YptWkV5BIkKVeXBEfuX7WGoYZB78jWZj44sRXBuuMdtz3qcB4BAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartDatabase/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "DbEndpoint": {
+   "Description": "Database endpoint hostname",
+   "Value": {
+    "Fn::GetAtt": [
+     "KeycloakDbC29913F8",
+     "Endpoint.Address"
+    ]
+   },
+   "Export": {
+    "Name": "ProxySmartDbEndpoint"
+   }
+  },
+  "DbPort": {
+   "Description": "Database port",
+   "Value": {
+    "Fn::GetAtt": [
+     "KeycloakDbC29913F8",
+     "Endpoint.Port"
+    ]
+   }
+  },
+  "DbSecretArn": {
+   "Description": "Database credentials secret ARN",
+   "Value": {
+    "Ref": "DbSecret685A0FA5"
+   },
+   "Export": {
+    "Name": "ProxySmartDbSecretArn"
+   }
+  },
+  "ExportsOutputFnGetAttKeycloakDbC29913F8EndpointAddress1D2B321C": {
+   "Value": {
+    "Fn::GetAtt": [
+     "KeycloakDbC29913F8",
+     "Endpoint.Address"
+    ]
+   },
+   "Export": {
+    "Name": "ProxySmartDatabase:ExportsOutputFnGetAttKeycloakDbC29913F8EndpointAddress1D2B321C"
+   }
+  },
+  "ExportsOutputRefDbSecret685A0FA57881E1C6": {
+   "Value": {
+    "Ref": "DbSecret685A0FA5"
+   },
+   "Export": {
+    "Name": "ProxySmartDatabase:ExportsOutputRefDbSecret685A0FA57881E1C6"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,1449 @@
+{
+  "version": "48.0.0",
+  "artifacts": {
+    "ProxySmartVpc.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProxySmartVpc.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProxySmartVpc": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "ProxySmartVpc.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "ManagedBy": "cdk",
+          "Project": "proxy-smart"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/25e7087262d6a78b9649afc2fa5a2fe8a5bba6e2d494ccb01a476c6d2633f3eb.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProxySmartVpc.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "ProxySmartVpc.assets"
+      ],
+      "metadata": {
+        "/ProxySmartVpc": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "ManagedBy",
+                "Value": "cdk"
+              },
+              {
+                "Key": "Project",
+                "Value": "proxy-smart"
+              }
+            ]
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpc5E0F3CCC"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet1Subnet8F6B16CA"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet1RouteTable2FE6FABC"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet1RouteTableAssociation3AE7AF42"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet1DefaultRoute0D20EB37"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet1/EIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet1EIP057B7EF0"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet1/NATGateway": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet1NATGatewayC5E1736D"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet2Subnet45BA1AEA"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet2RouteTable468F5F39"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet2RouteTableAssociation4F885554"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PublicSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPublicSubnet2DefaultRoute11BAD4C5"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet1SubnetF39FDD5A"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet1RouteTable36D9E768"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet1RouteTableAssociationAAD4185E"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet1DefaultRouteE1E8B465"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet2SubnetB84177BE"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet2RouteTable1E06BC3F"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet2RouteTableAssociation0E09235B"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/PrivateSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcPrivateSubnet2DefaultRoute28BAD69F"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIsolatedSubnet1SubnetF7961167"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIsolatedSubnet1RouteTable1627F471"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IsolatedSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIsolatedSubnet1RouteTableAssociationC4FD0B1E"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIsolatedSubnet2Subnet8AC08863"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIsolatedSubnet2RouteTable6CD5D3E9"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IsolatedSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIsolatedSubnet2RouteTableAssociation564A8A14"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/IGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcIGWB382B659"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/VPCGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcVPCGW4B361B7D"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/IAMRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcFlowLogCloudWatchIAMRole934C638A"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/IAMRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcFlowLogCloudWatchIAMRoleDefaultPolicy22C9DC35"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/LogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcFlowLogCloudWatchLogGroup10F962BB"
+          }
+        ],
+        "/ProxySmartVpc/ProxySmartVpc/FlowLogCloudWatch/FlowLog": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ProxySmartVpcFlowLogCloudWatchFlowLog0BA1847F"
+          }
+        ],
+        "/ProxySmartVpc/VpcId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcId"
+          }
+        ],
+        "/ProxySmartVpc/VpcCidr": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcCidr"
+          }
+        ],
+        "/ProxySmartVpc/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpc5E0F3CCC\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpcIsolatedSubnet1SubnetF7961167\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpcIsolatedSubnet1SubnetF7961167B5404B04"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpcIsolatedSubnet2Subnet8AC08863\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpcIsolatedSubnet2Subnet8AC08863F0C4664F"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpcPublicSubnet1Subnet8F6B16CA\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpcPublicSubnet1Subnet8F6B16CA1AE1F4E9"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpcPublicSubnet2Subnet45BA1AEA\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpcPublicSubnet2Subnet45BA1AEAF7569C1B"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpcPrivateSubnet1SubnetF39FDD5A\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpcPrivateSubnet1SubnetF39FDD5ABDD4ADE6"
+          }
+        ],
+        "/ProxySmartVpc/Exports/Output{\"Ref\":\"ProxySmartVpcPrivateSubnet2SubnetB84177BE\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefProxySmartVpcPrivateSubnet2SubnetB84177BE0B210505"
+          }
+        ],
+        "/ProxySmartVpc/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/ProxySmartVpc/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "ProxySmartVpc"
+    },
+    "ProxySmartDatabase.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProxySmartDatabase.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProxySmartDatabase": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "ProxySmartDatabase.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "ManagedBy": "cdk",
+          "Project": "proxy-smart"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/e9b71719d5c7cc3d6e10bcb8237ec32cfe63abd96a9eb3becb3f39e4ea40d8d7.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProxySmartDatabase.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "ProxySmartVpc",
+        "ProxySmartDatabase.assets"
+      ],
+      "metadata": {
+        "/ProxySmartDatabase": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "ManagedBy",
+                "Value": "cdk"
+              },
+              {
+                "Key": "Project",
+                "Value": "proxy-smart"
+              }
+            ]
+          }
+        ],
+        "/ProxySmartDatabase/DbSecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSecurityGroupE9D701AD"
+          }
+        ],
+        "/ProxySmartDatabase/DbSecret/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSecret685A0FA5"
+          }
+        ],
+        "/ProxySmartDatabase/DbSecret/Attachment/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSecretAttachment0609CE05"
+          }
+        ],
+        "/ProxySmartDatabase/KeycloakDb/SubnetGroup/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakDbSubnetGroup0DDBB8E0"
+          }
+        ],
+        "/ProxySmartDatabase/KeycloakDb/MonitoringRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakDbMonitoringRole6863D03D"
+          }
+        ],
+        "/ProxySmartDatabase/KeycloakDb/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakDbC29913F8"
+          }
+        ],
+        "/ProxySmartDatabase/DbEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbEndpoint"
+          }
+        ],
+        "/ProxySmartDatabase/DbPort": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbPort"
+          }
+        ],
+        "/ProxySmartDatabase/DbSecretArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "DbSecretArn"
+          }
+        ],
+        "/ProxySmartDatabase/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/ProxySmartDatabase/Exports/Output{\"Fn::GetAtt\":[\"KeycloakDbC29913F8\",\"Endpoint.Address\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttKeycloakDbC29913F8EndpointAddress1D2B321C"
+          }
+        ],
+        "/ProxySmartDatabase/Exports/Output{\"Ref\":\"DbSecret685A0FA5\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefDbSecret685A0FA57881E1C6"
+          }
+        ],
+        "/ProxySmartDatabase/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/ProxySmartDatabase/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "ProxySmartDatabase"
+    },
+    "ProxySmartKeycloak.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProxySmartKeycloak.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProxySmartKeycloak": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "ProxySmartKeycloak.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Application": "proxy-smart",
+          "Component": "keycloak",
+          "ManagedBy": "cdk",
+          "Project": "proxy-smart"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/babbf9054133527f4f7c629a76338d3503a7472b1aa055d1944738d5c791e4b8.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProxySmartKeycloak.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "ProxySmartDatabase",
+        "ProxySmartVpc",
+        "ProxySmartKeycloak.assets"
+      ],
+      "metadata": {
+        "/ProxySmartKeycloak": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Application",
+                "Value": "proxy-smart"
+              },
+              {
+                "Key": "Component",
+                "Value": "keycloak"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "cdk"
+              },
+              {
+                "Key": "Project",
+                "Value": "proxy-smart"
+              }
+            ]
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakAdminSecret/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakAdminSecret02FB07E0"
+          }
+        ],
+        "/ProxySmartKeycloak/Certificate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Certificate4E7ABB08"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakWaf": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakWaf"
+          }
+        ],
+        "/ProxySmartKeycloak/Cluster/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ClusterEB0386A7"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LB/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLBDA20ED16"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LB/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLBSecurityGroupF2682F29"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LB/SecurityGroup/to ProxySmartKeycloakKeycloakServiceSecurityGroup1AB61A1E:8080": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLBSecurityGrouptoProxySmartKeycloakKeycloakServiceSecurityGroup1AB61A1E80800186E03D"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LB/PublicListener/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLBPublicListenerF1BD9FFE"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LB/PublicListener/ECSGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLBPublicListenerECSGroup7008E672"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LB/PublicRedirectListener/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLBPublicRedirectListenerF61F172E"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/DNS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceDNSED139F81"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/LoadBalancerDNS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceLoadBalancerDNSCC22036B"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/ServiceURL": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceServiceURL69883E97"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/TaskDef/TaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskDefTaskRole86519850"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/TaskDef/TaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/TaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskDef778B54C2"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/TaskDef/web/LogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskDefwebLogGroupCB61FCD4"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/TaskDef/ExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskDefExecutionRoleF3AB432D"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/TaskDef/ExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskDefExecutionRoleDefaultPolicy2A28139A"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/Service/Service": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakService002681F6"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/Service/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceSecurityGroupEEE9A853"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/Service/SecurityGroup/from ProxySmartKeycloakKeycloakServiceLBSecurityGroup8F8F76D5:8080": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceSecurityGroupfromProxySmartKeycloakKeycloakServiceLBSecurityGroup8F8F76D58080B7AAE46B"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/Service/TaskCount/Target/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskCountTargetFA83EA2A"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakService/Service/TaskCount/Target/CpuScaling/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakServiceTaskCountTargetCpuScalingDF81235A"
+          }
+        ],
+        "/ProxySmartKeycloak/WafAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "WafAssociation"
+          }
+        ],
+        "/ProxySmartKeycloak/TokenEndpointLatencyAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "TokenEndpointLatencyAlarmD5875E66"
+          }
+        ],
+        "/ProxySmartKeycloak/UnhealthyHostsAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnhealthyHostsAlarmE3387D4B"
+          }
+        ],
+        "/ProxySmartKeycloak/Http5xxErrorsAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Http5xxErrorsAlarmAA393237"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakUrl"
+          }
+        ],
+        "/ProxySmartKeycloak/KeycloakAdminSecretArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakAdminSecretArn"
+          }
+        ],
+        "/ProxySmartKeycloak/LoadBalancerDns": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LoadBalancerDns"
+          }
+        ],
+        "/ProxySmartKeycloak/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/ProxySmartKeycloak/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/ProxySmartKeycloak/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "ProxySmartKeycloak"
+    },
+    "ProxySmartBackend.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProxySmartBackend.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProxySmartBackend": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "ProxySmartBackend.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Application": "proxy-smart",
+          "Component": "backend",
+          "ManagedBy": "cdk",
+          "Project": "proxy-smart"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/fb1a3d1b239a136c9c7200a0326fd71082696c7b7eeeef6e965affa982300a5f.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProxySmartBackend.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "ProxySmartKeycloak",
+        "ProxySmartVpc",
+        "ProxySmartBackend.assets"
+      ],
+      "metadata": {
+        "/ProxySmartBackend": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Application",
+                "Value": "proxy-smart"
+              },
+              {
+                "Key": "Component",
+                "Value": "backend"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "cdk"
+              },
+              {
+                "Key": "Project",
+                "Value": "proxy-smart"
+              }
+            ]
+          }
+        ],
+        "/ProxySmartBackend/BackendRepo/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendRepo7FFBAD06"
+          }
+        ],
+        "/ProxySmartBackend/KeycloakAdminSecret/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KeycloakAdminSecret02FB07E0"
+          }
+        ],
+        "/ProxySmartBackend/Certificate/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Certificate4E7ABB08"
+          }
+        ],
+        "/ProxySmartBackend/BackendWaf": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendWaf"
+          }
+        ],
+        "/ProxySmartBackend/Cluster/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ClusterEB0386A7"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LB/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLB09608E98"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LB/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLBSecurityGroup2B9BA648"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LB/SecurityGroup/to ProxySmartBackendBackendServiceSecurityGroupFC32CA2A:8445": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLBSecurityGrouptoProxySmartBackendBackendServiceSecurityGroupFC32CA2A8445F1C3314E"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LB/PublicListener/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLBPublicListener2FA7FC98"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LB/PublicListener/ECSGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLBPublicListenerECSGroupD43CD2AB"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LB/PublicRedirectListener/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLBPublicRedirectListenerA2A7EC53"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/DNS/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceDNS07B9A993"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/LoadBalancerDNS": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceLoadBalancerDNSE742582D"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/ServiceURL": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceServiceURLB1770053"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/TaskDef/TaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskDefTaskRoleD63B95BB"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/TaskDef/TaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/TaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskDef9F97F56B"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/TaskDef/web/LogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskDefwebLogGroup614D1BFF"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/TaskDef/ExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskDefExecutionRole15BE46B5"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/TaskDef/ExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskDefExecutionRoleDefaultPolicyDFB9BC56"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/Service/Service": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendService2147DAF9"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/Service/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceSecurityGroup7599F85E"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/Service/SecurityGroup/from ProxySmartBackendBackendServiceLBSecurityGroupD10957FB:8445": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceSecurityGroupfromProxySmartBackendBackendServiceLBSecurityGroupD10957FB84454F580B3B"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/Service/TaskCount/Target/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskCountTarget2134EDB2"
+          }
+        ],
+        "/ProxySmartBackend/BackendService/Service/TaskCount/Target/CpuScaling/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendServiceTaskCountTargetCpuScalingB44CAB95"
+          }
+        ],
+        "/ProxySmartBackend/BackendWafAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendWafAssociation"
+          }
+        ],
+        "/ProxySmartBackend/LatencyAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LatencyAlarm5394FC57"
+          }
+        ],
+        "/ProxySmartBackend/UnhealthyHostsAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnhealthyHostsAlarmE3387D4B"
+          }
+        ],
+        "/ProxySmartBackend/Http5xxErrorsAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "Http5xxErrorsAlarmAA393237"
+          }
+        ],
+        "/ProxySmartBackend/BackendUrl": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BackendUrl"
+          }
+        ],
+        "/ProxySmartBackend/EcrRepoUri": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EcrRepoUri"
+          }
+        ],
+        "/ProxySmartBackend/ClusterName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ClusterName"
+          }
+        ],
+        "/ProxySmartBackend/ServiceName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ServiceName"
+          }
+        ],
+        "/ProxySmartBackend/LoadBalancerDns": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LoadBalancerDns"
+          }
+        ],
+        "/ProxySmartBackend/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/ProxySmartBackend/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/ProxySmartBackend/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "ProxySmartBackend"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "aws-cdk-lib/feature-flag-report": {
+      "type": "cdk:feature-flag-report",
+      "properties": {
+        "module": "aws-cdk-lib",
+        "flags": {
+          "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": {
+            "recommendedValue": true,
+            "explanation": "Pass signingProfileName to CfnSigningProfile"
+          },
+          "@aws-cdk/core:newStyleStackSynthesis": {
+            "recommendedValue": true,
+            "explanation": "Switch to new stack synthesis method which enables CI/CD",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:stackRelativeExports": {
+            "recommendedValue": true,
+            "explanation": "Name exports based on the construct paths relative to the stack, rather than the global construct path",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": {
+            "recommendedValue": true,
+            "explanation": "Disable implicit openListener when custom security groups are provided"
+          },
+          "@aws-cdk/aws-rds:lowercaseDbIdentifier": {
+            "recommendedValue": true,
+            "explanation": "Force lowercasing of RDS Cluster names in CDK",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": {
+            "recommendedValue": true,
+            "explanation": "Allow adding/removing multiple UsagePlanKeys independently",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeVersionProps": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the  `fn.currentVersion`.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeLayerVersion": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the `fn.currentVersion`."
+          },
+          "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have cloudfront distributions use the security policy TLSv1.2_2021 by default.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:checkSecretUsage": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this flag to make it impossible to accidentally use SecretValues in unsafe locations"
+          },
+          "@aws-cdk/core:target-partitions": {
+            "userValue": [
+              "aws"
+            ],
+            "recommendedValue": [
+              "aws",
+              "aws-cn"
+            ],
+            "explanation": "What regions to include in lookup tables of environment agnostic stacks"
+          },
+          "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "ECS extensions will automatically add an `awslogs` driver if no logging is specified"
+          },
+          "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have Launch Templates generated by the `InstanceRequireImdsv2Aspect` use unique names."
+          },
+          "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "ARN format used by ECS. In the new ARN format, the cluster name is part of the resource ID."
+          },
+          "@aws-cdk/aws-iam:minimizePolicies": {
+            "recommendedValue": true,
+            "explanation": "Minimize IAM policies by combining Statements"
+          },
+          "@aws-cdk/core:validateSnapshotRemovalPolicy": {
+            "recommendedValue": true,
+            "explanation": "Error on snapshot removal policies on resources that do not support it."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": {
+            "recommendedValue": true,
+            "explanation": "Generate key aliases that include the stack name"
+          },
+          "@aws-cdk/aws-s3:createDefaultLoggingPolicy": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to create an S3 bucket policy by default in cases where an AWS service would automatically create the Policy if one does not exist."
+          },
+          "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": {
+            "recommendedValue": true,
+            "explanation": "Restrict KMS key policy for encrypted Queues a bit more"
+          },
+          "@aws-cdk/aws-apigateway:disableCloudWatchRole": {
+            "recommendedValue": true,
+            "explanation": "Make default CloudWatch Role behavior safe for multiple API Gateways in one environment"
+          },
+          "@aws-cdk/core:enablePartitionLiterals": {
+            "recommendedValue": true,
+            "explanation": "Make ARNs concrete if AWS partition is known"
+          },
+          "@aws-cdk/aws-events:eventsTargetQueueSameAccount": {
+            "recommendedValue": true,
+            "explanation": "Event Rules may only push to encrypted SQS queues in the same account"
+          },
+          "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Avoid setting the \"ECS\" deployment controller when adding a circuit breaker"
+          },
+          "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature to create default policy names for imported roles that depend on the stack the role is in."
+          },
+          "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": {
+            "recommendedValue": true,
+            "explanation": "Use S3 Bucket Policy instead of ACLs for Server Access Logging"
+          },
+          "@aws-cdk/aws-route53-patters:useCertificate": {
+            "recommendedValue": true,
+            "explanation": "Use the official `Certificate` resource instead of `DnsValidatedCertificate`"
+          },
+          "@aws-cdk/customresources:installLatestAwsSdkDefault": {
+            "recommendedValue": false,
+            "explanation": "Whether to install the latest SDK by default in AwsCustomResource"
+          },
+          "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": {
+            "recommendedValue": true,
+            "explanation": "Use unique resource name for Database Proxy"
+          },
+          "@aws-cdk/aws-codedeploy:removeAlarmsFromDeploymentGroup": {
+            "recommendedValue": true,
+            "explanation": "Remove CloudWatch alarms from deployment group"
+          },
+          "@aws-cdk/aws-apigateway:authorizerChangeDeploymentLogicalId": {
+            "recommendedValue": true,
+            "explanation": "Include authorizer configuration in the calculation of the API deployment logical ID."
+          },
+          "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": {
+            "recommendedValue": true,
+            "explanation": "Define user data for a launch template by default when a machine image is provided."
+          },
+          "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": {
+            "recommendedValue": true,
+            "explanation": "SecretTargetAttachments uses the ResourcePolicy of the attached Secret."
+          },
+          "@aws-cdk/aws-redshift:columnId": {
+            "recommendedValue": true,
+            "explanation": "Whether to use an ID to track Redshift column changes"
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:enableEmrServicePolicyV2": {
+            "recommendedValue": true,
+            "explanation": "Enable AmazonEMRServicePolicy_v2 managed policies"
+          },
+          "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": {
+            "recommendedValue": true,
+            "explanation": "Restrict access to the VPC default security group"
+          },
+          "@aws-cdk/aws-apigateway:requestValidatorUniqueId": {
+            "recommendedValue": true,
+            "explanation": "Generate a unique id for each RequestValidator added to a method"
+          },
+          "@aws-cdk/aws-kms:aliasNameRef": {
+            "recommendedValue": true,
+            "explanation": "KMS Alias name and keyArn will have implicit reference to KMS Key"
+          },
+          "@aws-cdk/aws-kms:applyImportedAliasPermissionsToPrincipal": {
+            "recommendedValue": true,
+            "explanation": "Enable grant methods on Aliases imported by name to use kms:ResourceAliases condition"
+          },
+          "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": {
+            "recommendedValue": true,
+            "explanation": "Generate a launch template when creating an AutoScalingGroup"
+          },
+          "@aws-cdk/core:includePrefixInUniqueNameGeneration": {
+            "recommendedValue": true,
+            "explanation": "Include the stack prefix in the stack name generation process"
+          },
+          "@aws-cdk/aws-efs:denyAnonymousAccess": {
+            "recommendedValue": true,
+            "explanation": "EFS denies anonymous clients accesses"
+          },
+          "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": {
+            "recommendedValue": true,
+            "explanation": "Enables support for Multi-AZ with Standby deployment for opensearch domains"
+          },
+          "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": {
+            "recommendedValue": true,
+            "explanation": "Enables aws-lambda-nodejs.Function to use the latest available NodeJs runtime as the default"
+          },
+          "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, mount targets will have a stable logicalId that is linked to the associated subnet."
+          },
+          "@aws-cdk/aws-rds:auroraClusterChangeScopeOfInstanceParameterGroupWithEachParameters": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a scope of InstanceParameterGroup for AuroraClusterInstance with each parameters will change."
+          },
+          "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": {
+            "recommendedValue": true,
+            "explanation": "When enabled, will always use the arn for identifiers for CfnSourceApiAssociation in the GraphqlApi construct rather than id."
+          },
+          "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": {
+            "recommendedValue": true,
+            "explanation": "When enabled, creating an RDS database cluster from a snapshot will only render credentials for snapshot credentials."
+          },
+          "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForCodeCommitSource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the CodeCommit source action is using the default branch name 'main'."
+          },
+          "@aws-cdk/aws-cloudwatch-actions:changeLambdaPermissionLogicalIdForLambdaAction": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the logical ID of a Lambda permission for a Lambda action includes an alarm ID."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeysDefaultValueToFalse": {
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default value for crossAccountKeys to false."
+          },
+          "@aws-cdk/aws-codepipeline:defaultPipelineTypeToV2": {
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default pipeline type to V2."
+          },
+          "@aws-cdk/aws-kms:reduceCrossAccountRegionPolicyScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, IAM Policy created from KMS key grant will reduce the resource scope to this key only."
+          },
+          "@aws-cdk/pipelines:reduceAssetRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from PipelineAssetsFileRole trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-eks:nodegroupNameAttribute": {
+            "recommendedValue": true,
+            "explanation": "When enabled, nodegroupName attribute of the provisioned EKS NodeGroup will not have the cluster name prefix."
+          },
+          "@aws-cdk/aws-ec2:ebsDefaultGp3Volume": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default volume type of the EBS volume will be GP3"
+          },
+          "@aws-cdk/aws-ecs:removeDefaultDeploymentAlarm": {
+            "recommendedValue": true,
+            "explanation": "When enabled, remove default deployment alarm settings"
+          },
+          "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": {
+            "recommendedValue": false,
+            "explanation": "When enabled, the custom resource used for `AwsCustomResource` will configure the `logApiResponseData` property as true by default"
+          },
+          "@aws-cdk/aws-s3:keepNotificationInImportedBucket": {
+            "recommendedValue": false,
+            "explanation": "When enabled, Adding notifications to a bucket in the current stack will not remove notification from imported stack."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:useNewS3UriParametersForBedrockInvokeModelTask": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use new props for S3 URI field in task definition of state machine for bedrock invoke model.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:explicitStackTags": {
+            "recommendedValue": true,
+            "explanation": "When enabled, stack tags need to be assigned explicitly on a Stack."
+          },
+          "@aws-cdk/aws-ecs:reduceEc2FargateCloudWatchPermissions": {
+            "recommendedValue": true,
+            "explanation": "When enabled, we will only grant the necessary permissions when users specify cloudwatch log group through logConfiguration"
+          },
+          "@aws-cdk/aws-dynamodb:resourcePolicyPerReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled will allow you to specify a resource policy per replica, and not copy the source table policy to all replicas"
+          },
+          "@aws-cdk/aws-ec2:ec2SumTImeoutEnabled": {
+            "recommendedValue": true,
+            "explanation": "When enabled, initOptions.timeout and resourceSignalTimeout values will be summed together."
+          },
+          "@aws-cdk/aws-appsync:appSyncGraphQLAPIScopeLambdaPermission": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a Lambda authorizer Permission created when using GraphqlApi will be properly scoped with a SourceArn."
+          },
+          "@aws-cdk/aws-rds:setCorrectValueForDatabaseInstanceReadReplicaInstanceResourceId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the value of property `instanceResourceId` in construct `DatabaseInstanceReadReplica` will be set to the correct value which is `DbiResourceId` instead of currently `DbInstanceArn`"
+          },
+          "@aws-cdk/core:cfnIncludeRejectComplexResourceUpdateCreatePolicyIntrinsics": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CFN templates added with `cfn-include` will error if the template contains Resource Update or Create policies with CFN Intrinsics that include non-primitive values."
+          },
+          "@aws-cdk/aws-lambda-nodejs:sdkV3ExcludeSmithyPackages": {
+            "recommendedValue": true,
+            "explanation": "When enabled, both `@aws-sdk` and `@smithy` packages will be excluded from the Lambda Node.js 18.x runtime to prevent version mismatches in bundled applications."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:fixRunEcsTaskPolicy": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resource of IAM Run Ecs policy generated by SFN EcsRunTask will reference the definition, instead of constructing ARN."
+          },
+          "@aws-cdk/aws-ec2:bastionHostUseAmazonLinux2023ByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the BastionHost construct will use the latest Amazon Linux 2023 AMI, instead of Amazon Linux 2."
+          },
+          "@aws-cdk/core:aspectStabilization": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a stabilization loop will be run when invoking Aspects during synthesis.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-route53-targets:userPoolDomainNameMethodWithoutCustomResource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use a new method for DNS Name of user pool domain target without creating a custom resource."
+          },
+          "@aws-cdk/aws-elasticloadbalancingV2:albDualstackWithoutPublicIpv4SecurityGroupRulesDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default security group ingress rules will allow IPv6 ingress from anywhere"
+          },
+          "@aws-cdk/aws-iam:oidcRejectUnauthorizedConnections": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default behaviour of OIDC provider will reject unauthorized connections"
+          },
+          "@aws-cdk/core:enableAdditionalMetadataCollection": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will expand the scope of usage data collected to better inform CDK development and improve communication for security concerns and emerging issues."
+          },
+          "@aws-cdk/aws-lambda:createNewPoliciesWithAddToRolePolicy": {
+            "recommendedValue": false,
+            "explanation": "[Deprecated] When enabled, Lambda will create new inline policies with AddToRolePolicy instead of adding to the Default Policy Statement"
+          },
+          "@aws-cdk/aws-s3:setUniqueReplicationRoleName": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will automatically generate a unique role name that is used for s3 object replication."
+          },
+          "@aws-cdk/pipelines:reduceStageRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from Stage addActions trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-events:requireEventBusPolicySid": {
+            "recommendedValue": true,
+            "explanation": "When enabled, grantPutEventsTo() will use resource policies with Statement IDs for service principals."
+          },
+          "@aws-cdk/core:aspectPrioritiesMutating": {
+            "recommendedValue": true,
+            "explanation": "When set to true, Aspects added by the construct library on your behalf will be given a priority of MUTATING."
+          },
+          "@aws-cdk/aws-dynamodb:retainTableReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled, table replica will be default to the removal policy of source table unless specified otherwise."
+          },
+          "@aws-cdk/cognito:logUserPoolClientSecretValue": {
+            "recommendedValue": false,
+            "explanation": "When disabled, the value of the user pool client secret will not be logged in the custom resource lambda function logs."
+          },
+          "@aws-cdk/pipelines:reduceCrossAccountActionRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, scopes down the trust policy for the cross-account action role",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-stepfunctions:useDistributedMapResultWriterV2": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resultWriterV2 property of DistributedMap will be used insted of resultWriter"
+          },
+          "@aws-cdk/s3-notifications:addS3TrustKeyPolicyForSnsSubscriptions": {
+            "recommendedValue": true,
+            "explanation": "Add an S3 trust policy to a KMS key resource policy for SNS subscriptions."
+          },
+          "@aws-cdk/aws-ec2:requirePrivateSubnetsForEgressOnlyInternetGateway": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the EgressOnlyGateway resource is only created if private subnets are defined in the dual-stack VPC."
+          },
+          "@aws-cdk/aws-ec2-alpha:useResourceIdForVpcV2Migration": {
+            "recommendedValue": false,
+            "explanation": "When enabled, use resource IDs for VPC V2 migration"
+          },
+          "@aws-cdk/aws-s3:publicAccessBlockedByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, setting any combination of options for BlockPublicAccess will automatically set true for any options not defined."
+          },
+          "@aws-cdk/aws-lambda:useCdkManagedLogGroup": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK creates and manages loggroup for the lambda function"
+          },
+          "@aws-cdk/aws-elasticloadbalancingv2:networkLoadBalancerWithSecurityGroupByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, Network Load Balancer will be created with a security group by default."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:httpInvokeDynamicJsonPathEndpoint": {
+            "recommendedValue": true,
+            "explanation": "When enabled, allows using a dynamic apiEndpoint with JSONPath format in HttpInvoke tasks.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:uniqueTargetGroupId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, ECS patterns will generate unique target group IDs to prevent conflicts during load balancer replacement"
+          },
+          "@aws-cdk/aws-route53-patterns:useDistribution": {
+            "recommendedValue": true,
+            "explanation": "Use the `Distribution` resource instead of `CloudFrontWebDistribution`"
+          }
+        }
+      }
+    }
+  },
+  "minimumCliVersion": "2.1033.0"
+}

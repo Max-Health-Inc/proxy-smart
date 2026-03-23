@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "25e7087262d6a78b9649afc2fa5a2fe8a5bba6e2d494ccb01a476c6d2633f3eb": {
+      "displayName": "ProxySmartVpc Template",
+      "source": {
+        "path": "ProxySmartVpc.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-bc731d9d": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "25e7087262d6a78b9649afc2fa5a2fe8a5bba6e2d494ccb01a476c6d2633f3eb.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
