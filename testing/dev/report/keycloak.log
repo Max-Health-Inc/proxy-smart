@@ -1,7 +1,1 @@
-Updating the configuration and installing your custom providers, if any. Please wait.
-2026-03-23 06:46:25,148 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 14483ms
-Running the server in development mode. DO NOT use this configuration in production.
-2026-03-23 06:46:28,838 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
-2026-03-23 06:46:29,758 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-03-23 06:46:30,963 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-03-23 06:46:39,387 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+Error response from daemon: No such container: keycloak
