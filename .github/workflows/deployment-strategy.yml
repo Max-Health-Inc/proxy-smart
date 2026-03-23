@@ -162,21 +162,17 @@ jobs:
         uses: ./.github/actions/discord-notify
         if: env.DISCORD_WEBHOOK_URL != ''
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          username: "Proxy Smart Bot"
-          avatar_url: "https://avatars.githubusercontent.com/u/9919?s=200&v=4"
-          title: "🚀 Deployment Successful!"
-          description: |
-            **Environment**: `${{ inputs.deployment_stage }}`
-            **Version**: `${{ inputs.app_version }}`
-            **Target**: `${{ needs.output-deployment-urls.outputs.deployment_target }}`
-            
-            **Service URLs**:
-            🏥 [FHIR Server](${{ needs.output-deployment-urls.outputs.fhir_server_url }})
-            🔐 [Keycloak Auth](${{ needs.output-deployment-urls.outputs.keycloak_url }})
-            📱 [Main App](${{ needs.output-deployment-urls.outputs.app_url }})
-          color: "3066993"
-          timestamp: true
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          notification-type: deployment
+          title: "Deployment Successful!"
+          description: "Environment: ${{ inputs.deployment_stage }} | Version: ${{ inputs.app_version }} | Target: ${{ needs.output-deployment-urls.outputs.deployment_target }}"
+          deployment-stage: ${{ inputs.deployment_stage }}
+          deployment-target: ${{ needs.output-deployment-urls.outputs.deployment_target }}
+          version: ${{ inputs.app_version }}
+          fhir-server-url: ${{ needs.output-deployment-urls.outputs.fhir_server_url }}
+          keycloak-url: ${{ needs.output-deployment-urls.outputs.keycloak_url }}
+          app-url: ${{ needs.output-deployment-urls.outputs.app_url }}
+          color: "00D4AA"
 
   # Discord notification on deployment failure
   notify-deployment-failure:
@@ -195,16 +191,11 @@ jobs:
         uses: ./.github/actions/discord-notify
         if: env.DISCORD_WEBHOOK_URL != ''
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          username: "Proxy Smart Bot"
-          avatar_url: "https://avatars.githubusercontent.com/u/9919?s=200&v=4"
-          title: "❌ Deployment Failed"
-          description: |
-            **Environment**: `${{ inputs.deployment_stage }}`
-            **Version**: `${{ inputs.app_version }}`
-            **Status**: `${{ needs.output-deployment-urls.outputs.deployment_status }}`
-            **Target**: `${{ needs.output-deployment-urls.outputs.deployment_target }}`
-            
-            [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          color: "15158332"
-          timestamp: true
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          notification-type: error
+          title: "Deployment Failed"
+          description: "Environment: ${{ inputs.deployment_stage }} | Version: ${{ inputs.app_version }} | Target: ${{ needs.output-deployment-urls.outputs.deployment_target }}"
+          deployment-stage: ${{ inputs.deployment_stage }}
+          deployment-target: ${{ needs.output-deployment-urls.outputs.deployment_target }}
+          version: ${{ inputs.app_version }}
+          color: "FF0000"
