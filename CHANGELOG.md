@@ -14,6 +14,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/211
 
 
+
+- ✨ Features: Add new SVG asset for backend proxy icon (proxy-smart.svg, 32x32, red)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/212
+
+
 ## [0.0.2-alpha.202603231648.0e8f43e2] - 2026-03-23
 
 - 🔧 Chores & Improvements: UI spacing tweak in backend/public/index.html (adjusted text-indent/margin-right for mono font label)
