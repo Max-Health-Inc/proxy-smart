@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/219
 
 
+
+- 🔧 Chores & Improvements: Dockerfile: copy additional lib folders for consent-app and dtr-app; adjust package.json workspaces to include only backend, ui, shared-ui, consent-app, dtr-app to avoid workspace install failures
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/220
+
+
 ## [0.0.2-alpha.202603231957.d98e9bfd] - 2026-03-23
 
 - 🔧 Chores & Improvements: Expand Caddy reverse proxy support (add 3_reverse_proxy for port 8445 in docker-compose.beta.yml; extend matching to additional upstreams with the same port)
