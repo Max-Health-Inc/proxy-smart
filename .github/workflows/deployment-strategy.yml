@@ -52,6 +52,12 @@ on:
         required: false
       VITE_ENCRYPTION_SECRET:
         required: false
+      BETA_POSTGRES_PASSWORD:
+        required: false
+      BETA_KEYCLOAK_ADMIN_PASSWORD:
+        required: false
+      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET:
+        required: false
 
 jobs:
   deploy-beta:
@@ -65,6 +71,10 @@ jobs:
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_USER: ${{ secrets.VPS_USER }}
+      BETA_POSTGRES_PASSWORD: ${{ secrets.BETA_POSTGRES_PASSWORD }}
+      BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
+      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
+      VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
 
   deploy-production:
     name: Deploy Production (Azure/AWS)

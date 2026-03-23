@@ -34,10 +34,18 @@ on:
         required: true
       VPS_USER:
         required: true
+      BETA_POSTGRES_PASSWORD:
+        required: true
+      BETA_KEYCLOAK_ADMIN_PASSWORD:
+        required: true
+      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET:
+        required: true
+      VITE_ENCRYPTION_SECRET:
+        required: true
 
 jobs:
   deploy:
-    name: Deploy Beta (VPS)
+    name: Deploy Beta (VPS – Docker Compose)
     runs-on: ubuntu-latest
     outputs:
       fhir_server_url: ${{ steps.deploy.outputs.fhir_server_url }}
@@ -45,90 +53,116 @@ jobs:
       app_url: ${{ steps.deploy.outputs.app_url }}
       deployment_status: ${{ steps.deploy.outputs.deployment_status }}
       deployment_target: ${{ steps.deploy.outputs.deployment_target }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_branch }}
-      
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun-version
-      
-      - name: Deploy Beta (VPS)
-        id: deploy
+
+      - name: Configure SSH
         run: |
-          echo "🚀 Deploying Beta version ${{ inputs.app_version }} to VPS..."
-          
-          # Setup SSH key
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
-          
-          # Create deployment script
-          cat > deploy-to-vps.sh << 'EOF'
-          #!/bin/bash
-          set -e
-          
-          echo "📦 Updating application on VPS..."
-          
-          # Navigate to application directory
-          cd /opt/proxy-smart-beta
-          
-          # Pull latest changes
-          git fetch origin
-          git checkout ${{ inputs.source_branch }}
-          git pull origin ${{ inputs.source_branch }}
-          
-          # Install dependencies and build
-          bun install --frozen-lockfile
-          cd backend
-          bun install --frozen-lockfile
-          bun run build
-          cd ..
-          
-          # Update environment variables
-          cat > backend/.env << ENVEOF
-          NODE_ENV=beta
-          VERSION=${{ inputs.app_version }}
-          BASE_URL=${BASE_URL:?Set BASE_URL}
-          PORT=3002
-          FHIR_SERVER_BASE=${FHIR_SERVER_BASE:-https://hapi.fhir.org/baseR4}
-          KEYCLOAK_BASE_URL=${KEYCLOAK_BASE_URL:?Set KEYCLOAK_BASE_URL}
-          KEYCLOAK_REALM=proxy-smart
-          DATABASE_URL=${DATABASE_URL:?Set DATABASE_URL}
-          ENVEOF
-          
-          # Restart services
-          sudo systemctl restart proxy-smart-beta
-          sudo systemctl restart nginx
-          
-          # Wait for service to be ready
-          sleep 10
-          
-          echo "✅ Beta deployment completed"
-          EOF
-          
-          # Execute deployment script on VPS
-          scp deploy-to-vps.sh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "chmod +x /tmp/deploy-to-vps.sh && /tmp/deploy-to-vps.sh"
-          
-          # Test deployment
+
+      - name: Deploy via Docker Compose
+        id: deploy
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          BETA_POSTGRES_PASSWORD: ${{ secrets.BETA_POSTGRES_PASSWORD }}
+          BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
+          BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
+          VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+        run: |
+          echo "🚀 Deploying Beta v${{ inputs.app_version }} to VPS (Docker Compose)..."
+
+          DEPLOY_DIR="/opt/proxy-smart-beta"
           VPS_URL="https://beta.proxy-smart.com"
-          
-          # Wait for deployment to be ready
-          echo "⏳ Waiting for VPS deployment to be ready..."
-          timeout 300s bash -c "until curl -f $VPS_URL/health; do sleep 10; done"
-          
+          SSH_CMD="ssh ${VPS_USER}@${VPS_HOST}"
+
+          # Ensure deploy directory and repo exist on VPS
+          ${SSH_CMD} "
+            if [ ! -d ${DEPLOY_DIR}/.git ]; then
+              sudo mkdir -p ${DEPLOY_DIR}
+              sudo chown \$(whoami):\$(whoami) ${DEPLOY_DIR}
+              git clone --branch ${{ inputs.source_branch }} \
+                https://github.com/${{ github.repository }}.git ${DEPLOY_DIR}
+            fi
+          "
+
+          # Write env file from CI secrets (variables expand on CI runner, not VPS)
+          ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta << ENVEOF
+POSTGRES_PASSWORD=${BETA_POSTGRES_PASSWORD}
+KC_DB_PASSWORD=${BETA_POSTGRES_PASSWORD}
+KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}
+KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}
+VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
+ENVEOF
+          chmod 600 ${DEPLOY_DIR}/.env.beta"
+
+          # Pull latest code and rebuild containers
+          ${SSH_CMD} "
+            set -e
+            cd ${DEPLOY_DIR}
+            git fetch origin
+            git checkout ${{ inputs.source_branch }}
+            git pull origin ${{ inputs.source_branch }}
+
+            # Ensure shared Caddy proxy is running
+            docker network create caddy 2>/dev/null || true
+            docker compose -f docker-compose.caddy.yml up -d
+
+            echo '📦 Rebuilding and restarting beta stack...'
+            docker compose -f docker-compose.beta.yml --env-file .env.beta pull postgres
+            docker compose -f docker-compose.beta.yml --env-file .env.beta build --parallel
+            docker compose -f docker-compose.beta.yml --env-file .env.beta up -d --remove-orphans
+
+            echo '⏳ Waiting for services to become healthy...'
+            # Wait for postgres health check
+            for i in \$(seq 1 30); do
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T postgres pg_isready -U postgres -d keycloak >/dev/null 2>&1; then
+                echo '  ✅ Postgres ready'
+                break
+              fi
+              sleep 2
+            done
+
+            # Wait for backend health endpoint
+            for i in \$(seq 1 60); do
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend curl -sf http://localhost:8445/health >/dev/null 2>&1; then
+                echo '  ✅ Backend ready'
+                break
+              fi
+              sleep 5
+            done
+          "
+
+          # External health check through Caddy
+          echo "⏳ Verifying external access at ${VPS_URL}..."
+          for i in $(seq 1 30); do
+            if curl -sf "${VPS_URL}/health" > /dev/null 2>&1; then
+              echo "✅ External health check passed"
+              break
+            fi
+            if [ "$i" -eq 30 ]; then
+              echo "❌ External health check failed after 30 attempts"
+              echo "deployment_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            sleep 10
+          done
+
           # Set outputs
-          echo "fhir_server_url=$VPS_URL/proxy-smart-backend/hapi-fhir-server/R4" >> $GITHUB_OUTPUT
-          echo "keycloak_url=https://auth-beta.proxy-smart.your-domain.com" >> $GITHUB_OUTPUT
-          echo "app_url=$VPS_URL" >> $GITHUB_OUTPUT
+          echo "fhir_server_url=${VPS_URL}/proxy-smart-backend/hapi-fhir-server/R4" >> $GITHUB_OUTPUT
+          echo "keycloak_url=${VPS_URL}/auth" >> $GITHUB_OUTPUT
+          echo "app_url=${VPS_URL}" >> $GITHUB_OUTPUT
           echo "deployment_status=success" >> $GITHUB_OUTPUT
           echo "deployment_target=vps" >> $GITHUB_OUTPUT
-          
+
           echo "✅ Beta deployment completed successfully"
-          echo "📍 App: $VPS_URL"
-          echo "📍 FHIR Server (Proxied): $VPS_URL/proxy-smart-backend/hapi-fhir-server/R4"
-          echo "📍 Keycloak: https://auth-beta.proxy-smart.your-domain.com"
+          echo "📍 App:       ${VPS_URL}"
+          echo "📍 FHIR:      ${VPS_URL}/proxy-smart-backend/hapi-fhir-server/R4"
+          echo "📍 Keycloak:  ${VPS_URL}/auth"
