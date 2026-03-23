@@ -58,6 +58,8 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - [SMART Apps](./admin-ui/smart-apps.md) — Application registration and management
 - [FHIR Servers](./admin-ui/fhir-servers.md) — Server configuration and monitoring
 - [Scope Management](./admin-ui/scope-management.md) — FHIR permissions and templates
+- [Access Control](./admin-ui/access-control.md) — Physical door management (Kisi, UniFi Access)
+- [Monitoring & Observability](./admin-ui/monitoring.md) — OAuth, FHIR health, consent, and audit monitoring
 
 ### AI & MCP
 
