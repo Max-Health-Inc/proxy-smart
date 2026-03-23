@@ -14,13 +14,13 @@ RUN apt-get update -qq && \
 # Copy root package files first
 COPY package.json bun.lock ./
 
-# Copy workspace package files
+# Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
-COPY infra/package.json ./infra/
-COPY dtr-app/package.json ./dtr-app/
-COPY consent-app/package.json ./consent-app/
+
+# Strip workspaces not included in Docker build to avoid install failures
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for all workspaces
 RUN bun install --frozen-lockfile
