@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-beta.202603231648.0e8f43e2] - 2026-03-23
+
+- 🔧 Chores & Improvements: Update beta/dev SMART compliance reports (CI skips)  
+- 🔧 Chores & Improvements: Center scroll indicator correctly (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/211
+
+
 ## [0.0.2-alpha.202603231648.0e8f43e2] - 2026-03-23
 
 - 🔧 Chores & Improvements: UI spacing tweak in backend/public/index.html (adjusted text-indent/margin-right for mono font label)
