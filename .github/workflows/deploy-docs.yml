@@ -36,7 +36,7 @@ jobs:
       - name: Build docs
         env:
           VITEPRESS_BASE: /proxy-smart/
-        run: bunx vitepress build docs
+        run: bun run docs:build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
