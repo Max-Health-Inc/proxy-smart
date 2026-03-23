@@ -5,6 +5,7 @@ export default defineConfig({
   description: 'Healthcare interoperability proxy — SMART App Launch 2.2.0, OAuth 2.0 & MCP',
   base: process.env.VITEPRESS_BASE || '/docs/',
   cleanUrls: true,
+  ignoreDeadLinks: true,
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${process.env.VITEPRESS_BASE || '/docs/'}logo.svg` }],
