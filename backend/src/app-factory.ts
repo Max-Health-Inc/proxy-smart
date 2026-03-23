@@ -138,6 +138,48 @@ export function createApp() {
         .use(adminAuditMonitoringRoutes)
         .use(mcpEndpointRoutes)
         .use(fhirRoutes)
+        .onError(({ code, set, request }) => {
+            if (code === 'NOT_FOUND') {
+                const accept = request.headers.get('accept') ?? ''
+                // Return JSON for API clients
+                if (accept.includes('application/json') && !accept.includes('text/html')) {
+                    set.status = 404
+                    return { error: 'Not Found', path: new URL(request.url).pathname }
+                }
+                // Return a styled HTML 404 page for browsers
+                set.status = 404
+                set.headers['content-type'] = 'text/html; charset=utf-8'
+                const path = new URL(request.url).pathname
+                return `<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="icon" type="image/svg+xml" href="/proxy-smart.svg"/>
+<title>404 — Proxy Smart</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#000;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.c{text-align:center;max-width:480px;padding:2rem}
+h1{font-size:6rem;font-weight:200;line-height:1;margin-bottom:.5rem;color:#a3a3a3}
+h2{font-size:1.25rem;font-weight:500;margin-bottom:1rem}
+p{color:#737373;font-size:.875rem;margin-bottom:2rem;word-break:break-all}
+a{display:inline-block;background:#fff;color:#000;border-radius:6px;padding:8px 20px;font-size:.875rem;font-weight:500;text-decoration:none;transition:opacity .15s}
+a:hover{opacity:.85}
+</style>
+</head>
+<body>
+<div class="c">
+<h1>404</h1>
+<h2>Page not found</h2>
+<p>${Bun.escapeHTML(path)}</p>
+<a href="/">Back to Home</a>
+</div>
+</body>
+</html>`
+            }
+        })
 
     return app
 }
