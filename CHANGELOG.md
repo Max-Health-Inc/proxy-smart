@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603231957.d98e9bfd] - 2026-03-23
+
+- 🔧 Chores & Improvements: Expand Caddy reverse proxy support (add 3_reverse_proxy for port 8445 in docker-compose.beta.yml; extend matching to additional upstreams with the same port)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/218
+
+
 ## [0.0.2-alpha.202603231949.c8b88e61] - 2026-03-23
 
 - 🔧 Chores & Improvements: Expand reverse proxy setup to include a second Caddy proxy (3_reverse_proxy) on port 8445 in docker-compose.beta.yml and extend upstream matching to cover additional upstreams with the same port
