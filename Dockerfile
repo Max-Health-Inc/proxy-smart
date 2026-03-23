@@ -37,7 +37,7 @@ RUN bun run export-openapi
 
 # API client generation stage
 FROM build-deps AS api-client-gen
-COPY scripts/generate-ts-fetch-client.py ./scripts/
+COPY scripts/generate-ts-fetch-client.py scripts/runtime-template.ts ./scripts/
 COPY --from=backend-build /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p ui/src/lib/api-client && \
     python scripts/generate-ts-fetch-client.py backend/dist/openapi.json ui/src/lib/api-client
