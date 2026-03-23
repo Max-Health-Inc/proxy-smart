@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603231607.00c7934f] - 2026-03-23
+
+- 🔧 Chores & Improvements: Documentation overhaul for AI MCP integration and redesigned AI Assistant flow; UI routing and setupTools() adjustments
+- 🔧 Chores & Improvements: CI/test enhancements and certification readiness for SMART 2.2.0; convert CI checks to automated adoption
+- 🔧 Chores & Improvements: Version management and monorepo organization updates; root version as truth
+- 🔧 Chores & Improvements: Release process update; shift from Alpha to Branch Flow with new three-stage promotion diagram and clarified automated beta/testing PR flow
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/207
+
+
 ## [0.0.2-alpha.202603231553.7ab93fa3] - 2026-03-23
 
 - 🔧 Chores & Improvements: Refined tool-call handling to trigger only on exact type 'tool-call' with a present toolName; updated comment to reflect start-only behavior
