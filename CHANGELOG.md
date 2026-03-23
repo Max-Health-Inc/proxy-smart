@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603231631.09cefee1] - 2026-03-23
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: 
+  - docs: add access control and monitoring documentation
+  - docs: update CHANGELOG.md for PR #207
+- 🔧 Chores & Improvements: 
+  - chore(testing): update dev SMART compliance report
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/208
+
+
 ## [0.0.2-alpha.202603231607.00c7934f] - 2026-03-23
 
 - 🔧 Chores & Improvements: Documentation overhaul for AI MCP integration and redesigned AI Assistant flow; UI routing and setupTools() adjustments
