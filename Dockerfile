@@ -66,6 +66,11 @@ WORKDIR /app/ui
 # Build UI for standalone deployment
 RUN bun run build
 
+# Docs build stage (VitePress)
+FROM build-deps AS docs-build
+COPY docs/ ./docs/
+RUN bun run docs:build
+
 # Backend production stage
 FROM base AS backend
 WORKDIR /app
@@ -83,6 +88,9 @@ COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-s
 
 # Copy backend's public directory (landing page only, no UI)
 COPY --from=backend-build /app/backend/public ./backend/public
+
+# Copy built VitePress docs
+COPY --from=docs-build /app/docs/.vitepress/dist ./backend/public/docs
 
 # Copy root node_modules (monorepo structure)
 COPY --from=backend-build /app/node_modules ./node_modules
