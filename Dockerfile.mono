@@ -37,6 +37,11 @@ RUN bun run generate:ui
 # - Building backend
 RUN bun run build:mono
 
+# Verify no localhost URLs leaked into production bundles via .env files
+RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \
+      echo "ERROR: Found hardcoded localhost:8445 in app bundles. Check .dockerignore excludes .env files." && exit 1; \
+    fi
+
 # Production stage - backend API server with static frontend
 FROM base AS production
 WORKDIR /app
