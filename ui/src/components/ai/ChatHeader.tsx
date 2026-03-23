@@ -1,4 +1,4 @@
-import { Brain, Bot, RotateCcw, RefreshCw, X } from 'lucide-react';
+import { Brain, Bot, RotateCcw, RefreshCw, X, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@proxy-smart/shared-ui';
 import { ChatSettings } from './ChatSettings';
@@ -47,15 +47,7 @@ export function ChatHeader({
         >
             <div className="flex items-center justify-between">
                 {/* Left: Icon and Status */}
-                <div
-                    className="flex items-center space-x-3 cursor-pointer select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
-                    onClick={onSettingsClick}
-                    onKeyDown={onSettingsKeyDown}
-                    role="button"
-                    tabIndex={0}
-                    aria-haspopup="menu"
-                    aria-expanded={showSettings}
-                >
+                <div className="flex items-center space-x-3 select-none">
                     <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-sm">
                         {isOpenAIReady ? (
                             <Brain className="w-4 h-4 text-primary-foreground" />
@@ -109,9 +101,21 @@ export function ChatHeader({
                         </span>
                     </div>
 
-                    {/* Settings Dropdown */}
+                    {/* Settings Button + Dropdown */}
                     {!isMinimized && (
                         <div className="relative">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSettingsClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-muted rounded-md"
+                                title={t('Settings')}
+                            >
+                                <Settings className="w-3 h-3 text-muted-foreground" />
+                            </Button>
                             <ChatSettings
                                 isOpen={showSettings}
                                 selectedModel={selectedModel}
