@@ -19,7 +19,9 @@ COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
 COPY consent-app/package.json ./consent-app/
+COPY consent-app/lib/ ./consent-app/lib/
 COPY dtr-app/package.json ./dtr-app/
+COPY dtr-app/lib/ ./dtr-app/lib/
 
 # Strip workspaces not included in Docker build to avoid install failures
 RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui","consent-app","dtr-app"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
