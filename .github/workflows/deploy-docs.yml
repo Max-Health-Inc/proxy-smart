@@ -31,7 +31,11 @@ jobs:
           bun-version: latest
 
       - name: Install VitePress
-        run: bun add -d vitepress
+        run: |
+          # Strip workspaces from package.json to avoid resolution errors
+          # (main may not have all workspace dirs yet)
+          node -e "const p=JSON.parse(require('fs').readFileSync('package.json','utf8')); delete p.workspaces; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2))"
+          bun add -d vitepress
 
       - name: Build docs
         env:
