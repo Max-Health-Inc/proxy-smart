@@ -443,9 +443,9 @@ class SmartOnFHIRAIAssistant {
               continue;
             }
 
-            // Tool call notifications
+            // Tool call notifications (only on call start, not on result)
             const toolName = (evt.toolName as string) || (evt.name as string) || (evt.tool?.name as string);
-            if (type?.startsWith('tool') && toolName) {
+            if (type === 'tool-call' && toolName) {
               yield { type: 'function_calling', name: toolName } as StreamChunk;
               continue;
             }
