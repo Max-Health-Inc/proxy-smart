@@ -109,22 +109,23 @@ COPY <<EOF /etc/nginx/conf.d/default.conf
 server {
     listen 80;
     server_name localhost;
+    root /usr/share/nginx/html;
 
     # Serve the Admin SPA under /webapp/
     location /webapp/ {
         alias /usr/share/nginx/html/webapp/;
         try_files \$uri \$uri/ /webapp/index.html;
+
+        # Cache static assets
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
     }
 
     # Redirect /webapp to /webapp/
     location = /webapp {
         return 301 /webapp/;
-    }
-
-    # Cache static assets
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
     }
 
     # Security headers
