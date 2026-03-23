@@ -494,11 +494,13 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/*"
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/*",
+        "https://beta.proxy-smart.com/*"
       ],
       "webOrigins": [
         "http://localhost:*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
+        "https://beta.proxy-smart.com"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
