@@ -239,6 +239,46 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
+      # When develop is behind test (e.g. version bump commits on test),
+      # the PR will have merge conflicts on package.json version strings.
+      # Resolve by merging test into develop, keeping develop's versions.
+      # version-operations will re-stamp the correct beta version after merge anyway.
+      - name: Resolve version conflicts with test
+        if: steps.check-diff.outputs.has_changes == 'true' && steps.check-diff.outputs.commits_behind != '0'
+        run: |
+          echo "::group::Resolve version conflicts"
+          echo "Develop is ${{ steps.check-diff.outputs.commits_behind }} commits behind test — absorbing..."
+
+          git config user.name "proxy-smart-releaser[bot]"
+          git config user.email "proxy-smart-releaser[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
+          # Merge test into develop, keeping develop's side on any conflicts
+          if git merge origin/test -X ours --no-edit \
+              -m "chore: absorb test branch (resolve version conflicts) [proxy-smart-releaser]"; then
+            echo "Merge completed cleanly"
+          else
+            echo "⚠️ Conflicts remain after -X ours — force-resolving all as ours"
+            CONFLICTED=$(git diff --name-only --diff-filter=U)
+            if [ -n "$CONFLICTED" ]; then
+              echo "$CONFLICTED" | xargs git checkout --ours
+              git add -A
+            fi
+            git commit --no-edit \
+              -m "chore: absorb test branch (resolve version conflicts) [proxy-smart-releaser]" || true
+          fi
+
+          # Push only if HEAD actually moved
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/develop)" ]; then
+            git push origin develop
+            echo "✅ Pushed merge commit — PR should now be conflict-free"
+          else
+            echo "✅ Already up-to-date with test"
+          fi
+          echo "::endgroup::"
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_exists == '0' && steps.check-diff.outputs.has_changes == 'true'
         run: |
@@ -347,6 +387,43 @@ jobs:
           TODO_COUNT=$(grep -r " TODO:" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.py" --include="*.java" --include="*.cs" --include="*.go" --include="*.rs" --include="*.cpp" --include="*.c" --include="*.h" . | wc -l || echo "0")
           echo "todo_count=$TODO_COUNT" >> $GITHUB_OUTPUT
           echo "Found $TODO_COUNT TODOs in the codebase"
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+
+      # Same as pr-to-test: resolve version conflicts by merging main into test
+      - name: Resolve version conflicts with main
+        if: steps.check-diff.outputs.has_changes == 'true' && steps.check-diff.outputs.commits_behind != '0'
+        run: |
+          echo "::group::Resolve version conflicts"
+          echo "Test is ${{ steps.check-diff.outputs.commits_behind }} commits behind main — absorbing..."
+
+          git config user.name "proxy-smart-releaser[bot]"
+          git config user.email "proxy-smart-releaser[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+
+          git checkout test
+
+          if git merge origin/main -X ours --no-edit \
+              -m "chore: absorb main branch (resolve version conflicts) [proxy-smart-releaser]"; then
+            echo "Merge completed cleanly"
+          else
+            echo "⚠️ Conflicts remain after -X ours — force-resolving all as ours"
+            CONFLICTED=$(git diff --name-only --diff-filter=U)
+            if [ -n "$CONFLICTED" ]; then
+              echo "$CONFLICTED" | xargs git checkout --ours
+              git add -A
+            fi
+            git commit --no-edit \
+              -m "chore: absorb main branch (resolve version conflicts) [proxy-smart-releaser]" || true
+          fi
+
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/test)" ]; then
+            git push origin test
+            echo "✅ Pushed merge commit — PR should now be conflict-free"
+          else
+            echo "✅ Already up-to-date with main"
+          fi
+          echo "::endgroup::"
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
