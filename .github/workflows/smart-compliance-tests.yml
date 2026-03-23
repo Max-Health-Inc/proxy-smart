@@ -63,10 +63,10 @@ on:
   schedule:
     - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
 
-# Only one Inferno test per branch at a time
+# Cancel previous compliance test runs for the same trigger, but don't block releases
 concurrency:
-  group: inferno-${{ github.ref }}
-  cancel-in-progress: false
+  group: compliance-tests-${{ github.event_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: write  # Required to commit test reports
@@ -89,6 +89,8 @@ jobs:
     name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ inputs.test_stage || 'alpha' }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # Skip bot/releaser version-bump commits to avoid duplicate runs
+    if: ${{ github.event_name != 'push' || (!contains(github.event.head_commit.message, '🔄 Update version') && !contains(github.event.head_commit.message, '🤖 Update client APIs') && !contains(github.event.head_commit.message, 'proxy-smart-releaser')) }}
     
     outputs:
       passed: ${{ steps.inferno-tests.outputs.passed }}
@@ -230,7 +232,7 @@ jobs:
         id: docker-cache
         with:
           path: /tmp/docker-images
-          key: docker-images-keycloak-26.0.5
+          key: docker-images-keycloak-26.5.6
 
       - name: Load cached Docker images
         if: steps.config.outputs.target != 'deployed' && steps.docker-cache.outputs.cache-hit == 'true'
@@ -245,9 +247,9 @@ jobs:
         if: steps.config.outputs.target != 'deployed' && steps.docker-cache.outputs.cache-hit != 'true'
         run: |
           echo "Pulling Keycloak image (will be cached for next run)..."
-          docker pull quay.io/keycloak/keycloak:26.0.5
+          docker pull quay.io/keycloak/keycloak:26.5.6
           mkdir -p /tmp/docker-images
-          docker save quay.io/keycloak/keycloak:26.0.5 -o /tmp/docker-images/keycloak.tar
+          docker save quay.io/keycloak/keycloak:26.5.6 -o /tmp/docker-images/keycloak.tar
           echo "✓ Keycloak image pulled and saved for caching"
 
       - name: Setup Bun
@@ -284,7 +286,7 @@ jobs:
             -e KC_HEALTH_ENABLED=true \
             -e KC_HTTP_ENABLED=true \
             -e KC_HOSTNAME_STRICT=false \
-            quay.io/keycloak/keycloak:26.0.5 \
+            quay.io/keycloak/keycloak:26.5.6 \
             start-dev --import-realm
           
           # Wait for Keycloak to be ready
@@ -409,8 +411,12 @@ jobs:
           NODE_ENV: production
           KEYCLOAK_BASE_URL: http://localhost:8080
           KEYCLOAK_REALM: proxy-smart
+          KEYCLOAK_ADMIN_CLIENT_ID: admin-service
+          KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
           # Point to HAPI FHIR server running in GitHub Actions service container
           FHIR_SERVER_BASE: http://localhost:8081/fhir
+          # Allow Inferno test runner origin for CORS compliance tests
+          CORS_ORIGINS: http://localhost:4567,http://localhost:8445,http://localhost:5173
 
       # For deployed targets, verify the remote services are reachable
       - name: Verify Deployed Services
@@ -426,22 +432,38 @@ jobs:
           echo "Keycloak: $KC_URL"
           echo "Realm: $KC_REALM"
           
-          # Check backend health
+          # Check backend health (with retries — Northflank may be cold-starting)
           echo "Checking backend health..."
-          if curl -sf "$BACKEND_URL/health" > /dev/null 2>&1; then
-            echo "✓ Backend is healthy"
-          else
-            echo "ERROR: Backend not reachable at $BACKEND_URL/health"
+          BACKEND_OK=false
+          for i in $(seq 1 20); do
+            if curl -sf --max-time 10 "$BACKEND_URL/health" > /dev/null 2>&1; then
+              echo "✓ Backend is healthy (attempt $i)"
+              BACKEND_OK=true
+              break
+            fi
+            echo "  Attempt $i/20 — not ready, waiting 10s..."
+            sleep 10
+          done
+          if [ "$BACKEND_OK" = "false" ]; then
+            echo "ERROR: Backend not reachable at $BACKEND_URL/health after 20 attempts"
             echo "Make sure the service is scaled up on Northflank"
             exit 1
           fi
           
-          # Check Keycloak realm
+          # Check Keycloak realm (with retries)
           echo "Checking Keycloak realm..."
-          if curl -sf "$KC_URL/realms/$KC_REALM" > /dev/null 2>&1; then
-            echo "✓ Keycloak realm $KC_REALM is accessible"
-          else
-            echo "ERROR: Keycloak realm not reachable at $KC_URL/realms/$KC_REALM"
+          KC_OK=false
+          for i in $(seq 1 20); do
+            if curl -sf --max-time 10 "$KC_URL/realms/$KC_REALM" > /dev/null 2>&1; then
+              echo "✓ Keycloak realm $KC_REALM is accessible (attempt $i)"
+              KC_OK=true
+              break
+            fi
+            echo "  Attempt $i/20 — not ready, waiting 10s..."
+            sleep 10
+          done
+          if [ "$KC_OK" = "false" ]; then
+            echo "ERROR: Keycloak realm not reachable at $KC_URL/realms/$KC_REALM after 20 attempts"
             echo "Make sure Keycloak is scaled up and realm exists"
             exit 1
           fi
@@ -450,6 +472,220 @@ jobs:
           echo "DEPLOYED_BACKEND_URL=$BACKEND_URL" >> $GITHUB_ENV
           echo "DEPLOYED_KC_URL=$KC_URL" >> $GITHUB_ENV
           echo "DEPLOYED_KC_REALM=$KC_REALM" >> $GITHUB_ENV
+
+      # Ensure inferno-test-client and SMART scopes exist on deployed Keycloak
+      - name: Ensure Inferno Test Client (Deployed)
+        if: steps.config.outputs.target == 'deployed'
+        run: |
+          KC_URL="${{ steps.config.outputs.kc_url }}"
+          KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          CLIENT_ID="${{ steps.config.outputs.client_id }}"
+          
+          # Get admin token via admin-service client (client_credentials grant)
+          ADMIN_TOKEN=$(curl -sf -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=client_credentials" \
+            -d "client_id=admin-service" \
+            -d "client_secret=${{ secrets.KC_ADMIN_SERVICE_SECRET || 'admin-service-secret' }}" \
+            | jq -r '.access_token')
+          
+          if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
+            echo "WARNING: Could not get admin token — trying master realm admin"
+            ADMIN_TOKEN=$(curl -sf -X POST "$KC_URL/realms/master/protocol/openid-connect/token" \
+              -H "Content-Type: application/x-www-form-urlencoded" \
+              -d "grant_type=password" \
+              -d "client_id=admin-cli" \
+              -d "username=admin" \
+              -d "password=admin" | jq -r '.access_token')
+          fi
+          
+          if [ -z "$ADMIN_TOKEN" ] || [ "$ADMIN_TOKEN" = "null" ]; then
+            echo "WARNING: Cannot authenticate to Keycloak admin API"
+            echo "  inferno-test-client may not exist — OAuth tests will likely fail"
+            exit 0
+          fi
+          
+          echo "✓ Keycloak admin token obtained"
+          
+          # ── Step 1: Ensure SMART client scopes exist ──
+          # These scopes are imported from realm-export.json for local but don't exist on deployed
+          SMART_SCOPES='["launch/patient","fhirUser","patient/*.read","offline_access"]'
+          
+          for SCOPE_NAME in "launch/patient" "fhirUser" "patient/*.read" "offline_access"; do
+            # URL-encode the scope name for the query
+            ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SCOPE_NAME', safe=''))")
+            
+            EXISTING=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r --arg name "$SCOPE_NAME" '.[] | select(.name == $name) | .id')
+            
+            if [ -n "$EXISTING" ]; then
+              echo "  ✓ Scope '$SCOPE_NAME' already exists (id: $EXISTING)"
+            else
+              echo "  Creating scope '$SCOPE_NAME'..."
+              
+              # Build scope definition based on name
+              SCOPE_DEF="{\"name\": \"$SCOPE_NAME\", \"protocol\": \"openid-connect\", \"attributes\": {\"include.in.token.scope\": \"true\", \"display.on.consent.screen\": \"true\"}}"
+              
+              # fhirUser needs a protocol mapper to include the claim
+              if [ "$SCOPE_NAME" = "fhirUser" ]; then
+                SCOPE_DEF="{
+                  \"name\": \"fhirUser\",
+                  \"protocol\": \"openid-connect\",
+                  \"attributes\": {\"include.in.token.scope\": \"true\", \"display.on.consent.screen\": \"true\"},
+                  \"protocolMappers\": [{
+                    \"name\": \"fhirUser-mapper\",
+                    \"protocol\": \"openid-connect\",
+                    \"protocolMapper\": \"oidc-usermodel-attribute-mapper\",
+                    \"consentRequired\": false,
+                    \"config\": {
+                      \"userinfo.token.claim\": \"true\",
+                      \"user.attribute\": \"fhirUser\",
+                      \"id.token.claim\": \"true\",
+                      \"access.token.claim\": \"true\",
+                      \"claim.name\": \"fhirUser\",
+                      \"jsonType.label\": \"String\"
+                    }
+                  }]
+                }"
+              fi
+              
+              HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+                -H "Authorization: Bearer $ADMIN_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "$SCOPE_DEF")
+              
+              if [ "$HTTP_CODE" = "201" ]; then
+                echo "  ✓ Created scope '$SCOPE_NAME'"
+              else
+                echo "  WARNING: Failed to create scope '$SCOPE_NAME' (HTTP $HTTP_CODE)"
+              fi
+            fi
+          done
+          
+          # ── Step 2: Ensure inferno-test-client exists ──
+          EXISTING=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq 'length')
+          
+          CLIENT_DEF="{
+            \"clientId\": \"$CLIENT_ID\",
+            \"name\": \"Inferno Test Client\",
+            \"protocol\": \"openid-connect\",
+            \"clientAuthenticatorType\": \"client-dummy\",
+            \"publicClient\": true,
+            \"bearerOnly\": false,
+            \"consentRequired\": false,
+            \"standardFlowEnabled\": true,
+            \"implicitFlowEnabled\": false,
+            \"directAccessGrantsEnabled\": true,
+            \"serviceAccountsEnabled\": false,
+            \"authorizationServicesEnabled\": false,
+            \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
+            \"webOrigins\": [\"http://localhost:4567\", \"*\"],
+            \"fullScopeAllowed\": true,
+            \"defaultClientScopes\": [\"web-origins\", \"acr\", \"profile\", \"roles\", \"email\", \"openid\"],
+            \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\", \"oauth2.device.authorization.grant.enabled\": \"false\", \"oidc.ciba.grant.enabled\": \"false\", \"backchannel.logout.session.required\": \"true\"}
+          }"
+          
+          if [ "$EXISTING" -gt 0 ]; then
+            # Delete and recreate to ensure clean state (PUT can leave stale settings)
+            INTERNAL_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
+            echo "Deleting existing $CLIENT_ID (internal: $INTERNAL_ID) for clean recreation..."
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+              "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
+              -H "Authorization: Bearer $ADMIN_TOKEN")
+            echo "  Delete response: HTTP $HTTP_CODE"
+          fi
+          
+          echo "Creating $CLIENT_ID..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$CLIENT_DEF")
+          if [ "$HTTP_CODE" = "201" ]; then
+            echo "  ✓ Created $CLIENT_ID (HTTP $HTTP_CODE)"
+          else
+            echo "  ✗ Failed to create $CLIENT_ID (HTTP $HTTP_CODE)"
+            # Show error for debugging
+            curl -s -X POST "$KC_URL/admin/realms/$KC_REALM/clients" \
+              -H "Authorization: Bearer $ADMIN_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$CLIENT_DEF" | jq '.' 2>/dev/null || true
+          fi
+          
+          # ── Step 3: Assign SMART scopes to the client as optional client scopes ──
+          INTERNAL_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients?clientId=$CLIENT_ID" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[0].id')
+          
+          if [ -z "$INTERNAL_ID" ] || [ "$INTERNAL_ID" = "null" ]; then
+            echo "WARNING: Could not find client internal ID"
+            exit 0
+          fi
+          
+          echo "Assigning SMART scopes to $CLIENT_ID (internal: $INTERNAL_ID)..."
+          
+          # Get current optional scopes for the client
+          CURRENT_SCOPES=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID/optional-client-scopes" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[].name' 2>/dev/null)
+          
+          for SCOPE_NAME in "launch/patient" "fhirUser" "patient/*.read" "offline_access"; do
+            if echo "$CURRENT_SCOPES" | grep -qF "$SCOPE_NAME"; then
+              echo "  ✓ Scope '$SCOPE_NAME' already assigned"
+            else
+              # Get scope ID
+              SCOPE_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+                -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r --arg name "$SCOPE_NAME" '.[] | select(.name == $name) | .id')
+              
+              if [ -n "$SCOPE_ID" ] && [ "$SCOPE_ID" != "null" ]; then
+                HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+                  "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID/optional-client-scopes/$SCOPE_ID" \
+                  -H "Authorization: Bearer $ADMIN_TOKEN")
+                if [ "$HTTP_CODE" = "204" ]; then
+                  echo "  ✓ Assigned scope '$SCOPE_NAME' to client"
+                else
+                  echo "  WARNING: Failed to assign scope '$SCOPE_NAME' (HTTP $HTTP_CODE)"
+                fi
+              else
+                echo "  WARNING: Scope '$SCOPE_NAME' not found in realm"
+              fi
+            fi
+          done
+          
+          echo "✓ Inferno test client configured with SMART scopes"
+          
+          # ── Step 4: Verify client configuration ──
+          echo ""
+          echo "Verifying client configuration..."
+          CLIENT_CONFIG=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID" \
+            -H "Authorization: Bearer $ADMIN_TOKEN")
+          echo "  publicClient: $(echo $CLIENT_CONFIG | jq '.publicClient')"
+          echo "  consentRequired: $(echo $CLIENT_CONFIG | jq '.consentRequired')"
+          echo "  standardFlowEnabled: $(echo $CLIENT_CONFIG | jq '.standardFlowEnabled')"
+          echo "  directAccessGrantsEnabled: $(echo $CLIENT_CONFIG | jq '.directAccessGrantsEnabled')"
+          echo "  redirectUris: $(echo $CLIENT_CONFIG | jq -c '.redirectUris')"
+          echo "  pkce.code.challenge.method: $(echo $CLIENT_CONFIG | jq -r '.attributes["pkce.code.challenge.method"]')"
+          
+          # ── Step 5: Quick token test via direct access grant ──
+          echo ""
+          echo "Testing token endpoint (direct access grant)..."
+          if [ "${{ steps.config.outputs.target }}" = "deployed" ]; then
+            BASE_URL="${{ steps.config.outputs.backend_url }}"
+          else
+            BASE_URL="http://localhost:${{ steps.config.outputs.backend_port }}"
+          fi
+          TOKEN_RESP=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/auth/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password&client_id=$CLIENT_ID&username=${{ steps.config.outputs.kc_username }}&password=${{ steps.config.outputs.kc_password }}&scope=openid")
+          TOKEN_HTTP=$(echo "$TOKEN_RESP" | tail -1)
+          TOKEN_BODY=$(echo "$TOKEN_RESP" | head -n -1)
+          if [ "$TOKEN_HTTP" = "200" ]; then
+            echo "  ✓ Token exchange works (HTTP $TOKEN_HTTP)"
+            echo "  has access_token: $(echo $TOKEN_BODY | jq 'has("access_token")')"
+          else
+            echo "  ✗ Token exchange FAILED (HTTP $TOKEN_HTTP)"
+            echo "  Error: $(echo $TOKEN_BODY | jq -r '.error // .message // "unknown"')"
+            echo "  Description: $(echo $TOKEN_BODY | jq -r '.error_description // "none"')"
+          fi
 
       # Setup Node.js for Playwright
       - name: Setup Node.js
@@ -491,6 +727,9 @@ jobs:
           cd inferno
           export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
           export REDIS_URL="redis://localhost:6379"
+          
+          # Disable TLS tests in local CI (no HTTPS) — TLS is validated on deployed environments
+          export INFERNO_DISABLE_TLS_TEST=true
           
           # Start Sidekiq worker for background job processing (test runs)
           # Must use -r ./worker.rb to load Inferno's job classes
@@ -624,13 +863,133 @@ jobs:
           echo ""
           echo "=== Keycloak setup verified ==="
 
+      # Seed FHIR resources for deployed mode (local mode seeds in earlier step)
+      - name: Seed FHIR Test Resources (Deployed)
+        if: steps.config.outputs.target == 'deployed'
+        run: |
+          BACKEND_URL="${{ steps.config.outputs.backend_url }}"
+          KC_URL="${{ steps.config.outputs.kc_url }}"
+          KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          CLIENT_ID="${{ steps.config.outputs.client_id }}"
+          KC_USERNAME="${{ steps.config.outputs.kc_username }}"
+          KC_PASSWORD="${{ steps.config.outputs.kc_password }}"
+          FHIR_BASE="$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4"
+          
+          echo "Seeding FHIR resources on deployed server..."
+          echo "  FHIR Base: $FHIR_BASE"
+          
+          # Get access token via direct access grant
+          TOKEN=$(curl -sf -X POST "$KC_URL/realms/$KC_REALM/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password" \
+            -d "client_id=$CLIENT_ID" \
+            -d "username=$KC_USERNAME" \
+            -d "password=$KC_PASSWORD" \
+            -d "scope=openid user/*.*" | jq -r '.access_token')
+          
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "WARNING: Could not obtain token for FHIR resource seeding"
+            echo "  Tests requiring fhirUser claim may fail"
+            exit 0
+          fi
+          
+          echo "✓ Obtained access token for resource seeding"
+          
+          # Create Practitioner (matches doctor user's fhirUser claim)
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Practitioner/example-practitioner" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Practitioner",
+              "id": "example-practitioner",
+              "identifier": [{"system": "http://example.org/practitioners", "value": "doctor"}],
+              "active": true,
+              "name": [{"family": "Doctor", "given": ["Test"], "prefix": ["Dr."]}],
+              "telecom": [{"system": "email", "value": "doctor@example.com"}]
+            }')
+          echo "  Practitioner/example-practitioner: HTTP $HTTP_CODE"
+          
+          # Create Patient (for launch/patient scope)
+          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Patient/test-patient" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Patient",
+              "id": "test-patient",
+              "identifier": [{"system": "http://example.org/patients", "value": "12345"}],
+              "active": true,
+              "name": [{"family": "Test", "given": ["Patient"]}],
+              "gender": "unknown",
+              "birthDate": "1990-01-01"
+            }')
+          echo "  Patient/test-patient: HTTP $HTTP_CODE"
+          
+          echo "✓ FHIR test resources seeded on deployed server"
+
+      # Wake up deployed services right before tests (they may have gone cold during tool setup)
+      - name: Warm Up Deployed Services
+        if: steps.config.outputs.target == 'deployed'
+        run: |
+          BACKEND_URL="${{ steps.config.outputs.backend_url }}"
+          KC_URL="${{ steps.config.outputs.kc_url }}"
+          KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          SMART_CONFIG="$BACKEND_URL/proxy-smart-backend/hapi-fhir-server/R4/.well-known/smart-configuration"
+          
+          echo "Warming up deployed services before test run..."
+          
+          # Step 1: Wait for backend /health
+          echo "Step 1: Waiting for backend /health..."
+          for i in $(seq 1 40); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$BACKEND_URL/health" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ Backend /health is up (attempt $i)"
+              break
+            fi
+            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
+            sleep 5
+          done
+          
+          # Step 2: Wait for Keycloak
+          echo "Step 2: Waiting for Keycloak..."
+          for i in $(seq 1 40); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$KC_URL/realms/$KC_REALM" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ Keycloak realm is up (attempt $i)"
+              break
+            fi
+            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
+            sleep 5
+          done
+          
+          # Step 3: Wait for SMART configuration (the actual endpoint Inferno hits first)
+          # This depends on BOTH backend + Keycloak being fully functional
+          echo "Step 3: Waiting for SMART configuration endpoint..."
+          SMART_READY=false
+          for i in $(seq 1 40); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$SMART_CONFIG" 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ SMART configuration is responding (attempt $i)"
+              SMART_READY=true
+              break
+            fi
+            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
+            sleep 5
+          done
+          
+          if [ "$SMART_READY" = "false" ]; then
+            echo "ERROR: SMART configuration endpoint never became healthy"
+            echo "  Last HTTP code: $HTTP_CODE"
+            echo "  URL: $SMART_CONFIG"
+            echo "  The deployed backend may not be functioning correctly"
+            exit 1
+          fi
+          
+          echo "✓ All services warmed up and responding"
+
       # Run Inferno tests via Playwright automation
       - name: Run SMART Compliance Tests
         id: inferno-tests
-        continue-on-error: true
         run: |
-          set +e  # Disable exit on error for robust handling
-          
           echo "=== SMART 2.2.0 Compliance Testing with Inferno ==="
           echo ""
           
@@ -643,9 +1002,9 @@ jobs:
             echo "Testing against LOCAL backend: $BACKEND_BASE"
           fi
           
-          # Get FHIR server URL from our proxy
+          # Get FHIR server URL from our proxy (dynamic discovery — source of truth)
           echo "### Step 0: Discovering FHIR Servers ###"
-          SERVERS=$(curl -s "$BACKEND_BASE/fhir-servers" 2>&1)
+          SERVERS=$(curl -sf "$BACKEND_BASE/fhir-servers" 2>&1)
           echo "Available FHIR servers:"
           echo "$SERVERS" | jq '.' 2>/dev/null || echo "$SERVERS"
           
@@ -654,27 +1013,32 @@ jobs:
           BASE_FHIR_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.base // empty' 2>/dev/null)
           
           if [ -z "$SMART_CONFIG_URL" ] || [ "$SMART_CONFIG_URL" = "null" ]; then
-            echo "::warning::No FHIR servers configured - cannot test SMART configuration"
-            echo "## SMART Compliance Tests - SKIPPED" >> $GITHUB_STEP_SUMMARY
+            echo "::error::No FHIR servers configured - cannot test SMART configuration"
+            echo "## SMART Compliance Tests - FAILED" >> $GITHUB_STEP_SUMMARY
             echo "No FHIR servers configured." >> $GITHUB_STEP_SUMMARY
             echo "passed=0" >> $GITHUB_OUTPUT
             echo "failed=0" >> $GITHUB_OUTPUT
-            exit 0
+            exit 1
           fi
           
-          echo ""
+          # Override FHIR_SERVER_URL with dynamically discovered URL (handles deployed HTTPS correctly)
+          if [ -n "$BASE_FHIR_URL" ] && [ "$BASE_FHIR_URL" != "null" ]; then
+            export FHIR_SERVER_URL="$BASE_FHIR_URL"
+            echo "Using discovered FHIR URL: $FHIR_SERVER_URL"
+          fi
+          
           echo "Using SMART config URL: $SMART_CONFIG_URL"
-          echo "Using FHIR base URL: $BASE_FHIR_URL"
           
           # Step 1: Quick validation of SMART configuration
           echo ""
           echo "### Step 1: Quick SMART Configuration Validation ###"
-          SMART_CONFIG=$(curl -s "$SMART_CONFIG_URL" 2>&1)
+          SMART_CONFIG=$(curl -sf "$SMART_CONFIG_URL" 2>&1)
           echo "$SMART_CONFIG" | jq '.'
           
           # Check required fields
           AUTH_EP=$(echo "$SMART_CONFIG" | jq -r '.authorization_endpoint // empty')
           TOKEN_EP=$(echo "$SMART_CONFIG" | jq -r '.token_endpoint // empty')
+          INTROSPECT_EP=$(echo "$SMART_CONFIG" | jq -r '.introspection_endpoint // empty')
           
           if [ -z "$AUTH_EP" ] || [ -z "$TOKEN_EP" ]; then
             echo "::error::Missing required SMART endpoints"
@@ -687,10 +1051,20 @@ jobs:
           
           echo "✓ authorization_endpoint: $AUTH_EP"
           echo "✓ token_endpoint: $TOKEN_EP"
+          if [ -n "$INTROSPECT_EP" ]; then
+            echo "✓ introspection_endpoint: $INTROSPECT_EP"
+          fi
           
           # Step 2: Run Inferno tests with Playwright OAuth automation
           echo ""
-          echo "### Step 2: Running Inferno Tests with Playwright ###"
+          echo "### Step 2: Running Inferno SMART STU2.2 Tests ###"
+          echo ""
+          echo "Test Groups:"
+          echo "  1. Standalone Launch (Discovery + OAuth + OpenID Connect + Token Refresh)"
+          echo "  2. Token Introspection (uses tokens from Standalone Launch)"
+          echo "  3. Backend Services (client_credentials + asymmetric JWT)"
+          echo "  4. EHR Launch (EHR-initiated launch with patient context)"
+          echo ""
           
           # Copy the script to the Playwright directory and run it from there
           cp .github/scripts/inferno-oauth-automation.js /tmp/playwright-setup/
@@ -701,12 +1075,14 @@ jobs:
           
           # Parse results from the log
           if grep -q "PASS:" inferno-output.log; then
-            PASSED=$(grep -c "✓ PASS:" inferno-output.log || echo "0")
-            FAILED=$(grep -c "✗ FAIL:" inferno-output.log || echo "0")
+            PASSED=$(grep -c "✓ PASS:" inferno-output.log || true)
+            FAILED=$(grep -c "✗ FAIL:" inferno-output.log || true)
           else
             PASSED=0
             FAILED=0
           fi
+          PASSED=${PASSED:-0}
+          FAILED=${FAILED:-0}
           
           # Write summary
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -716,7 +1092,7 @@ jobs:
           if [ "$INFERNO_EXIT_CODE" -eq 0 ]; then
             echo "**Status: ✓ PASSED**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "**Status: ✗ FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "**Status: ✗ FAILED (exit code: $INFERNO_EXIT_CODE)**" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -724,12 +1100,19 @@ jobs:
           echo "- Passed: $PASSED" >> $GITHUB_STEP_SUMMARY
           echo "- Failed: $FAILED" >> $GITHUB_STEP_SUMMARY
           echo "- Test Stage: ${{ env.TEST_STAGE }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Groups Tested" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Standalone Launch (Discovery + OAuth + OIDC + Token Refresh)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Token Introspection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Backend Services (client_credentials + asymmetric JWT)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ EHR Launch (EHR-initiated launch with patient context)" >> $GITHUB_STEP_SUMMARY
           
-          # Include FHIR server info (discovered from SMART config)
+          # Include FHIR server info
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### FHIR Server Configuration" >> $GITHUB_STEP_SUMMARY
           FHIR_VERSION=$(echo "$SMART_CONFIG" | jq -r '.fhirVersion // "R4"')
           echo "- FHIR Version: $FHIR_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- FHIR URL: $FHIR_SERVER_URL" >> $GITHUB_STEP_SUMMARY
           echo "- Authorization Endpoint: $AUTH_EP" >> $GITHUB_STEP_SUMMARY
           echo "- Token Endpoint: $TOKEN_EP" >> $GITHUB_STEP_SUMMARY
           
@@ -739,10 +1122,10 @@ jobs:
           
           exit $INFERNO_EXIT_CODE
         env:
-          # All values loaded from testing/$TEST_STAGE/inferno-config.json
           INFERNO_URL: ${{ steps.config.outputs.inferno_url }}
-          FHIR_SERVER_URL: http://localhost:${{ steps.config.outputs.backend_port }}/proxy-smart-backend/hapi-fhir-server/R4
+          FHIR_SERVER_URL: ${{ steps.config.outputs.target == 'deployed' && format('{0}/proxy-smart-backend/hapi-fhir-server/R4', steps.config.outputs.backend_url) || format('http://localhost:{0}/proxy-smart-backend/hapi-fhir-server/R4', steps.config.outputs.backend_port) }}
           TEST_SUITE: ${{ steps.config.outputs.test_suite }}
+          TEST_STAGE: ${{ env.TEST_STAGE }}
           CLIENT_ID: ${{ steps.config.outputs.client_id }}
           KC_USERNAME: ${{ steps.config.outputs.kc_username }}
           KC_PASSWORD: ${{ steps.config.outputs.kc_password }}
@@ -751,10 +1134,14 @@ jobs:
       - name: Save Test Results
         if: always()
         run: |
+          set +e  # Don't fail on individual commands — this is best-effort artifact collection
           mkdir -p test-results
           
+          # Use deployed URL when available, otherwise localhost
+          BASE_URL="${DEPLOYED_BACKEND_URL:-http://localhost:8445}"
+          
           # Discover servers and get SMART config URL
-          SERVERS=$(curl -s "http://localhost:8445/fhir-servers" 2>&1)
+          SERVERS=$(curl -sf "$BASE_URL/fhir-servers" 2>&1) || SERVERS='{"error":"backend unreachable"}'
           SMART_CONFIG_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.smartConfig // empty' 2>/dev/null)
           METADATA_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.metadata // empty' 2>/dev/null)
           
@@ -763,14 +1150,14 @@ jobs:
           
           # Save SMART configuration if URL available
           if [ -n "$SMART_CONFIG_URL" ] && [ "$SMART_CONFIG_URL" != "null" ]; then
-            curl -s "$SMART_CONFIG_URL" > test-results/smart-configuration.json 2>/dev/null || echo "{}" > test-results/smart-configuration.json
+            curl -sf "$SMART_CONFIG_URL" > test-results/smart-configuration.json 2>/dev/null || echo "{}" > test-results/smart-configuration.json
           else
             echo "{\"note\": \"No FHIR servers configured\"}" > test-results/smart-configuration.json
           fi
           
           # Save FHIR metadata if URL available
           if [ -n "$METADATA_URL" ] && [ "$METADATA_URL" != "null" ]; then
-            curl -s "$METADATA_URL" > test-results/fhir-metadata.json 2>/dev/null || echo "{}" > test-results/fhir-metadata.json
+            curl -sf "$METADATA_URL" > test-results/fhir-metadata.json 2>/dev/null || echo "{}" > test-results/fhir-metadata.json
           else
             echo "{\"note\": \"No FHIR servers configured\"}" > test-results/fhir-metadata.json
           fi
@@ -781,7 +1168,7 @@ jobs:
           # Save Playwright screenshots if any
           cp oauth-error.png test-results/oauth-error.png 2>/dev/null || true
           
-          # Also save service logs
+          # Also save service logs (only exists for local targets)
           docker logs keycloak > test-results/keycloak.log 2>&1 || true
 
       - name: Upload Artifacts
@@ -819,8 +1206,11 @@ jobs:
           EOF
           
           # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "proxy-smart-releaser[bot]"
+          git config user.email "proxy-smart-releaser[bot]@users.noreply.github.com"
+          
+          # Ensure we use the app token for push (survives branch switches)
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git"
           
           # Save report files before branch switch
           cp -r "$REPORT_DIR" /tmp/report-backup
@@ -831,9 +1221,12 @@ jobs:
           # Checkout develop branch and pull latest (to avoid race conditions with version updates)
           git fetch origin develop
           git checkout develop
+          git stash
           git pull origin develop --rebase || true
+          git stash pop || true
           
           # Restore and add report directory after branch switch
+          mkdir -p "$REPORT_DIR"
           cp -r /tmp/report-backup/* "$REPORT_DIR/"
           git add "$REPORT_DIR"
           git diff --staged --quiet || git commit -m "chore(testing): update ${TEST_STAGE} SMART compliance report [skip ci]
@@ -850,12 +1243,17 @@ jobs:
               break
             else
               echo "Push failed, retrying after pull..."
-              git pull origin develop --rebase
+              git stash
+              git pull origin develop --rebase || git rebase --abort
+              git stash pop || true
+              git add "$REPORT_DIR"
+              git diff --staged --quiet || git commit -m "chore(testing): update ${TEST_STAGE} SMART compliance report [skip ci]"
             fi
           done
         env:
           TEST_STAGE: ${{ env.TEST_STAGE }}
           TEST_SUITE: ${{ env.TEST_SUITE }}
+          APP_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
 
       # Cleanup
       - name: Cleanup
