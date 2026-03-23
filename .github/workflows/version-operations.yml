@@ -337,6 +337,40 @@ jobs:
                   git diff --staged --quiet || git commit --amend --no-edit
                 fi
               done
+
+              # Back-merge version commit to parent branch to prevent PR conflicts
+              # The commit message contains "🔄 Update version" which is filtered by
+              # release-alpha, release-beta, and create-pr workflows, so no loops.
+              case "${{ inputs.release_type }}" in
+                "beta")
+                  PARENT_BRANCH="develop"
+                  ;;
+                "RELEASE")
+                  PARENT_BRANCH="test"
+                  ;;
+                *)
+                  PARENT_BRANCH=""
+                  ;;
+              esac
+
+              if [ -n "$PARENT_BRANCH" ]; then
+                echo "🔄 Back-merging version to $PARENT_BRANCH..."
+                git fetch origin "$PARENT_BRANCH"
+                git checkout "$PARENT_BRANCH"
+                git merge origin/${{ inputs.source_branch }} --no-edit -m "🔄 Update version to $NEW_VERSION (back-merge from ${{ inputs.release_type }})" || {
+                  echo "⚠️ Back-merge had conflicts, auto-resolving package.json versions..."
+                  for file in $FILES_TO_ADD; do
+                    if [ -f "$file" ] && git diff --name-only --diff-filter=U | grep -q "$file"; then
+                      git checkout --theirs "$file"
+                      git add "$file"
+                    fi
+                  done
+                  git commit --no-edit || echo "Nothing to commit after conflict resolution"
+                }
+                git push origin "$PARENT_BRANCH" || echo "⚠️ Back-merge push failed (non-fatal)"
+                # Return to the original branch
+                git checkout ${{ inputs.source_branch }}
+              fi
             fi
           fi
 
