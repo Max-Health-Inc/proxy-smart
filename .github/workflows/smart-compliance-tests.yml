@@ -1226,6 +1226,7 @@ jobs:
           git stash pop || true
           
           # Restore and add report directory after branch switch
+          mkdir -p "$REPORT_DIR"
           cp -r /tmp/report-backup/* "$REPORT_DIR/"
           git add "$REPORT_DIR"
           git diff --staged --quiet || git commit -m "chore(testing): update ${TEST_STAGE} SMART compliance report [skip ci]
