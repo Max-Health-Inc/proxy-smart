@@ -48,8 +48,7 @@ COPY ui/ ./ui/
 # Build UI
 WORKDIR /app/ui
 
-RUN bun run generate:ui
-
+# API client is pre-generated and committed — skip generate step in Docker
 # Build UI for standalone deployment
 RUN bun run build
 
