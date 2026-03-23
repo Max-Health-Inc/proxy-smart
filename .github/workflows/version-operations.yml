@@ -193,6 +193,7 @@ jobs:
           # Build number logic:
           # - Alpha: Generate new build number and use current SHA
           # - Beta/RELEASE: Inherit build number and SHA from existing version
+          #   This preserves traceability through the staging ladder
           case "${{ inputs.release_type }}" in
             "alpha")
               BUILD_NUMBER=$(date +%Y%m%d%H%M)
@@ -207,7 +208,7 @@ jobs:
                 echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
                 echo "Inheriting build number: $BUILD_NUMBER"
                 
-                # For beta/RELEASE, preserve the original alpha SHA for revert capability
+                # Preserve the original alpha SHA for revert capability
                 if [ -n "$EXISTING_SHA" ]; then
                   RELEASE_SHA="$EXISTING_SHA"
                   echo "release_sha=$RELEASE_SHA" >> $GITHUB_OUTPUT

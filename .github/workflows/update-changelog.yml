@@ -6,8 +6,8 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - beta
-      - production
+      - test
+      - main
 
 jobs:
   update-changelog:
