@@ -743,16 +743,17 @@
     <!-- App Store -->
     <section id="appstore">
       <div class="section-label">Proxy Smart App Store — by Max Health Inc.</div>
-      <p style="color: rgba(255,255,255,.45); font-size: .9rem; margin-bottom: 2rem; max-width: 640px; line-height: 1.7;">
-        Register, manage, and launch SMART on FHIR apps through a single admin interface. Every app gets OAuth 2.0 + PKCE, scope-based access control, and FHIR server routing out of the box.
-      </p>
-      <a href="/apps" style="display: inline-flex; align-items: center; gap: .75rem; padding: 1rem 2.5rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 400; letter-spacing: .01em; transition: all .3s ease; text-decoration: none;"
-         onmouseover="this.style.background='rgba(255,255,255,.12)'; this.style.borderColor='rgba(255,255,255,.25)'; this.style.transform='translateY(-2px)'"
-         onmouseout="this.style.background='rgba(255,255,255,.06)'; this.style.borderColor='rgba(255,255,255,.12)'; this.style.transform='translateY(0)'">
-        <span style="font-size: 1.5rem;">🏪</span>
-        Browse the App Store
-        <span style="opacity: .5; font-size: .9rem;">&rarr;</span>
-      </a>
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;">
+        <p style="color: rgba(255,255,255,.45); font-size: .9rem; max-width: 640px; line-height: 1.7; margin: 0;">
+          Register, manage, and launch SMART on FHIR apps through a single admin interface. Every app gets OAuth 2.0 + PKCE, scope-based access control, and FHIR server routing out of the box.
+        </p>
+        <a href="/apps" style="display: inline-flex; align-items: center; gap: .75rem; padding: 1rem 2.5rem; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; color: #fff; font-size: 1.1rem; font-weight: 400; letter-spacing: .01em; transition: all .3s ease; text-decoration: none; white-space: nowrap; flex-shrink: 0;"
+           onmouseover="this.style.background='rgba(255,255,255,.12)'; this.style.borderColor='rgba(255,255,255,.25)'; this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.background='rgba(255,255,255,.06)'; this.style.borderColor='rgba(255,255,255,.12)'; this.style.transform='translateY(0)'">
+          🏪 Browse the App Store
+          <span style="opacity: .5; font-size: .9rem;">&rarr;</span>
+        </a>
+      </div>
       <div class="app-store-footer" style="margin-top: 1.5rem;">
         Register your own SMART apps via the Admin Dashboard or SMART Dynamic Client Registration.
       </div>
