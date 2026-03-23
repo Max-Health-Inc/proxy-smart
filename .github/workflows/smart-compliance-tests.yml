@@ -825,6 +825,9 @@ jobs:
           # Save report files before branch switch
           cp -r "$REPORT_DIR" /tmp/report-backup
           
+          # Clean up report files before switching branches (they're backed up in /tmp)
+          rm -rf "$REPORT_DIR"
+          
           # Checkout develop branch and pull latest (to avoid race conditions with version updates)
           git fetch origin develop
           git checkout develop
