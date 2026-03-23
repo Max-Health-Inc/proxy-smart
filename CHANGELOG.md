@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-beta.202603231421.2de1435a] - 2026-03-23
+
+- 🔧 Chores & Improvements: Clean startup by removing any existing docker container named caddy-proxy before starting the Caddy proxy
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/204
+
+
 ## [0.0.2-alpha] - 2026-03-14
 
 ### ✨ Features
