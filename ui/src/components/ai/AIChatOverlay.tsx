@@ -80,6 +80,8 @@ export function AIChatOverlay({ isOpen: externalIsOpen, onClose: externalOnClose
         setIsMinimized(nextMinimized);
         if (nextMinimized) {
             setShowSettings(false);
+            setIsExpanded(false);
+            setIsFullWidth(false);
         }
     };
 
