@@ -87,7 +87,8 @@
       max-width: 1080px; margin: 0 auto;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .nav-brand { font-weight: 400; font-size: .95rem; }
+    .nav-brand { font-weight: 400; font-size: .95rem; display: inline-flex; align-items: center; gap: .45rem; }
+    .nav-brand img { height: 1.2em; width: 1.2em; }
     .nav-links { display: flex; gap: 1.5rem; list-style: none; }
     .nav-links a {
       font-family: var(--font-mono);
@@ -601,7 +602,7 @@
   <!-- Navigation -->
   <nav>
     <div class="nav-inner">
-      <span class="nav-brand">Proxy Smart</span>
+      <span class="nav-brand"><img src="/proxy-smart.svg" alt="" aria-hidden="true">Proxy Smart</span>
       <button class="nav-toggle" aria-expanded="false" aria-label="Toggle navigation">
         <span></span><span></span><span></span>
       </button>
