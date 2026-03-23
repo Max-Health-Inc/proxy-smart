@@ -25,7 +25,7 @@ jobs:
       release_type: 'beta'
       source_branch: 'test'
       target_branch: 'test'
-      should_bump_version: false
+      should_bump_version: true
       is_prerelease: true
     secrets: inherit
 

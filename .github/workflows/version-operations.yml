@@ -208,6 +208,7 @@ jobs:
                 echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
                 echo "Inheriting build number: $BUILD_NUMBER"
                 
+                # Preserve the original alpha SHA for revert capability
                 if [ -n "$EXISTING_SHA" ]; then
                   RELEASE_SHA="$EXISTING_SHA"
                   echo "release_sha=$RELEASE_SHA" >> $GITHUB_OUTPUT
