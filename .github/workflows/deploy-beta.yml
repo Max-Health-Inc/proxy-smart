@@ -114,6 +114,7 @@ jobs:
 
             # Ensure shared Caddy proxy is running
             docker network create caddy 2>/dev/null || true
+            docker rm -f caddy-proxy 2>/dev/null || true
             docker compose -p caddy-proxy -f docker-compose.caddy.yml up -d
 
             echo '📦 Rebuilding and restarting beta stack...'
