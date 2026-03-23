@@ -18,6 +18,9 @@ COPY package.json bun.lock ./
 COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
+COPY infra/package.json ./infra/
+COPY dtr-app/package.json ./dtr-app/
+COPY consent-app/package.json ./consent-app/
 
 # Install dependencies for all workspaces
 RUN bun install --frozen-lockfile
