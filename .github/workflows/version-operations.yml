@@ -191,35 +191,33 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           
           # Build number logic:
-          # - Alpha: Generate new build number and use current SHA
-          # - Beta/RELEASE: Inherit build number and SHA from existing version
+          # - Alpha/Beta: Generate new build number for uniqueness, use current SHA
+          # - RELEASE: Inherit build number and SHA from existing version
           case "${{ inputs.release_type }}" in
-            "alpha")
+            "alpha"|"beta")
               BUILD_NUMBER=$(date +%Y%m%d%H%M)
-              # For alpha, use current commit SHA
               RELEASE_SHA="$SHORT_SHA"
               echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
               echo "release_sha=$RELEASE_SHA" >> $GITHUB_OUTPUT
               ;;
-            "beta"|"RELEASE")
+            "RELEASE")
               if [ -n "$EXISTING_BUILD_NUMBER" ]; then
                 BUILD_NUMBER="$EXISTING_BUILD_NUMBER"
                 echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
                 echo "Inheriting build number: $BUILD_NUMBER"
                 
-                # For beta/RELEASE, preserve the original alpha SHA for revert capability
                 if [ -n "$EXISTING_SHA" ]; then
                   RELEASE_SHA="$EXISTING_SHA"
                   echo "release_sha=$RELEASE_SHA" >> $GITHUB_OUTPUT
                   echo "Inheriting release SHA: $RELEASE_SHA"
                 else
                   echo "❌ No existing SHA found in version: $CURRENT_VERSION"
-                  echo "Beta and RELEASE builds require an existing SHA from alpha for revert capability"
+                  echo "RELEASE builds require an existing SHA for revert capability"
                   exit 1
                 fi
               else
                 echo "❌ No existing build number found in version: $CURRENT_VERSION"
-                echo "Beta and RELEASE builds require an existing build number from alpha"
+                echo "RELEASE builds require an existing build number"
                 exit 1
               fi
               ;;

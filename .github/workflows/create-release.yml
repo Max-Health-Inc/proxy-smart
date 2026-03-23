@@ -160,12 +160,19 @@ jobs:
             EXTRA_ARGS="--prerelease"
           fi
 
-          # Create the release
+          # Create or update the release
           TAG_NAME="v${{ inputs.version }}"
-          gh release create "$TAG_NAME" \
-            --title "$TAG_NAME" \
-            --notes-file release-notes.md \
-            $EXTRA_ARGS
+          if gh release view "$TAG_NAME" > /dev/null 2>&1; then
+            echo "⚠️ Release $TAG_NAME already exists, updating..."
+            gh release edit "$TAG_NAME" \
+              --title "$TAG_NAME" \
+              --notes-file release-notes.md
+          else
+            gh release create "$TAG_NAME" \
+              --title "$TAG_NAME" \
+              --notes-file release-notes.md \
+              $EXTRA_ARGS
+          fi
           
           # Get the release URL
           RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/$TAG_NAME"
