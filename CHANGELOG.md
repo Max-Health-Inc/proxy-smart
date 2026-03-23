@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603231648.0e8f43e2] - 2026-03-23
+
+- 🔧 Chores & Improvements: UI spacing tweak in backend/public/index.html (adjusted text-indent/margin-right for mono font label)
+- 🔧 Chores & Improvements: Expand environment ignore patterns to cover recursive .env and local variants across all folders
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/210
+
+
 ## [0.0.2-alpha.202603231643.9fb5f430] - 2026-03-23
 
 - 🔧 Chores & Improvements: Expand environment ignore patterns to recursively ignore env files (**/.env, **/.env.local, **/.env.*.local) alongside existing rules
