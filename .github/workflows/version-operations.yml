@@ -191,16 +191,18 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           
           # Build number logic:
-          # - Alpha/Beta: Generate new build number for uniqueness, use current SHA
-          # - RELEASE: Inherit build number and SHA from existing version
+          # - Alpha: Generate new build number and use current SHA
+          # - Beta/RELEASE: Inherit build number and SHA from existing version
+          #   This preserves traceability through the staging ladder
           case "${{ inputs.release_type }}" in
-            "alpha"|"beta")
+            "alpha")
               BUILD_NUMBER=$(date +%Y%m%d%H%M)
+              # For alpha, use current commit SHA
               RELEASE_SHA="$SHORT_SHA"
               echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
               echo "release_sha=$RELEASE_SHA" >> $GITHUB_OUTPUT
               ;;
-            "RELEASE")
+            "beta"|"RELEASE")
               if [ -n "$EXISTING_BUILD_NUMBER" ]; then
                 BUILD_NUMBER="$EXISTING_BUILD_NUMBER"
                 echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
@@ -212,12 +214,12 @@ jobs:
                   echo "Inheriting release SHA: $RELEASE_SHA"
                 else
                   echo "❌ No existing SHA found in version: $CURRENT_VERSION"
-                  echo "RELEASE builds require an existing SHA for revert capability"
+                  echo "Beta and RELEASE builds require an existing SHA from alpha for revert capability"
                   exit 1
                 fi
               else
                 echo "❌ No existing build number found in version: $CURRENT_VERSION"
-                echo "RELEASE builds require an existing build number"
+                echo "Beta and RELEASE builds require an existing build number from alpha"
                 exit 1
               fi
               ;;
