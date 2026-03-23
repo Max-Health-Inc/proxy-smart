@@ -93,15 +93,14 @@ jobs:
             fi
           "
 
-          # Write env file from CI secrets (variables expand on CI runner, not VPS)
-          ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta << ENVEOF
-POSTGRES_PASSWORD=${BETA_POSTGRES_PASSWORD}
-KC_DB_PASSWORD=${BETA_POSTGRES_PASSWORD}
-KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}
-KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}
-VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
-ENVEOF
-          chmod 600 ${DEPLOY_DIR}/.env.beta"
+          # Write env file from CI secrets (printf runs on CI, piped to VPS via SSH)
+          printf '%s\n' \
+            "POSTGRES_PASSWORD=${BETA_POSTGRES_PASSWORD}" \
+            "KC_DB_PASSWORD=${BETA_POSTGRES_PASSWORD}" \
+            "KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}" \
+            "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
+            "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
+          | ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta && chmod 600 ${DEPLOY_DIR}/.env.beta"
 
           # Pull latest code and rebuild containers
           ${SSH_CMD} "
