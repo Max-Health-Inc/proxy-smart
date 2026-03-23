@@ -30,9 +30,17 @@ FROM build-deps AS backend-build
 # Copy backend source code
 COPY backend/ ./backend/
 
-# Build backend only
+# Build backend and export OpenAPI spec
 WORKDIR /app/backend
 RUN bun run build
+RUN bun run export-openapi
+
+# API client generation stage
+FROM build-deps AS api-client-gen
+COPY scripts/generate-ts-fetch-client.py ./scripts/
+COPY --from=backend-build /app/backend/dist/openapi.json ./backend/dist/openapi.json
+RUN mkdir -p ui/src/lib/api-client && \
+    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json ui/src/lib/api-client
 
 # UI build stage
 FROM build-deps AS ui-build
@@ -45,10 +53,12 @@ ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
 
+# Copy generated API client from the generation stage
+COPY --from=api-client-gen /app/ui/src/lib/api-client ./ui/src/lib/api-client/
+
 # Build UI
 WORKDIR /app/ui
 
-# API client is pre-generated and committed — skip generate step in Docker
 # Build UI for standalone deployment
 RUN bun run build
 
