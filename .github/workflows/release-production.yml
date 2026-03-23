@@ -14,7 +14,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: releases
+  group: releases-production
   cancel-in-progress: false
 
 jobs:
