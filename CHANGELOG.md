@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603232047.4de7c7aa] - 2026-03-23
+
+- 🔧 Chores & Improvements: Documentation routing and assets handling updates
+  - Add VitePress docs SPA fallback routes and per-file asset fallback logic
+  - Rename and adjust docs API paths and route handling for /docs-api vs /docs
+  - Update docs-related URL generation and static serving behavior
+  - Update docker-compose beta config to allow /docs and /docs-api paths
+- 🔧 Chores & Improvements: Workspace and build optimizations
+  - Copy additional lib folders for consent-app and dtr-app in Dockerfile
+  - Narrow workspace scope to avoid install failures (backend, ui, shared-ui, consent-app, dtr-app)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/221
+
+
 ## [0.0.2-beta.202603231957.d98e9bfd] - 2026-03-23
 
 - 🔧 Chores & Improvements: Remove committed app bundles with baked localhost URLs (quotentiroler)
