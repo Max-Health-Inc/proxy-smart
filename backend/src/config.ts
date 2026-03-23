@@ -61,7 +61,8 @@ export const config = {
     },
     
     // Public URL for browser redirects (defaults to baseUrl if not specified)
-    get publicUrl() {   
+    get publicUrl() {
+      if (process.env.KEYCLOAK_PUBLIC_URL) return process.env.KEYCLOAK_PUBLIC_URL
       if (!this.baseUrl) return null
       const domain = process.env.KEYCLOAK_DOMAIN;
       if (!domain) return this.baseUrl

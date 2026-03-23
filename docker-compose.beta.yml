@@ -35,6 +35,10 @@ services:
       KC_DB_PASSWORD: ${KC_DB_PASSWORD:?Set KC_DB_PASSWORD}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+    labels:
+      caddy: beta.proxy-smart.com
+      caddy.@keycloak.path: "/auth/realms/* /auth/resources/* /auth/js/*"
+      caddy.0_reverse_proxy: "@keycloak {{upstreams 8080}}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,7 +88,7 @@ services:
     labels:
       caddy: beta.proxy-smart.com
       caddy.@backend.path: "/.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers/* /docs/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /webapp /webapp/ /webapp/* /swagger /swagger/* /openapi.json"
-      caddy.0_reverse_proxy: "@backend {{upstreams 8445}}"
+      caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
     depends_on:
       - keycloak
     networks:
@@ -104,7 +108,7 @@ services:
       VITE_API_BASE_URL: https://beta.proxy-smart.com
     labels:
       caddy: beta.proxy-smart.com
-      caddy.1_reverse_proxy: "{{upstreams 80}}"
+      caddy.2_reverse_proxy: "{{upstreams 80}}"
     depends_on:
       - backend
     networks:
