@@ -58,6 +58,9 @@ COPY --from=build /app/backend/public ./backend/public
 # Copy root node_modules (monorepo structure)
 COPY --from=build /app/node_modules ./node_modules
 
+# Copy raw markdown docs for the /docs API
+COPY --from=build /app/docs ./docs
+
 # Copy system prompt for AI assistant
 COPY prompts/ ./prompts/
 

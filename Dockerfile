@@ -92,6 +92,9 @@ COPY --from=backend-build /app/backend/public ./backend/public
 # Copy built VitePress docs
 COPY --from=docs-build /app/docs/.vitepress/dist ./backend/public/docs
 
+# Copy raw markdown docs for the /docs API
+COPY --from=docs-build /app/docs ./docs
+
 # Copy root node_modules (monorepo structure)
 COPY --from=backend-build /app/node_modules ./node_modules
 
