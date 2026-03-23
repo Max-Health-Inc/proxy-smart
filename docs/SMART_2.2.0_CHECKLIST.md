@@ -377,10 +377,12 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### SMART App Launch Test Suite
 
-- [ ] **Inferno Testing**
-  - Official SMART test suite
-  - Automated compliance verification
-  - Certification readiness
+- [x] **Inferno Testing** ✅ *Automated in CI*
+  - Official SMART test suite (Inferno v0.4.38+)
+  - Automated compliance verification via `smart-compliance-tests.yml`
+  - Runs on every merge to `test`/`main` and weekly via cron
+  - Puppeteer-based OAuth automation for unattended test execution
+  - Reports committed to `testing/{stage}/inferno-report/`
 - [x] **Test Categories** ✅ *Partially implemented*
   - EHR launch flows
   - Standalone launch flows
@@ -492,8 +494,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 #### v0.1.0 - SMART 2.2.0 Compliance
 - [ ] User-access branding support
 - [ ] App state persistence (experimental)
-- [ ] Inferno test suite compliance
-- [ ] Security audit
+- [x] Inferno test suite compliance ✅ *Automated in CI*
 
 #### v1.0.0 - Production Ready
 - [ ] Performance optimization
@@ -575,8 +576,8 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### Certification Readiness
 
-- [ ] **SMART App Launch Certification**
-  - Inferno test suite compliance
+- [x] **SMART App Launch Certification** ✅ *In progress*
+  - Inferno test suite compliance (automated, 55+ tests passing)
   - Official certification submission
   - Test result documentation
 - [ ] **Regulatory Compliance**
