@@ -168,3 +168,25 @@ jobs:
           echo "📍 App:       ${VPS_URL}"
           echo "📍 FHIR:      ${VPS_URL}/proxy-smart-backend/hapi-fhir-server/R4"
           echo "📍 Keycloak:  ${VPS_URL}/auth"
+
+      - name: Verify no localhost in production bundles
+        env:
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          echo "🔍 Checking production bundles for hardcoded localhost references..."
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST}"
+
+          # Scan all JS bundles in /apps for localhost:8445
+          MATCHES=$(${SSH_CMD} "docker exec proxy-smart-backend-beta grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null" || true)
+
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Found hardcoded localhost:8445 in production bundles:"
+            echo "$MATCHES"
+            echo ""
+            echo "This means .env files with VITE_PROXY_BASE=http://localhost:8445 leaked into the Docker build."
+            echo "Check .dockerignore includes **/.env patterns."
+            exit 1
+          fi
+
+          echo "✅ No localhost references found in production bundles"

@@ -18,9 +18,11 @@ COPY package.json bun.lock ./
 COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
+COPY consent-app/package.json ./consent-app/
+COPY dtr-app/package.json ./dtr-app/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui","consent-app","dtr-app"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -66,6 +68,20 @@ WORKDIR /app/ui
 # Build UI for standalone deployment
 RUN bun run build
 
+# Consent App build stage
+FROM build-deps AS consent-app-build
+COPY shared-ui/ ./shared-ui/
+COPY consent-app/ ./consent-app/
+WORKDIR /app/consent-app
+RUN bun run build
+
+# DTR App build stage
+FROM build-deps AS dtr-app-build
+COPY shared-ui/ ./shared-ui/
+COPY dtr-app/ ./dtr-app/
+WORKDIR /app/dtr-app
+RUN bun run build
+
 # Docs build stage (VitePress)
 FROM build-deps AS docs-build
 COPY docs/ ./docs/
@@ -88,6 +104,15 @@ COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-s
 
 # Copy backend's public directory (landing page only, no UI)
 COPY --from=backend-build /app/backend/public ./backend/public
+
+# Copy built SMART apps into backend public
+COPY --from=consent-app-build /app/consent-app/dist ./backend/public/apps/consent
+COPY --from=dtr-app-build /app/dtr-app/dist ./backend/public/apps/dtr
+
+# Verify no localhost URLs leaked into production bundles
+RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \
+      echo "ERROR: Found hardcoded localhost:8445 in app bundles. Check .dockerignore." && exit 1; \
+    fi
 
 # Copy built VitePress docs
 COPY --from=docs-build /app/docs/.vitepress/dist ./backend/public/docs
