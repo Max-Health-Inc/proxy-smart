@@ -1,78 +1,24 @@
 import { Server, Shield, Globe, Key } from 'lucide-react';
+import { StatCard } from '@/components/ui/stat-card';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface IdPStatisticsCardsProps {
   idps: IdentityProviderWithStats[];
 }
 
 export function IdPStatisticsCards({ idps }: IdPStatisticsCardsProps) {
+  const { t } = useTranslation();
   const totalActive = idps.filter((idp) => (idp.status ?? (idp.enabled ? 'active' : 'inactive')) === 'active').length;
   const totalUsers = idps.reduce((acc, idp) => acc + (idp.userCount ?? 0), 0);
   const totalSaml = idps.filter((idp) => (idp.providerId ?? '').toLowerCase() === 'saml').length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                <Server className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="text-sm font-semibold text-blue-800 dark:text-blue-300 tracking-wide">Total IdPs</div>
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-2">{idps.length}</div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                <Shield className="w-6 h-6 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">Active</div>
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-2">
-              {totalActive}
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                <Globe className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">Total Users</div>
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-2">
-              {totalUsers}
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                <Key className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-              </div>
-              <div className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">SAML Providers</div>
-            </div>
-            <div className="text-3xl font-bold text-foreground mb-2">
-              {totalSaml}
-            </div>
-          </div>
-        </div>
-      </div>
+      <StatCard icon={Server} label={t('Total IdPs')} value={idps.length} color="blue" />
+      <StatCard icon={Shield} label={t('Active')} value={totalActive} color="green" />
+      <StatCard icon={Globe} label={t('Total Users')} value={totalUsers} color="purple" />
+      <StatCard icon={Key} label={t('SAML Providers')} value={totalSaml} color="orange" />
     </div>
   );
 }

@@ -1,10 +1,14 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
+import { Badge, Button, Input } from '@proxy-smart/shared-ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { PageLoadingState } from './ui/page-loading-state';
+import { PageErrorState } from './ui/page-error-state';
+import { ExportMenu } from './ui/export-menu';
+import { StatCard } from './ui/stat-card';
 import { 
   Activity, 
-  AlertCircle, 
   CheckCircle, 
   RefreshCw, 
   TrendingUp, 
@@ -14,40 +18,28 @@ import {
   AlertTriangle, 
   Play, 
   Pause, 
-  Download, 
   Search,
   Server,
   Database,
-  Network,
   CalendarDays,
-  ChevronDown
+  AlertCircle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { oauthWebSocketService, type OAuthAnalytics, type OAuthEventSimple, type WeekdayInsight } from '../service/oauth-websocket-service';
 import { oauthMonitoringService } from '../service/oauth-monitoring-service';
-import { getItem } from '../lib/storage';
+import { getItem } from '@/lib/storage';
 import { config } from '@/config';
 import type { OAuthAnalyticsTopClient } from '../lib/api-client/models/OAuthAnalyticsTopClient';
-
-interface SystemHealth {
-  oauthServer: {
-    status: 'healthy' | 'degraded' | 'down';
-    uptime: number;
-    responseTime: number;
-  };
-  tokenStore: {
-    status: 'healthy' | 'degraded' | 'down';
-    storageUsed: number;
-    activeTokens: number;
-  };
-  network: {
-    status: 'healthy' | 'degraded' | 'down';
-    throughput: string;
-    errorRate: number;
-  };
-}
+import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatusResponse';
+import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
+import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
+import type { FhirUptimeSummary } from '../lib/api-client/models/FhirUptimeSummary';
+import { createServerApi, createAdminApi, createFhirMonitoringApi } from '@/lib/apiClient';
+import { EventsPanel } from './DoorManagement/EventsPanel';
+import { ConsentMonitoringDashboard } from './ConsentMonitoringDashboard';
+import { AdminAuditDashboard } from './AdminAuditDashboard';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -55,7 +47,10 @@ export function OAuthMonitoringDashboard() {
   const { t } = useTranslation();
   const [events, setEvents] = useState<OAuthEventSimple[]>([]);
   const [analytics, setAnalytics] = useState<OAuthAnalytics | null>(null);
-  const [systemHealth] = useState<SystemHealth | null>(null);
+  const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
+  const [doorHealth, setDoorHealth] = useState<AccessHealthResponse | null>(null);
+  const [doorEvents, setDoorEvents] = useState<AccessEvent[]>([]);
+  const [fhirUptime, setFhirUptime] = useState<FhirUptimeSummary[]>([]);
   const [isRealTimeActive, setIsRealTimeActive] = useState(true);
   const [connectionMode, setConnectionMode] = useState<'websocket' | 'sse'>('websocket');
   const [filterType, setFilterType] = useState<string>('all');
@@ -63,7 +58,6 @@ export function OAuthMonitoringDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Track whether this is the initial data load
   const isInitialLoadRef = useRef(true);
@@ -87,6 +81,17 @@ export function OAuthMonitoringDashboard() {
   }, [analytics?.topClients]);
   const hasClientDistribution = clientDistributionData.length > 0;
   const predictiveInsights = analytics?.predictiveInsights;
+  const hasObservedTraffic = (analytics?.successfulRequests ?? 0) + (analytics?.failedRequests ?? 0) > 0;
+  const hasPredictiveForecast = Boolean(
+    predictiveInsights &&
+    (
+      hasObservedTraffic ||
+      (analytics?.totalRequests ?? 0) > 0 ||
+      (analytics?.activeTokens ?? 0) > 0 ||
+      (analytics?.successRate ?? 0) > 0 ||
+      predictiveInsights.nextHour.totalFlows > 0
+    )
+  );
   const weekdayHighlights = useMemo(() => {
     const insights = analytics?.weekdayInsights ?? [];
 
@@ -342,20 +347,59 @@ export function OAuthMonitoringDashboard() {
     };
   }, []);
 
-  // Close export menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (showExportMenu && !target.closest('.export-menu-container')) {
-        setShowExportMenu(false);
-      }
-    };
+  // Fetch system status for System Health tab
+  const fetchSystemStatus = useCallback(async () => {
+    try {
+      const token = (await getItem<{access_token: string}>('openid_tokens'))?.access_token;
+      const serverApi = createServerApi(token ?? undefined);
+      const adminApi = createAdminApi(token ?? undefined);
+      const fhirMonApi = createFhirMonitoringApi(token ?? undefined);
+      const [status, acHealth, acEvents, fhirSummaries] = await Promise.allSettled([
+        serverApi.getStatus(),
+        adminApi.getAdminAccessControlHealth(),
+        adminApi.getAdminAccessControlEvents({ limit: 5 }),
+        fhirMonApi.getMonitoringFhirSummaries(),
+      ]);
+      if (status.status === 'fulfilled') setSystemStatus(status.value);
+      if (acHealth.status === 'fulfilled') setDoorHealth(acHealth.value);
+      if (acEvents.status === 'fulfilled') setDoorEvents(acEvents.value.data ?? []);
+      if (fhirSummaries.status === 'fulfilled') setFhirUptime(fhirSummaries.value.servers ?? []);
+    } catch (err) {
+      console.warn('Failed to fetch system status:', err);
+    }
+  }, []);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+  useEffect(() => {
+    fetchSystemStatus();
+    const interval = setInterval(fetchSystemStatus, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchSystemStatus]);
+
+  // SSE subscription for real-time FHIR uptime summaries
+  useEffect(() => {
+    let es: EventSource | null = null;
+    const connect = async () => {
+      const token = (await getItem<{access_token: string}>('openid_tokens'))?.access_token;
+      if (!token) return;
+      const baseUrl = config.api.baseUrl;
+      es = new EventSource(`${baseUrl}/monitoring/fhir/summaries/stream?token=${encodeURIComponent(token)}`);
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'keepalive' || data.type === 'connection') return;
+          if (Array.isArray(data)) setFhirUptime(data);
+        } catch { /* ignore parse errors */ }
+      };
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        // Reconnect after 10s
+        setTimeout(() => connect(), 10_000);
+      };
     };
-  }, [showExportMenu]);
+    connect();
+    return () => { es?.close(); };
+  }, []);
 
   const refreshData = async () => {
     // Reset the initial load flag when manually refreshing
@@ -492,47 +536,31 @@ export function OAuthMonitoringDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-4 text-muted-foreground">{t('Loading OAuth monitoring data...')}</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message={t('Loading OAuth monitoring data...')} />;
   }
 
   if (error) {
     return (
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">{t('Failed to Load OAuth Monitoring Data')}</h3>
-            <p className="text-muted-foreground mb-4">{error}</p>
-            <Button onClick={refreshData} variant="outline">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              {t('Try Again')}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageErrorState
+        title={t('Failed to Load OAuth Monitoring Data')}
+        message={error}
+        onRetry={refreshData}
+        retryLabel={t('Try Again')}
+      />
     );
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* Enhanced Header Section */}
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
               {t('OAuth Flow Monitoring')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Activity className="w-5 h-5 text-primary" />
               </div>
               {t('Real-time monitoring and analytics for OAuth 2.0 flows')}
@@ -542,11 +570,6 @@ export function OAuthMonitoringDashboard() {
             <Button
               variant={isRealTimeActive ? "default" : "outline"}
               onClick={toggleRealTime}
-              className={`px-6 py-3 font-semibold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-border ${
-                isRealTimeActive 
-                  ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800' 
-                  : 'bg-background text-foreground hover:bg-muted'
-              }`}
             >
               {isRealTimeActive ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {isRealTimeActive ? t('Pause') : t('Resume')} {t('Real-time')}
@@ -554,59 +577,27 @@ export function OAuthMonitoringDashboard() {
             <Button
               variant="outline"
               onClick={refreshData}
-              className="px-6 py-3 bg-background text-foreground font-semibold rounded-2xl hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-border"
             >
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Refresh')}
             </Button>
-            <div className="relative export-menu-container">
-              <Button
-                variant="outline"
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="px-6 py-3 bg-background text-foreground font-semibold rounded-2xl hover:bg-muted transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-border"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {t('Export')}
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </Button>
-              
-              {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-background border border-border rounded-2xl shadow-xl z-50">
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        exportAnalytics();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-muted rounded-xl transition-colors"
-                    >
-                      <div className="font-semibold text-foreground">{t('Export Current Data')}</div>
-                      <div className="text-sm text-muted-foreground">{t('Download current dashboard analytics')}</div>
-                    </button>
-                    <button
-                      onClick={() => {
-                        exportServerEvents();
-                        setShowExportMenu(false);
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-muted rounded-xl transition-colors"
-                    >
-                      <div className="font-semibold text-foreground">{t('Export Server Events')}</div>
-                      <div className="text-sm text-muted-foreground">{t('Download events log from server')}</div>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ExportMenu
+              label={t('Export')}
+              items={[
+                { label: t('Export Current Data'), description: t('Download current dashboard analytics'), onClick: exportAnalytics },
+                { label: t('Export Server Events'), description: t('Download events log from server'), onClick: exportServerEvents },
+              ]}
+            />
           </div>
         </div>
       </div>
 
       {/* Real-time Status */}
       {isRealTimeActive ? (
-        <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-6 rounded-2xl border border-green-500/20 shadow-lg">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4 shadow-sm">
                 <Activity className="h-5 w-5 text-green-600 animate-pulse" />
               </div>
               <div>
@@ -620,7 +611,7 @@ export function OAuthMonitoringDashboard() {
             </div>
             <div className="text-right space-y-3">
               <div>
-                <div className="text-sm text-green-700 dark:text-green-400 mb-2">Connection Mode</div>
+                <div className="text-sm text-green-700 dark:text-green-400 mb-2">{t('Connection Mode')}</div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant={connectionMode === 'websocket' ? "default" : "ghost"}
@@ -670,10 +661,10 @@ export function OAuthMonitoringDashboard() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-r from-orange-500/10 to-amber-500/10 p-6 rounded-2xl border border-orange-500/20 shadow-lg">
+        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center mr-4 shadow-sm">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mr-4 shadow-sm">
                 <Pause className="h-5 w-5 text-orange-600" />
               </div>
               <div>
@@ -687,7 +678,7 @@ export function OAuthMonitoringDashboard() {
             </div>
             <div className="text-right space-y-3">
               <div>
-                <div className="text-sm text-orange-700 dark:text-orange-400 mb-2">Connection Mode</div>
+                <div className="text-sm text-orange-700 dark:text-orange-400 mb-2">{t('Connection Mode')}</div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant={connectionMode === 'websocket' ? "default" : "ghost"}
@@ -737,10 +728,10 @@ export function OAuthMonitoringDashboard() {
         </div>
       )}
 
-      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border shadow-lg overflow-hidden">
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">
         <div className="p-8 pb-6">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
               <BarChart3 className="w-6 h-6 text-primary" />
             </div>
             <div>
@@ -750,162 +741,87 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 rounded-t-2xl">
+            <TabsList className="grid w-full grid-cols-6 bg-muted/50 rounded-t-2xl">
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="flows" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth Flows')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
-              <TabsTrigger value="monitoring" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('System Health')}</TabsTrigger>
+              <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
+              <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
+              <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
-                          <BarChart3 className="w-6 h-6 text-primary" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Requests')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-foreground mb-2">{analytics?.totalRequests ? analytics.totalRequests.toLocaleString() : '0'}</div>
-                      <p className="text-sm text-muted-foreground font-medium">{t('Last 24 hours')}</p>
-                    </div>
-                  </div>
-                </div>
+                <StatCard icon={BarChart3} label={t('Total Requests')} value={analytics?.totalRequests ? analytics.totalRequests.toLocaleString() : '0'} subtitle={t('Last 24 hours')} color="primary" />
+                <StatCard icon={TrendingUp} label={t('Success Rate')} value={`${analytics?.successRate ? analytics.successRate.toFixed(1) : '0.0'}%`} subtitle={t('Current success rate')} color="green" />
+                <StatCard icon={Timer} label={t('Avg Response Time')} value={`${analytics?.averageResponseTime ? analytics.averageResponseTime.toFixed(0) : '0'}ms`} subtitle={t('Average response time')} color="orange" />
+                <StatCard icon={Shield} label={t('Active Tokens')} value={analytics?.activeTokens ?? 0} subtitle={t('Currently valid')} color="purple" />
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                          <TrendingUp className="w-6 h-6 text-green-600" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Success Rate')}</h3>
+                {hasPredictiveForecast && predictiveInsights && (
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                        <TrendingUp className="w-6 h-6 text-sky-600" />
                       </div>
-                      <div className="text-3xl font-bold text-green-900 dark:text-green-300 mb-2">
-                        {analytics?.successRate ? analytics.successRate.toFixed(1) : '0.0'}%
+                      <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
+                    </div>
+                    <div className="text-3xl font-bold text-sky-900 dark:text-sky-200 mb-1">
+                      {predictiveInsights.nextHour.totalFlows.toLocaleString()}
+                    </div>
+                    <p className="text-sm text-sky-700 dark:text-sky-300 font-medium mb-4">
+                      {t('Projected OAuth flows in the next hour')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground font-medium">{t('Success rate')}</p>
+                        <p className="text-foreground font-semibold">{predictiveInsights.nextHour.successRate.toFixed(1)}%</p>
                       </div>
-                      <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                        {t('Current success rate')}
+                      <div className="text-right">
+                        <p className="text-muted-foreground font-medium">{t('Trend')}</p>
+                        <p className="text-foreground font-semibold">{predictiveTrendLabel}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-start justify-between gap-3 rounded-lg bg-sky-500/10 p-3">
+                      <Badge className={`${predictiveRiskBadgeClass} font-semibold shrink-0`}>{predictiveRiskLabel}</Badge>
+                      <p className="text-xs text-muted-foreground leading-snug text-right">
+                        {predictiveInsights.anomalyReasons[0]}
                       </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                          <Timer className="w-6 h-6 text-orange-600" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Response Time')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-orange-900 dark:text-orange-300 mb-2">
-                        {analytics?.averageResponseTime ? analytics.averageResponseTime.toFixed(0) : '0'}ms
-                      </div>
-                      <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
-                        {t('Average response time')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                          <Shield className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Active Tokens')}</h3>
-                      </div>
-                      <div className="text-3xl font-bold text-purple-900 dark:text-purple-300 mb-2">{analytics?.activeTokens ?? 0}</div>
-                      <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">{t('Currently valid')}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {predictiveInsights && (
-                  <div className="bg-gradient-to-br from-sky-500/10 via-sky-500/5 to-indigo-500/10 p-6 rounded-2xl border border-sky-500/40 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-sky-500/30 to-indigo-500/40 rounded-xl flex items-center justify-center shadow-sm">
-                            <TrendingUp className="w-6 h-6 text-sky-600" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
-                        </div>
-                        <div className="text-3xl font-bold text-sky-900 dark:text-sky-200 mb-1">
-                          {predictiveInsights.nextHour.totalFlows.toLocaleString()}
-                        </div>
-                        <p className="text-sm text-sky-700 dark:text-sky-300 font-medium">
-                          {t('Projected OAuth flows in the next hour')}
-                        </p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <p className="text-muted-foreground font-medium">{t('Success rate')}</p>
-                            <p className="text-foreground font-semibold">{predictiveInsights.nextHour.successRate.toFixed(1)}%</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-muted-foreground font-medium">{t('Trend')}</p>
-                            <p className="text-foreground font-semibold">{predictiveTrendLabel}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right space-y-2">
-                        <Badge className={`${predictiveRiskBadgeClass} font-semibold`}>{predictiveRiskLabel}</Badge>
-                        <p className="text-xs text-muted-foreground w-40 leading-snug">
-                          {predictiveInsights.anomalyReasons[0]}
-                        </p>
-                      </div>
                     </div>
                   </div>
                 )}
 
                 {weekdayHighlights && (
-                  <div className="bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-rose-500/10 p-6 rounded-2xl border border-amber-500/40 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-amber-500/30 to-rose-500/40 rounded-xl flex items-center justify-center shadow-sm">
-                            <CalendarDays className="w-6 h-6 text-amber-600" />
-                          </div>
-                          <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
-                        </div>
-                        <div className="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-1">
-                          {weekdayHighlights.busiest.label}
-                        </div>
-                        <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
-                          {t('Projected busiest day for OAuth volume')}
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                        <CalendarDays className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
+                    </div>
+                    <div className="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-1">
+                      {weekdayHighlights.busiest.label}
+                    </div>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-4">
+                      {t('Projected busiest day for OAuth volume')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground font-medium">{t('Highest success')}</p>
+                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.highestSuccess.label}</p>
+                        <p className="text-muted-foreground text-xs">{weekdayHighlights.highestSuccess.projectedSuccessRate.toFixed(1)}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground font-medium">{t('Watchlist')}</p>
+                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.attention.label}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {weekdayHighlights.attention.projectedErrorRate.toFixed(1)}%
+                          {typeof weekdayHighlights.attention.deltaFromAverage === 'number' && (
+                            <span className={`ml-1 ${weekdayHighlights.attention.deltaFromAverage > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                              ({weekdayHighlights.attention.deltaFromAverage > 0 ? '+' : ''}{weekdayHighlights.attention.deltaFromAverage.toFixed(1)}%)
+                            </span>
+                          )}
                         </p>
-                        <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <p className="text-muted-foreground font-medium">{t('Highest success')}</p>
-                            <p className="text-foreground font-semibold">
-                              {weekdayHighlights.highestSuccess.label}
-                              <span className="ml-2 text-muted-foreground">
-                                {weekdayHighlights.highestSuccess.projectedSuccessRate.toFixed(1)}%
-                              </span>
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-muted-foreground font-medium">{t('Watchlist')}</p>
-                            <p className="text-foreground font-semibold">
-                              {weekdayHighlights.attention.label}
-                              <span className="ml-2 text-muted-foreground">
-                                {weekdayHighlights.attention.projectedErrorRate.toFixed(1)}%
-                              </span>
-                              {typeof weekdayHighlights.attention.deltaFromAverage === 'number' && (
-                                <span className={`ml-1 ${weekdayHighlights.attention.deltaFromAverage > 0 ? 'text-red-500' : 'text-green-600'}`}>
-                                  ({weekdayHighlights.attention.deltaFromAverage > 0 ? '+' : ''}{weekdayHighlights.attention.deltaFromAverage.toFixed(1)}%)
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </div>
                       </div>
                     </div>
                     <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
@@ -922,9 +838,9 @@ export function OAuthMonitoringDashboard() {
 
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <BarChart3 className="w-6 h-6 text-primary" />
                     </div>
                     <div>
@@ -952,8 +868,8 @@ export function OAuthMonitoringDashboard() {
                             labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
                             formatter={(value) => [value ?? 0, t('flows')]}
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px',
                               boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
                             }}
@@ -961,10 +877,10 @@ export function OAuthMonitoringDashboard() {
                           <Line
                             type="monotone"
                             dataKey="total"
-                            stroke="hsl(var(--primary))"
+                            stroke="var(--primary)"
                             strokeWidth={2}
-                            dot={{ r: 3, fill: 'hsl(var(--primary))' }}
-                            activeDot={{ r: 5, fill: 'hsl(var(--primary))' }}
+                            dot={{ r: 3, fill: 'var(--primary)' }}
+                            activeDot={{ r: 5, fill: 'var(--primary)' }}
                           />
                         </LineChart>
                       </ResponsiveContainer>
@@ -979,9 +895,9 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Shield className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
@@ -994,7 +910,7 @@ export function OAuthMonitoringDashboard() {
                       analytics.topClients.map((client, index) => (
                         <div key={client.clientId} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-sm shadow-sm">
                               {index + 1}
                             </div>
                             <div>
@@ -1019,13 +935,323 @@ export function OAuthMonitoringDashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* System Health */}
+              <div className={`p-4 rounded-2xl border shadow-lg flex items-center justify-between ${
+                systemStatus?.overall === 'healthy' ? 'bg-green-500/10 border-green-500/30' :
+                systemStatus?.overall === 'degraded' ? 'bg-yellow-500/10 border-yellow-500/30' :
+                systemStatus?.overall === 'unhealthy' ? 'bg-red-500/10 border-red-500/30' :
+                'bg-card/70 border-border'
+              }`}>
+                <div className="flex items-center gap-3">
+                  {systemStatus?.overall === 'healthy' && <CheckCircle className="w-5 h-5 text-green-600" />}
+                  {systemStatus?.overall === 'degraded' && <AlertTriangle className="w-5 h-5 text-yellow-600" />}
+                  {systemStatus?.overall === 'unhealthy' && <AlertCircle className="w-5 h-5 text-red-600" />}
+                  {!systemStatus && <AlertCircle className="w-5 h-5 text-muted-foreground" />}
+                  <div>
+                    <p className="font-semibold text-foreground">
+                      {systemStatus ? t(systemStatus.overall.charAt(0).toUpperCase() + systemStatus.overall.slice(1)) : t('Loading...')}
+                    </p>
+                    {systemStatus && (
+                      <p className="text-xs text-muted-foreground">
+                        v{systemStatus.version} · {t('Uptime')}: {Math.floor(systemStatus.uptime / 3600)}{t('h')} {Math.floor((systemStatus.uptime % 3600) / 60)}{t('m')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={fetchSystemStatus}>
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                {/* Keycloak */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Shield className="w-6 h-6 text-green-600" />
+                    </div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Keycloak')}</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Status')}</span>
+                      <Badge className={
+                        systemStatus?.keycloak?.status === 'healthy'
+                          ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                          : systemStatus?.keycloak?.status === 'degraded'
+                          ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                          : systemStatus?.keycloak
+                          ? 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20'
+                          : 'bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20'
+                      }>
+                        {systemStatus?.keycloak?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.keycloak?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.keycloak?.status === 'unhealthy' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {!systemStatus?.keycloak && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.keycloak?.status
+                          ? t(systemStatus.keycloak.status.charAt(0).toUpperCase() + systemStatus.keycloak.status.slice(1))
+                          : t('Unknown')}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Realm')}</span>
+                      <span className="font-bold text-foreground">{systemStatus?.keycloak?.realm ?? 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Accessible')}</span>
+                      <span className="font-bold text-foreground">{systemStatus?.keycloak?.accessible ? t('Yes') : t('No')}</span>
+                    </div>
+                    {systemStatus?.keycloak?.lastConnected && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground font-medium">{t('Last Connected')}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {(() => { try { return format(new Date(systemStatus.keycloak.lastConnected), 'MMM dd, HH:mm'); } catch { return systemStatus.keycloak.lastConnected; } })()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* FHIR Servers */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Server className="w-6 h-6 text-primary" />
+                    </div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('FHIR Servers')}</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Status')}</span>
+                      <Badge className={
+                        systemStatus?.fhir?.status === 'healthy'
+                          ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                          : systemStatus?.fhir?.status === 'degraded'
+                          ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                          : systemStatus?.fhir
+                          ? 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20'
+                          : 'bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20'
+                      }>
+                        {systemStatus?.fhir?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.fhir?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.fhir?.status === 'unhealthy' && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {!systemStatus?.fhir && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {systemStatus?.fhir?.status
+                          ? t(systemStatus.fhir.status.charAt(0).toUpperCase() + systemStatus.fhir.status.slice(1))
+                          : t('Unknown')}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Servers')}</span>
+                      <span className="font-bold text-foreground">
+                        {systemStatus?.fhir ? `${systemStatus.fhir.healthyServers}/${systemStatus.fhir.totalServers} ${t('healthy')}` : 'N/A'}
+                      </span>
+                    </div>
+                    {systemStatus?.fhir?.servers?.map((server, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm border-t border-border pt-2">
+                        <span className="text-muted-foreground truncate max-w-[60%]" title={server.url}>{server.name}</span>
+                        <Badge variant="secondary" className={
+                          server.status === 'healthy' ? 'bg-green-500/10 text-green-700 dark:text-green-300' :
+                          server.status === 'degraded' ? 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-300' :
+                          'bg-red-500/10 text-red-700 dark:text-red-300'
+                        }>
+                          {server.version ?? 'N/A'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Memory */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Database className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Memory')}</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Heap Used')}</span>
+                      <span className="font-bold text-foreground">
+                        {systemStatus?.memory ? `${systemStatus.memory.used} MB` : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Heap Total')}</span>
+                      <span className="font-bold text-foreground">
+                        {systemStatus?.memory ? `${systemStatus.memory.total} MB` : 'N/A'}
+                      </span>
+                    </div>
+                    {systemStatus?.memory && (
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{t('Usage')}</span>
+                          <span>{Math.round((systemStatus.memory.used / systemStatus.memory.total) * 100)}%</span>
+                        </div>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              (systemStatus.memory.used / systemStatus.memory.total) > 0.85 ? 'bg-red-500' :
+                              (systemStatus.memory.used / systemStatus.memory.total) > 0.65 ? 'bg-yellow-500' :
+                              'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(100, Math.round((systemStatus.memory.used / systemStatus.memory.total) * 100))}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Active Tokens')}</span>
+                      <span className="font-bold text-foreground">{analytics?.activeTokens ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Door Management */}
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Shield className="w-6 h-6 text-orange-600" />
+                    </div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Door Management')}</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Provider')}</span>
+                      <span className="font-bold text-foreground">{doorHealth?.provider ?? t('Not configured')}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground font-medium">{t('Status')}</span>
+                      <Badge className={
+                        doorHealth?.connected
+                          ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                          : doorHealth?.configured
+                          ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                          : 'bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20'
+                      }>
+                        {doorHealth?.connected && <CheckCircle className="w-3 h-3 mr-1" />}
+                        {doorHealth?.configured && !doorHealth.connected && <AlertTriangle className="w-3 h-3 mr-1" />}
+                        {!doorHealth?.configured && <AlertCircle className="w-3 h-3 mr-1" />}
+                        {doorHealth?.connected ? t('Connected') : doorHealth?.configured ? t('Disconnected') : t('Not configured')}
+                      </Badge>
+                    </div>
+                    {doorEvents.length > 0 && (
+                      <div className="border-t border-border pt-3 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">{t('Recent Events')}</p>
+                        {doorEvents.slice(0, 4).map((evt) => (
+                          <div key={evt.id} className="flex items-center justify-between text-xs">
+                            <span className="truncate max-w-[65%] text-foreground" title={evt.message ?? evt.action}>
+                              {evt.message ?? evt.action}
+                            </span>
+                            <span className="text-muted-foreground shrink-0 ml-2">
+                              {evt.createdAt ? (() => { try { return format(new Date(evt.createdAt), 'HH:mm'); } catch { return ''; } })() : ''}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* FHIR Server Uptime */}
+              {fhirUptime.length > 0 && (
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Activity className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('FHIR Server Uptime')}</h4>
+                      <p className="text-xs text-muted-foreground">{t('Background health checks every 30 seconds')}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {fhirUptime.map((srv) => {
+                      const chartData = [...(srv.recentChecks ?? [])].reverse().map(c => ({
+                        time: c.timestamp,
+                        ms: c.responseTimeMs,
+                        ok: c.status === 'healthy' ? 1 : 0,
+                      }));
+
+                      return (
+                        <div key={srv.serverUrl} className="border border-border/40 rounded-xl p-4 space-y-3">
+                          {/* Header row */}
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-3">
+                              {srv.currentStatus === 'healthy' && <CheckCircle className="w-4 h-4 text-green-500" />}
+                              {srv.currentStatus === 'degraded' && <AlertTriangle className="w-4 h-4 text-yellow-500" />}
+                              {srv.currentStatus === 'unhealthy' && <AlertCircle className="w-4 h-4 text-red-500" />}
+                              <span className="font-semibold text-foreground">{srv.serverName}</span>
+                              <span className="text-xs text-muted-foreground font-mono">{srv.serverUrl}</span>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <Badge className={
+                                srv.uptimePercent >= 99 ? 'bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20'
+                                : srv.uptimePercent >= 95 ? 'bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20'
+                                : 'bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20'
+                              }>
+                                {srv.uptimePercent.toFixed(2)}% {t('uptime')}
+                              </Badge>
+                              <span className="text-muted-foreground flex items-center gap-1">
+                                <Timer className="w-3 h-3" />
+                                {srv.avgResponseTimeMs}{t('ms avg')}
+                              </span>
+                              <span className="text-muted-foreground text-xs">
+                                {srv.checksTotal} {t('checks')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Response time chart */}
+                          {chartData.length > 1 && (
+                            <div className="h-24">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
+                                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                                  <XAxis dataKey="time" hide />
+                                  <YAxis width={40} tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${v}ms`} />
+                                  <Tooltip
+                                    contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                                    labelFormatter={(label) => { try { return format(new Date(String(label)), 'HH:mm:ss'); } catch { return String(label); } }}
+                                    formatter={(value) => [`${value}ms`, t('Response')]}
+                                  />
+                                  <Line type="monotone" dataKey="ms" stroke="var(--primary)" strokeWidth={1.5} dot={false} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )}
+
+                          {/* Last error */}
+                          {srv.lastError && (
+                            <div className="flex items-start gap-2 text-xs text-red-600 dark:text-red-400 bg-red-500/5 p-2 rounded-lg">
+                              <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                              <span>{srv.lastError}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {systemStatus && (
+                <div className="bg-card/70 backdrop-blur-sm p-4 rounded-2xl border border-border/50 shadow-lg text-xs text-muted-foreground flex items-center justify-between">
+                  <span>{t('Last updated')}: {(() => { try { return format(new Date(systemStatus.timestamp), 'MMM dd, HH:mm:ss'); } catch { return systemStatus.timestamp; } })()}</span>
+                  <span>{t('Auto-refresh every 30s')}</span>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="flows" className="space-y-6">
               {/* Filters */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                     <Search className="w-5 h-5 text-primary" />
                   </div>
                   <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter OAuth Flows')}</h4>
@@ -1033,52 +1259,54 @@ export function OAuthMonitoringDashboard() {
                 <div className="flex flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
-                    <select
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                      className="border border-border rounded-xl px-3 py-2 bg-background text-foreground shadow-sm"
-                    >
-                      <option value="all">{t('All Types')}</option>
-                      <option value="authorization">{t('Authorization')}</option>
-                      <option value="token">{t('Token')}</option>
-                      <option value="refresh">{t('Refresh')}</option>
-                      <option value="error">{t('Error')}</option>
-                      <option value="revoke">{t('Revoke')}</option>
-                    </select>
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Types')}</SelectItem>
+                        <SelectItem value="authorization">{t('Authorization')}</SelectItem>
+                        <SelectItem value="token">{t('Token')}</SelectItem>
+                        <SelectItem value="refresh">{t('Refresh')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="revoke">{t('Revoke')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
-                    <select
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="border border-border rounded-xl px-3 py-2 bg-background text-foreground shadow-sm"
-                    >
-                      <option value="all">{t('All Statuses')}</option>
-                      <option value="success">{t('Success')}</option>
-                      <option value="error">{t('Error')}</option>
-                      <option value="warning">{t('Warning')}</option>
-                      <option value="pending">{t('Pending')}</option>
-                    </select>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                        <SelectItem value="success">{t('Success')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="warning">{t('Warning')}</SelectItem>
+                        <SelectItem value="pending">{t('Pending')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Search className="w-4 h-4 text-muted-foreground" />
-                    <input
+                    <Input
                       type="text"
                       placeholder={t('Search by client or user...')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border border-border rounded-xl px-3 py-2 min-w-[200px] bg-background text-foreground shadow-sm"
+                      className="min-w-[200px]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Events List - Simplified for brevity */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                     <Activity className="w-5 h-5 text-primary" />
                   </div>
                   <div>
@@ -1093,31 +1321,31 @@ export function OAuthMonitoringDashboard() {
                 </div>
                 {filteredEvents.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full table-auto text-sm">
-                      <thead>
-                        <tr className="bg-muted/50 text-muted-foreground border-b border-border">
-                          <th className="px-4 py-3 text-left font-semibold">{t('Time')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Type')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Client')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Status')}</th>
-                          <th className="px-4 py-3 text-left font-semibold">{t('Details')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table className="text-sm">
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>{t('Time')}</TableHead>
+                          <TableHead>{t('Type')}</TableHead>
+                          <TableHead>{t('Client')}</TableHead>
+                          <TableHead>{t('Status')}</TableHead>
+                          <TableHead>{t('Details')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {filteredEvents.slice(0, 50).map((event, index) => (
-                          <tr key={event.id || index} className="border-b border-border hover:bg-muted/30 transition-colors">
-                            <td className="px-4 py-3 text-muted-foreground">
+                          <TableRow key={event.id || index}>
+                            <TableCell className="text-muted-foreground">
                               {format(new Date(event.timestamp), 'MMM dd, HH:mm:ss')}
-                            </td>
-                            <td className="px-4 py-3">
+                            </TableCell>
+                            <TableCell>
                               <Badge variant="outline" className="font-mono text-xs">
                                 {event.type || t('Unknown')}
                               </Badge>
-                            </td>
-                            <td className="px-4 py-3 font-medium text-foreground">
+                            </TableCell>
+                            <TableCell className="font-medium text-foreground">
                               {event.clientName || event.clientId || t('Unknown')}
-                            </td>
-                            <td className="px-4 py-3">
+                            </TableCell>
+                            <TableCell>
                               <Badge
                                 className={
                                   event.status === 'success'
@@ -1129,14 +1357,14 @@ export function OAuthMonitoringDashboard() {
                               >
                                 {event.status || t('Unknown')}
                               </Badge>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground max-w-xs truncate">
+                            </TableCell>
+                            <TableCell className="text-muted-foreground max-w-xs truncate">
                               {event.errorMessage || '-'}
-                            </td>
-                          </tr>
+                            </TableCell>
+                          </TableRow>
                         ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                     {filteredEvents.length > 50 && (
                       <div className="text-center py-4 text-muted-foreground">
                         <p className="text-sm">{t('Showing first 50 events of {{total}}', { total: filteredEvents.length })}</p>
@@ -1156,9 +1384,9 @@ export function OAuthMonitoringDashboard() {
             <TabsContent value="analytics" className="space-y-6">
               <div className={`grid grid-cols-1 ${predictiveInsights ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 {/* Success Rate Chart */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <TrendingUp className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
@@ -1181,12 +1409,12 @@ export function OAuthMonitoringDashboard() {
                           <Tooltip
                             labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px'
                             }}
                           />
-                          <Bar dataKey="success" fill="hsl(var(--primary))" />
+                          <Bar dataKey="success" fill="var(--primary)" />
                           <Bar dataKey="error" fill="#ef4444" />
                         </BarChart>
                       </ResponsiveContainer>
@@ -1199,9 +1427,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {/* Client Distribution Pie Chart */}
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                   <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                       <Shield className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
@@ -1218,7 +1446,7 @@ export function OAuthMonitoringDashboard() {
                             cx="50%"
                             cy="50%"
                             outerRadius={100}
-                            fill="hsl(var(--primary))"
+                            fill="var(--primary)"
                             dataKey="count"
                             label={({ payload }) => `${payload?.clientName}: ${payload?.count}`}
                           >
@@ -1228,8 +1456,8 @@ export function OAuthMonitoringDashboard() {
                           </Pie>
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: 'hsl(var(--card))',
-                              border: '1px solid hsl(var(--border))',
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
                               borderRadius: '8px'
                             }}
                           />
@@ -1244,9 +1472,9 @@ export function OAuthMonitoringDashboard() {
                 </div>
 
                 {predictiveInsights && (
-                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
                     <div className="flex items-center space-x-3 mb-6">
-                      <div className="w-12 h-12 bg-gradient-to-br from-sky-500/20 to-indigo-500/30 rounded-xl flex items-center justify-center shadow-sm">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                         <Activity className="w-6 h-6 text-sky-600" />
                       </div>
                       <div>
@@ -1288,154 +1516,16 @@ export function OAuthMonitoringDashboard() {
               </div>
             </TabsContent>
 
-            <TabsContent value="monitoring" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                      <Server className="w-6 h-6 text-green-600" />
-                    </div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('OAuth Server')}</h4>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Status')}</span>
-                      <Badge className={systemHealth?.oauthServer?.status === 'healthy' 
-                        ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20"
-                        : systemHealth?.oauthServer?.status === 'degraded'
-                        ? "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"
-                        : systemHealth?.oauthServer?.status === 'down'
-                        ? "bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20"
-                      }>
-                        {systemHealth?.oauthServer?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.oauthServer?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.oauthServer?.status === 'down' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {!systemHealth?.oauthServer?.status && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.oauthServer?.status ? t(systemHealth.oauthServer.status.charAt(0).toUpperCase() + systemHealth.oauthServer.status.slice(1)) : t('Unknown')}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Uptime')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.oauthServer.uptime ? 
-                          `${Math.floor(systemHealth.oauthServer.uptime / 3600)}h ${Math.floor((systemHealth.oauthServer.uptime % 3600) / 60)}m` : 
-                          'N/A'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Response Time')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.oauthServer.responseTime ? 
-                          `${systemHealth.oauthServer.responseTime.toFixed(0)}ms` : 
-                          'N/A'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            <TabsContent value="door-access" className="space-y-6">
+              <EventsPanel />
+            </TabsContent>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
-                      <Database className="w-6 h-6 text-primary" />
-                    </div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Token Store')}</h4>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Status')}</span>
-                      <Badge className={systemHealth?.tokenStore?.status === 'healthy' 
-                        ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20"
-                        : systemHealth?.tokenStore?.status === 'degraded'
-                        ? "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"
-                        : systemHealth?.tokenStore?.status === 'down'
-                        ? "bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20"
-                      }>
-                        {systemHealth?.tokenStore?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.tokenStore?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.tokenStore?.status === 'down' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {!systemHealth?.tokenStore?.status && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.tokenStore?.status ? t(systemHealth.tokenStore.status.charAt(0).toUpperCase() + systemHealth.tokenStore.status.slice(1)) : t('Unknown')}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Storage Used')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.tokenStore.storageUsed ? 
-                          `${systemHealth.tokenStore.storageUsed}%` : 
-                          'N/A'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Active Tokens')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.tokenStore.activeTokens ?? analytics?.activeTokens ?? 0}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            <TabsContent value="consent" className="space-y-6">
+              <ConsentMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
+            </TabsContent>
 
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                      <Network className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Network')}</h4>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Status')}</span>
-                      <Badge className={systemHealth?.network?.status === 'healthy' 
-                        ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20"
-                        : systemHealth?.network?.status === 'degraded'
-                        ? "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"
-                        : systemHealth?.network?.status === 'down'
-                        ? "bg-red-500/10 text-red-800 dark:text-red-300 border-red-500/20"
-                        : "bg-gray-500/10 text-gray-800 dark:text-gray-300 border-gray-500/20"
-                      }>
-                        {systemHealth?.network?.status === 'healthy' && <CheckCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.network?.status === 'degraded' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.network?.status === 'down' && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {!systemHealth?.network?.status && <AlertCircle className="w-3 h-3 mr-1" />}
-                        {systemHealth?.network?.status ? t(systemHealth.network.status.charAt(0).toUpperCase() + systemHealth.network.status.slice(1)) : t('Unknown')}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Throughput')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.network.throughput ?? 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Error Rate')}</span>
-                      <span className="font-bold text-foreground">
-                        {systemHealth?.network.errorRate ? 
-                          `${systemHealth.network.errorRate.toFixed(1)}%` : 
-                          'N/A'
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                    <AlertTriangle className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h4 className="text-lg font-bold text-foreground tracking-tight">{t('System Alerts')}</h4>
-                </div>
-                <div className="text-center text-muted-foreground py-8">
-                  <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p>{t('No system alerts at this time')}</p>
-                  <p className="text-sm mt-2">{t('System monitoring will display real-time alerts here')}</p>
-                </div>
-              </div>
+            <TabsContent value="audit-log" className="space-y-6">
+              <AdminAuditDashboard embedded isRealTimeActive={isRealTimeActive} />
             </TabsContent>
           </Tabs>
         </div>

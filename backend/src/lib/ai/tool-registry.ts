@@ -98,7 +98,9 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
     // Check if route matches any of the specified prefixes
     const path = (route as { path?: unknown }).path
     const method = (route as { method?: unknown }).method
-    const schema = (route as { schema?: { body?: TSchema } }).schema
+    // Elysia stores body schema in hooks.body (TypeBox schema directly), not schema.body
+    const hooks = (route as { hooks?: { body?: TSchema } }).hooks
+    const legacySchema = (route as { schema?: { body?: TSchema } }).schema
     const handler = (route as { handler?: unknown }).handler
     const meta = (route as { meta?: { public?: boolean } }).meta
 
@@ -107,16 +109,16 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
     const matchesPrefix = routePrefixes.some(prefix => path.startsWith(prefix))
     if (!matchesPrefix) continue
     
-    // Skip GET requests (tools should be actions, not queries)
-    if (method === 'GET') continue
+    // Skip read-only / non-action methods (tools should be actions)
+    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') continue
     
     // Convert route path to tool name
     // e.g., /api/users/:id -> update_user_by_id (if PUT)
     //       /api/users -> create_user (if POST)
     const toolName = pathToToolName(path, method)
     
-    // Extract schema from route (if using validation)
-    const bodySchema = schema?.body
+    // Extract schema from route — prefer hooks.body (Elysia 1.x), fall back to schema.body (legacy)
+    const bodySchema = hooks?.body ?? legacySchema?.body
     
     tools.set(toolName, {
       path,

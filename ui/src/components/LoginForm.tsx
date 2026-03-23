@@ -23,8 +23,11 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { Button } from '@proxy-smart/shared-ui';
+import { useTranslation } from 'react-i18next';
 
 export function LoginForm() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [availableIdps, setAvailableIdps] = useState<PublicIdentityProvider[]>([]);
@@ -37,31 +40,34 @@ export function LoginForm() {
   const { initiateLogin, exchangeCodeForToken, clientApis } = useAuthStore();
 
   // Fetch available identity providers
-  const fetchAvailableIdps = useCallback(async () => {
+  const fetchAvailableIdps = useCallback(async (signal?: { aborted: boolean }) => {
     try {
       setLoadingIdps(true);
       logger.info('LoginForm: fetching identity providers...');
       const idps = await clientApis.auth.getAuthIdentityProviders();
+      if (signal?.aborted) return;
       
       // Filter to only show enabled identity providers
       const enabledIdps = idps.filter((idp: PublicIdentityProvider) => idp.enabled !== false);
       logger.info('LoginForm: identity providers fetched', { count: enabledIdps.length });
       setAvailableIdps(enabledIdps);
     } catch (error) {
+      if (signal?.aborted) return;
       console.warn('Could not fetch identity providers (this is normal for public access):', error);
       logger.warn('LoginForm: failed to fetch identity providers', error);
       // Don't show this as an error to users - it's expected when not authenticated
       setAvailableIdps([]);
     } finally {
-      setLoadingIdps(false);
+      if (!signal?.aborted) setLoadingIdps(false);
     }
   }, [clientApis.auth]);
 
   // Check if authentication is configured
-  const checkAuthAvailability = useCallback(async () => {
+  const checkAuthAvailability = useCallback(async (signal?: { aborted: boolean }) => {
     try {
       logger.info('LoginForm: checking authentication availability...');
       const available = await openidService.isAuthenticationAvailable();
+      if (signal?.aborted) return;
       setAuthAvailable(available);
       logger.info('LoginForm: auth availability', { available });
       if (!available) {
@@ -70,9 +76,10 @@ export function LoginForm() {
       } else {
         setError(null); // Clear any previous errors
         // Only fetch IdPs if authentication is available
-        fetchAvailableIdps();
+        fetchAvailableIdps(signal);
       }
     } catch (error) {
+      if (signal?.aborted) return;
       console.error('Failed to check auth availability:', error);
       logger.error('LoginForm: auth availability check failed', error);
       setAuthAvailable(false);
@@ -88,8 +95,7 @@ export function LoginForm() {
     setError(null);
     // Re-check availability and reload IdPs
     checkAuthAvailability();
-    fetchAvailableIdps();
-  }, [checkAuthAvailability, fetchAvailableIdps]);
+  }, [checkAuthAvailability]);
 
   // Handler for canceling Keycloak configuration
   const handleConfigCancel = useCallback(() => {
@@ -98,8 +104,10 @@ export function LoginForm() {
 
   // Load IdPs and check auth availability on component mount
   useEffect(() => {
+    const signal = { aborted: false };
     logger.info('LoginForm mounted');
-    checkAuthAvailability();
+    checkAuthAvailability(signal);
+    return () => { signal.aborted = true; };
   }, [checkAuthAvailability]);
 
   const handleCodeExchange = useCallback(async (code: string, state: string) => {
@@ -223,8 +231,8 @@ export function LoginForm() {
             <div className="w-12 h-12 mx-auto mb-6 border border-border rounded-lg flex items-center justify-center">
               <Loader2 className="w-5 h-5 text-foreground animate-spin" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">Authenticating</h3>
-            <p className="text-muted-foreground text-sm">Please wait while we verify your credentials...</p>
+            <h3 className="text-lg font-medium text-foreground mb-2">{t('Authenticating')}</h3>
+            <p className="text-muted-foreground text-sm">{t('Please wait while we verify your credentials...')}</p>
           </div>
         </div>
       </div>
@@ -239,8 +247,8 @@ export function LoginForm() {
           <div className="w-12 h-12 mx-auto mb-6 border border-border rounded-lg flex items-center justify-center">
             <Heart className="w-6 h-6 text-foreground" />
           </div>
-          <h1 className="text-2xl font-medium tracking-tight text-foreground mb-1">Proxy Smart</h1>
-          <p className="text-muted-foreground text-sm">Healthcare Administration</p>
+          <h1 className="text-2xl font-medium tracking-tight text-foreground mb-1">{t('Proxy Smart')}</h1>
+          <p className="text-muted-foreground text-sm">{t('Healthcare Administration')}</p>
         </div>
         
         {/* Content */}
@@ -258,7 +266,7 @@ export function LoginForm() {
           {(loadingIdps || authAvailable === null) && (
             <div className="text-center py-6">
               <Loader2 className="w-4 h-4 animate-spin mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Loading authentication options...</p>
+              <p className="text-sm text-muted-foreground">{t('Loading authentication options...')}</p>
             </div>
           )}
 
@@ -268,20 +276,18 @@ export function LoginForm() {
               <div className="w-12 h-12 mx-auto mb-4 border border-border rounded-lg flex items-center justify-center">
                 <AlertTriangle className="w-5 h-5 text-foreground" />
               </div>
-              <h3 className="text-base font-medium text-foreground mb-2">Authentication Not Configured</h3>
+              <h3 className="text-base font-medium text-foreground mb-2">{t('Authentication Not Configured')}</h3>
               <p className="text-muted-foreground text-sm mb-6">
-                Keycloak is not yet configured on this server.
+                {t('Keycloak is not yet configured on this server.')}
               </p>
               
-              <button
+              <Button
                 onClick={() => setShowConfigForm(true)}
-                className="w-full bg-foreground text-background rounded-lg py-3 px-4 text-sm font-medium transition-opacity hover:opacity-80"
+                className="w-full py-3"
               >
-                <div className="flex items-center justify-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  <span>Configure Keycloak</span>
-                </div>
-              </button>
+                <Settings className="w-4 h-4" />
+                {t('Configure Keycloak')}
+              </Button>
             </div>
           )}
 
@@ -292,32 +298,31 @@ export function LoginForm() {
               {availableIdps.length > 0 && (
                 <div className="space-y-3">
                   {availableIdps.map((idp) => (
-                    <button
+                    <Button
                       key={idp.alias}
+                      variant="outline"
                       onClick={() => handleLogin(idp.alias)}
-                      className="w-full group border border-border bg-card text-card-foreground rounded-lg py-3 px-4 text-sm font-medium transition-all hover:bg-accent hover:border-foreground/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 h-auto justify-between group"
                       disabled={loading}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-secondary rounded flex items-center justify-center">
-                            {idp.providerId === 'saml' && <Building2 className="w-4 h-4" />}
-                            {idp.providerId === 'oidc' && <Globe className="w-4 h-4" />}
-                            {idp.providerId === 'google' && <Users className="w-4 h-4" />}
-                            {!['saml', 'oidc', 'google'].includes(idp.providerId) && <Shield className="w-4 h-4" />}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-secondary rounded flex items-center justify-center">
+                          {idp.providerId === 'saml' && <Building2 className="w-4 h-4" />}
+                          {idp.providerId === 'oidc' && <Globe className="w-4 h-4" />}
+                          {idp.providerId === 'google' && <Users className="w-4 h-4" />}
+                          {!['saml', 'oidc', 'google'].includes(idp.providerId) && <Shield className="w-4 h-4" />}
+                        </div>
+                        <div className="text-left">
+                          <div className="text-sm font-medium">
+                            {idp.displayName || idp.alias}
                           </div>
-                          <div className="text-left">
-                            <div className="text-sm font-medium">
-                              {idp.displayName || idp.alias}
-                            </div>
-                            <div className="text-xs text-muted-foreground capitalize">
-                              {idp.providerId}
-                            </div>
+                          <div className="text-xs text-muted-foreground capitalize">
+                            {idp.providerId}
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                       </div>
-                    </button>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+                    </Button>
                   ))}
                   
                   <div className="relative py-4">
@@ -332,27 +337,23 @@ export function LoginForm() {
               )}
 
               {/* Default OpenID Connect Login */}
-              <button 
+              <Button
                 onClick={() => handleLogin()}
-                className="w-full bg-foreground text-background rounded-lg py-3 px-4 text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3"
                 disabled={loading}
               >
-                <div className="flex items-center justify-center gap-2">
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Signing in...</span>
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="w-4 h-4" />
-                      <span>
-                        {availableIdps.length > 0 ? 'Default Authentication' : 'Sign in with OpenID Connect'}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </button>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('Signing in...')}
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4" />
+                    {availableIdps.length > 0 ? 'Default Authentication' : 'Sign in with OpenID Connect'}
+                  </>
+                )}
+              </Button>
             </>
           )}
         </div>
@@ -362,7 +363,7 @@ export function LoginForm() {
           <div className="flex items-start gap-3">
             <Lock className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Secure authentication via OpenID Connect. Your credentials are never stored on this application.
+              {t('Secure authentication via OpenID Connect. Your credentials are never stored on this application.')}
             </p>
           </div>
         </div>
@@ -371,24 +372,26 @@ export function LoginForm() {
         <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <Stethoscope className="w-3.5 h-3.5" />
-            <span>FHIR Compliant</span>
+            <span>{t('FHIR Compliant')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Globe className="w-3.5 h-3.5" />
-            <span>SMART on FHIR</span>
+            <span>{t('SMART on FHIR')}</span>
           </div>
         </div>
 
         {/* Debug Panel Toggle */}
         <div className="mt-8">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowDebugPanel(!showDebugPanel)}
-            className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5 py-2"
+            className="w-full text-xs text-muted-foreground hover:text-foreground"
           >
             <Bug className="w-3 h-3" />
-            <span>Troubleshooting</span>
+            Troubleshooting
             {showDebugPanel ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
+          </Button>
           
           {showDebugPanel && (
             <div className="mt-4">

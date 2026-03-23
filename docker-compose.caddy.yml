@@ -1,0 +1,38 @@
+# Shared Caddy reverse proxy for the VPS
+# Uses caddy-docker-proxy: auto-discovers services via Docker labels.
+# No Caddyfile needed — each app stack declares its own routing via labels.
+#
+# Setup (run once on VPS):
+#   docker network create caddy
+#   docker compose -f docker-compose.caddy.yml up -d
+#
+# Any app stack that needs TLS + routing must:
+#   1. Join the external `caddy` network
+#   2. Add `caddy` and `caddy.reverse_proxy` labels to its containers
+#
+# To add another site on this VPS, just spin up a new compose stack
+# with the right labels — Caddy picks it up automatically.
+
+services:
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    container_name: caddy-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      - CADDY_INGRESS_NETWORKS=caddy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+    networks:
+      - caddy
+
+networks:
+  caddy:
+    external: true
+
+volumes:
+  caddy_data:

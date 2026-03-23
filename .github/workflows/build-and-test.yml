@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - "dev/*"
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
   workflow_call:
     inputs:
       run_tests:
@@ -71,6 +76,7 @@ jobs:
       id: frontend-build
       env:
         TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+        VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
       run: |
         echo "🔨 Building frontend..."
         cd ui

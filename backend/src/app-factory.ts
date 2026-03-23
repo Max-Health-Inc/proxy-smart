@@ -3,17 +3,52 @@ import { openapi, fromTypes } from '@elysiajs/openapi'
 import { cors } from '@elysiajs/cors'
 import staticPlugin from '@elysiajs/static'
 import { join } from 'path'
+import { readdirSync, readFileSync, existsSync } from 'fs'
 import { keycloakPlugin } from './lib/keycloak-plugin'
 import { fhirRoutes } from './routes/fhir'
 import { statusRoutes } from './routes/status'
 import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
+import { consentMonitoringRoutes } from './routes/consent-monitoring'
+import { consentWebSocket } from './routes/consent-websocket'
+import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
+import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
+import { mcpEndpointRoutes } from './routes/mcp-endpoint'
 import { docsRoutes } from './routes/docs'
+
+/** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
+function discoverApps() {
+    const appsDir = join(import.meta.dir, '..', 'public', 'apps')
+    if (!existsSync(appsDir)) return []
+
+    return readdirSync(appsDir, { withFileTypes: true })
+        .filter(d => d.isDirectory())
+        .map(d => {
+            const manifestPath = join(appsDir, d.name, 'smart-manifest.json')
+            if (!existsSync(manifestPath)) return null
+            try {
+                const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+                return {
+                    id: d.name,
+                    launch_url: `/apps/${d.name}/`,
+                    client_id: manifest.client_id ?? d.name,
+                    client_name: manifest.client_name ?? d.name,
+                    description: manifest.description ?? '',
+                    scope: manifest.scope ?? '',
+                    category: manifest.category ?? 'other',
+                    icon: manifest.icon ?? 'app-window',
+                    grant_types: manifest.grant_types ?? ['authorization_code'],
+                    token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
+                }
+            } catch { return null }
+        })
+        .filter(Boolean)
+}
 
 export function createApp() {
     const app = new Elysia({
@@ -31,7 +66,7 @@ export function createApp() {
             origin: config.cors.origins,
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']
         }))
         .use(openapi({
             references: fromTypes(
@@ -52,10 +87,15 @@ export function createApp() {
                     { name: 'servers', description: 'FHIR server discovery endpoints' },
                     { name: 'identity-providers', description: 'Identity provider management' },
                     { name: 'smart-apps', description: 'SMART on FHIR configuration endpoints' },
+                    { name: 'access-control', description: 'Physical access control (Kisi / UniFi Access)' },
                     { name: 'oauth-ws-monitoring', description: 'OAuth monitoring via WebSocket' },
                     { name: 'oauth-sse-monitoring', description: 'OAuth monitoring via Server-Sent Events' },
                     { name: 'ai', description: 'AI assistant endpoints with unified internal and MCP tools' },
                     { name: 'mcp-management', description: 'MCP server management endpoints' },
+                    { name: 'mcp-endpoint', description: 'Built-in MCP Streamable HTTP server endpoint' },
+                    { name: 'consent-monitoring', description: 'Consent decision monitoring and analytics' },
+                    { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
+                    { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
                 ],
                 servers: [
                     { url: config.baseUrl, description: 'Development server' }
@@ -70,6 +110,19 @@ export function createApp() {
         }))
         .get('/webapp', () => Bun.file('public/webapp/index.html'))
         .get('/webapp/', () => Bun.file('public/webapp/index.html'))
+        .get('/', () => Bun.file('public/index.html'))
+        // SMART apps directory
+        .get('/apps', () => Bun.file('public/apps/index.html'))
+        .get('/apps/', () => Bun.file('public/apps/index.html'))
+        // Public SMART app discovery endpoint
+        .get('/apps.json', () => ({ apps: discoverApps() }))
+        // SPA fallbacks for sub-apps under /apps/*
+        .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
+        .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
+        .get('/apps/dtr/*', () => Bun.file('public/apps/dtr/index.html'))
+        .get('/apps/consent', () => Bun.file('public/apps/consent/index.html'))
+        .get('/apps/consent/', () => Bun.file('public/apps/consent/index.html'))
+        .get('/apps/consent/*', () => Bun.file('public/apps/consent/index.html'))
         .use(keycloakPlugin)
         .use(docsRoutes)
         .use(mcpMetadataRoutes)
@@ -79,6 +132,11 @@ export function createApp() {
         .use(adminRoutes)
         .use(oauthMonitoringRoutes)
         .use(oauthWebSocket)
+        .use(consentMonitoringRoutes)
+        .use(consentWebSocket)
+        .use(fhirMonitoringRoutes)
+        .use(adminAuditMonitoringRoutes)
+        .use(mcpEndpointRoutes)
         .use(fhirRoutes)
 
     return app

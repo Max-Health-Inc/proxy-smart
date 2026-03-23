@@ -1,5 +1,5 @@
 import { config } from '@/config';
-import { getStoredToken, createOauthMonitoringApi } from '../lib/apiClient';
+import { getStoredToken, createOauthMonitoringApi } from '@/lib/apiClient';
 import type { 
   OAuthEvent,
   OAuthEventsListResponse,

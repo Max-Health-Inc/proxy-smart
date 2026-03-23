@@ -1,9 +1,10 @@
 import crypto from 'node:crypto'
+import { existsSync } from 'node:fs'
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { openai } from '@ai-sdk/openai'
-import { embed, embedMany } from 'ai'
+import { cosineSimilarity, embed, embedMany } from 'ai'
 import { logger } from '../logger'
 
 interface RagDocument {
@@ -54,8 +55,21 @@ const MIN_CHARS = Number.parseInt(process.env.RAG_MIN_CHUNK_SIZE || '200', 10)
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const BACKEND_ROOT = join(__dirname, '../../..')
-const DOCS_DIR = join(BACKEND_ROOT, 'docs')
+const REPO_ROOT = join(BACKEND_ROOT, '..')
 const CACHE_PATH = join(BACKEND_ROOT, 'logs', 'rag-cache.json')
+
+/** Resolve docs dir with fallback chain for local dev, monorepo Docker, and standalone Docker. */
+function resolveDocsDir(): string {
+  if (process.env.RAG_DOCS_DIR) return process.env.RAG_DOCS_DIR
+  const candidates = [
+    join(REPO_ROOT, 'docs'),          // local dev: backend/../../docs
+    join(process.cwd(), '..', 'docs'), // monorepo Docker: /app/backend → /app/docs
+    join(process.cwd(), 'docs'),       // standalone Docker: /app/docs
+    join(BACKEND_ROOT, 'docs'),        // fallback: backend/docs
+  ]
+  return candidates.find(p => existsSync(p)) ?? candidates[0]
+}
+const DOCS_DIR = resolveDocsDir()
 
 let knowledgeBase: KnowledgeChunk[] = []
 let initializationPromise: Promise<void> | null = null
@@ -68,27 +82,7 @@ function ensureAPIKey(): boolean {
   return true
 }
 
-function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length || a.length === 0) {
-    return 0
-  }
 
-  let dot = 0
-  let normA = 0
-  let normB = 0
-
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i]
-    normA += a[i] * a[i]
-    normB += b[i] * b[i]
-  }
-
-  if (normA === 0 || normB === 0) {
-    return 0
-  }
-
-  return dot / (Math.sqrt(normA) * Math.sqrt(normB))
-}
 
 async function ensureInitialized(): Promise<void> {
   if (knowledgeBase.length > 0) {

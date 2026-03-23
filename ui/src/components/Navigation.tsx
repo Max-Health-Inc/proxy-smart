@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,10 +9,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
-import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
-import { useTheme } from '../hooks/use-theme';
+import { useTheme } from '../hooks/useTheme';
 import type { UserProfile } from '@/lib/types/api';
 import { 
   LayoutDashboard, 
@@ -28,14 +27,13 @@ import {
   Languages,
   Check,
   Target,
-  Play,
   BarChart3,
   Moon,
   Sun,
-  Monitor
+  Monitor,
+  DoorOpen,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAIChatStore } from '../stores/aiChatStore';
 
 interface NavigationProps {
   activeTab: string;
@@ -45,9 +43,8 @@ interface NavigationProps {
 
 export function Navigation({ activeTab, onTabChange, profile }: NavigationProps) {
   const logout = useAuthStore((state) => state.logout);
-  const { language: currentLanguage, setLanguage, isAIAssistantEnabled } = useAppStore();
+  const { language: currentLanguage, setLanguage } = useAppStore();
   const { theme: currentTheme, setTheme } = useTheme();
-  const { setIsOpen } = useAIChatStore();
   const { t } = useTranslation();
   const [showPreferences, setShowPreferences] = useState(false);
 
@@ -124,7 +121,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
     { 
       id: 'users', 
       label: t('Users'), 
-      description: t('User Management'),
+      description: t('Users & Federation'),
       icon: Users
     },
     { 
@@ -134,28 +131,16 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       icon: Server
     },
     { 
-      id: 'mcp-servers', 
-      label: t('MCP Servers'), 
-      description: t('AI Tools'),
-      icon: Sparkles
-    },
-    { 
       id: 'idp', 
       label: t('Identity Providers'), 
       description: t('IdP Management'),
       icon: Shield
     },
     { 
-      id: 'scopes', 
-      label: t('Scope Management'), 
-      description: t('SMART Scopes'),
+      id: 'smart-config', 
+      label: t('SMART Config'), 
+      description: t('Scopes & Launch Context'),
       icon: Target
-    },
-    { 
-      id: 'launch-context', 
-      label: t('Launch Context'), 
-      description: t('Context Configuration'),
-      icon: Play
     },
     { 
       id: 'oauth-monitoring', 
@@ -163,6 +148,19 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       description: t('Flow Analytics'),
       icon: BarChart3
     },
+    { 
+      id: 'door-management', 
+      label: t('Door Management'), 
+      description: t('Physical Access'),
+      icon: DoorOpen
+    },
+    { 
+      id: 'ai-tools', 
+      label: t('AI Tools'), 
+      description: t('MCP Configuration'),
+      icon: Sparkles
+    },
+
   ];
 
   return (
@@ -193,10 +191,10 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
           </div>
           
           {/* Navigation - Takes available space */}
-          <div className="flex-1 flex justify-center px-2 lg:px-4 min-w-0 overflow-hidden">
+          <div className="flex-1 flex justify-center px-2 lg:px-4 min-w-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {/* Desktop Navigation */}
-            <NavigationMenu className="hidden lg:block w-full">
-              <NavigationMenuList className="flex flex-wrap justify-center gap-1">
+            <NavigationMenu className="hidden lg:block w-full max-w-full">
+              <NavigationMenuList className="flex flex-nowrap justify-start gap-1 w-max min-w-full px-1">
                 {tabs.map((tab) => {
                   const IconComponent = tab.icon;
                   return (
@@ -204,7 +202,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                       <Button
                         variant={activeTab === tab.id ? 'default' : 'ghost'}
                         onClick={() => onTabChange(tab.id)}
-                        className={`group flex items-center space-x-1 h-9 px-2 lg:px-3 rounded-lg transition-all duration-300 ${
+                        className={`group flex shrink-0 items-center space-x-1 h-9 px-2 lg:px-3 rounded-lg transition-all duration-300 ${
                           activeTab === tab.id 
                             ? 'bg-foreground text-background' 
                             : 'hover:bg-muted text-foreground'
@@ -213,7 +211,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                         <IconComponent className={`w-4 h-4 flex-shrink-0 ${
                           activeTab === tab.id ? 'scale-110' : 'group-hover:scale-105'
                         }`} />
-                        <span className="hidden xl:block text-xs font-semibold whitespace-nowrap">{tab.label}</span>
+                        <span className="hidden 2xl:block text-xs font-semibold whitespace-nowrap">{tab.label}</span>
                       </Button>
                     </NavigationMenuItem>
                   );
@@ -322,37 +320,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
 
           {/* User Profile - Compact */}
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            {/* AI Assistant - Desktop */}
-            {isAIAssistantEnabled && (
-              <div className="hidden xl:flex items-center">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsOpen(true)}
-                  className="p-0 h-auto hover:bg-transparent"
-                >
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-secondary text-secondary-foreground px-2 py-1 rounded-md border border-border flex items-center justify-center cursor-pointer hover:bg-accent transition-colors"
-                  >
-                    <Sparkles className="w-3 h-3 animate-pulse" />
-                  </Badge>
-                </Button>
-              </div>
-            )}
-            
-            {/* AI Assistant - Mobile */}
-            {isAIAssistantEnabled && (
-              <div className="xl:hidden flex items-center">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsOpen(true)}
-                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-full p-0 hover:bg-muted transition-all duration-300 hover:shadow-md flex-shrink-0"
-                >
-                  <Sparkles className="w-4 h-4 text-green-600 animate-pulse" />
-                </Button>
-              </div>
-            )}
-            
+
             <DropdownMenu onOpenChange={(open) => {
               if (!open) {
                 setShowPreferences(false);

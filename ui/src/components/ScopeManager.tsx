@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getItem, storeItem } from '@/lib/storage';
 import {
   Table,
@@ -29,9 +28,10 @@ import {
   CheckCircle,
   AlertCircle,
   Copy,
-  Play,
-  Loader2
+  Play
 } from 'lucide-react';
+import { CopyButton } from '@/components/ui/copy-button';
+import { StatCard } from '@/components/ui/stat-card';
 import { useTranslation } from 'react-i18next';
 
 // FHIR Resource types for scope building
@@ -340,7 +340,7 @@ interface ScopeSet {
   isTemplate: boolean;
 }
 
-export function ScopeManager() {
+export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
   const [scopeSets, setScopeSets] = useState<ScopeSet[]>([]);
   const [loading, setLoading] = useState(false);
@@ -619,9 +619,7 @@ export function ScopeManager() {
     });
   };
 
-  const copyScope = (scope: string) => {
-    navigator.clipboard.writeText(scope);
-  };
+
 
   const testScope = async (scope: string) => {
     // In production, this would test the scope against the FHIR server
@@ -654,37 +652,43 @@ export function ScopeManager() {
   };
 
   return (
-    <div className="p-8 space-y-8">
+    <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
-          <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
-              {t('SMART Scope Management')}
-            </h1>
-            <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              {t('Build and manage FHIR resource access scopes')}
-            </div>
-          </div>
-          <Button
-            onClick={() => setShowBuilder(true)}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
-          >
+      {embedded ? (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowBuilder(true)}>
             <Plus className="h-5 w-5 mr-2" />
             {t('Create Scope Set')}
           </Button>
         </div>
-      </div>
+      ) : (
+        <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
+            <div className="flex-1">
+              <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+                {t('SMART Scope Management')}
+              </h1>
+              <div className="text-muted-foreground text-lg flex items-center">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                  <Shield className="w-5 h-5 text-primary" />
+                </div>
+                {t('Build and manage FHIR resource access scopes')}
+              </div>
+            </div>
+            <Button onClick={() => setShowBuilder(true)}>
+              <Plus className="h-5 w-5 mr-2" />
+              {t('Create Scope Set')}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Scope Builder Modal/Panel */}
       {showBuilder && (
-        <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border shadow-lg">
+        <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-lg">
           <div className="mb-6">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                 <Code className="w-6 h-6 text-primary" />
               </div>
               <div>
@@ -718,20 +722,24 @@ export function ScopeManager() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold text-foreground">{t('Role-Based Templates')}</Label>
-                  <select
+                  <Select
                     value={builderState.selectedRole || 'all'}
-                    onChange={(e) => setBuilderState({ ...builderState, selectedRole: e.target.value === 'all' ? undefined : e.target.value })}
-                    className="text-xs border border-border rounded-lg px-2 py-1 bg-background text-foreground"
+                    onValueChange={(value) => setBuilderState({ ...builderState, selectedRole: value === 'all' ? undefined : value })}
                   >
-                    <option value="all">{t('All Roles')}</option>
-                    <option value="physician">{t('Physician')}</option>
-                    <option value="nurse">{t('Nurse')}</option>
-                    <option value="researcher">{t('Researcher')}</option>
-                    <option value="pharmacist">{t('Pharmacist')}</option>
-                    <option value="therapist">{t('Therapist')}</option>
-                    <option value="admin">{t('Administrator')}</option>
-                    <option value="agent">{t('Agent')}</option>
-                  </select>
+                    <SelectTrigger className="w-[160px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t('All Roles')}</SelectItem>
+                      <SelectItem value="physician">{t('Physician')}</SelectItem>
+                      <SelectItem value="nurse">{t('Nurse')}</SelectItem>
+                      <SelectItem value="researcher">{t('Researcher')}</SelectItem>
+                      <SelectItem value="pharmacist">{t('Pharmacist')}</SelectItem>
+                      <SelectItem value="therapist">{t('Therapist')}</SelectItem>
+                      <SelectItem value="admin">{t('Administrator')}</SelectItem>
+                      <SelectItem value="agent">{t('Agent')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto">
                   {SCOPE_TEMPLATES
@@ -739,7 +747,7 @@ export function ScopeManager() {
                     .map((template) => (
                       <div
                         key={template.id}
-                        className="p-4 border border-border rounded-xl hover:bg-muted/50 hover:border-border/80 transition-all duration-200 cursor-pointer group"
+                        className="p-4 border border-border/50 rounded-xl hover:bg-muted/50 hover:border-border/80 transition-all duration-200 cursor-pointer group"
                         onClick={() => loadTemplate(template)}
                       >
                         <div className="flex items-start justify-between mb-2">
@@ -779,33 +787,41 @@ export function ScopeManager() {
                 {/* Context Selection */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-2 block">{t('Context')}</Label>
-                  <select
+                  <Select
                     value={builderState.context}
-                    onChange={(e) => setBuilderState({ ...builderState, context: e.target.value })}
-                    className="w-full rounded-lg border-border bg-background text-foreground"
+                    onValueChange={(value) => setBuilderState({ ...builderState, context: value })}
                   >
-                    {SCOPE_CONTEXTS.map((ctx) => (
-                      <option key={ctx.value} value={ctx.value}>
-                        {ctx.label} - {ctx.description}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SCOPE_CONTEXTS.map((ctx) => (
+                        <SelectItem key={ctx.value} value={ctx.value}>
+                          {ctx.label} - {ctx.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Resource Selection */}
                 <div>
                   <Label className="text-xs text-muted-foreground mb-2 block">{t('FHIR Resource')}</Label>
-                  <select
-                    value={builderState.resource}
-                    onChange={(e) => setBuilderState({ ...builderState, resource: e.target.value })}
-                    className="w-full rounded-lg border-border bg-background text-foreground"
+                  <Select
+                    value={builderState.resource || '__none__'}
+                    onValueChange={(value) => setBuilderState({ ...builderState, resource: value === '__none__' ? '' : value })}
                   >
-                    <option value="">{t('Select resource...')}</option>
-                    <option value="*">{t('* (All resources)')}</option>
-                    {FHIR_RESOURCES.map((resource) => (
-                      <option key={resource} value={resource}>{resource}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('Select resource...')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">{t('Select resource...')}</SelectItem>
+                      <SelectItem value="*">{t('* (All resources)')}</SelectItem>
+                      {FHIR_RESOURCES.map((resource) => (
+                        <SelectItem key={resource} value={resource}>{resource}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Permissions */}
@@ -813,12 +829,11 @@ export function ScopeManager() {
                   <Label className="text-xs text-muted-foreground mb-2 block">{t('Permissions')}</Label>
                   <div className="grid grid-cols-5 gap-2">
                     {Object.entries(FHIR_PERMISSIONS).map(([key, perm]) => (
-                      <label key={key} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted/50">
-                        <input
-                          type="checkbox"
+                      <label key={key} className="flex items-center space-x-2 p-2 border border-border/50 rounded-lg hover:bg-muted/50">
+                        <Checkbox
                           checked={builderState.permissions.includes(key)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
+                          onCheckedChange={(checked) => {
+                            if (checked === true) {
                               setBuilderState({
                                 ...builderState,
                                 permissions: [...builderState.permissions, key].sort()
@@ -830,7 +845,6 @@ export function ScopeManager() {
                               });
                             }
                           }}
-                          className="rounded text-primary"
                         />
                         <span className="text-sm font-medium text-foreground" title={perm.description}>
                           {perm.label}
@@ -871,7 +885,7 @@ export function ScopeManager() {
                       const validation = previewScope ? validateScope(previewScope) : null;
 
                       return (
-                        <div className={`p-3 rounded-lg border transition-all duration-200 ${!previewScope ? 'bg-muted border-border' :
+                        <div className={`p-3 rounded-lg border transition-all duration-200 ${!previewScope ? 'bg-muted border-border/50' :
                           validation?.type === 'success' ? 'bg-green-500/10 border-green-500/20' :
                             validation?.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500/20' :
                               'bg-red-500/10 border-red-500/20'
@@ -906,15 +920,17 @@ export function ScopeManager() {
                               <div className="text-xs text-muted-foreground mb-1">{t('Suggestions:')}</div>
                               <div className="flex flex-wrap gap-1">
                                 {validation.suggestions.slice(0, 2).map((suggestion, index) => (
-                                  <button
+                                  <Button
                                     key={index}
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => {
                                       setBuilderState({ ...builderState, customScope: suggestion });
                                     }}
-                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded transition-colors"
+                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 h-auto px-2 py-1"
                                   >
                                     {suggestion}
-                                  </button>
+                                  </Button>
                                 ))}
                               </div>
                             </div>
@@ -930,7 +946,7 @@ export function ScopeManager() {
             {/* Current Scope Set */}
             <div className="space-y-4">
               <Label className="text-sm font-semibold text-foreground">{t('Current Scope Set')}</Label>
-              <div className="border border-border rounded-xl p-4 max-h-96 overflow-y-auto bg-card">
+              <div className="border border-border/50 rounded-xl p-4 max-h-96 overflow-y-auto bg-card">
                 {newScopeSet.scopes.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8">
                     <Shield className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -948,7 +964,7 @@ export function ScopeManager() {
                           }`}>
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center space-x-2 flex-1">
-                              <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded border border-border">
+                              <code className="text-sm font-mono text-foreground bg-background px-2 py-1 rounded border border-border/50">
                                 {scope}
                               </code>
                               <div className="flex items-center">
@@ -964,15 +980,7 @@ export function ScopeManager() {
                               </div>
                             </div>
                             <div className="flex items-center space-x-1 ml-2">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => copyScope(scope)}
-                                className="p-1 h-8 w-8 hover:bg-muted"
-                                title={t('Copy scope')}
-                              >
-                                <Copy className="w-3 h-3" />
-                              </Button>
+                              <CopyButton value={scope} variant="icon-sm" className="p-1 h-8 w-8" title={t('Copy scope')} />
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -1006,17 +1014,19 @@ export function ScopeManager() {
                               <div className="text-xs text-muted-foreground mb-1">{t('Suggestions:')}</div>
                               <div className="flex flex-wrap gap-1">
                                 {validation.suggestions.slice(0, 3).map((suggestion, suggestionIndex) => (
-                                  <button
+                                  <Button
                                     key={suggestionIndex}
+                                    variant="ghost"
+                                    size="sm"
                                     onClick={() => {
                                       const newScopes = [...newScopeSet.scopes];
                                       newScopes[index] = suggestion;
                                       setNewScopeSet({ ...newScopeSet, scopes: newScopes });
                                     }}
-                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded transition-colors cursor-pointer"
+                                    className="text-xs font-mono bg-primary/10 text-primary hover:bg-primary/20 h-auto px-2 py-1"
                                   >
                                     {suggestion}
-                                  </button>
+                                  </Button>
                                 ))}
                               </div>
                             </div>
@@ -1032,7 +1042,6 @@ export function ScopeManager() {
                 <Button
                   onClick={async () => await saveScopeSet(newScopeSet)}
                   disabled={!newScopeSet.name || newScopeSet.scopes.length === 0}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500"
                 >
                   {editingScope ? t('Update') : t('Save')} {t('Scope Set')}
                 </Button>
@@ -1055,72 +1064,39 @@ export function ScopeManager() {
 
       {/* Enhanced Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Database className="w-6 h-6 text-primary" />
-                </div>
-                <h3 className="text-sm font-semibold text-primary tracking-wide">{t('Total Scope Sets')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{scopeSets.length}</div>
-              <p className="text-sm text-muted-foreground font-medium">{t('Custom & templates')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Shield className="w-6 h-6 text-green-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-green-800 dark:text-green-300 tracking-wide">{t('Custom Scope Sets')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-green-900 dark:text-green-300 mb-2">{scopeSets.filter(s => !s.isTemplate).length}</div>
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">{t('User created')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Code className="w-6 h-6 text-purple-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-purple-800 dark:text-purple-300 tracking-wide">{t('Available Templates')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-purple-900 dark:text-purple-300 mb-2">{SCOPE_TEMPLATES.length}</div>
-              <p className="text-sm text-purple-700 dark:text-purple-400 font-medium">{t('Role-based')}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-xl flex items-center justify-center shadow-sm">
-                  <Settings className="w-6 h-6 text-orange-600" />
-                </div>
-                <h3 className="text-sm font-semibold text-orange-800 dark:text-orange-300 tracking-wide">{t('Avg Scopes')}</h3>
-              </div>
-              <div className="text-3xl font-bold text-orange-900 dark:text-orange-300 mb-2">
-                {scopeSets.length > 0 ? Math.round(scopeSets.reduce((sum, s) => sum + s.scopes.length, 0) / scopeSets.length) : 0}
-              </div>
-              <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">{t('Per scope set')}</p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon={Database}
+          label={t('Total Scope Sets')}
+          value={scopeSets.length}
+          subtitle={t('Custom & templates')}
+          color="primary"
+        />
+        <StatCard
+          icon={Shield}
+          label={t('Custom Scope Sets')}
+          value={scopeSets.filter(s => !s.isTemplate).length}
+          subtitle={t('User created')}
+          color="green"
+        />
+        <StatCard
+          icon={Code}
+          label={t('Available Templates')}
+          value={SCOPE_TEMPLATES.length}
+          subtitle={t('Role-based')}
+          color="purple"
+        />
+        <StatCard
+          icon={Settings}
+          label={t('Avg Scopes')}
+          value={scopeSets.length > 0 ? Math.round(scopeSets.reduce((sum, s) => sum + s.scopes.length, 0) / scopeSets.length) : 0}
+          subtitle={t('Per scope set')}
+          color="orange"
+        />
       </div>
-      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border shadow-lg overflow-hidden">
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">
         <div className="p-8 pb-6">
           <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
               <Database className="w-6 h-6 text-primary" />
             </div>
             <div>
@@ -1131,13 +1107,13 @@ export function ScopeManager() {
 
           {loading ? (
             <div className="flex justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-border">
+                  <TableRow className="border-border/50">
                     <TableHead className="font-semibold text-foreground">{t('Name')}</TableHead>
                     <TableHead className="font-semibold text-foreground">{t('Scopes')}</TableHead>
                     <TableHead className="font-semibold text-foreground">{t('Type')}</TableHead>
@@ -1147,7 +1123,7 @@ export function ScopeManager() {
                 </TableHeader>
                 <TableBody>
                   {scopeSets.map((scopeSet) => (
-                    <TableRow key={scopeSet.id} className="border-border hover:bg-muted/50 transition-colors duration-200">
+                    <TableRow key={scopeSet.id} className="border-border/50 hover:bg-muted/50 transition-colors duration-200">
                       <TableCell>
                         <div>
                           <div className="font-semibold text-foreground">{scopeSet.name}</div>
@@ -1188,7 +1164,7 @@ export function ScopeManager() {
                               <Edit className="w-4 h-4 mr-2" />
                               {t('Edit')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => copyScope(scopeSet.scopes.join(' '))}>
+                            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(scopeSet.scopes.join(' '))}>
                               <Copy className="w-4 h-4 mr-2" />
                               {t('Copy Scopes')}
                             </DropdownMenuItem>

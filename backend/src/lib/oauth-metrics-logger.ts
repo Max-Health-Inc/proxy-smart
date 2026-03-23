@@ -1,7 +1,9 @@
 import { writeFile, appendFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import { createReadStream } from 'fs';
 import { join } from 'path';
 import { logger } from './logger';
+import { createInterface } from 'readline';
 import type {
   OAuthEventType,
   OAuthPredictiveInsightsType,
@@ -109,10 +111,8 @@ class OAuthMetricsLogger {
         }
       });
 
-      // Recalculate analytics periodically
-      if (this.events.length % 10 === 0) {
-        await this.calculateAnalytics();
-      }
+      // Recalculate analytics on each event so dashboards update immediately.
+      await this.calculateAnalytics();
 
       logger.auth.debug('OAuth event logged', { 
         eventId: fullEvent.id, 
@@ -320,6 +320,12 @@ class OAuthMetricsLogger {
       return null;
     }
 
+    // Do not render pseudo-forecasts when there has been no OAuth traffic.
+    const recentTotalVolume = recent.reduce((sum, stat) => sum + stat.total, 0);
+    if (recentTotalVolume === 0) {
+      return null;
+    }
+
     const totals = recent.map(stat => stat.total);
   const successes = recent.map(stat => stat.success);
 
@@ -436,10 +442,36 @@ class OAuthMetricsLogger {
         return;
       }
 
-      // For now, we'll keep events in memory only
-      // In production, you might want to implement more sophisticated log rotation
-      this.events = [];
-      logger.auth.info('OAuth events loaded from persistence');
+      const cutoff = Date.now() - (24 * 60 * 60 * 1000);
+      const events: OAuthFlowEvent[] = [];
+
+      const stream = createReadStream(this.eventsFile, { encoding: 'utf-8' });
+      const rl = createInterface({ input: stream, crlfDelay: Infinity });
+
+      for await (const line of rl) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        try {
+          const parsed = JSON.parse(trimmed) as OAuthFlowEvent;
+          const ts = Date.parse(parsed.timestamp);
+          if (Number.isFinite(ts) && ts >= cutoff) {
+            events.push(parsed);
+          }
+        } catch {
+          // Ignore malformed lines to keep the logger resilient.
+        }
+      }
+
+      // Newest first and keep in-memory cap consistent.
+      this.events = events
+        .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
+        .slice(0, 1000);
+
+      logger.auth.info('OAuth events loaded from persistence', {
+        restoredEvents: this.events.length,
+        windowHours: 24,
+      });
     } catch (error) {
       logger.auth.error('Failed to load recent OAuth events', { error });
     }

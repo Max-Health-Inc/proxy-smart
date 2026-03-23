@@ -73,6 +73,28 @@ export const ConsentConfig = t.Object({
 export type ConsentConfigType = Static<typeof ConsentConfig>
 
 /**
+ * IAL (Identity Assurance Level) configuration
+ */
+export const IalLevel = t.Union([
+  t.Literal('level1'),
+  t.Literal('level2'),
+  t.Literal('level3'),
+  t.Literal('level4')
+], { description: 'Identity Assurance Level per NIST SP 800-63-3' })
+
+export const IalConfigSchema = t.Object({
+  enabled: t.Boolean({ description: 'Whether IAL verification is enabled' }),
+  minimumLevel: IalLevel,
+  sensitiveResourceTypes: t.Array(t.String(), { description: 'Resource types requiring elevated IAL' }),
+  sensitiveMinimumLevel: IalLevel,
+  verifyPatientLink: t.Boolean({ description: 'Verify smart_patient matches Person links' }),
+  allowOnPersonLookupFailure: t.Boolean({ description: 'Allow access if Person lookup fails' }),
+  cacheTtl: t.Number({ description: 'Cache TTL for Person lookups in milliseconds' })
+}, { title: 'IalConfig' })
+
+export type IalConfigSchemaType = Static<typeof IalConfigSchema>
+
+/**
  * Consent cache statistics
  */
 export const ConsentCacheStats = t.Object({
@@ -99,3 +121,33 @@ export const ConsentDeniedResponse = t.Object({
 }, { title: 'ConsentDeniedResponse' })
 
 export type ConsentDeniedResponseType = Static<typeof ConsentDeniedResponse>
+
+// ── Admin response/request wrappers ─────────────────────────────────────────
+
+/** Consent config update response */
+export const ConsentConfigUpdateResponse = t.Object({
+  message: t.String(),
+  config: ConsentConfig,
+  timestamp: t.String()
+})
+
+/** IAL config update response */
+export const IalConfigUpdateResponse = t.Object({
+  message: t.String(),
+  config: IalConfigSchema,
+  timestamp: t.String()
+})
+
+/** Consent cache invalidation request */
+export const ConsentCacheInvalidateRequest = t.Object({
+  patientId: t.Optional(t.String({ description: 'Patient ID to invalidate (optional)' })),
+  serverName: t.Optional(t.String({ description: 'Server name to invalidate (optional)' })),
+  all: t.Optional(t.Boolean({ description: 'Clear entire cache (default: false)' }))
+})
+
+/** Consent cache invalidation response */
+export const ConsentCacheInvalidateResponse = t.Object({
+  message: t.String(),
+  entriesInvalidated: t.Number(),
+  timestamp: t.String()
+})

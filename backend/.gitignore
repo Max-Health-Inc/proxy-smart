@@ -41,3 +41,6 @@ yarn-error.log*
 **/*.log
 package-lock.json
 **/*.bun
+
+# Runtime MCP server config (managed via UI)
+mcp.json

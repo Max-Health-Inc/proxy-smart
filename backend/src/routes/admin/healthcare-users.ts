@@ -123,7 +123,6 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
     } catch (error) {
       logger.admin.error('Error in healthcare users endpoint', { error })
       
-      // Check if it's an authentication error
       if (error instanceof AuthenticationError) {
         logger.admin.warn('AuthenticationError detected, returning 401')
         set.status = 401
@@ -254,7 +253,6 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
     } catch (error) {
       logger.admin.error('Error creating healthcare user', { error })
       
-      // Check if it's an authentication error
       if (error instanceof AuthenticationError) {
         set.status = 401
         return UNAUTHORIZED_RESPONSE

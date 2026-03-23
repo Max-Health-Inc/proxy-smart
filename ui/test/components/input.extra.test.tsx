@@ -2,7 +2,7 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Input } from '@/components/ui/input'
+import { Input } from '@proxy-smart/shared-ui'
 
 describe('Input (extra)', () => {
   it('updates value on typing', async () => {

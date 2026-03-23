@@ -255,7 +255,7 @@ jobs:
         run: |
           echo "Running backend tests..."
           cd backend
-          # bun test 2>&1 | tee ../backend-test.log
+          bun test 2>&1 | tee ../backend-test.log
 
       - name: Check Test Results
         if: ${{ inputs.run_tests }}

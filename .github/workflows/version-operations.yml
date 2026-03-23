@@ -293,7 +293,7 @@ jobs:
 
             # Add files to commit
             FILES_TO_ADD="package.json"
-            for file in backend/package.json ui/package.json testing/alpha/package.json testing/beta/package.json testing/production/package.json scripts/package.json README.md; do
+            for file in backend/package.json ui/package.json infra/package.json testing/alpha/package.json testing/beta/package.json testing/production/package.json scripts/package.json README.md; do
               if [ -f "$file" ]; then
                 FILES_TO_ADD="$FILES_TO_ADD $file"
               fi
@@ -321,8 +321,21 @@ jobs:
               esac
 
               git commit -m "$COMMIT_MSG"
-              git push origin HEAD
-              echo "✅ Committed version changes: $NEW_VERSION"
+              # Push with retry to handle concurrent workflow pushes
+              for i in 1 2 3; do
+                if git push origin HEAD; then
+                  echo "✅ Committed version changes: $NEW_VERSION"
+                  break
+                else
+                  echo "Push failed (attempt $i/3), pulling and retrying..."
+                  git stash || true
+                  git pull origin ${{ inputs.source_branch }} --rebase || git rebase --abort
+                  git stash pop || true
+                  # Re-stage any unstaged changes after rebase
+                  git add -A
+                  git diff --staged --quiet || git commit --amend --no-edit
+                fi
+              done
             fi
           fi
 

@@ -25,7 +25,7 @@ import type {
 } from './types'
 import { IAL_LEVELS } from './types'
 import { logger } from '../logger'
-import { config } from '../../config'
+import { getRuntimeIalConfig } from '../runtime-config'
 
 // =============================================================================
 // PERSON CACHE
@@ -390,18 +390,10 @@ function validatePatientLink(
 // =============================================================================
 
 /**
- * Get IAL configuration from app config
+ * Get IAL configuration (runtime: realm attributes merged over env vars)
  */
 export function getIalConfig(): IalConfig {
-  return {
-    enabled: config.ial.enabled,
-    minimumLevel: config.ial.minimumLevel,
-    sensitiveResourceTypes: config.ial.sensitiveResourceTypes,
-    sensitiveMinimumLevel: config.ial.sensitiveMinimumLevel,
-    verifyPatientLink: config.ial.verifyPatientLink,
-    allowOnPersonLookupFailure: config.ial.allowOnPersonLookupFailure,
-    cacheTtl: config.ial.cacheTtl
-  }
+  return getRuntimeIalConfig()
 }
 
 // =============================================================================

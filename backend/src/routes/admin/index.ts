@@ -1,5 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
+import { extractBearerToken } from '@/lib/admin-utils'
+import { validateToken } from '@/lib/auth'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
@@ -11,13 +13,20 @@ import { clientRegistrationSettingsRoutes } from './client-registration-settings
 import { keycloakConfigRoutes } from './keycloak-config'
 import { aiRoutes, aiPublicRoutes } from './ai'
 import { mcpServersRoutes } from './mcp-servers'
+import { mcpEndpointAdminRoutes } from './mcp-endpoint'
+import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
+import { accessControlRoutes } from './access-control'
+import { userFederationRoutes } from './user-federation'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
+import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
 /**
  * Admin routes aggregator - combines all admin functionality
  */
 export const adminRoutes = new Elysia({ prefix: '/admin' })
+  // Audit middleware — logs every admin mutation with actor identity
+  .use(adminAuditPlugin)
   // Add public AI health check routes first (no auth required)
   .use(aiPublicRoutes)
   // Then add authentication guard for protected routes
@@ -27,8 +36,11 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     }
   })
   // Operational: Shutdown server
-  .post('/shutdown', async ({ set }) => {
+  .post('/shutdown', async ({ set, headers }) => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+      await validateToken(token)
       logger.server.info('🛑 Shutdown requested via admin API')
       setTimeout(() => {
         logger.server.info('🛑 Shutting down server...')
@@ -51,8 +63,11 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     }
   })
   // Operational: Restart server
-  .post('/restart', async ({ set }) => {
+  .post('/restart', async ({ set, headers }) => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+      await validateToken(token)
       logger.server.info('🔄 Restart requested via admin API')
       setTimeout(() => {
         logger.server.info('🔄 Restarting server...')
@@ -84,8 +99,16 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(keycloakConfigRoutes)
   // MCP servers management
   .use(mcpServersRoutes)
+  // MCP endpoint (built-in Streamable HTTP MCP server) management
+  .use(mcpEndpointAdminRoutes)
+  // AI Tools — Skills management
+  .use(aiToolsSkillsRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
+  // Physical access control (Kisi / UniFi Access)
+  .use(accessControlRoutes)
+  // LDAP User Federation management
+  .use(userFederationRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

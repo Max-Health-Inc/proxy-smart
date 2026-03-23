@@ -18,6 +18,7 @@ RUN bun install
 COPY src/ ./src/
 COPY tsconfig.json ./
 COPY public ./public
+COPY mcp-server-templates.json ./
 
 # Build the application
 RUN bun run build

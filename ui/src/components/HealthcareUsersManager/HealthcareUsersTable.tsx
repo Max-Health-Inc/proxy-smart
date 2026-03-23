@@ -1,5 +1,4 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   Table,
@@ -16,24 +15,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Users, Server, Plus, MoreHorizontal } from 'lucide-react';
-import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
-
-// TODO: dont use custom interfaces for backend models, use or inherit the existing generated API models instead
-interface HealthcareUser {
-  id: string;
-  name: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  organization?: string;
-  enabled: boolean;
-  realmRoles: string[];
-  clientRoles: Record<string, string[]>;
-  primaryRole?: string;
-  fhirPersons: FhirPersonAssociation[];
-  createdAt: string;
-  lastLogin?: string;
-}
+import type { FhirPersonAssociation, FhirServer, HealthcareUser } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface HealthcareUsersTableProps {
   users: HealthcareUser[];
@@ -59,8 +42,7 @@ function getInitials(name: string): string {
 /**
  * Get primary role from user roles
  */
-function getPrimaryRole(realmRoles: string[], clientRoles: { [client: string]: string[] }, primaryRole?: string): string {
-  if (primaryRole) return primaryRole;
+function getPrimaryRole(realmRoles: string[] | undefined, clientRoles: { [client: string]: string[] } | undefined): string {
   
   // Priority order for roles
   const rolePriority = ['admin', 'administrator', 'practitioner', 'nurse', 'researcher', 'user'];
@@ -114,6 +96,7 @@ export function HealthcareUsersTable({
   onDeleteUser,
   onAddFhirPerson
 }: HealthcareUsersTableProps) {
+  const { t } = useTranslation();
   return (
     <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
       <div className="p-8 pb-6">
@@ -122,8 +105,8 @@ export function HealthcareUsersTable({
             <Users className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Healthcare Users</h3>
-            <p className="text-muted-foreground font-medium">View and manage all healthcare professionals and administrative users</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Healthcare Users')}</h3>
+            <p className="text-muted-foreground font-medium">{t('View and manage all healthcare professionals and administrative users')}</p>
           </div>
         </div>
         
@@ -131,14 +114,14 @@ export function HealthcareUsersTable({
           <Table>
             <TableHeader>
               <TableRow className="border-border/50">
-                <TableHead className="font-semibold text-muted-foreground">User</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Primary Role</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">All Roles</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Organization</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">FHIR Associations</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Status</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Created</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Last Login</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('User')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Primary Role')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('All Roles')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Organization')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('FHIR Associations')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Status')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Created')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Last Login')}</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -148,20 +131,20 @@ export function HealthcareUsersTable({
                   <TableCell>
                     <div className="flex items-center gap-4 py-2">
                       <Avatar className="h-10 w-10 border-2 border-border shadow-md">
-                        <AvatarImage src={undefined} alt={user.name} />
-                        <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-sm font-semibold">
-                          {getInitials(user.name)}
+                        <AvatarImage src={undefined} alt={`${user.firstName} ${user.lastName}`} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                          {getInitials(`${user.firstName} ${user.lastName}`)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-semibold text-foreground">{user.name}</div>
+                        <div className="font-semibold text-foreground">{`${user.firstName} ${user.lastName}`.trim()}</div>
                         <div className="text-sm text-muted-foreground mt-1">{user.email}</div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${getRoleBadgeColor(getPrimaryRole(user.realmRoles, user.clientRoles, user.primaryRole))} border-0 shadow-sm font-medium`}>
-                      {getPrimaryRole(user.realmRoles, user.clientRoles, user.primaryRole)}
+                    <Badge className={`${getRoleBadgeColor(getPrimaryRole(user.realmRoles, user.clientRoles))} border-0 shadow-sm font-medium`}>
+                      {getPrimaryRole(user.realmRoles, user.clientRoles)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -184,8 +167,8 @@ export function HealthcareUsersTable({
                   <TableCell>
                     <div className="space-y-2">
                       <div className="space-y-1">
-                        {user.fhirPersons.length > 0 ? (
-                          user.fhirPersons.slice(0, 2).map((association: FhirPersonAssociation, index: number) => {
+                        {(user.fhirPersons?.length ?? 0) > 0 ? (
+                          user.fhirPersons!.slice(0, 2).map((association: FhirPersonAssociation, index: number) => {
                             const serverName = fhirServers.find(s => s.id === association.serverId)?.name || association.serverId;
                             return (
                               <div key={index} className="flex items-center space-x-2 text-xs">
@@ -199,12 +182,12 @@ export function HealthcareUsersTable({
                           })
                         ) : (
                           <div className="text-sm text-muted-foreground">
-                            No associations
+                            {t('No associations')}
                           </div>
                         )}
-                        {user.fhirPersons.length > 2 && (
+                        {(user.fhirPersons?.length ?? 0) > 2 && (
                           <div className="text-xs text-muted-foreground">
-                            +{user.fhirPersons.length - 2} more
+                            +{user.fhirPersons!.length - 2} more
                           </div>
                         )}
                       </div>
@@ -215,7 +198,7 @@ export function HealthcareUsersTable({
                         className="text-xs h-6 px-2 text-primary hover:text-primary hover:bg-primary/10"
                       >
                         <Plus className="w-3 h-3 mr-1" />
-                        Add FHIR Person
+                        {t('Add FHIR Person')}
                       </Button>
                     </div>
                   </TableCell>
@@ -225,7 +208,7 @@ export function HealthcareUsersTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Not available'}
+                    {user.createdTimestamp ? new Date(user.createdTimestamp).toLocaleDateString() : 'Not available'}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
@@ -242,13 +225,13 @@ export function HealthcareUsersTable({
                           {user.enabled ? 'Deactivate' : 'Activate'}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onEditUser(user)} className="rounded-lg">
-                          Edit Profile
+                          {t('Edit Profile')}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => onDeleteUser(user.id)}
                           className="text-destructive rounded-lg hover:bg-destructive/10"
                         >
-                          Delete User
+                          {t('Delete User')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

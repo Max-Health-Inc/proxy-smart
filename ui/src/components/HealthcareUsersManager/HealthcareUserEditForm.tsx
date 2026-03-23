@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -11,7 +10,8 @@ import {
 } from '@/components/ui/select';
 import { Shield, Loader2, Server, Database, Trash2 } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
-import { createPersonResource } from '@/services/fhirService';
+import { createPersonResource } from '@/service/fhirService';
+import { useTranslation } from 'react-i18next';
 
 interface EditUserFormData {
   id: string;
@@ -64,6 +64,7 @@ export function HealthcareUserEditForm({
   availableClientRoles,
   getAllAvailableRoles
 }: HealthcareUserEditFormProps) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<EditUserFormData>(initialFormData);
 
   useEffect(() => {
@@ -141,8 +142,8 @@ export function HealthcareUserEditForm({
             <Shield className="w-6 h-6 text-violet-600 dark:text-violet-400" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Edit Healthcare User</h3>
-            <p className="text-muted-foreground font-medium">Update user information and permissions</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Edit Healthcare User')}</h3>
+            <p className="text-muted-foreground font-medium">{t('Update user information and permissions')}</p>
           </div>
         </div>
       </div>
@@ -150,24 +151,24 @@ export function HealthcareUserEditForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="editUsername" className="text-sm font-semibold text-foreground">Username</Label>
+            <Label htmlFor="editUsername" className="text-sm font-semibold text-foreground">{t('Username')}</Label>
             <Input
               id="editUsername"
               value={formData.username}
-              className="rounded-xl border-border bg-muted shadow-sm"
+              className="rounded-xl border-border/50 bg-muted shadow-sm"
               disabled
             />
-            <p className="text-xs text-muted-foreground">Username cannot be changed</p>
+            <p className="text-xs text-muted-foreground">{t('Username cannot be changed')}</p>
           </div>
           <div className="space-y-3">
-            <Label htmlFor="editEmail" className="text-sm font-semibold text-foreground">Email Address</Label>
+            <Label htmlFor="editEmail" className="text-sm font-semibold text-foreground">{t('Email Address')}</Label>
             <Input
               id="editEmail"
               type="email"
               placeholder="john.smith@hospital.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
@@ -175,24 +176,24 @@ export function HealthcareUserEditForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="editFirstName" className="text-sm font-semibold text-foreground">First Name</Label>
+            <Label htmlFor="editFirstName" className="text-sm font-semibold text-foreground">{t('First Name')}</Label>
             <Input
               id="editFirstName"
               placeholder="e.g., John"
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="editLastName" className="text-sm font-semibold text-foreground">Last Name</Label>
+            <Label htmlFor="editLastName" className="text-sm font-semibold text-foreground">{t('Last Name')}</Label>
             <Input
               id="editLastName"
               placeholder="e.g., Smith"
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
               required
             />
           </div>
@@ -200,20 +201,20 @@ export function HealthcareUserEditForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="editOrganization" className="text-sm font-semibold text-foreground">Organization</Label>
+            <Label htmlFor="editOrganization" className="text-sm font-semibold text-foreground">{t('Organization')}</Label>
             <Input
               id="editOrganization"
               placeholder="e.g., Cardiology Department"
               value={formData.organization}
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-              className="rounded-xl border-border focus:border-primary focus:ring-primary shadow-sm"
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="editFhirPersons" className="text-sm font-semibold text-foreground">FHIR Person Associations</Label>
+            <Label htmlFor="editFhirPersons" className="text-sm font-semibold text-foreground">{t('FHIR Person Associations')}</Label>
             <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
               {formData.fhirPersons.map((association, index) => (
-                <div key={index} className="space-y-3 bg-card p-4 rounded-lg border border-border">
+                <div key={index} className="space-y-3 bg-card p-4 rounded-lg border border-border/50">
                   <div className="flex items-center justify-between">
                     <h5 className="text-sm font-semibold text-foreground">FHIR Server Association #{index + 1}</h5>
                     <Button
@@ -228,13 +229,13 @@ export function HealthcareUserEditForm({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-medium text-muted-foreground">FHIR Server</Label>
+                      <Label className="text-xs font-medium text-muted-foreground">{t('FHIR Server')}</Label>
                       <Select
                         value={association.serverId}
                         onValueChange={(value) => updateFhirPersonAssociation(index, 'serverId', value)}
                       >
                         <SelectTrigger className="rounded-lg">
-                          <SelectValue placeholder="Select FHIR server" />
+                          <SelectValue placeholder={t('Select FHIR server')} />
                         </SelectTrigger>
                         <SelectContent>
                           {fhirServers.map(server => (
@@ -250,7 +251,7 @@ export function HealthcareUserEditForm({
                     </div>
                     <div className="flex space-x-2">
                       <div className="flex-1">
-                        <Label className="text-xs font-medium text-muted-foreground">Person ID</Label>
+                        <Label className="text-xs font-medium text-muted-foreground">{t('Person ID')}</Label>
                         <Input
                           placeholder="e.g., Person/12345"
                           value={association.personId}
@@ -277,7 +278,7 @@ export function HealthcareUserEditForm({
                           className="rounded-lg"
                         >
                           <Database className="w-4 h-4 mr-1" />
-                          Create
+                          {t('Create')}
                         </Button>
                       </div>
                     </div>
@@ -291,7 +292,7 @@ export function HealthcareUserEditForm({
                 className="w-full rounded-lg border-dashed border-primary/30 text-primary hover:bg-primary/10"
               >
                 <Database className="w-4 h-4 mr-2" />
-                Add FHIR Server Association
+                {t('Add FHIR Server Association')}
               </Button>
             </div>
           </div>
@@ -299,16 +300,14 @@ export function HealthcareUserEditForm({
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="editEnabled" className="text-sm font-semibold text-foreground">Account Status</Label>
+            <Label htmlFor="editEnabled" className="text-sm font-semibold text-foreground">{t('Account Status')}</Label>
             <div className="flex items-center space-x-3 pt-2">
-              <input
+              <Checkbox
                 id="editEnabled"
-                type="checkbox"
                 checked={formData.enabled}
-                onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
-                className="rounded border-border text-primary focus:ring-primary"
+                onCheckedChange={(checked) => setFormData({ ...formData, enabled: checked === true })}
               />
-              <Label htmlFor="editEnabled" className="text-sm text-foreground">Account enabled</Label>
+              <Label htmlFor="editEnabled" className="text-sm text-foreground">{t('Account enabled')}</Label>
             </div>
           </div>
           <div className="space-y-3">
@@ -323,39 +322,41 @@ export function HealthcareUserEditForm({
               <Shield className="w-4 h-4 text-primary" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground">Role Management</h4>
-              <p className="text-sm text-muted-foreground">Modify user roles and permissions</p>
+              <h4 className="font-semibold text-foreground">{t('Role Management')}</h4>
+              <p className="text-sm text-muted-foreground">{t('Modify user roles and permissions')}</p>
             </div>
           </div>
           
           <div className="space-y-4">
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-3 block">Primary Role</Label>
-              <select
-                value={formData.primaryRole}
-                onChange={(e) => setFormData({ ...formData, primaryRole: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+              <Label className="text-sm font-semibold text-foreground mb-3 block">{t('Primary Role')}</Label>
+              <Select
+                value={formData.primaryRole || undefined}
+                onValueChange={(value) => setFormData({ ...formData, primaryRole: value })}
               >
-                <option value="">Select primary role...</option>
-                {getAllAvailableRoles().map((role) => (
-                  <option key={role} value={role} className="capitalize">
-                    {role}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('Select primary role...')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {getAllAvailableRoles().map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-3 block">Realm Roles</Label>
+              <Label className="text-sm font-semibold text-foreground mb-3 block">{t('Realm Roles')}</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {availableRealmRoles.map((role) => (
                   <div key={role} className="flex items-center space-x-2">
-                    <input
+                    <Checkbox
                       id={`edit-realm-${role}`}
-                      type="checkbox"
                       checked={formData.realmRoles.includes(role)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
+                      onCheckedChange={(checked) => {
+                        if (checked === true) {
                           setFormData({
                             ...formData,
                             realmRoles: [...formData.realmRoles, role]
@@ -367,7 +368,6 @@ export function HealthcareUserEditForm({
                           });
                         }
                       }}
-                      className="rounded border-border text-primary focus:ring-primary"
                     />
                     <Label htmlFor={`edit-realm-${role}`} className="text-sm text-foreground capitalize">
                       {role}
@@ -378,17 +378,16 @@ export function HealthcareUserEditForm({
             </div>
             
             <div>
-              <Label className="text-sm font-semibold text-foreground mb-3 block">Admin UI Roles</Label>
+              <Label className="text-sm font-semibold text-foreground mb-3 block">{t('Admin UI Roles')}</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {availableClientRoles['admin-ui']?.map((role) => (
                   <div key={role} className="flex items-center space-x-2">
-                    <input
+                    <Checkbox
                       id={`edit-client-${role}`}
-                      type="checkbox"
                       checked={formData.clientRoles['admin-ui']?.includes(role) || false}
-                      onChange={(e) => {
+                      onCheckedChange={(checked) => {
                         const currentAdminUiRoles = formData.clientRoles['admin-ui'] || [];
-                        if (e.target.checked) {
+                        if (checked === true) {
                           setFormData({
                             ...formData,
                             clientRoles: {
@@ -406,7 +405,6 @@ export function HealthcareUserEditForm({
                           });
                         }
                       }}
-                      className="rounded border-border text-primary focus:ring-primary"
                     />
                     <Label htmlFor={`edit-client-${role}`} className="text-sm text-foreground capitalize">
                       {role.replace('-', ' ')}
@@ -422,12 +420,11 @@ export function HealthcareUserEditForm({
           <Button 
             type="submit"
             disabled={submitting}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {submitting ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Updating...
+                {t('Updating...')}
               </>
             ) : (
               'Update User'
@@ -438,9 +435,9 @@ export function HealthcareUserEditForm({
             variant="outline" 
             onClick={handleClose}
             disabled={submitting}
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-3 border-border/50 text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('Cancel')}
           </Button>
         </div>
       </form>

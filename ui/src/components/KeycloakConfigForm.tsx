@@ -1,7 +1,5 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Check,
   AlertCircle,
@@ -19,8 +17,8 @@ interface KeycloakConfigFormProps {
 }
 
 export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormProps) {
-  const [baseUrl, setBaseUrl] = useState('http://localhost:8080');
-  const [realm, setRealm] = useState('proxy-smart');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [realm, setRealm] = useState('');
   const [adminClientId, setAdminClientId] = useState('');
   const [adminClientSecret, setAdminClientSecret] = useState('');
   const [testing, setTesting] = useState(false);
@@ -30,6 +28,19 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
   const { t } = useTranslation();
 
   const clientApis = createClientApis(); // No auth needed for these endpoints
+
+  // Pre-populate form with current Keycloak configuration
+  useEffect(() => {
+    clientApis.admin.getAdminKeycloakConfigStatus().then((status) => {
+      if (status.baseUrl) setBaseUrl(status.baseUrl);
+      if (status.realm) setRealm(status.realm);
+      if (status.adminClientId) setAdminClientId(status.adminClientId);
+    }).catch(() => {
+      // Fallback defaults if status endpoint is unreachable
+      setBaseUrl((prev) => prev || 'http://localhost:8080');
+      setRealm((prev) => prev || 'proxy-smart');
+    });
+  }, []);
 
   const handleTest = async () => {
     if (!baseUrl.trim() || !realm.trim()) {
@@ -100,11 +111,11 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
     <div className="p-6 space-y-8 bg-background min-h-full">
       {/* Header Section */}
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl border border-blue-500/20">
+        <div className="w-20 h-20 mx-auto bg-primary/10 rounded-3xl flex items-center justify-center shadow-2xl">
           <Shield className="w-10 h-10 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
             {t('Keycloak Configuration')}
           </h1>
           <p className="text-muted-foreground text-lg mt-2">
@@ -310,7 +321,7 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
         <Button
           onClick={handleSave}
           disabled={saving || testing || !baseUrl.trim() || !realm.trim()}
-          className="flex-1 h-14 rounded-xl text-base font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white border border-blue-500/20 shadow-lg hover:shadow-xl transition-all duration-200"
+          className="flex-1 h-14 rounded-xl text-base font-semibold transition-all duration-200"
         >
           {saving ? (
             <>

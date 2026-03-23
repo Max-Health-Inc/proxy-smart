@@ -1,11 +1,11 @@
 {
   "test_stage": "beta",
-  "description": "Beta testing against VPS deployed instance",
+  "description": "Beta testing against VPS deployed instance (Docker Compose + Caddy)",
   "target": "deployed",
-  "deployed_url": "https://beta.proxy-smart.example.com",
+  "deployed_url": "https://beta.proxy-smart.com",
   "fhir_server": {
     "name": "Proxy Smart FHIR Server (VPS Beta)",
-    "url": "https://beta.proxy-smart.example.com/proxy-smart-backend"
+    "url": "https://beta.proxy-smart.com/proxy-smart-backend"
   },
   "inferno": {
     "url": "http://localhost:4567",
@@ -36,11 +36,11 @@
     }
   },
   "keycloak": {
-    "url": "https://beta.proxy-smart.example.com/auth",
+    "url": "https://beta.proxy-smart.com/auth",
     "realm": "proxy-smart"
   },
   "backend": {
-    "url": "https://beta.proxy-smart.example.com"
+    "url": "https://beta.proxy-smart.com"
   },
   "client": {
     "client_id": "inferno-test-client",

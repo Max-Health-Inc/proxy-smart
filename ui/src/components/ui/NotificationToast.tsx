@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 interface NotificationToastProps {

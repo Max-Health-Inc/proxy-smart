@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import fetch, { Headers } from 'cross-fetch'
 import { validateToken } from '../lib/auth'
+import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
 import { config } from '../config'
 import { fhirServerStore, getServerByName, getServerInfoByName } from '../lib/fhir-server-store'
 import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigurationResponse, FhirProxyResponse, type SmartConfigurationResponseType } from '../schemas'
@@ -66,10 +67,12 @@ async function proxyFHIR({ params, request, set }: any) {
       }
     }
 
-    // build target path
-    const parts = new URL(request.url).pathname.split('/').filter(Boolean)
+    // build target path (preserve query string for FHIR searches)
+    const requestUrl = new URL(request.url)
+    const parts = requestUrl.pathname.split('/').filter(Boolean)
     const resourcePath = parts.slice(3).join('/')
-    const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}`
+    const queryString = requestUrl.search
+    const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()
     request.headers.forEach((v: string, k: string) => k !== 'host' && k !== 'connection' && headers.set(k, v!))
@@ -99,19 +102,31 @@ async function proxyFHIR({ params, request, set }: any) {
         set.headers = { ...set.headers, [k]: v }
       }
     })
-    set.headers['Access-Control-Allow-Origin'] = '*'
-    set.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
-    set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-
     const text = await resp.text()
-    return text.replaceAll(
+    const replaced = text.replaceAll(
       serverUrl,
       `${config.baseUrl}/${config.name}/${params.server_name}/${params.fhir_version}`
     )
+    // Parse JSON so Elysia's response schema validation preserves all properties.
+    // Returning a raw string with a t.Object() response schema causes Elysia to
+    // encode/strip the response, breaking FHIR resource fields like resourceType.
+    const contentType = resp.headers.get('content-type') || ''
+    if (contentType.includes('json')) {
+      try { return JSON.parse(replaced) } catch { /* fall through to string */ }
+    }
+    return replaced
   } catch (error) {
+    if (error instanceof AuthenticationError) {
+      set.status = 401
+      return { error: 'Authentication failed', details: { message: error.message } }
+    }
+    if (error instanceof ConfigurationError) {
+      set.status = 503
+      return { error: 'Service configuration error', details: { message: error.message } }
+    }
     logger.fhir.error('FHIR proxy error', { server: params.server_name, error })
     set.status = 500
-    return { error: 'Failed to proxy FHIR request', details: error }
+    return { error: 'Failed to proxy FHIR request', details: error instanceof Error ? { message: error.message } : error }
   }
 }
 
@@ -152,11 +167,8 @@ const proxySchema = {
 
 export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fhir_version`, tags: ['fhir'] })
   // SMART on FHIR Configuration endpoint - server-specific configuration
-  .get('/.well-known/smart-configuration', async ({ set }): Promise<SmartConfigurationResponseType> => {
-    // SMART 2.2.0 requires CORS support for .well-known/smart-configuration
-    set.headers['Access-Control-Allow-Origin'] = '*'
-    set.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
-    set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+  .get('/.well-known/smart-configuration', async (): Promise<SmartConfigurationResponseType> => {
+    // CORS is handled by the global @elysiajs/cors plugin
     return await smartConfigService.getSmartConfiguration()
   }, {
     params: t.Object({
@@ -172,25 +184,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
       tags: ['smart-apps']
     }
   })
-  // CORS preflight
-  .options('/*', ({ set }) => {
-    set.headers = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-    }
-    return ''
-  }, {
-    params: t.Object({
-      server_name: t.String({ description: 'FHIR server name or identifier' }),
-      fhir_version: t.String({ description: 'FHIR version (e.g., R4, R5)' })
-    }),
-    detail: {
-      summary: 'FHIR CORS Preflight',
-      description: 'Handle CORS preflight requests for FHIR endpoints',
-      tags: ['fhir']
-    }
-  })
+  // CORS preflight is handled by the global @elysiajs/cors plugin
 
   // Root FHIR path - serve the FHIR server base URL content
   .get('/', async ({ params, set }) => {
@@ -223,10 +217,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
         }
       })
 
-      // Set CORS headers
-      set.headers['Access-Control-Allow-Origin'] = '*'
-      set.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
-      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+      // CORS is handled by the global @elysiajs/cors plugin
 
       const text = await resp.text()
       // Rewrite URLs to use our proxy base URL

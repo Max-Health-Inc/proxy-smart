@@ -6,11 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label } from '@proxy-smart/shared-ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -23,19 +19,9 @@ import {
   CheckCircle,
   Loader2
 } from 'lucide-react';
-import type { FhirPersonAssociation } from '@/lib/types/api';
-import { createPersonResource, searchPersonResources, getPersonResource } from '@/services/fhirService';
-
-// TODO: dont use custom interfaces for backend models, use or inherit the existing generated API models instead
-interface HealthcareUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  username: string;
-  organization?: string;
-  fhirPersons?: FhirPersonAssociation[];
-}
+import type { FhirPersonAssociation, HealthcareUser } from '@/lib/types/api';
+import { createPersonResource, searchPersonResources, getPersonResource } from '@/service/fhirService';
+import { useTranslation } from 'react-i18next';
 
 interface AddFhirPersonModalProps {
   isOpen: boolean;
@@ -58,6 +44,7 @@ export function AddFhirPersonModal({
   onPersonAdded,
   availableServers
 }: AddFhirPersonModalProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('existing');
   const [selectedServer, setSelectedServer] = useState('');
   const [personId, setPersonId] = useState('');
@@ -189,16 +176,16 @@ export function AddFhirPersonModal({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-amber-600">
-              No Available Servers
+              {t('No Available Servers')}
             </DialogTitle>
             <DialogDescription>
-              This user already has Person resources on all available FHIR servers.
+              {t('This user already has Person resources on all available FHIR servers.')}
             </DialogDescription>
           </DialogHeader>
           <div className="p-6 bg-amber-50 border border-amber-200 rounded-xl">
             <div className="flex items-center space-x-2 mb-3">
               <AlertCircle className="w-5 h-5 text-amber-600" />
-              <h4 className="font-semibold text-amber-900">All Servers Used</h4>
+              <h4 className="font-semibold text-amber-900">{t('All Servers Used')}</h4>
             </div>
             <p className="text-sm text-amber-700 mb-4">
               {user.firstName} {user.lastName} already has Person resources on all available FHIR servers:
@@ -218,7 +205,7 @@ export function AddFhirPersonModal({
           </div>
           <div className="flex justify-end">
             <Button onClick={handleClose} variant="outline">
-              Close
+              {t('Close')}
             </Button>
           </div>
         </DialogContent>
@@ -231,12 +218,12 @@ export function AddFhirPersonModal({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-6">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-              <User className="w-6 h-6 text-blue-600" />
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <User className="w-6 h-6 text-primary" />
             </div>
             <div>
               <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">
-                Add FHIR Person Resource
+                {t('Add FHIR Person Resource')}
               </DialogTitle>
               <DialogDescription className="text-gray-600 font-medium mt-1">
                 Associate {user.firstName} {user.lastName} with a Person resource on a FHIR server
@@ -259,16 +246,16 @@ export function AddFhirPersonModal({
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Server className="w-5 h-5" />
-              <span>Select FHIR Server</span>
+              <span>{t('Select FHIR Server')}</span>
             </CardTitle>
             <CardDescription>
-              Choose which FHIR server to add the Person resource to
+              {t('Choose which FHIR server to add the Person resource to')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Select value={selectedServer} onValueChange={setSelectedServer}>
               <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select a FHIR server" />
+                <SelectValue placeholder={t('Select a FHIR server')} />
               </SelectTrigger>
               <SelectContent>
                 {availableServersForUser.map(server => (
@@ -290,8 +277,8 @@ export function AddFhirPersonModal({
         {selectedServer && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-gray-100/50">
-              <TabsTrigger value="existing" className="rounded-xl">Link Existing Person</TabsTrigger>
-              <TabsTrigger value="create" className="rounded-xl">Create New Person</TabsTrigger>
+              <TabsTrigger value="existing" className="rounded-xl">{t('Link Existing Person')}</TabsTrigger>
+              <TabsTrigger value="create" className="rounded-xl">{t('Create New Person')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="existing" className="space-y-6 mt-6">
@@ -299,16 +286,16 @@ export function AddFhirPersonModal({
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Search className="w-5 h-5" />
-                    <span>Find Existing Person Resource</span>
+                    <span>{t('Find Existing Person Resource')}</span>
                   </CardTitle>
                   <CardDescription>
-                    Enter the Person resource ID to link to this user
+                    {t('Enter the Person resource ID to link to this user')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex space-x-3">
                     <div className="flex-1">
-                      <Label className="text-sm font-medium">Person Resource ID</Label>
+                      <Label className="text-sm font-medium">{t('Person Resource ID')}</Label>
                       <Input
                         placeholder="e.g., Person/12345 or just 12345"
                         value={personId}
@@ -326,12 +313,12 @@ export function AddFhirPersonModal({
                         {isSearching ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Searching...
+                            {t('Searching...')}
                           </>
                         ) : (
                           <>
                             <Search className="w-4 h-4 mr-2" />
-                            Search
+                            {t('Search')}
                           </>
                         )}
                       </Button>
@@ -340,7 +327,7 @@ export function AddFhirPersonModal({
 
                   {searchResults.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-medium text-gray-900">Search Results</h4>
+                      <h4 className="font-medium text-gray-900">{t('Search Results')}</h4>
                       {searchResults.map((result, index) => (
                         <div key={index} className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
                           <div className="flex items-center space-x-3">
@@ -356,7 +343,7 @@ export function AddFhirPersonModal({
                             className="bg-green-600 text-white hover:bg-green-700"
                           >
                             <Plus className="w-4 h-4 mr-2" />
-                            Add This Person
+                            {t('Add This Person')}
                           </Button>
                         </div>
                       ))}
@@ -371,7 +358,7 @@ export function AddFhirPersonModal({
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Database className="w-5 h-5" />
-                    <span>Create New Person Resource</span>
+                    <span>{t('Create New Person Resource')}</span>
                   </CardTitle>
                   <CardDescription>
                     Create a new Person resource on {selectedServer} for this user
@@ -379,19 +366,19 @@ export function AddFhirPersonModal({
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                    <h4 className="font-medium text-blue-900 mb-2">Person Resource Details</h4>
+                    <h4 className="font-medium text-blue-900 mb-2">{t('Person Resource Details')}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div>
-                        <span className="text-blue-700 font-medium">Name:</span> {user.firstName} {user.lastName}
+                        <span className="text-blue-700 font-medium">{t('Name:')}</span> {user.firstName} {user.lastName}
                       </div>
                       <div>
-                        <span className="text-blue-700 font-medium">Email:</span> {user.email}
+                        <span className="text-blue-700 font-medium">{t('Email:')}</span> {user.email}
                       </div>
                       <div>
-                        <span className="text-blue-700 font-medium">Username:</span> {user.username}
+                        <span className="text-blue-700 font-medium">{t('Username:')}</span> {user.username}
                       </div>
                       <div>
-                        <span className="text-blue-700 font-medium">Organization:</span> {user.organization || 'Not specified'}
+                        <span className="text-blue-700 font-medium">{t('Organization:')}</span> {user.organization || 'Not specified'}
                       </div>
                     </div>
                   </div>
@@ -405,12 +392,12 @@ export function AddFhirPersonModal({
                       {isCreating ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Creating Person Resource...
+                          {t('Creating Person Resource...')}
                         </>
                       ) : (
                         <>
                           <Database className="w-4 h-4 mr-2" />
-                          Create Person Resource
+                          {t('Create Person Resource')}
                         </>
                       )}
                     </Button>
@@ -423,7 +410,7 @@ export function AddFhirPersonModal({
 
         <div className="flex justify-end pt-6 border-t">
           <Button onClick={handleClose} variant="outline">
-            Cancel
+            {t('Cancel')}
           </Button>
         </div>
       </DialogContent>

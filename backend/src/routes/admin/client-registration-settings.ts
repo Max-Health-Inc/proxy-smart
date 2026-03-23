@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS: ClientRegistrationSettingsType = {
   allowedScopes: [
     'openid',
     'profile',
+    'email',
     'fhirUser',
     'launch',
     'launch/patient',
@@ -37,8 +38,8 @@ const DEFAULT_SETTINGS: ClientRegistrationSettingsType = {
   maxRedirectUris: 5,
   allowedRedirectUriPatterns: [
     'https://.*', // HTTPS only by default
-    'http://localhost:.*', // Allow localhost for development
-    'http://127\\.0\\.0\\.1:.*' // Allow loopback for development
+    'http://localhost(:\\d+)?(/.*)?', // Allow localhost for development (with or without port)
+    'http://127\\.0\\.0\\.1(:\\d+)?(/.*)?$' // Allow loopback for development (with or without port)
   ]
 }
 

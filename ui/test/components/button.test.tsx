@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Button } from '@/components/ui/button'
+import { Button } from '@proxy-smart/shared-ui'
 
 describe('Button', () => {
   it('renders with default props', () => {
@@ -20,7 +20,7 @@ describe('Button', () => {
     
     rerender(<Button variant="outline">Cancel</Button>)
     button = screen.getByRole('button', { name: /cancel/i })
-    expect(button).toHaveClass('border', 'bg-background')
+    expect(button).toHaveClass('border', 'bg-transparent')
   })
 
   it('renders with different sizes', () => {

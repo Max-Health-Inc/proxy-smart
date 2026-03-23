@@ -1,8 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +24,7 @@ import {
   Rocket,
   Wand2
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // Resources available for launch context (per SMART on FHIR 2.2.0 spec)
 const LAUNCH_RESOURCES = ['patient', 'encounter', 'practitioner', 'location', 'organization', 'diagnosticreport', 'imagingstudy', 'list', 'questionnaire'];
@@ -68,6 +67,7 @@ export function LaunchContextSetBuilder({
   onSave,
   onCancel
 }: LaunchContextSetBuilderProps) {
+  const { t } = useTranslation();
   // Use a key-based reset pattern: track the editingSet identity to reset state
   const editingSetKey = editingSet?.name ?? '';
   
@@ -229,7 +229,7 @@ export function LaunchContextSetBuilder({
                 {editingSet ? 'Edit Launch Context Set' : 'Create Launch Context Set'}
               </DialogTitle>
               <DialogDescription className="text-muted-foreground font-medium mt-1">
-                Configure launch contexts for SMART on FHIR applications. These determine what contextual information is available during app launch.
+                {t('Configure launch contexts for SMART on FHIR applications. These determine what contextual information is available during app launch.')}
               </DialogDescription>
             </div>
           </div>
@@ -243,14 +243,14 @@ export function LaunchContextSetBuilder({
                 <Layers className="w-4 h-4 text-blue-600 dark:text-blue-300" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-foreground tracking-tight">Basic Information</h4>
-                <p className="text-muted-foreground text-sm font-medium">Define the context set name, description, and category</p>
+                <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Basic Information')}</h4>
+                <p className="text-muted-foreground text-sm font-medium">{t('Define the context set name, description, and category')}</p>
               </div>
             </div>
             <div className="space-y-4">
               <div className="space-y-3">
                 <Label htmlFor="context-name" className="text-sm font-semibold text-foreground">
-                  Context Set Name *
+                  {t('Context Set Name *')}
                 </Label>
                 <Input
                   id="context-name"
@@ -262,35 +262,38 @@ export function LaunchContextSetBuilder({
               </div>
               <div className="space-y-3">
                 <Label htmlFor="context-description" className="text-sm font-semibold text-foreground">
-                  Description
+                  {t('Description')}
                 </Label>
                 <Textarea
                   id="context-description"
                   value={contextSet.description}
                   onChange={e => setContextSet({ ...contextSet, description: e.target.value })}
-                  placeholder="Describe when this context set should be used and what it enables..."
+                  placeholder={t('Describe when this context set should be used and what it enables...')}
                   rows={3}
                   className="rounded-xl border-border focus:border-blue-500 focus:ring-blue-500 shadow-sm"
                 />
               </div>
               <div className="space-y-3">
                 <Label htmlFor="context-category" className="text-sm font-semibold text-foreground">
-                  Category
+                  {t('Category')}
                 </Label>
-                <select
-                  id="context-category"
-                  value={contextSet.category}
-                  onChange={e => setContextSet({ ...contextSet, category: e.target.value })}
-                  className="flex h-10 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+                <Select
+                  value={contextSet.category || '__none__'}
+                  onValueChange={(value) => setContextSet({ ...contextSet, category: value === '__none__' ? '' : value })}
                 >
-                  <option value="">Select Category</option>
-                  <option value="ehr-launch">🏥 EHR Launch</option>
-                  <option value="standalone">📱 Standalone</option>
-                  <option value="workflow">⚡ Workflow</option>
-                  <option value="specialty">🔬 Specialty</option>
-                  <option value="data-collection">📊 Data Collection</option>
-                  <option value="identity">🔐 Identity</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('Select Category')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">{t('Select Category')}</SelectItem>
+                    <SelectItem value="ehr-launch">{t('EHR Launch')}</SelectItem>
+                    <SelectItem value="standalone">{t('Standalone')}</SelectItem>
+                    <SelectItem value="workflow">{t('Workflow')}</SelectItem>
+                    <SelectItem value="specialty">{t('Specialty')}</SelectItem>
+                    <SelectItem value="data-collection">{t('Data Collection')}</SelectItem>
+                    <SelectItem value="identity">{t('Identity')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -302,8 +305,8 @@ export function LaunchContextSetBuilder({
                 <Wand2 className="w-4 h-4 text-green-600 dark:text-green-300" />
               </div>
               <div>
-                <h4 className="text-lg font-bold text-foreground tracking-tight">Scope Builder</h4>
-                <p className="text-muted-foreground text-sm font-medium">Add SMART scopes and launch contexts to this set</p>
+                <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Scope Builder')}</h4>
+                <p className="text-muted-foreground text-sm font-medium">{t('Add SMART scopes and launch contexts to this set')}</p>
               </div>
             </div>
             
@@ -319,7 +322,7 @@ export function LaunchContextSetBuilder({
                 }
               >
                 <Zap className="w-4 h-4 mr-2" />
-                Quick Add
+                {t('Quick Add')}
               </Button>
               <Button
                 size="sm"
@@ -331,7 +334,7 @@ export function LaunchContextSetBuilder({
                 }
               >
                 <Code2 className="w-4 h-4 mr-2" />
-                Custom Builder
+                {t('Custom Builder')}
               </Button>
             </div>
 
@@ -340,7 +343,7 @@ export function LaunchContextSetBuilder({
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-foreground flex items-center">
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Common SMART Scopes
+                    {t('Common SMART Scopes')}
                   </Label>
                   <div className="flex flex-wrap gap-2">
                     {COMMON_SMART_SCOPES.map(scope => (
@@ -366,21 +369,25 @@ export function LaunchContextSetBuilder({
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-foreground flex items-center">
                     <Target className="w-4 h-4 mr-2" />
-                    Build Launch Context
+                    {t('Build Launch Context')}
                   </Label>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <select
-                      value={builderState.resource}
-                      onChange={e => setBuilderState({ ...builderState, resource: e.target.value })}
-                      className="flex h-10 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
+                    <Select
+                      value={builderState.resource || '__none__'}
+                      onValueChange={(value) => setBuilderState({ ...builderState, resource: value === '__none__' ? '' : value })}
                     >
-                      <option value="">Select Resource</option>
-                      {LAUNCH_RESOURCES.map(r => (
-                        <option key={r} value={r}>{r}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('Select Resource')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">{t('Select Resource')}</SelectItem>
+                        {LAUNCH_RESOURCES.map(r => (
+                          <SelectItem key={r} value={r}>{r}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Input
-                      placeholder="Role URI (optional)"
+                      placeholder={t('Role URI (optional)')}
                       value={builderState.role}
                       onChange={e => setBuilderState({ ...builderState, role: e.target.value })}
                       className="text-sm rounded-xl border-border focus:border-green-500 focus:ring-green-500 shadow-sm"
@@ -392,7 +399,7 @@ export function LaunchContextSetBuilder({
                         disabled={!builderState.resource && !builderState.customScope.trim()}
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Add Launch Context
+                        {t('Add Launch Context')}
                       </Button>
                     </div>
                   </div>
@@ -401,7 +408,7 @@ export function LaunchContextSetBuilder({
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold text-foreground flex items-center">
                     <Lightbulb className="w-4 h-4 mr-2" />
-                    Or Enter Custom Scope
+                    {t('Or Enter Custom Scope')}
                   </Label>
                   <div className="flex space-x-2">
                     <Input
@@ -445,7 +452,7 @@ export function LaunchContextSetBuilder({
                   <h4 className="text-lg font-bold text-foreground tracking-tight">
                     Current Scopes ({contextSet.contexts.length})
                   </h4>
-                  <p className="text-muted-foreground text-sm font-medium">Review and manage selected scopes</p>
+                  <p className="text-muted-foreground text-sm font-medium">{t('Review and manage selected scopes')}</p>
                 </div>
               </div>
               {contextSet.contexts.length > 0 && (
@@ -461,8 +468,8 @@ export function LaunchContextSetBuilder({
                   <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-muted/50 to-muted rounded-xl flex items-center justify-center shadow-sm">
                     <Target className="w-6 h-6 text-muted-foreground" />
                   </div>
-                  <p className="text-sm text-muted-foreground font-medium">No scopes added yet</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">Add scopes using the builder above</p>
+                  <p className="text-sm text-muted-foreground font-medium">{t('No scopes added yet')}</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">{t('Add scopes using the builder above')}</p>
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">
@@ -490,25 +497,23 @@ export function LaunchContextSetBuilder({
             type="button"
             variant="outline"
             onClick={handleCancel}
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
             onClick={handleSave}
             disabled={!contextSet.name.trim() || contextSet.contexts.length === 0}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {editingSet ? (
               <>
                 <Edit className="w-4 h-4 mr-2" />
-                Update Context Set
+                {t('Update Context Set')}
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4 mr-2" />
-                Create Context Set
+                {t('Create Context Set')}
               </>
             )}
           </Button>

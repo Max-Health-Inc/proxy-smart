@@ -79,6 +79,10 @@ def run_tests(test_filter: str | None = None):
     server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8000/mcp")
     server_port = os.getenv("MCP_SERVER_PORT", "8000")
 
+    # If port was overridden but URL was not, update URL to match port
+    if os.getenv("MCP_SERVER_PORT") and not os.getenv("MCP_SERVER_URL"):
+        server_url = f"http://localhost:{server_port}/mcp"
+
     if not server_script.exists():
         print(f"❌ Server script not found: {server_script}")
         print(f"   Make sure you've generated the MCP server first.")

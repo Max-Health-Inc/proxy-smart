@@ -74,11 +74,6 @@ jobs:
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
 
-      - name: Cache OpenAPI Generator
-        uses: ./.github/actions/cache-openapi-generator
-        with:
-          cache-key-suffix: '-frontend'
-
       - name: Generate Frontend API Client
         env:
           GITHUB_TOKEN: ${{ steps.api-app-auth.outputs.token || secrets.GITHUB_TOKEN }}

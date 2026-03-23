@@ -16,6 +16,7 @@ COPY package.json bun.lock ./
 
 # Copy workspace package files
 COPY backend/package.json ./backend/
+COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
 
 # Install dependencies for all workspaces
@@ -32,7 +33,13 @@ RUN bun run build
 
 # UI build stage
 FROM build-deps AS ui-build
+
+# Encryption secret for browser local-storage obfuscation (baked into Vite bundle)
+ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
+ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
+
 # Copy UI source code
+COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
 
 # Build UI
@@ -56,12 +63,16 @@ RUN apt-get update -qq && \
 # Copy built backend
 COPY --from=backend-build /app/backend/dist ./backend/dist
 COPY --from=backend-build /app/backend/package.json ./backend/package.json
+COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-server-templates.json
 
-# Copy backend's public directory (SMART launcher only, no UI)
+# Copy backend's public directory (landing page only, no UI)
 COPY --from=backend-build /app/backend/public ./backend/public
 
 # Copy root node_modules (monorepo structure)
 COPY --from=backend-build /app/node_modules ./node_modules
+
+# Copy system prompt for AI assistant
+COPY prompts/ ./prompts/
 
 # Expose backend port
 EXPOSE 8445

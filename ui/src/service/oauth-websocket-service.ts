@@ -3,7 +3,7 @@ import type { OAuthEvent, OAuthAnalyticsResponse } from '@/lib/types/api';
 import { useAuthStore } from '../stores/authStore';
 import { oauthMonitoringService } from './oauth-monitoring-service';
 import { config } from '@/config';
-import { getItem } from '../lib/storage';
+import { getItem } from '@/lib/storage';
 
 export interface OAuthEventSimple {
   id: string;

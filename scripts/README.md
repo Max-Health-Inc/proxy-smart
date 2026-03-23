@@ -12,7 +12,14 @@ Utility scripts for the Proxy Smart project.
 
 - `extract-schemas.py` - Extract TypeScript schemas
 - `count-targets.py` - Count implementation targets
-- `ai-commit-comment.mjs` - Generate commit messages
+
+## Workflow Scripts
+
+The `workflows/` folder contains Python scripts used by GitHub Actions:
+
+- `summarize_diff.py` - AI-powered commit diff summaries (GPT-5 nano)
+- `generate_changelog_ai.py` - AI-powered changelog generation from commits
+- `categorize_commits.py` - Fallback commit categorization (no AI required)
 
 ## AI Pipeline (Experimental)
 

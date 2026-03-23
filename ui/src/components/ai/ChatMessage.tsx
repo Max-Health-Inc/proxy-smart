@@ -1,5 +1,6 @@
 import { FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CopyButton } from '../ui/copy-button';
 import { ActionMarkdownRenderer } from './ActionMarkdownRenderer';
 import type { ChatMessage as ChatMessageType } from '../../lib/ai-assistant';
 import type { DocumentChunk, ToolExecution } from '../../lib/api-client';
@@ -120,6 +121,19 @@ export function ChatMessage({ message, isProcessing, onActionComplete }: ChatMes
                             </details>
                         </div>
                     )}
+
+                {/* Copy button */}
+                {message.content && !message.streaming && (
+                    <div className={`flex ${message.type === 'user' ? 'justify-start' : 'justify-end'} mt-1.5`}>
+                        <CopyButton
+                            value={message.content}
+                            variant="text"
+                            label={t('Copy')}
+                            copiedLabel={t('Copied')}
+                            title={t('Copy message')}
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );

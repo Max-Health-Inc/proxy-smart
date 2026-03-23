@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@proxy-smart/shared-ui';
 import { useAuthStore } from '../stores/authStore';
-import { getItem, removeItem, getSessionItem, removeSessionItem, clearAuthorizationCodeData } from '../lib/storage';
+import { getItem, removeItem, getSessionItem, removeSessionItem, clearAuthorizationCodeData } from '@/lib/storage';
 import { AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface TokenData {
   access_token: string;
@@ -14,6 +13,7 @@ interface TokenData {
 }
 
 export const AuthDebugPanel: React.FC = () => {
+  const { t } = useTranslation();
   const { logout, isAuthenticated, error } = useAuthStore();
   const [storageInfo, setStorageInfo] = useState({
     hasTokens: false,
@@ -152,22 +152,22 @@ export const AuthDebugPanel: React.FC = () => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm">
           <AlertCircle className="h-4 w-4 text-yellow-500" />
-          Authentication Debug
+          {t('Authentication Debug')}
         </CardTitle>
         <CardDescription className="text-xs">
-          Use these tools if you're experiencing login timeout or "Code not valid" errors
+          {t('Use these tools if you\'re experiencing login timeout or "Code not valid" errors')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Current Status */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Current Status</h4>
+          <h4 className="text-sm font-medium">{t('Current Status')}</h4>
           <div className="flex flex-wrap gap-2">
             <Badge variant={isAuthenticated ? 'default' : 'secondary'}>
               {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
             </Badge>
             {error && (
-              <Badge variant="destructive">Error</Badge>
+              <Badge variant="destructive">{t('Error')}</Badge>
             )}
           </div>
           {error && (
@@ -177,28 +177,28 @@ export const AuthDebugPanel: React.FC = () => {
 
         {/* Storage Information */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Cache Status</h4>
+          <h4 className="text-sm font-medium">{t('Cache Status')}</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="flex justify-between">
-              <span>Tokens:</span>
+              <span>{t('Tokens:')}</span>
               <Badge variant={storageInfo.hasTokens ? 'default' : 'outline'} className="text-xs">
                 {storageInfo.hasTokens ? 'Present' : 'None'}
               </Badge>
             </div>
             <div className="flex justify-between">
-              <span>Auth State:</span>
+              <span>{t('Auth State:')}</span>
               <Badge variant={storageInfo.hasAuthState ? 'default' : 'outline'} className="text-xs">
                 {storageInfo.hasAuthState ? 'Present' : 'None'}
               </Badge>
             </div>
             <div className="flex justify-between">
-              <span>PKCE:</span>
+              <span>{t('PKCE:')}</span>
               <Badge variant={storageInfo.hasPKCE ? 'default' : 'outline'} className="text-xs">
                 {storageInfo.hasPKCE ? 'Present' : 'None'}
               </Badge>
             </div>
             <div className="flex justify-between">
-              <span>OAuth State:</span>
+              <span>{t('OAuth State:')}</span>
               <Badge variant={storageInfo.hasOAuthState ? 'default' : 'outline'} className="text-xs">
                 {storageInfo.hasOAuthState ? 'Present' : 'None'}
               </Badge>
@@ -211,13 +211,13 @@ export const AuthDebugPanel: React.FC = () => {
             className="w-full text-xs mt-2"
           >
             <RefreshCw className="h-3 w-3 mr-1" />
-            Refresh Status
+            {t('Refresh Status')}
           </Button>
         </div>
 
         {/* Actions */}
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Troubleshooting Actions</h4>
+          <h4 className="text-sm font-medium">{t('Troubleshooting Actions')}</h4>
           <div className="space-y-2">
             <Button
               variant="outline"
@@ -226,7 +226,7 @@ export const AuthDebugPanel: React.FC = () => {
               className="w-full flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" />
-              Clear Session Data
+              {t('Clear Session Data')}
             </Button>
             <Button
               variant="outline"
@@ -235,7 +235,7 @@ export const AuthDebugPanel: React.FC = () => {
               className="w-full flex items-center gap-2"
             >
               <Trash2 className="h-4 w-4" />
-              Clear All Caches
+              {t('Clear All Caches')}
             </Button>
             <Button
               variant="outline"
@@ -244,11 +244,11 @@ export const AuthDebugPanel: React.FC = () => {
               className="w-full flex items-center gap-2"
             >
               <RefreshCw className="h-4 w-4" />
-              Force Logout & Reset
+              {t('Force Logout & Reset')}
             </Button>
           </div>
           <p className="text-xs text-gray-500">
-            Use "Clear Session Data" for PKCE/OAuth state issues. Use "Clear All Caches" for "Code not valid" errors. Use "Force Logout" for persistent login issues.
+            {t('Use "Clear Session Data" for PKCE/OAuth state issues. Use "Clear All Caches" for "Code not valid" errors. Use "Force Logout" for persistent login issues.')}
           </p>
         </div>
       </CardContent>

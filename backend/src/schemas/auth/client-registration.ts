@@ -20,10 +20,14 @@ export const ClientRegistrationRequest = t.Object({
   jwks: t.Optional(t.Object({}, { description: 'JSON Web Key Set' })),
   software_id: t.Optional(t.String({ description: 'Software identifier' })),
   software_version: t.Optional(t.String({ description: 'Software version' })),
+  // RFC 7591 standard fields
+  grant_types: t.Optional(t.Array(t.String(), { description: 'Requested grant types' })),
+  response_types: t.Optional(t.Array(t.String(), { description: 'Requested response types' })),
+  token_endpoint_auth_method: t.Optional(t.String({ description: 'Token endpoint authentication method' })),
   // SMART extensions
   fhir_versions: t.Optional(t.Array(t.String(), { description: 'Supported FHIR versions' })),
   launch_uris: t.Optional(t.Array(t.String({ format: 'uri' }), { description: 'EHR launch URLs' }))
-}, { title: 'ClientRegistrationRequest' })
+}, { title: 'ClientRegistrationRequest', additionalProperties: true })
 export type ClientRegistrationRequestType = Static<typeof ClientRegistrationRequest>
 
 // ==================== Client Registration Response ====================

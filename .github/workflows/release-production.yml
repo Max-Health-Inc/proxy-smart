@@ -66,12 +66,7 @@ jobs:
       target_branch: "main"
       should_bump_version: false
       is_prerelease: false
-      commit_limit: 20
-    secrets:
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    secrets: inherit
 
   # Deploy after successful release
   deploy-production:
@@ -82,13 +77,7 @@ jobs:
       deployment_stage: 'production'
       app_version: ${{ needs.production-release.outputs.version }}
       source_branch: 'main'
-    secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    secrets: inherit
 
   # Test the deployed production application
   test-production-deployment:
@@ -101,8 +90,7 @@ jobs:
       fhir_server_url: ${{ needs.deploy-production.outputs.fhir_server_url }}
       keycloak_url: ${{ needs.deploy-production.outputs.keycloak_url }}
       app_version: ${{ needs.production-release.outputs.version }}
-    secrets:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    secrets: inherit
 
   # Revert changes if production release fails
   revert-on-failure:

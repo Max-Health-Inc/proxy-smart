@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Edit, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Dialog,
   DialogContent,
@@ -9,9 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import type { FhirServerWithState } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface EditServerDialogProps {
   open: boolean;
@@ -32,6 +31,7 @@ export function EditServerDialog({
   error,
   urlError
 }: EditServerDialogProps) {
+  const { t } = useTranslation();
   const [editServerUrl, setEditServerUrl] = useState(server?.url || '');
   const [localUrlError, setLocalUrlError] = useState<string | null>(null);
 
@@ -87,7 +87,7 @@ export function EditServerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Fix Server URL</DialogTitle>
+          <DialogTitle>{t('Fix Server URL')}</DialogTitle>
           <DialogDescription>
             Update the URL for "{server?.serverName || server?.name}". The server name and details will be automatically retrieved from the server's metadata.
           </DialogDescription>
@@ -95,7 +95,7 @@ export function EditServerDialog({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="edit-server-url" className="text-right">
-              Server URL
+              {t('Server URL')}
             </Label>
             <Input
               id="edit-server-url"
@@ -126,7 +126,7 @@ export function EditServerDialog({
             onClick={handleClose}
             disabled={loading}
           >
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             type="button"
@@ -137,12 +137,12 @@ export function EditServerDialog({
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Updating...
+                {t('Updating...')}
               </>
             ) : (
               <>
                 <Edit className="w-4 h-4 mr-2" />
-                Update Server
+                {t('Update Server')}
               </>
             )}
           </Button>

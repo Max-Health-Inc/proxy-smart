@@ -168,27 +168,75 @@ export const config = {
     }
   },
 
+  kisi: {
+    // Kisi Access Control integration
+    get apiKey() {
+      return process.env.KISI_API_KEY || null
+    },
+    get baseUrl() {
+      return process.env.KISI_BASE_URL || 'https://api.kisi.io'
+    },
+    get timeout() {
+      return Number.parseInt(process.env.KISI_TIMEOUT_MS || '10000', 10)
+    },
+    get isConfigured() {
+      return !!this.apiKey
+    },
+  },
+
+  unifiAccess: {
+    // UniFi Access local controller integration
+    get host() {
+      return process.env.UNIFI_ACCESS_HOST || null
+    },
+    get username() {
+      return process.env.UNIFI_ACCESS_USERNAME || null
+    },
+    get password() {
+      return process.env.UNIFI_ACCESS_PASSWORD || null
+    },
+    get isConfigured() {
+      return !!(this.host && this.username && this.password)
+    },
+  },
+
+  mcp: {
+    // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server
+    // Defaults to enabled in MONO_MODE, disabled otherwise. Override with MCP_ENDPOINT_ENABLED.
+    get enabled(): boolean {
+      const explicit = process.env.MCP_ENDPOINT_ENABLED
+      if (explicit !== undefined) return explicit === 'true'
+      return process.env.MONO_MODE === 'true'
+    },
+    get path() {
+      return process.env.MCP_ENDPOINT_PATH || '/mcp'
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins
     get origins() {
       const defaultOrigins = [
-        'http://localhost:5173', // Vite dev server
+        'http://localhost:5173', // Vite dev server (admin UI)
+        'http://localhost:5174', // Vite dev server (consent app)
+        'http://localhost:5175', // Vite dev server (DTR app)
         'http://localhost:3000', // React dev server  
+        'http://localhost:4567', // Inferno SMART compliance test runner
         'http://localhost:8445', // App server
         config.baseUrl // Fallback to base URL
       ];
       
       const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) || [];
       
-      // In development mode, allow all localhost origins
-      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
-        const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
-        return allOrigins.filter(Boolean);
+      // In production with explicit CORS_ORIGINS, use only those
+      if (process.env.NODE_ENV === 'production' && envOrigins.length > 0) {
+        return envOrigins;
       }
       
-      // In production, only use explicitly configured origins or fallback to base URL
-      return envOrigins.length > 0 ? envOrigins : [config.baseUrl];
+      // Otherwise include all default + env origins
+      const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+      return allOrigins.filter(Boolean);
     }
   }
 } as const

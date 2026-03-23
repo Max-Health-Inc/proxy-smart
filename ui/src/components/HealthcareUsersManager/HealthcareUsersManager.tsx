@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Button } from '@proxy-smart/shared-ui';
+import { Plus } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';
 import { HealthcareUsersStats } from './HealthcareUsersStats';
 import { HealthcareUserAddForm } from './HealthcareUserAddForm';
@@ -9,6 +11,8 @@ import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } fr
 import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
+import { IALSettings } from '../IALSettings';
+import { useTranslation } from 'react-i18next';
 
 // Extend the API type to include our UI-specific computed properties
 type HealthcareUserWithPersons = HealthcareUser & {
@@ -102,7 +106,8 @@ function transformApiUser(apiUser: HealthcareUser): HealthcareUserWithPersons {
   }
 }
 
-export function HealthcareUsersManager() {
+export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}) {
+  const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
   
   // Store hooks for FHIR servers and healthcare users
@@ -208,30 +213,37 @@ export function HealthcareUsersManager() {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
+    <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
       {/* Show loading state */}
       {loading && (
-        <div className="flex justify-center items-center p-8">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <span className="ml-2 text-muted-foreground">Loading healthcare users...</span>
-        </div>
+        <PageLoadingState message="Loading healthcare users..." className="min-h-[200px]" />
       )}
 
       {/* Show error state */}
       {error && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-4 mb-6">
           <div className="text-destructive font-medium">{error}</div>
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setError(null)}
             className="text-destructive hover:text-destructive/80 text-sm mt-2"
           >
-            Dismiss
-          </button>
+            {t('Dismiss')}
+          </Button>
         </div>
       )}
 
       {/* Header Section */}
-      <HealthcareUsersHeader onAddUser={() => setShowAddForm(true)} />
+      {embedded ? (
+        <div className="flex justify-end">
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="h-5 w-5 mr-2" />
+            {t('Add New User')}
+          </Button>
+        </div>
+      ) : (
+        <HealthcareUsersHeader onAddUser={() => setShowAddForm(true)} />
+      )}
 
       {/* Statistics Cards */}
       {!loading && (
@@ -349,21 +361,7 @@ export function HealthcareUsersManager() {
       {/* Users Table */}
       {!loading && (
         <HealthcareUsersTable
-          users={users.map(user => ({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            organization: user.organization,
-            enabled: user.enabled,
-            realmRoles: user.realmRoles || [],
-            clientRoles: user.clientRoles || {},
-            primaryRole: user.primaryRole || getPrimaryRole(user.realmRoles || [], user.clientRoles || {}),
-            fhirPersons: user.fhirPersons || [],
-            createdAt: user.createdTimestamp ? new Date(user.createdTimestamp).toISOString() : new Date().toISOString(),
-            lastLogin: user.lastLogin ? new Date(user.lastLogin).toISOString() : undefined
-          }))}
+          users={users}
           fhirServers={fhirServers}
           onEditUser={(user) => {
             const originalUser = users.find(u => u.id === user.id);
@@ -385,6 +383,9 @@ export function HealthcareUsersManager() {
       )}
 
       {/* Add FHIR Person Modal */}
+      {/* ─── IAL Settings (Identity Assurance) ─── */}
+      <IALSettings />
+
       {selectedUserForPerson && (() => {
         const mappedServers = fhirServers.map(server => ({
           id: server.id,

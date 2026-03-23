@@ -16,40 +16,51 @@ import { handleAdminError } from '@/lib/admin-error-handler'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
+/** Safely read a Keycloak client attribute (handles both string and string[] formats) */
+function getAttr(attrs: Record<string, any> | undefined, key: string): string | undefined {
+  const val = attrs?.[key]
+  if (Array.isArray(val)) return val[0]
+  return typeof val === 'string' ? val : undefined
+}
+
 /**
- * Register a public key for a Backend Services client in Keycloak
+ * Register JWKS for a Backend Services client in Keycloak.
+ * Accepts either an inline JWKS JSON string or a PEM public key (which gets converted to JWK).
  */
-async function registerPublicKeyForClient(admin: KcAdminClient, clientId: string, _publicKeyPem: string): Promise<void> {
-  try {
-    logger.admin.debug('Registering public key for client', { clientId })
+async function registerJwksForClient(
+  admin: KcAdminClient,
+  clientInternalId: string,
+  options: { jwksString?: string; publicKeyPem?: string; signingAlg?: string }
+): Promise<void> {
+  const alg = options.signingAlg || 'RS384'
+  let jwksJson: string
 
-    // For Keycloak Backend Services, we need to use the client-jwt authenticator
-    // and provide the key either via JWKS or X509 certificate
-
-    // Update client to use JWT authentication with the public key
-    await admin.clients.update({ id: clientId }, {
-      clientAuthenticatorType: 'client-jwt',
-      attributes: {
-        'use.jwks.string': 'true',
-        'jwks.string': JSON.stringify({
-          keys: [{
-            kty: 'RSA',
-            use: 'sig',
-            alg: 'RS384',
-            kid: crypto.randomUUID(),
-            // Note: For a real implementation, we'd need to properly extract n and e from the PEM
-            // For now, we'll use a simpler approach with X509 certificate
-          }]
-        }),
-        'token.endpoint.auth.signing.alg': 'RS384'
-      }
+  if (options.jwksString) {
+    // Use inline JWKS directly
+    jwksJson = options.jwksString
+  } else if (options.publicKeyPem) {
+    // Convert PEM → JWK using Node crypto
+    const keyObject = crypto.createPublicKey(options.publicKeyPem)
+    const jwk = keyObject.export({ format: 'jwk' }) as Record<string, unknown>
+    jwksJson = JSON.stringify({
+      keys: [{ ...jwk, use: 'sig', alg, kid: crypto.randomUUID() }]
     })
-
-    logger.admin.debug('Public key registered for client', { clientId })
-  } catch (error) {
-    logger.admin.error('Failed to register public key', { error, clientId })
-    throw new Error(`Failed to register public key: ${error}`)
+  } else {
+    throw new Error('Either jwksString or publicKeyPem must be provided')
   }
+
+  logger.admin.debug('Registering JWKS for client', { clientInternalId, alg })
+
+  await admin.clients.update({ id: clientInternalId }, {
+    clientAuthenticatorType: 'client-jwt',
+    attributes: {
+      'use.jwks.string': 'true',
+      'jwks.string': jwksJson,
+      'token.endpoint.auth.signing.alg': alg
+    }
+  })
+
+  logger.admin.debug('JWKS registered for client', { clientInternalId })
 }
 
 /**
@@ -73,15 +84,24 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       const admin = await getAdmin(token)
       let clients = await admin.clients.find()
 
-      // Filter for SMART on FHIR applications only
+      // Keycloak built-in / internal clients that should never appear in the SMART app list
+      const INTERNAL_CLIENTS = new Set([
+        'account',
+        'account-console',
+        'admin-cli',
+        'broker',
+        'realm-management',
+        'security-admin-console',
+        'admin-ui',
+      ])
+
+      // Include any openid-connect client that isn't a Keycloak internal client
+      // and isn't bearer-only (which are service-level tokens, not SMART apps)
       clients = clients.filter(client =>
         client.protocol === 'openid-connect' &&
-        (client.attributes?.['smart_app']?.includes('true') ||
-          client.clientId?.includes('smart'))
+        !client.bearerOnly &&
+        !INTERNAL_CLIENTS.has(client.clientId ?? '')
       )
-
-      // Filter out admin-ui if it somehow gets through
-      clients = clients.filter(client => client.clientId !== 'admin-ui')
 
       // Enrich clients with actual scope information
       const enrichedClients = await Promise.all(
@@ -152,21 +172,28 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               ...(fullClient.secret && { secret: fullClient.secret }),
               
               // Extract metadata fields from attributes
-              launchUrl: fullClient.attributes?.['launch_url']?.[0],
-              logoUri: fullClient.attributes?.['logo_uri']?.[0],
-              tosUri: fullClient.attributes?.['tos_uri']?.[0],
-              policyUri: fullClient.attributes?.['policy_uri']?.[0],
-              contacts: fullClient.attributes?.['contacts']?.[0]?.split(',').filter(Boolean),
+              launchUrl: getAttr(fullClient.attributes, 'launch_url'),
+              logoUri: getAttr(fullClient.attributes, 'logo_uri'),
+              tosUri: getAttr(fullClient.attributes, 'tos_uri'),
+              policyUri: getAttr(fullClient.attributes, 'policy_uri'),
+              contacts: getAttr(fullClient.attributes, 'contacts')?.split(',').filter(Boolean),
               
               // Server access control
-              serverAccessType: fullClient.attributes?.['server_access_type']?.[0] as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
-              allowedServerIds: fullClient.attributes?.['allowed_server_ids']?.[0]?.split(',').filter(Boolean),
+              serverAccessType: getAttr(fullClient.attributes, 'server_access_type') as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
+              allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
+              
+              // MCP server access control
+              mcpAccessType: (getAttr(fullClient.attributes, 'mcp_access_type') || 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
+              allowedMcpServerNames: getAttr(fullClient.attributes, 'allowed_mcp_server_names')?.split(',').filter(Boolean) || [],
+              
+              // Skills access control
+              allowedSkillNames: getAttr(fullClient.attributes, 'allowed_skill_names')?.split(',').filter(Boolean) || [],
               
               // Scope set reference
-              scopeSetId: fullClient.attributes?.['scope_set_id']?.[0],
+              scopeSetId: getAttr(fullClient.attributes, 'scope_set_id'),
               
               // PKCE and offline access
-              requirePkce: fullClient.attributes?.['pkce.code.challenge.method']?.includes('S256'),
+              requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
               allowOfflineAccess: hasOfflineAccess
             } as SmartAppType
           } catch (error) {
@@ -235,9 +262,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       // Validate Backend Services requirements
       if (isBackendService) {
-        if (!body.publicKey && !body.jwksUri) {
+        if (!body.publicKey && !body.jwksUri && !body.jwksString) {
           set.status = 400
-          return { error: 'Backend Services clients require either publicKey or jwksUri for JWT authentication' }
+          return { error: 'Backend Services clients require publicKey, jwksUri, or jwksString for JWT authentication' }
         }
       }
 
@@ -251,6 +278,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         redirectUris: body.redirectUris || [],
         webOrigins: body.webOrigins || [],
         attributes: {
+          'smart_app': 'true',
           ...(body.smartVersion && { 'smart_version': body.smartVersion }),
           ...(body.fhirVersion && { 'fhir_version': body.fhirVersion }),
           // Store the original UI appType as client_type attribute
@@ -262,6 +290,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
             'use.jwks.url': 'true',
             'jwks.url': body.jwksUri
+          }),
+          // Inline JWKS string (alternative to jwksUri)
+          ...(body.jwksString && !body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+            'use.jwks.string': 'true',
+            'jwks.string': body.jwksString
           }),
           
           // Metadata fields
@@ -275,6 +308,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.serverAccessType && { 'server_access_type': body.serverAccessType }),
           ...(body.allowedServerIds && body.allowedServerIds.length > 0 && { 
             'allowed_server_ids': body.allowedServerIds.join(',') 
+          }),
+          
+          // MCP server access control
+          ...(body.mcpAccessType && { 'mcp_access_type': body.mcpAccessType }),
+          ...(body.allowedMcpServerNames && body.allowedMcpServerNames.length > 0 && {
+            'allowed_mcp_server_names': body.allowedMcpServerNames.join(',')
+          }),
+          
+          // Skills access control
+          ...(body.allowedSkillNames && body.allowedSkillNames.length > 0 && {
+            'allowed_skill_names': body.allowedSkillNames.join(',')
           }),
           
           // Scope set reference
@@ -385,11 +429,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       const clientAfterScopeAssignment = await admin.clients.findOne({ id: createdClient.id })
       const finalClientForResponse = clientAfterScopeAssignment || fullClient
 
-      // If Backend Services with public key, register the key
-      if (isBackendService && body.publicKey && createdClient.id) {
+      // If Backend Services with public key (PEM), convert and register JWKS
+      if (isBackendService && body.publicKey && !body.jwksString && !body.jwksUri && createdClient.id) {
         try {
-          // Convert PEM to JWKS format and register
-          await registerPublicKeyForClient(admin, createdClient.id, body.publicKey)
+          await registerJwksForClient(admin, createdClient.id, { publicKeyPem: body.publicKey })
 
           // Re-fetch client details after key registration
           const updatedClient = await admin.clients.findOne({ id: createdClient.id })
@@ -506,21 +549,28 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             ...(fullClient.secret && { secret: fullClient.secret }),
             
             // Extract metadata fields from attributes
-            launchUrl: fullClient.attributes?.['launch_url']?.[0],
-            logoUri: fullClient.attributes?.['logo_uri']?.[0],
-            tosUri: fullClient.attributes?.['tos_uri']?.[0],
-            policyUri: fullClient.attributes?.['policy_uri']?.[0],
-            contacts: fullClient.attributes?.['contacts']?.[0]?.split(',').filter(Boolean),
+            launchUrl: getAttr(fullClient.attributes, 'launch_url'),
+            logoUri: getAttr(fullClient.attributes, 'logo_uri'),
+            tosUri: getAttr(fullClient.attributes, 'tos_uri'),
+            policyUri: getAttr(fullClient.attributes, 'policy_uri'),
+            contacts: getAttr(fullClient.attributes, 'contacts')?.split(',').filter(Boolean),
             
             // Server access control
-            serverAccessType: fullClient.attributes?.['server_access_type']?.[0] as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
-            allowedServerIds: fullClient.attributes?.['allowed_server_ids']?.[0]?.split(',').filter(Boolean),
+            serverAccessType: getAttr(fullClient.attributes, 'server_access_type') as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
+            allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
+            
+            // MCP server access control
+            mcpAccessType: (getAttr(fullClient.attributes, 'mcp_access_type') || 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
+            allowedMcpServerNames: getAttr(fullClient.attributes, 'allowed_mcp_server_names')?.split(',').filter(Boolean) || [],
+            
+            // Skills access control
+            allowedSkillNames: getAttr(fullClient.attributes, 'allowed_skill_names')?.split(',').filter(Boolean) || [],
             
             // Scope set reference
-            scopeSetId: fullClient.attributes?.['scope_set_id']?.[0],
+            scopeSetId: getAttr(fullClient.attributes, 'scope_set_id'),
             
             // PKCE and offline access
-            requirePkce: fullClient.attributes?.['pkce.code.challenge.method']?.includes('S256'),
+            requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
             allowOfflineAccess: hasOfflineAccess
           } as SmartAppType
         }
@@ -571,7 +621,21 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         attributes: {
           ...clients[0].attributes,
           smart_version: body.smartVersion ? [body.smartVersion] : clients[0].attributes?.smart_version,
-          fhir_version: body.fhirVersion ? [body.fhirVersion] : clients[0].attributes?.fhir_version
+          fhir_version: body.fhirVersion ? [body.fhirVersion] : clients[0].attributes?.fhir_version,
+          // MCP server access control
+          ...(body.mcpAccessType !== undefined && { 'mcp_access_type': body.mcpAccessType }),
+          ...(body.allowedMcpServerNames !== undefined && {
+            'allowed_mcp_server_names': body.allowedMcpServerNames.length > 0 ? body.allowedMcpServerNames.join(',') : ''
+          }),
+          // Skills access control
+          ...(body.allowedSkillNames !== undefined && {
+            'allowed_skill_names': body.allowedSkillNames.length > 0 ? body.allowedSkillNames.join(',') : ''
+          }),
+          // Server access control
+          ...(body.serverAccessType !== undefined && { 'server_access_type': body.serverAccessType }),
+          ...(body.allowedServerIds !== undefined && {
+            'allowed_server_ids': body.allowedServerIds.length > 0 ? body.allowedServerIds.join(',') : ''
+          }),
         }
       }
       await admin.clients.update({ id: clients[0].id! }, updateData)

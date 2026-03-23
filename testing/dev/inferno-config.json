@@ -37,6 +37,13 @@
     "client_id": "inferno-test-client",
     "scopes": "launch/patient openid fhirUser offline_access patient/*.read"
   },
+  "backend_services_client": {
+    "client_id": "inferno-backend-services",
+    "scopes": "system/*.read",
+    "auth_method": "private_key_jwt",
+    "signing_algorithm": "RS384",
+    "private_jwks_file": "testing/dev/backend-services-private-jwks.json"
+  },
   "test_user": {
     "username": "doctor",
     "password": "doctor123"

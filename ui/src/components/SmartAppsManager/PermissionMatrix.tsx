@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Input } from '@proxy-smart/shared-ui';
+import { useTranslation } from 'react-i18next';
 
 /**
  * PermissionMatrix
@@ -47,6 +49,7 @@ function isValidScope(scope: string) {
 }
 
 export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], onSave }) => {
+  const { t } = useTranslation();
   const [scopes, setScopes] = useState<string[]>(initialScopes.length ? initialScopes : DEFAULT_SCOPES);
   const [customScope, setCustomScope] = useState('');
   const [status, setStatus] = useState<string | null>(null);
@@ -104,51 +107,51 @@ export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], o
   };
 
   return (
-    <div style={{ border: '1px solid #eee', padding: 12, borderRadius: 6, maxWidth: 1000 }}>
-      <h3>Permission Matrix</h3>
+    <div className="border border-border rounded-lg p-4 max-w-[1000px]">
+      <h3 className="text-lg font-semibold text-foreground mb-3">{t('Permission Matrix')}</h3>
 
-      <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
+      <div className="grid gap-3 mb-4">
         <div>
-          <strong>Current Scopes</strong>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+          <strong className="text-foreground">{t('Current Scopes')}</strong>
+          <div className="flex gap-2 flex-wrap mt-2">
             {scopes.map((s) => (
-              <div key={s} style={{ background: '#f5f5f5', padding: '6px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: 'monospace' }}>{s}</span>
-                <button onClick={() => removeScope(s)} aria-label={`Remove ${s}`}>
+              <div key={s} className="bg-muted px-2 py-1.5 rounded-md flex items-center gap-2">
+                <span className="font-mono text-sm">{s}</span>
+                <Button variant="ghost" size="sm" className="h-auto p-0 text-muted-foreground hover:text-destructive" onClick={() => removeScope(s)} aria-label={`Remove ${s}`}>
                   ×
-                </button>
+                </Button>
               </div>
             ))}
           </div>
         </div>
 
         <div>
-          <strong>Add Scope</strong>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            <input
+          <strong className="text-foreground">{t('Add Scope')}</strong>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            <Input
               value={customScope}
               onChange={(e) => setCustomScope(e.target.value)}
               placeholder="e.g. patient/Observation.read"
-              style={{ flex: 1, minWidth: 260 }}
+              className="flex-1 min-w-[260px]"
             />
-            <button onClick={addCustomScope}>Add</button>
+            <Button onClick={addCustomScope}>{t('Add')}</Button>
           </div>
-          {status && <div style={{ marginTop: 6, color: status.startsWith('Invalid') ? 'crimson' : '#333' }}>{status}</div>}
+          {status && <div className={`mt-1.5 text-sm ${status.startsWith('Invalid') ? 'text-destructive' : 'text-foreground'}`}>{status}</div>}
         </div>
 
         <details>
-          <summary>Quick Add</summary>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+          <summary className="cursor-pointer text-sm font-medium text-foreground">{t('Quick Add')}</summary>
+          <div className="grid grid-cols-2 gap-2 mt-2">
             {(['patient', 'user'] as const).map((who) => (
-              <div key={who} style={{ border: '1px solid #f0f0f0', padding: 8, borderRadius: 4 }}>
-                <div style={{ fontWeight: 600, marginBottom: 6 }}>{who}</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div key={who} className="border border-border p-2 rounded">
+                <div className="font-semibold mb-1.5 text-foreground">{who}</div>
+                <div className="flex gap-1.5 flex-wrap">
                   {SUGGESTED_RESOURCES.map((res) => (
-                    <div key={`${who}-${res}`} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontFamily: 'monospace' }}>{res}</span>
-                      <button onClick={() => addSuggested(who, res, 'read')}>.read</button>
-                      <button onClick={() => addSuggested(who, res, 'write')}>.write</button>
-                      <button onClick={() => addSuggested(who, res, 'read+write')}>.read+write</button>
+                    <div key={`${who}-${res}`} className="flex items-center gap-1">
+                      <span className="font-mono text-sm">{res}</span>
+                      <Button variant="ghost" size="sm" className="h-auto px-1 py-0.5 text-xs" onClick={() => addSuggested(who, res, 'read')}>.read</Button>
+                      <Button variant="ghost" size="sm" className="h-auto px-1 py-0.5 text-xs" onClick={() => addSuggested(who, res, 'write')}>.write</Button>
+                      <Button variant="ghost" size="sm" className="h-auto px-1 py-0.5 text-xs" onClick={() => addSuggested(who, res, 'read+write')}>.read+write</Button>
                     </div>
                   ))}
                 </div>
@@ -158,20 +161,20 @@ export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], o
         </details>
       </div>
 
-      <div>
-        <button onClick={save} disabled={saving || invalidScopes.length > 0}>
+      <div className="flex items-center gap-3">
+        <Button onClick={save} disabled={saving || invalidScopes.length > 0}>
           {saving ? 'Saving...' : 'Save Permissions'}
-        </button>
+        </Button>
         {invalidScopes.length > 0 && (
-          <span style={{ marginLeft: 12, color: 'crimson' }}>Invalid scopes: {invalidScopes.join(', ')}</span>
+          <span className="text-destructive text-sm">Invalid scopes: {invalidScopes.join(', ')}</span>
         )}
       </div>
 
-      <details style={{ marginTop: 12 }}>
-        <summary>Help</summary>
-        <div style={{ padding: 8 }}>
-          <p>Use SMART scopes like patient/Observation.read, user/*.write, offline_access. The backend should enforce policies.</p>
-          <p>For refresh tokens include offline_access. For patient context, prefer patient/Resource.access scopes.</p>
+      <details className="mt-3">
+        <summary className="cursor-pointer text-sm font-medium text-foreground">{t('Help')}</summary>
+        <div className="p-2 text-sm text-muted-foreground">
+          <p>{t('Use SMART scopes like patient/Observation.read, user/*.write, offline_access. The backend should enforce policies.')}</p>
+          <p className="mt-1">{t('For refresh tokens include offline_access. For patient context, prefer patient/Resource.access scopes.')}</p>
         </div>
       </details>
     </div>

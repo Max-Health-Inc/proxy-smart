@@ -126,7 +126,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // Login page redirect - provides a simple login endpoint for UIs
   .get('/login', ({ query, redirect }) => {
-    const state = query.state || Math.random().toString(36).substring(2, 15)
+    const state = query.state || crypto.randomUUID()
     const clientId = query.client_id || 'admin-ui'
     const redirectUri = query.redirect_uri || `${config.baseUrl}/`
     const scope = query.scope || 'openid profile email'
@@ -160,7 +160,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // Logout endpoint - proxy to Keycloak logout
   .get('/logout', ({ query, redirect }) => {
-    logger.auth.debug('Logout endpoint called', { query })
+    logger.auth.debug('Logout endpoint called', { post_logout_redirect_uri: query.post_logout_redirect_uri })
 
     const postLogoutRedirectUri = query.post_logout_redirect_uri || `${config.baseUrl}/`
 
@@ -314,7 +314,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       logger.auth.debug('Keycloak response received', {
         status: resp.status,
         hasAccessToken: !!data.access_token,
-        error: data.error
+        error: data.error,
+        error_description: data.error_description
       })
 
       // Log OAuth event
@@ -360,10 +361,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       set.headers['Cache-Control'] = 'no-store'
       set.headers['Pragma'] = 'no-cache'
 
-      // CORS headers for token endpoint (required by SMART)
-      set.headers['Access-Control-Allow-Origin'] = '*'
-      set.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-      set.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+      // CORS is handled by the global @elysiajs/cors plugin
 
       // If there's an error, return it with the proper status code
       if (data.error) {
@@ -485,14 +483,48 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     })
 
   // proxy introspection
-  .post('/introspect', async ({ body }) => {
+  .post('/introspect', async ({ body, set }) => {
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token/introspect`
+    const bodyObj = body as Record<string, string>
+    logger.auth.debug('Introspect request received', { bodyKeys: Object.keys(bodyObj) })
+
+    // RFC 7662: The introspection endpoint requires client authentication.
+    // If the caller didn't provide client credentials, authenticate as the
+    // proxy's admin-service client so Keycloak accepts the request.
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    const hasClientAuth = bodyObj.client_id || bodyObj.client_secret
+    if (!hasClientAuth && config.keycloak.adminClientId && config.keycloak.adminClientSecret) {
+      const credentials = Buffer.from(
+        `${config.keycloak.adminClientId}:${config.keycloak.adminClientSecret}`
+      ).toString('base64')
+      headers['Authorization'] = `Basic ${credentials}`
+      logger.auth.debug('Using admin-service credentials for introspection')
+    }
+
     const resp = await fetch(kcUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(body as Record<string, string>).toString()
+      headers,
+      body: new URLSearchParams(bodyObj).toString()
     })
-    return resp.json()
+
+    const data = await resp.json()
+    set.status = resp.status
+    set.headers['Cache-Control'] = 'no-store'
+    set.headers['Pragma'] = 'no-cache'
+    // CORS is handled by the global @elysiajs/cors plugin
+
+    if (data.error) {
+      logger.auth.warn('Introspection error from Keycloak', {
+        error: data.error,
+        description: data.error_description,
+        status: resp.status
+      })
+    }
+
+    return data
   }, {
     body: IntrospectRequest,
     response: {

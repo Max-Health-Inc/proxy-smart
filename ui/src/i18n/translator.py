@@ -1,39 +1,49 @@
+"""
+translator.py — Translate untranslated keys in non-English JSON files.
+
+Detection: a key is untranslated when value == key (self-referencing)
+           OR value starts with "TODO: Translate".
+
+Uses g4f (auto-provider selection) to translate in batches.
+"""
 import os
+import re
 import shutil
 import json
+import sys
+import time
 from g4f.client import Client
-import g4f.Provider
-import concurrent.futures
 
-# Initialize the GPT-5 client
+BATCH_SIZE = 50  # keys per translation request
+MAX_RETRIES = 3  # retries per batch on failure
+
+# Initialize the client
 client = Client()
-
-# Build initial provider list
-providers = [
-    getattr(g4f.Provider, name)
-    for name in dir(g4f.Provider)
-    if not name.startswith("__")
-    and callable(getattr(g4f.Provider, name))
-    and name != "DDG"
-]
-
-# Keep track of providers that have failed
-bad_providers: set = set()
 
 # Directory containing translation files (absolute path)
 script_dir = os.path.dirname(os.path.abspath(__file__))
 translations_dir = os.path.join(script_dir, "translations")
 
+# Language name mapping for better prompts
+LANG_NAMES = {
+    "de": "German",
+    "fr": "French",
+    "es": "Spanish",
+    "it": "Italian",
+    "ar": "Arabic",
+    "pt": "Portuguese",
+    "nl": "Dutch",
+    "ja": "Japanese",
+    "zh": "Chinese",
+    "ko": "Korean",
+}
 
-# Function to read a JSON file
+
 def read_json_file(file_path):
     try:
         with open(file_path, "r", encoding="utf-8") as file:
             content = file.read().strip()
             if not content:
-                print(
-                    f"Warning: {file_path} is empty. Initializing as an empty JSON object."
-                )
                 return {}
             return json.loads(content)
     except json.JSONDecodeError as e:
@@ -41,212 +51,185 @@ def read_json_file(file_path):
         return {}
 
 
-# Function to write a JSON file
 def write_json_file(file_path, data):
     try:
-        if not isinstance(data, dict):
-            raise ValueError(f"Data to write is not a valid JSON object: {data}")
         with open(file_path, "w", encoding="utf-8") as file:
             json.dump(data, file, ensure_ascii=False, indent=2)
-        print(f"Successfully wrote to {file_path}.")
-    except ValueError as ve:
-        print(f"ValueError while writing to {file_path}: {ve}")
+            file.write("\n")
+        print(f"  Wrote {file_path}")
     except Exception as e:
-        print(f"Error writing to JSON file {file_path}: {e}")
+        print(f"  Error writing {file_path}: {e}")
 
 
-def flatten_json(y):
-    """Flatten a nested JSON object into a single-level dictionary."""
-    out = {}
-
-    def flatten(x, name=""):
-        if type(x) is dict:
-            for a in x:
-                flatten(x[a], name + a + ".")
-        elif type(x) is list:
-            i = 0
-            for a in x:
-                flatten(a, name + str(i) + ".")
-                i += 1
-        else:
-            out[name[:-1]] = x
-
-    flatten(y)
-    return out
-
-
-def unflatten_json(flat_json):
-    """Unflatten a flat dictionary with dot-notated keys into a nested JSON object."""
-    nested_json = {}
-    for key, value in flat_json.items():
-        parts = key.split(".")
-        current = nested_json
-        for part in parts[:-1]:
-            if part not in current:
-                current[part] = {}
-            elif not isinstance(current[part], dict):
-                # Handle conflict: overwrite the existing value with a dictionary
-                current[part] = {}
-            current = current[part]
-        current[parts[-1]] = value
-    return nested_json
+def is_untranslated(key, value):
+    """A key is untranslated if value == key (self-referencing) or starts with TODO."""
+    if not isinstance(value, str):
+        return False
+    return value == key or value.startswith("TODO: Translate")
 
 
 def prepare_translation_data():
+    """Find all untranslated keys per non-English language file."""
     if not os.path.exists(translations_dir):
         raise FileNotFoundError(f"Translations directory not found: {translations_dir}")
 
     files = [f for f in os.listdir(translations_dir) if f.endswith(".json")]
-    translations = {}
-
-    # Load all translations
-    for file in files:
-        lang = os.path.splitext(file)[0]  # Extract language code from file name
-        file_path = os.path.join(translations_dir, file)
-        translations[lang] = read_json_file(file_path)
-
-    # Extract keys and values for translation
-    source_lang = "en"
-    if source_lang not in translations:
-        raise ValueError(f"Source language file '{source_lang}.json' not found.")
-
-    source_translations = flatten_json(translations[source_lang])
     translation_data = {}
 
-    for lang, translation in translations.items():
-        if lang == source_lang:
+    for file in files:
+        lang = os.path.splitext(file)[0]
+        if lang == "en":
             continue
 
-        flattened_translation = flatten_json(translation)
-        keys_to_translate = {}
+        file_path = os.path.join(translations_dir, file)
+        data = read_json_file(file_path)
 
-        for key, value in flattened_translation.items():
-            if (
-                isinstance(value, str)
-                and value.startswith("TODO: Translate")
-                and key in source_translations
-            ):
-                keys_to_translate[key] = source_translations[key]
+        keys_to_translate = {k: v for k, v in data.items() if is_untranslated(k, v)}
 
         if keys_to_translate:
-            # Return the nested JSON structure
-            translation_data[lang] = unflatten_json(keys_to_translate)
+            translation_data[lang] = keys_to_translate
+            print(f"  {lang}: {len(keys_to_translate)} keys need translation")
 
     return translation_data
 
 
-def merge_nested_dicts(original, updates):
-    """Recursively merge two dictionaries."""
-    for key, value in updates.items():
-        if (
-            key in original
-            and isinstance(original[key], dict)
-            and isinstance(value, dict)
-        ):
-            # If both are dictionaries, merge them recursively
-            merge_nested_dicts(original[key], value)
+def extract_json_from_response(text):
+    """Extract JSON object from a response that may contain markdown fences."""
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+
+    brace_start = text.find("{")
+    brace_end = text.rfind("}")
+    if brace_start != -1 and brace_end != -1:
+        try:
+            return json.loads(text[brace_start : brace_end + 1])
+        except json.JSONDecodeError:
+            pass
+
+    return None
+
+
+def translate_batch(batch_dict, lang):
+    """Translate a batch of keys using g4f auto-provider selection."""
+    lang_name = LANG_NAMES.get(lang, lang)
+
+    prompt = (
+        f"Translate the following JSON object values from English to {lang_name}. "
+        "Keep ALL keys exactly the same (unchanged). Only translate the values. "
+        "Keep technical terms (FHIR, SMART, OAuth, mTLS, PKCE, JWKS, LDAP, MCP, IAL, etc.) untranslated. "
+        "Keep placeholder patterns like {{name}}, {{count}}, {{error}} etc. exactly as-is. "
+        "Return ONLY a valid JSON object, no explanation:\n\n"
+        f"{json.dumps(batch_dict, ensure_ascii=False, indent=2)}"
+    )
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = client.chat.completions.create(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            f"You are a professional translator. Translate JSON values to {lang_name}. "
+                            "Return only valid JSON. Keep keys unchanged. Keep technical terms untranslated."
+                        ),
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                web_search=False,
+            )
+            raw = response.choices[0].message.content.strip()
+            parsed = extract_json_from_response(raw)
+            if parsed and isinstance(parsed, dict) and len(parsed) >= len(batch_dict) * 0.7:
+                return parsed
+            else:
+                print(f"(parse issue, retry {attempt+1})", end=" ", flush=True)
+        except Exception as e:
+            print(f"(error: {str(e)[:60]}, retry {attempt+1})", end=" ", flush=True)
+        time.sleep(2)
+
+    return None
+
+
+def translate_language(lang, keys_to_translate):
+    """Translate all untranslated keys for a language, in batches."""
+    file_path = os.path.join(translations_dir, f"{lang}.json")
+    full_data = read_json_file(file_path)
+    keys = list(keys_to_translate.keys())
+    total = len(keys)
+    translated_count = 0
+    total_batches = (total + BATCH_SIZE - 1) // BATCH_SIZE
+
+    print(f"\nTranslating {total} keys to {LANG_NAMES.get(lang, lang)} in {total_batches} batches...")
+
+    for i in range(0, total, BATCH_SIZE):
+        batch_keys = keys[i : i + BATCH_SIZE]
+        batch_dict = {k: keys_to_translate[k] for k in batch_keys}
+        batch_num = i // BATCH_SIZE + 1
+
+        print(f"  Batch {batch_num}/{total_batches} ({len(batch_dict)} keys)...", end=" ", flush=True)
+
+        result = translate_batch(batch_dict, lang)
+
+        if result:
+            batch_translated = 0
+            for k in batch_keys:
+                if k in result and isinstance(result[k], str) and result[k] != k:
+                    full_data[k] = result[k]
+                    translated_count += 1
+                    batch_translated += 1
+            print(f"OK +{batch_translated} ({translated_count}/{total} total)")
+
+            # Save progress after each successful batch
+            sorted_data = dict(sorted(full_data.items()))
+            write_json_file(file_path, sorted_data)
         else:
-            # Otherwise, overwrite or add the key
-            original[key] = value
+            print(f"FAILED after {MAX_RETRIES} retries")
+
+        # Delay between batches
+        if i + BATCH_SIZE < total:
+            time.sleep(2)
+
+    return translated_count, total
 
 
-def apply_translations(translated_data):
-    if not os.path.exists(translations_dir):
-        raise FileNotFoundError(f"Translations directory not found: {translations_dir}")
+def main():
+    print("=" * 60)
+    print("Translation Runner (g4f auto-provider)")
+    print("=" * 60)
 
-    for lang, translations in translated_data.items():
-        file_path = os.path.join(translations_dir, f"{lang}.json")
-        translation = read_json_file(file_path)
-
-        # Recursively merge the nested translations with the existing translation
-        merge_nested_dicts(translation, translations)
-
-        write_json_file(file_path, translation)
-        print(f"Updated {lang}.json with translated keys.")
-
-
-def translate_todos_optimized():
     translation_data = prepare_translation_data()
 
-    for lang, data in translation_data.items():
-        # filter out any providers that have already errored
-        effective_providers = [p for p in providers if p not in bad_providers]
-        if not effective_providers:
-            print(f"No working providers left for {lang}, skipping translation.")
-            continue
+    if not translation_data:
+        print("All translations are up to date!")
+        return
 
-        # Prepare the prompt with the nested JSON structure
-        prompt = (
-            f"Translate the following JSON object to {lang}. "
-            "Keep the structure intact and return a JSON object with the translations:\n\n"
-            f"{json.dumps(data, indent=2)}"
-        )
-        print(f"Prompt for {lang}: {prompt}")
+    for lang, keys_to_translate in translation_data.items():
+        translated, total = translate_language(lang, keys_to_translate)
+        print(f"\n{lang}: Translated {translated}/{total} keys")
 
-        # Function to handle translation with a specific provider
-        def translate_with_provider(provider):
-            try:
-                print(f"Attempting translation with provider: {provider.__name__}")
-                response = client.chat.completions.create(
-                    provider=provider,
-                    messages=[
-                        {"role": "system", "content": "You are a JSON translator."},
-                        {"role": "user", "content": prompt},
-                    ],
-                    web_search=False,
-                )
-                return json.loads(response.choices[0].message.content.strip())
-            except Exception as e:
-                print(f"Error with provider {provider.__name__}: {e}")
-                #if not "Expecting value" in str(e):
-                bad_providers.add(provider)
-                return None
-
-        # Submit all translation requests simultaneously
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = {
-                executor.submit(translate_with_provider, p): p
-                for p in effective_providers
-            }
-
-            # Wait for the first successful response
-            successful = None
-            for future in concurrent.futures.as_completed(futures):
-                result = future.result()
-                if result:
-                    successful = result
-                    print(f"Translated {lang} using {futures[future].__name__}")
-                    # cancel the rest
-                    for f in futures:
-                        f.cancel()
-                    break
-
-            if successful:
-                apply_translations({lang: successful})
-            else:
-                print(f"All remaining providers failed for {lang}.")
-
-        # Move to the next language file
-        print(f"Finished processing translations for {lang}.")
+    print("\nTranslation process completed.")
 
 
-# Main function to sync and translate
-def main():
-    print("Translating TODOs...")
-    translate_todos_optimized()
-    print("Translation process completed.")
-
-
-# Run the script
 if __name__ == "__main__":
     main()
-    # ─── CLEANUP ──────────────────────────────────────────────────────────────
-    # remove any stray cache/folder artifacts
-    for temp_dir in ["generated_media", "har_and_cookies"]:
-        temp_path = os.path.join(script_dir, temp_dir)
-        if os.path.isdir(temp_path):
-            shutil.rmtree(temp_path)
-            print(f"Removed leftover directory: {temp_path}")
+
+    # ─── CLEANUP g4f artifacts from both script dir and CWD ─────────────────
+    for base in [script_dir, os.getcwd()]:
+        for temp_dir in ["generated_media", "har_and_cookies"]:
+            temp_path = os.path.join(base, temp_dir)
+            if os.path.isdir(temp_path):
+                shutil.rmtree(temp_path)
+                print(f"Removed leftover directory: {temp_path}")
 
     # ─── CLOSE GPT-5 CLIENT SESSION ─────────────────────────────────────────
     try:

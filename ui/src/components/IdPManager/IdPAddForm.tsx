@@ -1,9 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
 import type { IdentityProviderFormData } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface IdPAddFormProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface IdPAddFormProps {
 }
 
 export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdPAddFormProps) {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const updateConfig = <K extends keyof IdentityProviderFormData['config']>(
@@ -34,22 +36,22 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
   };
 
   return (
-    <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border shadow-lg hover:shadow-xl transition-all duration-300">
+    <div className="bg-card/70 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300">
       <div className="mb-6">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center shadow-sm">
+          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
             <Plus className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Add New Identity Provider</h3>
-            <p className="text-muted-foreground font-medium">Configure a new identity provider for healthcare system authentication</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Add New Identity Provider')}</h3>
+            <p className="text-muted-foreground font-medium">{t('Configure a new identity provider for healthcare system authentication')}</p>
           </div>
         </div>
       </div>
       <form onSubmit={onSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="displayName" className="text-sm font-semibold text-foreground">Display Name</Label>
+            <Label htmlFor="displayName" className="text-sm font-semibold text-foreground">{t('Display Name')}</Label>
             <Input
               id="displayName"
               placeholder="e.g., Hospital Azure AD"
@@ -66,110 +68,111 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                   },
                 }));
               }}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               required
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="alias" className="text-sm font-semibold text-foreground">Alias (unique identifier)</Label>
+            <Label htmlFor="alias" className="text-sm font-semibold text-foreground">{t('Alias (unique identifier)')}</Label>
             <Input
               id="alias"
               placeholder="e.g., hospital-azure-ad"
               value={newIdp.alias}
               onChange={(e) => setNewIdp({ ...newIdp, alias: e.target.value })}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               required
             />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="vendor" className="text-sm font-semibold text-foreground">Provider Vendor</Label>
+            <Label htmlFor="vendor" className="text-sm font-semibold text-foreground">{t('Provider Vendor')}</Label>
             <Input
               id="vendor"
               placeholder="e.g., Microsoft Azure, Google, Okta"
               value={newIdp.vendorName ?? ''}
               onChange={(e) => setNewIdp({ ...newIdp, vendorName: e.target.value })}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="enabled" className="text-sm font-semibold text-foreground">Enable Provider Immediately</Label>
-            <div className="flex items-center space-x-3 h-12 px-4 rounded-xl border border-border bg-background">
-              <input
+            <Label htmlFor="enabled" className="text-sm font-semibold text-foreground">{t('Enable Provider Immediately')}</Label>
+            <div className="flex items-center space-x-3 h-12 px-4 rounded-xl border border-border/50 bg-background">
+              <Checkbox
                 id="enabled"
-                type="checkbox"
                 checked={newIdp.enabled ?? true}
-                onChange={(e) => setNewIdp({ ...newIdp, enabled: e.target.checked })}
-                className="rounded border-border"
+                onCheckedChange={(checked) => setNewIdp({ ...newIdp, enabled: checked === true })}
               />
-              <span className="text-sm text-foreground">Enabled</span>
+              <span className="text-sm text-foreground">{t('Enabled')}</span>
             </div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <Label htmlFor="type" className="text-sm font-semibold text-foreground">Authentication Type</Label>
-            <select
-              id="type"
-              className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+            <Label htmlFor="type" className="text-sm font-semibold text-foreground">{t('Authentication Type')}</Label>
+            <Select
               value={(newIdp.providerId ?? 'saml').toUpperCase()}
-              onChange={(e) => setNewIdp({ ...newIdp, providerId: e.target.value.toLowerCase() })}
+              onValueChange={(value) => setNewIdp({ ...newIdp, providerId: value.toLowerCase() })}
             >
-              <option value="SAML">SAML 2.0</option>
-              <option value="OAUTH2">OAuth 2.0</option>
-              <option value="OIDC">OpenID Connect</option>
-              <option value="LDAP">LDAP</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="SAML">{t('SAML 2.0')}</SelectItem>
+                <SelectItem value="OAUTH2">{t('OAuth 2.0')}</SelectItem>
+                <SelectItem value="OIDC">{t('OpenID Connect')}</SelectItem>
+                <SelectItem value="LDAP">LDAP</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-3">
-            <Label htmlFor="entityId" className="text-sm font-semibold text-foreground">Entity ID / Client ID</Label>
+            <Label htmlFor="entityId" className="text-sm font-semibold text-foreground">{t('Entity ID / Client ID')}</Label>
             <Input
               id="entityId"
-              placeholder="Entity identifier or client ID"
+              placeholder={t('Entity identifier or client ID')}
               value={newIdp.config.entityId ?? ''}
               onChange={(e) => updateConfig('entityId', e.target.value)}
-              className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+              className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               required
             />
           </div>
         </div>
         <div className="space-y-3">
-          <Label htmlFor="ssoUrl" className="text-sm font-semibold text-foreground">SSO URL / Authorization Endpoint</Label>
+          <Label htmlFor="ssoUrl" className="text-sm font-semibold text-foreground">{t('SSO URL / Authorization Endpoint')}</Label>
           <Input
             id="ssoUrl"
             type="url"
             placeholder="https://login.provider.com/sso"
             value={newIdp.config.singleSignOnServiceUrl ?? ''}
             onChange={(e) => updateConfig('singleSignOnServiceUrl', e.target.value)}
-            className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+            className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
             required
           />
         </div>
 
         {/* Additional Configuration Fields */}
-        <div className="mt-8 pt-6 border-t border-border">
-          <h4 className="text-lg font-semibold text-foreground mb-4">Additional Configuration</h4>
+        <div className="mt-8 pt-6 border-t border-border/50">
+          <h4 className="text-lg font-semibold text-foreground mb-4">{t('Additional Configuration')}</h4>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="space-y-3">
-              <Label htmlFor="configDisplayName" className="text-sm font-semibold text-foreground">UI Display Override</Label>
+              <Label htmlFor="configDisplayName" className="text-sm font-semibold text-foreground">{t('UI Display Override')}</Label>
               <Input
                 id="configDisplayName"
-                placeholder="Friendly name for login screens"
+                placeholder={t('Friendly name for login screens')}
                 value={newIdp.config.displayName ?? ''}
                 onChange={(e) => updateConfig('displayName', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="issuer" className="text-sm font-semibold text-foreground">Issuer</Label>
+              <Label htmlFor="issuer" className="text-sm font-semibold text-foreground">{t('Issuer')}</Label>
               <Input
                 id="issuer"
-                placeholder="Identity provider issuer URL"
+                placeholder={t('Identity provider issuer URL')}
                 value={newIdp.config.issuer ?? ''}
                 onChange={(e) => updateConfig('issuer', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
           </div>
@@ -179,48 +182,48 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label htmlFor="clientSecret" className="text-sm font-semibold text-foreground">Client Secret</Label>
+                  <Label htmlFor="clientSecret" className="text-sm font-semibold text-foreground">{t('Client Secret')}</Label>
                   <Input
                     id="clientSecret"
                     type="password"
-                    placeholder="OAuth2/OIDC client secret"
+                    placeholder={t('OAuth2/OIDC client secret')}
                     value={newIdp.config.clientSecret ?? ''}
                     onChange={(e) => updateConfig('clientSecret', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="tokenUrl" className="text-sm font-semibold text-foreground">Token URL</Label>
+                  <Label htmlFor="tokenUrl" className="text-sm font-semibold text-foreground">{t('Token URL')}</Label>
                   <Input
                     id="tokenUrl"
                     type="url"
                     placeholder="https://login.provider.com/token"
                     value={newIdp.config.tokenUrl ?? ''}
                     onChange={(e) => updateConfig('tokenUrl', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label htmlFor="userInfoUrl" className="text-sm font-semibold text-foreground">User Info URL</Label>
+                  <Label htmlFor="userInfoUrl" className="text-sm font-semibold text-foreground">{t('User Info URL')}</Label>
                   <Input
                     id="userInfoUrl"
                     type="url"
                     placeholder="https://login.provider.com/userinfo"
                     value={newIdp.config.userInfoUrl ?? ''}
                     onChange={(e) => updateConfig('userInfoUrl', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="defaultScopes" className="text-sm font-semibold text-foreground">Default Scopes</Label>
+                  <Label htmlFor="defaultScopes" className="text-sm font-semibold text-foreground">{t('Default Scopes')}</Label>
                   <Input
                     id="defaultScopes"
                     placeholder="openid profile email"
                     value={newIdp.config.defaultScopes ?? ''}
                     onChange={(e) => updateConfig('defaultScopes', e.target.value)}
-                    className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
                   />
                 </div>
               </div>
@@ -232,34 +235,40 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <Label htmlFor="signatureAlgorithm" className="text-sm font-semibold text-foreground">Signature Algorithm</Label>
-                  <select
-                    id="signatureAlgorithm"
-                    className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+                  <Label htmlFor="signatureAlgorithm" className="text-sm font-semibold text-foreground">{t('Signature Algorithm')}</Label>
+                  <Select
                     value={newIdp.config.signatureAlgorithm ?? 'RS256'}
-                    onChange={(e) => updateConfig('signatureAlgorithm', e.target.value)}
+                    onValueChange={(value) => updateConfig('signatureAlgorithm', value)}
                   >
-                    <option value="RS256">RSA-SHA256</option>
-                    <option value="RS384">RSA-SHA384</option>
-                    <option value="RS512">RSA-SHA512</option>
-                    <option value="ES256">ECDSA-SHA256</option>
-                    <option value="ES384">ECDSA-SHA384</option>
-                    <option value="ES512">ECDSA-SHA512</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RS256">{t('RSA-SHA256')}</SelectItem>
+                      <SelectItem value="RS384">{t('RSA-SHA384')}</SelectItem>
+                      <SelectItem value="RS512">{t('RSA-SHA512')}</SelectItem>
+                      <SelectItem value="ES256">{t('ECDSA-SHA256')}</SelectItem>
+                      <SelectItem value="ES384">{t('ECDSA-SHA384')}</SelectItem>
+                      <SelectItem value="ES512">{t('ECDSA-SHA512')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-3">
-                  <Label htmlFor="nameIdFormat" className="text-sm font-semibold text-foreground">NameID Format</Label>
-                  <select
-                    id="nameIdFormat"
-                    className="flex h-12 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm shadow-sm focus:border-ring focus:ring-2 focus:ring-ring focus:ring-offset-2 transition-all duration-200"
+                  <Label htmlFor="nameIdFormat" className="text-sm font-semibold text-foreground">{t('NameID Format')}</Label>
+                  <Select
                     value={newIdp.config.nameIdPolicyFormat ?? 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent'}
-                    onChange={(e) => updateConfig('nameIdPolicyFormat', e.target.value)}
+                    onValueChange={(value) => updateConfig('nameIdPolicyFormat', value)}
                   >
-                    <option value="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">Persistent</option>
-                    <option value="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">Transient</option>
-                    <option value="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">Email Address</option>
-                    <option value="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">Unspecified</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="urn:oasis:names:tc:SAML:2.0:nameid-format:persistent">{t('Persistent')}</SelectItem>
+                      <SelectItem value="urn:oasis:names:tc:SAML:2.0:nameid-format:transient">{t('Transient')}</SelectItem>
+                      <SelectItem value="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">{t('Email Address')}</SelectItem>
+                      <SelectItem value="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">{t('Unspecified')}</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="space-y-3">
@@ -269,7 +278,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                   placeholder="-----BEGIN CERTIFICATE-----&#10;MIIBIjANBgkqhkiG9w0BAQ...&#10;-----END CERTIFICATE-----"
                   value={newIdp.config.signingCertificate ?? ''}
                   onChange={(e) => updateConfig('signingCertificate', e.target.value)}
-                  className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm min-h-[120px]"
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm min-h-[120px]"
                   rows={5}
                 />
               </div>
@@ -279,7 +288,7 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
           {/* Common additional fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
             <div className="space-y-3">
-              <Label htmlFor="logoutUrl" className="text-sm font-semibold text-foreground">Logout URL</Label>
+              <Label htmlFor="logoutUrl" className="text-sm font-semibold text-foreground">{t('Logout URL')}</Label>
               <Input
                 id="logoutUrl"
                 type="url"
@@ -296,65 +305,126 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
                     },
                   }));
                 }}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="metadataUrl" className="text-sm font-semibold text-foreground">Metadata URL</Label>
+              <Label htmlFor="metadataUrl" className="text-sm font-semibold text-foreground">{t('Metadata URL')}</Label>
               <Input
                 id="metadataUrl"
                 type="url"
                 placeholder="https://login.provider.com/.well-known/metadata"
                 value={newIdp.config.metadataDescriptorUrl ?? ''}
                 onChange={(e) => updateConfig('metadataDescriptorUrl', e.target.value)}
-                className="rounded-xl border-border focus:border-ring focus:ring-ring shadow-sm"
+                className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
               />
             </div>
           </div>
 
           {/* Security Options */}
-          <div className="mt-6 pt-4 border-t border-border">
-            <h5 className="text-md font-semibold text-foreground mb-4">Security Options</h5>
+          <div className="mt-6 pt-4 border-t border-border/50">
+            <h5 className="text-md font-semibold text-foreground mb-4">{t('Security Options')}</h5>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
+                <Checkbox
                   id="validateSignature"
                   checked={newIdp.config.validateSignature ?? false}
-                  onChange={(e) => updateConfig('validateSignature', e.target.checked)}
-                  className="rounded border-border"
+                  onCheckedChange={(checked) => updateConfig('validateSignature', checked === true)}
                 />
-                <Label htmlFor="validateSignature" className="text-sm text-foreground">Validate Signature</Label>
+                <Label htmlFor="validateSignature" className="text-sm text-foreground">{t('Validate Signature')}</Label>
               </div>
               {(newIdp.providerId ?? '').toLowerCase() === 'saml' && (
                 <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     id="wantAuthnRequestsSigned"
                     checked={newIdp.config.wantAuthnRequestsSigned ?? false}
-                    onChange={(e) => updateConfig('wantAuthnRequestsSigned', e.target.checked)}
-                    className="rounded border-border"
+                    onCheckedChange={(checked) => updateConfig('wantAuthnRequestsSigned', checked === true)}
                   />
-                  <Label htmlFor="wantAuthnRequestsSigned" className="text-sm text-foreground">Want AuthnRequests Signed</Label>
+                  <Label htmlFor="wantAuthnRequestsSigned" className="text-sm text-foreground">{t('Want AuthnRequests Signed')}</Label>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Identity Linking */}
+          <div className="mt-6 pt-4 border-t border-border/50">
+            <h5 className="text-md font-semibold text-foreground mb-2">{t('Identity Linking')}</h5>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('Controls how Keycloak links accounts when a user logs in via this provider for the first time.')}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-3">
+                <Label htmlFor="firstBrokerLoginFlowAlias" className="text-sm font-semibold text-foreground">{t('First Broker Login Flow')}</Label>
+                <Input
+                  id="firstBrokerLoginFlowAlias"
+                  placeholder="first broker login"
+                  value={newIdp.firstBrokerLoginFlowAlias ?? ''}
+                  onChange={(e) => setNewIdp((prev) => ({ ...prev, firstBrokerLoginFlowAlias: e.target.value }))}
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
+                />
+                <p className="text-xs text-muted-foreground">{t('Authentication flow triggered on first login via this IdP.')}</p>
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="postBrokerLoginFlowAlias" className="text-sm font-semibold text-foreground">{t('Post Broker Login Flow')}</Label>
+                <Input
+                  id="postBrokerLoginFlowAlias"
+                  placeholder="(optional)"
+                  value={newIdp.postBrokerLoginFlowAlias ?? ''}
+                  onChange={(e) => setNewIdp((prev) => ({ ...prev, postBrokerLoginFlowAlias: e.target.value }))}
+                  className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
+                />
+                <p className="text-xs text-muted-foreground">{t('Authentication flow triggered after every broker login.')}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="trustEmail"
+                  checked={newIdp.trustEmail ?? false}
+                  onCheckedChange={(checked) => setNewIdp((prev) => ({ ...prev, trustEmail: checked === true }))}
+                />
+                <div>
+                  <Label htmlFor="trustEmail" className="text-sm text-foreground">{t('Trust Email')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('Auto-verify email from this IdP and use it for account linking.')}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="linkOnly"
+                  checked={newIdp.linkOnly ?? false}
+                  onCheckedChange={(checked) => setNewIdp((prev) => ({ ...prev, linkOnly: checked === true }))}
+                />
+                <div>
+                  <Label htmlFor="linkOnly" className="text-sm text-foreground">{t('Link Only')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('Only link to existing accounts, never create new users.')}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="hideOnLogin"
+                  checked={newIdp.hideOnLogin ?? false}
+                  onCheckedChange={(checked) => setNewIdp((prev) => ({ ...prev, hideOnLogin: checked === true }))}
+                />
+                <div>
+                  <Label htmlFor="hideOnLogin" className="text-sm text-foreground">{t('Hide on Login Page')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('Hide this IdP from the Keycloak login page.')}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         <div className="flex gap-4 pt-4">
           <Button 
             type="submit"
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
-            Add Identity Provider
+            {t('Add Identity Provider')}
           </Button>
           <Button 
             type="button" 
             variant="outline" 
             onClick={onClose}
-            className="px-8 py-3 border-border text-foreground font-semibold rounded-xl hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            Cancel
+            {t('Cancel')}
           </Button>
         </div>
       </form>
