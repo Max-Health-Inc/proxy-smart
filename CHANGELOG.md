@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603231643.9fb5f430] - 2026-03-23
+
+- 🔧 Chores & Improvements: Expand environment ignore patterns to recursively ignore env files (**/.env, **/.env.local, **/.env.*.local) alongside existing rules
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/209
+
+
 ## [0.0.2-alpha.202603231631.09cefee1] - 2026-03-23
 
 - ✨ Features: None
