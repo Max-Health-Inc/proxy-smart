@@ -12,7 +12,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: releases
+  group: releases-beta
   cancel-in-progress: false
 
 jobs:
