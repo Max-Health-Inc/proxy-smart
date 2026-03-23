@@ -3,7 +3,7 @@
   "client_id": "consent-app",
   "description": "Patient consent management — create, review and revoke FHIR Consent resources",
   "client_uri": "http://localhost:5174",
-  "logo_uri": "http://localhost:5174/vite.svg",
+  "logo_uri": "http://localhost:5174/proxy-smart.svg",
   "redirect_uris": ["http://localhost:5174/callback"],
   "scope": "openid fhirUser patient/*.read patient/Consent.*",
   "grant_types": ["authorization_code"],
