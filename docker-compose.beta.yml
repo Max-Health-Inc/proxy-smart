@@ -87,7 +87,7 @@ services:
       CORS_ORIGINS: https://beta.proxy-smart.com
     labels:
       caddy: beta.proxy-smart.com
-      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /docs/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi.json /proxy-smart.svg"
+      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi.json /proxy-smart.svg"
       caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
       caddy.3_reverse_proxy: "{{upstreams 8445}}"
     depends_on:
