@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.0.2-beta.202603240346.274d844f",
+  "version": "0.0.2-alpha.202603240700.0cadb793",
   "type": "module",
   "scripts": {
     "test": "bun test",
@@ -17,7 +17,7 @@
     "check": "bun run typecheck && bun run lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.47",
+    "@ai-sdk/openai": "^3.0.48",
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/eden": "^1.4.8",
     "@elysiajs/openapi": "^1.4.14",
@@ -25,7 +25,7 @@
     "@keycloak/keycloak-admin-client": "^26.5.6",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@sinclair/typebox": "^0.34.48",
-    "ai": "^6.0.134",
+    "ai": "^6.0.137",
     "cross-fetch": "^4.1.0",
     "elysia": "^1.4.28",
     "jsonwebtoken": "^9.0.3",
@@ -49,7 +49,7 @@
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.57.2"
   },
   "module": "src/index.js"
 }

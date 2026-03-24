@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { Elysia, t } from 'elysia'
 import * as z from 'zod'
-import { extractRouteTools, type ToolMetadata } from '../src/lib/ai/tool-registry'
+import { extractRouteTools, getMergedInputSchema, type ToolMetadata } from '../src/lib/ai/tool-registry'
 
 /**
  * Tests for MCP tool-registry schema extraction and tool bridging.
@@ -26,12 +26,19 @@ function createTestApp() {
       }),
     })
     .put('/admin/users/:userId', ({ body, params }) => ({ updated: true, userId: params.userId, ...body }), {
+      params: t.Object({
+        userId: t.String({ description: 'User ID' }),
+      }),
       body: t.Object({
         name: t.Optional(t.String()),
         email: t.Optional(t.String({ format: 'email' })),
       }),
     })
-    .delete('/admin/users/:userId', ({ params }) => ({ deleted: true, userId: params.userId }))
+    .delete('/admin/users/:userId', ({ params }) => ({ deleted: true, userId: params.userId }), {
+      params: t.Object({
+        userId: t.String({ description: 'User ID' }),
+      }),
+    })
     .post('/admin/ai/chat', ({ body }) => ({ reply: `Echo: ${body.message}` }), {
       body: t.Object({
         message: t.String({ minLength: 1, description: 'User message' }),
@@ -129,6 +136,29 @@ describe('Tool Registry — Schema Extraction', () => {
     const deleteTool = tools.get('delete_admin_users_userId')
     expect(deleteTool!.method).toBe('DELETE')
     expect(deleteTool!.path).toBe('/admin/users/:userId')
+  })
+
+  it('extracts paramsSchema for routes with path parameters', () => {
+    const updateTool = tools.get('update_admin_users_userId')
+    expect(updateTool).toBeDefined()
+    expect(updateTool!.paramsSchema).toBeDefined()
+
+    const paramsSchema = updateTool!.paramsSchema as Record<string, unknown>
+    expect(paramsSchema.type).toBe('object')
+    const props = paramsSchema.properties as Record<string, unknown>
+    expect(props.userId).toBeDefined()
+  })
+
+  it('has no paramsSchema for routes without path parameters', () => {
+    const chatTool = tools.get('create_admin_ai_chat')
+    expect(chatTool!.paramsSchema).toBeUndefined()
+  })
+
+  it('extracts paramsSchema for delete routes (no body)', () => {
+    const deleteTool = tools.get('delete_admin_users_userId')
+    expect(deleteTool).toBeDefined()
+    expect(deleteTool!.paramsSchema).toBeDefined()
+    expect(deleteTool!.schema).toBeUndefined() // no body schema
   })
 })
 
@@ -245,6 +275,57 @@ describe('Tool Registry — Elysia Context for Handlers', () => {
     })
 
     expect(result).toEqual({ success: true, message: 'Restarted' })
+  })
+})
+
+// ── Merged Input Schema (body + path params) ────────────────────────────────
+
+describe('Tool Registry — getMergedInputSchema', () => {
+  const app = createTestApp()
+  const tools = extractRouteTools(app, { prefixes: ['/admin/'] })
+
+  it('returns body schema when no params', () => {
+    const chatTool = tools.get('create_admin_ai_chat')!
+    const merged = getMergedInputSchema(chatTool) as Record<string, unknown>
+    expect(merged).toBeDefined()
+    expect(merged.type).toBe('object')
+    const props = merged.properties as Record<string, unknown>
+    expect(props.message).toBeDefined()
+    expect(props.userId).toBeUndefined()
+  })
+
+  it('returns params schema when no body (DELETE with params)', () => {
+    const deleteTool = tools.get('delete_admin_users_userId')!
+    const merged = getMergedInputSchema(deleteTool) as Record<string, unknown>
+    expect(merged).toBeDefined()
+    expect(merged.type).toBe('object')
+    const props = merged.properties as Record<string, unknown>
+    expect(props.userId).toBeDefined()
+  })
+
+  it('merges body + params into single schema (PUT with both)', () => {
+    const updateTool = tools.get('update_admin_users_userId')!
+    const merged = getMergedInputSchema(updateTool) as Record<string, unknown>
+    expect(merged).toBeDefined()
+    expect(merged.type).toBe('object')
+    const props = merged.properties as Record<string, unknown>
+    // path param
+    expect(props.userId).toBeDefined()
+    // body params
+    expect(props.name).toBeDefined()
+    expect(props.email).toBeDefined()
+  })
+
+  it('includes path params in required array', () => {
+    const updateTool = tools.get('update_admin_users_userId')!
+    const merged = getMergedInputSchema(updateTool) as Record<string, unknown>
+    const required = merged.required as string[]
+    expect(required).toContain('userId')
+  })
+
+  it('returns undefined when neither body nor params', () => {
+    const restartTool = tools.get('create_admin_restart')!
+    expect(getMergedInputSchema(restartTool)).toBeUndefined()
   })
 })
 
