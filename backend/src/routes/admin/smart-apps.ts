@@ -23,6 +23,11 @@ function getAttr(attrs: Record<string, any> | undefined, key: string): string | 
   return typeof val === 'string' ? val : undefined
 }
 
+/** Valid literal values for schema-validated enums */
+const VALID_APP_TYPES = new Set(['standalone-app', 'ehr-launch', 'backend-service', 'agent'])
+const VALID_SERVER_ACCESS_TYPES = new Set(['all-servers', 'selected-servers', 'user-person-servers'])
+const VALID_MCP_ACCESS_TYPES = new Set(['none', 'all-mcp-servers', 'selected-mcp-servers'])
+
 /**
  * Register JWKS for a Backend Services client in Keycloak.
  * Accepts either an inline JWKS JSON string or a PEM public key (which gets converted to JWK).
@@ -165,7 +170,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               ...fullClient,
               defaultClientScopes: defaultScopeNames,
               optionalClientScopes: optionalScopeNames,
-              appType: appType || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
+              appType: (VALID_APP_TYPES.has(appType!) ? appType : undefined) || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
               clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
               
               // Client secret (only included for confidential clients with client-secret auth)
@@ -179,11 +184,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               contacts: getAttr(fullClient.attributes, 'contacts')?.split(',').filter(Boolean),
               
               // Server access control
-              serverAccessType: getAttr(fullClient.attributes, 'server_access_type') as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
+              serverAccessType: (VALID_SERVER_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'server_access_type')!) ? getAttr(fullClient.attributes, 'server_access_type') : undefined) as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
               allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
               
               // MCP server access control
-              mcpAccessType: (getAttr(fullClient.attributes, 'mcp_access_type') || 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
+              mcpAccessType: (VALID_MCP_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'mcp_access_type')!) ? getAttr(fullClient.attributes, 'mcp_access_type') : 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
               allowedMcpServerNames: getAttr(fullClient.attributes, 'allowed_mcp_server_names')?.split(',').filter(Boolean) || [],
               
               // Skills access control
