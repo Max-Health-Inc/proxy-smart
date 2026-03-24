@@ -24,6 +24,7 @@ import {
   getToolRegistry,
   isToolRegistryInitialized,
   generateToolDefinitions,
+  getMergedInputSchema,
 } from '../lib/ai/tool-registry'
 import { loadMcpEndpointConfig, isToolExposed } from '../lib/mcp-endpoint-config'
 import type { ToolMetadata } from '../lib/ai/tool-registry'
@@ -58,8 +59,9 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
     // Permission: skip admin-only tools when caller has no admin role
     if (!meta.public && !userRoles.includes('admin')) continue
 
-    // MCP SDK expects Zod schemas — convert TypeBox (which IS JSON Schema) via z.fromJSONSchema
-    const zodSchema = meta.schema ? typeboxToZod(meta.schema) : undefined
+    // MCP SDK expects Zod schemas — convert merged TypeBox (body + path params) via z.fromJSONSchema
+    const inputSchema = getMergedInputSchema(meta)
+    const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
 
     if (zodSchema) {
       server.registerTool(
@@ -163,11 +165,12 @@ async function executeTool(
   authToken?: string,
 ) {
   try {
-    // Validate args
-    if (meta.schema) {
-      const valid = Value.Check(meta.schema, args)
+    // Validate args against merged schema (body + path params)
+    const inputSchema = getMergedInputSchema(meta)
+    if (inputSchema) {
+      const valid = Value.Check(inputSchema, args)
       if (!valid) {
-        const errors = [...Value.Errors(meta.schema, args)]
+        const errors = [...Value.Errors(inputSchema, args)]
         return {
           content: [{ type: 'text' as const, text: `Validation error: ${JSON.stringify(errors)}` }],
           isError: true,
@@ -184,9 +187,15 @@ async function executeTool(
 
     // Build an Elysia-like context so route handlers work correctly.
     // Route handlers expect ({ body, headers, set, params, query, getAdmin, ... }).
+    // Separate path params from body args so handlers receive clean objects.
+    const pathParams = extractPathParams(meta.path, args)
+    const bodyArgs = { ...args }
+    for (const key of Object.keys(pathParams)) {
+      delete bodyArgs[key]
+    }
     let responseStatus = 200
     const elysiaContext = {
-      body: args,
+      body: bodyArgs,
       headers: {
         ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
         'content-type': 'application/json',
@@ -195,7 +204,7 @@ async function executeTool(
         status: 200,
         headers: {} as Record<string, string>,
       },
-      params: extractPathParams(meta.path, args),
+      params: pathParams,
       query: {},
       request: new Request(`http://localhost${meta.path}`, {
         method: meta.method,
