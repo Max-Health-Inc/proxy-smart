@@ -4,9 +4,85 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg" />
-  <title>Proxy Smart — SMART on FHIR Proxy</title>
-  <meta name="description" content="Open-source stateless proxy that adds OAuth 2.0 and SMART App Launch 2.2.0 authorization to any FHIR server." />
+  <title>Proxy Smart — SMART on FHIR Proxy | Open-Source Healthcare Auth</title>
+  <meta name="description" content="Open-source stateless proxy that adds OAuth 2.0 and SMART App Launch 2.2.0 authorization to any FHIR server. No PHI stored. Docker-ready. Built by Max Health Inc." />
+  <meta name="keywords" content="SMART on FHIR, FHIR proxy, OAuth 2.0, healthcare authorization, SMART App Launch, HL7, interoperability, open source, Keycloak, BabelFHIR-TS, MCP, healthcare AI" />
   <meta name="theme-color" content="#000000" />
+  <meta name="author" content="Max Health Inc." />
+  <link rel="canonical" href="https://proxy-smart.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Proxy Smart — SMART on FHIR Proxy" />
+  <meta property="og:description" content="Open-source stateless proxy that adds OAuth 2.0 and SMART App Launch 2.2.0 authorization to any FHIR server. No PHI stored. Docker-ready." />
+  <meta property="og:url" content="https://proxy-smart.com/" />
+  <meta property="og:site_name" content="Proxy Smart" />
+  <meta property="og:image" content="https://proxy-smart.com/proxy-smart.svg" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Proxy Smart — SMART on FHIR Proxy" />
+  <meta name="twitter:description" content="Open-source stateless proxy that adds SMART App Launch 2.2.0 authorization to any FHIR server." />
+  <meta name="twitter:image" content="https://proxy-smart.com/proxy-smart.svg" />
+
+  <!-- AI Discoverability -->
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable product description" />
+
+  <!-- JSON-LD Structured Data: Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Max Health Inc.",
+    "url": "https://maxhealth.tech",
+    "logo": "https://proxy-smart.com/proxy-smart.svg",
+    "sameAs": [
+      "https://github.com/Max-Health-Inc",
+      "https://discord.gg/FshSApM7"
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data: SoftwareApplication -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Proxy Smart",
+    "description": "Open-source stateless proxy that adds OAuth 2.0 and SMART App Launch 2.2.0 authorization to any FHIR server.",
+    "applicationCategory": "HealthApplication",
+    "operatingSystem": "Linux, Docker",
+    "url": "https://proxy-smart.com",
+    "downloadUrl": "https://github.com/Max-Health-Inc/proxy-smart",
+    "softwareVersion": "2.2.0",
+    "author": {
+      "@type": "Organization",
+      "name": "Max Health Inc.",
+      "url": "https://maxhealth.tech"
+    },
+    "license": "https://opensource.org/licenses/AGPL-3.0",
+    "programmingLanguage": ["TypeScript", "JavaScript"],
+    "offers": [
+      {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "description": "Open source under AGPL-3.0"
+      }
+    ],
+    "featureList": [
+      "SMART App Launch 2.2.0 compliance",
+      "Stateless FHIR proxy — no PHI stored",
+      "OAuth 2.0 + PKCE authorization",
+      "Admin dashboard for SMART app management",
+      "MCP server for AI agent integration",
+      "BabelFHIR-TS type-safe FHIR development",
+      "Docker-ready deployment",
+      "Patient consent management"
+    ]
+  }
+  </script>
   <style>
     /* ── Reset ────────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -611,6 +687,7 @@
         <li><a href="#appstore">App Store</a></li>
         <li><a href="#architecture">Architecture</a></li>
         <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="/docs" style="color: rgba(255,255,255,.6);">Docs</a></li>
         <li><a href="https://github.com/max-health-inc/proxy-smart">GitHub</a></li>
       </ul>
     </div>
@@ -654,6 +731,7 @@
 
       <div class="hero-actions fade-in-d4">
         <a href="#quickstart" class="btn">Get Started &rarr;</a>
+        <a href="/docs" class="btn">Read the Docs</a>
         <a href="https://github.com/max-health-inc/proxy-smart" class="btn">View on GitHub</a>
       </div>
     </div>
@@ -869,9 +947,11 @@
       <div class="footer-inner">
         <span>&copy; <script>document.write(new Date().getFullYear())</script> Max Health Inc.</span>
         <div style="display: flex; gap: 1.5rem;">
+          <a href="/docs">Docs</a>
           <a href="https://github.com/max-health-inc/proxy-smart">GitHub</a>
           <a href="https://www.npmjs.com/package/babelfhir-ts">BabelFHIR-TS</a>
           <a href="https://discord.gg/FshSApM7">Discord</a>
+          <a href="/llms.txt">llms.txt</a>
         </div>
       </div>
       <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,.05); text-align: center;">
