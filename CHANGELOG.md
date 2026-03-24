@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/199
 
 
+
+- 🔧 Chores & Improvements: CI workflow updates and versioning
+  - Enable production release workflow and fix workflow_dispatch
+  - Update version to 0.0.2-beta.202603240700.0cadb793 (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/228
+
+
 ## [0.0.2-alpha.202603240346.274d844f] - 2026-03-24
 
 - ✨ Features: Add KC_HOSTNAME_STRICT=true for beta with redirect URIs for consent/dtr apps
