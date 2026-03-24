@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603232114.52d8e7a0] - 2026-03-24
+
+- ✨ Features: None
+- 🐛 Bug Fixes:
+  - fix: replace typeof fetch with explicit signature for Bun compatibility
+- 🔧 Chores & Improvements:
+  - chore: update version to 0.0.2-alpha.202603232114.52d8e7a0
+- 📚 Documentation:
+  - docs: update CHANGELOG.md for PR #221
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/222
+
+
 ## [0.0.2-alpha.202603232047.4de7c7aa] - 2026-03-23
 
 - 🔧 Chores & Improvements: Documentation routing and assets handling updates
