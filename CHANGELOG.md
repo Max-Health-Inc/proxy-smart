@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603240346.274d844f] - 2026-03-24
+
+- ✨ Features: Add KC_HOSTNAME_STRICT=true for beta with redirect URIs for consent/dtr apps
+- 🔧 Chores & Improvements: Testing updates for beta and dev SMART compliance reports
+- 🔧 Chores & Improvements: Version bumps for beta and alpha releases
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/226
+
+
 ## [0.0.2-alpha.202603240241.095e5351] - 2026-03-24
 
 - ✨ Features: AI discoverability, SEO metadata, and docs navigation (quotentiroler)
