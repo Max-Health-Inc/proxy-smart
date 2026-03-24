@@ -2,11 +2,11 @@ import { config } from './config'
 import { logger } from './lib/logger'
 import { initializeServer, displayServerEndpoints } from './init'
 import { oauthMetricsLogger } from './lib/oauth-metrics-logger'
+import { consentMetricsLogger } from './lib/consent-metrics-logger'
+import { fhirHealthLogger } from './lib/fhir-health-logger'
+import { adminAuditLogger } from './lib/admin-audit-logger'
 import { createApp } from './app-factory'
-
-// Debug CORS configuration
-console.log('[DEBUG] NODE_ENV:', process.env.NODE_ENV)
-console.log('[DEBUG] CORS origins:', config.cors.origins)
+import { existsSync, readFileSync } from 'fs'
 
 const app = createApp()
 
@@ -19,12 +19,33 @@ initializeServer()
     // Initialize OAuth metrics logger
     await oauthMetricsLogger.initialize();
 
+    // Initialize Consent metrics logger
+    await consentMetricsLogger.initialize();
+
+    // Initialize Admin audit logger
+    await adminAuditLogger.initialize();
+
+    // Initialize FHIR health logger and start background checks (every 30s)
+    await fhirHealthLogger.initialize();
+    fhirHealthLogger.start();
+
     try {
-      // In containerized environments (Docker/Fly.io), listen on all interfaces
+      // In containerized environments (Docker), listen on all interfaces
       // In local development, default to localhost only
-      const listenOptions = process.env.NODE_ENV === 'production' || process.env.DOCKER
+      const listenOptions: Record<string, any> = process.env.NODE_ENV === 'production' || process.env.DOCKER
         ? { port: config.port, hostname: '0.0.0.0' }
         : { port: config.port };
+
+      // Enable TLS when cert/key files are provided (e.g., CI compliance testing)
+      const tlsCert = process.env.TLS_CERT_FILE
+      const tlsKey = process.env.TLS_KEY_FILE
+      if (tlsCert && tlsKey && existsSync(tlsCert) && existsSync(tlsKey)) {
+        listenOptions.tls = {
+          cert: readFileSync(tlsCert),
+          key: readFileSync(tlsKey),
+        }
+        logger.server.info('TLS enabled via TLS_CERT_FILE / TLS_KEY_FILE')
+      }
 
       app.listen(listenOptions, async () => {
         logger.server.info(`🚀 Server successfully started on port ${config.port}`)
@@ -109,3 +130,11 @@ initializeServer()
 
     process.exit(1)
   })
+
+// Graceful shutdown
+for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+  process.on(signal, () => {
+    logger.server.info(`${signal} received — shutting down gracefully`)
+    app.stop().finally(() => process.exit(0))
+  })
+}

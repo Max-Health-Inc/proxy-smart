@@ -221,7 +221,7 @@ export async function fetchWithMtls(
         method: fetchOptions.method || 'GET',
         headers,
         body,
-        agent
+        agent: agent as unknown as import('http').Agent
       })
 
       // Convert node-fetch Response to standard Response for compatibility

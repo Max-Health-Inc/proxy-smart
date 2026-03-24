@@ -1,0 +1,18 @@
+# CDK output
+cdk.out/
+
+# Dependencies
+node_modules/
+
+# Build output
+*.js
+*.d.ts
+*.js.map
+
+# Keep source files
+!lib/**/*.ts
+!bin/**/*.ts
+
+# Environment files
+.env
+.env.local

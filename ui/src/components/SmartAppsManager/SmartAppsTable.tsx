@@ -1,5 +1,4 @@
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
   Table,
   TableBody,
@@ -29,6 +28,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import type { SmartApp, ScopeSet, SmartAppType } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 // UI-only type for display purposes
 type AuthenticationType = 'asymmetric' | 'symmetric' | 'none';
@@ -54,6 +54,7 @@ export function SmartAppsTable({
   onViewConfig,
   onEditAuth,
 }: SmartAppsTableProps) {
+  const { t } = useTranslation();
   const getServerAccessBadge = (app: SmartApp) => {
     switch (app.serverAccessType) {
       case 'all-servers':
@@ -77,7 +78,7 @@ export function SmartAppsTable({
       default:
         return {
           label: 'Unknown',
-          className: 'bg-muted/50 text-muted-foreground border-border',
+          className: 'bg-muted/50 text-muted-foreground border-border/50',
           icon: AlertCircle,
         };
     }
@@ -108,7 +109,7 @@ export function SmartAppsTable({
       default:
         return {
           label: 'Unknown',
-          className: 'bg-muted/50 text-muted-foreground border-border',
+          className: 'bg-muted/50 text-muted-foreground border-border/50',
         };
     }
   };
@@ -142,8 +143,8 @@ export function SmartAppsTable({
             <Settings className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-foreground tracking-tight">Registered Applications</h3>
-            <p className="text-muted-foreground font-medium">View and manage all SMART on FHIR applications</p>
+            <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Registered Applications')}</h3>
+            <p className="text-muted-foreground font-medium">{t('View and manage all SMART on FHIR applications')}</p>
           </div>
         </div>
 
@@ -151,13 +152,13 @@ export function SmartAppsTable({
           <Table>
             <TableHeader>
               <TableRow className="border-border/50">
-                <TableHead className="font-semibold text-muted-foreground">Application</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Type & Auth</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Server Access</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Client ID</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Status</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Scopes</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">Last Used</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Application')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Type & Auth')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Server Access')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Client ID')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Status')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Scopes')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Last Used')}</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -171,15 +172,13 @@ export function SmartAppsTable({
                 return (
                   <TableRow key={app.id} className="border-border/50 hover:bg-muted/50 transition-colors duration-200">
                     <TableCell>
-                      <div className="py-2">
+                      <div className="py-2 max-w-[280px]">
                         <div className="flex items-center space-x-3">
-                          <span className="text-lg">{getAppTypeIcon(app.appType || 'standalone-app')}</span>
-                          <div>
-                            <div className="font-semibold text-foreground">{app.name}</div>
-                            <div className="text-sm text-muted-foreground mt-1">
-                              {app.description && app.description.length > 120
-                                ? `${app.description.substring(0, 120)}...`
-                                : app.description}
+                          <span className="text-lg shrink-0">{getAppTypeIcon(app.appType || 'standalone-app')}</span>
+                          <div className="min-w-0">
+                            <div className="font-semibold text-foreground truncate">{app.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {app.description}
                             </div>
                           </div>
                         </div>
@@ -210,7 +209,7 @@ export function SmartAppsTable({
                       })()}
                     </TableCell>
                     <TableCell>
-                      <code className="bg-muted/50 px-3 py-2 rounded-lg text-sm font-medium text-foreground shadow-sm border border-border">
+                      <code className="bg-muted/50 px-3 py-2 rounded-lg text-sm font-medium text-foreground shadow-sm border border-border/50">
                         {app.clientId}
                       </code>
                     </TableCell>
@@ -219,7 +218,7 @@ export function SmartAppsTable({
                         variant={app.status === 'active' ? 'default' : 'secondary'}
                         className={app.status === 'active'
                           ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                          : 'bg-muted/50 text-muted-foreground border-border'
+                          : 'bg-muted/50 text-muted-foreground border-border/50'
                         }
                       >
                         {app.status}
@@ -286,19 +285,19 @@ export function SmartAppsTable({
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onOpenScopeEditor(app)} className="rounded-lg">
                             <Shield className="w-4 h-4 mr-2 text-primary" />
-                            Manage Scopes
+                            {t('Manage Scopes')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEditApp(app)} className="rounded-lg">
                             <Edit className="w-4 h-4 mr-2 text-muted-foreground" />
-                            Edit Details
+                            {t('Edit Details')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onViewConfig(app)} className="rounded-lg">
                             <Eye className="w-4 h-4 mr-2 text-muted-foreground" />
-                            View Configuration
+                            {t('View Configuration')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onEditAuth(app)} className="rounded-lg">
                             <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
-                            Authentication Settings
+                            {t('Authentication Settings')}
                           </DropdownMenuItem>
                           {app.clientId !== 'ai-assistant-agent' && (
                             <DropdownMenuItem
@@ -306,7 +305,7 @@ export function SmartAppsTable({
                               className="text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
+                              {t('Delete')}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>

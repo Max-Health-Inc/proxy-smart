@@ -1,6 +1,6 @@
 services:
   keycloak:
-    image: quay.io/keycloak/keycloak:26.4
+    image: quay.io/keycloak/keycloak:26.5.6
     container_name: proxy-smart-keycloak-dev
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
@@ -64,6 +64,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.mono
+      args:
+        VITE_ENCRYPTION_SECRET: ${VITE_ENCRYPTION_SECRET:-proxy-smart-dev-encryption-key}
     container_name: proxy-smart-app-dev
     environment:
       NODE_ENV: development

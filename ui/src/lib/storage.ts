@@ -12,6 +12,12 @@ export const getItem = async <T>(key: string): Promise<T | null> => {
     if (storedValue) {
         storedValue = applyDecrypt(storedValue);
 
+        // If decryption returned empty, treat as missing data
+        if (!storedValue) {
+            await localforage.removeItem(key);
+            return null;
+        }
+
         try {
             // Try to parse as JSON
             return JSON.parse(storedValue) as T;

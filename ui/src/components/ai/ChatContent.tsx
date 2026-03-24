@@ -1,9 +1,7 @@
 import React from 'react';
 import { Brain, Loader2, Mic, MicOff, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CardContent } from '../ui/card';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
+import { Button, CardContent, Input } from '@proxy-smart/shared-ui';
 import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import type { ChatMessage } from '../../lib/ai-assistant';
 

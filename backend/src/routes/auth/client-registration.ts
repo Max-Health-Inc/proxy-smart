@@ -104,8 +104,8 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
       if (settings.requireHttps) {
         const invalidUris = body.redirect_uris.filter(uri => 
           !uri.startsWith('https://') && 
-          !uri.startsWith('http://localhost:') && 
-          !uri.startsWith('http://127.0.0.1:')
+          !uri.startsWith('http://localhost') && 
+          !uri.startsWith('http://127.0.0.1')
         )
         if (invalidUris.length > 0) {
           set.status = 400

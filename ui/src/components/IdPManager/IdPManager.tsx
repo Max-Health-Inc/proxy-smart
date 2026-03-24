@@ -1,4 +1,5 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@proxy-smart/shared-ui';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Loader2, Shield } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
@@ -19,6 +20,7 @@ import type {
   UpdateIdentityProviderRequest,
   CreateIdentityProviderRequest
 } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 const DEFAULT_NAME_ID_FORMAT = 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent';
 
@@ -48,6 +50,11 @@ const createEmptyFormData = (): IdentityProviderFormData => ({
   enabled: true,
   config: createDefaultConfig(),
   vendorName: '',
+  firstBrokerLoginFlowAlias: 'first broker login',
+  postBrokerLoginFlowAlias: '',
+  trustEmail: false,
+  linkOnly: false,
+  hideOnLogin: false,
 });
 
 const sanitizeConfig = (config: IdentityProviderConfig): IdentityProviderConfig => {
@@ -93,9 +100,15 @@ const formDataFromStats = (provider: IdentityProviderWithStats): IdentityProvide
     ...((provider.config as IdentityProviderConfig) ?? {}),
   },
   vendorName: provider.vendorName,
+  firstBrokerLoginFlowAlias: provider.firstBrokerLoginFlowAlias ?? 'first broker login',
+  postBrokerLoginFlowAlias: provider.postBrokerLoginFlowAlias ?? '',
+  trustEmail: provider.trustEmail ?? false,
+  linkOnly: provider.linkOnly ?? false,
+  hideOnLogin: provider.hideOnLogin ?? false,
 });
 
 export function IdPManager() {
+  const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
   const [idps, setIdps] = useState<IdentityProviderWithStats[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +166,11 @@ export function IdPManager() {
           displayName: formData.displayName?.trim() || undefined,
           enabled: formData.enabled,
           config: sanitizeConfig(configWithDisplayName),
+          firstBrokerLoginFlowAlias: formData.firstBrokerLoginFlowAlias || undefined,
+          postBrokerLoginFlowAlias: formData.postBrokerLoginFlowAlias || undefined,
+          trustEmail: formData.trustEmail,
+          linkOnly: formData.linkOnly,
+          hideOnLogin: formData.hideOnLogin,
         };
 
         await clientApis.identityProviders.postAdminIdps({
@@ -204,6 +222,11 @@ export function IdPManager() {
           displayName: updatedIdp.displayName,
           enabled: updatedIdp.enabled,
           config: Object.keys(sanitizedConfig).length ? sanitizedConfig : undefined,
+          firstBrokerLoginFlowAlias: updatedIdp.firstBrokerLoginFlowAlias || undefined,
+          postBrokerLoginFlowAlias: updatedIdp.postBrokerLoginFlowAlias || undefined,
+          trustEmail: updatedIdp.trustEmail,
+          linkOnly: updatedIdp.linkOnly,
+          hideOnLogin: updatedIdp.hideOnLogin,
         };
 
         await clientApis.identityProviders.putAdminIdpsByAlias({
@@ -338,42 +361,34 @@ export function IdPManager() {
   };
 
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[300px]">
-        <div className="flex items-center space-x-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <div className="text-muted-foreground">Loading Identity Providers...</div>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message="Loading Identity Providers..." className="min-h-[300px]" />;
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       <NotificationToast
         notification={notification}
         onClose={() => setNotification(null)}
       />
 
-      <div className="bg-gradient-to-r from-background to-muted/50 p-8 rounded-3xl border border-border shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
-              Identity Provider Management
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+              {t('Identity Provider Management')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-primary/30 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Shield className="w-5 h-5 text-primary" />
               </div>
-              Configure and manage identity providers for healthcare system authentication
+              {t('Configure and manage identity providers for healthcare system authentication')}
             </div>
           </div>
           <Button
             onClick={() => setShowAddForm(true)}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
           >
             <Plus className="h-5 w-5 mr-2" />
-            Add Identity Provider
+            {t('Add Identity Provider')}
           </Button>
         </div>
       </div>

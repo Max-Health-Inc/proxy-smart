@@ -179,3 +179,47 @@ export const OAuthAnalyticsResponse = t.Object({
 
 export type OAuthAnalyticsResponseType = Static<typeof OAuthAnalyticsResponse>
 
+// ==================== FHIR Health Monitoring ====================
+
+export const FhirHealthCheckSchema = t.Object({
+  id: t.String({ description: 'Unique check ID' }),
+  timestamp: t.String({ description: 'Check timestamp (ISO 8601)' }),
+  serverName: t.String({ description: 'FHIR server display name' }),
+  serverUrl: t.String({ description: 'FHIR server base URL' }),
+  status: t.Union([t.Literal('healthy'), t.Literal('degraded'), t.Literal('unhealthy')], { description: 'Health status' }),
+  responseTimeMs: t.Number({ description: 'Response time in milliseconds' }),
+  fhirVersion: t.Optional(t.String({ description: 'Detected FHIR version' })),
+  error: t.Optional(t.String({ description: 'Error message if unhealthy' })),
+}, { title: 'FhirHealthCheck' })
+
+export type FhirHealthCheckSchemaType = Static<typeof FhirHealthCheckSchema>
+
+export const FhirUptimeSummarySchema = t.Object({
+  serverName: t.String({ description: 'FHIR server display name' }),
+  serverUrl: t.String({ description: 'FHIR server base URL' }),
+  currentStatus: t.Union([t.Literal('healthy'), t.Literal('degraded'), t.Literal('unhealthy')], { description: 'Current status' }),
+  uptimePercent: t.Number({ description: 'Uptime percentage over observation period' }),
+  avgResponseTimeMs: t.Number({ description: 'Average response time in ms' }),
+  checksTotal: t.Number({ description: 'Total number of checks' }),
+  checksHealthy: t.Number({ description: 'Number of healthy checks' }),
+  lastChecked: t.String({ description: 'Timestamp of last check (ISO 8601)' }),
+  lastError: t.Optional(t.String({ description: 'Most recent error message' })),
+  recentChecks: t.Array(FhirHealthCheckSchema, { description: 'Recent health check results' }),
+}, { title: 'FhirUptimeSummary' })
+
+export type FhirUptimeSummarySchemaType = Static<typeof FhirUptimeSummarySchema>
+
+export const FhirHealthChecksResponse = t.Object({
+  checks: t.Array(FhirHealthCheckSchema, { description: 'Health check history' }),
+  total: t.Number({ description: 'Total checks returned' }),
+  timestamp: t.String({ description: 'Response timestamp' }),
+}, { title: 'FhirHealthChecksResponse' })
+
+export type FhirHealthChecksResponseType = Static<typeof FhirHealthChecksResponse>
+
+export const FhirUptimeSummariesResponse = t.Object({
+  servers: t.Array(FhirUptimeSummarySchema, { description: 'Per-server uptime summaries' }),
+  timestamp: t.String({ description: 'Response timestamp' }),
+}, { title: 'FhirUptimeSummariesResponse' })
+
+export type FhirUptimeSummariesResponseType = Static<typeof FhirUptimeSummariesResponse>

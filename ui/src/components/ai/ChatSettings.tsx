@@ -1,4 +1,6 @@
 import { useTranslation } from 'react-i18next';
+import { Button } from '@proxy-smart/shared-ui';
+import { Switch } from '../ui/switch';
 import { AVAILABLE_MODELS } from './constants';
 
 interface ChatSettingsProps {
@@ -33,26 +35,25 @@ export function ChatSettings({
                     <label className="text-xs font-medium text-foreground mb-1.5 block">{t('AI Model')}</label>
                     <div className="space-y-1">
                         {AVAILABLE_MODELS.map((model) => (
-                            <button
+                            <Button
                                 key={model.id}
+                                variant={selectedModel === model.id ? 'default' : 'ghost'}
                                 onClick={() => onModelChange(model.id)}
-                                className={`w-full text-left px-2.5 py-2 rounded-md text-xs transition-colors ${
-                                    selectedModel === model.id
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'hover:bg-muted'
-                                }`}
+                                className={`w-full justify-start text-left h-auto px-2.5 py-2 text-xs`}
                             >
-                                <div className="font-medium">{model.name}</div>
-                                <div
-                                    className={`text-[10px] mt-0.5 ${
-                                        selectedModel === model.id
-                                            ? 'text-primary-foreground/80'
-                                            : 'text-muted-foreground'
-                                    }`}
-                                >
-                                    {model.description}
+                                <div>
+                                    <div className="font-medium">{model.name}</div>
+                                    <div
+                                        className={`text-[10px] mt-0.5 ${
+                                            selectedModel === model.id
+                                                ? 'text-primary-foreground/80'
+                                                : 'text-muted-foreground'
+                                        }`}
+                                    >
+                                        {model.description}
+                                    </div>
                                 </div>
-                            </button>
+                            </Button>
                         ))}
                     </div>
                 </div>
@@ -66,18 +67,11 @@ export function ChatSettings({
                                 {t('Real-time response streaming')}
                             </div>
                         </div>
-                        <button
-                            onClick={onStreamingToggle}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                streamingEnabled ? 'bg-primary' : 'bg-muted'
-                            }`}
-                        >
-                            <span
-                                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                                    streamingEnabled ? 'translate-x-5' : 'translate-x-1'
-                                }`}
-                            />
-                        </button>
+                        <Switch
+                            checked={streamingEnabled}
+                            onCheckedChange={() => onStreamingToggle()}
+                            size="sm"
+                        />
                     </label>
                 </div>
             </div>

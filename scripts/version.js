@@ -8,8 +8,14 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Directories to skip entirely during recursive search
+const SKIP_DIRS = ['node_modules', 'dist', 'build', '.git', '.cache', 'cache'];
+
+// Private packages that are never published — excluded from version management
+const EXCLUDED_PACKAGES = ['consent-app', 'dtr-app', 'shared-ui'];
+
 // Recursively find all package.json files using built-in modules
-function findPackageFiles(dir = process.cwd(), found = []) {
+function findPackageFiles(dir = process.cwd(), found = [], depth = 0) {
   try {
     const items = fs.readdirSync(dir);
     
@@ -18,10 +24,9 @@ function findPackageFiles(dir = process.cwd(), found = []) {
       const stat = fs.statSync(fullPath);
       
       if (stat.isDirectory()) {
-        // Skip node_modules, dist, build directories
-        if (!['node_modules', 'dist', 'build', '.git'].includes(item)) {
-          findPackageFiles(fullPath, found);
-        }
+        if (SKIP_DIRS.includes(item)) continue;
+        if (depth === 0 && EXCLUDED_PACKAGES.includes(item)) continue;
+        findPackageFiles(fullPath, found, depth + 1);
       } else if (item === 'package.json') {
         // Convert to relative path from process.cwd()
         const relativePath = path.relative(process.cwd(), fullPath);

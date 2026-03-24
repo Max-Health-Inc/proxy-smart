@@ -415,6 +415,81 @@ const result = await client.callTool('some_tool', { ...args });
 // Backoff: 2^attempt * 200ms (capped)
 ```
 
+## Client Authentication & Registration
+
+### OAuth Discovery Flow
+
+MCP clients discover how to authenticate via a two-step metadata chain defined by RFC 9728 and RFC 8414:
+
+```
+1. GET /.well-known/oauth-protected-resource
+   → Returns: authorization_servers[], resource (canonical URL), scopes_supported
+
+2. GET /.well-known/oauth-authorization-server  (from authorization_servers[0])
+   → Returns: authorization_endpoint, token_endpoint, registration_endpoint, ...
+```
+
+Both endpoints are served by `backend/src/routes/auth/mcp-metadata.ts` and proxy to Keycloak's actual OIDC configuration.
+
+### Client Registration Priority (MCP Spec)
+
+When an MCP client (e.g. VS Code, Claude Desktop) connects, it resolves a `client_id` in this order:
+
+1. **Pre-registered client** — Client already has a known `client_id` (e.g. hardcoded or from prior registration)
+2. **Client ID Metadata Document** — Client publishes a `client_id` document at a well-known URL (not commonly used)
+3. **Dynamic Client Registration (DCR)** — Client calls `registration_endpoint` (`/auth/register`) to auto-register
+4. **Prompt user** — Fallback: ask the user to provide a `client_id` manually
+
+Our server advertises `registration_endpoint` in the AS metadata, so DCR (option 3) works out of the box.
+
+### Pre-registered Clients (Keycloak)
+
+| Client ID | Type | Flow | Use Case |
+|-----------|------|------|----------|
+| `mcp-client` | Public | Authorization Code + PKCE | VS Code, Claude Desktop, browser-based MCP clients |
+| `ai-assistant-agent` | Confidential (client-jwt) | Service Account (client_credentials) | Machine-to-machine backend integrations |
+
+**Important:** `ai-assistant-agent` has `standardFlowEnabled: false` and requires client-jwt authentication. It **cannot** be used with VS Code or any browser-based OAuth flow that needs Authorization Code + PKCE.
+
+### VS Code MCP Configuration
+
+VS Code's `.vscode/mcp.json` schema for `http` type servers supports only: `type`, `url`, `headers`, `dev`. There is **no `clientId` field** — VS Code handles OAuth internally.
+
+When connecting to our MCP endpoint, VS Code will:
+1. Fetch `/.well-known/oauth-protected-resource` → gets AS URL
+2. Fetch `/.well-known/oauth-authorization-server` → gets `registration_endpoint`
+3. Call `/auth/register` (DCR) → receives a dynamically registered `client_id`
+4. Open browser for Authorization Code + PKCE flow
+5. Exchange code for tokens and connect
+
+If DCR fails, VS Code falls back to prompting the user — enter `mcp-client` when asked.
+
+```jsonc
+// .vscode/mcp.json
+{
+  "servers": {
+    "proxy-smart": {
+      "type": "http",
+      "url": "https://your-instance.example.com/mcp"
+    }
+  }
+}
+```
+
+### Dynamic Client Registration (DCR)
+
+The `/auth/register` endpoint proxies RFC 7591 requests to Keycloak. Dynamically registered clients appear in Keycloak with auto-generated IDs (e.g., `vscode-copilot-...`). These are public clients with standard flow enabled, suitable for browser-based auth.
+
+DCR is confirmed working on all environments. Existing dynamically registered VS Code clients can be seen in Keycloak's admin console.
+
+### Grant Types by Client
+
+| Grant Type | Client | When Used |
+|-----------|--------|-----------|
+| `authorization_code` + PKCE | `mcp-client`, DCR clients | Interactive (VS Code, Claude Desktop, browsers) |
+| `client_credentials` | `ai-assistant-agent` | M2M backend calls (requires client-jwt assertion) |
+| `urn:ietf:params:oauth:grant-type:token-exchange` | Backend internal | Token exchange for downstream FHIR calls |
+
 ## Security Considerations
 
 ### 1. Token Validation
@@ -690,6 +765,7 @@ curl -X POST https://keycloak.example.com/auth/realms/master/protocol/openid-con
 - [Model Context Protocol (MCP) Specification](https://modelcontextprotocol.io/)
 - [RFC 9728: OAuth 2.0 Resource Metadata](https://tools.ietf.org/html/rfc9728)
 - [RFC 8414: OAuth 2.0 Authorization Server Metadata](https://tools.ietf.org/html/rfc8414)
+- [RFC 7591: OAuth 2.0 Dynamic Client Registration](https://tools.ietf.org/html/rfc7591)
 - [RFC 6750: OAuth 2.0 Bearer Token Usage](https://tools.ietf.org/html/rfc6750)
 - [Microsoft MCP Learn Docs](https://learn.microsoft.com/en-us/semantic-kernel/concepts/mcp/)
 - [Elysia Web Framework](https://elysiajs.com/)

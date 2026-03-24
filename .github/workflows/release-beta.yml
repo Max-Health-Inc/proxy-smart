@@ -12,7 +12,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: releases
+  group: releases-beta
   cancel-in-progress: false
 
 jobs:
@@ -25,14 +25,9 @@ jobs:
       release_type: 'beta'
       source_branch: 'test'
       target_branch: 'test'
-      should_bump_version: false
+      should_bump_version: true
       is_prerelease: true
-      commit_limit: 10
-    secrets:
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    secrets: inherit
 
   # Deploy after successful release
   deploy-beta:
@@ -43,11 +38,7 @@ jobs:
       deployment_stage: 'beta'
       app_version: ${{ needs.beta-release.outputs.version }}
       source_branch: 'test'
-    secrets:
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-      VPS_HOST: ${{ secrets.VPS_HOST }}
-      VPS_USER: ${{ secrets.VPS_USER }}
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    secrets: inherit
 
   # Test the deployed beta application
   test-beta-deployment:
@@ -60,5 +51,4 @@ jobs:
       fhir_server_url: ${{ needs.deploy-beta.outputs.fhir_server_url }}
       keycloak_url: ${{ needs.deploy-beta.outputs.keycloak_url }}
       app_version: ${{ needs.beta-release.outputs.version }}
-    secrets:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    secrets: inherit

@@ -58,13 +58,25 @@ export const CreateIdentityProviderRequest = t.Object({
   providerId: t.String({ description: 'Provider type (oidc, saml, etc.)' }),
   displayName: t.Optional(t.String({ description: 'Display name for UI' })),
   enabled: t.Optional(t.Boolean({ description: 'Whether to enable the provider', default: true })),
-  config: IdentityProviderConfig
+  config: IdentityProviderConfig,
+  // Identity linking / broker flow settings
+  firstBrokerLoginFlowAlias: t.Optional(t.String({ description: 'Authentication flow for first broker login (e.g. "first broker login")' })),
+  postBrokerLoginFlowAlias: t.Optional(t.String({ description: 'Authentication flow to run after broker login' })),
+  trustEmail: t.Optional(t.Boolean({ description: 'Trust email provided by this identity provider for automatic account linking' })),
+  linkOnly: t.Optional(t.Boolean({ description: 'If true, users cannot log in through this provider, only link existing accounts' })),
+  hideOnLogin: t.Optional(t.Boolean({ description: 'Hide this provider from the login page' }))
 }, { title: 'CreateIdentityProviderRequest' })
 
 export const UpdateIdentityProviderRequest = t.Object({
   displayName: t.Optional(t.String({ description: 'Display name' })),
   enabled: t.Optional(t.Boolean({ description: 'Enable or disable the provider' })),
-  config: t.Optional(IdentityProviderConfig)
+  config: t.Optional(IdentityProviderConfig),
+  // Identity linking / broker flow settings
+  firstBrokerLoginFlowAlias: t.Optional(t.String({ description: 'Authentication flow for first broker login (e.g. "first broker login")' })),
+  postBrokerLoginFlowAlias: t.Optional(t.String({ description: 'Authentication flow to run after broker login' })),
+  trustEmail: t.Optional(t.Boolean({ description: 'Trust email provided by this identity provider for automatic account linking' })),
+  linkOnly: t.Optional(t.Boolean({ description: 'If true, users cannot log in through this provider, only link existing accounts' })),
+  hideOnLogin: t.Optional(t.Boolean({ description: 'Hide this provider from the login page' }))
 }, { title: 'UpdateIdentityProviderRequest' })
 
 // ==================== Response Schemas ====================

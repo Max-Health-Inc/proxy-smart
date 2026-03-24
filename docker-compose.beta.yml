@@ -1,0 +1,128 @@
+# Beta deployment stack for OVH VPS (135.125.205.225)
+# Domain: beta.proxy-smart.com
+# Requires the shared Caddy proxy: docker-compose.caddy.yml
+#
+# Prerequisites:
+#   docker network create caddy
+#   docker compose -f docker-compose.caddy.yml up -d
+#
+# Usage:
+#   docker compose -f docker-compose.beta.yml --env-file .env.beta up -d --build
+#
+# Required env vars (set in .env.beta):
+#   KC_DB_PASSWORD, POSTGRES_PASSWORD, KEYCLOAK_ADMIN_PASSWORD,
+#   KEYCLOAK_ADMIN_CLIENT_SECRET, VITE_ENCRYPTION_SECRET
+
+services:
+  keycloak:
+    build:
+      context: .
+      dockerfile: Dockerfile.keycloak
+    container_name: proxy-smart-keycloak-beta
+    restart: unless-stopped
+    environment:
+      KC_HOSTNAME: https://beta.proxy-smart.com/auth
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: ${KC_DB_PASSWORD:?Set KC_DB_PASSWORD}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+    labels:
+      caddy: beta.proxy-smart.com
+      caddy.@keycloak.path: "/auth/realms/* /auth/resources/* /auth/js/*"
+      caddy.0_reverse_proxy: "@keycloak {{upstreams 8080}}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxy-smart
+      - caddy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: proxy-smart-postgres-beta
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./keycloak/database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - proxy-smart
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: proxy-smart-backend-beta
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 8445
+      BASE_URL: https://beta.proxy-smart.com
+      KEYCLOAK_BASE_URL: http://keycloak:8080/auth
+      KEYCLOAK_PUBLIC_URL: https://beta.proxy-smart.com/auth
+      KEYCLOAK_DOMAIN: beta.proxy-smart.com
+      KEYCLOAK_REALM: proxy-smart
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
+      KEYCLOAK_ADMIN_CLIENT_ID: admin-service
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly
+      CORS_ORIGINS: https://beta.proxy-smart.com
+    labels:
+      caddy: beta.proxy-smart.com
+      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi.json /proxy-smart.svg"
+      caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
+      caddy.3_reverse_proxy: "{{upstreams 8445}}"
+    depends_on:
+      - keycloak
+    networks:
+      - proxy-smart
+      - caddy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ui
+      args:
+        VITE_ENCRYPTION_SECRET: ${VITE_ENCRYPTION_SECRET:-proxy-smart-beta-encryption-key}
+        VITE_BASE: /webapp/
+    container_name: proxy-smart-frontend-beta
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: https://beta.proxy-smart.com
+    labels:
+      caddy: beta.proxy-smart.com
+      caddy.@webapp.path: "/webapp /webapp/*"
+      caddy.2_reverse_proxy: "@webapp {{upstreams 80}}"
+    depends_on:
+      - backend
+    networks:
+      - proxy-smart
+      - caddy
+
+networks:
+  proxy-smart:
+    name: proxy-smart-beta-network
+    driver: bridge
+  caddy:
+    external: true
+
+volumes:
+  postgres_data:

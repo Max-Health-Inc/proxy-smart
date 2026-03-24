@@ -32,6 +32,7 @@ export interface ToolMetadata {
   method: string
   handler: unknown
   schema?: TSchema
+  paramsSchema?: TSchema
   public?: boolean // Whether tool is public (no auth required)
 }
 
@@ -98,7 +99,9 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
     // Check if route matches any of the specified prefixes
     const path = (route as { path?: unknown }).path
     const method = (route as { method?: unknown }).method
-    const schema = (route as { schema?: { body?: TSchema } }).schema
+    // Elysia stores body schema in hooks.body (TypeBox schema directly), not schema.body
+    const hooks = (route as { hooks?: { body?: TSchema; params?: TSchema } }).hooks
+    const legacySchema = (route as { schema?: { body?: TSchema; params?: TSchema } }).schema
     const handler = (route as { handler?: unknown }).handler
     const meta = (route as { meta?: { public?: boolean } }).meta
 
@@ -107,22 +110,24 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
     const matchesPrefix = routePrefixes.some(prefix => path.startsWith(prefix))
     if (!matchesPrefix) continue
     
-    // Skip GET requests (tools should be actions, not queries)
-    if (method === 'GET') continue
+    // Skip read-only / non-action methods (tools should be actions)
+    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') continue
     
     // Convert route path to tool name
     // e.g., /api/users/:id -> update_user_by_id (if PUT)
     //       /api/users -> create_user (if POST)
     const toolName = pathToToolName(path, method)
     
-    // Extract schema from route (if using validation)
-    const bodySchema = schema?.body
+    // Extract schema from route — prefer hooks (Elysia 1.x), fall back to schema (legacy)
+    const bodySchema = hooks?.body ?? legacySchema?.body
+    const paramsSchema = hooks?.params ?? legacySchema?.params
     
     tools.set(toolName, {
       path,
       method,
       handler,
       schema: bodySchema,
+      paramsSchema,
       public: meta?.public || false,
     })
   }
@@ -181,6 +186,39 @@ function pathToToolName(path: string, method: string): string {
 }
 
 /**
+ * Merge body and path-params schemas into a single input schema.
+ * Both are TypeBox t.Object() — we combine their properties so that
+ * MCP / OpenAI clients see a flat object with all required fields.
+ */
+export function getMergedInputSchema(meta: ToolMetadata): TSchema | undefined {
+  const { schema: bodySchema, paramsSchema } = meta
+  if (!bodySchema && !paramsSchema) return undefined
+  if (!paramsSchema) return bodySchema
+  if (!bodySchema) return paramsSchema
+
+  // JSON-safe copies strip TypeBox Symbol metadata (fine for JSON-Schema-based consumers)
+  const body = JSON.parse(JSON.stringify(bodySchema)) as Record<string, unknown>
+  const params = JSON.parse(JSON.stringify(paramsSchema)) as Record<string, unknown>
+
+  if (body.type !== 'object' || params.type !== 'object') return bodySchema
+
+  return {
+    type: 'object',
+    properties: {
+      ...(params.properties as Record<string, unknown>),
+      ...(body.properties as Record<string, unknown>),
+    },
+    required: [
+      ...new Set([
+        ...((params.required as string[]) ?? []),
+        ...((body.required as string[]) ?? []),
+      ]),
+    ],
+    additionalProperties: false,
+  } as unknown as TSchema
+}
+
+/**
  * Generate OpenAI tool definitions from route metadata
  */
 export function generateToolDefinitions(
@@ -195,15 +233,16 @@ export function generateToolDefinitions(
       continue
     }
     
-    // Convert TypeBox schema to OpenAI format
+    // Convert merged schema (body + path params) to OpenAI format
     let parameters: ToolDefinition['function']['parameters'] = {
       type: 'object',
       properties: {},
       additionalProperties: false,
     }
     
-    if (metadata.schema) {
-      parameters = typeboxToOpenAI(metadata.schema) as unknown as ToolDefinition['function']['parameters']
+    const inputSchema = getMergedInputSchema(metadata)
+    if (inputSchema) {
+      parameters = typeboxToOpenAI(inputSchema) as unknown as ToolDefinition['function']['parameters']
     }
     
     // Generate description from route metadata

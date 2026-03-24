@@ -28,7 +28,8 @@ import { getConsentProvision, getProvisionClasses, getProvisionType } from './ty
 import { consentCache } from './consent-cache'
 import { checkIal, getIalConfig } from './person-resolver'
 import { logger } from '../logger'
-import { config } from '../../config'
+import { getRuntimeConsentConfig } from '../runtime-config'
+import { consentMetricsLogger } from '../consent-metrics-logger'
 
 /**
  * Extract patient ID from various sources
@@ -290,7 +291,7 @@ async function fetchConsents(
 /**
  * Log consent decision for audit trail
  */
-function logAuditEntry(entry: ConsentAuditEntry): void {
+function logAuditEntry(entry: ConsentAuditEntry, extra?: { cached?: boolean; checkDurationMs?: number }): void {
   const level = entry.decision === 'deny' && entry.enforced ? 'warn' : 'info'
   
   logger.consent[level]('Consent decision', {
@@ -305,13 +306,30 @@ function logAuditEntry(entry: ConsentAuditEntry): void {
     serverName: entry.serverName,
     reason: entry.reason
   })
+
+  // Persist to metrics logger for the monitoring dashboard
+  consentMetricsLogger.logDecision({
+    decision: entry.decision,
+    enforced: entry.enforced,
+    mode: entry.mode,
+    consentId: entry.consentId,
+    patientId: entry.patientId,
+    clientId: entry.clientId,
+    resourceType: entry.resourceType,
+    resourcePath: entry.resourcePath,
+    serverName: entry.serverName,
+    method: entry.method,
+    reason: entry.reason,
+    cached: extra?.cached ?? false,
+    checkDurationMs: extra?.checkDurationMs ?? 0,
+  })
 }
 
 /**
- * Get consent configuration from app config
+ * Get consent configuration (runtime: realm attributes merged over env vars)
  */
 export function getConsentConfig(): ConsentConfig {
-  return config.consent
+  return getRuntimeConsentConfig()
 }
 
 /**
@@ -398,7 +416,7 @@ export async function checkConsent(
         reason: result.reason,
         mode: consentConfig.mode,
         enforced: false
-      })
+      }, { cached: false, checkDurationMs: result.checkDurationMs })
     }
 
     return result
@@ -475,7 +493,7 @@ export async function checkConsent(
     reason: result.reason,
     mode: consentConfig.mode,
     enforced: consentConfig.mode === 'enforce'
-  })
+  }, { cached, checkDurationMs })
 
   return result
 }
@@ -600,7 +618,7 @@ export async function checkConsentWithIal(
         mode: consentConfig.mode,
         enforced: consentConfig.mode === 'enforce',
         ialCheck: ialCheckResult
-      })
+      }, { cached: false, checkDurationMs: result.checkDurationMs })
 
       return result
     }
@@ -636,7 +654,7 @@ export async function checkConsentWithIal(
 /**
  * Log consent + IAL audit entry
  */
-function logAuditEntryWithIal(entry: ConsentAuditEntry & { ialCheck?: { allowed: boolean; actualLevel: string | null; requiredLevel: string; isSensitiveResource: boolean } | null }): void {
+function logAuditEntryWithIal(entry: ConsentAuditEntry & { ialCheck?: { allowed: boolean; actualLevel: string | null; requiredLevel: string; isSensitiveResource: boolean } | null }, extra?: { cached?: boolean; checkDurationMs?: number }): void {
   const level = entry.decision === 'deny' && entry.enforced ? 'warn' : 'info'
   
   logger.consent[level]('Consent+IAL decision', {
@@ -656,5 +674,23 @@ function logAuditEntryWithIal(entry: ConsentAuditEntry & { ialCheck?: { allowed:
       required: entry.ialCheck.requiredLevel,
       sensitive: entry.ialCheck.isSensitiveResource
     } : null
+  })
+
+  // Persist to metrics logger for the monitoring dashboard
+  consentMetricsLogger.logDecision({
+    decision: entry.decision,
+    enforced: entry.enforced,
+    mode: entry.mode,
+    consentId: entry.consentId,
+    patientId: entry.patientId,
+    clientId: entry.clientId,
+    resourceType: entry.resourceType,
+    resourcePath: entry.resourcePath,
+    serverName: entry.serverName,
+    method: entry.method,
+    reason: entry.reason,
+    cached: extra?.cached ?? false,
+    checkDurationMs: extra?.checkDurationMs ?? 0,
+    ial: entry.ialCheck ?? null,
   })
 }

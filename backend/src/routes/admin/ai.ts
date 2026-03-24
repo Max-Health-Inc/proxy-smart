@@ -19,13 +19,15 @@ import {
 import { getToolRegistry, createToolExecutor } from '@/lib/ai/tool-registry'
 import { type AIContext } from '@/lib/ai/assistant'
 import { McpClient, McpConnectionManager } from '@/lib/ai/mcp-client'
-import { streamText, generateText, type Tool as AiSdkTool, type LanguageModel } from 'ai'
+import { streamText, generateText, jsonSchema, stepCountIs, type Tool as AiSdkTool, type LanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
-import { typeboxToZod } from '@/lib/schemas/typebox-to-zod'
 import { validateToken } from '@/lib/auth'
 import type { JwtPayload } from 'jsonwebtoken'
 import { config } from '@/config'
+import { getConfiguredServers } from './mcp-servers'
+import { getInstalledSkills } from './ai-tools-skills'
+import { searchDocumentation } from '@/lib/ai/rag-tools'
 
 // Keycloak-flavored OIDC JWT payload shape (subset)
 type KeycloakJwtPayload = JwtPayload & {
@@ -75,11 +77,10 @@ async function loadSystemPrompt(reqId?: string): Promise<string> {
     for (const promptPath of candidatePaths) {
       try {
         const promptContent = await fs.readFile(promptPath, 'utf-8')
+        // Only strip the top-level H1 title, keep everything else intact
+        // (headings, code fences, examples are all meaningful to the model)
         return promptContent
           .replace(/^# SMART on FHIR Platform AI Assistant - System Prompt\n\n/, '')
-          .replace(/##\s+/g, '')
-          .replace(/```[^\n]*\n/g, '')
-          .replace(/```/g, '')
           .trim()
       } catch (error) {
         errors.push({
@@ -103,34 +104,41 @@ async function loadSystemPrompt(reqId?: string): Promise<string> {
 }
 
 /**
- * Get configured external MCP servers
+ * Append dynamic context (installed skills, MCP servers) to the system prompt.
+ */
+function enrichSystemPrompt(basePrompt: string): string {
+  const sections: string[] = [basePrompt]
+
+  // Installed skills
+  const skills = getInstalledSkills().filter(s => s.enabled)
+  if (skills.length > 0) {
+    const skillLines = skills.map(s => {
+      const parts = [`- **${s.name}** (${s.type}): ${s.description}`]
+      if (s.sourceUrl) parts.push(`  Source: ${s.sourceUrl}`)
+      return parts.join('\n')
+    })
+    sections.push(
+      `\n\n## INSTALLED SKILLS\n\nThe platform has the following AI skills installed. You should know about these and be able to answer questions about them:\n\n${skillLines.join('\n')}`
+    )
+  }
+
+  // Configured MCP servers
+  const mcpServers = getConfiguredMcpServers()
+  if (mcpServers.length > 0) {
+    const serverLines = mcpServers.map(s => `- **${s.name}**: ${s.url}`)
+    sections.push(
+      `\n\n## CONNECTED MCP SERVERS\n\n${serverLines.join('\n')}`
+    )
+  }
+
+  return sections.join('')
+}
+
+/**
+ * Get all configured MCP servers (env + dynamically added via UI)
  */
 function getConfiguredMcpServers(): Array<{ name: string; url: string }> {
-  const servers: Array<{ name: string; url: string }> = []
-  
-  // External MCP servers from environment (user-configured)
-  const externalServersEnv = process.env.EXTERNAL_MCP_SERVERS
-  if (externalServersEnv) {
-    try {
-      const externalServers = JSON.parse(externalServersEnv)
-      if (Array.isArray(externalServers)) {
-        for (const server of externalServers) {
-          if (server.name && server.url) {
-            servers.push({
-              name: server.name,
-              url: server.url
-            })
-          }
-        }
-      }
-    } catch (error) {
-      logger.server.warn('Failed to parse EXTERNAL_MCP_SERVERS', {
-        error: error instanceof Error ? error.message : String(error)
-      })
-    }
-  }
-  
-  return servers
+  return getConfiguredServers().map(s => ({ name: s.name, url: s.url }))
 }
 
 /**
@@ -156,7 +164,12 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
     const prefixedName = `i_${toolName}`
     sdkTools[prefixedName] = {
       description: `[Internal] Auto-generated tool for ${meta.method} ${meta.path}`,
-      inputSchema: meta.schema ? typeboxToZod(meta.schema) : z.object({}).strict(),
+      inputSchema: meta.schema ? (() => {
+        try {
+          const jsonSchema = JSON.parse(JSON.stringify(meta.schema))
+          return jsonSchema.type === 'object' ? z.fromJSONSchema(jsonSchema) : z.object({}).strict()
+        } catch { return z.object({}).strict() }
+      })() : z.object({}).strict(),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       execute: async ({ input }: any) => {
         logger.server.debug('Executing internal tool', { reqId, tool: toolName, input })
@@ -218,21 +231,27 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
       for (const mcpTool of mcpTools) {
         // Use short prefix "m_" to stay within OpenAI's 64-char tool name limit
         const toolName = `m_${mcpTool.function.name}`
+        // Pass the real JSON Schema from the MCP server so the model knows what parameters to send
+        const mcpInputSchema = mcpTool.function.parameters && Object.keys(mcpTool.function.parameters).length > 0
+          ? jsonSchema(mcpTool.function.parameters as Parameters<typeof jsonSchema>[0])
+          : z.object({})
         sdkTools[toolName] = {
           description: `[MCP] ${mcpTool.function.description}`,
-          inputSchema: z.object({}), // MCP tools use their own parameter validation
+          inputSchema: mcpInputSchema,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          execute: async ({ input }: any) => {
-            logger.server.debug('Executing MCP tool', { reqId, tool: mcpTool.function.name, input })
+          execute: async (args: any) => {
+            logger.server.debug('Executing MCP tool', { reqId, tool: mcpTool.function.name, args })
             const start = Date.now()
             try {
-              const result = await mcpManager.callTool(mcpTool.function.name, input || {})
+              const result = await mcpManager.callTool(mcpTool.function.name, args || {})
               logger.server.debug('MCP tool completed', {
                 reqId,
                 tool: mcpTool.function.name,
-                duration: Date.now() - start
+                duration: Date.now() - start,
+                contentCount: result.content.length,
               })
-              return result.content[0]?.text || ''
+              // Concatenate all text content from the MCP response
+              return result.content.map(c => c.text).join('\n\n') || ''
             } catch (error) {
               logger.server.error('MCP tool failed', {
                 reqId,
@@ -253,6 +272,43 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
       })
     }
   }
+
+  // 3. Add RAG documentation search tool
+  sdkTools['search_documentation'] = {
+    description: 'Search the platform documentation knowledge base using semantic similarity. Use this tool when the user asks about platform features, configuration, SMART on FHIR concepts, admin UI usage, OAuth flows, or any question that could be answered by the documentation.',
+    inputSchema: z.object({
+      query: z.string().describe('The search query to find relevant documentation'),
+      limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
+    }),
+    execute: async ({ query, limit }) => {
+      logger.server.debug('Executing RAG documentation search', { reqId, query, limit })
+      const start = Date.now()
+      try {
+        const result = await searchDocumentation(query, limit ?? 5)
+        logger.server.debug('RAG search completed', {
+          reqId,
+          query,
+          results: result.total_results,
+          duration: Date.now() - start
+        })
+        if (result.total_results === 0) {
+          return 'No relevant documentation found for this query.'
+        }
+        return result.documents
+          .map(doc => `## ${doc.title}\n\n${doc.content}\n\n_Source: ${doc.source}_`)
+          .join('\n\n---\n\n')
+      } catch (error) {
+        logger.server.error('RAG search failed', {
+          reqId,
+          query,
+          duration: Date.now() - start,
+          error: error instanceof Error ? error.message : String(error)
+        })
+        return 'Documentation search is temporarily unavailable.'
+      }
+    }
+  }
+  toolSources.internal++
 
   logger.server.info('Tool setup completed', {
     reqId,
@@ -494,9 +550,10 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
       // Stream with AI SDK
       const result = await streamText({
         model: openai(modelToUse) as unknown as LanguageModel,
-        system: systemPrompt,
+        system: enrichSystemPrompt(systemPrompt),
         messages,
         tools: sdkTools,
+        stopWhen: stepCountIs(5),
         onFinish: async ({ text, toolCalls, usage, finishReason }) => {
           logger.server.info('AI stream finished', {
             reqId,
@@ -643,9 +700,10 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
       const startTime = Date.now()
       const result = await generateText({
         model: openai(modelToUse) as unknown as LanguageModel,
-        system: systemPrompt,
+        system: enrichSystemPrompt(systemPrompt),
         messages,
         tools: sdkTools,
+        stopWhen: stepCountIs(5),
       })
 
       logger.server.info('AI chat completed', { 

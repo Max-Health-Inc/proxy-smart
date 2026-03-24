@@ -93,7 +93,8 @@ export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionIn
     const response = await fetch(metadataUrl, {
       headers: {
         'Accept': 'application/fhir+json, application/json'
-      }
+      },
+      signal: AbortSignal.timeout(4000)
     })
 
     if (!response.ok) {

@@ -1,5 +1,6 @@
 import { Users, UserCheck, UserX, Clock } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface BaseUser {
   enabled: boolean;
@@ -151,6 +152,7 @@ function PieChart({ data, className = "" }: { data: RoleData[]; className?: stri
 }
 
 export function HealthcareUsersStats({ users }: HealthcareUsersStatsProps) {
+  const { t } = useTranslation();
   const activeUsers = users.filter(user => user.enabled).length;
   const inactiveUsers = users.filter(user => !user.enabled).length;
   const recentUsers = users.filter(user => {
@@ -234,7 +236,7 @@ export function HealthcareUsersStats({ users }: HealthcareUsersStatsProps) {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-primary tracking-wide">Total Users</div>
+              <div className="text-xs sm:text-sm font-semibold text-primary tracking-wide">{t('Total Users')}</div>
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{users.length}</div>
           </div>
@@ -251,7 +253,7 @@ export function HealthcareUsersStats({ users }: HealthcareUsersStatsProps) {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500/10 dark:bg-emerald-400/20 rounded-xl flex items-center justify-center shadow-sm">
                 <UserCheck className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 tracking-wide">Active</div>
+              <div className="text-xs sm:text-sm font-semibold text-emerald-700 dark:text-emerald-300 tracking-wide">{t('Active')}</div>
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{activeUsers}</div>
             <div className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">
@@ -271,7 +273,7 @@ export function HealthcareUsersStats({ users }: HealthcareUsersStatsProps) {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/10 dark:bg-red-400/20 rounded-xl flex items-center justify-center shadow-sm">
                 <UserX className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 dark:text-red-400" />
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300 tracking-wide">Inactive</div>
+              <div className="text-xs sm:text-sm font-semibold text-red-700 dark:text-red-300 tracking-wide">{t('Inactive')}</div>
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{inactiveUsers}</div>
             <div className="text-xs sm:text-sm text-red-600 dark:text-red-400">
@@ -291,10 +293,10 @@ export function HealthcareUsersStats({ users }: HealthcareUsersStatsProps) {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-violet-500/10 dark:bg-violet-400/20 rounded-xl flex items-center justify-center shadow-sm">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-violet-600 dark:text-violet-400" />
               </div>
-              <div className="text-xs sm:text-sm font-semibold text-violet-700 dark:text-violet-300 tracking-wide">Recent</div>
+              <div className="text-xs sm:text-sm font-semibold text-violet-700 dark:text-violet-300 tracking-wide">{t('Recent')}</div>
             </div>
             <div className="text-2xl sm:text-3xl font-bold text-foreground mb-2">{recentUsers}</div>
-            <div className="text-xs sm:text-sm text-violet-600 dark:text-violet-400">Added this week</div>
+            <div className="text-xs sm:text-sm text-violet-600 dark:text-violet-400">{t('Added this week')}</div>
           </div>
           <div className="ml-2 sm:ml-4 w-12 sm:w-16">
             <PieChart data={recentRoleData} className="w-full h-full" />

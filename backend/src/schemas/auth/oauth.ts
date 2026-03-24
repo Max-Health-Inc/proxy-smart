@@ -17,6 +17,7 @@ export const TokenRequest = t.Object({
   refresh_token: t.Optional(t.String({ description: 'Refresh token (for refresh_token grant)' })),
   scope: t.Optional(t.String({ description: 'Requested scopes (space-separated)' })),
   audience: t.Optional(t.String({ description: 'Target audience for the token' })),
+  resource: t.Optional(t.String({ description: 'Target resource URI (RFC 8707 Resource Indicators)' })),
   username: t.Optional(t.String({ description: 'Username (for password grant)' })),
   password: t.Optional(t.String({ description: 'Password (for password grant)' })),
   client_assertion_type: t.Optional(t.String({ description: 'Client assertion type for JWT authentication' })),
@@ -28,21 +29,20 @@ export const TokenRequest = t.Object({
 }, { title: 'TokenRequest' })
 export type TokenRequestType = Static<typeof TokenRequest>
 
-export const IntrospectRequest = t.Object({
-  token: t.String({ description: 'Token to introspect' }),
-  token_type_hint: t.Optional(t.String({ description: 'Hint about token type (access_token, refresh_token)' })),
-  client_id: t.Optional(t.String({ description: 'OAuth2 client ID' })),
-  client_secret: t.Optional(t.String({ description: 'OAuth2 client secret' }))
-}, { title: 'IntrospectRequest' })
+// RFC 7662 Token Introspection — accept any form fields since clients may send
+// auth params (client_assertion, client_assertion_type) that vary by implementation.
+// Keycloak handles the real validation.
+export const IntrospectRequest = t.Record(t.String(), t.String(), {
+  title: 'IntrospectRequest',
+  description: 'RFC 7662 token introspection request (token, token_type_hint, client_id, client_secret, etc.)'
+})
 export type IntrospectRequestType = Static<typeof IntrospectRequest>
 
-export const IntrospectResponse = t.Object({
-  active: t.Boolean({ description: 'Whether the token is active' }),
-  sub: t.Optional(t.String({ description: 'Subject (user ID) of the token' })),
-  aud: t.Optional(t.String({ description: 'Audience (intended recipient)' })),
-  exp: t.Optional(t.Number({ description: 'Expiration time (Unix timestamp)' })),
-  scope: t.Optional(t.String({ description: 'Granted scopes (space-separated)' }))
-}, { title: 'IntrospectResponse' })
+// Introspection response can contain many implementation-specific fields
+export const IntrospectResponse = t.Record(t.String(), t.Any(), {
+  title: 'IntrospectResponse',
+  description: 'RFC 7662 token introspection response (active, sub, aud, exp, scope, etc.)'
+})
 export type IntrospectResponseType = Static<typeof IntrospectResponse>
 
 // ==================== OAuth Query Parameters ====================

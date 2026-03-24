@@ -1,15 +1,18 @@
 /**
- * Documentation Routes
+ * Documentation API Routes
  * 
- * Public routes for accessing markdown documentation:
- * - GET /docs → Table of contents
- * - GET /docs/:filename → Serve markdown files
- * - GET /docs/search/keyword → Keyword search with hit counts
- * - GET /docs/search/semantic → Semantic search with similarity scores
+ * JSON API for programmatic access to raw markdown documentation:
+ * - GET /docs-api → Table of contents
+ * - GET /docs-api/:filename → Serve raw markdown files
+ * - GET /docs-api/search/keyword → Keyword search with hit counts
+ * - GET /docs-api/search/semantic → Semantic search with similarity scores
+ *
+ * VitePress-built docs are served as static files at /docs (see app-factory.ts)
  */
 
 import { Elysia, t } from 'elysia'
 import { readdir, readFile } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { searchDocumentation } from '../lib/ai/rag-tools'
 import {
@@ -27,7 +30,16 @@ import {
   type SemanticSearchResponseType
 } from '../schemas'
 
-const DOCS_DIR = join(import.meta.dir, '../../../docs')
+/** Resolve docs dir with fallback chain for local dev and Docker. */
+function resolveDocsDir(): string {
+  const candidates = [
+    join(import.meta.dir, '../../../docs'),         // local dev: src/routes/ → repo root
+    join(process.cwd(), '..', 'docs'),              // Docker: /app/backend → /app/docs
+    join(process.cwd(), 'docs'),                    // standalone: /app/docs
+  ]
+  return candidates.find(p => existsSync(p)) ?? candidates[0]
+}
+const DOCS_DIR = resolveDocsDir()
 
 /**
  * Load all markdown files and build table of contents
@@ -58,7 +70,7 @@ async function loadTableOfContents(): Promise<DocEntryType[]> {
           path: relativePath,
           title,
           category: category || 'general',
-          url: `/docs/${relativePath}`,
+          url: `/docs-api/${relativePath}`,
         })
       }
     }
@@ -158,7 +170,7 @@ async function semanticSearch(query: string, limit: number = 10): Promise<Semant
 /**
  * Documentation routes
  */
-export const docsRoutes = new Elysia({ prefix: '/docs' })
+export const docsRoutes = new Elysia({ prefix: '/docs-api' })
   .get(
     '/',
     async (): Promise<TableOfContentsResponseType> => {
@@ -178,8 +190,8 @@ export const docsRoutes = new Elysia({ prefix: '/docs' })
         categories: Object.keys(grouped).sort(),
         table_of_contents: grouped,
         search: {
-          keyword: '/docs/search/keyword?q=your+query',
-          semantic: '/docs/search/semantic?q=your+query',
+          keyword: '/docs-api/search/keyword?q=your+query',
+          semantic: '/docs-api/search/semantic?q=your+query',
         },
       }
     },

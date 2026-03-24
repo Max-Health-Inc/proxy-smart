@@ -11,24 +11,24 @@ The system now uses a **direct integration** approach where the AI assistant:
 4. Supports connecting to external MCP servers for additional capabilities
 
 ```
-┌─────────────────┐
-│   AI Assistant  │
-│   (ai-mcp.ts)   │
-└────────┬────────┘
+┌──────────────────────────┐
+│     AI Assistant         │
+│  (routes/admin/ai.ts)    │
+│  setupTools() merges:    │
+└────────┬─────────────────┘
          │
-         ├──────────────────────────┐
-         │                          │
-         v                          v
-┌────────────────────┐    ┌──────────────────────┐
-│  Internal MCP      │    │  External MCP Server │
-│  (mcp-http.ts)     │    │  (Optional)          │
-│                    │    │                      │
-│  Tools:            │    │  Tools:              │
-│  - User mgmt       │    │  - Filesystem        │
-│  - App mgmt        │    │  - Database          │
-│  - FHIR servers    │    │  - etc.              │
-│  - Identity        │    │                      │
-└────────────────────┘    └──────────────────────┘
+    ┌────┴────┬──────────────────┐
+    │         │                  │
+    v         v                  v
+┌────────┐ ┌───────────────┐ ┌────────────────────┐
+│Internal│ │ External MCP  │ │ RAG Documentation  │
+│ Tools  │ │ Servers       │ │ Search             │
+│(i_*)   │ │ (m_*)         │ │(search_docs)       │
+│        │ │               │ │                    │
+│Routes: │ │Configured via │ │Semantic + keyword  │
+│/admin/*│ │admin UI or    │ │search over docs    │
+│/fhir/*.│ │environment    │ │                    │
+└────────┘ └───────────────┘ └────────────────────┘
 ```
 
 ## Components
@@ -49,35 +49,41 @@ Provides client classes for connecting to MCP servers:
 - `callTool(toolName, args)` - Route execution to correct server
 - Tool names are prefixed: `internal-backend__getUserById`, `external-mcp__readFile`
 
-### 2. AI Routes (`routes/admin/ai-mcp.ts`)
+### 2. AI Routes (`routes/admin/ai.ts`)
 
-**POST `/admin/ai/chat`** - Main chat endpoint
+Provides two chat endpoints:
+
+**POST `/admin/ai/chat/stream`** - Streaming chat (primary, used by UI)
+**POST `/admin/ai/chat`** - Non-streaming chat (fallback)
+
+The `setupTools()` function merges three tool sources:
+1. **Internal tools** (`i_` prefix) - Auto-extracted from Elysia route registry
+2. **External MCP tools** (`m_` prefix) - From configured MCP servers
+3. **RAG search** (`search_documentation`) - Semantic docs search
 
 Flow:
-1. **Authentication**: Validates Bearer token, extracts user identity
-2. **Setup**: Creates `McpConnectionManager`, adds internal + optional external servers
-3. **Tool Discovery**: Fetches all tools via `getAllTools()`
-4. **AI Execution**: Uses Vercel AI SDK (`streamText`) with OpenAI models
-5. **Tool Calling**: AI can call tools; manager routes to correct server
-6. **Response**: Returns answer with metadata (tokens, duration, tools used)
+1. **Authentication**: Validates Bearer token via JWKS, extracts user identity and roles
+2. **Setup**: `setupTools()` builds unified tool map from all sources
+3. **AI Execution**: Uses Vercel AI SDK (`streamText`/`generateText`) with OpenAI models
+4. **Tool Calling**: AI calls tools; internal tools execute route handlers directly, MCP tools route via `McpConnectionManager`
+5. **Response**: SSE stream via `toUIMessageStreamResponse()` (or JSON for non-stream)
 
 Key features:
-- User-scoped tools (admin tools only visible to admins)
-- OAuth token forwarded for authentication
-- Supports multiple MCP servers
-- Detailed logging of tool execution
-- Error handling with graceful fallbacks
+- Unified tool namespace across internal routes, external MCP, and RAG
+- Step limit (`stopWhen: stepCountIs(5)`) prevents runaway tool loops
+- System prompt loaded from `prompts/system.md`
+- OAuth token forwarded for both internal and external tool auth
 
-### 3. Internal MCP Server (`routes/admin/mcp-http.ts`)
+### 3. MCP Server Endpoint (`routes/mcp-endpoint.ts`)
 
-Exposes backend routes as MCP tools:
+Exposes platform capabilities as a standard MCP server at **`/mcp`**:
 
-**POST `/mcp`** with `{ type: 'listTools' }`
-- Extracts tools from Elysia routes (prefixes: `/admin/*`, `/fhir-servers/*`)
-- Returns OpenAI function format tools
-- Filters by user role (public vs admin scope)
+- Uses `@modelcontextprotocol/sdk` with Streamable HTTP transport
+- Tools registered from the Elysia route registry (same as internal AI tools)
+- Also exposes `search_documentation` RAG tool
+- Admin can configure which tools are exposed via the MCP servers admin page
 
-**POST `/mcp`** with `{ type: 'callTool', name, args }`
+**POST `/mcp`** - MCP protocol requests (initialize, tools/list, tools/call)
 - Executes the actual route handler
 - Returns `{ content: [{ type: 'text', text: '...' }] }`
 - Handles authentication via Bearer token
@@ -256,7 +262,7 @@ Tools extracted from routes (examples):
 - **Insufficient scope**: Returns `insufficient_scope` error per RFC 6750
 
 ### Token Validation
-Both `ai-mcp.ts` and `mcp-http.ts` validate tokens:
+Both `ai.ts` and `mcp-endpoint.ts` validate tokens:
 - Signature verification via JWKS
 - Expiry check
 - Audience claim must match `config.mcp.audience`
@@ -367,12 +373,15 @@ Each response includes diagnostic info:
 
 ## Related Files
 
-- `backend/src/lib/ai/mcp-client.ts` - MCP client implementation
-- `backend/src/routes/admin/ai-mcp.ts` - AI assistant routes
-- `backend/src/routes/admin/mcp-http.ts` - Internal MCP server
-- `backend/src/lib/tool-registry.ts` - Tool extraction from routes
-- `backend/src/config.ts` - Configuration (includes `ai.openaiApiKey`)
-- `docs/BACKEND_MCP_HTTP_CLIENT.md` - MCP HTTP protocol details
+- `backend/src/lib/ai/mcp-client.ts` - MCP client implementation (external servers)
+- `backend/src/lib/ai/tool-registry.ts` - Internal tool extraction from Elysia routes
+- `backend/src/lib/ai/rag-tools.ts` - RAG documentation search
+- `backend/src/routes/admin/ai.ts` - Unified AI assistant routes (chat + stream)
+- `backend/src/routes/mcp-endpoint.ts` - MCP server endpoint (`/mcp`)
+- `backend/src/routes/docs.ts` - Documentation search HTTP endpoints
+- `backend/src/config.ts` - Configuration
+- `prompts/system.md` - AI system prompt
+- `docs/MCP_HTTP_SERVER.md` - MCP endpoint protocol details
 
 ## Testing
 

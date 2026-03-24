@@ -1,15 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "Checking version consistency (auto-pull mode)..."
-
-git fetch --quiet
-
-# Try a non-interactive pull with rebase and autostash
-if ! git pull --rebase --autostash --quiet; then
-  echo "Auto-pull failed (likely conflicts). Please resolve them manually (git status), then re-run commit."
-  exit 1
-fi
+echo "Checking version consistency..."
 
 # Run version sync
 node scripts/version.js sync
@@ -17,5 +9,5 @@ node scripts/version.js sync
 # Stage ALL changed files (including package.json and any files that were auto-formatted)
 git add -u || true
 
-echo "✅ Version consistency ensured (auto-pull)"
+echo "✅ Version consistency ensured"
 exit 0

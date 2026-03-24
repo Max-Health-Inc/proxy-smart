@@ -32,10 +32,6 @@ on:
         description: "Target platform where app was deployed"
         value: ${{ jobs.output-deployment-urls.outputs.deployment_target }}
     secrets:
-      FLY_API_TOKEN:
-        required: false
-      ALPHA_DB_PASSWORD:
-        required: false
       VPS_SSH_KEY:
         required: false
       VPS_HOST:
@@ -54,21 +50,16 @@ on:
         required: false
       DISCORD_WEBHOOK_URL:
         required: false
+      VITE_ENCRYPTION_SECRET:
+        required: false
+      BETA_POSTGRES_PASSWORD:
+        required: false
+      BETA_KEYCLOAK_ADMIN_PASSWORD:
+        required: false
+      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET:
+        required: false
 
 jobs:
-  # DEPRECATED: Alpha deployment is now handled automatically by Northflank CD
-  # This job is kept as reference but should not be called
-  deploy-alpha:
-    name: Deploy Alpha (DEPRECATED - Northflank handles this automatically)
-    if: inputs.deployment_stage == 'alpha' && false  # Disabled - Northflank CD handles alpha deployment
-    uses: ./.github/workflows/deploy-alpha.yml
-    with:
-      app_version: ${{ inputs.app_version }}
-      source_branch: ${{ inputs.source_branch }}
-    secrets:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      ALPHA_DB_PASSWORD: ${{ secrets.ALPHA_DB_PASSWORD }}
-
   deploy-beta:
     name: Deploy Beta (VPS)
     if: inputs.deployment_stage == 'beta'
@@ -80,6 +71,10 @@ jobs:
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
       VPS_USER: ${{ secrets.VPS_USER }}
+      BETA_POSTGRES_PASSWORD: ${{ secrets.BETA_POSTGRES_PASSWORD }}
+      BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
+      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
+      VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
 
   deploy-production:
     name: Deploy Production (Azure/AWS)
@@ -94,11 +89,12 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
 
   output-deployment-urls:
     name: Output Deployment URLs
     runs-on: ubuntu-latest
-    needs: [deploy-alpha, deploy-beta, deploy-production]
+    needs: [deploy-beta, deploy-production]
     if: always()
     outputs:
       fhir_server_url: ${{ steps.set-outputs.outputs.fhir_server_url }}
@@ -118,22 +114,7 @@ jobs:
           echo "deployment_target=unknown" >> $GITHUB_OUTPUT
           
           # Determine the job result and set appropriate values
-          if [ "${{ inputs.deployment_stage }}" = "alpha" ]; then
-            ALPHA_RESULT="${{ needs.deploy-alpha.result }}"
-            echo "Alpha deployment result: $ALPHA_RESULT"
-            
-            if [ "$ALPHA_RESULT" = "success" ]; then
-              echo "fhir_server_url=${{ needs.deploy-alpha.outputs.fhir_server_url }}" >> $GITHUB_OUTPUT
-              echo "keycloak_url=${{ needs.deploy-alpha.outputs.keycloak_url }}" >> $GITHUB_OUTPUT
-              echo "app_url=${{ needs.deploy-alpha.outputs.app_url }}" >> $GITHUB_OUTPUT
-              echo "deployment_status=${{ needs.deploy-alpha.outputs.deployment_status }}" >> $GITHUB_OUTPUT
-              echo "deployment_target=${{ needs.deploy-alpha.outputs.deployment_target }}" >> $GITHUB_OUTPUT
-            else
-              echo "deployment_status=$ALPHA_RESULT" >> $GITHUB_OUTPUT
-              echo "deployment_target=northflank" >> $GITHUB_OUTPUT
-            fi
-            
-          elif [ "${{ inputs.deployment_stage }}" = "beta" ]; then
+          if [ "${{ inputs.deployment_stage }}" = "beta" ]; then
             BETA_RESULT="${{ needs.deploy-beta.result }}"
             echo "Beta deployment result: $BETA_RESULT"
             
@@ -174,25 +155,24 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Discord Deployment Success Notification
         uses: ./.github/actions/discord-notify
         if: env.DISCORD_WEBHOOK_URL != ''
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          username: "Proxy Smart Bot"
-          avatar_url: "https://avatars.githubusercontent.com/u/9919?s=200&v=4"
-          title: "🚀 Deployment Successful!"
-          description: |
-            **Environment**: `${{ inputs.deployment_stage }}`
-            **Version**: `${{ inputs.app_version }}`
-            **Target**: `${{ needs.output-deployment-urls.outputs.deployment_target }}`
-            
-            **Service URLs**:
-            🏥 [FHIR Server](${{ needs.output-deployment-urls.outputs.fhir_server_url }})
-            🔐 [Keycloak Auth](${{ needs.output-deployment-urls.outputs.keycloak_url }})
-            📱 [Main App](${{ needs.output-deployment-urls.outputs.app_url }})
-          color: "3066993"
-          timestamp: true
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          notification-type: deployment
+          title: "Deployment Successful!"
+          description: "Environment: ${{ inputs.deployment_stage }} | Version: ${{ inputs.app_version }} | Target: ${{ needs.output-deployment-urls.outputs.deployment_target }}"
+          deployment-stage: ${{ inputs.deployment_stage }}
+          deployment-target: ${{ needs.output-deployment-urls.outputs.deployment_target }}
+          version: ${{ inputs.app_version }}
+          fhir-server-url: ${{ needs.output-deployment-urls.outputs.fhir_server_url }}
+          keycloak-url: ${{ needs.output-deployment-urls.outputs.keycloak_url }}
+          app-url: ${{ needs.output-deployment-urls.outputs.app_url }}
+          color: "00D4AA"
 
   # Discord notification on deployment failure
   notify-deployment-failure:
@@ -204,20 +184,18 @@ jobs:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Discord Deployment Failure Notification
         uses: ./.github/actions/discord-notify
         if: env.DISCORD_WEBHOOK_URL != ''
         with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          username: "Proxy Smart Bot"
-          avatar_url: "https://avatars.githubusercontent.com/u/9919?s=200&v=4"
-          title: "❌ Deployment Failed"
-          description: |
-            **Environment**: `${{ inputs.deployment_stage }}`
-            **Version**: `${{ inputs.app_version }}`
-            **Status**: `${{ needs.output-deployment-urls.outputs.deployment_status }}`
-            **Target**: `${{ needs.output-deployment-urls.outputs.deployment_target }}`
-            
-            [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          color: "15158332"
-          timestamp: true
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          notification-type: error
+          title: "Deployment Failed"
+          description: "Environment: ${{ inputs.deployment_stage }} | Version: ${{ inputs.app_version }} | Target: ${{ needs.output-deployment-urls.outputs.deployment_target }}"
+          deployment-stage: ${{ inputs.deployment_stage }}
+          deployment-target: ${{ needs.output-deployment-urls.outputs.deployment_target }}
+          version: ${{ inputs.app_version }}
+          color: "FF0000"

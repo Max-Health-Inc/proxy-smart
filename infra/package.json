@@ -1,0 +1,42 @@
+{
+  "name": "proxy-smart-infra",
+  "displayName": "Proxy Smart Infrastructure",
+  "description": "AWS CDK infrastructure for Proxy Smart production deployment",
+  "version": "0.0.2-beta.202603240700.0cadb793",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk",
+    "synth": "cdk synth",
+    "diff": "cdk diff --all",
+    "deploy": "cdk deploy --all --require-approval never",
+    "deploy:vpc": "cdk deploy ProxySmartVpc",
+    "deploy:database": "cdk deploy ProxySmartDatabase",
+    "deploy:keycloak": "cdk deploy ProxySmartKeycloak",
+    "deploy:backend": "cdk deploy ProxySmartBackend",
+    "destroy": "cdk destroy --all",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.244.0",
+    "constructs": "^10.6.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^25.5.0",
+    "aws-cdk": "^2.1113.0",
+    "eslint": "^10.1.0",
+    "globals": "^17.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.57.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  }
+}

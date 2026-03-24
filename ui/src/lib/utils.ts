@@ -6,15 +6,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Default encryption secret fallback (should not be used in production)
-const DEFAULT_ENCRYPTION_SECRET = "proxy-smart-default-secret-key";
-
-// Get encryption secret with fallback
+// Get encryption secret — VITE_ENCRYPTION_SECRET should be set via env/build-arg
 const getEncryptionSecret = (): string => {
   const secret = import.meta.env.VITE_ENCRYPTION_SECRET;
   if (!secret) {
-    console.warn("VITE_ENCRYPTION_SECRET not found, using default secret. This is NOT secure for production!");
-    return DEFAULT_ENCRYPTION_SECRET;
+    console.warn("VITE_ENCRYPTION_SECRET is not set — using fallback key. Set this env variable for production builds.");
+    return "proxy-smart-default-encryption-key";
   }
   return secret;
 };
@@ -38,14 +35,14 @@ export const applyDecrypt = (cipherText: string): string => {
 
     // If decryption fails, bytes.toString() returns empty string
     if (!decrypted) {
-      console.warn("Decryption failed, returning original text");
-      return cipherText;
+      console.warn("Decryption produced empty result — clearing stale data");
+      return '';
     }
 
     return decrypted;
   } catch (error) {
     console.error("Decryption failed:", error);
-    // Return the original cipher text if decryption fails (fallback)
-    return cipherText;
+    // Return empty string so callers treat this as missing data
+    return '';
   }
 };

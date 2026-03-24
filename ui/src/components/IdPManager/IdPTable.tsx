@@ -1,5 +1,4 @@
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
   Table,
   TableBody,
@@ -25,6 +24,7 @@ import {
   CheckCircle 
 } from 'lucide-react';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
+import { useTranslation } from 'react-i18next';
 
 interface IdPTableProps {
   idps: IdentityProviderWithStats[];
@@ -47,6 +47,7 @@ export function IdPTable({
   onViewCertificates,
   onDelete
 }: IdPTableProps) {
+  const { t } = useTranslation();
   const getTypeBadgeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'saml':
@@ -63,27 +64,27 @@ export function IdPTable({
   };
 
   return (
-    <div className="backdrop-blur-sm bg-card/90 rounded-2xl shadow-xl border border-border p-8 transition-all duration-300 hover:shadow-2xl">
+    <div className="backdrop-blur-sm bg-card/70 rounded-2xl shadow-lg border border-border/50 p-8 transition-all duration-300 hover:shadow-xl">
       {/* Header */}
       <div className="mb-8">
-        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-          Identity Providers
+        <h3 className="text-2xl font-medium text-foreground mb-2">
+          {t('Identity Providers')}
         </h3>
         <p className="text-muted-foreground">
-          View and manage all configured identity providers
+          {t('View and manage all configured identity providers')}
         </p>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card/50">
+      <div className="overflow-hidden rounded-xl border border-border/50 bg-card/70">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gradient-to-r from-muted/50 to-muted/70 hover:from-muted/70 hover:to-muted/90 border-b border-border">
-              <TableHead className="font-semibold text-foreground">Provider</TableHead>
-              <TableHead className="font-semibold text-foreground">Type</TableHead>
-              <TableHead className="font-semibold text-foreground">Status</TableHead>
-              <TableHead className="font-semibold text-foreground">Users</TableHead>
-              <TableHead className="font-semibold text-foreground">Last Used</TableHead>
+            <TableRow className="bg-muted/50 hover:bg-muted/70 border-b border-border/50">
+              <TableHead className="font-semibold text-foreground">{t('Provider')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Type')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Status')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Users')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Last Used')}</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -155,7 +156,7 @@ export function IdPTable({
                       <DropdownMenuItem onClick={() => onEdit(idp)} className="hover:bg-muted/50">
                         <div className="flex items-center">
                           <Edit className="h-4 w-4 mr-2" />
-                          Edit Configuration
+                          {t('Edit Configuration')}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
@@ -181,7 +182,7 @@ export function IdPTable({
                       <DropdownMenuItem onClick={() => onViewCertificates(idp)} className="hover:bg-muted/50">
                         <div className="flex items-center">
                           <FileText className="h-4 w-4 mr-2" />
-                          View Certificates
+                          {t('View Certificates')}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
@@ -191,7 +192,7 @@ export function IdPTable({
                       >
                         <div className="flex items-center">
                           <XCircle className="h-4 w-4 mr-2" />
-                          Remove Provider
+                          {t('Remove Provider')}
                         </div>
                       </DropdownMenuItem>
                     </DropdownMenuContent>

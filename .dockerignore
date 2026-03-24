@@ -10,8 +10,11 @@ build/
 
 # Development files
 .env
+**/.env
 .env.local
 .env.*.local
+**/.env.local
+**/.env.*.local
 
 # Git
 .git/
@@ -20,9 +23,14 @@ build/
 .github/
 .githooks/
 
-# Documentation
-*.md
-docs/
+# Documentation (keep docs/ for VitePress, keep prompts/ for AI)
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+# Exclude root-level markdown files only
+/CHANGELOG.md
+/CONTRIBUTING.md
+/LICENSE-DUAL.md
+/README.md
 
 # Testing
 testing/
@@ -61,10 +69,6 @@ docker-compose*.yml
 # Keycloak (exclude everything except realm export files)
 keycloak/
 !keycloak/realm-export*.json
-
-# Scripts (exclude most but allow build scripts needed for mono mode)
-scripts/
-!scripts/copy-ui-dist.js
 
 # Agent (if not needed in production)
 agent/

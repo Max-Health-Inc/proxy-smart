@@ -31,31 +31,59 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
    * 5. Initiate OAuth flow
    */
   .get('/oauth-protected-resource', () => {
-    const baseUrl = config.baseUrl || 'http://localhost:3001'
-    const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
-    const realm = config.keycloak.realm
+    const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+    const mcpPath = config.mcp?.path || '/mcp'
 
     return {
-      resource: baseUrl,
-      // Per RFC 9728, point to the actual Authorization Server(s)
-      // so clients discover consistent metadata and issuer
+      // RFC 9728: resource MUST match the protected resource URL
+      resource: `${baseUrl}${mcpPath}`,
+      // Point to our own proxy so clients fetch our /.well-known/oauth-authorization-server
+      // which has the correct registration_endpoint (Keycloak's native DCR is blocked)
       authorization_servers: [
-        `${keycloakBase}/realms/${realm}`
+        baseUrl
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
-      // Keep scopes_supported focused on resource scopes; OIDC scopes are
-      // negotiated with the AS and need not be duplicated here
       scopes_supported: [
-        'backend:read',
-        'backend:write',
-        'backend:admin'
+        'openid',
+        'profile',
+        'email'
       ]
     }
   }, {
     detail: {
       summary: 'Get Protected Resource Metadata',
       description: 'Returns OAuth 2.0 Protected Resource Metadata (RFC 9728) for MCP authorization discovery',
+      tags: ['mcp-authorization']
+    },
+    response: {
+      200: ProtectedResourceMetadata
+    }
+  })
+
+  // Path-based resource metadata discovery (RFC 9728 §5.1)
+  // Clients may request /.well-known/oauth-protected-resource{path} for path-scoped resources
+  .get('/oauth-protected-resource/*', () => {
+    const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+    const mcpPath = config.mcp?.path || '/mcp'
+
+    return {
+      resource: `${baseUrl}${mcpPath}`,
+      authorization_servers: [
+        baseUrl
+      ],
+      bearer_methods_supported: ['header'],
+      resource_documentation: `${baseUrl}/docs`,
+      scopes_supported: [
+        'openid',
+        'profile',
+        'email'
+      ]
+    }
+  }, {
+    detail: {
+      summary: 'Get Protected Resource Metadata (path-scoped)',
+      description: 'Path-scoped OAuth 2.0 Protected Resource Metadata (RFC 9728 §5.1)',
       tags: ['mcp-authorization']
     },
     response: {
@@ -87,13 +115,16 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       }
 
       const oidcConfig = await response.json()
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
 
       return {
         issuer: oidcConfig.issuer,
         authorization_endpoint: oidcConfig.authorization_endpoint,
         token_endpoint: oidcConfig.token_endpoint,
         jwks_uri: oidcConfig.jwks_uri,
-        registration_endpoint: oidcConfig.registration_endpoint,
+        // Point to our own DCR endpoint instead of Keycloak's native one
+        // (Keycloak's requires initial access tokens / trusted host policy)
+        registration_endpoint: `${baseUrl}/auth/register`,
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,

@@ -1,0 +1,56 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Target, Play, Shield } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { ScopeManager } from './ScopeManager';
+import { LaunchContextManager } from './LaunchContextManager';
+
+export function SmartConfigManager() {
+    const { t } = useTranslation();
+    const [activeTab, setActiveTab] = useState('scopes');
+
+    return (
+        <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+            {/* Header */}
+            <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
+                    <div className="flex-1">
+                        <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+                            {t('SMART Configuration')}
+                        </h1>
+                        <div className="text-muted-foreground text-lg flex items-center">
+                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                                <Shield className="w-5 h-5 text-primary" />
+                            </div>
+                            {t('Manage FHIR resource scopes and application launch contexts')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tabs in card */}
+            <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+                        <TabsTrigger value="scopes" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                            <Target className="w-4 h-4" />
+                            <span>{t('Scopes')}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="launch-context" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                            <Play className="w-4 h-4" />
+                            <span>{t('Launch Context')}</span>
+                        </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="scopes" className="p-6 space-y-6">
+                        <ScopeManager embedded />
+                    </TabsContent>
+
+                    <TabsContent value="launch-context" className="p-6 space-y-6">
+                        <LaunchContextManager embedded />
+                    </TabsContent>
+                </Tabs>
+            </div>
+        </div>
+    );
+}

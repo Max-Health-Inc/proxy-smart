@@ -2,12 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Database,
   RefreshCw,
-  AlertCircle,
   Plus,
   Info
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@proxy-smart/shared-ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PageLoadingState } from '@/components/ui/page-loading-state';
+import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';
 import type { 
   FhirServerWithState
@@ -20,6 +21,7 @@ import { ServerDetails } from './ServerDetails';
 import { AddServerDialog } from './AddServerDialog';
 import { EditServerDialog } from './EditServerDialog';
 import { MtlsConfigDialog } from './MtlsConfigDialog';
+import { useTranslation } from 'react-i18next';
 
 // mTLS Configuration type
 interface MtlsConfig {
@@ -37,6 +39,7 @@ interface MtlsConfig {
 }
 
 export function FhirServersManager() {
+  const { t } = useTranslation();
   const { clientApis } = useAuth();
   const [servers, setServers] = useState<FhirServerWithState[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,7 +198,7 @@ export function FhirServersManager() {
       
       await clientApis.servers.putFhirServersByServerId({
         serverId: server.id,
-        updateFhirServerRequest: {
+        addFhirServerRequest: {
           url: newUrl
         }
       });
@@ -293,74 +296,49 @@ export function FhirServersManager() {
   }, [fetchServers]);
 
   if (loading) {
-    return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center shadow-lg">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-          <h2 className="text-2xl font-bold text-foreground mb-2">Loading FHIR Servers</h2>
-          <p className="text-muted-foreground font-medium">Fetching server information...</p>
-        </div>
-      </div>
-    );
+    return <PageLoadingState message="Loading FHIR Servers..." />;
   }
 
   if (error) {
     return (
-      <div className="p-8">
-        <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-destructive/10 rounded-xl flex items-center justify-center">
-              <AlertCircle className="h-6 w-6 text-destructive" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-destructive">Error Loading Servers</h3>
-              <p className="text-destructive/80">{error}</p>
-            </div>
-          </div>
-          <Button
-            onClick={fetchServers}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
+      <PageErrorState
+        title={t('Error Loading Servers')}
+        message={error}
+        onRetry={fetchServers}
+        retryLabel="Retry"
+      />
     );
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* Enhanced Header */}
-      <div className="bg-card/80 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-lg">
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3 tracking-tight">
-              FHIR Server Management
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
+              {t('FHIR Server Management')}
             </h1>
             <div className="text-muted-foreground text-lg flex items-center">
               <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                 <Database className="w-5 h-5 text-primary" />
               </div>
-              Manage and monitor FHIR server connections
+              {t('Manage and monitor FHIR server connections')}
             </div>
           </div>
           <div className="flex space-x-3">
             <Button
               onClick={() => setShowAddDialog(true)}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold rounded-2xl hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-emerald-500/20"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Add Server
+              {t('Add Server')}
             </Button>
             <Button
+              variant="outline"
               onClick={fetchServers}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white font-semibold rounded-2xl hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 border border-blue-500/20"
             >
               <RefreshCw className="w-5 h-5 mr-2" />
-              Refresh
+              {t('Refresh')}
             </Button>
           </div>
         </div>
@@ -374,10 +352,10 @@ export function FhirServersManager() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
             <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-              Server Overview
+              {t('Server Overview')}
             </TabsTrigger>
             <TabsTrigger value="details" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-              Server Details
+              {t('Server Details')}
             </TabsTrigger>
           </TabsList>
 
@@ -400,9 +378,9 @@ export function FhirServersManager() {
                 <div className="w-16 h-16 mx-auto mb-6 bg-muted/50 rounded-2xl flex items-center justify-center shadow-sm">
                   <Info className="w-8 h-8 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-3">No Server Selected</h3>
+                <h3 className="text-xl font-bold text-foreground mb-3">{t('No Server Selected')}</h3>
                 <p className="text-muted-foreground mb-6 font-medium">
-                  Select a server from the overview tab to view detailed information
+                  {t('Select a server from the overview tab to view detailed information')}
                 </p>
                 {loadingServerDetail && (
                   <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>

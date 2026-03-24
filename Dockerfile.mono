@@ -9,17 +9,26 @@ RUN apt-get update -qq && \
     build-essential \
     pkg-config \
     python-is-python3 \
-    openjdk-17-jre-headless \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy all files needed for build
 COPY package.json bun.lock ./
 COPY backend/ ./backend/
+COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
+COPY dtr-app/ ./dtr-app/
+COPY consent-app/ ./consent-app/
+COPY infra/ ./infra/
 COPY scripts/ ./scripts/
+COPY docs/ ./docs/
 
-# Install dependencies for all workspaces
+# Install dependencies for all workspaces (includes dtr-app, consent-app, shared-ui)
 RUN bun install --frozen-lockfile
+
+# Encryption secret for browser local-storage obfuscation (baked into Vite bundle)
+ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
+ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 
 RUN bun run generate:ui
 # Use the mono build script which handles:
@@ -27,6 +36,11 @@ RUN bun run generate:ui
 # - Copying UI dist to backend/public/webapp/
 # - Building backend
 RUN bun run build:mono
+
+# Verify no localhost URLs leaked into production bundles via .env files
+RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \
+      echo "ERROR: Found hardcoded localhost:8445 in app bundles. Check .dockerignore excludes .env files." && exit 1; \
+    fi
 
 # Production stage - backend API server with static frontend
 FROM base AS production
@@ -41,12 +55,19 @@ RUN apt-get update -qq && \
 # Copy built backend
 COPY --from=build /app/backend/dist ./backend/dist
 COPY --from=build /app/backend/package.json ./backend/package.json
+COPY --from=build /app/backend/mcp-server-templates.json ./backend/mcp-server-templates.json
 
 # Copy backend's public directory (contains the copied UI)
 COPY --from=build /app/backend/public ./backend/public
 
 # Copy root node_modules (monorepo structure)
 COPY --from=build /app/node_modules ./node_modules
+
+# Copy raw markdown docs for the /docs API
+COPY --from=build /app/docs ./docs
+
+# Copy system prompt for AI assistant
+COPY prompts/ ./prompts/
 
 # Expose backend port
 EXPOSE 8445

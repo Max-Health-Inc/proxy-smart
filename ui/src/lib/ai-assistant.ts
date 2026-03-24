@@ -238,7 +238,7 @@ class SmartOnFHIRAIAssistant {
   async isBackendAuthenticated(): Promise<boolean> {
     try {
       const aiApi = await this.createAiApi();
-      const health = await aiApi.getAdminAiHealth();
+      const health = await aiApi.getAdminAiHealth() as { backend_authenticated?: boolean };
       return health.backend_authenticated === true;
     } catch {
       return false;
@@ -443,9 +443,9 @@ class SmartOnFHIRAIAssistant {
               continue;
             }
 
-            // Tool call notifications
+            // Tool call notifications (only on call start, not on result)
             const toolName = (evt.toolName as string) || (evt.name as string) || (evt.tool?.name as string);
-            if (type?.startsWith('tool') && toolName) {
+            if (type === 'tool-call' && toolName) {
               yield { type: 'function_calling', name: toolName } as StreamChunk;
               continue;
             }

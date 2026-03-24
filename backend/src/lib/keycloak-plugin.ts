@@ -10,8 +10,11 @@ import { config } from '../config'
  * Uses the user's token for admin operations - no backend credentials stored
  * This is a proxy pattern where admin permissions are controlled by Keycloak user roles
  */
-export const keycloakPlugin = new Elysia()
-  .decorate('getAdmin', async (userToken: string) => {
+/**
+ * Standalone factory for creating a Keycloak admin client from a user token.
+ * Shared by both the Elysia plugin (decorator) and the MCP tool executor.
+ */
+export async function createAdminClient(userToken: string) {
     try {
       // Check if Keycloak is configured
       if (!config.keycloak.isConfigured) {
@@ -51,8 +54,8 @@ export const keycloakPlugin = new Elysia()
         )
       
       // Check if user has admin access to manage users
-      // In development, we'll be more permissive
-      const isDevelopment = process.env.NODE_ENV !== 'production'
+      // Only bypass in development when explicitly opted in
+      const isDevelopment = process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true'
       
       if (!hasAdminRole) {
         logger.auth.warn('User does not have admin permissions', { 
@@ -116,4 +119,7 @@ export const keycloakPlugin = new Elysia()
       // For all other errors, re-throw as-is
       throw error
     }
-  })
+}
+
+export const keycloakPlugin = new Elysia()
+  .decorate('getAdmin', createAdminClient)

@@ -3,7 +3,9 @@ import { getItem } from './storage';
 import { attemptTokenRefresh } from './tokenRefresh';
 import {
   AdminApi,
+  AiToolsApi,
   AuthenticationApi,
+  FhirMonitoringApi,
   HealthcareUsersApi,
   IdentityProvidersApi,
   LaunchContextsApi,
@@ -13,6 +15,7 @@ import {
   SmartAppsApi,
   ServersApi,
   ServerApi,
+  UserFederationApi,
   Configuration,
   ResponseError
 } from './api-client';
@@ -113,6 +116,9 @@ export const createRolesApi = (token?: string) => new RolesApi(createConfig(toke
 export const createSmartAppsApi = (token?: string) => new SmartAppsApi(createConfig(token));
 export const createServersApi = (token?: string) => new ServersApi(createConfig(token));
 export const createServerApi = (token?: string) => new ServerApi(createConfig(token));
+export const createAiToolsApi = (token?: string) => new AiToolsApi(createConfig(token));
+export const createFhirMonitoringApi = (token?: string) => new FhirMonitoringApi(createConfig(token));
+export const createUserFederationApi = (token?: string) => new UserFederationApi(createConfig(token));
 
 // Create a wrapper that automatically handles auth errors for any API method
 const wrapApiClient = <T extends object>(client: T): T => {
@@ -155,7 +161,9 @@ const wrapApiClient = <T extends object>(client: T): T => {
 // Create all client APIs at once with automatic auth error handling
 export const createClientApis = (token?: string) => ({
   admin: wrapApiClient(createAdminApi(token)),
+  aiTools: wrapApiClient(createAiToolsApi(token)),
   auth: wrapApiClient(createAuthApi(token)),
+  fhirMonitoring: wrapApiClient(createFhirMonitoringApi(token)),
   healthcareUsers: wrapApiClient(createHealthcareUsersApi(token)),
   identityProviders: wrapApiClient(createIdentityProvidersApi(token)),
   launchContexts: wrapApiClient(createLaunchContextsApi(token)),
@@ -165,6 +173,7 @@ export const createClientApis = (token?: string) => ({
   smartApps: wrapApiClient(createSmartAppsApi(token)),
   servers: wrapApiClient(createServersApi(token)),
   server: wrapApiClient(createServerApi(token)),
+  userFederation: wrapApiClient(createUserFederationApi(token)),
 });
 
 // Helper to get token from encrypted storage (always returns stored token)

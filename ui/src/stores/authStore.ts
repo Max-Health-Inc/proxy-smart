@@ -2,7 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { openidService } from '../service/openid-service';
-import { createClientApis, setAuthErrorHandler } from '../lib/apiClient';
+import { createClientApis, setAuthErrorHandler } from '@/lib/apiClient';
 import { registerRefreshHandler } from '../lib/tokenRefresh';
 import { 
   getItem, 
@@ -12,7 +12,7 @@ import {
   removeSessionItem,
   clearAllAuthData,
   clearAuthorizationCodeData
-} from '../lib/storage';
+} from '@/lib/storage';
 import type { UserProfile } from '@/lib/types/api';
 
 interface TokenData {
@@ -79,8 +79,13 @@ interface AuthState {
   logout: () => Promise<void>;
   clearError: () => void;
   updateClientApis: () => Promise<void>;
-  initialize: () => Promise<void>; // Add explicit initialization method
+  initialize: () => Promise<void>;
+  /** @internal */
+  _doInitialize: () => Promise<void>;
 }
+
+// Module-level lock to prevent overlapping initialize() calls (StrictMode, rehydration + effect, etc.)
+let initPromise: Promise<void> | null = null;
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -96,6 +101,33 @@ export const useAuthStore = create<AuthState>()(
       // Proper initialization method that handles all auth setup
       initialize: async () => {
         if (!get().isInitializing) return; // Already initialized
+        // Deduplicate: if an init is already in flight, wait for it instead of starting a new one
+        if (initPromise) return initPromise;
+        initPromise = (async () => {
+          try {
+            await get()._doInitialize();
+          } finally {
+            initPromise = null;
+          }
+        })();
+        return initPromise;
+      },
+
+      // Internal initialization logic (called only once via initialize())
+      _doInitialize: async () => {
+        
+        // If there's an active OAuth callback (code+state in URL), don't interfere —
+        // let LoginForm handle the code exchange with the stored PKCE verifier.
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('code') && urlParams.has('state')) {
+          set({
+            isAuthenticated: false,
+            isInitializing: false,
+            loading: false,
+            clientApis: createClientApis()
+          });
+          return;
+        }
         
         set({ isInitializing: true, loading: true });
         
@@ -130,7 +162,7 @@ export const useAuthStore = create<AuthState>()(
             
             // Set up auth error handler
             setAuthErrorHandler(async () => {
-              console.log('Auth error handler triggered, logging out...');
+              if (import.meta.env.DEV) console.log('Auth error handler triggered, logging out...');
               await get().logout();
             });
             
@@ -143,7 +175,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Tokens expired, try to refresh if we have refresh token
           if (tokens.refresh_token) {
-            console.log('🔄 Tokens expired, attempting refresh...');
+            if (import.meta.env.DEV) console.log('🔄 Tokens expired, attempting refresh...');
             try {
               await get().refreshTokens();
               set({ isInitializing: false });
@@ -161,8 +193,8 @@ export const useAuthStore = create<AuthState>()(
                  refreshError.message.includes('Token is not active'));
               
               if (isInvalidGrant) {
-                console.warn('🗑️ Tokens are invalid, forcing logout');
-                // Clear everything and redirect to login
+                if (import.meta.env.DEV) console.warn('🗑️ Tokens are invalid, clearing auth state');
+                // Clear everything — user will see the login page and can re-authenticate
                 await clearAllAuthData();
                 set({ 
                   isAuthenticated: false, 
@@ -171,11 +203,6 @@ export const useAuthStore = create<AuthState>()(
                   loading: false,
                   clientApis: createClientApis()
                 });
-                // Force redirect to login after a brief delay
-                setTimeout(async () => {
-                  const authData = await openidService.getAuthorizationUrl();
-                  window.location.href = authData.url;
-                }, 100);
               } else {
                 // Other error, just clear tokens and stay on page
                 await clearTokens();
@@ -190,7 +217,7 @@ export const useAuthStore = create<AuthState>()(
             }
           } else {
             // No refresh token, clear everything
-            console.log('❌ No refresh token available, clearing auth state');
+            if (import.meta.env.DEV) console.log('❌ No refresh token available, clearing auth state');
             await clearTokens();
             set({ 
               isAuthenticated: false, 
@@ -222,7 +249,7 @@ export const useAuthStore = create<AuthState>()(
         
         // Set up auth error handler each time we update clients
         setAuthErrorHandler(async () => {
-          console.log('Auth error handler triggered, logging out...');
+          if (import.meta.env.DEV) console.log('Auth error handler triggered, logging out...');
           await get().logout();
         });
       },      // Actions
@@ -357,7 +384,7 @@ export const useAuthStore = create<AuthState>()(
           // Update API clients with refreshed token
           await get().updateClientApis();
           
-          console.debug('✅ Tokens refreshed successfully');
+          if (import.meta.env.DEV) console.debug('✅ Tokens refreshed successfully');
         } catch (error) {
           console.error('❌ Token refresh failed:', error);
           set({ loading: false });
@@ -370,7 +397,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         const tokens = await getStoredTokens();
         
-        console.log('🚪 Initiating logout with tokens:', {
+        if (import.meta.env.DEV) console.log('🚪 Initiating logout with tokens:', {
           hasAccessToken: !!tokens?.access_token,
           hasIdToken: !!tokens?.id_token,
           hasRefreshToken: !!tokens?.refresh_token
@@ -433,13 +460,27 @@ export const useAuthStore = create<AuthState>()(
 // Custom hook that properly initializes auth state
 export const useAuth = () => {
   const store = useAuthStore();
-  
+  // Initialization is triggered solely by onRehydrateStorage.
+  // No extra useEffect needed — the module-level lock in initialize()
+  // ensures it's idempotent even if called from multiple places.
+
+  // Handle bfcache restoration (e.g., pressing Back from Keycloak login page).
+  // When the browser restores a page from bfcache, the in-memory state still has
+  // loading: true from initiateLogin() but nothing will ever resolve it.
   React.useEffect(() => {
-    // Only initialize if we haven't started initialization yet
-    if (store.isInitializing && !store.loading) {
-      store.initialize();
-    }
-  }, [store]);
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        const state = useAuthStore.getState();
+        if (state.loading && !state.isInitializing) {
+          // Reset stuck loading state and re-initialize
+          useAuthStore.setState({ loading: false, isInitializing: true });
+          useAuthStore.getState().initialize();
+        }
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   return store;
 };

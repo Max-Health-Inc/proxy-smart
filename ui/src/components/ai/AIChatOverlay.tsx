@@ -9,8 +9,7 @@ import {
 } from '../../lib/ai-assistant';
 import type { ChatResponseTokensUsed, DocumentChunk, ToolExecution } from '../../lib/api-client';
 import { useAIChatStore } from '../../stores/aiChatStore';
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
+import { Button, Card } from '@proxy-smart/shared-ui';
 import { logger } from '@/lib/logger';
 import { Bot, Brain } from 'lucide-react';
 import { ChatHeader } from './ChatHeader';
@@ -81,6 +80,8 @@ export function AIChatOverlay({ isOpen: externalIsOpen, onClose: externalOnClose
         setIsMinimized(nextMinimized);
         if (nextMinimized) {
             setShowSettings(false);
+            setIsExpanded(false);
+            setIsFullWidth(false);
         }
     };
 

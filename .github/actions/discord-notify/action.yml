@@ -117,121 +117,68 @@ runs:
     - name: Send Discord notification
       shell: bash
       run: |
-        # Build the Discord embed payload
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+        COLOR_DEC=$((0x${{ steps.color.outputs.color }}))
         
-        # Build fields array based on available inputs
-        FIELDS=""
-        if [ -n "${{ inputs.version }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"Version\", \"value\": \"\`${{ inputs.version }}\`\", \"inline\": true},"
-        fi
+        # Build fields array using jq for safe JSON construction
+        FIELDS_JSON="[]"
         
-        if [ -n "${{ inputs.release-type }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"Type\", \"value\": \"\`${{ inputs.release-type }}\`\", \"inline\": true},"
-        fi
+        add_field() {
+          local name="$1" value="$2" inline="${3:-true}"
+          FIELDS_JSON=$(echo "$FIELDS_JSON" | jq --arg n "$name" --arg v "$value" --argjson i "$inline" '. + [{"name": $n, "value": $v, "inline": $i}]')
+        }
         
-        if [ -n "${{ inputs.deployment-stage }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"Stage\", \"value\": \"\`${{ inputs.deployment-stage }}\`\", \"inline\": true},"
-        fi
+        [ -n "${{ inputs.version }}" ] && add_field "Version" "${{ inputs.version }}"
+        [ -n "${{ inputs.release-type }}" ] && add_field "Type" "${{ inputs.release-type }}"
+        [ -n "${{ inputs.deployment-stage }}" ] && add_field "Stage" "${{ inputs.deployment-stage }}"
+        [ -n "${{ inputs.deployment-target }}" ] && add_field "Target" "${{ inputs.deployment-target }}"
+        [ -n "${{ inputs.actor }}" ] && add_field "Triggered by" "${{ inputs.actor }}"
         
-        if [ -n "${{ inputs.deployment-target }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"Target\", \"value\": \"\`${{ inputs.deployment-target }}\`\", \"inline\": true},"
-        fi
-        
-        if [ -n "${{ inputs.actor }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"Triggered by\", \"value\": \"${{ inputs.actor }}\", \"inline\": true},"
-        fi
-        
-        # Add commit info
         SHORT_SHA=$(echo "${{ inputs.commit-sha }}" | cut -c1-8)
-        FIELDS="$FIELDS{\"name\": \"Commit\", \"value\": \"[\`$SHORT_SHA\`](https://github.com/${{ inputs.repository }}/commit/${{ inputs.commit-sha }})\", \"inline\": true},"
+        add_field "Commit" "[$SHORT_SHA](https://github.com/${{ inputs.repository }}/commit/${{ inputs.commit-sha }})"
         
-        # Add deployment URLs if available
-        if [ -n "${{ inputs.fhir-server-url }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"🏥 FHIR Server\", \"value\": \"[FHIR Server](${{ inputs.fhir-server-url }})\", \"inline\": true},"
-        fi
+        [ -n "${{ inputs.fhir-server-url }}" ] && add_field "FHIR Server" "[Link](${{ inputs.fhir-server-url }})"
+        [ -n "${{ inputs.keycloak-url }}" ] && add_field "Keycloak" "[Link](${{ inputs.keycloak-url }})"
+        [ -n "${{ inputs.app-url }}" ] && add_field "Proxy Smart" "[Link](${{ inputs.app-url }})"
+        [ -n "${{ inputs.workflow-url }}" ] && add_field "Workflow" "[Actions](${{ inputs.workflow-url }})"
+        [ -n "${{ inputs.release-url }}" ] && add_field "Release" "[GitHub](${{ inputs.release-url }})"
+        [ -n "${{ steps.changelog.outputs.formatted_changelog }}" ] && add_field "Changelog" "${{ steps.changelog.outputs.formatted_changelog }}" false
         
-        if [ -n "${{ inputs.keycloak-url }}" ]; then
-          FIELDS="$FIELDS{\"name\": \"🔐 Keycloak\", \"value\": \"[Keycloak](${{ inputs.keycloak-url }})\", \"inline\": true},"
-        fi
-        
-        # Remove trailing comma
-        FIELDS=$(echo "$FIELDS" | sed 's/,$//')
-        
-        # Build the complete payload
-        PAYLOAD=$(cat << EOF
-        {
-          "embeds": [
-            {
-              "title": "${{ inputs.title }}",
-              "description": "${{ inputs.description }}",
-              "color": $((0x${{ steps.color.outputs.color }})),
-              "timestamp": "$TIMESTAMP",
-              "fields": [$FIELDS],
+        # Build payload with jq for proper JSON escaping
+        PAYLOAD=$(jq -n \
+          --arg title "${{ inputs.title }}" \
+          --arg desc "${{ inputs.description }}" \
+          --argjson color "$COLOR_DEC" \
+          --arg ts "$TIMESTAMP" \
+          --argjson fields "$FIELDS_JSON" \
+          --arg repo "${{ inputs.repository }}" \
+          '{
+            "embeds": [{
+              "title": $title,
+              "description": $desc,
+              "color": $color,
+              "timestamp": $ts,
+              "fields": $fields,
               "footer": {
-                "text": "${{ inputs.repository }}",
+                "text": $repo,
                 "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
               }
-            }
-          ]
-        }
-        EOF
-        )
-        
-        # Add changelog as separate field if provided (simple approach)
-        CHANGELOG_FIELD=""
-        if [ -n "${{ steps.changelog.outputs.formatted_changelog }}" ]; then
-          CHANGELOG_FIELD=",{\"name\": \"📋 Changelog\", \"value\": \"${{ steps.changelog.outputs.formatted_changelog }}\", \"inline\": false}"
-        fi
-        
-        # Add workflow URL field if provided
-        WORKFLOW_FIELD=""
-        if [ -n "${{ inputs.workflow-url }}" ]; then
-          WORKFLOW_FIELD=",{\"name\": \"🔗 View Workflow\", \"value\": \"[GitHub Actions](${{ inputs.workflow-url }})\", \"inline\": true}"
-        fi
-        
-        # Add release URL field if provided
-        RELEASE_FIELD=""
-        if [ -n "${{ inputs.release-url }}" ]; then
-          RELEASE_FIELD=",{\"name\": \"📦 View Release\", \"value\": \"[GitHub Release](${{ inputs.release-url }})\", \"inline\": true}"
-        fi
-        
-        # Add app URL field if provided (prominent for deployments)
-        APP_FIELD=""
-        if [ -n "${{ inputs.app-url }}" ]; then
-          APP_FIELD=",{\"name\": \"🚀 Proxy Smart\", \"value\": \"[Proxy Smart](${{ inputs.app-url }})\", \"inline\": true}"
-        fi
-        
-        # Rebuild payload with additional fields
-        PAYLOAD=$(cat << EOF
-        {
-          "embeds": [
-            {
-              "title": "${{ inputs.title }}",
-              "description": "${{ inputs.description }}",
-              "color": $((0x${{ steps.color.outputs.color }})),
-              "timestamp": "$TIMESTAMP",
-              "fields": [$FIELDS$CHANGELOG_FIELD$WORKFLOW_FIELD$RELEASE_FIELD$APP_FIELD],
-              "footer": {
-                "text": "${{ inputs.repository }}",
-                "icon_url": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-              }
-            }
-          ]
-        }
-        EOF
-        )
+            }]
+          }')
         
         # Send the webhook
-        curl -H "Content-Type: application/json" \
+        HTTP_CODE=$(curl -s -o /tmp/discord-response.txt -w "%{http_code}" \
+             -H "Content-Type: application/json" \
              -d "$PAYLOAD" \
-             "${{ inputs.webhook-url }}"
+             "${{ inputs.webhook-url }}")
         
-        if [ $? -eq 0 ]; then
-          echo "✅ Discord notification sent successfully"
+        if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+          echo "Discord notification sent successfully (HTTP $HTTP_CODE)"
         else
-          echo "❌ Failed to send Discord notification"
-          exit 1
+          echo "WARNING: Discord notification returned HTTP $HTTP_CODE"
+          cat /tmp/discord-response.txt 2>/dev/null || true
+          # Don't fail the workflow for Discord notification issues
+          exit 0
         fi
 
     - name: Log notification details
