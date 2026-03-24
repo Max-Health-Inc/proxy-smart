@@ -1,6 +1,5 @@
 name: Production Release
 
-# TEMPORARILY DISABLED - re-enable by removing the 'if: false' from check-changes job
 on:
   push:
     branches: [main]
@@ -21,7 +20,6 @@ jobs:
   check-changes:
     name: Check if release is needed
     runs-on: ubuntu-latest
-    if: false  # TEMPORARILY DISABLED
     outputs:
       should_release: ${{ steps.check.outputs.should_release }}
     steps:
