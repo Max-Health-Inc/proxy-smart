@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
+  base: '/apps/dtr/',
   plugins: [react(), tailwindcss()],
   server: {
     port: 5175,
