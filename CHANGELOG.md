@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.2-alpha.202603240241.095e5351] - 2026-03-24
+
+- ✨ Features: AI discoverability, SEO metadata, and docs navigation (quotentiroler)
+- 🔧 Chores & Improvements: CI/CD and internal testing updates (beta/alpha SMART reports)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/225
+
+
 ## [0.0.2-alpha.202603240158.5d8c65e8] - 2026-03-24
 
 - 🔧 Chores & Improvements: Set Vite base paths for consent-app and dtr-app to /apps/consent/ and /apps/dtr/, fixing asset 404s under beta subpaths
