@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603240754.fe065af2] - 2026-03-24
+
+- 🔧 Chores & Improvements: UI spacing adjustments for hero container across breakpoints; header bottom padding tweaks
+- 🔧 Chores & Improvements: Added enum-like validation sets and runtime sanitization for appType (fallback to backend-service or standalone-app) in admin routes
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/230
+
+
 ## [0.0.2-beta.202603240700.0cadb793] - 2026-03-24
 
 - 🔧 Chores & Improvements: Update version to 0.0.2-beta.202603240700.0cadb793 (beta)
