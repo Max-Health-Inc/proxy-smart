@@ -1,6 +1,5 @@
 name: Production Release
 
-# TEMPORARILY DISABLED - re-enable by removing the 'if: false' from check-changes job
 on:
   push:
     branches: [main]
@@ -21,7 +20,6 @@ jobs:
   check-changes:
     name: Check if release is needed
     runs-on: ubuntu-latest
-    if: false  # TEMPORARILY DISABLED
     outputs:
       should_release: ${{ steps.check.outputs.should_release }}
     steps:
@@ -33,7 +31,14 @@ jobs:
       - name: Check changed files
         id: check
         run: |
-          # Get list of changed files in the last commit
+          # For workflow_dispatch, always release (user explicitly requested it)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual dispatch — proceeding with production release"
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # For push events, check if only docs/workflow files changed
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
           echo "Changed files:"
           echo "$CHANGED_FILES"
@@ -58,7 +63,7 @@ jobs:
     name: Production Release
     needs: [check-changes]
     # Only run if the last commit is not a release commit AND there are non-documentation changes
-    if: ${{ needs.check-changes.outputs.should_release == 'true' && !contains(github.event.head_commit.message, '🔄 Update version') && !contains(github.event.head_commit.message, '🤖 Update client APIs') && !contains(github.event.head_commit.message, 'Production release') && !contains(github.event.head_commit.message, '🎉') }}
+    if: ${{ needs.check-changes.outputs.should_release == 'true' && !contains(github.event.head_commit.message || '', '🔄 Update version') && !contains(github.event.head_commit.message || '', '🤖 Update client APIs') && !contains(github.event.head_commit.message || '', 'Production release') && !contains(github.event.head_commit.message || '', '🎉') }}
     uses: ./.github/workflows/release-orchestrator.yml
     with:
       release_type: "RELEASE"
