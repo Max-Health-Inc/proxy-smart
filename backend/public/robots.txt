@@ -1,0 +1,54 @@
+# https://proxy-smart.com robots.txt
+
+# Standard crawlers
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /fhir
+Disallow: /auth
+Disallow: /mcp
+Disallow: /webapp
+
+# AI Crawlers — Welcome
+User-agent: GPTBot
+Allow: /
+Allow: /llms.txt
+Allow: /docs
+Disallow: /admin
+Disallow: /fhir
+Disallow: /auth
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Allow: /docs
+Disallow: /admin
+Disallow: /fhir
+Disallow: /auth
+
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Allow: /docs
+Disallow: /admin
+Disallow: /fhir
+Disallow: /auth
+
+User-agent: Bingbot
+Allow: /
+Allow: /llms.txt
+Allow: /docs
+Disallow: /admin
+Disallow: /fhir
+Disallow: /auth
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Allow: /docs
+Disallow: /admin
+Disallow: /fhir
+Disallow: /auth
+
+# Sitemap
+Sitemap: https://proxy-smart.com/sitemap.xml

@@ -1,0 +1,59 @@
+# Proxy Smart
+
+> Open-source stateless proxy that adds OAuth 2.0 and SMART App Launch 2.2.0 authorization to any FHIR server.
+
+## What it does
+
+Proxy Smart sits between your SMART on FHIR app and any FHIR server, adding full OAuth 2.0 + PKCE authorization, SMART App Launch 2.2.0 compliance, scope-based access control, and enterprise SSO — without storing any clinical data. It makes any FHIR server SMART-enabled in minutes.
+
+## Key Features
+
+- Stateless FHIR Proxy: No PHI touches the proxy — requests pass through to your FHIR server. Smaller attack surface, simpler HIPAA/GDPR compliance.
+- SMART App Launch 2.2.0: Full spec implementation with OAuth 2.0 + PKCE, JWT validation, scope-based access control, refresh token rotation, enterprise SSO.
+- Admin Dashboard: Built-in React UI to manage SMART apps, FHIR server connections, users, scopes, and identity providers.
+- AI Assistant & MCP Server: Built-in AI assistant with RAG over healthcare docs, plus an auto-generated MCP server from the OpenAPI spec for programmatic AI-tool integration.
+- App Store: Register, manage, and launch SMART on FHIR apps through a single admin interface with dynamic client registration.
+- BabelFHIR-TS Integration: Generate type-safe TypeScript from any FHIR Implementation Guide — profile-aware interfaces, runtime validation, and a generated FHIR client.
+- Docker-Ready: One-command dev and prod deployments with mono-container and multi-container Docker Compose setups.
+- Consent Management: Patient-facing consent app for granular data sharing control.
+- Access Control: Physical access control integration (Kisi / UniFi Access) for healthcare facility management.
+
+## Use Cases
+
+- Add SMART App Launch to an existing FHIR server that doesn't support it natively
+- Build production-ready SMART on FHIR apps with type-safe TypeScript
+- Manage multiple SMART apps, users, and FHIR servers from a single admin dashboard
+- Enable AI agents to interact with healthcare systems via MCP protocol
+- Implement patient consent workflows for data sharing
+
+## Technical Stack
+
+- Runtime: Bun
+- Backend: Elysia (TypeScript)
+- Frontend: React 19, Vite, Tailwind CSS
+- Identity Provider: Keycloak + PostgreSQL
+- FHIR Types: BabelFHIR-TS
+- Testing: Vitest, Bun Test, Inferno SMART Compliance Suite
+- Infrastructure: Docker, AWS CDK
+
+## API Access
+
+- Documentation: https://proxy-smart.com/docs
+- OpenAPI Spec: https://proxy-smart.com/swagger
+- MCP Server: https://proxy-smart.com/mcp (Streamable HTTP)
+- Authentication: OAuth 2.0 + PKCE (SMART App Launch)
+
+## Licensing
+
+- Open Source: AGPL-3.0 (free for open-source projects)
+- Commercial: Dual license available for proprietary use
+- Self-Hosted: Deploy on your own infrastructure
+
+## Links
+
+- Website: https://proxy-smart.com
+- Documentation: https://proxy-smart.com/docs
+- GitHub: https://github.com/Max-Health-Inc/proxy-smart
+- npm (BabelFHIR-TS): https://www.npmjs.com/package/babelfhir-ts
+- Discord: https://discord.gg/FshSApM7
+- Company: https://maxhealth.tech
