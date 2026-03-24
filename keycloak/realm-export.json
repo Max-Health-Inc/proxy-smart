@@ -723,12 +723,16 @@
       "redirectUris": [
         "http://localhost:5174/*",
         "http://localhost:8445/apps/consent/*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/consent/*"
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/consent/*",
+        "https://beta.proxy-smart.com/apps/consent/*",
+        "https://proxy-smart.com/apps/consent/*"
       ],
       "webOrigins": [
         "http://localhost:5174",
         "http://localhost:8445",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
+        "https://beta.proxy-smart.com",
+        "https://proxy-smart.com",
         "*"
       ],
       "protocol": "openid-connect",
@@ -782,12 +786,16 @@
       "redirectUris": [
         "http://localhost:5175/*",
         "http://localhost:8445/apps/dtr/*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/dtr/*"
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/dtr/*",
+        "https://beta.proxy-smart.com/apps/dtr/*",
+        "https://proxy-smart.com/apps/dtr/*"
       ],
       "webOrigins": [
         "http://localhost:5175",
         "http://localhost:8445",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
+        "https://beta.proxy-smart.com",
+        "https://proxy-smart.com",
         "*"
       ],
       "protocol": "openid-connect",

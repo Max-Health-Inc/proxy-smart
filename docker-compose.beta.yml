@@ -21,12 +21,11 @@ services:
     container_name: proxy-smart-keycloak-beta
     restart: unless-stopped
     environment:
-      KC_HOSTNAME: beta.proxy-smart.com
-      KC_HOSTNAME_PATH: /auth
+      KC_HOSTNAME: https://beta.proxy-smart.com/auth
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT: "true"
       KC_HEALTH_ENABLED: "true"
       KC_METRICS_ENABLED: "true"
       KC_DB: postgres
