@@ -20,7 +20,7 @@ export type { Patient, Person, Consent, Practitioner, Task }
 const baseFetch = smartAuth.createAuthenticatedFetch()
 
 /** Wraps the SMART authenticated fetch to detect permanent auth failures */
-const authFetch: typeof fetch = async (input, init) => {
+const authFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   try {
     return await baseFetch(input, init)
   } catch (err) {
