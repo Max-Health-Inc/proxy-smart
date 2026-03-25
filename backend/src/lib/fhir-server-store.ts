@@ -1,6 +1,8 @@
 import { config } from '../config'
 import { getFHIRServerInfo, getServerIdentifier, clearMetadataCache, type FHIRVersionInfo } from './fhir-utils'
 import { logger } from './logger'
+import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { join } from 'path'
 
 export interface FHIRServerInfo {
   name: string
@@ -9,6 +11,39 @@ export interface FHIRServerInfo {
   metadata: FHIRVersionInfo
   lastUpdated: number
 }
+
+// ── File-backed persistence for dynamically added servers ────────────────────
+
+interface PersistedServer { url: string; name?: string }
+
+const SERVERS_JSON_PATH = join(process.cwd(), 'fhir-servers.json')
+
+function loadPersistedServers(): Map<string, PersistedServer> {
+  try {
+    if (!existsSync(SERVERS_JSON_PATH)) return new Map()
+    const raw = readFileSync(SERVERS_JSON_PATH, 'utf-8')
+    const data = JSON.parse(raw)
+    if (!data || typeof data.servers !== 'object') return new Map()
+    return new Map(Object.entries(data.servers as Record<string, PersistedServer>))
+  } catch (error) {
+    logger.fhir.warn('Failed to load fhir-servers.json, starting with env-only servers', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+    return new Map()
+  }
+}
+
+function savePersistedServers(servers: Map<string, PersistedServer>): void {
+  const data = {
+    $schema: 'fhir-servers-runtime',
+    updatedAt: new Date().toISOString(),
+    servers: Object.fromEntries(servers)
+  }
+  writeFileSync(SERVERS_JSON_PATH, JSON.stringify(data, null, 2), 'utf-8')
+}
+
+// Track which identifiers came from file vs env so we know what to persist
+const dynamicServers = loadPersistedServers()
 
 class FHIRServerStore {
   private servers = new Map<string, FHIRServerInfo>()
@@ -68,6 +103,41 @@ class FHIRServerStore {
           }
           
           serverInfos.set(fallbackIdentifier, fallbackServerInfo)
+        }
+      }
+
+      // Also load dynamically added servers from fhir-servers.json
+      for (const [identifier, persisted] of dynamicServers) {
+        // Skip if already loaded from env (URL match)
+        const alreadyLoaded = Array.from(serverInfos.values()).some(
+          s => s.url.replace(/\/+$/, '') === persisted.url.replace(/\/+$/, '')
+        )
+        if (alreadyLoaded) continue
+
+        try {
+          const metadata = await getFHIRServerInfo(persisted.url)
+          const serverInfo: FHIRServerInfo = {
+            name: persisted.name || metadata.serverName || `Server ${identifier}`,
+            url: persisted.url,
+            identifier,
+            metadata,
+            lastUpdated: Date.now()
+          }
+          serverInfos.set(identifier, serverInfo)
+          logger.fhir.info(`Loaded persisted FHIR server: ${serverInfo.name}`, {
+            url: persisted.url,
+            identifier,
+            fhirVersion: metadata.fhirVersion
+          })
+        } catch (error) {
+          logger.fhir.warn(`Failed to fetch metadata for persisted server ${persisted.url}`, { error })
+          serverInfos.set(identifier, {
+            name: persisted.name || `Server ${identifier}`,
+            url: persisted.url,
+            identifier,
+            metadata: { fhirVersion: 'Unknown', serverName: 'Unknown FHIR Server', supported: false },
+            lastUpdated: Date.now()
+          })
         }
       }
 
@@ -228,6 +298,10 @@ export async function addServer(serverUrl: string, name?: string): Promise<FHIRS
     // Add to store
     fhirServerStore.addServer(identifier, serverInfo)
     
+    // Persist dynamically added server
+    dynamicServers.set(identifier, { url: normalizedUrl, name: serverInfo.name })
+    savePersistedServers(dynamicServers)
+    
     logger.fhir.info(`Added new FHIR server: ${serverInfo.name}`, { 
       url: normalizedUrl, 
       identifier,
@@ -273,6 +347,10 @@ export async function updateServer(serverIdentifier: string, newServerUrl: strin
     // Update in store
     fhirServerStore.updateServer(serverIdentifier, serverInfo)
     
+    // Persist if this is a dynamic server (or promote it to dynamic)
+    dynamicServers.set(serverIdentifier, { url: normalizedUrl, name: serverInfo.name })
+    savePersistedServers(dynamicServers)
+    
     logger.fhir.info(`Updated FHIR server: ${serverInfo.name}`, { 
       url: newServerUrl, 
       identifier: serverIdentifier,
@@ -315,17 +393,17 @@ export async function retryUnknownServers(): Promise<void> {
   await ensureServersInitialized()
 
   const servers = fhirServerStore.getAllServers()
-  const unknowns = servers.filter(s => s.metadata.serverName === 'Unknown FHIR Server' || s.metadata.fhirVersion === 'Unknown')
+  const unknowns = servers.filter(s => s.metadata.fhirVersion === 'Unknown')
 
   await Promise.allSettled(
     unknowns.map(async (server) => {
       try {
         clearMetadataCache(server.url)
         const metadata = await getFHIRServerInfo(server.url)
-        if (metadata.serverName !== 'Unknown FHIR Server') {
+        if (metadata.fhirVersion !== 'Unknown') {
           fhirServerStore.updateServer(server.identifier, {
             ...server,
-            name: metadata.serverName || server.name,
+            name: metadata.serverName !== 'Unknown FHIR Server' ? metadata.serverName || server.name : server.name,
             metadata,
             lastUpdated: Date.now()
           })
@@ -349,6 +427,13 @@ export async function deleteServer(serverIdentifier: string): Promise<void> {
   }
 
   fhirServerStore.removeServer(serverIdentifier)
+  
+  // Remove from persisted file
+  if (dynamicServers.has(serverIdentifier)) {
+    dynamicServers.delete(serverIdentifier)
+    savePersistedServers(dynamicServers)
+  }
+  
   logger.fhir.info(`Deleted FHIR server: ${server.name}`, {
     url: server.url,
     identifier: serverIdentifier,
