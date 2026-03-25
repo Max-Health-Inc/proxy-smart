@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Dashboard } from "@/components/Dashboard"
-import { Button, Spinner } from "@proxy-smart/shared-ui"
+import { Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"
@@ -14,6 +14,7 @@ export default function App() {
   const [state, setState] = useState<AppState>("loading")
   const [error, setError] = useState<string | null>(null)
   const callbackHandled = useRef(false)
+  const brand = useBranding()
 
   useEffect(() => {
     // Subscribe to auth errors from fetch wrapper
@@ -81,7 +82,11 @@ export default function App() {
       <header className="border-b bg-card">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="size-5 text-maxhealth" />
+            {brand?.logoUrl ? (
+              <img src={brand.logoUrl} alt={brand.name} className="h-6 w-auto" />
+            ) : (
+              <ShieldCheck className="size-5 text-maxhealth" />
+            )}
             <h1 className="font-semibold">Consent Manager</h1>
           </div>
           {state === "authenticated" && (
@@ -125,7 +130,11 @@ export default function App() {
         ) : state === "unauthenticated" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-6">
             <div className="text-center space-y-2">
-              <ShieldCheck className="size-16 mx-auto text-muted-foreground/30" />
+              {brand?.logoUrl ? (
+                <img src={brand.logoUrl} alt={brand.name} className="h-16 mx-auto" />
+              ) : (
+                <ShieldCheck className="size-16 mx-auto text-muted-foreground/30" />
+              )}
               <h2 className="text-2xl font-semibold">Consent Manager</h2>
               <p className="text-muted-foreground max-w-md">
                 Manage who can access your health records. Sign in with your identity to view and control your consent settings.

@@ -12,3 +12,6 @@ export { ErrorBoundary } from "./components/error-boundary"
 
 // Utilities
 export { cn } from "./lib/utils"
+
+// Hooks
+export { useBranding, type BrandInfo } from "./hooks/use-branding"
