@@ -189,36 +189,18 @@ export function getServerIdentifier(serverInfo: FHIRVersionInfo, serverUrl: stri
 }
 
 /**
- * Get server configuration by name (async version)
+ * Convert short FHIR version labels to semver codes (inverse of normalizeFHIRVersion)
+ * Examples: "R4" → "4.0.1", "R5" → "5.0.0", "STU3" → "3.0.2"
  */
-export async function getServerByName(serverName: string): Promise<string | null> {
-  // Try to find by generated server identifier from metadata
-  for (let i = 0; i < config.fhir.serverBases.length; i++) {
-    const serverBase = config.fhir.serverBases[i]
-
-    try {
-      const serverInfo = await getFHIRServerInfo(serverBase)
-
-      // Generate consistent server identifier
-      const serverIdentifier = getServerIdentifier(serverInfo, serverBase, i)
-      if (serverIdentifier === serverName) {
-        return serverBase
-      }
-    } catch {
-      // If metadata fetch fails, try fallback
-      const fallbackIdentifier = `server-${i}`
-      if (fallbackIdentifier === serverName) {
-        return serverBase
-      }
-    }
+export function fhirVersionToSemver(version: string): string {
+  const map: Record<string, string> = {
+    'R2': '1.0.2', 'DSTU2': '1.0.2',
+    'R3': '3.0.2', 'STU3': '3.0.2',
+    'R4': '4.0.1',
+    'R4B': '4.3.0',
+    'R5': '5.0.0'
   }
-
-  // Fallback: try to find by partial URL match (e.g., "hapi" matches "hapi.fhir.org")
-  const matchingServer = config.fhir.serverBases.find(server =>
-    server.toLowerCase().includes(serverName.toLowerCase())
-  )
-
-  return matchingServer || null
+  return map[version.toUpperCase()] || version
 }
 
 /**

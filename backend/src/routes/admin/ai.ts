@@ -326,7 +326,7 @@ export const aiPublicRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
     try {
       // Check if OpenAI is configured
       const openaiConfigured = !!process.env.OPENAI_API_KEY
-      const model = process.env.OPENAI_MODEL || 'gpt-5-mini'
+      const model = process.env.OPENAI_MODEL || 'gpt-4o-mini'
 
       // Get internal tool count
       const internalTools = getToolRegistry()
@@ -662,7 +662,7 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
 
       logger.server.info('AI chat starting', {
         reqId,
-        model: body.model || process.env.OPENAI_MODEL || 'gpt-5-mini',
+        model: body.model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
         totalTools: Object.keys(sdkTools).length,
         internalTools: toolSources.internal,
         externalTools: toolSources.external

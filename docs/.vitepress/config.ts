@@ -37,6 +37,7 @@ export default defineConfig({
           { text: 'SMART Apps', link: '/admin-ui/smart-apps' },
           { text: 'FHIR Servers', link: '/admin-ui/fhir-servers' },
           { text: 'Scope Management', link: '/admin-ui/scope-management' },
+          { text: 'Brand Management', link: '/admin-ui/branding' },
         ],
       },
       {

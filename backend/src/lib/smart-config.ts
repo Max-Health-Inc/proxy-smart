@@ -131,7 +131,14 @@ class SmartConfigService {
             scopes_supported: allScopes,
 
             // SMART capabilities based on what we support
-            capabilities: this.getSmartCapabilities()
+            capabilities: this.getSmartCapabilities(),
+
+            // User-Access Brands (SMART 2.2.0 Section 8) — RECOMMENDED
+            user_access_brand_bundle: `${config.baseUrl}/branding.json`,
+            user_access_brand_identifier: {
+                system: 'urn:ietf:rfc:3986',
+                value: config.brand.identifier
+            }
         }
     }
 
