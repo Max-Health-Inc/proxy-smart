@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603251726.4eb5bd90] - 2026-03-25
+
+- ✨ Features: MCP resources, FHIR server delete, AI assistant fixes, IAL encoding fix
+- 🔧 Chores & Improvements: user-access branding, dynamic roles, code cleanup
+- 📚 Documentation: update CHANGELOG.md for PR #231
+- ⚠️ Breaking Changes: none
+- 🐛 Bug Fixes: (none explicit beyond features)
+Note: Only changes since last release included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/232
+
+
 ## [0.0.3-alpha.202603241627.cdee7ff7] - 2026-03-25
 
 - ✨ Features: user-access branding, dynamic roles, code cleanup (quotentiroler)
