@@ -44,3 +44,6 @@ package-lock.json
 
 # Runtime MCP server config (managed via UI)
 mcp.json
+
+# Runtime FHIR server config (managed via UI)
+fhir-servers.json
