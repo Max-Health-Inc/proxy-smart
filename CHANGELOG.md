@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603252123.0938d55e] - 2026-03-25
+
+- ✨ Features: Scaffold international patient portal with IPS/IPA (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/237
+
+
 ## [0.0.3-alpha.202603252036.bae2a0a9] - 2026-03-25
 
 - ✨ Features: surface brand logo in consent-app and dtr-app (quotentiroler)
