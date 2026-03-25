@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603251933.c56cbe7f] - 2026-03-25
+
+- 🐛 Bug Fixes: Preserve bundle type on 304 response — return empty string cast to bundle type when If-None-Match matches ETag (ETag and Cache-Control behavior unchanged)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/234
+
+
 ## [0.0.3-alpha.202603251928.7a647e6d] - 2026-03-25
 
 - ✨ Features: MCP resources, FHIR server delete, AI assistant fixes, IAL encoding fix; user-access branding, dynamic roles, code cleanup
