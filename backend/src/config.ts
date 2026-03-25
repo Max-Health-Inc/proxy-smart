@@ -89,6 +89,28 @@ export const config = {
     capabilities: process.env.SMART_CAPABILITIES?.split(',').map(s => s.trim()),
   },
 
+  // User-Access Brands (SMART App Launch 2.2.0 Section 8)
+  brand: {
+    get name() { return process.env.BRAND_NAME || packageJson.displayName || packageJson.name },
+    get website() { return process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
+    get logoUrl() { return process.env.BRAND_LOGO_URL || null },
+    get logoLicenseUrl() { return process.env.BRAND_LOGO_LICENSE_URL || null },
+    get aliases(): string[] {
+      return process.env.BRAND_ALIASES?.split(',').map(s => s.trim()).filter(Boolean) || []
+    },
+    get category() { return process.env.BRAND_CATEGORY || 'prov' }, // prov, pay, laboratory, etc.
+    get portalName() { return process.env.BRAND_PORTAL_NAME || null },
+    get portalUrl() { return process.env.BRAND_PORTAL_URL || null },
+    get portalDescription() { return process.env.BRAND_PORTAL_DESCRIPTION || null },
+    get portalLogoUrl() { return process.env.BRAND_PORTAL_LOGO_URL || null },
+    get portalLogoLicenseUrl() { return process.env.BRAND_PORTAL_LOGO_LICENSE_URL || null },
+    get addressCity() { return process.env.BRAND_ADDRESS_CITY || null },
+    get addressState() { return process.env.BRAND_ADDRESS_STATE || null },
+    get addressPostalCode() { return process.env.BRAND_ADDRESS_POSTAL_CODE || null },
+    get addressCountry() { return process.env.BRAND_ADDRESS_COUNTRY || null },
+    get identifier() { return process.env.BRAND_IDENTIFIER || process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
+  },
+
   ai: {
     // Always use internal AI (unified ai.ts with direct Elysia tool execution)
     // Can connect to external MCP servers via EXTERNAL_MCP_SERVERS env variable

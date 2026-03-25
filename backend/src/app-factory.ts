@@ -20,6 +20,8 @@ import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { mcpEndpointRoutes } from './routes/mcp-endpoint'
 import { docsRoutes } from './routes/docs'
+import { brandBundleService } from './lib/brand-bundle'
+import { UserAccessBrandBundle } from './schemas'
 
 /** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
 function discoverApps() {
@@ -116,6 +118,26 @@ export function createApp() {
         .get('/apps/', () => Bun.file('public/apps/index.html'))
         // Public SMART app discovery endpoint
         .get('/apps.json', () => ({ apps: discoverApps() }))
+        // User-Access Brand Bundle (SMART 2.2.0 Section 8)
+        .get('/branding.json', async ({ set, headers }) => {
+            const { bundle, etag } = await brandBundleService.getBrandBundle()
+            // Support conditional requests (ETag / If-None-Match)
+            const ifNoneMatch = headers['if-none-match']
+            if (ifNoneMatch && ifNoneMatch === etag) {
+                set.status = 304
+                return
+            }
+            set.headers['etag'] = etag
+            set.headers['cache-control'] = 'public, max-age=60'
+            return bundle
+        }, {
+            response: { 200: UserAccessBrandBundle },
+            detail: {
+                summary: 'User-Access Brand Bundle',
+                description: 'FHIR Bundle (collection) of Organization and Endpoint resources for User-Access Brands (SMART 2.2.0 Section 8)',
+                tags: ['smart-apps']
+            }
+        })
         // SPA fallbacks for sub-apps under /apps/*
         .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
         .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
@@ -126,10 +148,15 @@ export function createApp() {
         // VitePress docs SPA fallback
         .get('/docs', () => Bun.file('public/docs/index.html'))
         .get('/docs/', () => Bun.file('public/docs/index.html'))
-        .get('/docs/*', ({ params }) => {
+        .get('/docs/*', async ({ params, set }) => {
             const path = (params as { '*': string })['*']
-            // Serve the exact file if it exists (e.g. assets/style.css), otherwise SPA fallback
-            return Bun.file(`public/docs/${path}`)
+            const file = Bun.file(`public/docs/${path}`)
+            if (await file.exists()) return file
+            // SPA fallback for clean URLs (VitePress client-side routing)
+            const index = Bun.file('public/docs/index.html')
+            if (await index.exists()) return index
+            set.status = 404
+            return { error: 'Not Found' }
         })
         .use(keycloakPlugin)
         .use(docsRoutes)

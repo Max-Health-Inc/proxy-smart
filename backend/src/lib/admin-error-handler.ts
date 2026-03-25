@@ -41,29 +41,4 @@ export function handleAdminError(error: unknown, set: Context['set']) {
   return { error: 'Internal server error', details: error }
 }
 
-/**
- * Wrapper function for admin route handlers that automatically handles Keycloak errors
- */
-export function withAdminErrorHandler<T extends unknown[], R>(
-  handler: (...args: T) => Promise<R>
-) {
-  return async (...args: T): Promise<R> => {
-    try {
-      return await handler(...args)
-    } catch (error) {
-      // Find the 'set' context object in the arguments
-      const setContext = args.find(arg => 
-        typeof arg === 'object' && 
-        arg !== null && 
-        'status' in arg
-      ) as Context['set'] | undefined
-      
-      if (setContext) {
-        return handleAdminError(error, setContext) as R
-      } else {
-        // If no set context found, just re-throw the error
-        throw error
-      }
-    }
-  }
-}
+

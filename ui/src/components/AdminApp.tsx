@@ -20,6 +20,7 @@ import { ShieldAlert, X } from 'lucide-react';
 import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
+import { BrandSettings } from './BrandSettings';
 
 
 // Valid tab routes
@@ -33,6 +34,7 @@ const VALID_TABS = [
     'smart-config',
     'oauth-monitoring',
     'door-management',
+    'branding',
 ] as const;
 
 type ValidTab = typeof VALID_TABS[number];
@@ -175,6 +177,7 @@ export function AdminApp() {
                             {currentTab === 'smart-config' && <SmartConfigManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
+                            {currentTab === 'branding' && <BrandSettings />}
                         </Panel>
                     </div>
                 </div>

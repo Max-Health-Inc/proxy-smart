@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { validateToken } from '@/lib/auth'
+import { extractBearerToken } from '@/lib/admin-utils'
 import { getConsentCacheStats, consentCache } from '@/lib/consent'
 import {
   CommonErrorResponses,
@@ -29,7 +30,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Get current consent enforcement configuration (runtime = realm attrs + env fallback)
    */
   .get('/config', async ({ set, headers, getAdmin }) => {
-    const token = headers.authorization?.replace('Bearer ', '')
+    const token = extractBearerToken(headers)
     if (!token) {
       set.status = 401
       return { error: 'Authentication required' }
@@ -76,7 +77,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Update consent enforcement configuration (persisted to Keycloak realm attributes)
    */
   .put('/config', async ({ set, headers, body, getAdmin }) => {
-    const token = headers.authorization?.replace('Bearer ', '')
+    const token = extractBearerToken(headers)
     if (!token) {
       set.status = 401
       return { error: 'Authorization header required' }
@@ -116,7 +117,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Get current IAL configuration
    */
   .get('/ial', async ({ set, headers, getAdmin }) => {
-    const token = headers.authorization?.replace('Bearer ', '')
+    const token = extractBearerToken(headers)
     if (!token) {
       set.status = 401
       return { error: 'Authentication required' }
@@ -163,7 +164,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Update IAL configuration (persisted to Keycloak realm attributes)
    */
   .put('/ial', async ({ set, headers, body, getAdmin }) => {
-    const token = headers.authorization?.replace('Bearer ', '')
+    const token = extractBearerToken(headers)
     if (!token) {
       set.status = 401
       return { error: 'Authorization header required' }
@@ -203,7 +204,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Get consent cache statistics
    */
   .get('/cache/stats', async ({ set, headers }) => {
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     if (!auth) {
       set.status = 401
       return { error: 'Authentication required' }
@@ -237,7 +238,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Invalidate consent cache entries
    */
   .post('/cache/invalidate', async ({ set, headers, body }) => {
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     if (!auth) {
       set.status = 401
       return { error: 'Authentication required' }
@@ -303,7 +304,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    * Clean up expired cache entries
    */
   .post('/cache/cleanup', async ({ set, headers }) => {
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     if (!auth) {
       set.status = 401
       return { error: 'Authentication required' }
@@ -344,7 +345,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
    */
   .post('/webhook', async ({ set, headers, body }) => {
     // Webhook can use API key or Bearer token
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     // Note: API key support (x-api-key) reserved for future implementation
     
     // For now, require Bearer token (could add API key support later)

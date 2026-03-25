@@ -40,7 +40,13 @@ export const SmartConfigurationResponse = t.Object({
   scopes_supported: t.Array(t.String(), { description: 'Supported OAuth2 scopes' }),
   capabilities: t.Array(t.String(), { description: 'SMART on FHIR capabilities' }),
   token_endpoint_auth_methods_supported: t.Array(t.String(), { description: 'Supported token endpoint authentication methods' }),
-  token_endpoint_auth_signing_alg_values_supported: t.Array(t.String(), { description: 'Supported JWT signing algorithms for token endpoint auth' })
+  token_endpoint_auth_signing_alg_values_supported: t.Array(t.String(), { description: 'Supported JWT signing algorithms for token endpoint auth' }),
+  // User-Access Brands (SMART 2.2.0 Section 8) — RECOMMENDED
+  user_access_brand_bundle: t.Optional(t.String({ description: 'URL of a Brand Bundle (FHIR Bundle of Organization + Endpoint resources)' })),
+  user_access_brand_identifier: t.Optional(t.Object({
+    system: t.Optional(t.String({ description: 'Identifier system (RECOMMENDED: urn:ietf:rfc:3986)' })),
+    value: t.String({ description: 'Identifier value (RECOMMENDED: HTTPS URL of brand primary web presence)' })
+  }, { description: 'FHIR Identifier for this server\'s primary Brand within the Bundle' }))
 }, { title: 'SmartConfigurationResponse' })
 
 export type SmartConfigurationResponseType = Static<typeof SmartConfigurationResponse>
@@ -64,3 +70,18 @@ export const SmartConfigRefreshResponse = t.Object({
 }, { title: 'SmartConfigRefreshResponse' })
 
 export type SmartConfigRefreshResponseType = Static<typeof SmartConfigRefreshResponse>
+
+// ==================== User-Access Brands (SMART 2.2.0 Section 8) ====================
+
+export const UserAccessBrandBundle = t.Object({
+  resourceType: t.Literal('Bundle'),
+  id: t.String({ description: 'Bundle identifier' }),
+  type: t.Literal('collection'),
+  timestamp: t.String({ description: 'Last-modified timestamp (ISO 8601)' }),
+  entry: t.Array(t.Object({
+    fullUrl: t.Optional(t.String({ description: 'Full URL of the resource' })),
+    resource: t.Object({}, { additionalProperties: true, description: 'Organization or Endpoint FHIR resource' })
+  }), { description: 'Organization and Endpoint resources' })
+}, { title: 'UserAccessBrandBundle', additionalProperties: true })
+
+export type UserAccessBrandBundleType = Static<typeof UserAccessBrandBundle>

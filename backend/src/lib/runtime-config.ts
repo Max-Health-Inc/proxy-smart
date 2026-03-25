@@ -12,10 +12,12 @@ import { logger } from '@/lib/logger'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
+import type { BrandConfigType } from '@/schemas'
 
 // Module-level cache
 let consentOverrides: Partial<ConsentConfig> | null = null
 let ialOverrides: Partial<IalConfig> | null = null
+let brandOverrides: Partial<BrandConfigType> | null = null
 let loaded = false
 
 // ─── Consent ─────────────────────────────────────────────────────────
@@ -118,11 +120,13 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
 
     consentOverrides = parseConsentFromAttributes(attrs)
     ialOverrides = parseIalFromAttributes(attrs)
+    brandOverrides = parseBrandFromAttributes(attrs)
     loaded = true
 
     logger.admin.info('Runtime config loaded from Keycloak', {
       consentOverrides: !!consentOverrides,
       ialOverrides: !!ialOverrides,
+      brandOverrides: !!brandOverrides,
     })
   } catch (error) {
     logger.admin.warn('Failed to load runtime config from Keycloak, using env var defaults', { error })
@@ -213,4 +217,109 @@ export async function saveIalConfig(admin: KcAdminClient, settings: IalConfig): 
 /** Whether runtime config has been loaded from Keycloak at least once */
 export function isRuntimeConfigLoaded(): boolean {
   return loaded
+}
+
+// ─── Brand ───────────────────────────────────────────────────────────
+
+const BRAND_PREFIX = 'brand_settings.'
+
+function parseBrandFromAttributes(attrs: Record<string, string>): Partial<BrandConfigType> | null {
+  const hasAny = Object.keys(attrs).some(k => k.startsWith(BRAND_PREFIX))
+  if (!hasAny) return null
+
+  const get = (key: string) => attrs[`${BRAND_PREFIX}${key}`]
+
+  const result: Partial<BrandConfigType> = {}
+
+  if (get('name') !== undefined) result.name = get('name')
+  if (get('website') !== undefined) result.website = get('website')
+  if (get('logo_url') !== undefined) result.logoUrl = get('logo_url') || null
+  if (get('logo_license_url') !== undefined) result.logoLicenseUrl = get('logo_license_url') || null
+  if (get('aliases') !== undefined) {
+    result.aliases = get('aliases').split(',').map(s => s.trim()).filter(Boolean)
+  }
+  if (get('category') !== undefined) result.category = get('category')
+  if (get('portal_name') !== undefined) result.portalName = get('portal_name') || null
+  if (get('portal_url') !== undefined) result.portalUrl = get('portal_url') || null
+  if (get('portal_description') !== undefined) result.portalDescription = get('portal_description') || null
+  if (get('portal_logo_url') !== undefined) result.portalLogoUrl = get('portal_logo_url') || null
+  if (get('portal_logo_license_url') !== undefined) result.portalLogoLicenseUrl = get('portal_logo_license_url') || null
+  if (get('address_city') !== undefined) result.addressCity = get('address_city') || null
+  if (get('address_state') !== undefined) result.addressState = get('address_state') || null
+  if (get('address_postal_code') !== undefined) result.addressPostalCode = get('address_postal_code') || null
+  if (get('address_country') !== undefined) result.addressCountry = get('address_country') || null
+  if (get('identifier') !== undefined) result.identifier = get('identifier')
+
+  return result
+}
+
+function brandToAttributes(settings: BrandConfigType): Record<string, string> {
+  return {
+    [`${BRAND_PREFIX}name`]: settings.name,
+    [`${BRAND_PREFIX}website`]: settings.website,
+    [`${BRAND_PREFIX}logo_url`]: settings.logoUrl || '',
+    [`${BRAND_PREFIX}logo_license_url`]: settings.logoLicenseUrl || '',
+    [`${BRAND_PREFIX}aliases`]: settings.aliases.join(','),
+    [`${BRAND_PREFIX}category`]: settings.category,
+    [`${BRAND_PREFIX}portal_name`]: settings.portalName || '',
+    [`${BRAND_PREFIX}portal_url`]: settings.portalUrl || '',
+    [`${BRAND_PREFIX}portal_description`]: settings.portalDescription || '',
+    [`${BRAND_PREFIX}portal_logo_url`]: settings.portalLogoUrl || '',
+    [`${BRAND_PREFIX}portal_logo_license_url`]: settings.portalLogoLicenseUrl || '',
+    [`${BRAND_PREFIX}address_city`]: settings.addressCity || '',
+    [`${BRAND_PREFIX}address_state`]: settings.addressState || '',
+    [`${BRAND_PREFIX}address_postal_code`]: settings.addressPostalCode || '',
+    [`${BRAND_PREFIX}address_country`]: settings.addressCountry || '',
+    [`${BRAND_PREFIX}identifier`]: settings.identifier,
+  }
+}
+
+/**
+ * Get effective brand config: realm attribute overrides merged over env vars.
+ */
+export function getRuntimeBrandConfig(): BrandConfigType {
+  const envDefaults: BrandConfigType = {
+    name: config.brand.name,
+    website: config.brand.website,
+    logoUrl: config.brand.logoUrl,
+    logoLicenseUrl: config.brand.logoLicenseUrl,
+    aliases: config.brand.aliases,
+    category: config.brand.category,
+    portalName: config.brand.portalName,
+    portalUrl: config.brand.portalUrl,
+    portalDescription: config.brand.portalDescription,
+    portalLogoUrl: config.brand.portalLogoUrl,
+    portalLogoLicenseUrl: config.brand.portalLogoLicenseUrl,
+    addressCity: config.brand.addressCity,
+    addressState: config.brand.addressState,
+    addressPostalCode: config.brand.addressPostalCode,
+    addressCountry: config.brand.addressCountry,
+    identifier: config.brand.identifier,
+  }
+
+  if (!brandOverrides) return envDefaults
+
+  return { ...envDefaults, ...brandOverrides }
+}
+
+/**
+ * Save brand config to Keycloak realm attributes and update in-memory cache.
+ */
+export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfigType): Promise<void> {
+  const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
+  const existingAttrs = (realm?.attributes || {}) as Record<string, string>
+
+  const attributes = {
+    ...existingAttrs,
+    ...brandToAttributes(settings),
+  }
+
+  await admin.realms.update(
+    { realm: process.env.KEYCLOAK_REALM! },
+    { attributes }
+  )
+
+  // Update in-memory cache
+  brandOverrides = { ...settings }
+  logger.admin.info('Brand config saved to Keycloak realm attributes', { name: settings.name })
 }

@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia'
 import fetch, { Headers } from 'cross-fetch'
 import { validateToken } from '../lib/auth'
-import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
+import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
 import { config } from '../config'
 import { fhirServerStore, getServerByName, getServerInfoByName } from '../lib/fhir-server-store'
 import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigurationResponse, FhirProxyResponse, type SmartConfigurationResponseType } from '../schemas'
@@ -249,7 +249,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
   // Admin endpoint to refresh FHIR server cache
   .post('/cache/refresh', async ({ set, headers, params }) => {
     // Require authentication for cache management
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     if (!auth) {
       set.status = 401
       return { error: 'Authentication required' }

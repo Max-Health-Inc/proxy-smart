@@ -197,7 +197,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .post('/:userId/encounter/:encounterId', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -232,7 +232,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .post('/:userId/fhir-context', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -285,7 +285,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/fhir-user', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -317,7 +317,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/patient', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -351,7 +351,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/encounter', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -385,7 +385,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/fhir-context', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -418,7 +418,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/intent', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -450,7 +450,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/need-patient-banner', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -482,7 +482,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/smart-style-url', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -514,7 +514,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/tenant', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -547,7 +547,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/intent', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -579,7 +579,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/need-patient-banner', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -611,7 +611,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/smart-style-url', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -643,7 +643,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/tenant', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }

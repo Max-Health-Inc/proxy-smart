@@ -3,6 +3,7 @@ import { config } from '../config'
 import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
+import { extractBearerToken } from '../lib/admin-utils'
 import { mtlsStore } from '../lib/mtls-store'
 import * as forge from 'node-forge'
 import * as crypto from 'crypto'
@@ -246,7 +247,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .post('/', async ({ body, set, headers }) => {
     try {
       // Require authentication for server management
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -323,7 +324,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .put('/:server_id', async ({ params, body, set, headers }) => {
     try {
       // Require authentication for server management
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -504,7 +505,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .get('/:server_id/mtls', async ({ params, set, headers }) => {
     try {
       // Require authentication
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -558,7 +559,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .put('/:server_id/mtls', async ({ params, body, set, headers }) => {
     try {
       // Require authentication
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -615,7 +616,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .post('/:server_id/mtls/certificates', async ({ params, body, set, headers }) => {
     try {
       // Require authentication
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }

@@ -32,6 +32,7 @@ import {
   Sun,
   Monitor,
   DoorOpen,
+  Building2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -159,6 +160,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('AI Tools'), 
       description: t('MCP Configuration'),
       icon: Sparkles
+    },
+    { 
+      id: 'branding', 
+      label: t('Branding'), 
+      description: t('Brand Identity'),
+      icon: Building2
     },
 
   ];

@@ -13,6 +13,8 @@ import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
 import { IALSettings } from '../IALSettings';
 import { useTranslation } from 'react-i18next';
+import { config } from '@/config';
+import { getStoredToken } from '@/lib/apiClient';
 
 // Extend the API type to include our UI-specific computed properties
 type HealthcareUserWithPersons = HealthcareUser & {
@@ -52,37 +54,23 @@ function getPrimaryRole(realmRoles: string[] = [], clientRoles: Record<string, s
 }
 
 /**
- * Available realm roles for selection
+ * Fetch client roles for a Keycloak client (e.g., 'admin-ui') from the backend.
+ * Uses the new GET /admin/roles/clients/:clientId endpoint.
  */
-const AVAILABLE_REALM_ROLES = [
-  'nurse',
-  'researcher',
-  'practitioner',
-  'administrator',
-  'user'
-];
-
-/**
- * Available client roles for admin-ui
- */
-const AVAILABLE_CLIENT_ROLES = {
-  'admin-ui': [
-    'admin',
-    'user-manager',
-    'viewer'
-  ]
-};
-
-/**
- * Get all available roles for primary role selection
- */
-const getAllAvailableRoles = () => {
-  const allRoles = [...AVAILABLE_REALM_ROLES];
-  Object.values(AVAILABLE_CLIENT_ROLES).forEach(roles => {
-    allRoles.push(...roles);
-  });
-  return allRoles;
-};
+async function fetchClientRoles(clientId: string): Promise<string[]> {
+  const token = await getStoredToken();
+  if (!token) return [];
+  try {
+    const res = await fetch(`${config.api.baseUrl}/admin/roles/clients/${encodeURIComponent(clientId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return [];
+    const roles: { name?: string }[] = await res.json();
+    return roles.map(r => r.name).filter((n): n is string => !!n);
+  } catch {
+    return [];
+  }
+}
 
 /**
  * Transform API user data to our internal format
@@ -124,6 +112,36 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
   const [showAddPersonModal, setShowAddPersonModal] = useState(false);
   const [selectedUserForPerson, setSelectedUserForPerson] = useState<HealthcareUserWithPersons | null>(null);
 
+  // Dynamic roles fetched from Keycloak
+  const [availableRealmRoles, setAvailableRealmRoles] = useState<string[]>([]);
+  const [availableClientRoles, setAvailableClientRoles] = useState<Record<string, string[]>>({ 'admin-ui': [] });
+
+  const getAllAvailableRoles = useCallback(() => {
+    const allRoles = [...availableRealmRoles];
+    Object.values(availableClientRoles).forEach(roles => {
+      allRoles.push(...roles);
+    });
+    return [...new Set(allRoles)];
+  }, [availableRealmRoles, availableClientRoles]);
+
+  // Fetch available roles from Keycloak
+  const loadRoles = useCallback(async () => {
+    try {
+      const [realmRoles, adminUiRoles] = await Promise.all([
+        clientApis.roles.getAdminRoles().catch(() => []),
+        fetchClientRoles('admin-ui'),
+      ]);
+      const realmRoleNames = realmRoles
+        .map(r => r.name)
+        .filter((n): n is string => !!n)
+        .filter(n => !n.startsWith('default-roles-'));
+      setAvailableRealmRoles(realmRoleNames);
+      setAvailableClientRoles({ 'admin-ui': adminUiRoles });
+    } catch {
+      // Fallback: leave empty — user sees no checkboxes, but nothing crashes
+    }
+  }, [clientApis.roles]);
+
   // Load users from API
   const loadUsers = useCallback(async () => {
     try {
@@ -146,8 +164,9 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
   useEffect(() => {
     if (isAuthenticated) {
       loadUsers();
+      loadRoles();
     }
-  }, [isAuthenticated, loadUsers]);
+  }, [isAuthenticated, loadUsers, loadRoles]);
 
   const handleEditUser = (user: HealthcareUserWithPersons) => {
     setEditingUser(user);
@@ -289,8 +308,8 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
         }}
         submitting={submitting}
         fhirServers={fhirServers}
-        availableRealmRoles={AVAILABLE_REALM_ROLES}
-        availableClientRoles={AVAILABLE_CLIENT_ROLES}
+        availableRealmRoles={availableRealmRoles}
+        availableClientRoles={availableClientRoles}
         getAllAvailableRoles={getAllAvailableRoles}
       />
 
@@ -353,8 +372,8 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
           clientRoles: editingUser.clientRoles || {},
         } : null}
         fhirServers={fhirServers}
-        availableRealmRoles={AVAILABLE_REALM_ROLES}
-        availableClientRoles={AVAILABLE_CLIENT_ROLES}
+        availableRealmRoles={availableRealmRoles}
+        availableClientRoles={availableClientRoles}
         getAllAvailableRoles={getAllAvailableRoles}
       />
 

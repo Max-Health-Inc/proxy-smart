@@ -18,6 +18,7 @@ import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
+import { brandingAdminRoutes } from './branding'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -95,6 +96,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(launchContextRoutes)
   .use(identityProvidersRoutes)
   .use(smartConfigAdminRoutes)
+  .use(brandingAdminRoutes)
   .use(clientRegistrationSettingsRoutes)
   .use(keycloakConfigRoutes)
   // MCP servers management
