@@ -131,6 +131,7 @@
     "infra",
     "shared-ui",
     "dtr-app",
-    "consent-app"
+    "consent-app",
+    "patient-portal"
   ]
 }
