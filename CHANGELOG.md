@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603241627.cdee7ff7] - 2026-03-25
+
+- ✨ Features: user-access branding, dynamic roles, code cleanup (quotentiroler)
+- 🔧 Chores & Improvements: internal maintenance and CI/CD updates
+- 📚 Documentation: changelog update for PR #230
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/231
+
+
 ## [0.0.3-alpha.202603240754.fe065af2] - 2026-03-24
 
 - 🔧 Chores & Improvements: UI spacing adjustments for hero container across breakpoints; header bottom padding tweaks
