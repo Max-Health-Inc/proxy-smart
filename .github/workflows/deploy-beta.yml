@@ -42,6 +42,8 @@ on:
         required: true
       VITE_ENCRYPTION_SECRET:
         required: true
+      OPENAI_API_KEY:
+        required: false
 
 jobs:
   deploy:
@@ -78,6 +80,7 @@ jobs:
           BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
           BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
           VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           echo "🚀 Deploying Beta v${{ inputs.app_version }} to VPS (Docker Compose)..."
 
@@ -102,6 +105,7 @@ jobs:
             "KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}" \
             "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
             "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
+            "OPENAI_API_KEY=${OPENAI_API_KEY}" \
           | ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta && chmod 600 ${DEPLOY_DIR}/.env.beta"
 
           # Pull latest code and rebuild containers

@@ -33,6 +33,11 @@ export interface FHIRVersionInfo {
 const fhirMetadataCache = new Map<string, { data: FHIRVersionInfo, timestamp: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 
+/** Clear cached metadata for a specific server URL so the next fetch is fresh */
+export function clearMetadataCache(serverUrl: string): void {
+  fhirMetadataCache.delete(serverUrl)
+}
+
 /**
  * Normalize FHIR version to standard R + major version format
  * Examples:
@@ -94,7 +99,7 @@ export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionIn
       headers: {
         'Accept': 'application/fhir+json, application/json'
       },
-      signal: AbortSignal.timeout(4000)
+      signal: AbortSignal.timeout(10000)
     })
 
     if (!response.ok) {
