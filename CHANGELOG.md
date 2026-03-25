@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603252036.bae2a0a9] - 2026-03-25
+
+- ✨ Features: surface brand logo in consent-app and dtr-app (quotentiroler)
+- 🔧 Chores & Improvements: update beta and dev SMART compliance reports (proxy-smart-releaser[bot])
+- 🔧 Chores & Improvements: update version to 0.0.3-alpha.202603252036.bae2a0a9 (github-actions[bot])
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/236
+
+
 ## [0.0.3-alpha.202603251947.f10c9f3b] - 2026-03-25
 
 - ✨ Features: pass OPENAI_API_KEY through beta deployment pipeline (quotentiroler)
