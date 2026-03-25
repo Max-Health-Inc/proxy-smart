@@ -110,9 +110,7 @@ export function FhirServersManager() {
       
       const mappedServers: FhirServerWithState[] = response.servers.map((server) => ({
         ...server,
-        connectionStatus: (server.serverName === 'Unknown FHIR Server' || 
-                         server.serverName?.includes('Unknown') ||
-                         server.fhirVersion === 'Unknown') ? 'disconnected' : 'connected',
+        connectionStatus: server.fhirVersion === 'Unknown' ? 'disconnected' : 'connected',
         loading: false,
         error: undefined
       }));

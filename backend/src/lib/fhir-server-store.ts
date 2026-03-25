@@ -393,17 +393,17 @@ export async function retryUnknownServers(): Promise<void> {
   await ensureServersInitialized()
 
   const servers = fhirServerStore.getAllServers()
-  const unknowns = servers.filter(s => s.metadata.serverName === 'Unknown FHIR Server' || s.metadata.fhirVersion === 'Unknown')
+  const unknowns = servers.filter(s => s.metadata.fhirVersion === 'Unknown')
 
   await Promise.allSettled(
     unknowns.map(async (server) => {
       try {
         clearMetadataCache(server.url)
         const metadata = await getFHIRServerInfo(server.url)
-        if (metadata.serverName !== 'Unknown FHIR Server') {
+        if (metadata.fhirVersion !== 'Unknown') {
           fhirServerStore.updateServer(server.identifier, {
             ...server,
-            name: metadata.serverName || server.name,
+            name: metadata.serverName !== 'Unknown FHIR Server' ? metadata.serverName || server.name : server.name,
             metadata,
             lastUpdated: Date.now()
           })
