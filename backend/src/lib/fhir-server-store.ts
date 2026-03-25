@@ -1,5 +1,5 @@
 import { config } from '../config'
-import { getFHIRServerInfo, getServerIdentifier, type FHIRVersionInfo } from './fhir-utils'
+import { getFHIRServerInfo, getServerIdentifier, clearMetadataCache, type FHIRVersionInfo } from './fhir-utils'
 import { logger } from './logger'
 
 export interface FHIRServerInfo {
@@ -284,6 +284,59 @@ export async function updateServer(serverIdentifier: string, newServerUrl: strin
     logger.fhir.error(`Failed to update FHIR server: ${newServerUrl}`, { error })
     throw new Error(`Failed to update FHIR server: ${error}`)
   }
+}
+
+// Refresh metadata for a single server (re-fetch from origin)
+export async function refreshServer(serverIdentifier: string): Promise<FHIRServerInfo> {
+  await ensureServersInitialized()
+
+  const server = fhirServerStore.getServerByName(serverIdentifier)
+  if (!server) {
+    throw new Error(`Server '${serverIdentifier}' not found`)
+  }
+
+  // Clear cache so we get a fresh fetch
+  clearMetadataCache(server.url)
+  const metadata = await getFHIRServerInfo(server.url)
+
+  const updated: FHIRServerInfo = {
+    ...server,
+    name: metadata.serverName && metadata.serverName !== 'Unknown FHIR Server' ? metadata.serverName : server.name,
+    metadata,
+    lastUpdated: Date.now()
+  }
+
+  fhirServerStore.updateServer(serverIdentifier, updated)
+  return updated
+}
+
+// Retry metadata fetch for all servers currently showing as Unknown
+export async function retryUnknownServers(): Promise<void> {
+  await ensureServersInitialized()
+
+  const servers = fhirServerStore.getAllServers()
+  const unknowns = servers.filter(s => s.metadata.serverName === 'Unknown FHIR Server' || s.metadata.fhirVersion === 'Unknown')
+
+  await Promise.allSettled(
+    unknowns.map(async (server) => {
+      try {
+        clearMetadataCache(server.url)
+        const metadata = await getFHIRServerInfo(server.url)
+        if (metadata.serverName !== 'Unknown FHIR Server') {
+          fhirServerStore.updateServer(server.identifier, {
+            ...server,
+            name: metadata.serverName || server.name,
+            metadata,
+            lastUpdated: Date.now()
+          })
+          logger.fhir.info(`Recovered FHIR server metadata: ${metadata.serverName}`, {
+            url: server.url,
+            identifier: server.identifier,
+          })
+        }
+      } catch { /* still unreachable, keep as-is */ }
+    })
+  )
 }
 
 // Delete a server from the store
