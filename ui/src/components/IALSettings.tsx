@@ -93,7 +93,7 @@ export function IALSettings() {
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to load IAL settings',
+        text: error instanceof Error ? error.message : t('Failed to load IAL settings'),
       });
     } finally {
       setLoading(false);
@@ -109,11 +109,11 @@ export function IALSettings() {
       setSaving(true);
       setMessage(null);
       await apiCall('/admin/consent/ial', 'PUT', ial);
-      setMessage({ type: 'success', text: 'IAL settings saved successfully' });
+      setMessage({ type: 'success', text: t('IAL settings saved successfully') });
     } catch (error) {
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to save IAL settings',
+        text: error instanceof Error ? error.message : t('Failed to save IAL settings'),
       });
     } finally {
       setSaving(false);
@@ -132,7 +132,7 @@ export function IALSettings() {
   };
 
   if (loading) {
-    return <PageLoadingState message="Loading IAL settings..." />;
+    return <PageLoadingState message={t('Loading IAL settings...')} />;
   }
 
   return (
@@ -153,7 +153,7 @@ export function IALSettings() {
               </p>
             </div>
             <Badge variant={ial.enabled ? 'default' : 'secondary'} className="px-3 py-1 ml-4">
-              {ial.enabled ? 'Enabled' : 'Disabled'}
+              {ial.enabled ? t('Enabled') : t('Disabled')}
             </Badge>
           </div>
           <div className="flex space-x-3">
@@ -163,7 +163,7 @@ export function IALSettings() {
             </Button>
             <Button size="sm" onClick={saveSettings} disabled={saving}>
               {saving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Save IAL Settings
+              {t('Save IAL Settings')}
             </Button>
           </div>
         </div>
@@ -229,7 +229,7 @@ export function IALSettings() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(IAL_LEVEL_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                    <SelectItem key={k} value={k}>{t(v)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -246,7 +246,7 @@ export function IALSettings() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(IAL_LEVEL_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                    <SelectItem key={k} value={k}>{t(v)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
