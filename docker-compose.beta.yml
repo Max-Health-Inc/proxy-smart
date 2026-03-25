@@ -84,6 +84,7 @@ services:
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
       FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly
       CORS_ORIGINS: https://beta.proxy-smart.com
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     labels:
       caddy: beta.proxy-smart.com
       caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi.json /proxy-smart.svg"

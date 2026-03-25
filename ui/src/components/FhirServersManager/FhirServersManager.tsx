@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';
+import { useAlertStore } from '@/stores/alertStore';
+import { config } from '@/config';
+import { getStoredToken } from '@/lib/apiClient';
 import type { 
   FhirServerWithState
 } from '@/lib/types/api';
@@ -41,6 +44,7 @@ interface MtlsConfig {
 export function FhirServersManager() {
   const { t } = useTranslation();
   const { clientApis } = useAuth();
+  const { confirm } = useAlertStore();
   const [servers, setServers] = useState<FhirServerWithState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -291,6 +295,34 @@ export function FhirServersManager() {
     checkServerSecurity(server);
   };
 
+  const handleDeleteServer = (server: FhirServerWithState) => {
+    const isDisconnected = server.connectionStatus === 'disconnected';
+    confirm({
+      title: t('Delete Server'),
+      message: isDisconnected
+        ? t('This server is unreachable and can be safely removed. Delete "{{name}}"?', { name: server.serverName || server.name })
+        : t('Are you sure you want to delete "{{name}}"? Any SMART apps or launch contexts referencing this server will lose their FHIR connection. This action cannot be undone.', { name: server.serverName || server.name }),
+      type: isDisconnected ? 'warning' : 'error',
+      confirmText: t('Delete Server'),
+      cancelText: t('Cancel'),
+      onConfirm: async () => {
+        const token = await getStoredToken();
+        const res = await fetch(`${config.api.baseUrl}/fhir-servers/${encodeURIComponent(server.id)}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Failed to delete server');
+        }
+        await fetchServers();
+      },
+    });
+  };
+
   useEffect(() => {
     fetchServers();
   }, [fetchServers]);
@@ -367,6 +399,7 @@ export function FhirServersManager() {
               onConfigureMtls={handleConfigureMtls}
               onCheckSecurity={handleCheckSecurity}
               onEditServer={handleEditServer}
+              onDeleteServer={handleDeleteServer}
             />
           </TabsContent>
 

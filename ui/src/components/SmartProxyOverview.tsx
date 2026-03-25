@@ -168,10 +168,14 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
     // Fetch dashboard data
     useEffect(() => {
         const fetchDashboardData = async () => {
-            // Set initial AI Agent status - check backend availability
-            const isOpenAIConnected = await aiAssistant.isOpenAIAvailable();
-            const aiAgentStatus = isOpenAIConnected ? 'connected' : 'fallback';
-            const aiAgentSearchType = isOpenAIConnected ? 'openai_powered' : 'semantic_search';
+            // Set initial AI Agent status - check backend availability with detailed status
+            const aiStatus = await aiAssistant.getAvailabilityStatus();
+            const aiAgentStatus = aiStatus === 'connected' ? 'connected' 
+                : aiStatus === 'not_configured' ? 'not_configured' 
+                : 'disconnected';
+            const aiAgentSearchType = aiStatus === 'connected' ? 'openai_powered' 
+                : aiStatus === 'not_configured' ? 'not_configured'
+                : 'none';
             
             setSystemHealth(prev => ({ 
                 ...prev, 
@@ -259,9 +263,13 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                     const uptimeFormatted = uptimeHours > 0 ? `${uptimeHours}h` : `${Math.floor(uptimeSeconds / 60)}m`;
 
                     // Check AI Agent status - use await since it's async
-                    const isOpenAIConnected = await aiAssistant.isOpenAIAvailable();
-                    const aiAgentStatus = isOpenAIConnected ? 'connected' : 'fallback';
-                    const aiAgentSearchType = isOpenAIConnected ? 'openai_powered' : 'semantic_search';
+                    const aiStatus = await aiAssistant.getAvailabilityStatus();
+                    const aiAgentStatus = aiStatus === 'connected' ? 'connected'
+                        : aiStatus === 'not_configured' ? 'not_configured'
+                        : 'disconnected';
+                    const aiAgentSearchType = aiStatus === 'connected' ? 'openai_powered'
+                        : aiStatus === 'not_configured' ? 'not_configured'
+                        : 'none';
 
                     // Get memory usage from status endpoint instead of health
                     let memoryUsage = 'unknown';
@@ -305,9 +313,13 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                     }));
                 } else {
                     // Check AI Agent status even when system status fails - use await since it's async
-                    const isOpenAIConnected = await aiAssistant.isOpenAIAvailable();
-                    const aiAgentStatus = isOpenAIConnected ? 'connected' : 'fallback';
-                    const aiAgentSearchType = isOpenAIConnected ? 'openai_powered' : 'semantic_search';
+                    const aiStatus = await aiAssistant.getAvailabilityStatus();
+                    const aiAgentStatus = aiStatus === 'connected' ? 'connected'
+                        : aiStatus === 'not_configured' ? 'not_configured'
+                        : 'disconnected';
+                    const aiAgentSearchType = aiStatus === 'connected' ? 'openai_powered'
+                        : aiStatus === 'not_configured' ? 'not_configured'
+                        : 'none';
 
                     setSystemHealth(prev => ({
                         ...prev,
@@ -583,7 +595,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                         <div className="mt-3 flex items-center space-x-3 p-2 bg-muted/20 border border-border/30">
                             {systemHealth.aiAgentStatus === 'connected' ? (
                                 <Bot className="w-5 h-5 text-foreground" />
-                            ) : systemHealth.aiAgentStatus === 'fallback' ? (
+                            ) : systemHealth.aiAgentStatus === 'not_configured' ? (
                                 <Bot className="w-5 h-5 text-muted-foreground" />
                             ) : systemHealth.aiAgentStatus === 'checking' ? (
                                 <Bot className="w-5 h-5 text-muted-foreground animate-pulse" />
@@ -594,7 +606,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                 <span className={`font-semibold text-sm ${
                                     systemHealth.aiAgentStatus === 'connected'
                                         ? 'text-foreground'
-                                        : systemHealth.aiAgentStatus === 'fallback'
+                                        : systemHealth.aiAgentStatus === 'not_configured'
                                             ? 'text-muted-foreground'
                                             : systemHealth.aiAgentStatus === 'checking'
                                                 ? 'text-muted-foreground'
@@ -602,8 +614,8 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                 }`}>
                                     {systemHealth.aiAgentStatus === 'connected' 
                                         ? t('AI Assistant: Backend Connected') 
-                                        : systemHealth.aiAgentStatus === 'fallback'
-                                            ? t('AI Assistant: Backend Unavailable')
+                                        : systemHealth.aiAgentStatus === 'not_configured'
+                                            ? t('AI Assistant: Not Configured')
                                             : systemHealth.aiAgentStatus === 'checking'
                                                 ? t('AI Assistant: Checking...')
                                                 : t('AI Assistant: Disconnected')
@@ -612,8 +624,8 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                                 <div className="text-xs text-muted-foreground">
                                     {systemHealth.aiAgentSearchType === 'openai_powered' 
                                         ? t('Using backend AI with OpenAI GPT') 
-                                        : systemHealth.aiAgentSearchType === 'semantic_search'
-                                            ? t('Using semantic search as fallback')
+                                        : systemHealth.aiAgentSearchType === 'not_configured'
+                                            ? t('Set OPENAI_API_KEY to enable AI features')
                                             : systemHealth.aiAgentSearchType === 'checking'
                                                 ? t('...')
                                                 : t('No AI assistance available')

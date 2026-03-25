@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { config } from '../config'
-import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer } from '../lib/fhir-server-store'
+import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
@@ -674,6 +674,49 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
     detail: {
       summary: 'Upload Certificate',
       description: 'Upload a certificate or private key for mTLS authentication',
+      tags: ['servers'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  // Delete a FHIR server
+  .delete('/:server_id', async ({ params, set, headers }) => {
+    try {
+      const auth = extractBearerToken(headers)
+      if (!auth) {
+        set.status = 401
+        return { error: 'Authentication required' }
+      }
+
+      await validateToken(auth)
+
+      await deleteServer(params.server_id)
+
+      return {
+        success: true,
+        message: `FHIR server '${params.server_id}' deleted successfully`,
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        set.status = 404
+        return { error: error.message }
+      }
+      logger.fhir.error('Failed to delete FHIR server', { error, serverId: params.server_id })
+      set.status = 500
+      return { error: 'Failed to delete FHIR server', details: error }
+    }
+  }, {
+    params: ServerIdParam,
+    response: {
+      200: t.Object({
+        success: t.Boolean({ description: 'Whether the server was deleted successfully' }),
+        message: t.String({ description: 'Success message' }),
+      }, { title: 'DeleteFhirServerResponse' }),
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Delete FHIR Server',
+      description: 'Remove a FHIR server from the system. This does not delete any patient data on the FHIR server itself.',
       tags: ['servers'],
       security: [{ BearerAuth: [] }]
     }

@@ -134,6 +134,10 @@ class FHIRServerStore {
     this.servers.set(identifier, serverInfo)
   }
 
+  removeServer(identifier: string): boolean {
+    return this.servers.delete(identifier)
+  }
+
   clearError(): void {
     this.error = null
   }
@@ -190,16 +194,19 @@ export async function addServer(serverUrl: string, name?: string): Promise<FHIRS
     // Ensure store is initialized first
     await ensureServersInitialized()
         
+    // Normalize URL: strip trailing slash to prevent duplicates
+    const normalizedUrl = serverUrl.replace(/\/+$/, '')
+
     // Check if a server with this URL already exists
     const existingServers = fhirServerStore.getAllServers()
-    const existingServer = existingServers.find(server => server.url === serverUrl)
+    const existingServer = existingServers.find(server => server.url.replace(/\/+$/, '') === normalizedUrl)
     
     if (existingServer) {
-      throw new Error(`A server with URL ${serverUrl} already exists: ${existingServer.name}`)
+      throw new Error(`A server with URL ${normalizedUrl} already exists: ${existingServer.name}`)
     }
     // Fetch server metadata
-    const metadata = await getFHIRServerInfo(serverUrl)
-    let identifier = getServerIdentifier(metadata, serverUrl, Date.now())
+    const metadata = await getFHIRServerInfo(normalizedUrl)
+    let identifier = getServerIdentifier(metadata, normalizedUrl, Date.now())
     
     // Ensure unique identifier by checking for conflicts and appending number if needed
     let counter = 1
@@ -212,7 +219,7 @@ export async function addServer(serverUrl: string, name?: string): Promise<FHIRS
     
     const serverInfo: FHIRServerInfo = {
       name: name || metadata.serverName || `Server ${identifier}`,
-      url: serverUrl,
+      url: normalizedUrl,
       identifier,
       metadata,
       lastUpdated: Date.now()
@@ -222,7 +229,7 @@ export async function addServer(serverUrl: string, name?: string): Promise<FHIRS
     fhirServerStore.addServer(identifier, serverInfo)
     
     logger.fhir.info(`Added new FHIR server: ${serverInfo.name}`, { 
-      url: serverUrl, 
+      url: normalizedUrl, 
       identifier,
       version: metadata.fhirVersion 
     })
@@ -239,19 +246,25 @@ export async function updateServer(serverIdentifier: string, newServerUrl: strin
   try {
     // Ensure store is initialized first
     await ensureServersInitialized()
-        // Check if a server with this URL already exists
+
+    // Normalize URL: strip trailing slash to prevent duplicates
+    const normalizedUrl = newServerUrl.replace(/\/+$/, '')
+
+    // Check if a server with this URL already exists (exclude self)
     const existingServers = fhirServerStore.getAllServers()
-    const existingServer = existingServers.find(server => server.url === newServerUrl)
+    const existingServer = existingServers.find(server =>
+      server.url.replace(/\/+$/, '') === normalizedUrl && server.identifier !== serverIdentifier
+    )
     
     if (existingServer) {
-      throw new Error(`A server with URL ${newServerUrl} already exists: ${existingServer.name}`)
+      throw new Error(`A server with URL ${normalizedUrl} already exists: ${existingServer.name}`)
     }
     // Fetch server metadata for the new URL
-    const metadata = await getFHIRServerInfo(newServerUrl)
+    const metadata = await getFHIRServerInfo(normalizedUrl)
     
     const serverInfo: FHIRServerInfo = {
       name: name || metadata.serverName || `Server ${serverIdentifier}`,
-      url: newServerUrl,
+      url: normalizedUrl,
       identifier: serverIdentifier, // Keep the same identifier
       metadata,
       lastUpdated: Date.now()
@@ -271,6 +284,22 @@ export async function updateServer(serverIdentifier: string, newServerUrl: strin
     logger.fhir.error(`Failed to update FHIR server: ${newServerUrl}`, { error })
     throw new Error(`Failed to update FHIR server: ${error}`)
   }
+}
+
+// Delete a server from the store
+export async function deleteServer(serverIdentifier: string): Promise<void> {
+  await ensureServersInitialized()
+
+  const server = fhirServerStore.getServerByName(serverIdentifier)
+  if (!server) {
+    throw new Error(`Server '${serverIdentifier}' not found`)
+  }
+
+  fhirServerStore.removeServer(serverIdentifier)
+  logger.fhir.info(`Deleted FHIR server: ${server.name}`, {
+    url: server.url,
+    identifier: serverIdentifier,
+  })
 }
 
 // Helper function to ensure servers are initialized

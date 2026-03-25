@@ -8,6 +8,7 @@ interface ServerOverviewProps {
   onConfigureMtls: (server: FhirServerWithState) => void;
   onCheckSecurity: (server: FhirServerWithState) => void;
   onEditServer: (server: FhirServerWithState) => void;
+  onDeleteServer: (server: FhirServerWithState) => void;
 }
 
 export function ServerOverview({
@@ -16,7 +17,8 @@ export function ServerOverview({
   onViewDetails,
   onConfigureMtls,
   onCheckSecurity,
-  onEditServer
+  onEditServer,
+  onDeleteServer
 }: ServerOverviewProps) {
   return (
     <div className="p-6 space-y-6">
@@ -30,6 +32,7 @@ export function ServerOverview({
             onConfigureMtls={onConfigureMtls}
             onCheckSecurity={onCheckSecurity}
             onEditServer={onEditServer}
+            onDeleteServer={onDeleteServer}
           />
         ))}
       </div>
