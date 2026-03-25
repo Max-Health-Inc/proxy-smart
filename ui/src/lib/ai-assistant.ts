@@ -123,13 +123,32 @@ class SmartOnFHIRAIAssistant {
       this.backendAvailable = true;
       return true;
     } catch (error) {
-      // 503 means endpoint exists but MCP is down - still consider it "available"
-      if (error instanceof Response && error.status === 503) {
-        this.backendAvailable = true;
-        return true;
+      // 503 from the HEAD /chat means the endpoint exists but OpenAI API key is not configured
+      if (error instanceof ResponseError && error.response.status === 503) {
+        this.backendAvailable = false;
+        return false;
       }
       this.backendAvailable = false;
       return false;
+    }
+  }
+
+  /**
+   * Get detailed availability status for dashboard display.
+   * Returns 'connected' | 'not_configured' | 'unreachable'
+   */
+  async getAvailabilityStatus(): Promise<'connected' | 'not_configured' | 'unreachable'> {
+    try {
+      const aiApi = await this.createAiApi();
+      await aiApi.headAdminAiChat({
+        signal: AbortSignal.timeout(3000)
+      });
+      return 'connected';
+    } catch (error) {
+      if (error instanceof ResponseError && error.response.status === 503) {
+        return 'not_configured';
+      }
+      return 'unreachable';
     }
   }
 
@@ -255,7 +274,7 @@ class SmartOnFHIRAIAssistant {
     if (!isBackendAvailable) {
       // Return a minimal, valid ChatResponse shape so the UI can render gracefully
       return {
-        answer: "⚠️ AI Assistant service is currently unavailable. Please try again later or contact your administrator.",
+        answer: "⚠️ AI Assistant is not configured on this instance. The OPENAI_API_KEY environment variable needs to be set on the backend server.",
         sources: [],
         model: 'unavailable',
         conversationId: conversationId ?? crypto.randomUUID(),
@@ -299,7 +318,7 @@ class SmartOnFHIRAIAssistant {
     if (!isBackendAvailable) {
       yield {
         type: 'content',
-        content: "⚠️ AI Assistant service is currently unavailable. Please try again later or contact your administrator."
+        content: "⚠️ AI Assistant is not configured on this instance. The OPENAI_API_KEY environment variable needs to be set on the backend server."
       };
       yield {
         type: 'done',

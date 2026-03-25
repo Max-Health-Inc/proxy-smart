@@ -14,6 +14,7 @@
 
 import { Elysia } from 'elysia'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
 import * as z from 'zod'
@@ -25,9 +26,12 @@ import {
   isToolRegistryInitialized,
   generateToolDefinitions,
   getMergedInputSchema,
+  getResourceRegistry,
+  isResourceRegistryInitialized,
+  pathToResourceUri,
 } from '../lib/ai/tool-registry'
-import { loadMcpEndpointConfig, isToolExposed } from '../lib/mcp-endpoint-config'
-import type { ToolMetadata } from '../lib/ai/tool-registry'
+import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
+import type { ToolMetadata, ResourceMetadata as ResourceMeta } from '../lib/ai/tool-registry'
 import { searchDocumentation } from '../lib/ai/rag-tools'
 import { Value } from '@sinclair/typebox/value'
 import { createAdminClient } from '../lib/keycloak-plugin'
@@ -116,6 +120,108 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
     },
   )
   }
+}
+
+// ── Resource bridging ────────────────────────────────────────────────────────
+
+/**
+ * Register all exposed GET routes from the resource registry as MCP resources.
+ * Static (no path params) → fixed URI resources.
+ * Parameterized → URI template resources.
+ */
+function registerResources(server: McpServer, userRoles: string[], authToken?: string): void {
+  if (!isResourceRegistryInitialized()) return
+
+  const registry = getResourceRegistry()
+
+  for (const [resourceName, meta] of registry) {
+    if (!isResourceExposed(resourceName)) continue
+    if (!meta.public && !userRoles.includes('admin')) continue
+
+    const uri = pathToResourceUri(meta.path)
+    const description = generateResourceDescription(resourceName, meta)
+
+    if (meta.pathParams.length === 0) {
+      // Static resource — fixed URI
+      server.registerResource(
+        resourceName,
+        uri,
+        { description, mimeType: 'application/json' },
+        async () => {
+          const result = await executeResource(meta, {}, authToken)
+          return { contents: [{ uri, text: result }] }
+        },
+      )
+    } else {
+      // Parameterized resource — URI template
+      const template = new ResourceTemplate(uri, { list: undefined })
+      server.registerResource(
+        resourceName,
+        template,
+        { description, mimeType: 'application/json' },
+        async (reqUri, variables) => {
+          const params: Record<string, string> = {}
+          for (const p of meta.pathParams) {
+            if (variables[p]) params[p] = String(variables[p])
+          }
+          const result = await executeResource(meta, params, authToken)
+          return { contents: [{ uri: reqUri.href, text: result }] }
+        },
+      )
+    }
+  }
+}
+
+/**
+ * Execute a GET route handler and return the serialized result.
+ */
+async function executeResource(
+  meta: ResourceMeta,
+  pathParams: Record<string, string>,
+  authToken?: string,
+): Promise<string> {
+  try {
+    if (typeof meta.handler !== 'function') {
+      return JSON.stringify({ error: 'Resource has no callable handler' })
+    }
+
+    const elysiaContext = {
+      body: {},
+      headers: {
+        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
+        'content-type': 'application/json',
+      },
+      set: {
+        status: 200,
+        headers: {} as Record<string, string>,
+      },
+      params: pathParams,
+      query: {},
+      request: new Request(`http://localhost${meta.path}`, {
+        method: 'GET',
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+      }),
+      getAdmin: createAdminClient,
+      getAccessControl: getAccessControlInstance,
+    }
+
+    const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
+
+    if (result === undefined || result === null) {
+      return JSON.stringify({ success: true })
+    }
+    return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
+  } catch (err) {
+    return JSON.stringify({ error: `Resource read failed: ${err instanceof Error ? err.message : String(err)}` })
+  }
+}
+
+function generateResourceDescription(name: string, meta: ResourceMeta): string {
+  const parts = name.split('_')
+  const resource = parts.join(' ')
+  return `Read ${resource}. ${meta.public ? '(Public)' : '(Admin only)'}`
 }
 
 function generateDescription(toolName: string, meta: ToolMetadata): string {
@@ -360,11 +466,14 @@ async function handleMcpRequest(request: Request): Promise<Response> {
 
       const server = new McpServer(
         { name: config.displayName, version: config.version },
-        { capabilities: { tools: { listChanged: false } } },
+        { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
       )
 
       // Bridge tool-registry → MCP tools
       registerTools(server, auth.roles, auth.token)
+
+      // Bridge resource-registry → MCP resources (GET routes)
+      registerResources(server, auth.roles, auth.token)
 
       await server.connect(transport)
 

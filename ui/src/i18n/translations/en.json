@@ -401,7 +401,7 @@
   "Enforcement": "Enforcement",
   "Enforcement Mode": "Enforcement Mode",
   "Ensure private keys are never shared or transmitted over insecure channels": "Ensure private keys are never shared or transmitted over insecure channels",
-  "Ensure token&apos;s smart_patient matches Person.link[]": "Ensure token&apos;s smart_patient matches Person.link[]",
+  "Ensure token's smart_patient matches Person.link[]": "Ensure token's smart_patient matches Person.link[]",
   "Enter client secret...": "Enter client secret...",
   "Enter password": "Enter password",
   "Enter shared secret": "Enter shared secret",

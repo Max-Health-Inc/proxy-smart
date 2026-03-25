@@ -78,3 +78,11 @@ export function isToolExposed(toolName: string): boolean {
   // Otherwise blocklist mode
   return !cfg.disabledTools.includes(toolName)
 }
+
+/**
+ * Check whether a specific resource should be exposed via the MCP endpoint.
+ * Reuses the same config mechanism as tools — resources share the allowlist/blocklist.
+ */
+export function isResourceExposed(resourceName: string): boolean {
+  return isToolExposed(resourceName)
+}

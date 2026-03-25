@@ -9,7 +9,8 @@ import {
   Edit,
   Shield,
   Loader2,
-  Lock
+  Lock,
+  Trash2
 } from 'lucide-react';
 import { Badge, Button } from '@proxy-smart/shared-ui';
 import { CopyButton } from '@/components/ui/copy-button';
@@ -23,6 +24,7 @@ interface ServerCardProps {
   onConfigureMtls: (server: FhirServerWithState) => void;
   onCheckSecurity: (server: FhirServerWithState) => void;
   onEditServer: (server: FhirServerWithState) => void;
+  onDeleteServer: (server: FhirServerWithState) => void;
 }
 
 export function ServerCard({
@@ -31,7 +33,8 @@ export function ServerCard({
   onViewDetails,
   onConfigureMtls,
   onCheckSecurity,
-  onEditServer
+  onEditServer,
+  onDeleteServer
 }: ServerCardProps) {
   const { t } = useTranslation();
   return (
@@ -238,6 +241,15 @@ export function ServerCard({
               <span>{t('Metadata')}</span>
             </Button>
           )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDeleteServer(server)}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <Trash2 className="w-3 h-3" />
+            <span>{t('Delete')}</span>
+          </Button>
         </div>
       </div>
     </div>

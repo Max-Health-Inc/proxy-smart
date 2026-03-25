@@ -286,7 +286,7 @@ export function IALSettings() {
               <div className="space-y-1">
                 <Label htmlFor="verify-patient-link">{t('Verify Patient Link')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  {t('Ensure token&apos;s smart_patient matches Person.link[]')}
+                  {t("Ensure token's smart_patient matches Person.link[]")}
                 </p>
               </div>
               <Switch
