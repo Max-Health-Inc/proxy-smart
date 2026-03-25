@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603251947.f10c9f3b] - 2026-03-25
+
+- ✨ Features: pass OPENAI_API_KEY through beta deployment pipeline (quotentiroler)
+- 🔧 Chores & Improvements: update beta and dev SMART compliance reports (proxy-smart-releaser[bot])
+- 🔧 Chores & Improvements: update changelog reference and version metadata (CI)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/235
+
+
 ## [0.0.3-alpha.202603251933.c56cbe7f] - 2026-03-25
 
 - 🐛 Bug Fixes: Preserve bundle type on 304 response — return empty string cast to bundle type when If-None-Match matches ETag (ETag and Cache-Control behavior unchanged)
