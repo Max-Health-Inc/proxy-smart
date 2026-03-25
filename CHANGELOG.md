@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603251928.7a647e6d] - 2026-03-25
+
+- ✨ Features: MCP resources, FHIR server delete, AI assistant fixes, IAL encoding fix; user-access branding, dynamic roles, code cleanup
+- 🧪 ⚠️ Breaking Changes: (none)
+- 🐛 Bug Fixes: wrap IALSettings hardcoded strings with t() for i18n
+- 📚 Documentation: update CHANGELOG.md for PR #231, PR #232
+- 🔧 Chores & Improvements: version bumps, CI/CD housekeeping, SMART compliance report updates, code cleanup
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/233
+
+
 ## [0.0.3-alpha.202603251726.4eb5bd90] - 2026-03-25
 
 - ✨ Features: MCP resources, FHIR server delete, AI assistant fixes, IAL encoding fix
