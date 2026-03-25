@@ -125,7 +125,7 @@ export function createApp() {
             const ifNoneMatch = headers['if-none-match']
             if (ifNoneMatch && ifNoneMatch === etag) {
                 set.status = 304
-                return
+                return '' as unknown as typeof bundle
             }
             set.headers['etag'] = etag
             set.headers['cache-control'] = 'public, max-age=60'
