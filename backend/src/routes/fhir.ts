@@ -8,7 +8,7 @@ import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigu
 import { smartConfigService } from '../lib/smart-config'
 import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
-import { checkConsent, getConsentConfig } from '../lib/consent'
+import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
@@ -39,12 +39,12 @@ async function proxyFHIR({ params, request, set }: any) {
       tokenPayload = await validateToken(auth)
     }
 
-    // 2) Consent enforcement check
+    // 2) Consent + IAL enforcement check
     if (tokenPayload) {
       const parts = new URL(request.url).pathname.split('/').filter(Boolean)
       const resourcePath = parts.slice(3).join('/')
       
-      const consentResult = await checkConsent(
+      const consentResult = await checkConsentWithIal(
         tokenPayload,
         params.server_name,
         serverUrl,
@@ -53,11 +53,11 @@ async function proxyFHIR({ params, request, set }: any) {
         authHeader
       )
 
-      // If consent denied and mode is 'enforce', block the request
+      // If consent or IAL denied and mode is 'enforce', block the request
       if (consentResult.decision === 'deny' && getConsentConfig().mode === 'enforce') {
         set.status = 403
         return {
-          error: 'consent_denied',
+          error: consentResult.ialCheck && !consentResult.ialCheck.allowed ? 'ial_verification_failed' : 'consent_denied',
           message: consentResult.reason,
           consentId: consentResult.consentId,
           patientId: consentResult.context.patientId,

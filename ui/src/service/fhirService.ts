@@ -4,8 +4,8 @@
  * with version-specific type support (R3, R4, R5)
  */
 
-import type { PersonR3, PersonR4, PersonR5 } from '../lib/fhir-types';
-import type { ContactPoint } from '../lib/fhir-types';
+import type { PersonR3, PersonR4, PersonR5, AssuranceLevel } from '../lib/fhir-types';
+import type { ContactPoint, CustomPersonLink, PersonResource, ServerInfo } from '../lib/fhir-types';
 import { getStoredToken } from '@/lib/apiClient';
 import { config } from '@/config';
 
@@ -261,4 +261,118 @@ export async function getPersonResource(
     id: `Person/${person.id}`,
     display: display || person.id || 'Unknown'
   };
+}
+
+/**
+ * Get a Person resource with full detail including links
+ */
+export async function getPersonResourceFull(
+  serverId: string,
+  fhirVersion: string,
+  personId: string,
+  serverInfo: ServerInfo
+): Promise<PersonResource> {
+  const versionPath = getFhirVersionPath(fhirVersion);
+  const token = await getStoredToken();
+  if (!token) throw new Error('No access token available. Please log in.');
+
+  const cleanId = personId.startsWith('Person/') ? personId.substring(7) : personId;
+  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
+
+  const response = await fetch(fhirProxyUrl, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/fhir+json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get Person resource: ${response.status} ${response.statusText}`);
+  }
+
+  const person: AnyPerson = await response.json();
+  const display = person.name?.[0]?.text ||
+    `${person.name?.[0]?.given?.[0] || ''} ${person.name?.[0]?.family || ''}`.trim();
+
+  // Map FHIR Person.link to our CustomPersonLink format
+  const links: CustomPersonLink[] = (person.link || []).map((link: { target?: { reference?: string; display?: string }; assurance?: string }, idx: number) => {
+    const ref = link.target?.reference || '';
+    const parts = ref.split('/');
+    const resourceType = (parts[0] || 'Patient') as 'Patient' | 'Practitioner' | 'RelatedPerson';
+    return {
+      id: `link-${idx}`,
+      target: {
+        resourceType,
+        reference: ref,
+        display: link.target?.display
+      },
+      assurance: (link.assurance as AssuranceLevel) || 'level1',
+      created: new Date().toISOString()
+    };
+  });
+
+  return {
+    id: person.id || cleanId,
+    display: display || cleanId,
+    serverInfo,
+    links
+  };
+}
+
+/**
+ * Update Person.link entries on a FHIR server (read-modify-write)
+ */
+export async function updatePersonLinks(
+  serverId: string,
+  fhirVersion: string,
+  personId: string,
+  links: CustomPersonLink[]
+): Promise<void> {
+  const versionPath = getFhirVersionPath(fhirVersion);
+  const token = await getStoredToken();
+  if (!token) throw new Error('No access token available. Please log in.');
+
+  const cleanId = personId.startsWith('Person/') ? personId.substring(7) : personId;
+  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
+
+  // Read the current Person resource
+  const getResponse = await fetch(fhirProxyUrl, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/fhir+json'
+    }
+  });
+
+  if (!getResponse.ok) {
+    throw new Error(`Failed to read Person resource: ${getResponse.status}`);
+  }
+
+  const person = await getResponse.json();
+
+  // Map CustomPersonLinks back to FHIR Person.link format
+  person.link = links.map(link => ({
+    target: {
+      reference: link.target.reference,
+      display: link.target.display
+    },
+    assurance: link.assurance
+  }));
+
+  // Write back with PUT
+  const putResponse = await fetch(fhirProxyUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/fhir+json',
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/fhir+json'
+    },
+    body: JSON.stringify(person)
+  });
+
+  if (!putResponse.ok) {
+    const errorText = await putResponse.text();
+    throw new Error(`Failed to update Person links: ${putResponse.status} ${putResponse.statusText}. ${errorText}`);
+  }
 }
