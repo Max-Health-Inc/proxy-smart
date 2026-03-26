@@ -5,8 +5,10 @@
  * Handles: enableWhen, calculatedExpression, repeating groups, choice/open-choice,
  * conditional display, answerValueSet, and all SDC item types.
  *
- * Replaces the manual QuestionnaireItemField renderer for payer Questionnaires.
- * The generic PA fallback still uses the original manual renderer.
+ * Pre-population strategy:
+ * 1. Try FHIR server's Questionnaire/$populate (server-side CQL/FHIRPath)
+ * 2. Fall back to Smart Forms' built-in SDC expression engine (initialExpression,
+ *    calculatedExpression, x-fhir-query variables via FHIRPath)
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
@@ -19,8 +21,8 @@ import {
 } from "@aehrc/smart-forms-renderer"
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { type SelectedService } from "@/components/ServiceSelector"
-import { prePopulateWithCql, type PrePopulationResult } from "@/lib/cql-prepopulate"
-import { ArrowRight, FileQuestion, Info, Sparkles, Zap } from "lucide-react"
+import { prePopulate, type PrePopulationResult } from "@/lib/questionnaire-populate"
+import { ArrowRight, FileQuestion, Sparkles, Zap } from "lucide-react"
 
 interface SmartFormsQuestionnaireRendererProps {
   questionnaire: Questionnaire
@@ -39,17 +41,17 @@ export function SmartFormsQuestionnaireRenderer({
   const [prePopulating, setPrePopulating] = useState(true)
   const prePopRan = useRef(false)
 
-  // Run CQL pre-population on mount
+  // Try server-side $populate on mount
   useEffect(() => {
     if (prePopRan.current) return
     prePopRan.current = true
 
     async function runPrePopulation() {
       try {
-        const result = await prePopulateWithCql(questionnaire, patient)
+        const result = await prePopulate(questionnaire, patient)
         setPrePopResult(result)
       } catch (err) {
-        console.warn("[SmartForms] CQL pre-population failed, continuing without:", err)
+        console.warn("[SmartForms] $populate failed, continuing without:", err)
         setPrePopResult({
           questionnaireResponse: {
             resourceType: "QuestionnaireResponse",
@@ -59,8 +61,7 @@ export function SmartFormsQuestionnaireRenderer({
             authored: new Date().toISOString(),
             item: [],
           },
-          evaluatedExpressions: [],
-          cqlExecuted: false,
+          serverPopulated: false,
         })
       } finally {
         setPrePopulating(false)
@@ -145,10 +146,10 @@ function SmartFormsRendererInner({
           <Badge variant="outline" className="text-xs">
             {questionnaire.publisher ?? questionnaire.name ?? questionnaire.id}
           </Badge>
-          {prePopResult.cqlExecuted && (
+          {prePopResult.serverPopulated && (
             <Badge variant="secondary" className="text-xs gap-1">
               <Sparkles className="size-3" />
-              {prePopResult.evaluatedExpressions.length} fields auto-populated via CQL
+              Pre-populated via $populate
             </Badge>
           )}
         </div>
