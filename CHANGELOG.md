@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603261915.b85b32ac] - 2026-03-26
+
+- ✨ Features: Introduce SMART on FHIR access control
+  - Add configurable accessControl settings (scopeEnforcement, roleBasedFiltering, readOnlyForUsers, patientScopedResources)
+  - Implement SMART access control module with scope enforcement, role-based filtering, and optional write blocking
+  - Wire config usage and logging into backend routes (FHIR)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/250
+
+
 ## [0.0.3-alpha.202603261227.e58ce3fa] - 2026-03-26
 
 - 🐛 Bug Fixes: ESLint config fixes, lint error resolutions, CSS build fixes, and App Store button issue (quotentiroler)
