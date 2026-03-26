@@ -277,6 +277,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           serverVersion: serverInfo.metadata.serverVersion,
           serverName: serverInfo.metadata.serverName,
           supported: serverInfo.metadata.supported,
+          smartCapabilities: serverInfo.metadata.smartCapabilities,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -354,6 +355,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           serverVersion: serverInfo.metadata.serverVersion,
           serverName: serverInfo.metadata.serverName,
           supported: serverInfo.metadata.supported,
+          smartCapabilities: serverInfo.metadata.smartCapabilities,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -418,6 +420,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         serverVersion: serverInfo.metadata.serverVersion,
         serverName: serverInfo.metadata.serverName,
         supported: serverInfo.metadata.supported,
+        smartCapabilities: serverInfo.metadata.smartCapabilities,
         endpoints: {
           base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
           smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -471,6 +474,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         serverVersion: serverInfo.metadata.serverVersion,
         serverName: serverInfo.metadata.serverName,
         supported: serverInfo.metadata.supported,
+        smartCapabilities: serverInfo.metadata.smartCapabilities,
         endpoints: {
           // Proxy's FHIR endpoints
           base: proxyBase,

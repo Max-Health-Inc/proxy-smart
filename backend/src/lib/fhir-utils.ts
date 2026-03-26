@@ -25,6 +25,7 @@ export interface FHIRVersionInfo {
   serverVersion?: string
   serverName?: string
   supported: boolean
+  smartCapabilities?: string[]
 }
 
 /**
@@ -80,6 +81,28 @@ export function normalizeFHIRVersion(version: string): string {
 }
 
 /**
+ * Fetch SMART capabilities from an origin FHIR server's .well-known/smart-configuration
+ * Returns the capabilities array if available, empty array otherwise
+ */
+async function fetchSmartCapabilities(serverUrl: string): Promise<string[]> {
+  try {
+    const smartConfigUrl = `${serverUrl}/.well-known/smart-configuration`
+    const response = await fetch(smartConfigUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(5000)
+    })
+
+    if (!response.ok) return []
+
+    const smartConfig = await response.json() as { capabilities?: string[] }
+    return Array.isArray(smartConfig.capabilities) ? smartConfig.capabilities : []
+  } catch {
+    // Server doesn't support .well-known/smart-configuration — that's fine
+    return []
+  }
+}
+
+/**
  * Fetch and parse FHIR server metadata to determine version
  */
 export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionInfo> {
@@ -120,6 +143,9 @@ export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionIn
       serverName: capability.software?.name || 'Unknown FHIR Server',
       supported: config.fhir.supportedVersions.includes(fhirVersion)
     }
+
+    // Try to fetch SMART capabilities from the origin server's .well-known/smart-configuration
+    versionInfo.smartCapabilities = await fetchSmartCapabilities(serverUrl)
 
     // Cache the result
     fhirMetadataCache.set(cacheKey, {
