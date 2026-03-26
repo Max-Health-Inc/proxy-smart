@@ -98,6 +98,16 @@ jobs:
             fi
           "
 
+          # Clean up unused Docker resources to prevent disk-full failures
+          ${SSH_CMD} "
+            echo '🧹 Cleaning up unused Docker resources...'
+            docker image prune -af --filter 'until=168h' 2>/dev/null || true
+            docker container prune -f 2>/dev/null || true
+            docker volume prune -f 2>/dev/null || true
+            docker builder prune -af --keep-storage=2gb 2>/dev/null || true
+            echo \"📊 Disk usage: \$(df -h / | tail -1 | awk '{print \$5}') used\"
+          "
+
           # Write env file from CI secrets (printf runs on CI, piped to VPS via SSH)
           printf '%s\n' \
             "POSTGRES_PASSWORD=${BETA_POSTGRES_PASSWORD}" \
