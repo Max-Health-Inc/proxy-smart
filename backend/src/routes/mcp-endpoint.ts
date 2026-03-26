@@ -492,20 +492,6 @@ async function handleMcpRequest(request: Request): Promise<Response> {
   )
 }
 
-// ── Cleanup ──────────────────────────────────────────────────────────────────
-
-export async function closeMcpEndpoint(): Promise<void> {
-  for (const [sid, session] of sessions) {
-    try {
-      await session.transport.close()
-    } catch (err) {
-      logger.server.error('Error closing MCP transport', { sessionId: sid, error: String(err) })
-    }
-  }
-  sessions.clear()
-  logger.server.info('All MCP endpoint sessions closed')
-}
-
 // ── Elysia route ─────────────────────────────────────────────────────────────
 
 export const mcpEndpointRoutes = new Elysia({ tags: ['mcp-endpoint'] })

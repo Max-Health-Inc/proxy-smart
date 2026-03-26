@@ -209,12 +209,5 @@ export async function getOrganization(id: string): Promise<PASOrganization> {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-export function formatHumanName(name?: HumanName[]): string {
-  if (!name?.length) return "Unknown"
-  const n = name[0]
-  const parts: string[] = []
-  if (n.prefix?.length) parts.push(n.prefix.join(" "))
-  if (n.given?.length) parts.push(n.given.join(" "))
-  if (n.family) parts.push(n.family)
-  return parts.join(" ") || n.text || "Unknown"
-}
+// Re-export from shared-ui to avoid duplication
+export { formatHumanName } from "@proxy-smart/shared-ui"

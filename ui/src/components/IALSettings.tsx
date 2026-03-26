@@ -23,8 +23,7 @@ import {
   X,
   Plus,
 } from 'lucide-react';
-import { config } from '@/config';
-import { getItem } from '@/lib/storage';
+import { adminApiCall } from '@/lib/admin-api';
 import { useTranslation } from 'react-i18next';
 import type { IalConfig, IalConfigMinimumLevelEnum } from '@/lib/types/api';
 
@@ -49,31 +48,6 @@ const IAL_LEVEL_LABELS: Record<IalLevel, string> = {
   level4: 'Level 4 — In-person + biometrics',
 };
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-
-async function getToken(): Promise<string | null> {
-  try {
-    const tokens = await getItem<{ access_token: string }>('openid_tokens');
-    return tokens?.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-async function apiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: unknown): Promise<T> {
-  const token = await getToken();
-  const res = await fetch(`${config.api.baseUrl}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!res.ok) throw new Error(`API ${method} ${path} failed: ${res.status}`);
-  return res.json();
-}
-
 // ─── Component ───────────────────────────────────────────────────────
 
 export function IALSettings() {
@@ -88,7 +62,7 @@ export function IALSettings() {
     try {
       setLoading(true);
       setMessage(null);
-      const res = await apiCall<{ config: IalConfig }>('/admin/consent/ial');
+      const res = await adminApiCall<{ config: IalConfig }>('/admin/consent/ial');
       setIal(res.config);
     } catch (error) {
       setMessage({
@@ -108,7 +82,7 @@ export function IALSettings() {
     try {
       setSaving(true);
       setMessage(null);
-      await apiCall('/admin/consent/ial', 'PUT', ial);
+      await adminApiCall('/admin/consent/ial', 'PUT', ial);
       setMessage({ type: 'success', text: t('IAL settings saved successfully') });
     } catch (error) {
       setMessage({

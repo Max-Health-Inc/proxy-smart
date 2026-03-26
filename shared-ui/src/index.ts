@@ -16,5 +16,11 @@ export { createSmartAppConfig, type SmartAppConfig } from "./lib/smart-app-confi
 export { CHART_COLORS } from "./lib/chart-colors"
 export { ADMIN_TABS, type AdminTab } from "./lib/admin-tabs"
 
+// FHIR helpers
+export { formatHumanName } from "./lib/fhir-helpers"
+
+// Auth utilities
+export { onAuthError, reportAuthError } from "./lib/auth-error"
+
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"

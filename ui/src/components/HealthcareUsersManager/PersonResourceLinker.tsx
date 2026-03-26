@@ -491,30 +491,3 @@ export function PersonResourceLinker({
     </Dialog>
   );
 }
-
-// Export a trigger component for easy integration
-export function PersonResourceLinkerTrigger({ 
-  children, 
-  availablePersons = [], 
-  onPersonUpdate 
-}: {
-  children: React.ReactNode;
-  availablePersons?: PersonResource[];
-  onPersonUpdate: (personId: string, updatedLinks: CustomPersonLink[]) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <>
-      <div onClick={() => setIsOpen(true)} className="cursor-pointer">
-        {children}
-      </div>
-      <PersonResourceLinker
-        availablePersons={availablePersons}
-        onPersonUpdate={onPersonUpdate}
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-      />
-    </>
-  );
-}

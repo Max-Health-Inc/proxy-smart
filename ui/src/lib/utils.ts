@@ -1,10 +1,7 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
 import CryptoJS from "crypto-js";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+// Re-export cn from shared-ui to avoid duplication
+export { cn } from "@proxy-smart/shared-ui";
 
 // Get encryption secret — VITE_ENCRYPTION_SECRET should be set via env/build-arg
 const getEncryptionSecret = (): string => {
