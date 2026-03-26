@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.3-beta.202603252246.f07ac170",
+  "version": "0.0.3-alpha.202603252257.1f554a11",
   "repository": {
     "type": "git",
     "url": "https://github.com/quotentiroler/proxy-smart.git"
@@ -51,7 +51,8 @@
     "build:ui:mono": "cd ui && cross-env VITE_BASE=/webapp/ bun run build",
     "build:dtr:mono": "cd dtr-app && npx vite build --base /apps/dtr/",
     "build:consent:mono": "cd consent-app && npx vite build --base /apps/consent/",
-    "build:all:mono": "bun run build:ui:mono && bun run build:dtr:mono && bun run build:consent:mono && bun run docs:build",
+    "build:patient-portal:mono": "cd patient-portal && npx vite build --base /apps/patient-portal/",
+    "build:all:mono": "bun run build:ui:mono && bun run build:dtr:mono && bun run build:consent:mono && bun run build:patient-portal:mono && bun run docs:build",
     "start": "concurrently \"bun run start:backend\" \"bun run start:ui\"",
     "start:backend": "cd backend && bun run start",
     "start:ui": "cd ui && bun run preview",

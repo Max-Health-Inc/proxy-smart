@@ -138,13 +138,19 @@ export function createApp() {
                 tags: ['smart-apps']
             }
         })
-        // SPA fallbacks for sub-apps under /apps/*
-        .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
-        .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
-        .get('/apps/dtr/*', () => Bun.file('public/apps/dtr/index.html'))
-        .get('/apps/consent', () => Bun.file('public/apps/consent/index.html'))
-        .get('/apps/consent/', () => Bun.file('public/apps/consent/index.html'))
-        .get('/apps/consent/*', () => Bun.file('public/apps/consent/index.html'))
+        // Dynamic SPA fallback for all sub-apps under /apps/<name>/*
+        .get('/apps/:app', async ({ params, set }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            if (await index.exists()) return index
+            set.status = 404
+            return { error: 'Not Found' }
+        })
+        .get('/apps/:app/*', async ({ params, set }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            if (await index.exists()) return index
+            set.status = 404
+            return { error: 'Not Found' }
+        })
         // VitePress docs SPA fallback
         .get('/docs', () => Bun.file('public/docs/index.html'))
         .get('/docs/', () => Bun.file('public/docs/index.html'))
