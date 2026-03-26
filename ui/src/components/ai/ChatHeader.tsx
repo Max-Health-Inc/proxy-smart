@@ -30,7 +30,7 @@ export function ChatHeader({
     showSettings,
     onHeaderClick,
     onSettingsClick,
-    _onSettingsKeyDown,
+    onSettingsKeyDown: _onSettingsKeyDown,
     onRetryConnection,
     onClearChat,
     onClose,
