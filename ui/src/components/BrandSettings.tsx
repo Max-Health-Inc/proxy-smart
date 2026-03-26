@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { config } from '@/config';
-import { getItem } from '@/lib/storage';
+import { adminApiCall } from '@/lib/admin-api';
 import { useTranslation } from 'react-i18next';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -80,31 +80,6 @@ const CATEGORY_OPTIONS = [
   { value: 'aggregator', label: 'Data Aggregator' },
 ];
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-
-async function getToken(): Promise<string | null> {
-  try {
-    const tokens = await getItem<{ access_token: string }>('openid_tokens');
-    return tokens?.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-async function apiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: unknown): Promise<T> {
-  const token = await getToken();
-  const res = await fetch(`${config.api.baseUrl}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!res.ok) throw new Error(`API ${method} ${path} failed: ${res.status}`);
-  return res.json();
-}
-
 // ─── Component ───────────────────────────────────────────────────────
 
 export function BrandSettings() {
@@ -119,7 +94,7 @@ export function BrandSettings() {
     try {
       setLoading(true);
       setMessage(null);
-      const res = await apiCall<{ config: BrandConfig }>('/admin/branding');
+      const res = await adminApiCall<{ config: BrandConfig }>('/admin/branding');
       setBrand(res.config);
     } catch (error) {
       setMessage({
@@ -139,7 +114,7 @@ export function BrandSettings() {
     try {
       setSaving(true);
       setMessage(null);
-      await apiCall('/admin/branding', 'PUT', brand);
+      await adminApiCall('/admin/branding', 'PUT', brand);
       setMessage({ type: 'success', text: t('Brand settings saved successfully') });
     } catch (error) {
       setMessage({

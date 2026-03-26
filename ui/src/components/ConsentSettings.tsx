@@ -23,8 +23,7 @@ import {
   X,
   Plus,
 } from 'lucide-react';
-import { config } from '@/config';
-import { getItem } from '@/lib/storage';
+import { adminApiCall } from '@/lib/admin-api';
 import { useTranslation } from 'react-i18next';
 import type { ConsentConfig } from '@/lib/types/api';
 
@@ -38,31 +37,6 @@ const DEFAULT_CONSENT: ConsentConfig = {
   requiredForResourceTypes: [],
   exemptResourceTypes: ['CapabilityStatement', 'metadata'],
 };
-
-// ─── Helpers ─────────────────────────────────────────────────────────
-
-async function getToken(): Promise<string | null> {
-  try {
-    const tokens = await getItem<{ access_token: string }>('openid_tokens');
-    return tokens?.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-async function apiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: unknown): Promise<T> {
-  const token = await getToken();
-  const res = await fetch(`${config.api.baseUrl}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!res.ok) throw new Error(`API ${method} ${path} failed: ${res.status}`);
-  return res.json();
-}
 
 // ─── Component ───────────────────────────────────────────────────────
 
@@ -81,7 +55,7 @@ export function ConsentSettings() {
     try {
       setLoading(true);
       setMessage(null);
-      const res = await apiCall<{ config: ConsentConfig }>('/admin/consent/config');
+      const res = await adminApiCall<{ config: ConsentConfig }>('/admin/consent/config');
       setConsent(res.config);
     } catch (error) {
       setMessage({
@@ -101,7 +75,7 @@ export function ConsentSettings() {
     try {
       setSaving(true);
       setMessage(null);
-      await apiCall('/admin/consent/config', 'PUT', consent);
+      await adminApiCall('/admin/consent/config', 'PUT', consent);
       setMessage({ type: 'success', text: 'Consent settings saved successfully' });
     } catch (error) {
       setMessage({
@@ -292,8 +266,7 @@ export function ConsentSettings() {
   );
 }
 
-/** @deprecated Use ConsentSettings instead */
-export const ConsentIALSettings = ConsentSettings;
+
 
 // ─── Reusable tag-list sub-component ────────────────────────────────
 

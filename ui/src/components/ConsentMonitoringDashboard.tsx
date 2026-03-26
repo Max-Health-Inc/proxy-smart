@@ -42,26 +42,13 @@ import {
   Legend,
 } from 'recharts';
 import { config } from '@/config';
-import { getItem } from '@/lib/storage';
+import { getAdminToken } from '@/lib/admin-api';
 import { ConsentSettings } from './ConsentSettings';
 import {
   consentWebSocketService,
   type ConsentDecisionEvent,
   type ConsentAnalytics,
 } from '../service/consent-websocket-service';
-
-// ─── API helpers ─────────────────────────────────────────────────────
-
-async function getToken(): Promise<string | null> {
-  try {
-    const tokens = await getItem<{ access_token: string }>('openid_tokens');
-    return tokens?.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-
 
 // ─── Component ───────────────────────────────────────────────────────
 
@@ -99,7 +86,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
     setError(null);
 
     try {
-      const token = await getToken();
+      const token = await getAdminToken();
       if (!token) {
         setError('No authentication token available. Please log in.');
         return;
@@ -236,8 +223,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
 
   const exportServerEvents = async () => {
     try {
-      const token = await getToken();
-      if (!token) { setError('Not authenticated'); return; }
+      const token = await getAdminToken();
 
       const res = await fetch(`${config.api.baseUrl}/monitoring/consent/events/export`, {
         headers: { Authorization: `Bearer ${token}`, Accept: 'application/x-jsonlines' },

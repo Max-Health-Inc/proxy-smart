@@ -22,9 +22,4 @@ export function getCustomTools(): Map<string, ToolMetadata> {
   return tools
 }
 
-/**
- * Tool metadata for OpenAPI documentation
- */
-export const customToolDescriptions = {
-  // Custom tool descriptions can be added here as needed
-}
+
