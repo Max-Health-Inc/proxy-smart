@@ -172,24 +172,27 @@ export function ServerCard({
           </div>
         )}
 
-        {/* Launch Context Summary */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-muted-foreground">{t('Launch Contexts:')}</span>
-            <span className="text-xs text-muted-foreground">3 available</span>
+        {/* SMART Capabilities */}
+        {server.smartCapabilities && server.smartCapabilities.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-muted-foreground">{t('SMART Capabilities:')}</span>
+              <span className="text-xs text-muted-foreground">{server.smartCapabilities.length} {t('available')}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {server.smartCapabilities.slice(0, 5).map((cap) => (
+                <Badge key={cap} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+                  {cap}
+                </Badge>
+              ))}
+              {server.smartCapabilities.length > 5 && (
+                <Badge variant="secondary" className="text-xs bg-muted text-muted-foreground border-border/50">
+                  +{server.smartCapabilities.length - 5} {t('more')}
+                </Badge>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="text-xs bg-emerald-500/10 dark:bg-emerald-400/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 dark:border-emerald-400/20">
-              {t('Global')}
-            </Badge>
-            <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-              {t('Patient Chart')}
-            </Badge>
-            <Badge variant="secondary" className="text-xs bg-violet-500/10 dark:bg-violet-400/20 text-violet-700 dark:text-violet-300 border-violet-500/20 dark:border-violet-400/20">
-              {t('Provider Context')}
-            </Badge>
-          </div>
-        </div>
+        )}
 
         <div className="flex flex-wrap gap-2 pt-2">
           <Button

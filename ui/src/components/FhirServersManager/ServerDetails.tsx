@@ -168,73 +168,28 @@ export function ServerDetails(server: FhirServerDetails) {
         </div>
       )}
 
-      {/* Launch Context Associations */}
-      <div className="mt-8">
-        <h3 className="text-lg font-bold text-foreground mb-6 flex items-center">
-          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3">
-            <Database className="w-4 h-4 text-primary" />
-          </div>
-          {t('Associated Launch Contexts')}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Sample launch contexts - in a real app, these would come from API */}
-          <div className="p-4 bg-blue-500/10 dark:bg-blue-400/10 rounded-xl border border-blue-500/20 dark:border-blue-400/20">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100">{t('Patient Chart Launch')}</h4>
-              <Badge variant="secondary" className="bg-blue-500/10 dark:bg-blue-400/20 text-blue-800 dark:text-blue-300 border-blue-500/30 dark:border-blue-400/30">
-                {t('Global')}
+      {/* SMART Capabilities */}
+      {server.smartCapabilities && server.smartCapabilities.length > 0 && (
+        <div className="mt-8">
+          <h3 className="text-lg font-bold text-foreground mb-6 flex items-center">
+            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3">
+              <Database className="w-4 h-4 text-primary" />
+            </div>
+            {t('SMART Capabilities')}
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {server.smartCapabilities.map((cap) => (
+              <Badge
+                key={cap}
+                variant="secondary"
+                className="text-xs px-3 py-1.5 bg-primary/10 text-primary border-primary/20"
+              >
+                {cap}
               </Badge>
-            </div>
-            <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">{t('Standard patient chart context for EHR integration')}</p>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">{t('Active')}</span>
-            </div>
-          </div>
-
-          <div className="p-4 bg-purple-500/10 dark:bg-purple-400/10 rounded-xl border border-purple-500/20 dark:border-purple-400/20">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-purple-900 dark:text-purple-100">{t('Provider Summary')}</h4>
-              <Badge variant="secondary" className="bg-purple-500/10 dark:bg-purple-400/20 text-purple-800 dark:text-purple-300 border-purple-500/30 dark:border-purple-400/30">
-                {t('Server-specific')}
-              </Badge>
-            </div>
-            <p className="text-sm text-purple-700 dark:text-purple-300 mb-2">{t('Provider-focused clinical decision support context')}</p>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">{t('Active')}</span>
-            </div>
-          </div>
-
-          <div className="p-4 bg-emerald-500/10 dark:bg-emerald-400/10 rounded-xl border border-emerald-500/20 dark:border-emerald-400/20">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">{t('Encounter Context')}</h4>
-              <Badge variant="secondary" className="bg-emerald-500/10 dark:bg-emerald-400/20 text-emerald-800 dark:text-emerald-300 border-emerald-500/30 dark:border-emerald-400/30">
-                {t('Global')}
-              </Badge>
-            </div>
-            <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">{t('Encounter-specific clinical workflow context')}</p>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{t('Active')}</span>
-            </div>
-          </div>
-
-          <div className="p-4 bg-orange-500/10 dark:bg-orange-400/10 rounded-xl border border-orange-500/20 dark:border-orange-400/20">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-orange-900 dark:text-orange-100">{t('Quality Reporting')}</h4>
-              <Badge variant="secondary" className="bg-orange-500/10 dark:bg-orange-400/20 text-orange-800 dark:text-orange-300 border-orange-500/30 dark:border-orange-400/30">
-                {t('Server-specific')}
-              </Badge>
-            </div>
-            <p className="text-sm text-orange-700 dark:text-orange-300 mb-2">{t('Clinical quality measure reporting context')}</p>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-              <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">{t('Pending')}</span>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,8 @@ const FhirServerCoreFields = {
   fhirVersion: t.String({ description: 'FHIR version (e.g., R4, R5)' }),
   serverVersion: t.Optional(t.String({ description: 'FHIR server software version' })),
   serverName: t.Optional(t.String({ description: 'FHIR server software name' })),
-  supported: t.Boolean({ description: 'Whether the server is supported by this proxy' })
+  supported: t.Boolean({ description: 'Whether the server is supported by this proxy' }),
+  smartCapabilities: t.Optional(t.Array(t.String(), { description: 'SMART App Launch capabilities from the server\'s .well-known/smart-configuration' }))
 }
 
 export const FhirServerResponse = t.Object({
