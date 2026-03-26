@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603252257.1f554a11] - 2026-03-26
+
+- ✨ Features: Register patient-portal in App Store and mono build pipeline (quotentiroler)
+
+- 🔧 Chores & Improvements: Update dev SMART compliance report (proxy-smart-releaser[bot])
+- 🔧 Chores & Improvements: Update version to 0.0.3-beta.202603252246.f07ac170 (beta) (github-actions[bot])
+- 📚 Documentation: Update CHANGELOG.md for PR #238 [skip ci] (github-actions[bot])
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603252257.1f554a11 (alpha) (github-actions[bot])
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/239
+
+
 ## [0.0.3-alpha.202603252246.f07ac170] - 2026-03-25
 
 - 🔧 Chores & Improvements: Introduced file-backed persistence for dynamically added FHIR servers
