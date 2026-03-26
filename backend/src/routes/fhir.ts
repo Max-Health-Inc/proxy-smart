@@ -9,6 +9,7 @@ import { smartConfigService } from '../lib/smart-config'
 import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
+import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
@@ -71,7 +72,54 @@ async function proxyFHIR({ params, request, set }: any) {
     const requestUrl = new URL(request.url)
     const parts = requestUrl.pathname.split('/').filter(Boolean)
     const resourcePath = parts.slice(3).join('/')
-    const queryString = requestUrl.search
+    let queryString = requestUrl.search
+
+    // Resolve mTLS config once per request (used by both access control and proxy fetch)
+    const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
+    const serverFetch = async (url: string, init?: RequestInit) => {
+      const useMtls = mtlsConfig?.enabled === true && url.startsWith('https://')
+      return useMtls
+        ? fetchWithMtls(url, { ...init, serverId: serverInfo.identifier })
+        : fetch(url, init)
+    }
+
+    // 3–5) SMART access control (scope enforcement, write blocking, role-based filtering)
+    if (tokenPayload) {
+      const acCtx: AccessControlContext = {
+        tokenPayload,
+        resourcePath,
+        method: request.method,
+        serverUrl,
+        serverId: serverInfo.identifier,
+        serverName: params.server_name,
+        authHeader,
+        upstreamFetch: serverFetch,
+      }
+
+      // 3) SMART scope enforcement
+      const scopeResult = enforceScopeAccess(acCtx)
+      if (!scopeResult.allowed) {
+        set.status = scopeResult.status
+        return scopeResult.body
+      }
+
+      // 4) Write blocking
+      const writeResult = enforceWriteBlocking(acCtx)
+      if (!writeResult.allowed) {
+        set.status = writeResult.status
+        return writeResult.body
+      }
+
+      // 5) Role-based filtering
+      const roleResult = await enforceRoleBasedFiltering(acCtx, queryString)
+      if (!roleResult.allowed) {
+        set.status = roleResult.status
+        // Check for early return (e.g. empty bundle for practitioner with no patients)
+        return roleResult.body
+      }
+      queryString = roleResult.modifiedQueryString ?? queryString
+    }
+
     const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()
@@ -87,7 +135,6 @@ async function proxyFHIR({ params, request, set }: any) {
     }
 
     // Check if mTLS is configured for this server
-    const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
     const useMtls = mtlsConfig?.enabled === true && target.startsWith('https://')
 
     // Use appropriate fetch method based on mTLS configuration
