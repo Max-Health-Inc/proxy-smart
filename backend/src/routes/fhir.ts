@@ -71,7 +71,134 @@ async function proxyFHIR({ params, request, set }: any) {
     const requestUrl = new URL(request.url)
     const parts = requestUrl.pathname.split('/').filter(Boolean)
     const resourcePath = parts.slice(3).join('/')
-    const queryString = requestUrl.search
+    let queryString = requestUrl.search
+
+    // 3) SMART scope enforcement (only if enabled via SCOPE_ENFORCEMENT_MODE)
+    if (tokenPayload && config.accessControl.scopeEnforcement !== 'disabled') {
+      const tokenScopes = ((tokenPayload.scope as string) || '').split(' ').filter(Boolean)
+      const resourceType = resourcePath.split(/[/?]/)[0]
+
+      if (resourceType && resourceType !== 'metadata') {
+        const method = request.method as string
+        const methodToV2Char: Record<string, string> = { GET: 'r', POST: 'c', PUT: 'u', PATCH: 'u', DELETE: 'd' }
+        const requiredChar = methodToV2Char[method]
+        const isRead = method === 'GET'
+        const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+
+        const hasAccess = tokenScopes.some((scope) => {
+          const match = scope.match(/^(patient|user|system)\/([\w*]+)\.([\w*]+)$/)
+          if (!match) return false
+          const [, , scopeResource, scopePermission] = match
+          if (scopeResource !== '*' && scopeResource !== resourceType) return false
+          if (scopePermission === '*' || scopePermission === 'cruds') return true
+          if (isRead && (scopePermission === 'read' || scopePermission === 'rs' || scopePermission.includes('r'))) return true
+          if (isWrite && (scopePermission === 'write' || (requiredChar && scopePermission.includes(requiredChar)))) return true
+          return false
+        })
+
+        if (!hasAccess) {
+          logger.fhir.warn('SMART scope check failed', {
+            resourceType, method, scopes: tokenScopes.join(' '),
+            fhirUser: tokenPayload.fhirUser, server: params.server_name,
+          })
+          if (config.accessControl.scopeEnforcement === 'enforce') {
+            set.status = 403
+            return {
+              error: 'insufficient_scope',
+              message: `Token does not grant ${method} access to ${resourceType}. Required scope: patient/${resourceType}.read or user/${resourceType}.read (or equivalent).`,
+            }
+          }
+        }
+      }
+    }
+
+    // 4) Write operation restrictions (only if READ_ONLY_FOR_USERS is enabled)
+    if (
+      config.accessControl.readOnlyForUsers &&
+      ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) &&
+      tokenPayload?.fhirUser
+    ) {
+      logger.fhir.warn('Write operation blocked for non-admin user', {
+        fhirUser: tokenPayload.fhirUser, method: request.method,
+        resourcePath, server: params.server_name,
+      })
+      set.status = 403
+      return { error: 'access_denied', message: 'Write operations are not permitted for this user role' }
+    }
+
+    // 5) Role-based FHIR access control (only if enabled via ROLE_BASED_FILTERING_MODE)
+    if (tokenPayload && config.accessControl.roleBasedFiltering !== 'disabled') {
+      const fhirUser = tokenPayload.fhirUser as string | undefined
+      const resourceType = resourcePath.split(/[/?]/)[0]
+      const patientScopedResources = config.accessControl.patientScopedResources
+
+      if (fhirUser?.startsWith('Practitioner/')) {
+        // Practitioner: only access patients assigned via generalPractitioner
+        if (request.method === 'GET' && /^Patient(\?|$)/.test(resourcePath)) {
+          const sep = queryString ? '&' : '?'
+          queryString += `${sep}general-practitioner=${encodeURIComponent(fhirUser)}`
+        }
+
+        const patientDirectMatch = resourcePath.match(/^Patient\/([^/]+)/)
+        if (request.method === 'GET' && patientDirectMatch) {
+          const patientId = patientDirectMatch[1]
+          if (patientId !== '$' && !patientId.startsWith('$')) {
+            const checkUrl = `${serverUrl}/Patient?_id=${encodeURIComponent(patientId)}&general-practitioner=${encodeURIComponent(fhirUser)}&_format=json`
+            const checkResp = await fetch(checkUrl, { method: 'GET', headers: { Accept: 'application/fhir+json' } })
+            const checkBundle = await checkResp.json()
+            if (!checkBundle.entry?.length) {
+              const msg = `Patient ${patientId} is not assigned to ${fhirUser}`
+              logger.fhir.warn('Practitioner access denied to patient', { fhirUser, patientId, server: params.server_name })
+              if (config.accessControl.roleBasedFiltering === 'enforce') {
+                set.status = 403
+                return { error: 'access_denied', message: msg }
+              }
+            }
+          }
+        }
+
+        if (request.method === 'GET' && patientScopedResources.includes(resourceType) && !resourcePath.includes('/')) {
+          const patientsUrl = `${serverUrl}/Patient?general-practitioner=${encodeURIComponent(fhirUser)}&_elements=id&_format=json`
+          const patientsResp = await fetch(patientsUrl, { method: 'GET', headers: { Accept: 'application/fhir+json' } })
+          const patientsBundle = await patientsResp.json()
+          const patientIds = (patientsBundle.entry || []).map((e: { resource: { id: string } }) => e.resource.id)
+
+          if (patientIds.length === 0) {
+            set.status = 200
+            return { resourceType: 'Bundle', type: 'searchset', total: 0, entry: [] }
+          }
+
+          const sep = queryString ? '&' : '?'
+          queryString += `${sep}patient=${patientIds.map((id: string) => `Patient/${id}`).join(',')}`
+        }
+      } else if (fhirUser?.startsWith('Patient/')) {
+        // Patient: only access own data
+        const ownPatientId = fhirUser.split('/')[1]
+
+        if (request.method === 'GET' && /^Patient(\?|$)/.test(resourcePath)) {
+          const sep = queryString ? '&' : '?'
+          queryString += `${sep}_id=${encodeURIComponent(ownPatientId)}`
+        }
+
+        const patientDirectMatch = resourcePath.match(/^Patient\/([^/]+)/)
+        if (request.method === 'GET' && patientDirectMatch) {
+          const patientId = patientDirectMatch[1]
+          if (patientId !== '$' && !patientId.startsWith('$') && patientId !== ownPatientId) {
+            logger.fhir.warn('Patient access denied to other patient', { fhirUser, requestedPatient: patientId, server: params.server_name })
+            if (config.accessControl.roleBasedFiltering === 'enforce') {
+              set.status = 403
+              return { error: 'access_denied', message: 'You can only access your own patient record' }
+            }
+          }
+        }
+
+        if (request.method === 'GET' && patientScopedResources.includes(resourceType) && !resourcePath.includes('/')) {
+          const sep = queryString ? '&' : '?'
+          queryString += `${sep}patient=Patient/${encodeURIComponent(ownPatientId)}`
+        }
+      }
+    }
+
     const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()

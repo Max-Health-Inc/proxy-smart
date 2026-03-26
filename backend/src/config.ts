@@ -191,6 +191,31 @@ export const config = {
     }
   },
 
+  accessControl: {
+    // SMART scope enforcement — validates token scopes against requested FHIR resources
+    get scopeEnforcement(): 'enforce' | 'audit-only' | 'disabled' {
+      const mode = process.env.SCOPE_ENFORCEMENT_MODE || 'disabled'
+      if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
+      return 'disabled'
+    },
+    // Role-based filtering using fhirUser claim (e.g. generalPractitioner-based isolation)
+    get roleBasedFiltering(): 'enforce' | 'audit-only' | 'disabled' {
+      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'disabled'
+      if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
+      return 'disabled'
+    },
+    // Block write operations for non-admin users (users with fhirUser claim)
+    get readOnlyForUsers() {
+      return process.env.READ_ONLY_FOR_USERS === 'true'
+    },
+    // Clinical resource types subject to patient-scoped filtering
+    get patientScopedResources(): string[] {
+      const defaults = ['Observation', 'Condition', 'Procedure', 'MedicationRequest', 'MedicationStatement', 'DiagnosticReport', 'Encounter', 'AllergyIntolerance', 'ImagingStudy', 'CarePlan', 'Consent']
+      const env = process.env.PATIENT_SCOPED_RESOURCES?.split(',').map(s => s.trim()).filter(Boolean)
+      return env || defaults
+    },
+  },
+
   kisi: {
     // Kisi Access Control integration
     get apiKey() {
