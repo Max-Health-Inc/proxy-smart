@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603261153.437fd3f4] - 2026-03-26
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements: 
+  - Refactor: remove redundancies and consolidate shared code (quotentiroler)
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/248
+
+
 ## [0.0.3-alpha.202603261142.f2bbdb5a] - 2026-03-26
 
 - ✨ Features: wire IAL enforcement in FHIR proxy and complete Person link management UI
