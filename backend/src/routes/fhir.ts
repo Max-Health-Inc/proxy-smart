@@ -74,17 +74,17 @@ async function proxyFHIR({ params, request, set }: any) {
     const resourcePath = parts.slice(3).join('/')
     let queryString = requestUrl.search
 
+    // Resolve mTLS config once per request (used by both access control and proxy fetch)
+    const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
+    const serverFetch = async (url: string, init?: RequestInit) => {
+      const useMtls = mtlsConfig?.enabled === true && url.startsWith('https://')
+      return useMtls
+        ? fetchWithMtls(url, { ...init, serverId: serverInfo.identifier })
+        : fetch(url, init)
+    }
+
     // 3–5) SMART access control (scope enforcement, write blocking, role-based filtering)
     if (tokenPayload) {
-      // Build mTLS-aware upstream fetch for access control queries
-      const mtlsCfg = await getMtlsConfig(serverInfo.identifier)
-      const acUpstreamFetch = async (url: string, init?: RequestInit) => {
-        const useUpstreamMtls = mtlsCfg?.enabled === true && url.startsWith('https://')
-        return useUpstreamMtls
-          ? fetchWithMtls(url, { ...init, serverId: serverInfo.identifier })
-          : fetch(url, init)
-      }
-
       const acCtx: AccessControlContext = {
         tokenPayload,
         resourcePath,
@@ -93,7 +93,7 @@ async function proxyFHIR({ params, request, set }: any) {
         serverId: serverInfo.identifier,
         serverName: params.server_name,
         authHeader,
-        upstreamFetch: acUpstreamFetch,
+        upstreamFetch: serverFetch,
       }
 
       // 3) SMART scope enforcement
@@ -135,7 +135,6 @@ async function proxyFHIR({ params, request, set }: any) {
     }
 
     // Check if mTLS is configured for this server
-    const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
     const useMtls = mtlsConfig?.enabled === true && target.startsWith('https://')
 
     // Use appropriate fetch method based on mTLS configuration
