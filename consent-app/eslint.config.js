@@ -10,9 +10,9 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default tseslint.config([
-  globalIgnores(['dist', 'node_modules', '**/lib/api-client/**']),
+  globalIgnores(['dist', 'node_modules']),
   {
-    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -39,7 +39,6 @@ export default tseslint.config([
       globals: globals.browser,
       parserOptions: {
         tsconfigRootDir: __dirname,
-        // Use tsconfig.app.json which includes src folder for ESLint
         project: './tsconfig.app.json'
       }
     },

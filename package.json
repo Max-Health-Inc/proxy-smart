@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.3-beta.202603261153.437fd3f4",
+  "version": "0.0.3-alpha.202603261227.e58ce3fa",
   "repository": {
     "type": "git",
     "url": "https://github.com/quotentiroler/proxy-smart.git"
@@ -78,9 +78,12 @@
     "typecheck": "concurrently \"bun run typecheck:backend\" \"bun run typecheck:ui\"",
     "typecheck:backend": "cd backend && bun run typecheck",
     "typecheck:ui": "cd ui && bun run typecheck",
-    "lint": "concurrently \"bun run lint:backend\" \"bun run lint:ui\"",
+    "lint": "concurrently \"bun run lint:backend\" \"bun run lint:ui\" \"bun run lint:consent\" \"bun run lint:dtr\" \"bun run lint:patient-portal\"",
     "lint:backend": "cd backend && bun run lint",
     "lint:ui": "cd ui && bun run lint",
+    "lint:consent": "cd consent-app && bun run lint",
+    "lint:dtr": "cd dtr-app && bun run lint",
+    "lint:patient-portal": "cd patient-portal && bun run lint",
     "lint:fix": "concurrently \"bun run lint:fix:backend\" \"bun run lint:fix:ui\"",
     "lint:fix:backend": "cd backend && bun run lint:fix",
     "lint:fix:ui": "cd ui && bun run lint:fix",

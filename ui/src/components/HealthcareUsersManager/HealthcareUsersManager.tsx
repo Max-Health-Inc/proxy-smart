@@ -116,7 +116,7 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
   const [selectedUserForPerson, setSelectedUserForPerson] = useState<HealthcareUserWithPersons | null>(null);
   const [showLinkerModal, setShowLinkerModal] = useState(false);
   const [linkerPersons, setLinkerPersons] = useState<PersonResource[]>([]);
-  const [linkerUser, setLinkerUser] = useState<HealthcareUserWithPersons | null>(null);
+  const [_linkerUser, setLinkerUser] = useState<HealthcareUserWithPersons | null>(null);
 
   // Dynamic roles fetched from Keycloak
   const [availableRealmRoles, setAvailableRealmRoles] = useState<string[]>([]);

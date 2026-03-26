@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from "@proxy-smart/shared-ui"
+import { Button, Badge } from "@proxy-smart/shared-ui"
 import { toast } from "sonner"
 import { ServiceSelector, type SelectedService } from "@/components/ServiceSelector"
 import { QuestionnaireRenderer } from "@/components/QuestionnaireRenderer"
@@ -8,7 +8,7 @@ import { SmartFormsQuestionnaireRenderer } from "@/components/SmartFormsQuestion
 import { PaReviewSubmit } from "@/components/PaReviewSubmit"
 import { createQuestionnaireResponse, submitClaim } from "@/lib/fhir-client"
 import { buildPasClaim } from "@/lib/pas-builder"
-import { ArrowLeft, ArrowRight, FileCheck, Loader2 } from "lucide-react"
+import { ArrowLeft, ArrowRight } from "lucide-react"
 
 interface NewPaWorkflowProps {
   patient: Patient

@@ -15,7 +15,6 @@ import {
   TrendingUp,
   BarChart3,
   Shield,
-  Timer,
   Search,
   AlertTriangle,
   XCircle,

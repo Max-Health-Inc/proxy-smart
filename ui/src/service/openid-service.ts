@@ -40,7 +40,7 @@ class OpenIDService {
       }
     } catch (error) {
       console.error('Failed to check auth configuration:', error);
-      throw new Error('Unable to verify authentication configuration. Please try again later.');
+      throw new Error('Unable to verify authentication configuration. Please try again later.', { cause: error });
     }
 
     // Generate PKCE parameters

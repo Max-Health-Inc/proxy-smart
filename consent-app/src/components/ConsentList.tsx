@@ -1,6 +1,5 @@
 import type { Consent } from "fhir/r4"
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, CardAction } from "@proxy-smart/shared-ui"
-import { formatHumanName } from "@/lib/fhir-client"
 import { format } from "date-fns"
 import { ShieldCheck, ShieldOff, User, Clock, Eye } from "lucide-react"
 

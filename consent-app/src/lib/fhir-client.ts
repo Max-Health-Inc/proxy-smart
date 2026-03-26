@@ -10,7 +10,6 @@ import type {
   Consent,
   Practitioner,
   Task,
-  HumanName,
 } from "fhir/r4"
 
 export type { Patient, Person, Consent, Practitioner, Task }

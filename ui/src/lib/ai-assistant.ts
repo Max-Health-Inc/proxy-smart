@@ -231,7 +231,7 @@ class SmartOnFHIRAIAssistant {
 
       // Re-throw with more context
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`Backend AI API error: ${errorMessage}`);
+      throw new Error(`Backend AI API error: ${errorMessage}`, { cause: error });
     }
   }
 

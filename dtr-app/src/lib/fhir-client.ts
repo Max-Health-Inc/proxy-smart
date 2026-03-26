@@ -6,7 +6,6 @@ import type {
   Patient,
   Questionnaire,
   QuestionnaireResponse,
-  HumanName,
   Condition,
   QuestionnaireItem,
   QuestionnaireResponseItem,

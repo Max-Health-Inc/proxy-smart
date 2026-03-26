@@ -24,7 +24,7 @@ export default tseslint.config(
       "no-console": "off", // Allow console.log in backend
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_" },
+        { argsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
     },
