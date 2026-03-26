@@ -9,7 +9,6 @@ import {
   searchImmunizations,
   searchVitals,
   searchLabs,
-  formatHumanName,
   type Patient,
   type Condition,
   type AllergyIntolerance,

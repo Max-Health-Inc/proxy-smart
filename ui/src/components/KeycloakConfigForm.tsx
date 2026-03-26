@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Check,
@@ -27,7 +27,7 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  const clientApis = createClientApis(); // No auth needed for these endpoints
+  const clientApis = useMemo(() => createClientApis(), []); // No auth needed for these endpoints
 
   // Pre-populate form with current Keycloak configuration
   useEffect(() => {
@@ -40,7 +40,7 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
       setBaseUrl((prev) => prev || 'http://localhost:8080');
       setRealm((prev) => prev || 'proxy-smart');
     });
-  }, []);
+  }, [clientApis]);
 
   const handleTest = async () => {
     if (!baseUrl.trim() || !realm.trim()) {

@@ -1,7 +1,7 @@
 import { Button } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Loader2, Shield } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 
 import { NotificationToast } from '../ui/NotificationToast';

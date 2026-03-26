@@ -14,7 +14,6 @@ import type {
 import type {
   Observation,
   DocumentReference,
-  HumanName,
 } from "fhir/r4"
 
 export type {

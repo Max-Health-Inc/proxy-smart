@@ -25,10 +25,8 @@ import {
     Download,
     ChevronDown,
     Link2,
-    AppWindow,
     BookOpen,
-    AlertTriangle,
-    Radio
+    AlertTriangle
 } from 'lucide-react';
 import { McpEndpointSettings } from './McpEndpointSettings';
 import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
@@ -48,7 +46,7 @@ import type {
     GetAdminAiToolsSkillsRegistryBrowse200ResponseSkillsInner,
     SmartApp
 } from '../lib/api-client';
-import { Checkbox } from './ui/checkbox';
+
 import { AssignAppsDialog, AssignedAppsBadges } from './AssignAppsDialog';
 
 interface McpTemplate {
@@ -600,7 +598,7 @@ export function McpServersManager() {
         fetchTemplates();
         fetchSmartApps();
         fetchSkills();
-    }, [fetchServers, fetchTemplates, fetchSmartApps]);
+    }, [fetchServers, fetchTemplates, fetchSmartApps, fetchSkills]);
 
     const getStatusIcon = (status: string) => {
         switch (status) {

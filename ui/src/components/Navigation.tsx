@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge, Button } from '@proxy-smart/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import {
   DropdownMenu,
   DropdownMenuContent,

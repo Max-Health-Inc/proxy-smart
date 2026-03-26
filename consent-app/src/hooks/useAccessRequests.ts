@@ -43,7 +43,7 @@ export function useAccessRequests(mode: SearchMode | null) {
     } finally {
       setLoading(false)
     }
-  }, [mode?.by === "patient" ? mode.patientId : mode?.by === "requester" ? mode.practitionerRef : null])
+  }, [mode])
 
   useEffect(() => {
     fetchRequests()

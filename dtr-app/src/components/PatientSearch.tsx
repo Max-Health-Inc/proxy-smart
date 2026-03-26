@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react"
 import type { Patient } from "fhir/r4"
 import { searchPatients, searchPatientByIdentifier, formatHumanName } from "@/lib/fhir-client"
-import { Input, Button, Card, CardContent, CardHeader, CardTitle, Spinner } from "@proxy-smart/shared-ui"
+import { Input, Card, CardContent, Spinner } from "@proxy-smart/shared-ui"
 import { Search, User, Calendar, Hash, ChevronRight } from "lucide-react"
 
 interface PatientSearchProps {

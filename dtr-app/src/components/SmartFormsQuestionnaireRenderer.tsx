@@ -99,6 +99,7 @@ export function SmartFormsQuestionnaireRenderer({
 function SmartFormsRendererInner({
   questionnaire,
   patient,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   service,
   prePopResult,
   onComplete,

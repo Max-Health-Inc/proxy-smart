@@ -1,6 +1,5 @@
 import { useState } from "react"
-import type { Patient } from "fhir/r4"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@proxy-smart/shared-ui"
+import { Tabs, TabsContent, TabsList, TabsTrigger, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import { PatientSearch } from "@/components/PatientSearch"
@@ -9,7 +8,6 @@ import { PaRequestList } from "@/components/PaRequestList"
 import { NewPaWorkflow } from "@/components/NewPaWorkflow"
 import { QuestionnaireBrowser } from "@/components/QuestionnaireBrowser"
 import { usePatientContext } from "@/hooks/usePatientContext"
-import { Spinner } from "@proxy-smart/shared-ui"
 
 interface DashboardProps {
   launchMode: LaunchMode

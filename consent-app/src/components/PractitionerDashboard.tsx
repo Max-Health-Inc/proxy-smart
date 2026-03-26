@@ -20,7 +20,6 @@ import {
   XCircle,
   Ban,
   Clock,
-  Eye,
 } from "lucide-react"
 
 interface PractitionerDashboardProps {
