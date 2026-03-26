@@ -6,6 +6,7 @@ export const fhirBaseUrl = `${config.proxyBase}/${config.proxyPrefix}/${config.f
 export const smartAuth = new SmartAuth({
   clientId: config.clientId,
   redirectUri: config.redirectUri,
+  postLogoutRedirectUri: window.location.origin + import.meta.env.BASE_URL,
   fhirBaseUrl,
   scopes: config.scopes,
   storagePrefix: "patient_portal_",
