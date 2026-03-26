@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Button, Input } from '@proxy-smart/shared-ui';
+import { Badge, Button, Input, CHART_COLORS } from '@proxy-smart/shared-ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -61,16 +61,7 @@ async function getToken(): Promise<string | null> {
   }
 }
 
-const CHART_COLORS = [
-  'var(--primary)',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#06b6d4',
-  '#ec4899',
-  '#84cc16',
-];
+
 
 // ─── Component ───────────────────────────────────────────────────────
 
