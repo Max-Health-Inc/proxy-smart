@@ -42,6 +42,8 @@ import { getAccessControlInstance } from '../lib/access-control/plugin'
 interface McpSession {
   transport: WebStandardStreamableHTTPServerTransport
   server: McpServer
+  /** Mutable token ref — updated on every authenticated request so tool/resource handlers always use the freshest token. */
+  tokenRef: { current?: string }
 }
 
 const sessions = new Map<string, McpSession>()
@@ -51,7 +53,7 @@ const sessions = new Map<string, McpSession>()
 /**
  * Register all exposed tools from the tool-registry onto an McpServer instance.
  */
-function registerTools(server: McpServer, userRoles: string[], authToken?: string): void {
+function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   if (!isToolRegistryInitialized()) return
 
   const registry = getToolRegistry()
@@ -75,7 +77,7 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
           inputSchema: zodSchema,
         },
         async (args: unknown) => {
-          return executeTool(toolName, meta, args as Record<string, unknown>, authToken)
+          return executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current)
         },
       )
     } else {
@@ -83,7 +85,7 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
         toolName,
         generateDescription(toolName, meta),
         async () => {
-          return executeTool(toolName, meta, {}, authToken)
+          return executeTool(toolName, meta, {}, tokenRef.current)
         },
       )
     }
@@ -129,7 +131,7 @@ function registerTools(server: McpServer, userRoles: string[], authToken?: strin
  * Static (no path params) → fixed URI resources.
  * Parameterized → URI template resources.
  */
-function registerResources(server: McpServer, userRoles: string[], authToken?: string): void {
+function registerResources(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   if (!isResourceRegistryInitialized()) return
 
   const registry = getResourceRegistry()
@@ -148,7 +150,7 @@ function registerResources(server: McpServer, userRoles: string[], authToken?: s
         uri,
         { description, mimeType: 'application/json' },
         async () => {
-          const result = await executeResource(meta, {}, authToken)
+          const result = await executeResource(meta, {}, tokenRef.current)
           return { contents: [{ uri, text: result }] }
         },
       )
@@ -164,7 +166,7 @@ function registerResources(server: McpServer, userRoles: string[], authToken?: s
           for (const p of meta.pathParams) {
             if (variables[p]) params[p] = String(variables[p])
           }
-          const result = await executeResource(meta, params, authToken)
+          const result = await executeResource(meta, params, tokenRef.current)
           return { contents: [{ uri: reqUri.href, text: result }] }
         },
       )
@@ -438,6 +440,8 @@ async function handleMcpRequest(request: Request): Promise<Response> {
   // ── Existing session ───────────────────────────────────────────────────
   if (sessionId && sessions.has(sessionId)) {
     const session = sessions.get(sessionId)!
+    // Update the token ref so tool/resource handlers use the freshest token
+    if (auth.token) session.tokenRef.current = auth.token
     return session.transport.handleRequest(request)
   }
 
@@ -449,7 +453,7 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       const transport = new WebStandardStreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
         onsessioninitialized: (sid) => {
-          sessions.set(sid, { transport, server })
+          sessions.set(sid, { transport, server, tokenRef })
           logger.server.info('MCP session initialized', { sessionId: sid, sub: auth.sub })
         },
         onsessionclosed: (sid) => {
@@ -469,11 +473,14 @@ async function handleMcpRequest(request: Request): Promise<Response> {
         { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
       )
 
+      // Mutable token reference — closures read from this, updated on each request
+      const tokenRef = { current: auth.token }
+
       // Bridge tool-registry → MCP tools
-      registerTools(server, auth.roles, auth.token)
+      registerTools(server, auth.roles, tokenRef)
 
       // Bridge resource-registry → MCP resources (GET routes)
-      registerResources(server, auth.roles, auth.token)
+      registerResources(server, auth.roles, tokenRef)
 
       await server.connect(transport)
 
