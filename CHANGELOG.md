@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603262009.6c2d2717] - 2026-03-26
+
+- ✨ Features: Add comprehensive SMART Access Control tests (scope, write blocking, role-based filtering) plus test utilities.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/252
+
+
 ## [0.0.3-alpha.202603261959.0eedf22a] - 2026-03-26
 
 - ✨ Features: SMART on FHIR access control feature set
