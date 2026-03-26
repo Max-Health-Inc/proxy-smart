@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603261959.0eedf22a] - 2026-03-26
+
+- ✨ Features: SMART on FHIR access control feature set
+  - Adds configurable access control with scope enforcement, role-based filtering, and optional write blocking
+  - Introduces SMART access control module and core types, wired into backend config
+  - Adds new backend route integration for FHIR access control
+
+- 🔧 Chores & Improvements: CI/config updates for new feature
+  - Extends backend/config.ts with accessControl options (scopeEnforcement, roleBasedFiltering, readOnlyForUsers, patientScopedResources)
+
+- 📚 Documentation: (none)
+
+- ⚠️ Breaking Changes: (none)
+
+- 🐛 Bug Fixes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/251
+
+
 ## [0.0.3-alpha.202603261915.b85b32ac] - 2026-03-26
 
 - ✨ Features: Introduce SMART on FHIR access control
