@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603262109.1f1eb8d7] - 2026-03-26
+
+- ✨ Features:
+  - Add missing params schemas to admin routes for MCP tool exposure (quotentiroler)
+
+- 🔧 Chores & Improvements:
+  - CI/CI: Update version references to 0.0.3-alpha.202603262109.1f1eb8d7
+  - Documentation: Update CHANGELOG with PR metadata
+
+Note: No breaking changes, bug fixes, or documentation/content changes beyond housekeeping detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/253
+
+
 ## [0.0.3-alpha.202603262009.6c2d2717] - 2026-03-26
 
 - ✨ Features: Add comprehensive SMART Access Control tests (scope, write blocking, role-based filtering) plus test utilities.
