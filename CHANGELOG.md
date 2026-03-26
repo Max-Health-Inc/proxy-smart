@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603260505.b938bcb4] - 2026-03-26
+
+- ✨ Features: Wire up real SMART capabilities in FHIR server management UI (quotentiroler)
+- 🔧 Chores & Improvements: Update dev SMART compliance report
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603260505.b938bcb4
+- 📚 Documentation: Update CHANGELOG.md for PR #242
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/243
+
+
 ## [0.0.3-alpha.202603260458.782b5ec9] - 2026-03-26
 
 - 🔧 Chores & Improvements: Internal updates and maintenance
