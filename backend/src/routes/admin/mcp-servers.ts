@@ -298,6 +298,9 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       error: health.error
     }
   }, {
+    params: t.Object({
+      name: t.String({ description: 'MCP server name' })
+    }),
     detail: {
       summary: 'Check MCP server health',
       description: 'Check connectivity and health of a specific MCP server',
@@ -348,6 +351,9 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       throw error
     }
   }, {
+    params: t.Object({
+      name: t.String({ description: 'MCP server name' })
+    }),
     detail: {
       summary: 'List MCP server tools',
       description: 'Get available tools from a specific MCP server',
@@ -561,6 +567,9 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       error: health.error
     }
   }, {
+    params: t.Object({
+      name: t.String({ description: 'MCP server name' })
+    }),
     body: McpServerUpdate,
     detail: {
       summary: 'Update MCP server',
@@ -607,6 +616,9 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       message: `MCP server '${name}' deleted successfully`
     }
   }, {
+    params: t.Object({
+      name: t.String({ description: 'MCP server name' })
+    }),
     detail: {
       summary: 'Delete MCP server',
       description: 'Remove a dynamically added MCP server',
