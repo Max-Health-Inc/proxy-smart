@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603260233.96d79d26] - 2026-03-26
+
+- ✨ Features: wire up CQL engine and Smart Forms SDC renderer in DTR app (quotentiroler)
+
+- 🔧 Chores & Improvements: update dev SMART compliance report
+
+- 🔧 Chores & Improvements: update version to 0.0.3-beta.202603260210.50141671 (beta)
+- 🔧 Chores & Improvements: update version to 0.0.3-alpha.202603260233.96d79d26 (alpha)
+
+Note: No user-facing breaking changes, docs, or other fixes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/241
+
+
 ## [0.0.3-alpha.202603260210.50141671] - 2026-03-26
 
 - 🔧 Chores & Improvements: Deduplicated app configs, CSS theme, chart colors, and admin tabs into shared-ui
