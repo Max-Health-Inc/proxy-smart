@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603262146.90e44e07] - 2026-03-26
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Fix: use mutable token ref in MCP sessions to prevent stale auth
+
+Note: No user-facing features, bug fixes beyond internal auth fix, or documentation changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/254
+
+
 ## [0.0.3-alpha.202603262109.1f1eb8d7] - 2026-03-26
 
 - ✨ Features:
