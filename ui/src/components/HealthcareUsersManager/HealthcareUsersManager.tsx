@@ -11,7 +11,10 @@ import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } fr
 import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
+import { PersonResourceLinker } from './PersonResourceLinker';
 import { IALSettings } from '../IALSettings';
+import { getPersonResourceFull, updatePersonLinks } from '@/service/fhirService';
+import type { PersonResource, CustomPersonLink } from '@/lib/fhir-types';
 import { useTranslation } from 'react-i18next';
 import { config } from '@/config';
 import { getStoredToken } from '@/lib/apiClient';
@@ -111,6 +114,9 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
   const [submitting, setSubmitting] = useState(false);
   const [showAddPersonModal, setShowAddPersonModal] = useState(false);
   const [selectedUserForPerson, setSelectedUserForPerson] = useState<HealthcareUserWithPersons | null>(null);
+  const [showLinkerModal, setShowLinkerModal] = useState(false);
+  const [linkerPersons, setLinkerPersons] = useState<PersonResource[]>([]);
+  const [linkerUser, setLinkerUser] = useState<HealthcareUserWithPersons | null>(null);
 
   // Dynamic roles fetched from Keycloak
   const [availableRealmRoles, setAvailableRealmRoles] = useState<string[]>([]);
@@ -229,6 +235,58 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
     // Close modal and reset state
     setShowAddPersonModal(false);
     setSelectedUserForPerson(null);
+  };
+
+  // Handle opening the Person Resource Linker for IAL management
+  const handleManageLinks = async (user: HealthcareUserWithPersons) => {
+    if (!user.fhirPersons?.length) return;
+    setLinkerUser(user);
+
+    const persons: PersonResource[] = [];
+    for (const assoc of user.fhirPersons) {
+      const server = fhirServers.find(s => s.id === assoc.serverId);
+      if (!server) continue;
+      try {
+        const person = await getPersonResourceFull(
+          server.name,
+          server.fhirVersion || 'R4',
+          assoc.personId,
+          {
+            serverName: server.name,
+            version: server.fhirVersion || 'R4',
+            baseUrl: `${config.api.baseUrl}/proxy/${server.name}/${server.fhirVersion || 'R4'}`,
+            fhirVersion: server.fhirVersion
+          }
+        );
+        persons.push(person);
+      } catch (err) {
+        console.error(`Failed to load Person ${assoc.personId}:`, err);
+      }
+    }
+    setLinkerPersons(persons);
+    setShowLinkerModal(true);
+  };
+
+  // Handle Person link updates from the linker
+  const handlePersonLinkUpdate = async (personId: string, updatedLinks: CustomPersonLink[]) => {
+    const person = linkerPersons.find(p => (p.id || p.display) === personId);
+    if (!person) return;
+
+    try {
+      await updatePersonLinks(
+        person.serverInfo.serverName,
+        person.serverInfo.fhirVersion || person.serverInfo.version,
+        person.id,
+        updatedLinks
+      );
+      // Update local state
+      setLinkerPersons(prev => prev.map(p =>
+        (p.id || p.display) === personId ? { ...p, links: updatedLinks } : p
+      ));
+    } catch (err) {
+      console.error('Failed to update Person links:', err);
+      setError('Failed to update Person links on the FHIR server.');
+    }
   };
 
   return (
@@ -398,10 +456,27 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
               handleAddFhirPerson(originalUser);
             }
           }}
+          onManageLinks={(user) => {
+            const originalUser = users.find(u => u.id === user.id);
+            if (originalUser) {
+              handleManageLinks(originalUser);
+            }
+          }}
         />
       )}
 
-      {/* Add FHIR Person Modal */}
+      {/* Person Resource Linker for IAL management */}
+      <PersonResourceLinker
+        isOpen={showLinkerModal}
+        onClose={() => {
+          setShowLinkerModal(false);
+          setLinkerUser(null);
+          setLinkerPersons([]);
+        }}
+        availablePersons={linkerPersons}
+        onPersonUpdate={handlePersonLinkUpdate}
+      />
+
       {/* ─── IAL Settings (Identity Assurance) ─── */}
       <IALSettings />
 

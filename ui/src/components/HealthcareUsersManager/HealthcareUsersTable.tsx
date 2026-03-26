@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Users, Server, Plus, MoreHorizontal } from 'lucide-react';
+import { Users, Server, Plus, MoreHorizontal, Link } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer, HealthcareUser } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
 
@@ -25,6 +25,7 @@ interface HealthcareUsersTableProps {
   onToggleStatus: (userId: string, currentStatus: 'active' | 'inactive') => void;
   onDeleteUser: (userId: string) => void;
   onAddFhirPerson: (user: HealthcareUser) => void;
+  onManageLinks?: (user: HealthcareUser) => void;
 }
 
 /**
@@ -94,7 +95,8 @@ export function HealthcareUsersTable({
   onEditUser,
   onToggleStatus,
   onDeleteUser,
-  onAddFhirPerson
+  onAddFhirPerson,
+  onManageLinks
 }: HealthcareUsersTableProps) {
   const { t } = useTranslation();
   return (
@@ -191,15 +193,28 @@ export function HealthcareUsersTable({
                           </div>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onAddFhirPerson(user)}
-                        className="text-xs h-6 px-2 text-primary hover:text-primary hover:bg-primary/10"
-                      >
-                        <Plus className="w-3 h-3 mr-1" />
-                        {t('Add FHIR Person')}
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onAddFhirPerson(user)}
+                          className="text-xs h-6 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          {t('Add FHIR Person')}
+                        </Button>
+                        {(user.fhirPersons?.length ?? 0) > 0 && onManageLinks && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onManageLinks(user)}
+                            className="text-xs h-6 px-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:bg-blue-500/10"
+                          >
+                            <Link className="w-3 h-3 mr-1" />
+                            {t('Manage Links')}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
