@@ -1,0 +1,14 @@
+{
+  "client_name": "Patient Portal",
+  "client_id": "patient-portal",
+  "description": "Patient health portal — view IPS summary, conditions, medications, immunizations, lab results and allergies",
+  "client_uri": "http://localhost:5176",
+  "logo_uri": "http://localhost:5176/proxy-smart.svg",
+  "redirect_uris": ["http://localhost:5176/callback"],
+  "scope": "openid fhirUser patient/*.read",
+  "grant_types": ["authorization_code"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none",
+  "category": "clinical",
+  "icon": "heart-pulse"
+}

@@ -19,6 +19,7 @@ COPY shared-ui/ ./shared-ui/
 COPY ui/ ./ui/
 COPY dtr-app/ ./dtr-app/
 COPY consent-app/ ./consent-app/
+COPY patient-portal/ ./patient-portal/
 COPY infra/ ./infra/
 COPY scripts/ ./scripts/
 COPY docs/ ./docs/
