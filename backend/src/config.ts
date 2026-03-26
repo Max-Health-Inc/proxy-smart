@@ -212,7 +212,7 @@ export const config = {
     get patientScopedResources(): string[] {
       const defaults = ['Observation', 'Condition', 'Procedure', 'MedicationRequest', 'MedicationStatement', 'DiagnosticReport', 'Encounter', 'AllergyIntolerance', 'ImagingStudy', 'CarePlan', 'Consent']
       const env = process.env.PATIENT_SCOPED_RESOURCES?.split(',').map(s => s.trim()).filter(Boolean)
-      return env || defaults
+      return env && env.length > 0 ? env : defaults
     },
   },
 
