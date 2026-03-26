@@ -12,6 +12,9 @@ export { ErrorBoundary } from "./components/error-boundary"
 
 // Utilities
 export { cn } from "./lib/utils"
+export { createSmartAppConfig, type SmartAppConfig } from "./lib/smart-app-config"
+export { CHART_COLORS } from "./lib/chart-colors"
+export { ADMIN_TABS, type AdminTab } from "./lib/admin-tabs"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"

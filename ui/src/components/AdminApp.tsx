@@ -13,7 +13,7 @@ import { cn } from '../lib/utils';
 import { AlertDialogs } from './AlertDialogs';
 import { AIChatOverlay } from './ai/AIChatOverlay';
 import { Panel } from './ui/panel';
-import { Button, Spinner } from '@proxy-smart/shared-ui';
+import { Button, Spinner, ADMIN_TABS, type AdminTab } from '@proxy-smart/shared-ui';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import { ShieldAlert, X } from 'lucide-react';
@@ -23,26 +23,10 @@ import { IdPManager } from './IdPManager/IdPManager';
 import { BrandSettings } from './BrandSettings';
 
 
-// Valid tab routes
-const VALID_TABS = [
-    'dashboard',
-    'smart-apps',
-    'users',
-    'fhir-servers',
-    'ai-tools',
-    'idp',
-    'smart-config',
-    'oauth-monitoring',
-    'door-management',
-    'branding',
-] as const;
-
-type ValidTab = typeof VALID_TABS[number];
-
 // Get tab from URL hash
-function getTabFromHash(): ValidTab {
+function getTabFromHash(): AdminTab {
     const hash = window.location.hash.slice(1); // Remove the '#'
-    return VALID_TABS.includes(hash as ValidTab) ? (hash as ValidTab) : 'dashboard';
+    return ADMIN_TABS.includes(hash as AdminTab) ? (hash as AdminTab) : 'dashboard';
 }
 
 // Set tab in URL hash
