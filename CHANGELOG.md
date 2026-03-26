@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603252246.f07ac170] - 2026-03-25
+
+- 🔧 Chores & Improvements: Introduced file-backed persistence for dynamically added FHIR servers
+  - Add fs/path usage, PersistedServer interface, and SERVERS_JSON_PATH
+  - Implement loadPersistedServers and savePersistedServers
+  - Prepare groundwork for persisting servers to fhir-servers.json
+- 🔧 Chores & Improvements: Standardize newline handling and update ignore rules for backend
+  - Update backend/.gitignore with fhir-servers.json
+  - Ensure mcp.json newline issue is fixed
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/238
+
+
 ## [0.0.3-alpha.202603252123.0938d55e] - 2026-03-25
 
 - ✨ Features: Scaffold international patient portal with IPS/IPA (quotentiroler)
