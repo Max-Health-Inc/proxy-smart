@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603260616.9f8b1020] - 2026-03-26
+
+- 🔧 Chores & Improvements: Cleanup and maintenance of deploy-beta workflow
+  - Performs remote Docker prune/cleanup (images, containers, volumes, builders with 2GB kept) via SSH and outputs disk usage after cleanup
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/246
+
+
 ## [0.0.3-alpha.202603260600.c6b0d8d9] - 2026-03-26
 
 - 🐛 Bug Fixes: Remove hardcoded fake data from CertificatesDialog and LaunchContextManager (quotentiroler)
