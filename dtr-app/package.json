@@ -13,6 +13,7 @@
     "preview": "vite preview --port 5175"
   },
   "dependencies": {
+    "@aehrc/smart-forms-renderer": "^1.3.1",
     "@babelfhir-ts/client-r4": "^0.2.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@proxy-smart/shared-ui": "workspace:*",
@@ -32,6 +33,8 @@
     "@types/fhir": "^0.0.41",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cql-exec-fhir": "^2.1.6",
+    "cql-execution": "^3.3.0",
     "date-fns": "^4.1.0",
     "fhirpath": "^4.9.1",
     "hl7.fhir.us.davinci-pas-generated": "./lib/hl7.fhir.us.davinci-pas-generated.tgz",

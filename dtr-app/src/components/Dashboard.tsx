@@ -7,6 +7,7 @@ import { PatientSearch } from "@/components/PatientSearch"
 import { PatientBanner } from "@/components/PatientBanner"
 import { PaRequestList } from "@/components/PaRequestList"
 import { NewPaWorkflow } from "@/components/NewPaWorkflow"
+import { QuestionnaireBrowser } from "@/components/QuestionnaireBrowser"
 import { usePatientContext } from "@/hooks/usePatientContext"
 import { Spinner } from "@proxy-smart/shared-ui"
 
@@ -60,6 +61,7 @@ export function Dashboard({ launchMode }: DashboardProps) {
         <TabsList>
           <TabsTrigger value="requests">PA Requests</TabsTrigger>
           <TabsTrigger value="new">New Request</TabsTrigger>
+          <TabsTrigger value="questionnaires">Questionnaires</TabsTrigger>
         </TabsList>
 
         <TabsContent value="requests" className="mt-4">
@@ -71,6 +73,10 @@ export function Dashboard({ launchMode }: DashboardProps) {
             patient={patient}
             onComplete={() => setActiveTab("requests")}
           />
+        </TabsContent>
+
+        <TabsContent value="questionnaires" className="mt-4">
+          <QuestionnaireBrowser patient={patient} />
         </TabsContent>
       </Tabs>
     </div>
