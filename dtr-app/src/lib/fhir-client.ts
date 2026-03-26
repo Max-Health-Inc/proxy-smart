@@ -1,4 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
+export { fhirBaseUrl }
 import { reportAuthError } from "@/lib/auth-error"
 import { FhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
@@ -54,7 +55,7 @@ const baseFetch = smartAuth.createAuthenticatedFetch()
 
 /** Wraps the SMART authenticated fetch to detect permanent auth failures */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const authFetch: any = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+export const authFetch: any = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
   try {
     return await baseFetch(input, init)
   } catch (err) {

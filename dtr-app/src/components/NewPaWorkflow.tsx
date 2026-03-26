@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from
 import { toast } from "sonner"
 import { ServiceSelector, type SelectedService } from "@/components/ServiceSelector"
 import { QuestionnaireRenderer } from "@/components/QuestionnaireRenderer"
+import { SmartFormsQuestionnaireRenderer } from "@/components/SmartFormsQuestionnaireRenderer"
 import { PaReviewSubmit } from "@/components/PaReviewSubmit"
 import { createQuestionnaireResponse, submitClaim } from "@/lib/fhir-client"
 import { buildPasClaim } from "@/lib/pas-builder"
@@ -113,12 +114,21 @@ export function NewPaWorkflow({ patient, onComplete }: NewPaWorkflowProps) {
           <Button variant="ghost" size="sm" onClick={() => setStep("service")}>
             <ArrowLeft className="size-4" /> Back to service selection
           </Button>
-          <QuestionnaireRenderer
-            questionnaire={questionnaire}
-            patient={patient}
-            service={selectedService!}
-            onComplete={handleDocumentationComplete}
-          />
+          {questionnaire ? (
+            <SmartFormsQuestionnaireRenderer
+              questionnaire={questionnaire}
+              patient={patient}
+              service={selectedService!}
+              onComplete={handleDocumentationComplete}
+            />
+          ) : (
+            <QuestionnaireRenderer
+              questionnaire={null}
+              patient={patient}
+              service={selectedService!}
+              onComplete={handleDocumentationComplete}
+            />
+          )}
         </div>
       )}
 
