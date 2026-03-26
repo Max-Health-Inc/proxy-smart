@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603260210.50141671] - 2026-03-26
+
+- 🔧 Chores & Improvements: Deduplicated app configs, CSS theme, chart colors, and admin tabs into shared-ui
+- 📚 Documentation: Updated CHANGELOG entry for PR #239
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/240
+
+
 ## [0.0.3-alpha.202603252257.1f554a11] - 2026-03-26
 
 - ✨ Features: Register patient-portal in App Store and mono build pipeline (quotentiroler)
