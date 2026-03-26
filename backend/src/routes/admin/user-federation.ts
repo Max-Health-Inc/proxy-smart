@@ -193,6 +193,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     response: {
       200: UserFederationProviderResponse,
       ...CommonErrorResponses,
@@ -235,6 +238,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     body: UpdateUserFederationRequest,
     response: {
       200: SuccessResponse,
@@ -263,6 +269,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses,
@@ -301,6 +310,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     body: UserFederationSyncRequest,
     response: {
       200: UserFederationSyncResultResponse,
@@ -329,6 +341,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses,
@@ -356,6 +371,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses,
@@ -486,6 +504,9 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      id: t.String({ description: 'User federation provider ID' })
+    }),
     response: {
       200: t.Array(UserFederationMapperResponse),
       ...CommonErrorResponses,

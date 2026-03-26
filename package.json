@@ -3,7 +3,7 @@
   "version": "0.0.3-alpha.202603262109.1f1eb8d7",
   "repository": {
     "type": "git",
-    "url": "https://github.com/quotentiroler/proxy-smart.git"
+    "url": "git+https://github.com/quotentiroler/proxy-smart.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -137,5 +137,14 @@
     "dtr-app",
     "consent-app",
     "patient-portal"
-  ]
+  ],
+  "main": "eslint.config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/quotentiroler/proxy-smart/issues"
+  },
+  "homepage": "https://github.com/quotentiroler/proxy-smart#readme"
 }

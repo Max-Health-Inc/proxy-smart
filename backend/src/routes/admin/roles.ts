@@ -112,6 +112,9 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      roleName: t.String({ description: 'Role name' })
+    }),
     response: {
       200: RoleResponse,
       ...CommonErrorResponses
@@ -155,6 +158,9 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       return { error: 'Failed to update role', details: error }
     }
   }, {
+    params: t.Object({
+      roleName: t.String({ description: 'Role name' })
+    }),
     body: UpdateRoleRequest,
     response: {
       200: SuccessResponse,
@@ -192,6 +198,9 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       return { error: 'Failed to delete role', details: error }
     }
   }, {
+    params: t.Object({
+      roleName: t.String({ description: 'Role name' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -227,6 +236,9 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       return handleAdminError(error, set)
     }
   }, {
+    params: t.Object({
+      clientId: t.String({ description: 'Keycloak client ID' })
+    }),
     response: {
       200: t.Array(RoleResponse),
       ...CommonErrorResponses
