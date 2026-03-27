@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270323.2babb9a9] - 2026-03-27
+
+- ✨ Features: replace static 429 stat card with dynamic Top Error card (quotentiroler)
+- 🔧 Chores & Improvements: update dev SMART compliance report (proxy-smart-releaser[bot])
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/262
+
+
 ## [0.0.3-alpha.202603270307.b7318334] - 2026-03-27
 
 - 🔧 Chores & Improvements: use generated API client types instead of manual duplicates (quotentiroler)
