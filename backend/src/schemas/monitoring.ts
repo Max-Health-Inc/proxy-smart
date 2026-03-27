@@ -223,3 +223,60 @@ export const FhirUptimeSummariesResponse = t.Object({
 }, { title: 'FhirUptimeSummariesResponse' })
 
 export type FhirUptimeSummariesResponseType = Static<typeof FhirUptimeSummariesResponse>
+
+// ==================== FHIR Proxy Metrics ====================
+
+export const FhirProxyEventSchema = t.Object({
+  id: t.String({ description: 'Unique event ID' }),
+  timestamp: t.String({ description: 'Event timestamp (ISO 8601)' }),
+  serverName: t.String({ description: 'Target FHIR server name' }),
+  method: t.String({ description: 'HTTP method (GET, POST, etc.)' }),
+  resourcePath: t.String({ description: 'FHIR resource path' }),
+  resourceType: t.String({ description: 'FHIR resource type' }),
+  statusCode: t.Number({ description: 'HTTP response status code' }),
+  responseTimeMs: t.Number({ description: 'Response time in milliseconds' }),
+  clientId: t.Optional(t.String({ description: 'OAuth client ID' })),
+  error: t.Optional(t.String({ description: 'Error description' })),
+}, { title: 'FhirProxyEvent' })
+
+export type FhirProxyEventSchemaType = Static<typeof FhirProxyEventSchema>
+
+export const FhirProxyHourlyStat = t.Object({
+  hour: t.String({ description: 'Hour bucket (ISO 8601)' }),
+  total: t.Number(),
+  success: t.Number(),
+  errors: t.Number(),
+  rateLimited: t.Number(),
+  avgMs: t.Number(),
+}, { title: 'FhirProxyHourlyStat' })
+
+export const FhirProxyAnalyticsSchema = t.Object({
+  totalRequests: t.Number({ description: 'Total proxied requests in last 24h' }),
+  successCount: t.Number({ description: 'Successful requests (2xx/3xx)' }),
+  errorCount: t.Number({ description: 'Error requests (4xx/5xx)' }),
+  rateLimitCount: t.Number({ description: 'Rate-limited requests (429)' }),
+  successRate: t.Number({ description: 'Success rate percentage' }),
+  avgResponseTimeMs: t.Number({ description: 'Average response time in ms' }),
+  requestsByStatus: t.Record(t.String(), t.Number(), { description: 'Requests grouped by status code' }),
+  requestsByServer: t.Record(t.String(), t.Number(), { description: 'Requests grouped by server name' }),
+  requestsByResource: t.Record(t.String(), t.Number(), { description: 'Requests grouped by resource type' }),
+  recentErrors: t.Array(FhirProxyEventSchema, { description: 'Recent error events' }),
+  hourlyStats: t.Array(FhirProxyHourlyStat, { description: 'Hourly request statistics' }),
+}, { title: 'FhirProxyAnalytics' })
+
+export type FhirProxyAnalyticsSchemaType = Static<typeof FhirProxyAnalyticsSchema>
+
+export const FhirProxyEventsResponse = t.Object({
+  events: t.Array(FhirProxyEventSchema, { description: 'Proxy event history' }),
+  total: t.Number({ description: 'Total events returned' }),
+  timestamp: t.String({ description: 'Response timestamp' }),
+}, { title: 'FhirProxyEventsResponse' })
+
+export type FhirProxyEventsResponseType = Static<typeof FhirProxyEventsResponse>
+
+export const FhirProxyAnalyticsResponse = t.Object({
+  analytics: FhirProxyAnalyticsSchema,
+  timestamp: t.String({ description: 'Response timestamp' }),
+}, { title: 'FhirProxyAnalyticsResponse' })
+
+export type FhirProxyAnalyticsResponseType = Static<typeof FhirProxyAnalyticsResponse>
