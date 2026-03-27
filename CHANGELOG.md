@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270307.b7318334] - 2026-03-27
+
+- 🔧 Chores & Improvements: use generated API client types instead of manual duplicates (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/261
+
+
 ## [0.0.3-alpha.202603270233.e884c722] - 2026-03-27
 
 - 🐛 Bug Fixes: auto-logout on monitoring 401 and improvements to E2E test stability
