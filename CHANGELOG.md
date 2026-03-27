@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270436.f1547658] - 2026-03-27
+
+- 🔧 Chores & Improvements: Refactor access request logic to use primitive mode helpers (modeBy, modeKey) for stable dependencies
+  - Remove react useMemo import from useAccessRequests.ts
+  - Guard fetchRequests with modeBy/modeKey instead of mode
+  - Switch searchTasksByPatient/searchTasksByRequester to modeBy/modeKey
+  - Update effect dependencies to [modeBy, modeKey] and remove direct [mode]
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/266
+
+
 ## [0.0.3-alpha.202603270407.6aa704dc] - 2026-03-27
 
 - ✨ Features: expose MCP resources (GET routes) in admin endpoint config UI (quotentiroler)
