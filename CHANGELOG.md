@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270441.5b5ab954] - 2026-03-27
+
+- 🔧 Chores & Improvements: Internal maintenance updates and CI/CD housekeeping
+- ✨ Features: None
+- 🐛 Bug Fixes: Restore useMemo import in consent-app
+- 📚 Documentation: Update CHANGELOG.md for PR #266
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/267
+
+
 ## [0.0.3-alpha.202603270436.f1547658] - 2026-03-27
 
 - 🔧 Chores & Improvements: Refactor access request logic to use primitive mode helpers (modeBy, modeKey) for stable dependencies
