@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270005.c4f44147] - 2026-03-27
+
+- ✨ Features: Add E2E Playwright tests for patient-portal (70 test specs)
+- 🔧 Chores & Improvements: Testing updates and internal maintenance (dev SMART compliance reports)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/257
+
+
 ## [0.0.3-alpha.202603262231.bcef1334] - 2026-03-27
 
 - 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603262231.bcef1334
