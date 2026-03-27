@@ -57,6 +57,7 @@ const app = new Elysia({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
   }))
   .use(openapi({
+    path: '/swagger',
     references: fromTypes(
       process.env.NODE_ENV === 'production'
         ? 'dist/index.d.ts'
@@ -181,8 +182,8 @@ const exportSpec = async () => {
     console.log(`🔄 Fetching OpenAPI spec from port ${port}`)
     
     // Fetch the spec - Bun is fast enough that we don't need extra delays
-    // Note: @elysiajs/openapi uses /openapi/json by default (not /swagger/json)
-    const response = await fetch(`http://localhost:${port}/openapi/json`)
+    // Note: with path: '/swagger', the spec is at /swagger/json
+    const response = await fetch(`http://localhost:${port}/swagger/json`)
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)

@@ -1,0 +1,144 @@
+import { Elysia, t } from 'elysia'
+import { keycloakPlugin } from '@/lib/keycloak-plugin'
+import { extractBearerToken } from '@/lib/admin-utils'
+import { validateToken } from '@/lib/auth'
+import { CommonErrorResponses, ScopeMapperStatusResponse, ScopeMapperFixResponse, SuccessResponse } from '@/schemas'
+import { getSmartMapperStatus, ensureAllSmartMappers } from '@/lib/smart-scope-mappers'
+import { logger } from '@/lib/logger'
+
+/**
+ * SMART Scope Protocol Mapper management endpoints
+ */
+export const scopeMappersRoutes = new Elysia({ prefix: '/scope-mappers', tags: ['admin'] })
+  .use(keycloakPlugin)
+
+  /**
+   * GET /admin/scope-mappers
+   * Get the health status of all SMART protocol mappers
+   */
+  .get('/', async ({ set, headers, getAdmin }) => {
+    const token = extractBearerToken(headers)
+    if (!token) {
+      set.status = 401
+      return { error: 'Authorization header required' }
+    }
+
+    try {
+      await validateToken(token)
+      const admin = await getAdmin(token)
+      const status = await getSmartMapperStatus(admin)
+
+      return {
+        status,
+        timestamp: new Date().toISOString()
+      }
+    } catch (error) {
+      logger.admin.error('Failed to get scope mapper status', { error })
+      set.status = 500
+      return { error: 'Failed to get scope mapper status', details: error }
+    }
+  }, {
+    response: {
+      200: ScopeMapperStatusResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Get SMART Scope Mapper Status',
+      description: 'Returns the health status of all SMART protocol mappers across Keycloak client scopes',
+      tags: ['admin', 'smart-apps'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  /**
+   * POST /admin/scope-mappers/fix
+   * Auto-provision all missing SMART protocol mappers
+   */
+  .post('/fix', async ({ set, headers, getAdmin }) => {
+    const token = extractBearerToken(headers)
+    if (!token) {
+      set.status = 401
+      return { error: 'Authorization header required' }
+    }
+
+    try {
+      await validateToken(token)
+      const admin = await getAdmin(token)
+      const result = await ensureAllSmartMappers(admin)
+
+      logger.admin.info('SMART scope mappers fix completed', result)
+
+      return {
+        message: result.created > 0
+          ? `Created ${result.created} missing mapper(s) across ${result.scanned} scope(s)`
+          : 'All SMART protocol mappers are already configured',
+        scanned: result.scanned,
+        created: result.created,
+        errors: result.errors,
+        timestamp: new Date().toISOString()
+      }
+    } catch (error) {
+      logger.admin.error('Failed to fix scope mappers', { error })
+      set.status = 500
+      return { error: 'Failed to fix scope mappers', details: error }
+    }
+  }, {
+    response: {
+      200: ScopeMapperFixResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Fix Missing SMART Protocol Mappers',
+      description: 'Auto-provision all missing SMART protocol mappers on Keycloak client scopes (idempotent)',
+      tags: ['admin', 'smart-apps'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  /**
+   * DELETE /admin/scope-mappers/:scopeId/:mapperId
+   * Remove a specific protocol mapper from a scope
+   */
+  .delete('/:scopeId/:mapperId', async ({ set, headers, getAdmin, params }) => {
+    const token = extractBearerToken(headers)
+    if (!token) {
+      set.status = 401
+      return { error: 'Authorization header required' }
+    }
+
+    try {
+      await validateToken(token)
+      const admin = await getAdmin(token)
+
+      await admin.clientScopes.delProtocolMapper({
+        id: params.scopeId,
+        mapperId: params.mapperId
+      })
+
+      logger.admin.info('Deleted protocol mapper', { scopeId: params.scopeId, mapperId: params.mapperId })
+
+      return {
+        success: true,
+        message: 'Protocol mapper deleted'
+      }
+    } catch (error) {
+      logger.admin.error('Failed to delete protocol mapper', { error, ...params })
+      set.status = 500
+      return { error: 'Failed to delete protocol mapper', details: error }
+    }
+  }, {
+    params: t.Object({
+      scopeId: t.String({ description: 'Keycloak client scope ID' }),
+      mapperId: t.String({ description: 'Protocol mapper ID to delete' })
+    }),
+    response: {
+      200: SuccessResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Delete Protocol Mapper',
+      description: 'Remove a specific protocol mapper from a Keycloak client scope',
+      tags: ['admin', 'smart-apps'],
+      security: [{ BearerAuth: [] }]
+    }
+  })

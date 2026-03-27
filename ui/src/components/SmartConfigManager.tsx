@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Target, Play, Shield } from 'lucide-react';
+import { Target, Play, Shield, Link } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { ScopeManager } from './ScopeManager';
 import { LaunchContextManager } from './LaunchContextManager';
+import { ProtocolMappersManager } from './ProtocolMappersManager';
 
 export function SmartConfigManager() {
     const { t } = useTranslation();
@@ -31,7 +32,7 @@ export function SmartConfigManager() {
             {/* Tabs in card */}
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+                    <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
                         <TabsTrigger value="scopes" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Target className="w-4 h-4" />
                             <span>{t('Scopes')}</span>
@@ -39,6 +40,10 @@ export function SmartConfigManager() {
                         <TabsTrigger value="launch-context" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Play className="w-4 h-4" />
                             <span>{t('Launch Context')}</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="mappers" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                            <Link className="w-4 h-4" />
+                            <span>{t('Protocol Mappers')}</span>
                         </TabsTrigger>
                     </TabsList>
 
@@ -48,6 +53,10 @@ export function SmartConfigManager() {
 
                     <TabsContent value="launch-context" className="p-6 space-y-6">
                         <LaunchContextManager embedded />
+                    </TabsContent>
+
+                    <TabsContent value="mappers" className="p-6 space-y-6">
+                        <ProtocolMappersManager embedded />
                     </TabsContent>
                 </Tabs>
             </div>
