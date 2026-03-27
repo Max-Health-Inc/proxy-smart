@@ -34,7 +34,7 @@ export async function smartLogin(
   user: keyof typeof testUsers = "patient",
 ): Promise<void> {
   // Navigate to patient portal
-  await page.goto(env.patientPortalURL, { waitUntil: "networkidle" })
+  await page.goto(env.patientPortalURL, { waitUntil: "domcontentloaded" })
 
   // Check if we're already authenticated (e.g. from stored state)
   const signOutButton = page.getByRole("button", { name: "Sign Out" })
