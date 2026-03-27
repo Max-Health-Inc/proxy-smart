@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603262231.bcef1334] - 2026-03-27
+
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603262231.bcef1334
+- ✨ Features: SMART scope protocol mapper auto-provisioning, management UI, and logout fixes (quotentiroler)
+- 📚 Documentation: CHANGELOG update note (from PR #255)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/256
+
+
 ## [0.0.3-alpha.202603262210.ca39219f] - 2026-03-26
 
 - 🐛 Bug Fixes: set postLogoutRedirectUri in all SMART apps (quotentiroler)
