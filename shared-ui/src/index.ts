@@ -9,6 +9,7 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants } from "./components/tabs"
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip"
 export { ErrorBoundary } from "./components/error-boundary"
+export { AppHeader, type AppHeaderProps } from "./components/app-header"
 
 // Utilities
 export { cn } from "./lib/utils"

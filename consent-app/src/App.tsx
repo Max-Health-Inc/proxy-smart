@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import { Dashboard } from "@/components/Dashboard"
-import { Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"
 import { onAuthError } from "@/lib/auth-error"
-import { ShieldCheck, LogOut, LogIn, AlertTriangle } from "lucide-react"
+import { ShieldCheck, LogIn, AlertTriangle } from "lucide-react"
 import "./index.css"
 
 type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error" | "session-expired"
@@ -78,25 +78,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {brand?.logoUrl ? (
-              <img src={brand.logoUrl} alt={brand.name} className="h-6 w-auto" />
-            ) : (
-              <ShieldCheck className="size-5 text-maxhealth" />
-            )}
-            <h1 className="font-semibold">Consent Manager</h1>
-          </div>
-          {state === "authenticated" && (
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="size-4" />
-              Sign Out
-            </Button>
-          )}
-        </div>
-      </header>
+      <AppHeader
+        title="Consent Manager"
+        icon={ShieldCheck}
+        authenticated={state === "authenticated"}
+        onSignOut={handleLogout}
+        maxWidth="max-w-4xl"
+      />
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
