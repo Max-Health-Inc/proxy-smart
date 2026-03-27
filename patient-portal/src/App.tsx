@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import { Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { onAuthError } from "@/lib/auth-error"
-import { Heart, LogOut, LogIn, AlertTriangle, LayoutGrid } from "lucide-react"
+import { Heart, LogIn, AlertTriangle } from "lucide-react"
 import { Dashboard } from "@/components/Dashboard"
 import "./index.css"
 
@@ -86,33 +86,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {brand?.logoUrl ? (
-              <img src={brand.logoUrl} alt={brand.name} className="h-6 w-auto" />
-            ) : (
-              <Heart className="size-5 text-maxhealth" />
-            )}
-            <h1 className="font-semibold">Patient Portal</h1>
-          </div>
-          {state === "authenticated" && (
-            <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" asChild>
-                <a href="/apps">
-                  <LayoutGrid className="size-4" />
-                  App Store
-                </a>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="size-4" />
-                Sign Out
-              </Button>
-            </div>
-          )}
-        </div>
-      </header>
+      <AppHeader
+        title="Patient Portal"
+        icon={Heart}
+        authenticated={state === "authenticated"}
+        onSignOut={handleLogout}
+      />
 
       {/* Content */}
       <main className="max-w-5xl mx-auto px-4 py-6">
