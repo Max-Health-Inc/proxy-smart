@@ -22,9 +22,11 @@ COPY consent-app/package.json ./consent-app/
 COPY consent-app/lib/ ./consent-app/lib/
 COPY dtr-app/package.json ./dtr-app/
 COPY dtr-app/lib/ ./dtr-app/lib/
+COPY patient-portal/package.json ./patient-portal/
+COPY patient-portal/lib/ ./patient-portal/lib/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui","consent-app","dtr-app"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui","consent-app","dtr-app","patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -84,6 +86,13 @@ COPY dtr-app/ ./dtr-app/
 WORKDIR /app/dtr-app
 RUN bun run build
 
+# Patient Portal build stage
+FROM build-deps AS patient-portal-build
+COPY shared-ui/ ./shared-ui/
+COPY patient-portal/ ./patient-portal/
+WORKDIR /app/patient-portal
+RUN bun run build
+
 # Docs build stage (VitePress)
 FROM build-deps AS docs-build
 COPY docs/ ./docs/
@@ -110,6 +119,7 @@ COPY --from=backend-build /app/backend/public ./backend/public
 # Copy built SMART apps into backend public
 COPY --from=consent-app-build /app/consent-app/dist ./backend/public/apps/consent
 COPY --from=dtr-app-build /app/dtr-app/dist ./backend/public/apps/dtr
+COPY --from=patient-portal-build /app/patient-portal/dist ./backend/public/apps/patient-portal
 
 # Verify no localhost URLs leaked into production bundles
 RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \

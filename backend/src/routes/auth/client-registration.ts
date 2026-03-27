@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
+import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import * as crypto from 'crypto'
 import { getClientRegistrationSettings } from '../admin/client-registration-settings'
@@ -313,6 +314,10 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
                       id: createdClient.id, 
                       clientScopeId: matchingScope.id 
                     })
+                  }
+                  // Auto-provision SMART protocol mappers if needed
+                  if (SMART_SCOPE_MAPPERS[scopeName]) {
+                    await ensureScopeMappers(admin, matchingScope.id, scopeName)
                   }
                   logger.admin.debug('Assigned scope to client', { clientId, scopeName })
                 } catch (scopeError) {

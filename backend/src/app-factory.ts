@@ -71,6 +71,7 @@ export function createApp() {
             allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']
         }))
         .use(openapi({
+            path: '/swagger',
             references: fromTypes(
                 process.env.NODE_ENV === 'production' ? 'dist/index.d.ts' : 'src/index.ts',
                 { projectRoot: join(import.meta.dir, '..') }

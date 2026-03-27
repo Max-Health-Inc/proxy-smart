@@ -73,7 +73,7 @@ export default function App() {
 
   const handleLogout = () => {
     smartAuth.logout()
-    setState("unauthenticated")
+    // logout() is async — it will redirect to Keycloak's end_session_endpoint
   }
 
   return (

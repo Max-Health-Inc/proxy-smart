@@ -14,6 +14,7 @@ import {
 import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -403,6 +404,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }
         }
 
+        // Auto-provision SMART protocol mappers on scopes that need them
+        const allScopeNames = [...defaultScopesToAssign, ...optionalScopesToAssign]
+        for (const scopeName of allScopeNames) {
+          if (SMART_SCOPE_MAPPERS[scopeName]) {
+            const scope = allClientScopes.find(s => s.name === scopeName)
+            if (scope?.id) {
+              await ensureScopeMappers(admin, scope.id, scopeName)
+            }
+          }
+        }
+
         logger.admin.debug('Scopes assigned to client', {
           clientId: fullClient.clientId,
           defaultScopes: defaultScopesToAssign,
@@ -702,6 +714,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
                 await admin.clients.addOptionalClientScope({ id: clients[0].id!, clientScopeId: scopeId })
               } catch (error) {
                 logger.admin.warn('Failed to add new optional scope', { clientId: clients[0].clientId, scopeId, error })
+              }
+            }
+          }
+
+          // Auto-provision SMART protocol mappers on updated scopes
+          const updatedScopeNames = [...(body.defaultClientScopes || []), ...(body.optionalClientScopes || [])]
+          for (const scopeName of updatedScopeNames) {
+            if (SMART_SCOPE_MAPPERS[scopeName]) {
+              const scope = allClientScopes.find(s => s.name === scopeName)
+              if (scope?.id) {
+                await ensureScopeMappers(admin, scope.id, scopeName)
               }
             }
           }
