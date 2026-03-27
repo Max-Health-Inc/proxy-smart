@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270100.b4b79f74] - 2026-03-27
+
+- 🐛 Bug Fixes: Rate-limit avoidance for patient-portal via batch FHIR requests to reduce 429s
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603270100.b4b79f74 (alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/258
+
+
 ## [0.0.3-alpha.202603270005.c4f44147] - 2026-03-27
 
 - ✨ Features: Add E2E Playwright tests for patient-portal (70 test specs)
