@@ -43,16 +43,17 @@ export function AppHeader({
           {children}
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" asChild>
-            <a href="/apps">
-              <LayoutGrid className="size-4" />
-              App Store
-            </a>
-          </Button>
-          {authenticated && (
+          {authenticated ? (
             <Button variant="ghost" size="sm" onClick={onSignOut}>
               <LogOut className="size-4" />
               Sign Out
+            </Button>
+          ) : (
+            <Button variant="ghost" size="sm" asChild>
+              <a href="/apps">
+                <LayoutGrid className="size-4" />
+                App Store
+              </a>
             </Button>
           )}
         </div>
