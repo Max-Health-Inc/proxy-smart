@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270356.21873b4b] - 2026-03-27
+
+- ✨ Features: add agent scope context and Device fhirUser support (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/264
+
+
 ## [0.0.3-alpha.202603270335.6642cc28] - 2026-03-27
 
 - 🔧 Chores & Improvements: Consolidate OAuth & Events into a single OAuth tab; fix memory stats
