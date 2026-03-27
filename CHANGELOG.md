@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270508.c9253829] - 2026-03-27
+
+- 🐛 Bug Fixes: Show App Store only when user is signed out
+- 🔧 Chores & Improvements: CI/CD and testing updates (dev SMART compliance report)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/269
+
+
 ## [0.0.3-alpha.202603270447.2f9c80a0] - 2026-03-27
 
 - 🔧 Chores & Improvements: Internal maintenance and refactoring
