@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores/authStore';
 import { oauthMonitoringService } from './oauth-monitoring-service';
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
+import { ResponseError } from '@/lib/api-client/runtime';
 
 export interface OAuthEventSimple {
   id: string;
@@ -261,7 +262,10 @@ export class OAuthWebSocketService {
 
     const token = await getToken();
     if (!token) {
-      throw new Error('No authentication token found. Please log in first.');
+      throw new ResponseError(
+        new Response(null, { status: 401, statusText: 'Unauthorized' }),
+        'No authentication token found. Please log in first.'
+      );
     }
 
     return new Promise((resolve, reject) => {
@@ -290,7 +294,10 @@ export class OAuthWebSocketService {
           this.removeEventHandler('error', errorHandler);
           const errorMsg = message.data?.message || 'Authentication failed';
           console.error('WebSocket authentication failed:', errorMsg);
-          reject(new Error(errorMsg));
+          reject(new ResponseError(
+            new Response(null, { status: 401, statusText: 'Unauthorized' }),
+            errorMsg
+          ));
         }
       };
 

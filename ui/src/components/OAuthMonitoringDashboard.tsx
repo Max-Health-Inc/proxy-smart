@@ -36,7 +36,7 @@ import type { SystemStatusResponse } from '../lib/api-client/models/SystemStatus
 import type { AccessHealthResponse } from '../lib/api-client/models/AccessHealthResponse';
 import type { AccessEvent } from '../lib/api-client/models/AccessEvent';
 import type { FhirUptimeSummary } from '../lib/api-client/models/FhirUptimeSummary';
-import { createServerApi, createAdminApi, createFhirMonitoringApi } from '@/lib/apiClient';
+import { createServerApi, createAdminApi, createFhirMonitoringApi, handleApiError } from '@/lib/apiClient';
 import { EventsPanel } from './DoorManagement/EventsPanel';
 import { ConsentMonitoringDashboard } from './ConsentMonitoringDashboard';
 import { AdminAuditDashboard } from './AdminAuditDashboard';
@@ -315,7 +315,9 @@ export function OAuthMonitoringDashboard() {
         // Mark that initial load is complete
         isInitialLoadRef.current = false;
 
-      } catch {
+      } catch (authErr) {
+        // Delegate to global 401 handler — attempts token refresh, then logout
+        await handleApiError(authErr);
         setError('Connected but not authenticated. Please log in to view OAuth monitoring data.');
       }
 
