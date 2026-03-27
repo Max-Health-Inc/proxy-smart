@@ -20,6 +20,7 @@ import {
   Loader2,
   Info,
   ShieldCheck,
+  Database,
 } from 'lucide-react';
 import { Badge, Button } from '@proxy-smart/shared-ui';
 import { Checkbox } from './ui/checkbox';
@@ -32,12 +33,20 @@ interface McpToolInfo {
   exposed: boolean;
 }
 
+interface McpResourceInfo {
+  name: string;
+  description: string;
+  uri: string;
+  exposed: boolean;
+}
+
 interface McpEndpointStatus {
   enabled: boolean;
   configSource: string;
   endpointPath: string;
   endpointUrl: string;
   tools: McpToolInfo[];
+  resources: McpResourceInfo[];
   disabledTools: string[];
   enabledTools: string[] | null;
   updatedAt: string;
@@ -173,6 +182,8 @@ export function McpEndpointSettings() {
   if (!status) return null;
 
   const exposedCount = status.tools.filter((tool) => !pendingDisabled.has(tool.name)).length;
+  const exposedResourceCount = status.resources?.filter((r) => !pendingDisabled.has(r.name)).length ?? 0;
+  const totalResourceCount = status.resources?.length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -308,6 +319,68 @@ export function McpEndpointSettings() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Resource Selection ─────────────────────────────────────────── */}
+      {status.enabled && totalResourceCount > 0 && (
+        <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-lg">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-primary" />
+                <h4 className="text-lg font-semibold text-foreground">
+                  {t('Exposed Resources')}
+                </h4>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {t('Read-only GET endpoints exposed as MCP resources. {{exposed}} of {{total}} enabled.', {
+                  exposed: exposedResourceCount,
+                  total: totalResourceCount,
+                })}
+              </p>
+            </div>
+            {hasToolChanges && (
+              <Button size="sm" onClick={saveToolConfig} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                {t('Save Changes')}
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {status.resources.map((resource) => {
+              const isDisabled = pendingDisabled.has(resource.name);
+              return (
+                <label
+                  key={resource.name}
+                  className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                    isDisabled
+                      ? 'border-border/30 bg-muted/20 opacity-60'
+                      : 'border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10'
+                  }`}
+                >
+                  <Checkbox
+                    checked={!isDisabled}
+                    onCheckedChange={() => toggleTool(resource.name)}
+                    className="mt-0.5"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium truncate">{resource.name}</span>
+                      {isDisabled ? (
+                        <EyeOff className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{resource.description}</p>
+                    <p className="text-xs font-mono text-muted-foreground/70 line-clamp-1 mt-0.5">{resource.uri}</p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
