@@ -13,6 +13,7 @@ import { oauthWebSocket } from './routes/oauth-websocket'
 import { consentMonitoringRoutes } from './routes/consent-monitoring'
 import { consentWebSocket } from './routes/consent-websocket'
 import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
+import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
 import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
@@ -98,6 +99,7 @@ export function createApp() {
                     { name: 'mcp-endpoint', description: 'Built-in MCP Streamable HTTP server endpoint' },
                     { name: 'consent-monitoring', description: 'Consent decision monitoring and analytics' },
                     { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
+                    { name: 'fhir-proxy-monitoring', description: 'FHIR proxy request metrics and error tracking' },
                     { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
                 ],
                 servers: [
@@ -177,6 +179,7 @@ export function createApp() {
         .use(consentMonitoringRoutes)
         .use(consentWebSocket)
         .use(fhirMonitoringRoutes)
+        .use(fhirProxyMonitoringRoutes)
         .use(adminAuditMonitoringRoutes)
         .use(mcpEndpointRoutes)
         .use(fhirRoutes)

@@ -10,6 +10,7 @@ import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
 import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
+import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
@@ -138,9 +139,26 @@ async function proxyFHIR({ params, request, set }: any) {
     const useMtls = mtlsConfig?.enabled === true && target.startsWith('https://')
 
     // Use appropriate fetch method based on mTLS configuration
+    const fetchStart = performance.now()
     const resp = useMtls
       ? await fetchWithMtls(target, { ...fetchOptions, serverId: serverInfo.identifier })
       : await fetch(target, fetchOptions)
+    const fetchMs = Math.round(performance.now() - fetchStart)
+
+    // Extract resource type from path (e.g. "Patient/123" → "Patient")
+    const resourceType = resourcePath.split('/')[0] || 'unknown'
+
+    // Track proxied request metrics (fire-and-forget)
+    fhirProxyMetricsLogger.logRequest({
+      serverName: params.server_name,
+      method: request.method,
+      resourcePath,
+      resourceType,
+      statusCode: resp.status,
+      responseTimeMs: fetchMs,
+      clientId: tokenPayload?.azp || tokenPayload?.client_id,
+      error: resp.status >= 400 ? `HTTP ${resp.status}` : undefined,
+    })
 
     // copy status & CORS headers
     set.status = resp.status
