@@ -1559,7 +1559,32 @@ export function OAuthMonitoringDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <StatCard icon={BarChart3} label={t('Total Requests')} value={fhirProxyAnalytics?.totalRequests?.toLocaleString() ?? '0'} subtitle={t('Last 24 hours')} color="primary" />
                 <StatCard icon={TrendingUp} label={t('Success Rate')} value={`${fhirProxyAnalytics?.successRate?.toFixed(1) ?? '0.0'}%`} subtitle={t('2xx/3xx responses')} color="green" />
-                <StatCard icon={AlertTriangle} label={t('429 Rate Limited')} value={fhirProxyAnalytics?.rateLimitCount?.toLocaleString() ?? '0'} subtitle={t('Rate-limited requests')} color="orange" />
+                <StatCard
+                  icon={AlertTriangle}
+                  label={t('Top Error')}
+                  value={(() => {
+                    const statuses = fhirProxyAnalytics?.requestsByStatus;
+                    if (!statuses) return t('None');
+                    const errorEntries = Object.entries(statuses)
+                      .filter(([code]) => Number(code) >= 400)
+                      .sort(([, a], [, b]) => b - a);
+                    if (!errorEntries.length) return t('None');
+                    const [code, count] = errorEntries[0];
+                    return `${code} (${count})`;
+                  })()}
+                  subtitle={(() => {
+                    const statuses = fhirProxyAnalytics?.requestsByStatus;
+                    if (!statuses) return t('No errors');
+                    const errorEntries = Object.entries(statuses)
+                      .filter(([code]) => Number(code) >= 400)
+                      .sort(([, a], [, b]) => b - a);
+                    if (!errorEntries.length) return t('No errors');
+                    const code = Number(errorEntries[0][0]);
+                    const labels: Record<number, string> = { 400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found', 408: 'Timeout', 410: 'Gone', 412: 'Precondition Failed', 429: 'Too Many Requests', 500: 'Internal Server Error', 502: 'Bad Gateway', 503: 'Service Unavailable' };
+                    return labels[code] ?? `HTTP ${code}`;
+                  })()}
+                  color="orange"
+                />
                 <StatCard icon={Timer} label={t('Avg Response')} value={`${fhirProxyAnalytics?.avgResponseTimeMs ?? 0}ms`} subtitle={t('Average latency')} color="purple" />
               </div>
 
