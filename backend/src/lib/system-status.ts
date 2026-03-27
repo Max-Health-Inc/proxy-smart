@@ -160,7 +160,7 @@ export async function collectSystemStatus(force = false): Promise<SystemStatus> 
     keycloak,
     memory: {
       used: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-      total: Math.round(memoryUsage.heapTotal / 1024 / 1024)
+      total: Math.round(memoryUsage.rss / 1024 / 1024)
     }
   };
   lastSystemStatusUpdated = now;

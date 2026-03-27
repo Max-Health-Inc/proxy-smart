@@ -774,201 +774,16 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7 bg-muted/50 rounded-t-2xl">
+            <TabsList className="grid w-full grid-cols-6 bg-muted/50 rounded-t-2xl">
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Dashboard')}</TabsTrigger>
               <TabsTrigger value="fhir-proxy" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('FHIR Proxy')}</TabsTrigger>
-              <TabsTrigger value="flows" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Events')}</TabsTrigger>
-              <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
+              <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth')}</TabsTrigger>
               <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
               <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
               <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
-              {/* Key Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-                <StatCard icon={BarChart3} label={t('Total Requests')} value={analytics?.totalRequests ? analytics.totalRequests.toLocaleString() : '0'} subtitle={t('Last 24 hours')} color="primary" />
-                <StatCard icon={TrendingUp} label={t('Success Rate')} value={`${analytics?.successRate ? analytics.successRate.toFixed(1) : '0.0'}%`} subtitle={t('Current success rate')} color="green" />
-                <StatCard icon={Timer} label={t('Avg Response Time')} value={`${analytics?.averageResponseTime ? analytics.averageResponseTime.toFixed(0) : '0'}ms`} subtitle={t('Average response time')} color="orange" />
-                <StatCard icon={Shield} label={t('Active Tokens')} value={analytics?.activeTokens ?? 0} subtitle={t('Currently valid')} color="purple" />
-
-                {hasPredictiveForecast && predictiveInsights && (
-                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                        <TrendingUp className="w-6 h-6 text-sky-600" />
-                      </div>
-                      <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
-                    </div>
-                    <div className="text-3xl font-bold text-sky-900 dark:text-sky-200 mb-1">
-                      {predictiveInsights.nextHour.totalFlows.toLocaleString()}
-                    </div>
-                    <p className="text-sm text-sky-700 dark:text-sky-300 font-medium mb-4">
-                      {t('Projected OAuth flows in the next hour')}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-muted-foreground font-medium">{t('Success rate')}</p>
-                        <p className="text-foreground font-semibold">{predictiveInsights.nextHour.successRate.toFixed(1)}%</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-muted-foreground font-medium">{t('Trend')}</p>
-                        <p className="text-foreground font-semibold">{predictiveTrendLabel}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-start justify-between gap-3 rounded-lg bg-sky-500/10 p-3">
-                      <Badge className={`${predictiveRiskBadgeClass} font-semibold shrink-0`}>{predictiveRiskLabel}</Badge>
-                      <p className="text-xs text-muted-foreground leading-snug text-right">
-                        {predictiveInsights.anomalyReasons[0]}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {weekdayHighlights && (
-                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                        <CalendarDays className="w-6 h-6 text-amber-600" />
-                      </div>
-                      <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
-                    </div>
-                    <div className="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-1">
-                      {weekdayHighlights.busiest.label}
-                    </div>
-                    <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-4">
-                      {t('Projected busiest day for OAuth volume')}
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-muted-foreground font-medium">{t('Highest success')}</p>
-                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.highestSuccess.label}</p>
-                        <p className="text-muted-foreground text-xs">{weekdayHighlights.highestSuccess.projectedSuccessRate.toFixed(1)}%</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-muted-foreground font-medium">{t('Watchlist')}</p>
-                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.attention.label}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {weekdayHighlights.attention.projectedErrorRate.toFixed(1)}%
-                          {typeof weekdayHighlights.attention.deltaFromAverage === 'number' && (
-                            <span className={`ml-1 ${weekdayHighlights.attention.deltaFromAverage > 0 ? 'text-red-500' : 'text-green-600'}`}>
-                              ({weekdayHighlights.attention.deltaFromAverage > 0 ? '+' : ''}{weekdayHighlights.attention.deltaFromAverage.toFixed(1)}%)
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                      <Badge variant="secondary" className="bg-white/40 dark:bg-black/30 text-foreground border border-white/40 dark:border-white/20">
-                        {weekdayHighlights.busiest.sampleDays} {t('days sampled')}
-                      </Badge>
-                      {weekdayLastObservedLabel && (
-                        <span>{t('Last observed')} · {weekdayLastObservedLabel}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <BarChart3 className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Flow Activity (24h)')}</h4>
-                      <p className="text-muted-foreground font-medium">{t('OAuth flows over time')}</p>
-                    </div>
-                  </div>
-                  <div className="h-[300px]">
-                    {/* TODO: hourlyStats not available in current API response */}
-                    {analytics?.hourlyStats && analytics.hourlyStats.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={analytics.hourlyStats}
-                          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                          <XAxis
-                            dataKey="hour"
-                            tickFormatter={(hour) => format(new Date(hour), 'HH:mm')}
-                            minTickGap={20}
-                            className="text-muted-foreground"
-                          />
-                          <YAxis allowDecimals={false} className="text-muted-foreground" />
-                          <Tooltip
-                            labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
-                            formatter={(value) => [value ?? 0, t('flows')]}
-                            contentStyle={{
-                              backgroundColor: 'var(--card)',
-                              border: '1px solid var(--border)',
-                              borderRadius: '8px',
-                              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                            }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="total"
-                            stroke="var(--primary)"
-                            strokeWidth={2}
-                            dot={{ r: 3, fill: 'var(--primary)' }}
-                            activeDot={{ r: 5, fill: 'var(--primary)' }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                          <p className="font-medium">{t('No flow activity data available')}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                  <div className="flex items-center space-x-3 mb-6">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                      <Shield className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Top Applications')}</h4>
-                      <p className="text-muted-foreground font-medium">{t('Most active OAuth clients')}</p>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    {analytics?.topClients && analytics.topClients.length > 0 ? (
-                      analytics.topClients.map((client, index) => (
-                        <div key={client.clientId} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-sm shadow-sm">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-bold text-foreground">{client.clientName}</p>
-                              <p className="text-sm text-muted-foreground font-medium">{client.count} {t('flows')}</p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <Badge className={client.successRate > 95 ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20" : "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"}>
-                              {client.successRate.toFixed(1)}%
-                            </Badge>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                        <p>{t('No client activity data available')}</p>
-                        <p className="text-sm mt-2">{t('OAuth client statistics will appear here once data is collected')}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
 
               {/* System Health */}
               <div className={`p-4 rounded-2xl border shadow-lg flex items-center justify-between ${
@@ -1113,7 +928,7 @@ export function OAuthMonitoringDashboard() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground font-medium">{t('Heap Total')}</span>
+                      <span className="text-muted-foreground font-medium">{t('RSS Total')}</span>
                       <span className="font-bold text-foreground">
                         {systemStatus?.memory ? `${systemStatus.memory.total} MB` : 'N/A'}
                       </span>
@@ -1281,141 +1096,192 @@ export function OAuthMonitoringDashboard() {
               )}
             </TabsContent>
 
-            <TabsContent value="flows" className="space-y-6">
-              {/* Filters */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                    <Search className="w-5 h-5 text-primary" />
-                  </div>
-                  <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter OAuth Flows')}</h4>
-                </div>
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
-                    <Select value={filterType} onValueChange={setFilterType}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('All Types')}</SelectItem>
-                        <SelectItem value="authorization">{t('Authorization')}</SelectItem>
-                        <SelectItem value="token">{t('Token')}</SelectItem>
-                        <SelectItem value="refresh">{t('Refresh')}</SelectItem>
-                        <SelectItem value="error">{t('Error')}</SelectItem>
-                        <SelectItem value="revoke">{t('Revoke')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+            <TabsContent value="analytics" className="space-y-6">
+              {/* Key Metrics */}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+                <StatCard icon={BarChart3} label={t('Total Requests')} value={analytics?.totalRequests ? analytics.totalRequests.toLocaleString() : '0'} subtitle={t('Last 24 hours')} color="primary" />
+                <StatCard icon={TrendingUp} label={t('Success Rate')} value={`${analytics?.successRate ? analytics.successRate.toFixed(1) : '0.0'}%`} subtitle={t('Current success rate')} color="green" />
+                <StatCard icon={Timer} label={t('Avg Response Time')} value={`${analytics?.averageResponseTime ? analytics.averageResponseTime.toFixed(0) : '0'}ms`} subtitle={t('Average response time')} color="orange" />
+                <StatCard icon={Shield} label={t('Active Tokens')} value={analytics?.activeTokens ?? 0} subtitle={t('Currently valid')} color="purple" />
 
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
-                        <SelectItem value="success">{t('Success')}</SelectItem>
-                        <SelectItem value="error">{t('Error')}</SelectItem>
-                        <SelectItem value="warning">{t('Warning')}</SelectItem>
-                        <SelectItem value="pending">{t('Pending')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-muted-foreground" />
-                    <Input
-                      type="text"
-                      placeholder={t('Search by client or user...')}
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="min-w-[200px]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Events List - Simplified for brevity */}
-              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                    <Activity className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Recent OAuth Events')}</h4>
-                    <p className="text-muted-foreground font-medium">
-                      {t('Showing {{count}} of {{total}} events', { 
-                        count: filteredEvents.length, 
-                        total: events.length 
-                      })}
-                    </p>
-                  </div>
-                </div>
-                {filteredEvents.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <Table className="text-sm">
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead>{t('Time')}</TableHead>
-                          <TableHead>{t('Type')}</TableHead>
-                          <TableHead>{t('Client')}</TableHead>
-                          <TableHead>{t('Status')}</TableHead>
-                          <TableHead>{t('Details')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredEvents.slice(0, 50).map((event, index) => (
-                          <TableRow key={event.id || index}>
-                            <TableCell className="text-muted-foreground">
-                              {format(new Date(event.timestamp), 'MMM dd, HH:mm:ss')}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="font-mono text-xs">
-                                {event.type || t('Unknown')}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-medium text-foreground">
-                              {event.clientName || event.clientId || t('Unknown')}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  event.status === 'success'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
-                                    : event.status === 'error'
-                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
-                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
-                                }
-                              >
-                                {event.status || t('Unknown')}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground max-w-xs truncate">
-                              {event.errorMessage || '-'}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    {filteredEvents.length > 50 && (
-                      <div className="text-center py-4 text-muted-foreground">
-                        <p className="text-sm">{t('Showing first 50 events of {{total}}', { total: filteredEvents.length })}</p>
+                {hasPredictiveForecast && predictiveInsights && (
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                        <TrendingUp className="w-6 h-6 text-sky-600" />
                       </div>
-                    )}
+                      <h3 className="text-sm font-semibold text-sky-900 dark:text-sky-300 tracking-wide">{t('Predictive Forecast')}</h3>
+                    </div>
+                    <div className="text-3xl font-bold text-sky-900 dark:text-sky-200 mb-1">
+                      {predictiveInsights.nextHour.totalFlows.toLocaleString()}
+                    </div>
+                    <p className="text-sm text-sky-700 dark:text-sky-300 font-medium mb-4">
+                      {t('Projected OAuth flows in the next hour')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground font-medium">{t('Success rate')}</p>
+                        <p className="text-foreground font-semibold">{predictiveInsights.nextHour.successRate.toFixed(1)}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground font-medium">{t('Trend')}</p>
+                        <p className="text-foreground font-semibold">{predictiveTrendLabel}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-start justify-between gap-3 rounded-lg bg-sky-500/10 p-3">
+                      <Badge className={`${predictiveRiskBadgeClass} font-semibold shrink-0`}>{predictiveRiskLabel}</Badge>
+                      <p className="text-xs text-muted-foreground leading-snug text-right">
+                        {predictiveInsights.anomalyReasons[0]}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="font-medium">{t('No events match your filters')}</p>
-                    <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
+                )}
+
+                {weekdayHighlights && (
+                  <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg overflow-hidden">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                        <CalendarDays className="w-6 h-6 text-amber-600" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-amber-900 dark:text-amber-200 tracking-wide">{t('Weekday Patterns')}</h3>
+                    </div>
+                    <div className="text-3xl font-bold text-amber-900 dark:text-amber-100 mb-1">
+                      {weekdayHighlights.busiest.label}
+                    </div>
+                    <p className="text-sm text-amber-800 dark:text-amber-200 font-medium mb-4">
+                      {t('Projected busiest day for OAuth volume')}
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-muted-foreground font-medium">{t('Highest success')}</p>
+                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.highestSuccess.label}</p>
+                        <p className="text-muted-foreground text-xs">{weekdayHighlights.highestSuccess.projectedSuccessRate.toFixed(1)}%</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-muted-foreground font-medium">{t('Watchlist')}</p>
+                        <p className="text-foreground font-semibold mt-1">{weekdayHighlights.attention.label}</p>
+                        <p className="text-muted-foreground text-xs">
+                          {weekdayHighlights.attention.projectedErrorRate.toFixed(1)}%
+                          {typeof weekdayHighlights.attention.deltaFromAverage === 'number' && (
+                            <span className={`ml-1 ${weekdayHighlights.attention.deltaFromAverage > 0 ? 'text-red-500' : 'text-green-600'}`}>
+                              ({weekdayHighlights.attention.deltaFromAverage > 0 ? '+' : ''}{weekdayHighlights.attention.deltaFromAverage.toFixed(1)}%)
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                      <Badge variant="secondary" className="bg-white/40 dark:bg-black/30 text-foreground border border-white/40 dark:border-white/20">
+                        {weekdayHighlights.busiest.sampleDays} {t('days sampled')}
+                      </Badge>
+                      {weekdayLastObservedLabel && (
+                        <span>{t('Last observed')} · {weekdayLastObservedLabel}</span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-            </TabsContent>
 
-            <TabsContent value="analytics" className="space-y-6">
+              {/* Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <BarChart3 className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Flow Activity (24h)')}</h4>
+                      <p className="text-muted-foreground font-medium">{t('OAuth flows over time')}</p>
+                    </div>
+                  </div>
+                  <div className="h-[300px]">
+                    {analytics?.hourlyStats && analytics.hourlyStats.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={analytics.hourlyStats}
+                          margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                        >
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis
+                            dataKey="hour"
+                            tickFormatter={(hour) => format(new Date(hour), 'HH:mm')}
+                            minTickGap={20}
+                            className="text-muted-foreground"
+                          />
+                          <YAxis allowDecimals={false} className="text-muted-foreground" />
+                          <Tooltip
+                            labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
+                            formatter={(value) => [value ?? 0, t('flows')]}
+                            contentStyle={{
+                              backgroundColor: 'var(--card)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '8px',
+                              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                            }}
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="total"
+                            stroke="var(--primary)"
+                            strokeWidth={2}
+                            dot={{ r: 3, fill: 'var(--primary)' }}
+                            activeDot={{ r: 5, fill: 'var(--primary)' }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-muted-foreground">
+                        <div className="text-center">
+                          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                          <p className="font-medium">{t('No flow activity data available')}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                      <Shield className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Top Applications')}</h4>
+                      <p className="text-muted-foreground font-medium">{t('Most active OAuth clients')}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {analytics?.topClients && analytics.topClients.length > 0 ? (
+                      analytics.topClients.map((client, index) => (
+                        <div key={client.clientId} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold text-sm shadow-sm">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-bold text-foreground">{client.clientName}</p>
+                              <p className="text-sm text-muted-foreground font-medium">{client.count} {t('flows')}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <Badge className={client.successRate > 95 ? "bg-green-500/10 text-green-800 dark:text-green-300 border-green-500/20" : "bg-yellow-500/10 text-yellow-800 dark:text-yellow-300 border-yellow-500/20"}>
+                              {client.successRate.toFixed(1)}%
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-muted-foreground py-8">
+                        <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                        <p>{t('No client activity data available')}</p>
+                        <p className="text-sm mt-2">{t('OAuth client statistics will appear here once data is collected')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Detailed Analytics */}
               <div className={`grid grid-cols-1 ${predictiveInsights ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-6`}>
                 {/* Success Rate Chart */}
                 <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
@@ -1424,12 +1290,11 @@ export function OAuthMonitoringDashboard() {
                       <TrendingUp className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Success Rate')}</h4>
+                      <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Success vs Errors')}</h4>
                       <p className="text-muted-foreground font-medium">{t('OAuth flow success over time')}</p>
                     </div>
                   </div>
                   <div className="h-[300px]">
-                    {/* TODO: hourlyStats not available in current API response */}
                     {analytics?.hourlyStats && analytics.hourlyStats.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={analytics.hourlyStats}>
@@ -1545,6 +1410,137 @@ export function OAuthMonitoringDashboard() {
                         </div>
                       )}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* OAuth Events */}
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                    <Search className="w-5 h-5 text-primary" />
+                  </div>
+                  <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter OAuth Flows')}</h4>
+                </div>
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
+                    <Select value={filterType} onValueChange={setFilterType}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Types')}</SelectItem>
+                        <SelectItem value="authorization">{t('Authorization')}</SelectItem>
+                        <SelectItem value="token">{t('Token')}</SelectItem>
+                        <SelectItem value="refresh">{t('Refresh')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="revoke">{t('Revoke')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
+                    <Select value={filterStatus} onValueChange={setFilterStatus}>
+                      <SelectTrigger className="w-[160px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('All Statuses')}</SelectItem>
+                        <SelectItem value="success">{t('Success')}</SelectItem>
+                        <SelectItem value="error">{t('Error')}</SelectItem>
+                        <SelectItem value="warning">{t('Warning')}</SelectItem>
+                        <SelectItem value="pending">{t('Pending')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder={t('Search by client or user...')}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="min-w-[200px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+                    <Activity className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Recent OAuth Events')}</h4>
+                    <p className="text-muted-foreground font-medium">
+                      {t('Showing {{count}} of {{total}} events', { 
+                        count: filteredEvents.length, 
+                        total: events.length 
+                      })}
+                    </p>
+                  </div>
+                </div>
+                {filteredEvents.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table className="text-sm">
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead>{t('Time')}</TableHead>
+                          <TableHead>{t('Type')}</TableHead>
+                          <TableHead>{t('Client')}</TableHead>
+                          <TableHead>{t('Status')}</TableHead>
+                          <TableHead>{t('Details')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredEvents.slice(0, 50).map((event, index) => (
+                          <TableRow key={event.id || index}>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(event.timestamp), 'MMM dd, HH:mm:ss')}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {event.type || t('Unknown')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="font-medium text-foreground">
+                              {event.clientName || event.clientId || t('Unknown')}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  event.status === 'success'
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                                    : event.status === 'error'
+                                    ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300'
+                                }
+                              >
+                                {event.status || t('Unknown')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground max-w-xs truncate">
+                              {event.errorMessage || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                    {filteredEvents.length > 50 && (
+                      <div className="text-center py-4 text-muted-foreground">
+                        <p className="text-sm">{t('Showing first 50 events of {{total}}', { total: filteredEvents.length })}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="font-medium">{t('No events match your filters')}</p>
+                    <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
                   </div>
                 )}
               </div>
