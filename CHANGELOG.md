@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270407.6aa704dc] - 2026-03-27
+
+- ✨ Features: expose MCP resources (GET routes) in admin endpoint config UI (quotentiroler)
+- 🔧 Chores & Improvements: update beta/alpha version metadata and SMART compliance reports (ci-related)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/265
+
+
 ## [0.0.3-alpha.202603270356.21873b4b] - 2026-03-27
 
 - ✨ Features: add agent scope context and Device fhirUser support (quotentiroler)
