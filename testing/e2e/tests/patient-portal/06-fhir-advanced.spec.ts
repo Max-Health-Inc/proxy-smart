@@ -2,19 +2,25 @@ import { test, expect } from "@playwright/test"
 import { env, testUsers } from "../../lib/env"
 import { smartLogin } from "../../lib/auth"
 
+const TOKEN_KEY = "patient_portal_token"
+
+/** Extract access_token from sessionStorage after smartLogin */
+async function getAccessToken(page: import("@playwright/test").Page): Promise<string> {
+  const token = await page.evaluate((key) => {
+    const raw = sessionStorage.getItem(key)
+    if (!raw) return null
+    return JSON.parse(raw).access_token ?? null
+  }, TOKEN_KEY)
+  if (!token) throw new Error("No access_token found in sessionStorage")
+  return token
+}
+
 test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
   test.describe("International Patient Summary ($summary)", () => {
     test("should be able to fetch IPS $summary for the patient", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
-
-      expect(accessToken).toBeTruthy()
+      const accessToken = await getAccessToken(page)
 
       // Call $summary operation
       const response = await page.request.get(
@@ -47,12 +53,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should support _count parameter to limit results", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Observation?patient=Patient/${testUsers.patient.patientId}&category=vital-signs&_count=2`,
@@ -77,12 +78,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should support _sort parameter for ordering results", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Observation?patient=Patient/${testUsers.patient.patientId}&category=vital-signs&_sort=-date`,
@@ -102,12 +98,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should support clinical-status search parameter for conditions", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Condition?patient=Patient/${testUsers.patient.patientId}&clinical-status=active`,
@@ -140,12 +131,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
       test(`should be able to search ${resourceType} for patient`, async ({ page }) => {
         await smartLogin(page, "patient")
 
-        const accessToken = await page.evaluate(() => {
-          const keys = Object.keys(sessionStorage)
-          const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-          if (!tokenKey) return null
-          return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-        })
+        const accessToken = await getAccessToken(page)
 
         const response = await page.request.get(
           `${env.baseURL}/${env.fhirProxyPath}/${resourceType}?patient=Patient/${testUsers.patient.patientId}`,
@@ -169,12 +155,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should be able to read Patient resource by ID", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Patient/${testUsers.patient.patientId}`,
@@ -198,12 +179,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should return JSON when Accept: application/fhir+json", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Patient/${testUsers.patient.patientId}`,
@@ -223,12 +199,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should handle Accept: application/fhir+xml (or reject cleanly)", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Patient/${testUsers.patient.patientId}`,
@@ -249,12 +220,7 @@ test.describe("Patient Portal — IPS & Advanced FHIR Operations", () => {
     test("should include pagination links in Bundle response", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       const response = await page.request.get(
         `${env.baseURL}/${env.fhirProxyPath}/Observation?patient=Patient/${testUsers.patient.patientId}&_count=1`,

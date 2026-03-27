@@ -277,10 +277,9 @@ test.describe("Patient Portal — Advanced & Edge Cases", () => {
       // Check that tokens aren't rendered in the DOM
       const bodyText = await page.locator("body").textContent()
       const tokenData = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
+        const raw = sessionStorage.getItem("patient_portal_token")
+        if (!raw) return null
+        return JSON.parse(raw).access_token ?? null
       })
 
       if (tokenData) {

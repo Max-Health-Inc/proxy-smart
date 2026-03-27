@@ -53,20 +53,25 @@ export function Dashboard() {
         const pt = await getPatient(patientId)
         setPatient(pt)
 
-        // Load all clinical data in parallel
-        const [cond, allergy, meds, imm, vit, lab] = await Promise.allSettled([
+        // Load clinical data in small batches to avoid 429 rate limits
+        const [cond, allergy] = await Promise.allSettled([
           searchConditions(patientId),
           searchAllergies(patientId),
+        ])
+        if (cond.status === "fulfilled") setConditions(cond.value)
+        if (allergy.status === "fulfilled") setAllergies(allergy.value)
+
+        const [meds, imm] = await Promise.allSettled([
           searchMedicationStatements(patientId),
           searchImmunizations(patientId),
+        ])
+        if (meds.status === "fulfilled") setMedications(meds.value)
+        if (imm.status === "fulfilled") setImmunizations(imm.value)
+
+        const [vit, lab] = await Promise.allSettled([
           searchVitals(patientId),
           searchLabs(patientId),
         ])
-
-        if (cond.status === "fulfilled") setConditions(cond.value)
-        if (allergy.status === "fulfilled") setAllergies(allergy.value)
-        if (meds.status === "fulfilled") setMedications(meds.value)
-        if (imm.status === "fulfilled") setImmunizations(imm.value)
         if (vit.status === "fulfilled") setVitals(vit.value)
         if (lab.status === "fulfilled") setLabs(lab.value)
       } catch (err) {

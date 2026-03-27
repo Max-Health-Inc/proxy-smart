@@ -2,6 +2,19 @@ import { test, expect } from "@playwright/test"
 import { env, testUsers } from "../../lib/env"
 import { smartLogin, keycloakLogin } from "../../lib/auth"
 
+const TOKEN_KEY = "patient_portal_token"
+
+/** Extract access_token from sessionStorage after smartLogin */
+async function getAccessToken(page: import("@playwright/test").Page): Promise<string> {
+  const token = await page.evaluate((key) => {
+    const raw = sessionStorage.getItem(key)
+    if (!raw) return null
+    return JSON.parse(raw).access_token ?? null
+  }, TOKEN_KEY)
+  if (!token) throw new Error("No access_token found in sessionStorage")
+  return token
+}
+
 test.describe("Patient Portal — Access Control & Multi-Role", () => {
   test.describe("Patient User Access", () => {
     test("patient should see their own data only", async ({ page }) => {
@@ -43,15 +56,7 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
     test("patient should NOT be able to access other patients via URL manipulation", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      // Extract the access token
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
-
-      expect(accessToken).toBeTruthy()
+      const accessToken = await getAccessToken(page)
 
       // Try to access a different patient's data directly via the FHIR proxy
       const response = await page.request.get(
@@ -72,14 +77,7 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
     test("patient should NOT be able to perform write operations", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
-
-      expect(accessToken).toBeTruthy()
+      const accessToken = await getAccessToken(page)
 
       // Try to create a resource (should be blocked — patient has *.read only)
       const response = await page.request.post(
@@ -108,8 +106,21 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
   test.describe("Practitioner User Access", () => {
     test("practitioner should be able to login to patient portal", async ({ page }) => {
       await page.goto(env.patientPortalURL, { waitUntil: "networkidle" })
-      await page.getByRole("button", { name: "Sign In with SMART" }).click()
-      await keycloakLogin(page, "practitioner")
+
+      // Click sign in
+      const signIn = page.getByRole("button", { name: "Sign In with SMART" })
+      await expect(signIn).toBeVisible({ timeout: 10_000 })
+      await signIn.click()
+
+      // Keycloak login — may show form or SSO may auto-complete
+      const needsLogin = await page
+        .locator("#username")
+        .isVisible({ timeout: 10_000 })
+        .catch(() => false)
+
+      if (needsLogin) {
+        await keycloakLogin(page, "practitioner")
+      }
 
       // Practitioner should either:
       // - Reach authenticated state with doctor's patient context (smart_patient)
@@ -118,14 +129,29 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
         .getByRole("button", { name: "Sign Out" })
         .isVisible({ timeout: 30_000 })
         .catch(() => false)
+      const noContext = await page
+        .getByText("No patient context", { exact: false })
+        .isVisible({ timeout: 5_000 })
+        .catch(() => false)
 
-      expect(isAuthenticated).toBe(true)
+      expect(isAuthenticated || noContext).toBe(true)
     })
 
     test("practitioner should see patient context data (if smart_patient is set)", async ({ page }) => {
       await page.goto(env.patientPortalURL, { waitUntil: "networkidle" })
-      await page.getByRole("button", { name: "Sign In with SMART" }).click()
-      await keycloakLogin(page, "practitioner")
+
+      const signIn = page.getByRole("button", { name: "Sign In with SMART" })
+      await expect(signIn).toBeVisible({ timeout: 10_000 })
+      await signIn.click()
+
+      const needsLogin = await page
+        .locator("#username")
+        .isVisible({ timeout: 10_000 })
+        .catch(() => false)
+
+      if (needsLogin) {
+        await keycloakLogin(page, "practitioner")
+      }
 
       await expect(
         page.getByRole("button", { name: "Sign Out" }),
@@ -150,12 +176,7 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
     test("should only allow read operations matching granted scopes", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       // Try to read AllergyIntolerance (should work — patient/*.read)
       const allergyResp = await page.request.get(
@@ -186,12 +207,7 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
     test("should enforce patient compartment (no cross-patient reads)", async ({ page }) => {
       await smartLogin(page, "patient")
 
-      const accessToken = await page.evaluate(() => {
-        const keys = Object.keys(sessionStorage)
-        const tokenKey = keys.find((k) => k.includes("patient_portal_"))
-        if (!tokenKey) return null
-        return JSON.parse(sessionStorage.getItem(tokenKey)!).access_token
-      })
+      const accessToken = await getAccessToken(page)
 
       // Search for ALL patients (no patient filter) — should be blocked or scoped
       const response = await page.request.get(

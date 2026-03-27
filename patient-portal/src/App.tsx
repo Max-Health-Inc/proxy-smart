@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { onAuthError } from "@/lib/auth-error"
-import { Heart, LogOut, LogIn, AlertTriangle } from "lucide-react"
+import { Heart, LogOut, LogIn, AlertTriangle, LayoutGrid } from "lucide-react"
 import { Dashboard } from "@/components/Dashboard"
 import "./index.css"
 
@@ -98,10 +98,18 @@ export default function App() {
             <h1 className="font-semibold">Patient Portal</h1>
           </div>
           {state === "authenticated" && (
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="size-4" />
-              Sign Out
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/apps">
+                  <LayoutGrid className="size-4" />
+                  App Store
+                </a>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
+                <LogOut className="size-4" />
+                Sign Out
+              </Button>
+            </div>
           )}
         </div>
       </header>
