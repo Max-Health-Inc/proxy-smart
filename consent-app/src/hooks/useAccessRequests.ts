@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import {
   searchTasksByPatient,
@@ -25,16 +25,20 @@ export function useAccessRequests(mode: SearchMode | null) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Stabilize dependencies — extract primitives so useCallback doesn't depend on object identity
+  const modeBy = mode?.by ?? null
+  const modeKey = mode ? (mode.by === "patient" ? mode.patientId : mode.practitionerRef) : null
+
   const fetchRequests = useCallback(async () => {
-    if (!mode) return
+    if (!modeBy || !modeKey) return
 
     setLoading(true)
     setError(null)
     try {
       const results =
-        mode.by === "patient"
-          ? await searchTasksByPatient(mode.patientId)
-          : await searchTasksByRequester(mode.practitionerRef)
+        modeBy === "patient"
+          ? await searchTasksByPatient(modeKey)
+          : await searchTasksByRequester(modeKey)
       setRequests(results)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to load access requests"
@@ -43,7 +47,7 @@ export function useAccessRequests(mode: SearchMode | null) {
     } finally {
       setLoading(false)
     }
-  }, [mode])
+  }, [modeBy, modeKey])
 
   useEffect(() => {
     fetchRequests()

@@ -18,6 +18,7 @@ export class OAuthWebSocketService {
   private eventHandlers: Record<string, ((data: unknown) => void)[]> = {};
   private baseUrl: string;
   private isConnecting = false;
+  private connectPromise: Promise<void> | null = null;
   private clientId: string | null = null;
   private lastConnectionAttempt = 0;
   private connectionThrottleMs = 1000; // Minimum 1 second between connection attempts
@@ -122,35 +123,49 @@ export class OAuthWebSocketService {
   }
 
   async connectWithMode(mode: 'websocket' | 'sse' | 'auto' = 'auto'): Promise<void> {
-    if (this.isConnecting || (this.ws && this.ws.readyState === WebSocket.OPEN) || this.useSSE) {
+    // If already connected in the right mode, nothing to do
+    if (!this.isConnecting) {
+      if ((this.ws && this.ws.readyState === WebSocket.OPEN && mode !== 'sse') || (this.useSSE && mode !== 'websocket')) {
+        return;
+      }
+    }
+
+    // If another connection is in progress, wait for it instead of returning early
+    if (this.isConnecting && this.connectPromise) {
+      await this.connectPromise;
       return;
     }
 
     this.isConnecting = true;
     
-    try {
-      if (mode === 'sse') {
-        // Force SSE mode
-        this.connectSSE();
-        this.useSSE = true;
-      } else if (mode === 'websocket') {
-        // Force WebSocket mode (will throw if fails)
-        await this.connectWebSocket();
-        this.useSSE = false;
-      } else {
-        // Auto mode - try WebSocket first, fallback to SSE
-        try {
-          await this.connectWebSocket();
-          this.useSSE = false;
-        } catch {
-          console.warn('WebSocket connection failed, falling back to SSE');
+    this.connectPromise = (async () => {
+      try {
+        if (mode === 'sse') {
+          // Force SSE mode
           this.connectSSE();
           this.useSSE = true;
+        } else if (mode === 'websocket') {
+          // Force WebSocket mode (will throw if fails)
+          await this.connectWebSocket();
+          this.useSSE = false;
+        } else {
+          // Auto mode - try WebSocket first, fallback to SSE
+          try {
+            await this.connectWebSocket();
+            this.useSSE = false;
+          } catch {
+            console.warn('WebSocket connection failed, falling back to SSE');
+            this.connectSSE();
+            this.useSSE = true;
+          }
         }
+      } finally {
+        this.isConnecting = false;
+        this.connectPromise = null;
       }
-    } finally {
-      this.isConnecting = false;
-    }
+    })();
+
+    await this.connectPromise;
   }
 
   async authenticate(): Promise<void> {
@@ -435,6 +450,7 @@ export class OAuthWebSocketService {
     
     this.authenticated = false;
     this.isConnecting = false;
+    this.connectPromise = null;
     this.clientId = null;
   }
 

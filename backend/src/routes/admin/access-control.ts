@@ -588,9 +588,9 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
 
   // ==================== Events (optional) ====================
   .get('/events', async ({ getAccessControl, query, set }) => {
+    const provider = getAccessControl()
+    if (!provider.getEvents) { set.status = 501; return NOT_SUPPORTED }
     try {
-      const provider = getAccessControl()
-      if (!provider.getEvents) { set.status = 501; return NOT_SUPPORTED }
       return await provider.getEvents({ limit: query.limit, offset: query.offset })
     } catch (error) {
       set.status = 500
