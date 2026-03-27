@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270335.6642cc28] - 2026-03-27
+
+- 🔧 Chores & Improvements: Consolidate OAuth & Events into a single OAuth tab; fix memory stats
+- 🔧 Chores & Improvements: Update beta/dev SMART compliance reports (internal testing automation)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/263
+
+
 ## [0.0.3-alpha.202603270323.2babb9a9] - 2026-03-27
 
 - ✨ Features: replace static 429 stat card with dynamic Top Error card (quotentiroler)
