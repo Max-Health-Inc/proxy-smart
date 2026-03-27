@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270447.2f9c80a0] - 2026-03-27
+
+- 🔧 Chores & Improvements: Internal maintenance and refactoring
+  - Refactor(shared-ui): extract AppHeader component from app headers
+  - CI/CD: Update version to 0.0.3-alpha.202603270447.2f9c80a0 (alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/268
+
+
 ## [0.0.3-alpha.202603270441.5b5ab954] - 2026-03-27
 
 - 🔧 Chores & Improvements: Internal maintenance updates and CI/CD housekeeping
