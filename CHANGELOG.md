@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603262210.ca39219f] - 2026-03-26
+
+- 🐛 Bug Fixes: set postLogoutRedirectUri in all SMART apps (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/255
+
+
 ## [0.0.3-alpha.202603262146.90e44e07] - 2026-03-26
 
 - 🔧 Chores & Improvements: Internal updates and maintenance
