@@ -1,1 +1,21 @@
-Error response from daemon: No such container: keycloak
+Updating the configuration and installing your custom providers, if any. Please wait.
+2026-03-27 04:14:58,555 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8168ms
+Running the server in development mode. DO NOT use this configuration in production.
+2026-03-27 04:15:02,250 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
+2026-03-27 04:15:03,103 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-03-27 04:15:04,278 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-03-27 04:15:12,618 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-03-27 04:15:12,974 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_413406, Site name: null
+2026-03-27 04:15:13,209 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-03-27 04:15:13,376 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-03-27 04:15:14,722 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
+2026-03-27 04:15:17,567 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
+2026-03-27 04:15:17,567 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: IGNORE_EXISTING
+2026-03-27 04:15:17,567 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
+2026-03-27 04:15:17,568 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
+2026-03-27 04:15:17,568 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
+2026-03-27 04:15:17,630 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
+2026-03-27 04:15:17,801 INFO  [io.quarkus] (main) Keycloak 26.5.6 on JVM (powered by Quarkus 3.27.2) started in 19.093s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
+2026-03-27 04:15:17,802 INFO  [io.quarkus] (main) Profile dev activated. 
+2026-03-27 04:15:17,802 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
+2026-03-27 04:17:05,400 WARN  [org.keycloak.events] (executor-thread-2) type="INTROSPECT_TOKEN_ERROR", realmId="138372a3-1387-4157-9b17-0e2ff85fb226", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="invalid_token", reason="Access token JWT check failed", client_auth_method="client-secret"
