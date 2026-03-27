@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270233.e884c722] - 2026-03-27
+
+- 🐛 Bug Fixes: auto-logout on monitoring 401 and improvements to E2E test stability
+- 🔧 Chores & Improvements: CI/CD and versioning updates for alpha pre-release 0.0.3-alpha.202603270233.e884c722
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/260
+
+
 ## [0.0.3-alpha.202603270112.2b029cbe] - 2026-03-27
 
 - ✨ Features: FHIR proxy request monitoring with 429/error tracking (quotentiroler)
