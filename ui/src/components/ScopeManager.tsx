@@ -298,15 +298,15 @@ const SCOPE_TEMPLATES = [
     role: 'agent',
     color: 'bg-purple-100 text-purple-800 border-purple-200',
     scopes: [
-      'agent/Patient.read',
-      'agent/Observation.read',
-      'agent/DiagnosticReport.read', 
-      'agent/Condition.read',
-      'agent/MedicationRequest.read',
-      'agent/AllergyIntolerance.read',
-      'agent/CarePlan.create',
-      'agent/RiskAssessment.create',
-      'agent/ClinicalImpression.create',
+      'agent/Patient.rs',
+      'agent/Observation.rs',
+      'agent/DiagnosticReport.rs',
+      'agent/Condition.rs',
+      'agent/MedicationRequest.rs',
+      'agent/AllergyIntolerance.rs',
+      'agent/CarePlan.c',
+      'agent/RiskAssessment.c',
+      'agent/ClinicalImpression.c',
       'openid',
       'fhirUser'
     ]
@@ -318,12 +318,12 @@ const SCOPE_TEMPLATES = [
     role: 'agent',
     color: 'bg-red-100 text-red-800 border-red-200',
     scopes: [
-      'agent/Patient.read',
-      'agent/Encounter.create',
-      'agent/Observation.create',
-      'agent/AllergyIntolerance.read',
-      'agent/MedicationStatement.read',
-      'agent/EmergencyContact.read',
+      'agent/Patient.rs',
+      'agent/Encounter.c',
+      'agent/Observation.c',
+      'agent/AllergyIntolerance.rs',
+      'agent/MedicationStatement.rs',
+      'agent/RelatedPerson.rs',
       'openid',
       'fhirUser'
     ]

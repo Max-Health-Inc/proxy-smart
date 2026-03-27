@@ -59,11 +59,11 @@ export interface AccessControlResult {
  */
 function normalizeFhirUser(fhirUser: string): string {
   // Already relative
-  if (fhirUser.startsWith('Patient/') || fhirUser.startsWith('Practitioner/') || fhirUser.startsWith('Person/') || fhirUser.startsWith('RelatedPerson/')) {
+  if (fhirUser.startsWith('Patient/') || fhirUser.startsWith('Practitioner/') || fhirUser.startsWith('Person/') || fhirUser.startsWith('RelatedPerson/') || fhirUser.startsWith('Device/')) {
     return fhirUser
   }
   // Full URL — extract the resource type and ID from the path
-  const match = fhirUser.match(/(Patient|Practitioner|Person|RelatedPerson)\/([a-zA-Z0-9\-.]+)/)
+  const match = fhirUser.match(/(Patient|Practitioner|Person|RelatedPerson|Device)\/([a-zA-Z0-9\-.]+)/)
   if (match) {
     return `${match[1]}/${match[2]}`
   }
@@ -96,7 +96,7 @@ function checkSmartScopes(
 
   return tokenScopes.some((scope) => {
     // Match SMART scope pattern: context/resource.permissions
-    const match = scope.match(/^(patient|user|system)\/([\w*]+)\.([\w*]+)$/)
+    const match = scope.match(/^(patient|user|system|agent)\/([\w*]+)\.([\w*]+)$/)
     if (!match) return false
     const [, , scopeResource, scopePermission] = match
 
@@ -153,7 +153,7 @@ export function enforceScopeAccess(ctx: AccessControlContext): AccessControlResu
         status: 403,
         body: {
           error: 'insufficient_scope',
-          message: `Token does not grant ${ctx.method} access to ${resourceType}. Required scope: patient/${resourceType}.read or user/${resourceType}.read (or equivalent).`,
+          message: `Token does not grant ${ctx.method} access to ${resourceType}. Required scope: patient/${resourceType}.rs, user/${resourceType}.rs, system/${resourceType}.rs, or agent/${resourceType}.rs (or equivalent).`,
         },
       }
     }

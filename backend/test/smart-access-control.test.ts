@@ -190,6 +190,47 @@ describe('SMART Scope Enforcement', () => {
       expect(result.allowed).toBe(true)
     })
 
+    // ── agent scope context ──
+
+    it('should allow GET with agent/Observation.rs scope', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'agent/Observation.rs' }, resourcePath: 'Observation', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should allow POST with agent/Encounter.c scope', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'agent/Encounter.c' }, resourcePath: 'Encounter', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should deny GET when agent scope only has create permission', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'agent/RiskAssessment.c' }, resourcePath: 'RiskAssessment', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+    })
+
+    it('should deny POST when agent scope only has read+search permission', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'agent/Patient.rs' }, resourcePath: 'Patient', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+    })
+
+    it('should deny access to resources not in agent scope', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'agent/Observation.rs agent/RiskAssessment.c' }, resourcePath: 'MedicationRequest', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+    })
+
+    it('should allow agent scope with v1 read format', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'agent/Patient.read' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
     // ── Edge cases ──
 
     it('should skip scope check for metadata endpoint', () => {
