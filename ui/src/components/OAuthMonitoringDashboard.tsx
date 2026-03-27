@@ -27,7 +27,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { oauthWebSocketService, type OAuthAnalytics, type OAuthEventSimple, type WeekdayInsight } from '../service/oauth-websocket-service';
+import { oauthWebSocketService } from '../service/oauth-websocket-service';
+import type { OAuthAnalyticsResponse, OAuthEvent, OAuthWeekdayInsight } from '../lib/types/api';
 import { oauthMonitoringService } from '../service/oauth-monitoring-service';
 import { getItem } from '@/lib/storage';
 import { config } from '@/config';
@@ -79,8 +80,8 @@ interface FhirProxyAnalytics {
 
 export function OAuthMonitoringDashboard() {
   const { t } = useTranslation();
-  const [events, setEvents] = useState<OAuthEventSimple[]>([]);
-  const [analytics, setAnalytics] = useState<OAuthAnalytics | null>(null);
+  const [events, setEvents] = useState<OAuthEvent[]>([]);
+  const [analytics, setAnalytics] = useState<OAuthAnalyticsResponse | null>(null);
   const [systemStatus, setSystemStatus] = useState<SystemStatusResponse | null>(null);
   const [doorHealth, setDoorHealth] = useState<AccessHealthResponse | null>(null);
   const [doorEvents, setDoorEvents] = useState<AccessEvent[]>([]);
@@ -152,9 +153,9 @@ export function OAuthMonitoringDashboard() {
       }
       return acc;
     }, {
-      busiest: undefined as WeekdayInsight | undefined,
-      highestSuccess: undefined as WeekdayInsight | undefined,
-      attention: undefined as WeekdayInsight | undefined,
+      busiest: undefined as OAuthWeekdayInsight | undefined,
+      highestSuccess: undefined as OAuthWeekdayInsight | undefined,
+      attention: undefined as OAuthWeekdayInsight | undefined,
       latestObserved: undefined as { ts: number; iso: string } | undefined
     });
 
@@ -249,39 +250,9 @@ export function OAuthMonitoringDashboard() {
             const initialEventsResponse = await oauthMonitoringService.getEvents({ limit: 100 });
             const initialAnalyticsResponse = await oauthMonitoringService.getAnalytics();
             
-            // Convert API response types to WebSocket service types
-            const convertedEvents: OAuthEventSimple[] = (initialEventsResponse.events || []).map(event => ({
-              id: event.id || '',
-              timestamp: event.timestamp || new Date().toISOString(),
-              type: (event.type as OAuthEventSimple['type']) || 'authorization',
-              status: (event.status as OAuthEventSimple['status']) || 'success',
-              clientId: event.clientId || '',
-              clientName: event.clientName,
-              scopes: event.scopes || [],
-              grantType: event.grantType || '',
-              responseTime: event.responseTime || 0,
-              errorMessage: event.errorMessage
-            }));
-            
-            const convertedAnalytics: OAuthAnalytics = {
-              totalRequests: initialAnalyticsResponse.totalRequests || 0,
-              successfulRequests: initialAnalyticsResponse.successfulRequests || 0,
-              failedRequests: initialAnalyticsResponse.failedRequests || 0,
-              successRate: initialAnalyticsResponse.successRate || 0,
-              averageResponseTime: initialAnalyticsResponse.averageResponseTime || 0,
-              activeTokens: initialAnalyticsResponse.activeTokens || 0,
-              topClients: initialAnalyticsResponse.topClients || [],
-              flowsByType: (initialAnalyticsResponse.flowsByType as Record<string, number>) || {},
-              errorsByType: (initialAnalyticsResponse.errorsByType as Record<string, number>) || {},
-              hourlyStats: initialAnalyticsResponse.hourlyStats || [],
-              timestamp: initialAnalyticsResponse.timestamp || new Date().toISOString(),
-              predictiveInsights: (initialAnalyticsResponse as OAuthAnalytics).predictiveInsights,
-              weekdayInsights: (initialAnalyticsResponse as OAuthAnalytics).weekdayInsights
-            };
-            
             if (isInitialLoadRef.current || isRealTimeActiveRef.current) {
-              setEvents(convertedEvents);
-              setAnalytics(convertedAnalytics);
+              setEvents(initialEventsResponse.events || []);
+              setAnalytics(initialAnalyticsResponse);
             }
           } catch (apiError) {
             console.warn('Failed to fetch initial data via API for SSE mode:', apiError);
@@ -335,12 +306,12 @@ export function OAuthMonitoringDashboard() {
 
     if (isRealTimeActive) {
       // Subscribe to real-time events via WebSocket
-      eventsUnsubscribe = oauthWebSocketService.onEventsUpdate((event: OAuthEventSimple) => {
+      eventsUnsubscribe = oauthWebSocketService.onEventsUpdate((event: OAuthEvent) => {
         setEvents(prev => [event, ...prev.slice(0, 999)]); // Keep last 1000 events
       });
 
       // Subscribe to analytics updates via WebSocket
-      analyticsUnsubscribe = oauthWebSocketService.onAnalyticsUpdate((newAnalytics: OAuthAnalytics) => {
+      analyticsUnsubscribe = oauthWebSocketService.onAnalyticsUpdate((newAnalytics: OAuthAnalyticsResponse) => {
         setAnalytics(newAnalytics);
       });
     } else {

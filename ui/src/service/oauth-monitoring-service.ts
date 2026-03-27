@@ -3,38 +3,18 @@ import { getStoredToken, createOauthMonitoringApi } from '@/lib/apiClient';
 import type { 
   OAuthEvent,
   OAuthEventsListResponse,
-  OAuthAnalyticsResponse
+  OAuthAnalyticsResponse,
+  MonitoringHealthResponse
 } from '../lib/types/api';
-import type { OAuthAnalytics } from './oauth-websocket-service';
 
-export interface SystemHealth {
-  oauthServer: {
-    status: string;
-    uptime: number;
-    responseTime: number;
-  };
-  tokenStore: {
-    status: string;
-    activeTokens: number;
-    storageUsed: number;
-  };
-  network: {
-    status: string;
-    throughput: string;
-    errorRate: number;
-  };
-  alerts: Array<{
-    type: string;
-    message: string;
-  }>;
-  timestamp: string;
-}
+// Re-export for backward compatibility
+export type SystemHealth = MonitoringHealthResponse;
 
 class OAuthMonitoringService {
   private eventsEventSource: EventSource | null = null;
   private analyticsEventSource: EventSource | null = null;
   private eventListeners = new Set<(event: OAuthEvent) => void>();
-  private analyticsListeners = new Set<(analytics: OAuthAnalytics) => void>();
+  private analyticsListeners = new Set<(analytics: OAuthAnalyticsResponse) => void>();
   private baseUrl: string;
 
   constructor() {
@@ -64,7 +44,7 @@ class OAuthMonitoringService {
   /**
    * Subscribe to real-time analytics updates
    */
-  subscribeToAnalytics(callback: (analytics: OAuthAnalytics) => void): () => void {
+  subscribeToAnalytics(callback: (analytics: OAuthAnalyticsResponse) => void): () => void {
     this.analyticsListeners.add(callback);
     
     if (!this.analyticsEventSource) {
@@ -115,7 +95,7 @@ class OAuthMonitoringService {
   /**
    * Get current OAuth analytics
    */
-  async getAnalytics(): Promise<OAuthAnalytics> {
+  async getAnalytics(): Promise<OAuthAnalyticsResponse> {
     const token = await getStoredToken();
     if (!token) {
       throw new Error('No authentication token available');
@@ -124,23 +104,7 @@ class OAuthMonitoringService {
     const api = createOauthMonitoringApi(token);
     
     try {
-      const response: OAuthAnalyticsResponse = await api.getMonitoringOauthAnalytics({});
-      // Convert API response to internal format
-      return {
-        totalRequests: response.totalRequests,
-        successfulRequests: response.successfulRequests,
-        failedRequests: response.failedRequests,
-        successRate: response.successRate,
-        averageResponseTime: response.averageResponseTime,
-        activeTokens: response.activeTokens,
-        topClients: response.topClients,
-        flowsByType: response.flowsByType as Record<string, number>,
-        errorsByType: response.errorsByType as Record<string, number>,
-        hourlyStats: response.hourlyStats || [],
-        timestamp: response.timestamp || new Date().toISOString(),
-        predictiveInsights: (response as OAuthAnalytics).predictiveInsights,
-        weekdayInsights: (response as OAuthAnalytics).weekdayInsights
-      };
+      return await api.getMonitoringOauthAnalytics({});
     } catch (error) {
       console.error('Failed to fetch OAuth analytics:', error);
       throw error;
@@ -150,7 +114,7 @@ class OAuthMonitoringService {
   /**
    * Get system health metrics
    */
-  async getSystemHealth(): Promise<SystemHealth> {
+  async getSystemHealth(): Promise<MonitoringHealthResponse> {
     const token = await getStoredToken();
     if (!token) {
       throw new Error('No authentication token available');
@@ -159,9 +123,7 @@ class OAuthMonitoringService {
     const api = createOauthMonitoringApi(token);
     
     try {
-      const response = await api.getMonitoringOauthHealth({});
-      // The API returns the health data directly
-      return response as unknown as SystemHealth;
+      return await api.getMonitoringOauthHealth({});
     } catch (error) {
       console.error('Failed to fetch system health:', error);
       throw error;
@@ -273,7 +235,7 @@ class OAuthMonitoringService {
           // Notify all listeners
           this.analyticsListeners.forEach(callback => {
             try {
-              callback(data as OAuthAnalytics);
+              callback(data as OAuthAnalyticsResponse);
             } catch (error) {
               console.error('Error in OAuth analytics listener:', error);
             }

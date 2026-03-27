@@ -1,58 +1,16 @@
 // OAuth WebSocket Service - Simplified version for real-time monitoring with SSE fallback
-import type { OAuthEvent, OAuthAnalyticsResponse } from '@/lib/types/api';
+import type { OAuthEvent, OAuthAnalyticsResponse, OAuthPredictiveInsights, OAuthWeekdayInsight } from '@/lib/types/api';
 import { useAuthStore } from '../stores/authStore';
 import { oauthMonitoringService } from './oauth-monitoring-service';
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
 import { ResponseError } from '@/lib/api-client/runtime';
 
-export interface OAuthEventSimple {
-  id: string;
-  timestamp: string;
-  type: 'authorization' | 'token' | 'refresh' | 'error' | 'revoke' | 'introspect';
-  status: 'success' | 'error' | 'pending' | 'warning';
-  clientId: string;
-  clientName?: string;
-  scopes: string[];
-  grantType: string;
-  responseTime: number;
-  errorMessage?: string;
-}
-
-export interface PredictiveInsights {
-  generatedAt: string;
-  trendDirection: 'increasing' | 'decreasing' | 'stable';
-  trendConfidence: number;
-  nextHour: {
-    totalFlows: number;
-    successRate: number;
-    errorRate: number;
-  };
-  anomalyRisk: 'low' | 'medium' | 'high';
-  anomalyReasons: string[];
-  notes?: string;
-}
-
-export interface WeekdayInsight {
-  weekday: number;
-  label: string;
-  sampleDays: number;
-  averageTotal: number;
-  averageSuccessRate: number;
-  averageErrorRate: number;
-  projectedTotal: number;
-  projectedSuccessRate: number;
-  projectedErrorRate: number;
-  latestTotal?: number;
-  deltaFromAverage?: number;
-  lastObserved?: string;
-}
-
-// Use the generated API client type for analytics and merge predictive insights
-export type OAuthAnalytics = OAuthAnalyticsResponse & {
-  predictiveInsights?: PredictiveInsights;
-  weekdayInsights?: WeekdayInsight[];
-};
+// Re-export generated types under legacy names for backward compatibility
+export type OAuthEventSimple = OAuthEvent;
+export type PredictiveInsights = OAuthPredictiveInsights;
+export type WeekdayInsight = OAuthWeekdayInsight;
+export type OAuthAnalytics = OAuthAnalyticsResponse;
 
 export class OAuthWebSocketService {
   private ws: WebSocket | null = null;
@@ -149,45 +107,13 @@ export class OAuthWebSocketService {
   private connectSSE(): void {
     // Subscribe to SSE events and forward them through our interface
     this.sseEventsUnsub = oauthMonitoringService.subscribeToEvents((event: OAuthEvent) => {
-      // Convert SSE event to our WebSocket event format
-      const oauthEvent: OAuthEventSimple = {
-        id: event.id || '',
-        timestamp: event.timestamp || new Date().toISOString(),
-        type: (event.type as OAuthEventSimple['type']) || 'authorization',
-        status: (event.status as OAuthEventSimple['status']) || 'success',
-        clientId: event.clientId || '',
-        clientName: event.clientName,
-        scopes: event.scopes || [],
-        grantType: event.grantType || '',
-        responseTime: event.responseTime || 0,
-        errorMessage: event.errorMessage
-      };
-      
-      // Trigger event handlers
-      this.eventsUpdateHandlers.forEach(handler => handler(oauthEvent));
-      this.triggerEventHandlers('events', oauthEvent);
+      this.eventsUpdateHandlers.forEach(handler => handler(event));
+      this.triggerEventHandlers('events', event);
     });
 
     this.sseAnalyticsUnsub = oauthMonitoringService.subscribeToAnalytics((analytics) => {
-      // Forward analytics through our interface  
-      const convertedAnalytics: OAuthAnalytics = {
-        totalRequests: analytics.totalRequests || 0,
-        successfulRequests: analytics.successfulRequests || 0,
-        failedRequests: analytics.failedRequests || 0,
-        successRate: analytics.successRate || 0,
-        averageResponseTime: analytics.averageResponseTime || 0,
-        activeTokens: analytics.activeTokens || 0,
-        topClients: analytics.topClients || [],
-        flowsByType: (analytics.flowsByType as Record<string, number>) || {},
-        errorsByType: (analytics.errorsByType as Record<string, number>) || {},
-        hourlyStats: analytics.hourlyStats || [],
-        timestamp: analytics.timestamp || new Date().toISOString(),
-        predictiveInsights: analytics.predictiveInsights,
-        weekdayInsights: analytics.weekdayInsights
-      };
-      
-      this.analyticsUpdateHandlers.forEach(handler => handler(convertedAnalytics));
-      this.triggerEventHandlers('analytics', convertedAnalytics);
+      this.analyticsUpdateHandlers.forEach(handler => handler(analytics));
+      this.triggerEventHandlers('analytics', analytics);
     });
 
     // Mark as authenticated for SSE
