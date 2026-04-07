@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202603270523.8a72cdae] - 2026-03-27
+
+- ✨ Features: add Proxy Smart logo icon to /apps page nav
+- 🔧 Chores & Improvements: update beta/alpha version references for pre-release 0.0.3-alpha.202603270523.8a72cdae
+- 📚 Documentation: update CHANGELOG.md for PR #269
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/270
+
+
 ## [0.0.3-alpha.202603270508.c9253829] - 2026-03-27
 
 - 🐛 Bug Fixes: Show App Store only when user is signed out
