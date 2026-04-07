@@ -14,6 +14,9 @@ RUN apt-get update -qq && \
 # Copy root package files first
 COPY package.json bun.lock ./
 
+# Copy root lib (contains shared tarballs like smart-app-launch-generated.tgz)
+COPY lib/ ./lib/
+
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/

@@ -14,6 +14,7 @@ RUN apt-get update -qq && \
 
 # ── Dependency install layer (cached unless package.json/bun.lock/tgz change) ──
 COPY package.json bun.lock ./
+COPY lib/ ./lib/
 COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY ui/package.json ./ui/
