@@ -13,7 +13,7 @@ import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
 import type { BrandConfigType, BrandCategoryType } from '@/schemas'
-import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js'
+import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
 
 // Module-level cache
 let consentOverrides: Partial<ConsentConfig> | null = null

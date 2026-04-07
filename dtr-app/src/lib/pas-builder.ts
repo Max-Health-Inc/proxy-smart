@@ -1,6 +1,6 @@
 import type { Patient } from "fhir/r4"
 import type { PASClaim, ExtensionRequestedService } from "hl7.fhir.us.davinci-pas-generated"
-import type { X12278RequestedServiceTypeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278RequestedServiceType.js"
+import type { X12278RequestedServiceTypeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278RequestedServiceType"
 import type { SelectedService } from "@/components/ServiceSelector"
 
 interface BuildClaimParams {
