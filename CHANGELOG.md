@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-beta.202604070709.d55c0d66] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+- ⚠️ Breaking Changes: None
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/278
+
+
 ## [0.0.3-alpha.202604070601.47816146] - 2026-04-07
 
 - ✨ Features: integrate remaining babelfhir-ts IPS/PAS types across both apps (quotentiroler)
