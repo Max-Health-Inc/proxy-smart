@@ -6,13 +6,20 @@ import type {
   ConditionUvIps,
   AllergyIntoleranceUvIps,
   MedicationStatementIPS,
+  MedicationRequestIPS,
   ImmunizationUvIps,
   DiagnosticReportUvIps,
   ObservationResultsLaboratoryPathologyUvIps,
+  ObservationResultsRadiologyUvIps,
   ObservationTobaccoUseUvIps,
   ObservationAlcoholUseUvIps,
+  ObservationPregnancyStatusUvIps,
+  ObservationPregnancyEddUvIps,
+  ObservationPregnancyOutcomeUvIps,
   ProcedureUvIps,
   FlagAlertUvIps,
+  DeviceUseStatementUvIps,
+  ImagingStudyUvIps,
   BundleUvIps,
 } from "hl7.fhir.uv.ips-generated"
 import type {
@@ -25,13 +32,20 @@ export type {
   ConditionUvIps as Condition,
   AllergyIntoleranceUvIps as AllergyIntolerance,
   MedicationStatementIPS as MedicationStatement,
+  MedicationRequestIPS as MedicationRequest,
   ImmunizationUvIps as Immunization,
   DiagnosticReportUvIps as DiagnosticReport,
   ObservationResultsLaboratoryPathologyUvIps as LabResult,
+  ObservationResultsRadiologyUvIps as RadiologyResult,
   ObservationTobaccoUseUvIps as TobaccoUseObservation,
   ObservationAlcoholUseUvIps as AlcoholUseObservation,
+  ObservationPregnancyStatusUvIps as PregnancyStatus,
+  ObservationPregnancyEddUvIps as PregnancyEdd,
+  ObservationPregnancyOutcomeUvIps as PregnancyOutcome,
   ProcedureUvIps as Procedure,
   FlagAlertUvIps as FlagAlert,
+  DeviceUseStatementUvIps as DeviceUseStatement,
+  ImagingStudyUvIps as ImagingStudy,
   BundleUvIps as IpsBundle,
 }
 export type { Observation, DocumentReference }
@@ -191,6 +205,75 @@ export async function searchFlags(patientId: string): Promise<FlagAlertUvIps[]> 
     patient: `Patient/${patientId}`,
     status: "active",
     _count: 20,
+  })
+}
+
+// ── Pregnancy (IPS-profiled) ─────────────────────────────────────────────────
+
+export async function searchPregnancyStatus(patientId: string): Promise<ObservationPregnancyStatusUvIps[]> {
+  return client.read().observation().searchAll({
+    patient: `Patient/${patientId}`,
+    code: "82810-3",
+    _count: 10,
+    _sort: "-date",
+  }) as Promise<ObservationPregnancyStatusUvIps[]>
+}
+
+export async function searchPregnancyEdd(patientId: string): Promise<ObservationPregnancyEddUvIps[]> {
+  return client.read().observation().searchAll({
+    patient: `Patient/${patientId}`,
+    code: "11778-8,11779-6,11780-4",
+    _count: 10,
+    _sort: "-date",
+  }) as Promise<ObservationPregnancyEddUvIps[]>
+}
+
+export async function searchPregnancyOutcome(patientId: string): Promise<ObservationPregnancyOutcomeUvIps[]> {
+  return client.read().observation().searchAll({
+    patient: `Patient/${patientId}`,
+    code: "11636-8,11637-6,11638-4,11639-2,11640-0,11612-9,11613-7,33065-X",
+    _count: 10,
+    _sort: "-date",
+  }) as Promise<ObservationPregnancyOutcomeUvIps[]>
+}
+
+// ── Medication Requests (IPS-profiled) ───────────────────────────────────────
+
+export async function searchMedicationRequests(patientId: string): Promise<MedicationRequestIPS[]> {
+  return client.read().medicationRequest().searchAll({
+    patient: `Patient/${patientId}`,
+    status: "active",
+    _count: 50,
+    _sort: "-authoredon",
+  }) as Promise<MedicationRequestIPS[]>
+}
+
+// ── Device Use Statements (IPS-profiled) ─────────────────────────────────────
+
+export async function searchDeviceUseStatements(patientId: string): Promise<DeviceUseStatementUvIps[]> {
+  return client.read().deviceUseStatement().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+  }) as Promise<DeviceUseStatementUvIps[]>
+}
+
+// ── Imaging Studies (IPS-profiled) ───────────────────────────────────────────
+
+export async function searchImagingStudies(patientId: string): Promise<ImagingStudyUvIps[]> {
+  return client.read().imagingStudyUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+    _sort: "-started",
+  })
+}
+
+// ── Radiology Results (IPS-profiled) ─────────────────────────────────────────
+
+export async function searchRadiologyResults(patientId: string): Promise<ObservationResultsRadiologyUvIps[]> {
+  return client.read().observationResultsRadiologyUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+    _sort: "-date",
   })
 }
 
