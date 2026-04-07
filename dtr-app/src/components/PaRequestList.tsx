@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardAction, Badge, Button, Spinner } from "@proxy-smart/shared-ui"
 import { searchClaims, searchClaimResponses, type PASClaim, type PASClaimResponse } from "@/lib/fhir-client"
+import type { ReviewAction } from "hl7.fhir.us.davinci-pas-generated"
 import { format } from "date-fns"
 import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye } from "lucide-react"
 
@@ -144,11 +145,58 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
                 )}
 
                 {expanded && item.response && (
-                  <div className="mt-3 p-3 bg-muted/50 rounded-md">
-                    <p className="text-xs font-medium mb-1">Payer Response</p>
-                    <pre className="text-xs overflow-auto max-h-48">
-                      {JSON.stringify(item.response, null, 2)}
-                    </pre>
+                  <div className="mt-3 space-y-3">
+                    {/* Item-level adjudication details */}
+                    {item.response.item?.map((ri, idx) => {
+                      const reviewAction = ri.adjudication?.[0]?.extension?.find(
+                        (e): e is ReviewAction => e.url === "http://hl7.org/fhir/us/davinci-pas/StructureDefinition/extension-reviewAction"
+                      )
+                      const reviewCode = reviewAction?.extension?.find(e => e.url === "http://hl7.org/fhir/us/davinci-pas/StructureDefinition/extension-reviewActionCode")
+                      return (
+                        <div key={idx} className="p-3 bg-muted/50 rounded-md">
+                          <p className="text-xs font-medium mb-1">Item {ri.itemSequence}</p>
+                          {reviewCode?.valueCodeableConcept && (
+                            <p className="text-xs text-muted-foreground">
+                              Review Action: {reviewCode.valueCodeableConcept.coding?.[0]?.display ?? reviewCode.valueCodeableConcept.coding?.[0]?.code}
+                            </p>
+                          )}
+                          {ri.extension?.filter(e => e.url === "http://hl7.org/fhir/us/davinci-pas/StructureDefinition/extension-itemPreAuthPeriod").map((ext, i) => (
+                            <p key={i} className="text-xs text-muted-foreground">
+                              Auth Period: {ext.valuePeriod?.start && format(new Date(ext.valuePeriod.start), "MMM d, yyyy")}
+                              {ext.valuePeriod?.end && ` — ${format(new Date(ext.valuePeriod.end), "MMM d, yyyy")}`}
+                            </p>
+                          ))}
+                          {ri.extension?.filter(e => e.url === "http://hl7.org/fhir/us/davinci-pas/StructureDefinition/extension-authorizationNumber").map((ext, i) => (
+                            <p key={i} className="text-xs text-muted-foreground font-mono">
+                              Auth #: {ext.valueString}
+                            </p>
+                          ))}
+                        </div>
+                      )
+                    })}
+                    {/* Errors */}
+                    {item.response.error?.map((err, idx) => (
+                      <div key={idx} className="p-3 bg-destructive/10 rounded-md">
+                        <p className="text-xs font-medium text-destructive">
+                          Error: {err.code?.coding?.[0]?.display ?? err.code?.coding?.[0]?.code ?? "Unknown"}
+                        </p>
+                      </div>
+                    ))}
+                    {/* Communication requests */}
+                    {item.response.communicationRequest && item.response.communicationRequest.length > 0 && (
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md">
+                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                          Payer requests additional information ({item.response.communicationRequest.length} item{item.response.communicationRequest.length !== 1 ? "s" : ""})
+                        </p>
+                      </div>
+                    )}
+                    {/* Raw response fallback */}
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Raw FHIR Response</summary>
+                      <pre className="mt-1 overflow-auto max-h-48 p-2 bg-muted/50 rounded text-xs">
+                        {JSON.stringify(item.response, null, 2)}
+                      </pre>
+                    </details>
                   </div>
                 )}
 

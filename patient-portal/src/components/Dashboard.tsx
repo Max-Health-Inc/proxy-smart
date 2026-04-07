@@ -9,6 +9,10 @@ import {
   searchImmunizations,
   searchVitals,
   searchLabs,
+  searchTobaccoUse,
+  searchAlcoholUse,
+  searchProcedures,
+  searchFlags,
   type Patient,
   type Condition,
   type AllergyIntolerance,
@@ -16,7 +20,13 @@ import {
   type Immunization,
   type Observation,
   type LabResult,
+  type TobaccoUseObservation,
+  type AlcoholUseObservation,
+  type Procedure,
+  type FlagAlert,
 } from "@/lib/fhir-client"
+import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps.js"
+import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps.js"
 import { PatientBanner } from "@/components/PatientBanner"
 import {
   Heart,
@@ -26,6 +36,10 @@ import {
   Activity,
   FlaskConical,
   AlertCircle,
+  Cigarette,
+  Wine,
+  Scissors,
+  Flag,
 } from "lucide-react"
 import { format } from "date-fns"
 
@@ -39,6 +53,10 @@ export function Dashboard() {
   const [immunizations, setImmunizations] = useState<Immunization[]>([])
   const [vitals, setVitals] = useState<Observation[]>([])
   const [labs, setLabs] = useState<LabResult[]>([])
+  const [tobaccoUse, setTobaccoUse] = useState<TobaccoUseObservation[]>([])
+  const [alcoholUse, setAlcoholUse] = useState<AlcoholUseObservation[]>([])
+  const [procedures, setProcedures] = useState<Procedure[]>([])
+  const [flags, setFlags] = useState<FlagAlert[]>([])
 
   useEffect(() => {
     async function loadData() {
@@ -74,6 +92,17 @@ export function Dashboard() {
         ])
         if (vit.status === "fulfilled") setVitals(vit.value)
         if (lab.status === "fulfilled") setLabs(lab.value)
+
+        const [tobacco, alcohol, proc, flag] = await Promise.allSettled([
+          searchTobaccoUse(patientId),
+          searchAlcoholUse(patientId),
+          searchProcedures(patientId),
+          searchFlags(patientId),
+        ])
+        if (tobacco.status === "fulfilled") setTobaccoUse(tobacco.value)
+        if (alcohol.status === "fulfilled") setAlcoholUse(alcohol.value)
+        if (proc.status === "fulfilled") setProcedures(proc.value)
+        if (flag.status === "fulfilled") setFlags(flag.value)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
       } finally {
@@ -210,18 +239,27 @@ export function Dashboard() {
               <p className="text-sm text-muted-foreground">No immunization records</p>
             ) : (
               <ul className="space-y-2">
-                {immunizations.map((imm, i) => (
-                  <li key={imm.id || i} className="text-sm">
-                    <span className="font-medium">
-                      {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || "Unknown vaccine"}
-                    </span>
-                    {imm.occurrenceDateTime && (
-                      <span className="text-muted-foreground ml-2">
-                        {format(new Date(imm.occurrenceDateTime), "MMM d, yyyy")}
+                {immunizations.map((imm, i) => {
+                  const targetDiseaseCode = imm.protocolApplied?.[0]?.targetDisease?.[0]?.coding?.[0]?.code
+                  const targetDisease = targetDiseaseCode
+                    ? getVaccineTargetDiseasesUvIpsConcept(targetDiseaseCode)?.display
+                    : undefined
+                  return (
+                    <li key={imm.id || i} className="text-sm">
+                      <span className="font-medium">
+                        {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || "Unknown vaccine"}
                       </span>
-                    )}
-                  </li>
-                ))}
+                      {targetDisease && (
+                        <span className="text-muted-foreground ml-1 text-xs">({targetDisease})</span>
+                      )}
+                      {imm.occurrenceDateTime && (
+                        <span className="text-muted-foreground ml-2">
+                          {format(new Date(imm.occurrenceDateTime), "MMM d, yyyy")}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </CardContent>
@@ -280,6 +318,146 @@ export function Dashboard() {
                         ? `${l.valueQuantity.value} ${l.valueQuantity.unit || ""}`
                         : l.valueString || "—"}
                     </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Social History — Tobacco Use */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Cigarette className="size-4 text-orange-500" />
+              Smoking Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {tobaccoUse.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No tobacco use records</p>
+            ) : (
+              <ul className="space-y-2">
+                {tobaccoUse.map((obs, i) => {
+                  const statusCode = obs.valueCodeableConcept?.coding?.[0]?.code
+                  const statusDisplay = statusCode
+                    ? getCurrentSmokingStatusUvIpsConcept(statusCode)?.display
+                    : undefined
+                  return (
+                    <li key={obs.id || i} className="text-sm flex justify-between">
+                      <span className="font-medium">
+                        {statusDisplay || obs.valueCodeableConcept?.text || "Unknown"}
+                      </span>
+                      {obs.effectiveDateTime && (
+                        <span className="text-muted-foreground">
+                          {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Alcohol Use */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Wine className="size-4 text-rose-500" />
+              Alcohol Use
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {alcoholUse.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No alcohol use records</p>
+            ) : (
+              <ul className="space-y-2">
+                {alcoholUse.map((obs, i) => (
+                  <li key={obs.id || i} className="text-sm flex justify-between">
+                    <span className="font-medium">
+                      {obs.valueCodeableConcept?.coding?.[0]?.display ||
+                        obs.valueCodeableConcept?.text ||
+                        obs.valueQuantity
+                          ? `${obs.valueQuantity?.value ?? ""} ${obs.valueQuantity?.unit ?? ""}`.trim()
+                          : "Unknown"}
+                    </span>
+                    {obs.effectiveDateTime && (
+                      <span className="text-muted-foreground">
+                        {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Procedures */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Scissors className="size-4 text-indigo-500" />
+              Procedures
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {procedures.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No procedure records</p>
+            ) : (
+              <ul className="space-y-2">
+                {procedures.map((proc, i) => (
+                  <li key={proc.id || i} className="text-sm">
+                    <span className="font-medium">
+                      {proc.code?.coding?.[0]?.display || proc.code?.text || "Unknown procedure"}
+                    </span>
+                    {proc.performedDateTime && (
+                      <span className="text-muted-foreground ml-2">
+                        {format(new Date(proc.performedDateTime), "MMM d, yyyy")}
+                      </span>
+                    )}
+                    {proc.status && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                        {proc.status}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Flags / Alerts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Flag className="size-4 text-red-500" />
+              Flags &amp; Alerts
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {flags.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active flags</p>
+            ) : (
+              <ul className="space-y-2">
+                {flags.map((flag, i) => (
+                  <li key={flag.id || i} className="text-sm flex items-center gap-2">
+                    <span
+                      className={`inline-block size-2 rounded-full ${
+                        flag.status === "active" ? "bg-red-500" : "bg-gray-400"
+                      }`}
+                    />
+                    <span className="font-medium">
+                      {flag.code?.coding?.[0]?.display || flag.code?.text || "Unknown flag"}
+                    </span>
+                    {flag.period?.start && (
+                      <span className="text-muted-foreground text-xs">
+                        since {format(new Date(flag.period.start), "MMM d, yyyy")}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
