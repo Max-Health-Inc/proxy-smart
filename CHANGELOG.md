@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604071536.80de429f] - 2026-04-07
+
+- ✨ Features:  
+  - Add CI/CD workflow to build and push beta Docker images to GHCR (backend and frontend) with versioned and latest tags, plus Buildx caching.  
+  - Introduce GHCR-based image usage in docker-compose.beta.yml for backend, frontend, and Keycloak (default to beta-latest tags).
+
+- 🔧 Chores & Improvements:  
+  - Implement isolated dependency install layer for mono build with per-package workspace installation and cached bun install.  
+  - Compute and export lowercase GHCR path (IMAGE_PREFIX) at two workflow points to ensure consistent image references.  
+  - Update GitHub Actions workflow permissions to grant write access to release packaging.
+
+- ⚠️ Breaking Changes:  
+  - Switched docker-compose.beta.yml to use prebuilt GHCR images instead of local Docker builds.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/283
+
+
 ## [0.0.3-beta.202604070736.41e900cf] - 2026-04-07
 
 - 🔧 Chores & Improvements: CI/CD updates
