@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604072243.17a845f3] - 2026-04-07
+
+- ⚠️ Breaking Changes: none
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+- 📚 Documentation: none
+- 🔧 Chores & Improvements: minor build/test tooling updates
+
+Note: No user-facing changes detected beyond version bumps and internal maintenance.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/293
+
+
 ## [0.0.3-alpha.202604072226.d14c7f94] - 2026-04-07
 
 - 🔧 Chores & Improvements: Regenerate FHIR tgz packages with babelfhir-ts 1.2.5; update testing reports
