@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604071618.6e486c97] - 2026-04-07
+
+- 🔧 Chores & Improvements: Copy root lib/ tarballs into Docker build context
+
+- 📚 Documentation: Update CHANGELOG.md for PR #284
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/285
+
+
 ## [0.0.3-alpha.202604071545.70936f2d] - 2026-04-07
 
 - 🔧 Chores & Improvements: CI/CD workflow enhancements
