@@ -1,6 +1,10 @@
 {
   "name": "@proxy-smart/e2e",
+<<<<<<< Updated upstream
   "version": "0.0.3-beta.202604070423.c1b1db1c",
+=======
+  "version": "0.0.3-alpha.202604070454.f050a94b",
+>>>>>>> Stashed changes
   "private": true,
   "description": "End-to-end Playwright tests for Proxy Smart apps",
   "scripts": {
