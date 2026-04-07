@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-beta.202604070736.41e900cf] - 2026-04-07
+
+- 🔧 Chores & Improvements: CI/CD updates
+  - Add GitHub Actions workflow to build and push beta Docker images to GHCR (backend and frontend) with versioned and latest tags, plus Buildx caching
+  - Update docker-compose.beta.yml to use GHCR prebuilt images via env vars (BACKEND_IMAGE, FRONTEND_IMAGE, KEYCLOAK_IMAGE) with defaults to beta-latest; remove local Docker builds for Keycloak, Backend, and Frontend
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/280
+
+
 ## [0.0.3-alpha.202604070736.41e900cf] - 2026-04-07
 
 - 🐛 Bug Fixes: Health checks treat unconfigured subsystems as neutral
