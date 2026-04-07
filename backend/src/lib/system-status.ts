@@ -42,7 +42,9 @@ export let lastSystemStatusUpdated = 0;
 const STATUS_TTL_MS = 30_000; // cache window for heavy checks
 
 function deriveOverall(fhirStatus: string, keycloakStatus: string): 'healthy' | 'degraded' | 'unhealthy' {
-  const statuses = [fhirStatus, keycloakStatus];
+  // Filter out subsystems that are not configured — they should not affect overall health
+  const statuses = [fhirStatus, keycloakStatus].filter(s => s !== 'not_configured');
+  if (statuses.length === 0) return 'healthy'; // nothing configured yet, server itself is healthy
   if (statuses.every(s => s === 'healthy')) return 'healthy';
   if (statuses.some(s => s === 'unhealthy')) return 'unhealthy';
   return 'degraded';
@@ -76,7 +78,7 @@ async function collectFhirStatus(): Promise<SystemStatus['fhir']> {
     }
   }
   const healthy = servers.filter(s => s.status === 'healthy').length;
-  const status = healthy === servers.length && servers.length > 0 ? 'healthy' : healthy > 0 ? 'degraded' : 'unhealthy';
+  const status = servers.length === 0 ? 'not_configured' : healthy === servers.length ? 'healthy' : healthy > 0 ? 'degraded' : 'unhealthy';
   return { status, totalServers: servers.length, healthyServers: healthy, servers };
 }
 
@@ -84,7 +86,7 @@ async function collectKeycloakStatus(): Promise<SystemStatus['keycloak']> {
   const realm = process.env.KEYCLOAK_REALM || 'smart-on-fhir';
   const base = process.env.KEYCLOAK_BASE_URL;
   if (!base) {
-    return { status: 'unhealthy', accessible: false, realm };
+    return { status: 'not_configured', accessible: false, realm };
   }
 
   const startTime = performance.now();
