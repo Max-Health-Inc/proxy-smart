@@ -47,7 +47,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/${{ github.repository }}
 
 jobs:
   # ── Build images on GA runners (7 GB RAM) and push to GHCR ──
@@ -72,6 +71,9 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Compute image prefix (GHCR requires lowercase)
+        run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Build & push backend image
         uses: docker/build-push-action@v6
@@ -157,6 +159,9 @@ jobs:
           install -m 600 /dev/null ~/.ssh/deploy_key
           echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Compute image prefix
+        run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Deploy via Docker Compose
         id: deploy
