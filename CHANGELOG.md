@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604070736.41e900cf] - 2026-04-07
+
+- 🐛 Bug Fixes: Health checks treat unconfigured subsystems as neutral
+  - Not_configured state added for FHIR when no servers configured
+  - Keycloak health: if KEYCLOAK_BASE_URL missing, report not_configured (not unhealthy)
+  - Overall system health now filters out not_configured subsystems and reports healthy/degraded/unhealthy accurately
+- 🔧 Chores & Improvements: Use JAVA_TOOL_OPTIONS for Keycloak build heap limit (JVM-level) instead of JAVA_OPTS_KC_BUILD
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/279
+
+
+## [0.0.3-beta.202604070709.d55c0d66] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+- ⚠️ Breaking Changes: None
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/278
+
+
 ## [0.0.3-alpha.202604070601.47816146] - 2026-04-07
 
 - ✨ Features: integrate remaining babelfhir-ts IPS/PAS types across both apps (quotentiroler)
