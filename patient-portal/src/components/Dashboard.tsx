@@ -37,9 +37,9 @@ import {
   type DeviceUseStatement,
   type ImagingStudy,
 } from "@/lib/fhir-client"
-import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps.js"
-import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps.js"
-import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps.js"
+import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps"
+import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps"
+import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps"
 import { PatientBanner } from "@/components/PatientBanner"
 import {
   Heart,
