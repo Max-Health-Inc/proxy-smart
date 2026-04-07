@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604072212.97a1f997] - 2026-04-07
+
+- 🔧 Chores & Improvements: Drop .js from valueset imports to align with exports wildcard (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/290
+
+
 ## [0.0.3-beta.202604072115.7fa57ae1] - 2026-04-07
 
 - 🔧 Chores & Improvements: Internal maintenance (version metadata updates skipped; exclude noisy update commits)
