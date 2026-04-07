@@ -10,6 +10,7 @@
       "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@types/fhir": "^0.0.41",
+        "@vue/server-renderer": "^3.5.30",
         "babelfhir-ts": "^1.2.2",
         "concurrently": "^9.2.1",
         "cross-env": "^10.1.0",
@@ -25,7 +26,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.0.3-alpha.202604070454.f050a94b",
+      "version": "0.0.3-alpha.202604072212.97a1f997",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.48",
         "@elysiajs/cors": "^1.4.1",
@@ -160,7 +161,7 @@
     },
     "infra": {
       "name": "proxy-smart-infra",
-      "version": "0.0.3-alpha.202604070454.f050a94b",
+      "version": "0.0.3-alpha.202604072212.97a1f997",
       "dependencies": {
         "aws-cdk-lib": "^2.244.0",
         "constructs": "^10.6.0",
@@ -178,7 +179,7 @@
     },
     "patient-portal": {
       "name": "proxy-smart-patient-portal",
-      "version": "0.0.3-alpha.202604070450.422fa383",
+      "version": "0.0.3-alpha.202604072212.97a1f997",
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.8",
         "@proxy-smart/shared-ui": "workspace:*",
@@ -241,7 +242,7 @@
     },
     "ui": {
       "name": "proxy-smart-ui",
-      "version": "0.0.3-alpha.202604070454.f050a94b",
+      "version": "0.0.3-alpha.202604072212.97a1f997",
       "dependencies": {
         "@proxy-smart/shared-ui": "workspace:*",
         "@radix-ui/react-accordion": "^1.2.12",
