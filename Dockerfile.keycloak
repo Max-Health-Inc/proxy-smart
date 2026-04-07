@@ -13,6 +13,8 @@ ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 
 # Build Keycloak to optimize startup time
+# Limit JVM heap to 512MB to avoid OOM on memory-constrained VPS hosts
+ENV JAVA_OPTS_KC_BUILD="-Xmx512m"
 RUN /opt/keycloak/bin/kc.sh build
 
 # Start Keycloak in production mode with realm import and optimized settings
