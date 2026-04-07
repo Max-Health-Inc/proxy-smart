@@ -19,6 +19,7 @@
     "typescript-eslint": "^8.58.0",
     "vite": "^8.0.7",
     "vitepress": "^1.6.4",
+    "@vue/compiler-dom": "^3.5.32",
     "@vue/server-renderer": "^3.5.32"
   },
   "description": "Proxy Smart - Healthcare interoperability proxy with Keycloak integration",
