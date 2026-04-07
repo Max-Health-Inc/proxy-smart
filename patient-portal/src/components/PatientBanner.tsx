@@ -12,6 +12,14 @@ export function PatientBanner({ patient }: PatientBannerProps) {
   const birthDate = patient.birthDate ? new Date(patient.birthDate) : null
   const age = birthDate ? differenceInYears(new Date(), birthDate) : null
 
+  // IPS extensions: gender identity and pronouns
+  const genderIdentity = patient.extension?.find(
+    e => e.url === "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity"
+  )?.valueCodeableConcept?.coding?.[0]?.display
+  const pronouns = patient.extension?.find(
+    e => e.url === "http://hl7.org/fhir/StructureDefinition/individual-pronouns"
+  )?.valueCodeableConcept?.coding?.[0]?.display
+
   return (
     <Card>
       <CardContent className="flex items-center gap-4 py-4">
@@ -25,6 +33,8 @@ export function PatientBanner({ patient }: PatientBannerProps) {
               <span>{format(birthDate, "MMM d, yyyy")}{age !== null && ` (${age} years)`}</span>
             )}
             {patient.gender && <Badge variant="outline">{patient.gender}</Badge>}
+            {genderIdentity && <Badge variant="outline">{genderIdentity}</Badge>}
+            {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
             {patient.identifier?.[0]?.value && (
               <span className="font-mono text-xs">MRN: {patient.identifier[0].value}</span>
             )}

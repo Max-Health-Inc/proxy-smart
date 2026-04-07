@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardAction, Badge, Button, Spinner } from "@proxy-smart/shared-ui"
-import { searchClaims, searchClaimResponses, type PASClaim, type PASClaimResponse } from "@/lib/fhir-client"
+import { searchClaims, searchClaimResponses, searchTasks, type PASClaim, type PASClaimResponse, type PASTask } from "@/lib/fhir-client"
 import type { ReviewAction } from "hl7.fhir.us.davinci-pas-generated"
+import { getX12278DiagnosisTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278DiagnosisType.js"
+import { getPASTaskCodesConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes.js"
+import { getPASSupportingInfoTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASSupportingInfoType.js"
 import { format } from "date-fns"
-import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye } from "lucide-react"
+import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Paperclip } from "lucide-react"
 
 interface PaRequestListProps {
   patientId: string
@@ -12,6 +15,7 @@ interface PaRequestListProps {
 interface PaDisplayItem {
   claim: PASClaim
   response?: PASClaimResponse
+  tasks: PASTask[]
 }
 
 function getStatusInfo(item: PaDisplayItem) {
@@ -43,8 +47,8 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
     setLoading(true)
     setError(null)
 
-    Promise.all([searchClaims(patientId), searchClaimResponses(patientId)])
-      .then(([claims, responses]) => {
+    Promise.all([searchClaims(patientId), searchClaimResponses(patientId), searchTasks(patientId)])
+      .then(([claims, responses, tasks]) => {
         if (cancelled) return
         // Match ClaimResponses to Claims
         const responseMap = new Map<string, PASClaimResponse>()
@@ -53,9 +57,21 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
           if (claimRef) responseMap.set(claimRef, r)
         }
 
+        // Match Tasks to Claims via focus reference
+        const taskMap = new Map<string, PASTask[]>()
+        for (const t of tasks) {
+          const focusRef = t.focus?.reference
+          if (focusRef) {
+            const existing = taskMap.get(focusRef) ?? []
+            existing.push(t)
+            taskMap.set(focusRef, existing)
+          }
+        }
+
         const combined: PaDisplayItem[] = claims.map((claim) => ({
           claim,
           response: responseMap.get(`Claim/${claim.id}`),
+          tasks: taskMap.get(`Claim/${claim.id}`) ?? [],
         }))
         setItems(combined)
       })
@@ -108,8 +124,18 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
           (p) => (p.procedureCodeableConcept?.coding?.[0]?.display ?? p.procedureCodeableConcept?.coding?.[0]?.code ?? "")
         ).filter(Boolean) ?? []
         const diagnosisCodes = item.claim.diagnosis?.map(
-          (d) => (d.diagnosisCodeableConcept?.coding?.[0]?.display ?? d.diagnosisCodeableConcept?.coding?.[0]?.code ?? "")
+          (d) => {
+            const display = d.diagnosisCodeableConcept?.coding?.[0]?.display ?? d.diagnosisCodeableConcept?.coding?.[0]?.code ?? ""
+            const typeCode = d.type?.[0]?.coding?.[0]?.code
+            const typeLabel = typeCode ? getX12278DiagnosisTypeConcept(typeCode)?.code : undefined
+            return typeLabel ? `${display} (${typeLabel})` : display
+          }
         ).filter(Boolean) ?? []
+        const supportingInfoItems = item.claim.supportingInfo?.map((si) => {
+          const categoryCode = si.category?.coding?.[0]?.code
+          const categoryLabel = categoryCode ? getPASSupportingInfoTypeConcept(categoryCode)?.code : undefined
+          return categoryLabel ?? categoryCode ?? ""
+        }).filter(Boolean) ?? []
         const expanded = expandedId === item.claim.id
 
         return (
@@ -140,6 +166,14 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
                     <span className="text-xs text-muted-foreground font-medium">Diagnoses:</span>
                     {diagnosisCodes.map((code, i) => (
                       <Badge key={i} variant="outline" className="text-xs">{code}</Badge>
+                    ))}
+                  </div>
+                )}
+                {supportingInfoItems.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    <span className="text-xs text-muted-foreground font-medium">Supporting Info:</span>
+                    {supportingInfoItems.map((cat, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">{cat}</Badge>
                     ))}
                   </div>
                 )}
@@ -197,6 +231,43 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
                         {JSON.stringify(item.response, null, 2)}
                       </pre>
                     </details>
+                  </div>
+                )}
+
+                {/* Attachment request tasks */}
+                {expanded && item.tasks.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs font-medium flex items-center gap-1">
+                      <Paperclip className="size-3" /> Attachment Requests
+                    </p>
+                    {item.tasks.map((task, idx) => {
+                      const taskCode = task.code?.coding?.[0]?.code
+                      const taskLabel = taskCode ? getPASTaskCodesConcept(taskCode)?.code : undefined
+                      return (
+                        <div key={task.id || idx} className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md">
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
+                              {taskLabel === "attachment-request-questionnaire"
+                                ? "Questionnaire Request"
+                                : taskLabel === "attachment-request-code"
+                                  ? "Coded Attachment Request"
+                                  : taskCode ?? "Attachment Request"}
+                            </p>
+                            <Badge variant="outline" className="text-xs">
+                              {task.status}
+                            </Badge>
+                          </div>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
+                          )}
+                          {task.lastModified && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              Updated: {format(new Date(task.lastModified), "MMM d, yyyy")}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
 

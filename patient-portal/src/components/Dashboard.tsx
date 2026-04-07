@@ -6,6 +6,7 @@ import {
   searchConditions,
   searchAllergies,
   searchMedicationStatements,
+  searchMedicationRequests,
   searchImmunizations,
   searchVitals,
   searchLabs,
@@ -13,20 +14,32 @@ import {
   searchAlcoholUse,
   searchProcedures,
   searchFlags,
+  searchPregnancyStatus,
+  searchPregnancyEdd,
+  searchDeviceUseStatements,
+  searchImagingStudies,
+  searchRadiologyResults,
   type Patient,
   type Condition,
   type AllergyIntolerance,
   type MedicationStatement,
+  type MedicationRequest,
   type Immunization,
   type Observation,
   type LabResult,
+  type RadiologyResult,
   type TobaccoUseObservation,
   type AlcoholUseObservation,
+  type PregnancyStatus,
+  type PregnancyEdd,
   type Procedure,
   type FlagAlert,
+  type DeviceUseStatement,
+  type ImagingStudy,
 } from "@/lib/fhir-client"
 import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps.js"
 import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps.js"
+import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps.js"
 import { PatientBanner } from "@/components/PatientBanner"
 import {
   Heart,
@@ -40,6 +53,10 @@ import {
   Wine,
   Scissors,
   Flag,
+  Baby,
+  Stethoscope,
+  ScanLine,
+  Laptop,
 } from "lucide-react"
 import { format } from "date-fns"
 
@@ -57,6 +74,12 @@ export function Dashboard() {
   const [alcoholUse, setAlcoholUse] = useState<AlcoholUseObservation[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [flags, setFlags] = useState<FlagAlert[]>([])
+  const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus[]>([])
+  const [pregnancyEdd, setPregnancyEdd] = useState<PregnancyEdd[]>([])
+  const [medicationRequests, setMedicationRequests] = useState<MedicationRequest[]>([])
+  const [deviceUse, setDeviceUse] = useState<DeviceUseStatement[]>([])
+  const [imagingStudies, setImagingStudies] = useState<ImagingStudy[]>([])
+  const [radiologyResults, setRadiologyResults] = useState<RadiologyResult[]>([])
 
   useEffect(() => {
     async function loadData() {
@@ -103,6 +126,21 @@ export function Dashboard() {
         if (alcohol.status === "fulfilled") setAlcoholUse(alcohol.value)
         if (proc.status === "fulfilled") setProcedures(proc.value)
         if (flag.status === "fulfilled") setFlags(flag.value)
+
+        const [pregStatus, pregEdd, medReqs, devices, imaging, radiology] = await Promise.allSettled([
+          searchPregnancyStatus(patientId),
+          searchPregnancyEdd(patientId),
+          searchMedicationRequests(patientId),
+          searchDeviceUseStatements(patientId),
+          searchImagingStudies(patientId),
+          searchRadiologyResults(patientId),
+        ])
+        if (pregStatus.status === "fulfilled") setPregnancyStatus(pregStatus.value)
+        if (pregEdd.status === "fulfilled") setPregnancyEdd(pregEdd.value)
+        if (medReqs.status === "fulfilled") setMedicationRequests(medReqs.value)
+        if (devices.status === "fulfilled") setDeviceUse(devices.value)
+        if (imaging.status === "fulfilled") setImagingStudies(imaging.value)
+        if (radiology.status === "fulfilled") setRadiologyResults(radiology.value)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
       } finally {
@@ -456,6 +494,173 @@ export function Dashboard() {
                     {flag.period?.start && (
                       <span className="text-muted-foreground text-xs">
                         since {format(new Date(flag.period.start), "MMM d, yyyy")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pregnancy Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Baby className="size-4 text-pink-500" />
+              Pregnancy
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {pregnancyStatus.length === 0 && pregnancyEdd.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No pregnancy records</p>
+            ) : (
+              <ul className="space-y-2">
+                {pregnancyStatus.map((obs, i) => {
+                  const code = obs.valueCodeableConcept?.coding?.[0]?.code
+                  const display = code
+                    ? getPregnancyStatusUvIpsConcept(code)?.display
+                    : undefined
+                  return (
+                    <li key={obs.id || `ps-${i}`} className="text-sm flex justify-between">
+                      <span className="font-medium">
+                        {display || obs.valueCodeableConcept?.text || "Unknown status"}
+                      </span>
+                      {obs.effectiveDateTime && (
+                        <span className="text-muted-foreground">
+                          {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
+                {pregnancyEdd.map((obs, i) => (
+                  <li key={obs.id || `edd-${i}`} className="text-sm flex justify-between">
+                    <span className="font-medium">
+                      EDD: {obs.valueDateTime
+                        ? format(new Date(obs.valueDateTime), "MMM d, yyyy")
+                        : "Unknown"}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      {obs.code?.coding?.[0]?.display || "Expected Delivery Date"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Prescribed Medications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Stethoscope className="size-4 text-cyan-500" />
+              Prescribed Medications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {medicationRequests.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No active prescriptions</p>
+            ) : (
+              <ul className="space-y-2">
+                {medicationRequests.map((rx, i) => (
+                  <li key={rx.id || i} className="text-sm">
+                    <span className="font-medium">
+                      {rx.medicationCodeableConcept?.coding?.[0]?.display ||
+                        rx.medicationCodeableConcept?.text ||
+                        "Unknown medication"}
+                    </span>
+                    {rx.dosageInstruction?.[0]?.text && (
+                      <span className="text-muted-foreground ml-2">— {rx.dosageInstruction[0].text}</span>
+                    )}
+                    {rx.authoredOn && (
+                      <span className="text-muted-foreground ml-2 text-xs">
+                        {format(new Date(rx.authoredOn), "MMM d, yyyy")}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Medical Devices */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Laptop className="size-4 text-slate-500" />
+              Medical Devices
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {deviceUse.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No device records</p>
+            ) : (
+              <ul className="space-y-2">
+                {deviceUse.map((du, i) => (
+                  <li key={du.id || i} className="text-sm">
+                    <span className="font-medium">
+                      {du.device?.display || du.device?.reference || "Unknown device"}
+                    </span>
+                    {du.timingPeriod?.start && (
+                      <span className="text-muted-foreground ml-2">
+                        since {format(new Date(du.timingPeriod.start), "MMM d, yyyy")}
+                      </span>
+                    )}
+                    {du.status && (
+                      <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                        {du.status}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Imaging Studies */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ScanLine className="size-4 text-violet-500" />
+              Imaging Studies
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {imagingStudies.length === 0 && radiologyResults.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No imaging records</p>
+            ) : (
+              <ul className="space-y-2">
+                {imagingStudies.map((study, i) => (
+                  <li key={study.id || `img-${i}`} className="text-sm">
+                    <span className="font-medium">
+                      {study.procedureCode?.[0]?.coding?.[0]?.display ||
+                        study.description ||
+                        "Imaging study"}
+                    </span>
+                    {study.started && (
+                      <span className="text-muted-foreground ml-2">
+                        {format(new Date(study.started), "MMM d, yyyy")}
+                      </span>
+                    )}
+                    {study.numberOfSeries != null && (
+                      <span className="text-muted-foreground ml-2 text-xs">
+                        {study.numberOfSeries} series
+                      </span>
+                    )}
+                  </li>
+                ))}
+                {radiologyResults.map((obs, i) => (
+                  <li key={obs.id || `rad-${i}`} className="text-sm flex justify-between">
+                    <span className="font-medium truncate mr-2">
+                      {obs.code?.coding?.[0]?.display || obs.code?.text || "Radiology result"}
+                    </span>
+                    {obs.effectiveDateTime && (
+                      <span className="text-muted-foreground whitespace-nowrap">
+                        {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
                       </span>
                     )}
                   </li>

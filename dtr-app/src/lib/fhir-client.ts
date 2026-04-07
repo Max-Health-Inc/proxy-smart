@@ -28,6 +28,9 @@ import type {
   PASResponseBundle,
   PASInquiryRequestBundle,
   PASInquiryResponseBundle,
+  PASClaimInquiryResponse,
+  PASDeviceRequest,
+  PASMedicationRequest,
 } from "hl7.fhir.us.davinci-pas-generated"
 import type { PASClaimResponse } from "hl7.fhir.us.davinci-pas-generated/PASClaimResponse"
 
@@ -42,6 +45,7 @@ export type {
   PASClaimUpdate,
   PASClaimInquiry,
   PASClaimResponse,
+  PASClaimInquiryResponse,
   PASCoverage,
   PASOrganization,
   PASServiceRequest,
@@ -56,6 +60,8 @@ export type {
   PASResponseBundle,
   PASInquiryRequestBundle,
   PASInquiryResponseBundle,
+  PASDeviceRequest,
+  PASMedicationRequest,
 }
 
 // ── FHIR client with authenticated fetch (@babelfhir-ts/client-r4) ──────────
@@ -214,6 +220,55 @@ export async function searchClaimResponses(patientId: string): Promise<PASClaimR
 
 export async function getOrganization(id: string): Promise<PASOrganization> {
   return client.read().pASOrganization().read(id)
+}
+
+// ── Claim Inquiry ($inquire) ─────────────────────────────────────────────────
+
+export async function inquireClaim(inquiry: PASClaimInquiry): Promise<PASClaimInquiryResponse> {
+  const res = await authFetch(`${fhirBaseUrl}/Claim/$inquire`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/fhir+json",
+      Accept: "application/fhir+json",
+    },
+    body: JSON.stringify(inquiry),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Claim/$inquire failed (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<PASClaimInquiryResponse>
+}
+
+// ── Device Requests (PAS-profiled) ───────────────────────────────────────────
+
+export async function searchDeviceRequests(patientId: string): Promise<PASDeviceRequest[]> {
+  return client.read().deviceRequest().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+    _sort: "-authored-on",
+  }) as Promise<PASDeviceRequest[]>
+}
+
+// ── Medication Requests (PAS-profiled) ───────────────────────────────────────
+
+export async function searchMedicationRequests(patientId: string): Promise<PASMedicationRequest[]> {
+  return client.read().medicationRequest().searchAll({
+    patient: `Patient/${patientId}`,
+    intent: "order",
+    _count: 50,
+    _sort: "-authoredon",
+  }) as Promise<PASMedicationRequest[]>
+}
+
+// ── Tasks (PAS-profiled) ─────────────────────────────────────────────────────
+
+export async function searchTasks(patientId: string): Promise<PASTask[]> {
+  return client.read().task().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+    _sort: "-modified",
+  }) as Promise<PASTask[]>
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
