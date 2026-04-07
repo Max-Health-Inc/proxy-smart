@@ -15,6 +15,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/280
 
 
+
+- 🔧 Chores & Improvements: Ensure IMAGE_PREFIX is always lowercase GHCR path at runtime (two build/deploy steps) and remove the old definition
+- 🔧 Chores & Improvements: Update GitHub Actions to grant package write access in release-beta workflow
+- ✨ Features: Add beta GitHub Actions workflow to build and push beta Docker images to GHCR (backend and frontend) with versioned and latest tags, plus Buildx caching
+- 🔧 Chores & Improvements: Switch docker-compose.beta.yml to use prebuilt GHCR images (BACKEND_IMAGE, FRONTEND_IMAGE, KEYCLOAK_IMAGE) with default beta-latest tags; remove local builds for Keycloak, Backend, and Frontend
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/282
+
+
 ## [0.0.3-alpha.202604070736.41e900cf] - 2026-04-07
 
 - 🐛 Bug Fixes: Health checks treat unconfigured subsystems as neutral
