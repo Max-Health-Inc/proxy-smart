@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604070454.f050a94b] - 2026-04-07
+
+- ✨ Features: Integrate TaskStatusCode, TaskIntentCode, and BundleTypeCode across consent-app and backend (quotentiroler)
+- 🔧 Chores & Improvements: Update changelog reference and version metadata
+- ⚠️ Breaking Changes: None
+- 📚 Documentation: None
+- 🐛 Bug Fixes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/273
+
+
 ## [0.0.3-alpha.202604070450.422fa383] - 2026-04-07
 
 - ✨ Features: use extension validators and ValueSet codes in brand-bundle (quotentiroler)
