@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-beta.202604072115.7fa57ae1] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal maintenance (version metadata updates skipped; exclude noisy update commits)
+- ✨ Features: None
+- 🐛 Bug Fixes: fix(patient-portal): regenerate ips-generated with babelfhir-ts 1.2.5 (valuesets exports)
+- 📚 Documentation: docs: update CHANGELOG.md for PR #288
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/289
+
+
 ## [0.0.3-alpha.202604071925.75928c50] - 2026-04-07
 
 - 🔧 Chores & Improvements: Internal updates and maintenance
