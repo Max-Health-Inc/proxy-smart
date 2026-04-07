@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604070450.422fa383] - 2026-04-07
+
+- ✨ Features: use extension validators and ValueSet codes in brand-bundle (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/272
+
+
 ## [0.0.3-alpha.202604070423.c1b1db1c] - 2026-04-07
 
 - 🔧 Chores & Improvements: Significant dependency lockfile updates and prebuilt binary refresh
