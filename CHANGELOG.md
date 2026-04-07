@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604070601.47816146] - 2026-04-07
+
+- ✨ Features: integrate remaining babelfhir-ts IPS/PAS types across both apps (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/276
+
+
 ## [0.0.3-alpha.202604070519.fa24d1e7] - 2026-04-07
 
 - ✨ Features: integrate babelfhir-ts 1.2.2 PAS/IPS types into dtr-app and patient-portal
