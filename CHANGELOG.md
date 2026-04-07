@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604071925.75928c50] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Minor: Update CHANGELOG for PR #287
+  - Chore: Update version metadata and related release steps to alpha 0.0.3-alpha.202604071925.75928c50
+  - Chore: Update dev beta/alpha SMART compliance reports (cleanup/internal)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/288
+
+
 ## [0.0.3-alpha.202604071628.96af1239] - 2026-04-07
 
 - 🔧 Chores & Improvements: Remove explicit GHCR build/push workflow step for alpha; retain automatic Northflank deployment on develop pushes; reduce top-level permissions by removing write access from certain packages.
