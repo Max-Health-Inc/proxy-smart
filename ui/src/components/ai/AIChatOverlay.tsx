@@ -185,7 +185,7 @@ export function AIChatOverlay({ isOpen: externalIsOpen, onClose: externalOnClose
         const container = messagesContainerRef.current;
         if (!container || !isOpen || isMinimized) return;
 
-        let scrollTimeout: NodeJS.Timeout;
+        let scrollTimeout: ReturnType<typeof setTimeout>;
 
         // Debounced scroll handler - only save after user stops scrolling
         const handleScroll = () => {
