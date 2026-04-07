@@ -8,7 +8,7 @@ import {
   createConsent as apiCreateConsent,
   type Task,
 } from "@/lib/fhir-client"
-import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus.js"
+import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus"
 import { buildR4Consent, type ConsentDraft } from "@/lib/consent-builder"
 import {
   getRequestResourceTypes,

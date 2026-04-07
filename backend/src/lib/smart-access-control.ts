@@ -16,7 +16,7 @@
 
 import { config } from '../config'
 import { logger } from './logger'
-import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType.js'
+import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

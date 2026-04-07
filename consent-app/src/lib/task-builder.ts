@@ -1,6 +1,6 @@
 import type { Task } from "fhir/r4"
-import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus.js"
-import type { TaskIntentCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskIntent.js"
+import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus"
+import type { TaskIntentCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskIntent"
 
 export type AccessRequestDraft = {
   patientId: string

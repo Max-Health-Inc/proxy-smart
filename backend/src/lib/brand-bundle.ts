@@ -17,9 +17,9 @@ import { logger } from './logger'
 import type { UserAccessBrandBundleType } from '../schemas'
 import type { UserAccessEndpoint, UserAccessBrand, UserAccessBrandsBundle, UserAccessEndpointConnectionType, UserAccessEndpointPayloadTypeCoding, EndpointFhirVersion, OrganizationBrand, OrganizationPortal } from 'hl7.fhir.uv.smart-app-launch-generated'
 import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint, validateOrganizationBrand, validateOrganizationPortal, validateEndpointFhirVersion } from 'hl7.fhir.uv.smart-app-launch-generated'
-import type { EndpointStatusCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-EndpointStatus.js'
-import type { ContactPointSystemCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-ContactPointSystem.js'
-import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType.js'
+import type { EndpointStatusCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-EndpointStatus'
+import type { ContactPointSystemCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-ContactPointSystem'
+import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'
 import type { Address } from 'fhir/r4'
 
 interface BrandBundleCache {

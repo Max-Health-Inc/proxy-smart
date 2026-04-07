@@ -6,8 +6,8 @@
 
 import { t, type Static } from 'elysia'
 import { ValueSetRegistry } from 'hl7.fhir.uv.smart-app-launch-generated'
-import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js'
-import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js'
+import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
+import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
 export { isValidUserAccessCategoryValueSetCode }
 
 const { UserAccessCategoryValueSetCodes, UserAccessCategoryValueSetConcepts } = ValueSetRegistry.UserAccessCategoryValueSet
