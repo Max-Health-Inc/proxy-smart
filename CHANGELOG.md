@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604070510.aa1fb797] - 2026-04-07
+
+- ✨ Features: None
+- 🐛 Bug Fixes:
+  - fix: add date-fns@1.30.1 as direct backend dependency to fix Bun linker bug
+- 📚 Documentation:
+  - docs: update CHANGELOG.md for PR #273
+- 🔧 Chores & Improvements:
+  - chore(testing): update dev SMART compliance report
+  - Update version to 0.0.3-alpha.202604070510.aa1fb797 (alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/274
+
+
 ## [0.0.3-alpha.202604070454.f050a94b] - 2026-04-07
 
 - ✨ Features: Integrate TaskStatusCode, TaskIntentCode, and BundleTypeCode across consent-app and backend (quotentiroler)
