@@ -16,6 +16,7 @@
 
 import { config } from '../config'
 import { logger } from './logger'
+import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType.js'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -346,7 +347,7 @@ async function enforcePractitionerFiltering(
         allowed: true,
         modifiedQueryString: queryString,
         status: 200,
-        body: { resourceType: 'Bundle', type: 'searchset', total: 0, entry: [] },
+        body: { resourceType: 'Bundle', type: 'searchset' satisfies BundleTypeCode, total: 0, entry: [] },
       }
     }
 

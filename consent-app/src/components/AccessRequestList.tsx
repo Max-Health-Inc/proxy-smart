@@ -1,4 +1,4 @@
-import type { Task } from "fhir/r4"
+import type { Task } from "fhir/r4"\nimport type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus.js"
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, CardAction } from "@proxy-smart/shared-ui"
 import {
   getRequestResourceTypes,
@@ -28,7 +28,7 @@ interface AccessRequestListProps {
   onReject: (task: Task) => void
 }
 
-function getStatusBadge(status?: string) {
+function getStatusBadge(status?: TaskStatusCode | string) {
   switch (status) {
     case "requested":
       return (

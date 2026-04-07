@@ -1,4 +1,6 @@
 import type { Task } from "fhir/r4"
+import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus.js"
+import type { TaskIntentCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskIntent.js"
 
 export type AccessRequestDraft = {
   patientId: string
@@ -29,8 +31,8 @@ const ACCESS_REQUEST_CODE = {
 export function buildAccessRequestTask(draft: AccessRequestDraft): Task {
   const task: Task = {
     resourceType: "Task",
-    status: "requested",
-    intent: "order",
+    status: "requested" satisfies TaskStatusCode,
+    intent: "order" satisfies TaskIntentCode,
     code: ACCESS_REQUEST_CODE,
     description: draft.reason || "Request to access patient data",
     for: {
