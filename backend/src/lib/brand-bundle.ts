@@ -16,7 +16,9 @@ import { getRuntimeBrandConfig } from './runtime-config'
 import { logger } from './logger'
 import type { UserAccessBrandBundleType } from '../schemas'
 import type { UserAccessEndpoint, UserAccessBrand, UserAccessBrandsBundle, UserAccessEndpointConnectionType, UserAccessEndpointPayloadTypeCoding, EndpointFhirVersion, OrganizationBrand, OrganizationPortal } from 'hl7.fhir.uv.smart-app-launch-generated'
-import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint } from 'hl7.fhir.uv.smart-app-launch-generated'
+import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint, validateOrganizationBrand, validateOrganizationPortal, validateEndpointFhirVersion } from 'hl7.fhir.uv.smart-app-launch-generated'
+import type { EndpointStatusCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-EndpointStatus.js'
+import type { ContactPointSystemCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-ContactPointSystem.js'
 import type { Address } from 'fhir/r4'
 
 interface BrandBundleCache {
@@ -104,11 +106,40 @@ class BrandBundleService {
         if (result.errors.length > 0) {
           logger.warn('brand-bundle', `Endpoint ${resource.id} validation errors: ${result.errors.join('; ')}`)
         }
+        // Validate extension sub-resources
+        const extensions = (resource as unknown as UserAccessEndpoint).extension
+        if (extensions) {
+          for (const ext of extensions) {
+            if (ext.url === 'http://hl7.org/fhir/StructureDefinition/endpoint-fhir-version') {
+              const extResult = await validateEndpointFhirVersion(ext as EndpointFhirVersion)
+              if (extResult.errors.length > 0) {
+                logger.warn('brand-bundle', `EndpointFhirVersion validation errors: ${extResult.errors.join('; ')}`)
+              }
+            }
+          }
+        }
       } else if (resource.resourceType === 'Organization') {
         const result = await validateUserAccessBrand(resource as any)
         for (const w of result.warnings) logger.debug('brand-bundle', `Organization validation warning: ${w}`)
         if (result.errors.length > 0) {
           logger.warn('brand-bundle', `Organization ${resource.id} validation errors: ${result.errors.join('; ')}`)
+        }
+        // Validate extension sub-resources
+        const extensions = (resource as unknown as UserAccessBrand).extension
+        if (extensions) {
+          for (const ext of extensions) {
+            if (ext.url === 'http://hl7.org/fhir/StructureDefinition/organization-brand') {
+              const extResult = await validateOrganizationBrand(ext as OrganizationBrand)
+              if (extResult.errors.length > 0) {
+                logger.warn('brand-bundle', `OrganizationBrand validation errors: ${extResult.errors.join('; ')}`)
+              }
+            } else if (ext.url === 'http://hl7.org/fhir/StructureDefinition/organization-portal') {
+              const extResult = await validateOrganizationPortal(ext as OrganizationPortal)
+              if (extResult.errors.length > 0) {
+                logger.warn('brand-bundle', `OrganizationPortal validation errors: ${extResult.errors.join('; ')}`)
+              }
+            }
+          }
         }
       }
     }
@@ -125,7 +156,7 @@ class BrandBundleService {
     return {
       resourceType: 'Endpoint',
       id,
-      status: 'active',
+      status: 'active' as EndpointStatusCode,
       name: `FHIR ${fhirVersion} Endpoint for ${brand.name}`,
       address,
       connectionType: {
@@ -137,7 +168,7 @@ class BrandBundleService {
         valueCode: fhirVersionToSemver(fhirVersion)
       } satisfies EndpointFhirVersion],
       contact: [{
-        system: 'url',
+        system: 'url' as ContactPointSystemCode,
         value: brand.website
       }],
       payloadType: [{
