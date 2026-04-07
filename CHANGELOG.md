@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604072220.eb426fd8] - 2026-04-07
+
+- 🔧 Chores & Improvements: Update dependencies and bump version strings across bun.lock and multiple packages to 202604072212.97a1f997
+  - Added dependency "@vue/server-renderer" ^3.5.30
+  - Updated package.json and bun.lock version tags for backend, infra, patient-portal, and ui components
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/291
+
+
 ## [0.0.3-alpha.202604072212.97a1f997] - 2026-04-07
 
 - 🔧 Chores & Improvements: Drop .js from valueset imports to align with exports wildcard (quotentiroler)
