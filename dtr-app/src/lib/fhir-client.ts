@@ -31,8 +31,8 @@ import type {
   PASClaimInquiryResponse,
   PASDeviceRequest,
   PASMedicationRequest,
+  PASClaimResponse,
 } from "hl7.fhir.us.davinci-pas-generated"
-import type { PASClaimResponse } from "hl7.fhir.us.davinci-pas-generated/PASClaimResponse"
 
 export type {
   Patient,
