@@ -30,7 +30,7 @@ COPY scripts/package.json ./scripts/
 RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui","consent-app","dtr-app","patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies (this layer is cached when only source code changes)
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # ── Source copy (changes frequently, but bun install is already cached) ──
 COPY backend/ ./backend/
