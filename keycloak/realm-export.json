@@ -715,6 +715,70 @@
       ]
     },
     {
+      "clientId": "patient-portal",
+      "name": "Patient Portal",
+      "description": "SMART on FHIR patient portal application",
+      "enabled": true,
+      "clientAuthenticatorType": "client-dummy",
+      "redirectUris": [
+        "http://localhost:5176/*",
+        "http://localhost:8445/apps/patient-portal/*",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/patient-portal/*",
+        "https://beta.proxy-smart.com/apps/patient-portal/*",
+        "https://proxy-smart.com/apps/patient-portal/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5176",
+        "http://localhost:8445",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
+        "https://beta.proxy-smart.com",
+        "https://proxy-smart.com",
+        "*"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "consentRequired": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "openid"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "launch/patient",
+        "launch",
+        "fhirUser",
+        "online_access",
+        "patient/*.read",
+        "patient/*.write",
+        "patient/*.*",
+        "user/*.read",
+        "user/*.write",
+        "user/*.*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true",
+        "post.logout.redirect.uris": "+"
+      }
+    },
+    {
       "clientId": "consent-app",
       "name": "Consent Management App",
       "description": "SMART on FHIR consent management application",
@@ -725,7 +789,9 @@
         "http://localhost:8445/apps/consent/*",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/consent/*",
         "https://beta.proxy-smart.com/apps/consent/*",
-        "https://proxy-smart.com/apps/consent/*"
+        "https://proxy-smart.com/apps/consent/*",
+        "https://beta.proxy-smart.com/apps/consent-app/*",
+        "https://proxy-smart.com/apps/consent-app/*"
       ],
       "webOrigins": [
         "http://localhost:5174",
@@ -774,7 +840,8 @@
         "oidc.ciba.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
         "backchannel.logout.revoke.offline.tokens": "false",
-        "use.refresh.tokens": "true"
+        "use.refresh.tokens": "true",
+        "post.logout.redirect.uris": "+"
       }
     },
     {
@@ -838,7 +905,8 @@
         "oidc.ciba.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
         "backchannel.logout.revoke.offline.tokens": "false",
-        "use.refresh.tokens": "true"
+        "use.refresh.tokens": "true",
+        "post.logout.redirect.uris": "+"
       }
     },
     {

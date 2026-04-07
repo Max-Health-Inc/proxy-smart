@@ -82,6 +82,24 @@ const METHOD_TO_V2_CHAR: Record<string, string> = {
 }
 
 /**
+ * Determine the effective operation kind from HTTP method and resource path.
+ * POST to `_search` is a search operation, not a create.
+ */
+function resolveOperation(method: string, resourcePath: string): { effectiveMethod: string; isSearch: boolean } {
+  // POST _search (e.g. "Patient/_search") is a search, not a create
+  if (method === 'POST' && /_search(\?|$)/.test(resourcePath)) {
+    return { effectiveMethod: 'GET', isSearch: true }
+  }
+  // GET with query params or bare resource type (no id) is a search
+  const pathParts = resourcePath.split(/[?]/)[0].split('/')
+  if (method === 'GET' && (resourcePath.includes('?') || pathParts.length === 1)) {
+    return { effectiveMethod: 'GET', isSearch: true }
+  }
+  // GET with a resource id is a read
+  return { effectiveMethod: method, isSearch: false }
+}
+
+/**
  * Check whether token scopes grant the requested access.
  * Supports SMART v1 (`read`/`write`/`*`) and v2 (`cruds` character) formats.
  */
@@ -89,10 +107,12 @@ function checkSmartScopes(
   tokenScopes: string[],
   resourceType: string,
   method: string,
+  resourcePath: string,
 ): boolean {
-  const requiredChar = METHOD_TO_V2_CHAR[method]
-  const isRead = method === 'GET'
-  const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)
+  const { effectiveMethod, isSearch } = resolveOperation(method, resourcePath)
+  const requiredChar = isSearch ? 's' : METHOD_TO_V2_CHAR[effectiveMethod]
+  const isRead = effectiveMethod === 'GET'
+  const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(effectiveMethod)
 
   return tokenScopes.some((scope) => {
     // Match SMART scope pattern: context/resource.permissions
@@ -114,8 +134,8 @@ function checkSmartScopes(
     // v2 permissions are a subset of "cruds" characters
     if (scopePermission.length <= 5 && /^[cruds]+$/.test(scopePermission)) {
       if (requiredChar && scopePermission.includes(requiredChar)) return true
-      // 's' = search, equivalent to read for GET requests
-      if (isRead && scopePermission.includes('s')) return true
+      // For GET requests: 'r' grants read-by-id, 's' grants search — either suffices
+      if (isRead && (scopePermission.includes('r') || scopePermission.includes('s'))) return true
     }
 
     return false
@@ -135,7 +155,7 @@ export function enforceScopeAccess(ctx: AccessControlContext): AccessControlResu
     return { allowed: true }
   }
 
-  const hasAccess = checkSmartScopes(tokenScopes, resourceType, ctx.method)
+  const hasAccess = checkSmartScopes(tokenScopes, resourceType, ctx.method, ctx.resourcePath)
 
   if (!hasAccess) {
     logger.fhir.warn('SMART scope check failed', {

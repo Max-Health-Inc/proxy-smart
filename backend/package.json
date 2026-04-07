@@ -28,6 +28,7 @@
     "ai": "^6.0.137",
     "cross-fetch": "^4.1.0",
     "elysia": "^1.4.28",
+    "fhirpath": "^4.9.2",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.0.1",
     "node-fetch": "^3.3.2",

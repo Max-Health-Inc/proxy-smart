@@ -13,7 +13,6 @@
     "preview": "vite preview --port 5174"
   },
   "dependencies": {
-    "@babelfhir-ts/client-r4": "^0.2.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@proxy-smart/shared-ui": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",

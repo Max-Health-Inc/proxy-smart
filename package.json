@@ -7,6 +7,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/fhir": "^0.0.41",
+    "babelfhir-ts": "^1.2.2",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "eslint": "^10.1.0",
@@ -146,5 +148,8 @@
   "bugs": {
     "url": "https://github.com/quotentiroler/proxy-smart/issues"
   },
-  "homepage": "https://github.com/quotentiroler/proxy-smart#readme"
+  "homepage": "https://github.com/quotentiroler/proxy-smart#readme",
+  "dependencies": {
+    "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz"
+  }
 }

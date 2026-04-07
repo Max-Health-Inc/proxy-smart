@@ -117,8 +117,21 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       const oidcConfig = await response.json()
       const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
 
+      // Ensure token_endpoint_auth_methods_supported includes "none" for public
+      // MCP clients (DCR creates public clients with token_endpoint_auth_method=none).
+      // Keycloak's OIDC config omits "none" even though it supports public clients.
+      const authMethods: string[] = Array.isArray(oidcConfig.token_endpoint_auth_methods_supported)
+        ? oidcConfig.token_endpoint_auth_methods_supported
+        : []
+      if (!authMethods.includes('none')) {
+        authMethods.push('none')
+      }
+
       return {
-        issuer: oidcConfig.issuer,
+        // RFC 8414 §3: issuer MUST be the authorization server's URL — the proxy
+        // acts as AS from MCP clients' perspective (it owns the registration_endpoint
+        // and proxies authorization/token endpoints), so use baseUrl, not Keycloak's issuer.
+        issuer: baseUrl,
         authorization_endpoint: oidcConfig.authorization_endpoint,
         token_endpoint: oidcConfig.token_endpoint,
         jwks_uri: oidcConfig.jwks_uri,
@@ -128,7 +141,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,
-        token_endpoint_auth_methods_supported: oidcConfig.token_endpoint_auth_methods_supported,
+        token_endpoint_auth_methods_supported: authMethods,
         code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported
       }
     } catch {
@@ -258,18 +271,26 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       }
       
       const oidcConfig = await response.json()
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      const authMethods: string[] = Array.isArray(oidcConfig.token_endpoint_auth_methods_supported)
+        ? oidcConfig.token_endpoint_auth_methods_supported
+        : []
+      if (!authMethods.includes('none')) {
+        authMethods.push('none')
+      }
       
       // Return OAuth 2.0 AS Metadata format (subset of OIDC)
       return {
-        issuer: oidcConfig.issuer,
+        issuer: baseUrl,
         authorization_endpoint: oidcConfig.authorization_endpoint,
         token_endpoint: oidcConfig.token_endpoint,
         jwks_uri: oidcConfig.jwks_uri,
-        registration_endpoint: oidcConfig.registration_endpoint,
+        registration_endpoint: `${baseUrl}/auth/register`,
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,
-        token_endpoint_auth_methods_supported: oidcConfig.token_endpoint_auth_methods_supported,
+        token_endpoint_auth_methods_supported: authMethods,
         code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported
       }
     } catch {

@@ -12,7 +12,8 @@ import { logger } from '@/lib/logger'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
-import type { BrandConfigType } from '@/schemas'
+import type { BrandConfigType, BrandCategoryType } from '@/schemas'
+import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js'
 
 // Module-level cache
 let consentOverrides: Partial<ConsentConfig> | null = null
@@ -238,7 +239,14 @@ function parseBrandFromAttributes(attrs: Record<string, string>): Partial<BrandC
   if (get('aliases') !== undefined) {
     result.aliases = get('aliases').split(',').map(s => s.trim()).filter(Boolean)
   }
-  if (get('category') !== undefined) result.category = get('category')
+  if (get('category') !== undefined) {
+    const cat = get('category')
+    if (isValidUserAccessCategoryValueSetCode(cat)) {
+      result.category = cat as BrandCategoryType
+    } else {
+      logger.warn('runtime-config', `Invalid brand category '${cat}', ignoring`)
+    }
+  }
   if (get('portal_name') !== undefined) result.portalName = get('portal_name') || null
   if (get('portal_url') !== undefined) result.portalUrl = get('portal_url') || null
   if (get('portal_description') !== undefined) result.portalDescription = get('portal_description') || null
@@ -284,7 +292,7 @@ export function getRuntimeBrandConfig(): BrandConfigType {
     logoUrl: config.brand.logoUrl,
     logoLicenseUrl: config.brand.logoLicenseUrl,
     aliases: config.brand.aliases,
-    category: config.brand.category,
+    category: config.brand.category as BrandCategoryType,
     portalName: config.brand.portalName,
     portalUrl: config.brand.portalUrl,
     portalDescription: config.brand.portalDescription,
