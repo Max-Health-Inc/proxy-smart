@@ -19,6 +19,7 @@ import type { UserAccessEndpoint, UserAccessBrand, UserAccessBrandsBundle, UserA
 import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint, validateOrganizationBrand, validateOrganizationPortal, validateEndpointFhirVersion } from 'hl7.fhir.uv.smart-app-launch-generated'
 import type { EndpointStatusCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-EndpointStatus.js'
 import type { ContactPointSystemCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-ContactPointSystem.js'
+import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType.js'
 import type { Address } from 'fhir/r4'
 
 interface BrandBundleCache {
@@ -79,7 +80,7 @@ class BrandBundleService {
     const bundle: UserAccessBrandBundleType = {
       resourceType: 'Bundle',
       id: 'user-access-brands',
-      type: 'collection',
+      type: 'collection' satisfies BundleTypeCode,
       timestamp: new Date().toISOString(),
       entry: entries
     }

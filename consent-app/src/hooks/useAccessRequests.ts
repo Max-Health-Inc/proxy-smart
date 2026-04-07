@@ -8,6 +8,7 @@ import {
   createConsent as apiCreateConsent,
   type Task,
 } from "@/lib/fhir-client"
+import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus.js"
 import { buildR4Consent, type ConsentDraft } from "@/lib/consent-builder"
 import {
   getRequestResourceTypes,
@@ -97,7 +98,7 @@ export function useAccessRequests(mode: SearchMode | null) {
       // 2. Update Task to accepted with consent reference in output
       const updated: Task = {
         ...task,
-        status: "accepted",
+        status: "accepted" satisfies TaskStatusCode,
         output: [
           ...(task.output ?? []),
           {
@@ -128,7 +129,7 @@ export function useAccessRequests(mode: SearchMode | null) {
     if (!id) throw new Error("Task has no id")
 
     try {
-      const updated: Task = { ...task, status: "rejected" }
+      const updated: Task = { ...task, status: "rejected" satisfies TaskStatusCode }
       await apiUpdateTask(id, updated)
       setRequests((prev) =>
         prev.map((r) => (r.id === id ? { ...r, status: "rejected" as const } : r)),
@@ -148,7 +149,7 @@ export function useAccessRequests(mode: SearchMode | null) {
     if (!id) throw new Error("Task has no id")
 
     try {
-      const updated: Task = { ...task, status: "cancelled" }
+      const updated: Task = { ...task, status: "cancelled" satisfies TaskStatusCode }
       await apiUpdateTask(id, updated)
       setRequests((prev) =>
         prev.map((r) => (r.id === id ? { ...r, status: "cancelled" as const } : r)),
