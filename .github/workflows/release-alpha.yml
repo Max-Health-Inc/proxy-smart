@@ -10,7 +10,6 @@ on:
 permissions:
   contents: write
   pull-requests: read
-  packages: write
 
 concurrency:
   group: releases-alpha
@@ -31,44 +30,7 @@ jobs:
     secrets: inherit
 
   # Note: Deployment is handled automatically by Northflank
-  # Northflank pulls the pre-built image from GHCR instead of building from source
-  build-alpha-image:
-    name: Build & Push Alpha Image
-    needs: [alpha-release]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: develop
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Compute image prefix
-        run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
-      - name: Build & push mono image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.mono
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/mono:alpha-${{ needs.alpha-release.outputs.version }}
-            ${{ env.IMAGE_PREFIX }}/mono:alpha-latest
-          cache-from: type=gha,scope=alpha-mono
-          cache-to: type=gha,mode=max,scope=alpha-mono
+  # When code is pushed to 'develop', Northflank detects the commit and deploys automatically
 
   # Test the deployed alpha application
   #test-alpha-deployment:
