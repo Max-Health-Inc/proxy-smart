@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604072226.d14c7f94] - 2026-04-07
+
+- 🔧 Chores & Improvements: Regenerate FHIR tgz packages with babelfhir-ts 1.2.5; update testing reports
+- 📚 Documentation: Update CHANGELOG.md for PR #291
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/292
+
+
 ## [0.0.3-alpha.202604072220.eb426fd8] - 2026-04-07
 
 - 🔧 Chores & Improvements: Update dependencies and bump version strings across bun.lock and multiple packages to 202604072212.97a1f997
