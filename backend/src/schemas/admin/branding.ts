@@ -5,21 +5,22 @@
  */
 
 import { t, type Static } from 'elysia'
+import { ValueSetRegistry } from 'hl7.fhir.uv.smart-app-launch-generated'
+import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js'
+import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js'
+export { isValidUserAccessCategoryValueSetCode }
+
+const { UserAccessCategoryValueSetCodes, UserAccessCategoryValueSetConcepts } = ValueSetRegistry.UserAccessCategoryValueSet
 
 /**
- * Brand category (organization type)
+ * Brand category (organization type) — codes from SMART App Launch IG 2.2.0 UserAccessCategory ValueSet
  */
-export const BrandCategory = t.Union([
-  t.Literal('prov'),
-  t.Literal('pay'),
-  t.Literal('laboratory'),
-  t.Literal('imaging'),
-  t.Literal('pharmacy'),
-  t.Literal('network'),
-  t.Literal('aggregator'),
-], { description: 'Organization category per FHIR organization-type CodeSystem' })
+export const BrandCategory = t.Union(
+  UserAccessCategoryValueSetCodes.map(code => t.Literal(code)) as [ReturnType<typeof t.Literal>, ...ReturnType<typeof t.Literal>[]],
+  { description: 'Organization category per FHIR organization-type CodeSystem (SMART App Launch IG 2.2.0)' }
+)
 
-export type BrandCategoryType = Static<typeof BrandCategory>
+export type BrandCategoryType = UserAccessCategoryValueSetCode
 
 /**
  * Brand configuration (admin-editable settings)
@@ -30,7 +31,7 @@ export const BrandConfig = t.Object({
   logoUrl: t.Union([t.String(), t.Null()], { description: 'Brand logo URL (SVG or 1024px PNG, transparent background)' }),
   logoLicenseUrl: t.Union([t.String(), t.Null()], { description: 'Logo license URL' }),
   aliases: t.Array(t.String(), { description: 'Alternative brand names' }),
-  category: t.String({ description: 'Organization category (prov, pay, laboratory, imaging, pharmacy, network, aggregator)' }),
+  category: BrandCategory,
   portalName: t.Union([t.String(), t.Null()], { description: 'Patient-facing portal name' }),
   portalUrl: t.Union([t.String(), t.Null()], { description: 'Patient-facing portal URL' }),
   portalDescription: t.Union([t.String(), t.Null()], { description: 'Patient-facing portal description (Markdown)' }),
@@ -43,7 +44,7 @@ export const BrandConfig = t.Object({
   identifier: t.String({ description: 'Brand identifier URI (typically the brand website URL)' }),
 }, { title: 'BrandConfig' })
 
-export type BrandConfigType = Static<typeof BrandConfig>
+export type BrandConfigType = Omit<Static<typeof BrandConfig>, 'category'> & { category: BrandCategoryType }
 
 /**
  * Brand config update response

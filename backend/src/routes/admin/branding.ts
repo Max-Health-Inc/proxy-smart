@@ -2,7 +2,7 @@ import { Elysia } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { validateToken } from '@/lib/auth'
-import { BrandConfig, BrandConfigUpdateResponse, ErrorResponse } from '@/schemas'
+import { BrandConfig, BrandConfigUpdateResponse, ErrorResponse, type BrandConfigType } from '@/schemas'
 import { getRuntimeBrandConfig, saveBrandConfig, loadRuntimeConfig, isRuntimeConfigLoaded } from '@/lib/runtime-config'
 import { brandBundleService } from '@/lib/brand-bundle'
 import { logger } from '@/lib/logger'
@@ -77,7 +77,7 @@ export const brandingAdminRoutes = new Elysia({ prefix: '/branding', tags: ['adm
 
     try {
       const admin = await getAdmin(token)
-      await saveBrandConfig(admin, body)
+      await saveBrandConfig(admin, body as BrandConfigType)
 
       // Clear the brand bundle cache so the next request rebuilds it
       brandBundleService.clearCache()

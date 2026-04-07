@@ -13,7 +13,11 @@ import { config } from '../config'
 import { getAllServers, ensureServersInitialized } from './fhir-server-store'
 import { fhirVersionToSemver } from './fhir-utils'
 import { getRuntimeBrandConfig } from './runtime-config'
+import { logger } from './logger'
 import type { UserAccessBrandBundleType } from '../schemas'
+import type { UserAccessEndpoint, UserAccessBrand, UserAccessBrandsBundle, UserAccessEndpointConnectionType, UserAccessEndpointPayloadTypeCoding, EndpointFhirVersion, OrganizationBrand, OrganizationPortal } from 'hl7.fhir.uv.smart-app-launch-generated'
+import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint } from 'hl7.fhir.uv.smart-app-launch-generated'
+import type { Address } from 'fhir/r4'
 
 interface BrandBundleCache {
   bundle: UserAccessBrandBundleType
@@ -70,12 +74,43 @@ class BrandBundleService {
       resource: this.buildOrganization(orgId, endpointRefs, brand)
     })
 
-    return {
+    const bundle: UserAccessBrandBundleType = {
       resourceType: 'Bundle',
       id: 'user-access-brands',
       type: 'collection',
       timestamp: new Date().toISOString(),
       entry: entries
+    }
+
+    // Validate against SMART App Launch IG constraints
+    await this.validateBundle(bundle, entries)
+
+    return bundle
+  }
+
+  /** Validate the brand bundle and its entries against SMART App Launch IG FHIRPath constraints */
+  private async validateBundle(bundle: UserAccessBrandBundleType, entries: UserAccessBrandBundleType['entry']): Promise<void> {
+    const { errors, warnings } = await validateUserAccessBrandsBundle(bundle as any)
+    for (const w of warnings) logger.debug('brand-bundle', `validation warning: ${w}`)
+    if (errors.length > 0) {
+      logger.warn('brand-bundle', `bundle validation errors: ${errors.join('; ')}`)
+    }
+
+    for (const entry of entries) {
+      const resource = entry.resource as Record<string, unknown>
+      if (resource.resourceType === 'Endpoint') {
+        const result = await validateUserAccessEndpoint(resource as any)
+        for (const w of result.warnings) logger.debug('brand-bundle', `Endpoint validation warning: ${w}`)
+        if (result.errors.length > 0) {
+          logger.warn('brand-bundle', `Endpoint ${resource.id} validation errors: ${result.errors.join('; ')}`)
+        }
+      } else if (resource.resourceType === 'Organization') {
+        const result = await validateUserAccessBrand(resource as any)
+        for (const w of result.warnings) logger.debug('brand-bundle', `Organization validation warning: ${w}`)
+        if (result.errors.length > 0) {
+          logger.warn('brand-bundle', `Organization ${resource.id} validation errors: ${result.errors.join('; ')}`)
+        }
+      }
     }
   }
 
@@ -86,7 +121,7 @@ class BrandBundleService {
     address: string,
     fhirVersion: string,
     brand: ReturnType<typeof getRuntimeBrandConfig>
-  ): Record<string, unknown> {
+  ): UserAccessEndpoint {
     return {
       resourceType: 'Endpoint',
       id,
@@ -96,11 +131,11 @@ class BrandBundleService {
       connectionType: {
         system: 'http://terminology.hl7.org/CodeSystem/endpoint-connection-type',
         code: 'hl7-fhir-rest'
-      },
+      } satisfies UserAccessEndpointConnectionType,
       extension: [{
         url: 'http://hl7.org/fhir/StructureDefinition/endpoint-fhir-version',
         valueCode: fhirVersionToSemver(fhirVersion)
-      }],
+      } satisfies EndpointFhirVersion],
       contact: [{
         system: 'url',
         value: brand.website
@@ -109,7 +144,7 @@ class BrandBundleService {
         coding: [{
           system: 'http://terminology.hl7.org/CodeSystem/endpoint-payload-type',
           code: 'none'
-        }]
+        } satisfies UserAccessEndpointPayloadTypeCoding]
       }]
     }
   }
@@ -119,11 +154,11 @@ class BrandBundleService {
     id: string,
     endpointRefs: Array<{ reference: string }>,
     brand: ReturnType<typeof getRuntimeBrandConfig>
-  ): Record<string, unknown> {
-    const extensions: Array<Record<string, unknown>> = []
+  ): UserAccessBrand {
+    const extensions: UserAccessBrand['extension'] = []
 
-    // organization-brand extension
-    const brandExtParts: Array<Record<string, unknown>> = []
+    // organization-brand extension (OrganizationBrand profile)
+    const brandExtParts: OrganizationBrand['extension'] = []
     if (brand.logoUrl) {
       brandExtParts.push({ url: 'brandLogo', valueUrl: brand.logoUrl })
     }
@@ -132,13 +167,14 @@ class BrandBundleService {
     }
     brandExtParts.push({ url: 'brandBundle', valueUrl: `${config.baseUrl}/branding.json` })
 
-    extensions.push({
+    const brandExt: OrganizationBrand = {
       url: 'http://hl7.org/fhir/StructureDefinition/organization-brand',
       extension: brandExtParts
-    })
+    }
+    extensions.push(brandExt)
 
-    // organization-portal extension
-    const portalExtParts: Array<Record<string, unknown>> = []
+    // organization-portal extension (OrganizationPortal profile)
+    const portalExtParts: OrganizationPortal['extension'] = []
     if (brand.portalName) {
       portalExtParts.push({ url: 'portalName', valueString: brand.portalName })
     }
@@ -159,16 +195,17 @@ class BrandBundleService {
     }
 
     if (portalExtParts.length > 0) {
-      extensions.push({
+      const portalExt: OrganizationPortal = {
         url: 'http://hl7.org/fhir/StructureDefinition/organization-portal',
         extension: portalExtParts
-      })
+      }
+      extensions.push(portalExt)
     }
 
     // Build address if any address fields configured
-    const address: Array<Record<string, string>> = []
+    const address: Address[] = []
     if (brand.addressCity || brand.addressState || brand.addressPostalCode) {
-      const addr: Record<string, string> = {}
+      const addr: Address = {}
       if (brand.addressCity) addr.city = brand.addressCity
       if (brand.addressState) addr.state = brand.addressState
       if (brand.addressPostalCode) addr.postalCode = brand.addressPostalCode
@@ -176,16 +213,8 @@ class BrandBundleService {
       address.push(addr)
     }
 
-    // Build the Organization type coding from brand category
-    const categoryMap: Record<string, string> = {
-      prov: 'Healthcare Provider',
-      pay: 'Payer',
-      laboratory: 'Laboratory',
-      imaging: 'Imaging Center',
-      pharmacy: 'Pharmacy',
-      network: 'Health Information Network',
-      aggregator: 'Data Aggregator'
-    }
+    // Look up display name from the IG ValueSet
+    const categoryConcept = ValueSetRegistry.UserAccessCategoryValueSet.getUserAccessCategoryValueSetConcept(brand.category)
 
     return {
       resourceType: 'Organization',
@@ -197,7 +226,7 @@ class BrandBundleService {
         coding: [{
           system: 'http://terminology.hl7.org/CodeSystem/organization-type',
           code: brand.category,
-          display: categoryMap[brand.category] || brand.category
+          display: categoryConcept?.display || brand.category
         }]
       }],
       extension: extensions,

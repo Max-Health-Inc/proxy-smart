@@ -29,6 +29,11 @@ import {
 import { config } from '@/config';
 import { adminApiCall } from '@/lib/admin-api';
 import { useTranslation } from 'react-i18next';
+import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js';
+import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet.js';
+import { ValueSetRegistry } from 'hl7.fhir.uv.smart-app-launch-generated';
+
+const { UserAccessCategoryValueSetConcepts } = ValueSetRegistry.UserAccessCategoryValueSet;
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -38,7 +43,7 @@ interface BrandConfig {
   logoUrl: string | null;
   logoLicenseUrl: string | null;
   aliases: string[];
-  category: string;
+  category: UserAccessCategoryValueSetCode;
   portalName: string | null;
   portalUrl: string | null;
   portalDescription: string | null;
@@ -70,15 +75,10 @@ const DEFAULT_BRAND: BrandConfig = {
   identifier: '',
 };
 
-const CATEGORY_OPTIONS = [
-  { value: 'prov', label: 'Healthcare Provider' },
-  { value: 'pay', label: 'Payer' },
-  { value: 'laboratory', label: 'Laboratory' },
-  { value: 'imaging', label: 'Imaging Center' },
-  { value: 'pharmacy', label: 'Pharmacy' },
-  { value: 'network', label: 'Health Information Network' },
-  { value: 'aggregator', label: 'Data Aggregator' },
-];
+const CATEGORY_OPTIONS = UserAccessCategoryValueSetConcepts.map(c => ({
+  value: c.code,
+  label: c.display,
+}));
 
 // ─── Component ───────────────────────────────────────────────────────
 
@@ -233,7 +233,7 @@ export function BrandSettings() {
               <Label>{t('Organization Category')}</Label>
               <Select
                 value={brand.category}
-                onValueChange={(value) => updateField('category', value)}
+                onValueChange={(value) => { if (isValidUserAccessCategoryValueSetCode(value)) updateField('category', value) }}
               >
                 <SelectTrigger>
                   <SelectValue />

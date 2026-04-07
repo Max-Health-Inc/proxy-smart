@@ -82,18 +82,26 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
       }
       
       const oidcConfig = await response.json()
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      const authMethods: string[] = Array.isArray(oidcConfig.token_endpoint_auth_methods_supported)
+        ? oidcConfig.token_endpoint_auth_methods_supported
+        : []
+      if (!authMethods.includes('none')) {
+        authMethods.push('none')
+      }
       
       // Return OAuth 2.0 AS Metadata format (subset of OIDC)
       return {
-        issuer: oidcConfig.issuer,
+        issuer: baseUrl,
         authorization_endpoint: oidcConfig.authorization_endpoint,
         token_endpoint: oidcConfig.token_endpoint,
         jwks_uri: oidcConfig.jwks_uri,
-        registration_endpoint: oidcConfig.registration_endpoint,
+        registration_endpoint: `${baseUrl}/auth/register`,
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,
-        token_endpoint_auth_methods_supported: oidcConfig.token_endpoint_auth_methods_supported,
+        token_endpoint_auth_methods_supported: authMethods,
         code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported
       }
     } catch {

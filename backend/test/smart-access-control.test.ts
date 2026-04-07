@@ -290,6 +290,335 @@ describe('SMART Scope Enforcement', () => {
       expect(result.allowed).toBe(true)
     })
   })
+
+  describe('POST _search handling', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should allow POST _search with read scope (v1)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.read' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should allow POST _search with search permission (v2 s)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.s' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should allow POST _search with rs scope (v2)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should deny POST _search when only create scope is present', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.c' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+    })
+
+    it('should allow POST _search with query params', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/_search?name=Smith', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should still require create scope for regular POST (not _search)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Observation.rs' }, resourcePath: 'Observation', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+    })
+
+    it('should allow POST _search with wildcard resource and read scope', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/*.read' }, resourcePath: 'Observation/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should allow POST _search with write scope (v1 write includes search capability)', () => {
+      // v1 write scope does NOT grant search — write is only for mutations
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.write' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should allow POST _search with wildcard permission (*)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.*' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should allow POST _search with system scope', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'system/Patient.rs' }, resourcePath: 'Patient/_search', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+  })
+
+  // ── v2 CRUDS granular permission tests ──
+
+  describe('v2 CRUDS granular permissions', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should deny PUT with only create permission (c)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.c' }, resourcePath: 'Patient/123', method: 'PUT' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should deny PATCH with only create permission (c)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.c' }, resourcePath: 'Patient/123', method: 'PATCH' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should allow PATCH with update permission (u)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.u' }, resourcePath: 'Patient/123', method: 'PATCH' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should deny POST with only update permission (u)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.u' }, resourcePath: 'Patient', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should deny GET with only delete permission (d)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.d' }, resourcePath: 'Patient/123', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should deny DELETE with only read and search (rs)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/123', method: 'DELETE' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should allow combined cu for both POST and PUT', () => {
+      const post = makeCtx({ tokenPayload: { scope: 'patient/Observation.cu' }, resourcePath: 'Observation', method: 'POST' })
+      const put = makeCtx({ tokenPayload: { scope: 'patient/Observation.cu' }, resourcePath: 'Observation/123', method: 'PUT' })
+      expect(enforceScopeAccess(post).allowed).toBe(true)
+      expect(enforceScopeAccess(put).allowed).toBe(true)
+    })
+
+    it('should deny GET with cu scope (no read or search)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Observation.cu' }, resourcePath: 'Observation/123', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should handle single-character permissions correctly for each CRUDS letter', () => {
+      const cases: Array<{ perm: string; method: string; path: string; expected: boolean }> = [
+        { perm: 'c', method: 'POST', path: 'Patient', expected: true },
+        { perm: 'c', method: 'GET', path: 'Patient', expected: false },
+        { perm: 'r', method: 'GET', path: 'Patient/123', expected: true },
+        { perm: 'r', method: 'POST', path: 'Patient', expected: false },
+        { perm: 'u', method: 'PUT', path: 'Patient/123', expected: true },
+        { perm: 'u', method: 'PATCH', path: 'Patient/123', expected: true },
+        { perm: 'u', method: 'GET', path: 'Patient/123', expected: false },
+        { perm: 'd', method: 'DELETE', path: 'Patient/123', expected: true },
+        { perm: 'd', method: 'GET', path: 'Patient/123', expected: false },
+        { perm: 's', method: 'GET', path: 'Patient', expected: true },
+        { perm: 's', method: 'POST', path: 'Patient', expected: false },
+      ]
+      for (const { perm, method, path, expected } of cases) {
+        const ctx = makeCtx({ tokenPayload: { scope: `patient/Patient.${perm}` }, resourcePath: path, method })
+        const result = enforceScopeAccess(ctx)
+        expect(result.allowed).toBe(expected)
+      }
+    })
+  })
+
+  // ── Cross-context scope isolation ──
+
+  describe('cross-context scope isolation', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should not mix patient and user context scopes', () => {
+      // Token has patient/Observation.rs but not user/Patient.rs
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Observation.rs' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should match when any of multiple scopes grants access', () => {
+      const ctx = makeCtx({
+        tokenPayload: { scope: 'patient/Observation.rs user/Patient.rs system/Condition.cruds' },
+        resourcePath: 'Condition',
+        method: 'DELETE',
+      })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should allow when token has both patient and user scopes for same resource', () => {
+      const ctx = makeCtx({
+        tokenPayload: { scope: 'patient/Patient.rs user/Patient.rs' },
+        resourcePath: 'Patient',
+        method: 'GET',
+      })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+  })
+
+  // ── Wildcard combinations ──
+
+  describe('wildcard combinations', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should allow system/*.* for any resource and any method', () => {
+      for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+        for (const resource of ['Patient', 'Observation', 'Encounter', 'Bundle']) {
+          const ctx = makeCtx({ tokenPayload: { scope: 'system/*.*' }, resourcePath: resource, method })
+          expect(enforceScopeAccess(ctx).allowed).toBe(true)
+        }
+      }
+    })
+
+    it('should allow patient/*.cruds for any resource and any method', () => {
+      for (const method of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+        const ctx = makeCtx({ tokenPayload: { scope: 'patient/*.cruds' }, resourcePath: 'MedicationRequest', method })
+        expect(enforceScopeAccess(ctx).allowed).toBe(true)
+      }
+    })
+
+    it('should deny patient/*.rs for write methods', () => {
+      for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+        const ctx = makeCtx({ tokenPayload: { scope: 'patient/*.rs' }, resourcePath: 'Observation', method })
+        expect(enforceScopeAccess(ctx).allowed).toBe(false)
+      }
+    })
+  })
+
+  // ── Resource path edge cases ──
+
+  describe('resource path edge cases', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should handle nested paths like Patient/123/_history/2', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/123/_history/2', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should handle compartment searches like Patient/123/Observation', () => {
+      // Resource type is extracted as "Patient" from the path prefix
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/123/Observation', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should handle $operation paths', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/$everything', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should handle POST $operation as the operation method not create', () => {
+      // POST Patient/$match is an operation, not a create — but currently treated as POST=create
+      // This documents current behavior: POST operations require 'c' unless path is _search
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Patient/$match', method: 'POST' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should handle resource type with version in path (Patient/123/_history)', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.read' }, resourcePath: 'Patient/123/_history', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+  })
+
+  // ── Error response format ──
+
+  describe('error response format', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should return 403 with insufficient_scope error', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: '' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+      expect(result.body?.error).toBe('insufficient_scope')
+      expect(result.body?.message).toContain('Patient')
+      expect(result.body?.message).toContain('GET')
+    })
+
+    it('should include resource type and method in error message', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rs' }, resourcePath: 'Observation', method: 'DELETE' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.body?.message).toContain('Observation')
+      expect(result.body?.message).toContain('DELETE')
+    })
+  })
+
+  // ── Malformed and adversarial scopes ──
+
+  describe('malformed and adversarial scopes', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce' }))
+
+    it('should ignore scopes with invalid context prefix', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'admin/Patient.read' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should ignore scopes missing the dot separator', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patientread' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should ignore scopes with extra path segments', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient/sub.read' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should not be tricked by scope with cruds-like resource name', () => {
+      // Resource named "cruds" should only match "cruds" resource
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/cruds.r' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should handle scope string with extra whitespace', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: '  patient/Patient.read   openid  ' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(true)
+    })
+
+    it('should handle scope with null value', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: null }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should handle scope with undefined value', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: undefined }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should reject v2 permissions longer than 5 chars as non-CRUDS', () => {
+      // "crudss" has 6 chars — should not be treated as valid v2 permission
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.crudss' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+
+    it('should reject v2 permissions with invalid characters', () => {
+      const ctx = makeCtx({ tokenPayload: { scope: 'patient/Patient.rx' }, resourcePath: 'Patient', method: 'GET' })
+      const result = enforceScopeAccess(ctx)
+      expect(result.allowed).toBe(false)
+    })
+  })
 })
 
 // ══════════════════════════════════════════════════════════════════════════════

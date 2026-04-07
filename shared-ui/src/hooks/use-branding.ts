@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type { UserAccessBrandsBundle, UserAccessBrand, OrganizationBrand } from 'hl7.fhir.uv.smart-app-launch-generated'
 
 export interface BrandInfo {
   name: string
@@ -7,31 +8,30 @@ export interface BrandInfo {
 }
 
 /** Extract brand name and logo from the /branding.json FHIR Bundle */
-function parseBrandBundle(bundle: Record<string, unknown>): BrandInfo {
+function parseBrandBundle(bundle: UserAccessBrandsBundle): BrandInfo {
   const fallback: BrandInfo = { name: 'Proxy Smart', logoUrl: null, website: null }
-  const entries = bundle.entry as Array<{ resource: Record<string, unknown> }> | undefined
+  const entries = bundle.entry
   if (!Array.isArray(entries)) return fallback
 
-  const org = entries.find(e => e.resource?.resourceType === 'Organization')?.resource
+  const org = entries.find(e => (e.resource as UserAccessBrand | undefined)?.resourceType === 'Organization')?.resource as UserAccessBrand | undefined
   if (!org) return fallback
 
-  const name = (org.name as string) || fallback.name
+  const name = org.name || fallback.name
 
   let logoUrl: string | null = null
   let website: string | null = null
 
-  const extensions = org.extension as Array<Record<string, unknown>> | undefined
-  if (Array.isArray(extensions)) {
-    const brandExt = extensions.find(
-      e => e.url === 'http://hl7.org/fhir/StructureDefinition/organization-brand'
+  if (Array.isArray(org.extension)) {
+    const brandExt = org.extension.find(
+      (e): e is OrganizationBrand => e.url === 'http://hl7.org/fhir/StructureDefinition/organization-brand'
     )
     if (brandExt) {
-      const inner = brandExt.extension as Array<Record<string, unknown>> | undefined
-      logoUrl = inner?.find(e => e.url === 'brandLogo')?.valueUrl as string | null
+      const inner = brandExt.extension
+      logoUrl = (inner?.find(e => e.url === 'brandLogo') as { valueUrl?: string } | undefined)?.valueUrl ?? null
     }
   }
 
-  const telecoms = org.telecom as Array<Record<string, string>> | undefined
+  const telecoms = org.telecom
   if (Array.isArray(telecoms)) {
     website = telecoms.find(t => t.system === 'url')?.value ?? null
   }
