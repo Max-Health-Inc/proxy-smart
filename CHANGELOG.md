@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604070423.c1b1db1c] - 2026-04-07
+
+- 🔧 Chores & Improvements: Significant dependency lockfile updates and prebuilt binary refresh
+  - Substantial Bun.lock churn with widespread dependency/version updates
+  - Updated prebuilt artifact: hl7.fhir.uv.smart-app-launch-generated.tgz
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/271
+
+
 ## [0.0.3-alpha.202603270523.8a72cdae] - 2026-03-27
 
 - ✨ Features: add Proxy Smart logo icon to /apps page nav
