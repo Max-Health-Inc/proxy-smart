@@ -1,5 +1,6 @@
 import type { Patient } from "fhir/r4"
-import type { PASClaim } from "hl7.fhir.us.davinci-pas-generated"
+import type { PASClaim, ExtensionRequestedService } from "hl7.fhir.us.davinci-pas-generated"
+import type { X12278RequestedServiceTypeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278RequestedServiceType.js"
 import type { SelectedService } from "@/components/ServiceSelector"
 
 interface BuildClaimParams {
@@ -82,14 +83,14 @@ export function buildPasClaim({ patient, service, questionnaireResponseId }: Bui
       },
       productOrService: {
         coding: [{
-          system: "http://terminology.hl7.org/CodeSystem/data-absent-reason" as const,
-          code: "not-applicable" as const,
+          system: "http://terminology.hl7.org/CodeSystem/data-absent-reason",
+          code: "not-applicable" satisfies X12278RequestedServiceTypeCode,
           display: "Not Applicable",
         }],
       },
       quantity: { value: 1 },
       extension: [{
-        url: "http://hl7.org/fhir/us/davinci-pas/StructureDefinition/extension-requestedService" as const,
+        url: "http://hl7.org/fhir/us/davinci-pas/StructureDefinition/extension-requestedService" satisfies ExtensionRequestedService["url"],
         valueReference: {
           display: `${service.procedure.code} - ${service.procedure.display}`,
         },

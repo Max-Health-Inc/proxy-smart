@@ -12,6 +12,8 @@ import type {
 } from "fhir/r4"
 import type {
   PASClaim,
+  PASClaimUpdate,
+  PASClaimInquiry,
   PASCoverage,
   PASOrganization,
   PASServiceRequest,
@@ -21,8 +23,11 @@ import type {
   PASPractitioner,
   PASEncounter,
   PASCommunicationRequest,
+  PASTask,
   PASRequestBundle,
   PASResponseBundle,
+  PASInquiryRequestBundle,
+  PASInquiryResponseBundle,
 } from "hl7.fhir.us.davinci-pas-generated"
 import type { PASClaimResponse } from "hl7.fhir.us.davinci-pas-generated/PASClaimResponse"
 
@@ -34,6 +39,8 @@ export type {
   QuestionnaireResponseItem,
   Condition,
   PASClaim,
+  PASClaimUpdate,
+  PASClaimInquiry,
   PASClaimResponse,
   PASCoverage,
   PASOrganization,
@@ -44,8 +51,11 @@ export type {
   PASPractitioner,
   PASEncounter,
   PASCommunicationRequest,
+  PASTask,
   PASRequestBundle,
   PASResponseBundle,
+  PASInquiryRequestBundle,
+  PASInquiryResponseBundle,
 }
 
 // ── FHIR client with authenticated fetch (@babelfhir-ts/client-r4) ──────────

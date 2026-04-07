@@ -9,6 +9,10 @@ import type {
   ImmunizationUvIps,
   DiagnosticReportUvIps,
   ObservationResultsLaboratoryPathologyUvIps,
+  ObservationTobaccoUseUvIps,
+  ObservationAlcoholUseUvIps,
+  ProcedureUvIps,
+  FlagAlertUvIps,
   BundleUvIps,
 } from "hl7.fhir.uv.ips-generated"
 import type {
@@ -24,6 +28,10 @@ export type {
   ImmunizationUvIps as Immunization,
   DiagnosticReportUvIps as DiagnosticReport,
   ObservationResultsLaboratoryPathologyUvIps as LabResult,
+  ObservationTobaccoUseUvIps as TobaccoUseObservation,
+  ObservationAlcoholUseUvIps as AlcoholUseObservation,
+  ProcedureUvIps as Procedure,
+  FlagAlertUvIps as FlagAlert,
   BundleUvIps as IpsBundle,
 }
 export type { Observation, DocumentReference }
@@ -143,6 +151,46 @@ export async function searchDocuments(patientId: string): Promise<DocumentRefere
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-date",
+  })
+}
+
+// ── Social History (IPS-profiled) ────────────────────────────────────────────
+
+export async function searchTobaccoUse(patientId: string): Promise<ObservationTobaccoUseUvIps[]> {
+  return client.read().observationTobaccoUseUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    code: "72166-2",
+    _count: 10,
+    _sort: "-date",
+  })
+}
+
+export async function searchAlcoholUse(patientId: string): Promise<ObservationAlcoholUseUvIps[]> {
+  return client.read().observationAlcoholUseUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    code: "74013-4",
+    _count: 10,
+    _sort: "-date",
+  })
+}
+
+// ── Procedures (IPS-profiled) ────────────────────────────────────────────────
+
+export async function searchProcedures(patientId: string): Promise<ProcedureUvIps[]> {
+  return client.read().procedureUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+    _sort: "-date",
+  })
+}
+
+// ── Flags / Alerts (IPS-profiled) ────────────────────────────────────────────
+
+export async function searchFlags(patientId: string): Promise<FlagAlertUvIps[]> {
+  return client.read().flagAlertUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    status: "active",
+    _count: 20,
   })
 }
 
