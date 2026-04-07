@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604071545.70936f2d] - 2026-04-07
+
+- 🔧 Chores & Improvements: CI/CD workflow enhancements
+  - Add GitHub Actions steps to build and push the alpha Docker image to GHCR, extend workflow permissions (packages: write)
+  - Introduce build-alpha-image job: checkout develop, login to GHCR, setup Buildx, compute image prefix, build/push mono:alpha-<version> and mono:alpha-latest, enable caching for alpha-mono
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/284
+
+
 ## [0.0.3-alpha.202604071536.80de429f] - 2026-04-07
 
 - ✨ Features:  
