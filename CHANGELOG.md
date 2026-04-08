@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-beta.202604072243.17a845f3] - 2026-04-07
+
+- 🔧 Chores & Improvements: CI/CD updates and maintenance (version bump in CI, testing report updates)
+- 🐛 Bug Fixes: Fix dtr-app tarball cache and adjust PASClaimResponse import
+- 📚 Documentation: Update CHANGELOG entry for PR #293
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/294
+
+
 ## [0.0.3-alpha.202604072243.17a845f3] - 2026-04-07
 
 - ⚠️ Breaking Changes: none
