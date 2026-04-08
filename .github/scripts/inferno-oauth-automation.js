@@ -394,7 +394,7 @@ function buildBackendServicesSmartAuthInfo() {
     client_id: BACKEND_SERVICES_CLIENT_ID,
     requested_scopes: 'system/*.read',
     encryption_algorithm: 'RS384',
-    jwks: JSON.parse(privateJwksJson.trim())
+    jwks: privateJwksJson.trim()
   });
 }
 

@@ -529,6 +529,21 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       })
     }
 
+    // Enrich active introspection response with SMART launch context claims.
+    // Keycloak stores them as smart_patient, smart_encounter, fhirUser etc.
+    // but SMART STU 2.2 Token Introspection expects top-level patient, encounter, fhirUser.
+    if (data.active) {
+      if (data.smart_patient && !data.patient) {
+        data.patient = data.smart_patient
+      }
+      if (data.smart_encounter && !data.encounter) {
+        data.encounter = data.smart_encounter
+      }
+      if (data.fhirUser === undefined && data.fhir_user) {
+        data.fhirUser = data.fhir_user
+      }
+    }
+
     return data
   }, {
     body: IntrospectRequest,
