@@ -91,7 +91,7 @@ export const WebSocketWelcomeMessage = t.Object({
 export type WebSocketWelcomeMessageType = Static<typeof WebSocketWelcomeMessage>
 
 export const WebSocketAuthResponse = t.Object({
-  type: t.Union([t.Literal('auth_success'), t.Literal('auth_error')]),
+  type: t.UnionEnum(['auth_success', 'auth_error']),
   data: t.Object({
     message: t.String({ description: 'Authentication result message' }),
     timestamp: t.Optional(t.String({ description: 'Response timestamp', format: 'date-time' }))
@@ -101,7 +101,7 @@ export const WebSocketAuthResponse = t.Object({
 export type WebSocketAuthResponseType = Static<typeof WebSocketAuthResponse>
 
 export const WebSocketSubscriptionResponse = t.Object({
-  type: t.Union([t.Literal('subscription_confirmed'), t.Literal('unsubscription_confirmed')]),
+  type: t.UnionEnum(['subscription_confirmed', 'unsubscription_confirmed']),
   data: t.Object({
     subscriptionType: t.String({ description: 'Type of subscription' }),
     timestamp: t.String({ description: 'Response timestamp', format: 'date-time' })
