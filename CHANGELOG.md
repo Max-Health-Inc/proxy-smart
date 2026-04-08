@@ -15,6 +15,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/294
 
 
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix: introspection patient claim + backend services JWKS format (quotentiroler)
+  - fix: fix dtr-app tgz (stale cache) and move PASClaimResponse to main import (quotentiroler)
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #294
+  - docs: update CHANGELOG.md for PR #293
+
+- 🔧 Chores & Improvements
+  - chore(testing): update beta/dev SMART compliance reports (proxy-smart-releaser[bot])
+  - chore(testing): update version to 0.0.3-beta.202604072243.17a845f3 (beta) (github-actions[bot])
+
+- ⚠️ Breaking Changes
+  - None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/295
+
+
 ## [0.0.3-alpha.202604072243.17a845f3] - 2026-04-07
 
 - ⚠️ Breaking Changes: none
