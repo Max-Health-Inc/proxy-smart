@@ -186,7 +186,7 @@ export const FhirHealthCheckSchema = t.Object({
   timestamp: t.String({ description: 'Check timestamp (ISO 8601)' }),
   serverName: t.String({ description: 'FHIR server display name' }),
   serverUrl: t.String({ description: 'FHIR server base URL' }),
-  status: t.Union([t.Literal('healthy'), t.Literal('degraded'), t.Literal('unhealthy')], { description: 'Health status' }),
+  status: t.UnionEnum(['healthy', 'degraded', 'unhealthy'], { description: 'Health status' }),
   responseTimeMs: t.Number({ description: 'Response time in milliseconds' }),
   fhirVersion: t.Optional(t.String({ description: 'Detected FHIR version' })),
   error: t.Optional(t.String({ description: 'Error message if unhealthy' })),
@@ -197,7 +197,7 @@ export type FhirHealthCheckSchemaType = Static<typeof FhirHealthCheckSchema>
 export const FhirUptimeSummarySchema = t.Object({
   serverName: t.String({ description: 'FHIR server display name' }),
   serverUrl: t.String({ description: 'FHIR server base URL' }),
-  currentStatus: t.Union([t.Literal('healthy'), t.Literal('degraded'), t.Literal('unhealthy')], { description: 'Current status' }),
+  currentStatus: t.UnionEnum(['healthy', 'degraded', 'unhealthy'], { description: 'Current status' }),
   uptimePercent: t.Number({ description: 'Uptime percentage over observation period' }),
   avgResponseTimeMs: t.Number({ description: 'Average response time in ms' }),
   checksTotal: t.Number({ description: 'Total number of checks' }),
