@@ -3,7 +3,11 @@
   "displayName": "Proxy Smart Patient Portal",
   "description": "International Patient Portal — SMART on FHIR app for patient access using IPS (International Patient Summary) and IPA (International Patient Access) standards.",
   "private": true,
+<<<<<<< Updated upstream
   "version": "0.0.3-beta.202604090720.61696ba9",
+=======
+  "version": "0.0.3-alpha.202604090747.47995eb3",
+>>>>>>> Stashed changes
   "type": "module",
   "scripts": {
     "dev": "vite --port 5176",
