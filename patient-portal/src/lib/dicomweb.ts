@@ -125,3 +125,47 @@ export function getDicomwebAuthHeaders(): HeadersInit {
   if (!token?.access_token) return {}
   return { Authorization: `Bearer ${token.access_token}` }
 }
+
+/** Get the current access token string (for Cornerstone loader beforeSend) */
+export function getAccessToken(): string | null {
+  return smartAuth.getToken()?.access_token ?? null
+}
+
+/**
+ * Build Cornerstone3D WADO-RS imageId for a single frame.
+ * Format: `wadors:{wadoRsRoot}/studies/{study}/series/{series}/instances/{sop}/frames/{frame}`
+ */
+export function buildImageId(
+  studyUID: string,
+  seriesUID: string,
+  sopUID: string,
+  frame = 1,
+): string {
+  return `wadors:${getDicomwebBase()}/studies/${studyUID}/series/${seriesUID}/instances/${sopUID}/frames/${frame}`
+}
+
+/**
+ * Fetch WADO-RS metadata for a series and return Cornerstone imageIds.
+ * Calls QIDO-RS instances search, then builds imageId per instance.
+ */
+export async function fetchSeriesImageIds(
+  studyUID: string,
+  seriesUID: string,
+): Promise<string[]> {
+  const url = getInstancesSearchUrl(studyUID, seriesUID)
+  const res = await fetch(url, { headers: getDicomwebAuthHeaders() })
+  if (!res.ok) return []
+
+  const instances: Array<Record<string, unknown>> = await res.json()
+
+  // QIDO-RS returns DICOM JSON: tag 00080018 = SOP Instance UID
+  const SOP_INSTANCE_UID_TAG = "00080018"
+  return instances
+    .map((inst) => {
+      const sopObj = inst[SOP_INSTANCE_UID_TAG] as { Value?: string[] } | undefined
+      const sopUID = sopObj?.Value?.[0]
+      if (!sopUID) return null
+      return buildImageId(studyUID, seriesUID, sopUID)
+    })
+    .filter((id): id is string => id !== null)
+}

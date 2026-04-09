@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
-import { ScanLine, ChevronDown, ChevronUp, ImageIcon } from "lucide-react"
+import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye } from "lucide-react"
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"
 import {
@@ -12,6 +12,7 @@ import {
   getModalityInfo,
   getDicomwebAuthHeaders,
 } from "@/lib/dicomweb"
+import { DicomViewerDialog, type ViewerTarget } from "./DicomViewer"
 
 // ── Thumbnail with auth + graceful fallback ────────────────────────────────
 
@@ -60,13 +61,26 @@ function DicomThumbnail({
 
 // ── Study row (expandable to show series) ──────────────────────────────────
 
-function StudyRow({ study }: { study: ImagingStudy }) {
+function StudyRow({ study, onViewSeries }: { study: ImagingStudy; onViewSeries: (target: ViewerTarget) => void }) {
   const [expanded, setExpanded] = useState(false)
   const studyUID = getStudyInstanceUID(study)
   const modality = getPrimaryModality(study)
   const modalityInfo = modality ? getModalityInfo(modality) : null
   const title = getStudyTitle(study)
   const hasSeries = (study.series?.length ?? 0) > 0
+
+  /** Open the viewer for the first series (quick-view from header) */
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!studyUID || !study.series?.length) return
+    const first = study.series[0]
+    onViewSeries({
+      studyUID,
+      seriesUID: first.uid,
+      seriesDescription: first.description || title,
+      modality: first.modality?.code || modality || undefined,
+    })
+  }
 
   return (
     <li className="rounded-md border border-border/50 overflow-hidden">
@@ -118,16 +132,28 @@ function StudyRow({ study }: { study: ImagingStudy }) {
           </div>
         </div>
 
-        {/* Expand toggle */}
-        {hasSeries && (
-          <span className="shrink-0 mt-1 text-muted-foreground">
-            {expanded ? (
-              <ChevronUp className="size-4" />
-            ) : (
-              <ChevronDown className="size-4" />
-            )}
-          </span>
-        )}
+        {/* View + Expand toggles */}
+        <div className="flex items-center gap-1 shrink-0 mt-1">
+          {studyUID && hasSeries && (
+            <button
+              type="button"
+              onClick={handleQuickView}
+              className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              title="View images"
+            >
+              <Eye className="size-4" />
+            </button>
+          )}
+          {hasSeries && (
+            <span className="text-muted-foreground">
+              {expanded ? (
+                <ChevronUp className="size-4" />
+              ) : (
+                <ChevronDown className="size-4" />
+              )}
+            </span>
+          )}
+        </div>
       </button>
 
       {/* Expanded series list */}
@@ -168,6 +194,22 @@ function StudyRow({ study }: { study: ImagingStudy }) {
                       )}
                     </div>
                   </div>
+                  {/* View series button */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onViewSeries({
+                        studyUID,
+                        seriesUID: series.uid,
+                        seriesDescription: series.description || `Series ${(series.number ?? si) + 1}`,
+                        modality: seriesModality || modality || undefined,
+                      })
+                    }
+                    className="shrink-0 mt-0.5 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                    title="View series"
+                  >
+                    <Eye className="size-3.5" />
+                  </button>
                 </li>
               )
             })}
@@ -187,63 +229,84 @@ export function ImagingStudyCard({
   imagingStudies: ImagingStudy[]
   radiologyResults: RadiologyResult[]
 }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <ScanLine className="size-4 text-violet-500" />
-          Imaging Studies
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {imagingStudies.length === 0 && radiologyResults.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No imaging records</p>
-        ) : (
-          <div className="space-y-3">
-            {/* Imaging studies with thumbnails */}
-            {imagingStudies.length > 0 && (
-              <ul className="space-y-2">
-                {imagingStudies.map((study, i) => (
-                  <StudyRow key={study.id || `img-${i}`} study={study} />
-                ))}
-              </ul>
-            )}
+  const [viewerTarget, setViewerTarget] = useState<ViewerTarget | null>(null)
+  const [viewerOpen, setViewerOpen] = useState(false)
 
-            {/* Radiology observation results */}
-            {radiologyResults.length > 0 && (
-              <>
-                {imagingStudies.length > 0 && (
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium pt-1">
-                    Radiology Reports
-                  </p>
-                )}
-                <ul className="space-y-1.5">
-                  {radiologyResults.map((obs, i) => (
-                    <li
-                      key={obs.id || `rad-${i}`}
-                      className="text-sm flex justify-between"
-                    >
-                      <span className="font-medium truncate mr-2">
-                        {obs.code?.coding?.[0]?.display ||
-                          obs.code?.text ||
-                          "Radiology result"}
-                      </span>
-                      {obs.effectiveDateTime && (
-                        <span className="text-muted-foreground whitespace-nowrap">
-                          {format(
-                            new Date(obs.effectiveDateTime),
-                            "MMM d, yyyy",
-                          )}
-                        </span>
-                      )}
-                    </li>
+  const handleViewSeries = (target: ViewerTarget) => {
+    setViewerTarget(target)
+    setViewerOpen(true)
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ScanLine className="size-4 text-violet-500" />
+            Imaging Studies
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {imagingStudies.length === 0 && radiologyResults.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No imaging records</p>
+          ) : (
+            <div className="space-y-3">
+              {/* Imaging studies with thumbnails */}
+              {imagingStudies.length > 0 && (
+                <ul className="space-y-2">
+                  {imagingStudies.map((study, i) => (
+                    <StudyRow
+                      key={study.id || `img-${i}`}
+                      study={study}
+                      onViewSeries={handleViewSeries}
+                    />
                   ))}
                 </ul>
-              </>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+              )}
+
+              {/* Radiology observation results */}
+              {radiologyResults.length > 0 && (
+                <>
+                  {imagingStudies.length > 0 && (
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium pt-1">
+                      Radiology Reports
+                    </p>
+                  )}
+                  <ul className="space-y-1.5">
+                    {radiologyResults.map((obs, i) => (
+                      <li
+                        key={obs.id || `rad-${i}`}
+                        className="text-sm flex justify-between"
+                      >
+                        <span className="font-medium truncate mr-2">
+                          {obs.code?.coding?.[0]?.display ||
+                            obs.code?.text ||
+                            "Radiology result"}
+                        </span>
+                        {obs.effectiveDateTime && (
+                          <span className="text-muted-foreground whitespace-nowrap">
+                            {format(
+                              new Date(obs.effectiveDateTime),
+                              "MMM d, yyyy",
+                            )}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* DICOM Viewer modal */}
+      <DicomViewerDialog
+        target={viewerTarget}
+        open={viewerOpen}
+        onOpenChange={setViewerOpen}
+      />
+    </>
   )
 }
