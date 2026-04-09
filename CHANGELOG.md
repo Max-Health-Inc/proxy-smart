@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604090837.7f0be1bf] - 2026-04-09
+
+- 🔧 Chores & Improvements: CI/CD tweaks and testing updates
+  - ci: add [skip ci] to version-bump commits to prevent duplicate workflow runs
+  - chore(testing): update beta SMART compliance report
+  - chore(testing): update dev SMART compliance report
+- 📚 Documentation: docs for DICOMweb proxy & Patient Portal Imaging
+- ⚠️ Breaking Changes: none
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/302
+
+
 ## [0.0.3-alpha.202604090747.47995eb3] - 2026-04-09
 
 - ✨ Features: add post.logout.redirect.uris for Keycloak 25+ compatibility
