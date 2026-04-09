@@ -24,7 +24,7 @@ Pre-flight warm-up (deployed mode)...
 
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: cHfUsTR7VY4
+✓ Created test session: feSsbGhz4O2
 
 === Running Standalone Launch Tests ===
 
@@ -37,8 +37,8 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: 44ef081f-55d5-4a9b-a70b-6ddcb1870ad7
-Waiting for test run 44ef081f-55d5-4a9b-a70b-6ddcb1870ad7 to complete (timeout: 3 minutes)...
+✓ Started test run: fbc38d39-42b7-4230-a3a2-b09d84a8d36d
+Waiting for test run fbc38d39-42b7-4230-a3a2-b09d84a8d36d to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
@@ -48,13 +48,13 @@ Waiting for test run 44ef081f-55d5-4a9b-a70b-6ddcb1870ad7 to complete (timeout: 
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=54b2660c-4299-44f4-a496-369c14734569&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=TD9lDo35GNaYg8RDFjdydRq_uX0lRT2QDS8yQ
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=54b2660c-4299-44f4-a496-369c14734569&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=TD9lDo35GNaYg8RDFjdydRq_uX0lRT2QDS8yQtUn_20&code_challenge_method=S256.
-  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=54b2660c-4299-44f4-a496-369c14734569&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=TD9lDo35GNaYg8RDFjdydRq_uX0lRT2QDS8yQtUn_20&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c340a5bc-fcc8-4e69-891c-e6a220c88a9c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=WQ5Ob0NoHwyxkTRN5ShmXFkgRVyTfay9ZoOte
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c340a5bc-fcc8-4e69-891c-e6a220c88a9c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=WQ5Ob0NoHwyxkTRN5ShmXFkgRVyTfay9ZoOteW3nxDE&code_challenge_method=S256.
+  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c340a5bc-fcc8-4e69-891c-e6a220c88a9c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=WQ5Ob0NoHwyxkTRN5ShmXFkgRVyTfay9ZoOteW3nxDE&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=54b2660c-4299-44f4-a496-369c14734569&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=TD9lDo35GNaYg8RDFjdydRq_uX0lRT2QDS8yQtUn_20&code_challenge_method=S256
+  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c340a5bc-fcc8-4e69-891c-e6a220c88a9c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=WQ5Ob0NoHwyxkTRN5ShmXFkgRVyTfay9ZoOteW3nxDE&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=54b2660c-4299-44f4-a496-369c14734569&code_challenge=TD9lDo35GNaYg8RDFjdydRq_uX0lRT2QDS8yQtUn_20&code_challenge_method=S256
+  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c340a5bc-fcc8-4e69-891c-e6a220c88a9c&code_challenge=WQ5Ob0NoHwyxkTRN5ShmXFkgRVyTfay9ZoOteW3nxDE&code_challenge_method=S256
   On Keycloak login page, entering credentials...
   Filled username
   Filled password
@@ -63,7 +63,7 @@ Handling OAuth flow...
   OAuth flow completed, continuing to poll...
   Progress: 5 passed, 0 failed, 3 waiting, 9 total
   [Poll #4] Status: running
-  Progress: 20 passed, 0 failed, 2 waiting, 24 total
+  Progress: 22 passed, 0 failed, 2 waiting, 26 total
   [Poll #5] Status: done
 Test completed with status: done
 
@@ -71,24 +71,28 @@ Test completed with status: done
 
 Running test group: smart_stu2_2-smart_token_introspection_stu2_2 — Token Introspection
 Starting test group: smart_stu2_2-smart_token_introspection_stu2_2
-✓ Started test run: df60258c-4d82-4b3a-ba9a-ba8359a319c9
-Waiting for test run df60258c-4d82-4b3a-ba9a-ba8359a319c9 to complete (timeout: 3 minutes)...
+✓ Started test run: f3b103b1-6aa8-437e-b8ae-45c054c7fe29
+Waiting for test run f3b103b1-6aa8-437e-b8ae-45c054c7fe29 to complete (timeout: 3 minutes)...
   [Poll #1] Status: running
   [Poll #2] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
-  [Poll #3] Status: waiting
+  [Poll #3] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #4] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #5] Status: waiting
   Test is waiting for user action (OAuth flow, attempt 1/3)...
   Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
   result_message (first 500 chars): 
 ### Request New Access Token to Introspect
 
-[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e80d8da1-90cf-443b-bbb6-03fdeb7fec12&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=J7GuI4HcWzW7QhT-
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e80d8da1-90cf-443b-bbb6-03fdeb7fec12&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=J7GuI4HcWzW7QhT-mfshliHv0bNm2szUCyPyGoXyvEM&code_challenge_method=S256.
-  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e80d8da1-90cf-443b-bbb6-03fdeb7fec12&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=J7GuI4HcWzW7QhT-mfshliHv0bNm2szUCyPyGoXyvEM&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=d94b9fb0-6530-4cf9-8f21-91fd44bb058c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=HPysSiQ5MPUMvgI-
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=d94b9fb0-6530-4cf9-8f21-91fd44bb058c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=HPysSiQ5MPUMvgI-GQatysiNnK89J270Mu3UktN6pcQ&code_challenge_method=S256.
+  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=d94b9fb0-6530-4cf9-8f21-91fd44bb058c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=HPysSiQ5MPUMvgI-GQatysiNnK89J270Mu3UktN6pcQ&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e80d8da1-90cf-443b-bbb6-03fdeb7fec12&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=J7GuI4HcWzW7QhT-mfshliHv0bNm2szUCyPyGoXyvEM&code_challenge_method=S256
+  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=d94b9fb0-6530-4cf9-8f21-91fd44bb058c&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=HPysSiQ5MPUMvgI-GQatysiNnK89J270Mu3UktN6pcQ&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e80d8da1-90cf-443b-bbb6-03fdeb7fec12&code_challenge=J7GuI4HcWzW7QhT-mfshliHv0bNm2szUCyPyGoXyvEM&code_challenge_method=S256
+  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=d94b9fb0-6530-4cf9-8f21-91fd44bb058c&code_challenge=HPysSiQ5MPUMvgI-GQatysiNnK89J270Mu3UktN6pcQ&code_challenge_method=S256
   On Keycloak login page, entering credentials...
   Filled username
   Filled password
@@ -96,18 +100,18 @@ Handling OAuth flow...
   ✓ OAuth flow completed, redirected back to Inferno
   OAuth flow completed, continuing to poll...
   Progress: 5 passed, 0 failed, 5 waiting, 11 total
-  [Poll #4] Status: done
+  [Poll #6] Status: done
 Test completed with status: done
 
 === Running Backend Services Tests ===
 
 Running test group: smart_stu2_2-smart_backend_services — Backend Services
   Loaded private JWKS from /home/runner/work/proxy-smart/proxy-smart/testing/dev/backend-services-private-jwks.json
-Auth info: {"auth_type":"backend_services","client_id":"inferno-backend-services","requested_scopes":"system/*.read","encryption_algorithm":"RS384","jwks":"{\r\n  \"keys\": [\r\n    {\r\n      \"kty\": \"RSA\",\r\n      \"n\": \"k0j6wRB70KDa9_dmmTINZau8XOVIwDJEAGFJv7j2xbSYx11ZY9FJ7QiFes9E_MxFGTo_GkO3KlQ1MlQrdo08aoraB79sN1Pmr_A-6rLO6b7Y_yq3LHLoz2B7icTcIQ2zAPnWFumlASuQtisTdfsLifrOUHPsFGggBnRYSvO3P97msCROvQVAo243THv5RfsJ2_1e4ntiw4dVyZZ4rdjxPRyXT8oVHDtjcAnvki6WHsNZg7hc3BO5__nuNvP4c089kksnzKIP_CgAn1Xkzr97dsv8PFYUVjSPBTzS_Nd4pV42M6bCvrEx21wMrWuuFOpH82G680eQ8DU6ZBLCtu6r-w\",\r\n      \"e\": \"AQAB\",\r\n      \"d\": \"BT-rC_lJ6EfrNb3_zoLNnmtt1YOoQY0pBjhxV99AEBCdBzHI7zk0oLlWhGdhhn7DEaCVQhraqqwAj1AXkmx7FDLpjTAhq6EWTfvKSjPgEs1lz0YW7AMWT9mY3XKCA72IvQaqPfvKkQ2b5RoI4gH1yc-BzbUr2xhQ19oKkXU4-RIrHysaFXarMWVRzpQdFql8w_Os6kJ6gtUCsLmn8HVpmz7IocNrFm21PTZtZrZOGPg2E5nSXCUomSaKFsSXZsjB6LHnlNWTsiHpP8Dabv7p8YHzxYGVUf6XkOfWOBj4TbgdBlFAXKpVocu16OM8iFjAyuKCG2CmhyUrLiuTeGN36Q\",\r\n      \"p\": \"x2sr0BKks46Bkxs1PMsyt1_gmCxIuLVhzBvRgT7-XZvLowK1lEtsc9Eod30unyzrZWyqUfqtodmyiDv_T57QLe9YuAh_aCM0vN-G0fPv6MW3OM5JONqRbEoQvsbfYDAMhyazvQRyMshkCzoVnnRwLw_m6WwPazli_TBz6D04sNk\",\r\n      \"q\": \"vRMSjg8VVvsb-MUK7J_EtoNMat0RM-nq1n3GpcJXCNfqUM8TNESi6IEoUjIUUZBrRILsuX8vGNP_555CMRePz4S24v9dE2jACKZsILy9Ki9PtE7TmpV16fO-LcH6doo1mKR1VPyKRH_UzCsH3HvHvg88q0k0ilxej-wD9J80fvM\",\r\n      \"dp\": \"dACQtPITYuvTzin2lw2wy-D2-i5Qgznn0N6hyWhGeVeGZqXN0JzrUpfpzVBBjZCIwjArB5Ml68-CPiOAieVdPktLtYoj6wUHyZLRj1IyTZqt0VqWV381NuQCx6dSC1cIAppt1dc_QvE02R8JsmoTVB0Q-tnEQmBYh-XmlsL-Nkk\",\r\n      \"dq\": \"K_qfukNv50eJfhf3LosLKpjn0YOSWMz0PugKqMvHitsOObWw9dtxOTuxsUzMxRwel1UM0yjuP4wwXiPFqb2dSdvI3owfjkAzSs_LHuJH7eQLWhlrxu00_DIh7mrMY35KcTLvx9DmKIDDcqofrf1svJy2s_DXM8fAhyGS2feeMlk\",\r\n      \"qi\": \"SK_79fC4ceKj_VICqd6Ymkp_7mOGhKrddiV8qJRisBfSJXlynCJUJjXeYL7Z_r35UWsuM-AtRKyblr3cBakI0cW6B9TgpC2sv8f0OEG_kWjQv0TJQ4OzcsfK1P1T6tI26EG0Wjt6kPQP58jnD6geX1U2PAUyCP-ID1Y0ysncm2Y\",\r\n      \"use\": \"sig\",\r\n      \"alg\": \"RS384\",\r\n      \"kid\": \"inferno-backend-services-key-1\"\r\n    }\r\n  ]\r\n}"}
+Auth info: {"auth_type":"backend_services","client_id":"inferno-backend-services","requested_scopes":"system/*.read","encryption_algorithm":"RS384","jwks":"{\r\n  \"keys\": [\r\n    {\r\n      \"kty\": \"RSA\",\r\n      \"n\": \"k0j6wRB70KDa9_dmmTINZau8XOVIwDJEAGFJv7j2xbSYx11ZY9FJ7QiFes9E_MxFGTo_GkO3KlQ1MlQrdo08aoraB79sN1Pmr_A-6rLO6b7Y_yq3LHLoz2B7icTcIQ2zAPnWFumlASuQtisTdfsLifrOUHPsFGggBnRYSvO3P97msCROvQVAo243THv5RfsJ2_1e4ntiw4dVyZZ4rdjxPRyXT8oVHDtjcAnvki6WHsNZg7hc3BO5__nuNvP4c089kksnzKIP_CgAn1Xkzr97dsv8PFYUVjSPBTzS_Nd4pV42M6bCvrEx21wMrWuuFOpH82G680eQ8DU6ZBLCtu6r-w\",\r\n      \"e\": \"AQAB\",\r\n      \"d\": \"BT-rC_lJ6EfrNb3_zoLNnmtt1YOoQY0pBjhxV99AEBCdBzHI7zk0oLlWhGdhhn7DEaCVQhraqqwAj1AXkmx7FDLpjTAhq6EWTfvKSjPgEs1lz0YW7AMWT9mY3XKCA72IvQaqPfvKkQ2b5RoI4gH1yc-BzbUr2xhQ19oKkXU4-RIrHysaFXarMWVRzpQdFql8w_Os6kJ6gtUCsLmn8HVpmz7IocNrFm21PTZtZrZOGPg2E5nSXCUomSaKFsSXZsjB6LHnlNWTsiHpP8Dabv7p8YHzxYGVUf6XkOfWOBj4TbgdBlFAXKpVocu16OM8iFjAyuKCG2CmhyUrLiuTeGN36Q\",\r\n      \"p\": \"x2sr0BKks46Bkxs1PMsyt1_gmCxIuLVhzBvRgT7-XZvLowK1lEtsc9Eod30unyzrZWyqUfqtodmyiDv_T57QLe9YuAh_aCM0vN-G0fPv6MW3OM5JONqRbEoQvsbfYDAMhyazvQRyMshkCzoVnnRwLw_m6WwPazli_TBz6D04sNk\",\r\n      \"q\": \"vRMSjg8VVvsb-MUK7J_EtoNMat0RM-nq1n3GpcJXCNfqUM8TNESi6IEoUjIUUZBrRILsuX8vGNP_555CMRePz4S24v9dE2jACKZsILy9Ki9PtE7TmpV16fO-LcH6doo1mKR1VPyKRH_UzCsH3HvHvg88q0k0ilxej-wD9J80fvM\",\r\n      \"dp\": \"dACQtPITYuvTzin2lw2wy-D2-i5Qgznn0N6hyWhGeVeGZqXN0JzrUpfpzVBBjZCIwjArB5Ml68-CPiOAieVdPktLtYoj6wUHyZLRj1IyTZqt0VqWV381NuQCx6dSC1cIAppt1dc_QvE02R8JsmoTVB0Q-tnEQmBYh-XmlsL-Nkk\",\r\n      \"dq\": \"K_qfukNv50eJfhf3LosLKpjn0YOSWMz0PugKqMvHitsOObWw9dtxOTuxsUzMxRwel1UM0yjuP4wwXiPFqb2dSdvI3owfjkAzSs_LHuJH7eQLWhlrxu00_DIh7mrMY35KcTLvx9DmKIDDcqofrf1svJy2s_DXM8fAhyGS2feeMlk\",\r\n      \"qi\": \"SK_79fC4ceKj_VICqd6Ymkp_7mOGhKrddiV8qJRisBfSJXlynCJUJjXeYL7Z_r35UWsuM-AtRKyblr3cBakI0cW6B9TgpC2sv8f0OEG_kWjQv0TJQ4OzcsfK1P1T6tI26EG0Wjt6kPQP58jnD6geX1U2PAUyCP-ID1Y0ysncm2Y\",\r\n      \"use\": \"sig\",\r\n      \"key_ops\": [\"sign\"],\r\n      \"alg\": \"RS384\",\r\n      \"kid\": \"inferno-backend-services-key-1\"\r\n    }\r\n  ]\r\n}"}
 Starting test group: smart_stu2_2-smart_backend_services
-✓ Started test run: e9a4c43a-24a8-4908-8eac-6d3a855d7f4a
-Waiting for test run e9a4c43a-24a8-4908-8eac-6d3a855d7f4a to complete (timeout: 3 minutes)...
-  [Poll #1] Status: queued
+✓ Started test run: 39b6e3b8-5b00-437e-8776-e8e476fae73b
+Waiting for test run 39b6e3b8-5b00-437e-8776-e8e476fae73b to complete (timeout: 3 minutes)...
+  [Poll #1] Status: running
   [Poll #2] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
   [Poll #3] Status: done
@@ -185,69 +189,32 @@ WARNING: EHR Launch tests failed but continuing...
 ✓ PASS: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-smart_cors_metadata_request
 ✓ PASS: Unknown test
 ? OMIT: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_token_tls_version
-✗ FAIL: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_grant_type
-    Reason: No signing key found for inputs: encryption method = 'RS384' and kid = ''
-✗ FAIL: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_client_assertion
-    Reason: No signing key found for inputs: encryption method = 'RS384' and kid = ''
-✗ FAIL: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_jwt
-    Reason: No signing key found for inputs: encryption method = 'RS384' and kid = ''
-✗ FAIL: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_auth_request_success
-    Reason: No signing key found for inputs: encryption method = 'RS384' and kid = ''
+⚠ ERROR: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_grant_type
+    Error: Error: undefined method `match?' for nil
+
+/opt/hostedtoolcache/Ruby/3.3.11/x64/lib/ruby/gems/3.3.0/gems/inferno_core-1.0.2/lib/inferno/dsl/http_client.rb:120:in `block (2 levels) in post'
+⚠ ERROR: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_client_assertion
+    Error: Error: undefined method `match?' for nil
+
+/opt/hostedtoolcache/Ruby/3.3.11/x64/lib/ruby/gems/3.3.0/gems/inferno_core-1.0.2/lib/inferno/dsl/http_client.rb:120:in `block (2 levels) in post'
+⚠ ERROR: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_jwt
+    Error: Error: undefined method `match?' for nil
+
+/opt/hostedtoolcache/Ruby/3.3.11/x64/lib/ruby/gems/3.3.0/gems/inferno_core-1.0.2/lib/inferno/dsl/http_client.rb:120:in `block (2 levels) in post'
+⚠ ERROR: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_auth_request_success
+    Error: Error: undefined method `match?' for nil
+
+/opt/hostedtoolcache/Ruby/3.3.11/x64/lib/ruby/gems/3.3.0/gems/inferno_core-1.0.2/lib/inferno/dsl/http_client.rb:120:in `block (2 levels) in post'
 ○ SKIP: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_auth_response_body
     Reason: Input 'authentication_response' is nil, skipping test.
-✗ FAIL: Unknown test
-✗ FAIL: Unknown test
+⚠ ERROR: Unknown test
+⚠ ERROR: Unknown test
 
 ========================================
-Total: 67 | Passed: 55 | Failed: 6 | Skipped: 1 | Errors: 0
-========================================
-
-
-========================================
-       DETAILED FAILURE ANALYSIS        
+Total: 67 | Passed: 55 | Failed: 0 | Skipped: 1 | Errors: 6
 ========================================
 
 
---- smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_grant_type ---
-Test ID: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_grant_type
+⚠️  6 test(s) had internal errors (not compliance failures) — 55 passed out of 67
 
-Result Message:
-No signing key found for inputs: encryption method = 'RS384' and kid = ''
-
---------------------------------------------------
-
---- smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_client_assertion ---
-Test ID: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_client_assertion
-
-Result Message:
-No signing key found for inputs: encryption method = 'RS384' and kid = ''
-
---------------------------------------------------
-
---- smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_jwt ---
-Test ID: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_jwt
-
-Result Message:
-No signing key found for inputs: encryption method = 'RS384' and kid = ''
-
---------------------------------------------------
-
---- smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_auth_request_success ---
-Test ID: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_auth_request_success
-
-Result Message:
-No signing key found for inputs: encryption method = 'RS384' and kid = ''
-
---------------------------------------------------
-
---- Unknown test ---
-Test ID: undefined
-
---------------------------------------------------
-
---- Unknown test ---
-Test ID: undefined
-
---------------------------------------------------
-
-❌ Tests failed: 6 failed, 0 errors out of 67
+✅ All 55 tests passed!

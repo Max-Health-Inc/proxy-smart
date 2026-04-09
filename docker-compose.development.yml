@@ -60,6 +60,30 @@ services:
       timeout: 5s
       retries: 5
 
+  orthanc:
+    image: jodogne/orthanc-plugins:1.12.8
+    container_name: proxy-smart-orthanc-dev
+    ports:
+      - "8042:8042"   # HTTP + DICOMweb
+      - "4242:4242"   # DICOM DIMSE
+    environment:
+      ORTHANC__NAME: "ProxySmart Dev PACS"
+      ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      ORTHANC__DICOM_WEB__ENABLE: "true"
+      ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
+      ORTHANC__DICOM_WEB__ENABLE_WADO: "true"
+      ORTHANC__DICOM_WEB__WADO_ROOT: "/wado"
+    volumes:
+      - orthanc_data_dev:/var/lib/orthanc/db
+    networks:
+      - proxy-smart
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8042/system || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build:
       context: .
@@ -78,6 +102,8 @@ services:
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
       FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly # Multiple FHIR servers can be specified, separated by commas
+      # DICOMweb proxy — points to the Orthanc PACS DICOMweb endpoint
+      DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
       # UI is served from /webapp path by the backend
       VITE_API_BASE_URL: http://localhost:8445
       VITE_BASE: /webapp/
@@ -98,6 +124,8 @@ services:
 volumes:
   postgres_data_dev:
     name: proxy-smart-postgres-data-dev
+  orthanc_data_dev:
+    name: proxy-smart-orthanc-data-dev
 
 networks:
   proxy-smart:

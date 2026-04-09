@@ -20,6 +20,7 @@ import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { mcpEndpointRoutes } from './routes/mcp-endpoint'
+import { dicomwebRoutes } from './routes/dicomweb'
 import { docsRoutes } from './routes/docs'
 import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
@@ -101,6 +102,7 @@ export function createApp() {
                     { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
                     { name: 'fhir-proxy-monitoring', description: 'FHIR proxy request metrics and error tracking' },
                     { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
+                    { name: 'dicomweb', description: 'DICOMweb proxy for WADO-RS and QIDO-RS imaging services' },
                 ],
                 servers: [
                     { url: config.baseUrl, description: 'Development server' }
@@ -182,6 +184,7 @@ export function createApp() {
         .use(fhirProxyMonitoringRoutes)
         .use(adminAuditMonitoringRoutes)
         .use(mcpEndpointRoutes)
+        .use(dicomwebRoutes)
         .use(fhirRoutes)
         .onError(({ code, set, request }) => {
             if (code === 'NOT_FOUND') {
