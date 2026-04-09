@@ -308,16 +308,16 @@ jobs:
             else
               case "${{ inputs.release_type }}" in
                 "alpha")
-                  COMMIT_MSG="🔄 Update version to $NEW_VERSION (alpha)"
+                  COMMIT_MSG="🔄 Update version to $NEW_VERSION (alpha) [skip ci]"
                   ;;
                 "beta")
-                  COMMIT_MSG="🔄 Update version to $NEW_VERSION (beta)"
+                  COMMIT_MSG="🔄 Update version to $NEW_VERSION (beta) [skip ci]"
                   ;;
                 "RELEASE")
-                  COMMIT_MSG="🔄 Update version to $NEW_VERSION"
+                  COMMIT_MSG="🔄 Update version to $NEW_VERSION [skip ci]"
                   ;;
                 *)
-                  COMMIT_MSG="🔄 Update version to $NEW_VERSION"
+                  COMMIT_MSG="🔄 Update version to $NEW_VERSION [skip ci]"
                   ;;
               esac
 
