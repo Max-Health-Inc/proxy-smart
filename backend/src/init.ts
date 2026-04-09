@@ -203,7 +203,7 @@ export async function initializeFhirServers(): Promise<void> {
  * "+" means "use the same URIs as Valid Redirect URIs".
  * Idempotent — safe to call on every startup.
  */
-async function ensurePostLogoutRedirectUris(): Promise<void> {
+export async function ensurePostLogoutRedirectUris(): Promise<void> {
   if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
     logger.keycloak.debug('Skipping post-logout redirect URI check — no admin credentials configured')
     return
