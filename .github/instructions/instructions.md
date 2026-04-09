@@ -7,3 +7,5 @@ check in package.json how to generate client apis in doubt
 follow the concept of DRY! and use existing code patterns
 
 mind that we use ui\src\i18n\translations
+
+if bun causes issues, use bun install --force 

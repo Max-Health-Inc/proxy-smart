@@ -9,7 +9,7 @@ import type {
   MedicationRequestIPS,
   ImmunizationUvIps,
   DiagnosticReportUvIps,
-  ObservationResultsLaboratoryUvIps,
+  ObservationResultsLaboratoryPathologyUvIps,
   ObservationResultsRadiologyUvIps,
   ObservationTobaccoUseUvIps,
   ObservationAlcoholUseUvIps,
@@ -17,6 +17,7 @@ import type {
   ObservationPregnancyEddUvIps,
   ObservationPregnancyOutcomeUvIps,
   ProcedureUvIps,
+  FlagAlertUvIps,
   DeviceUseStatementUvIps,
   ImagingStudyUvIps,
   BundleUvIps,
@@ -24,7 +25,6 @@ import type {
 import type {
   Observation,
   DocumentReference,
-  Flag,
 } from "fhir/r4"
 
 export type {
@@ -35,7 +35,7 @@ export type {
   MedicationRequestIPS as MedicationRequest,
   ImmunizationUvIps as Immunization,
   DiagnosticReportUvIps as DiagnosticReport,
-  ObservationResultsLaboratoryUvIps as LabResult,
+  ObservationResultsLaboratoryPathologyUvIps as LabResult,
   ObservationResultsRadiologyUvIps as RadiologyResult,
   ObservationTobaccoUseUvIps as TobaccoUseObservation,
   ObservationAlcoholUseUvIps as AlcoholUseObservation,
@@ -43,11 +43,12 @@ export type {
   ObservationPregnancyEddUvIps as PregnancyEdd,
   ObservationPregnancyOutcomeUvIps as PregnancyOutcome,
   ProcedureUvIps as Procedure,
+  FlagAlertUvIps as FlagAlert,
   DeviceUseStatementUvIps as DeviceUseStatement,
   ImagingStudyUvIps as ImagingStudy,
   BundleUvIps as IpsBundle,
 }
-export type { Observation, DocumentReference, Flag as FlagAlert }
+export type { Observation, DocumentReference }
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
@@ -138,8 +139,8 @@ export async function searchVitals(patientId: string): Promise<Observation[]> {
   })
 }
 
-export async function searchLabs(patientId: string): Promise<ObservationResultsLaboratoryUvIps[]> {
-  return client.read().observationResultsLaboratoryUvIps().searchAll({
+export async function searchLabs(patientId: string): Promise<ObservationResultsLaboratoryPathologyUvIps[]> {
+  return client.read().observationResultsLaboratoryPathologyUvIps().searchAll({
     patient: `Patient/${patientId}`,
     category: "laboratory",
     _count: 50,
@@ -199,8 +200,8 @@ export async function searchProcedures(patientId: string): Promise<ProcedureUvIp
 
 // ── Flags / Alerts (IPS-profiled) ────────────────────────────────────────────
 
-export async function searchFlags(patientId: string): Promise<Flag[]> {
-  return client.read().flag().searchAll({
+export async function searchFlags(patientId: string): Promise<FlagAlertUvIps[]> {
+  return client.read().flagAlertUvIps().searchAll({
     patient: `Patient/${patientId}`,
     status: "active",
     _count: 20,
