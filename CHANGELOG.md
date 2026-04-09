@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604090735.37497a36] - 2026-04-09
+
+- 🔧 Chores & Improvements: internal setup and maintenance
+  - fix: use internal.setOptions for dicom-image-loader auth config (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/300
+
+
 ## [0.0.3-alpha.202604090720.61696ba9] - 2026-04-09
 
 - ✨ Features: Add DicomViewer component with Cornerstone3D lazy init, WADO-RS auth integration, dynamic imports, and image loader token injection; extend ImagingStudyCard to support quick-view via DicomViewer
