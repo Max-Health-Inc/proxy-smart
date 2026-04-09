@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604090747.47995eb3] - 2026-04-09
+
+- ✨ Features: add post.logout.redirect.uris for Keycloak 25+ compatibility
+- 🔧 Chores & Improvements: CI/testing updates and version bumps
+- 📚 Documentation: changelog entry updated for PR #300
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/301
+
+
 ## [0.0.3-alpha.202604090735.37497a36] - 2026-04-09
 
 - 🔧 Chores & Improvements: internal setup and maintenance
