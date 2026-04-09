@@ -41,6 +41,7 @@ import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/v
 import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps"
 import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps"
 import { PatientBanner } from "@/components/PatientBanner"
+import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import {
   Heart,
   Pill,
@@ -55,7 +56,6 @@ import {
   Flag,
   Baby,
   Stethoscope,
-  ScanLine,
   Laptop,
 } from "lucide-react"
 import { format } from "date-fns"
@@ -622,53 +622,7 @@ export function Dashboard() {
         </Card>
 
         {/* Imaging Studies */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ScanLine className="size-4 text-violet-500" />
-              Imaging Studies
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {imagingStudies.length === 0 && radiologyResults.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No imaging records</p>
-            ) : (
-              <ul className="space-y-2">
-                {imagingStudies.map((study, i) => (
-                  <li key={study.id || `img-${i}`} className="text-sm">
-                    <span className="font-medium">
-                      {study.procedureCode?.[0]?.coding?.[0]?.display ||
-                        study.description ||
-                        "Imaging study"}
-                    </span>
-                    {study.started && (
-                      <span className="text-muted-foreground ml-2">
-                        {format(new Date(study.started), "MMM d, yyyy")}
-                      </span>
-                    )}
-                    {study.numberOfSeries != null && (
-                      <span className="text-muted-foreground ml-2 text-xs">
-                        {study.numberOfSeries} series
-                      </span>
-                    )}
-                  </li>
-                ))}
-                {radiologyResults.map((obs, i) => (
-                  <li key={obs.id || `rad-${i}`} className="text-sm flex justify-between">
-                    <span className="font-medium truncate mr-2">
-                      {obs.code?.coding?.[0]?.display || obs.code?.text || "Radiology result"}
-                    </span>
-                    {obs.effectiveDateTime && (
-                      <span className="text-muted-foreground whitespace-nowrap">
-                        {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
       </div>
     </div>
   )

@@ -261,6 +261,29 @@ export const config = {
     },
   },
 
+  dicomweb: {
+    // DICOMweb proxy configuration — proxies WADO-RS / QIDO-RS requests to a PACS
+    get enabled() {
+      return !!this.baseUrl
+    },
+    get baseUrl() {
+      return process.env.DICOMWEB_BASE_URL || null // e.g. http://orthanc:8042/dicom-web
+    },
+    get wadoRoot() {
+      return process.env.DICOMWEB_WADO_ROOT || this.baseUrl // WADO-RS root, defaults to baseUrl
+    },
+    get qidoRoot() {
+      return process.env.DICOMWEB_QIDO_ROOT || this.baseUrl // QIDO-RS root, defaults to baseUrl
+    },
+    // Optional auth for upstream PACS (e.g. Basic auth for Orthanc)
+    get upstreamAuth() {
+      return process.env.DICOMWEB_UPSTREAM_AUTH || null // e.g. "Basic dGVzdDp0ZXN0"
+    },
+    get timeoutMs() {
+      return Number.parseInt(process.env.DICOMWEB_TIMEOUT_MS || '30000', 10)
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins
