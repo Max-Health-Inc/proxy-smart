@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604080110.a6a53b7c] - 2026-04-09
+
+- 🔧 Chores & Improvements: Add key_ops: ["sign"] to RS384 private JWKS entries (dev and alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/297
+
+
 ## [0.0.3-alpha.202604080058.cda7f4b7] - 2026-04-08
 
 - ✨ Features
