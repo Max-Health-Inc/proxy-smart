@@ -30,10 +30,7 @@ import { config } from '@/config';
 import { adminApiCall } from '@/lib/admin-api';
 import { useTranslation } from 'react-i18next';
 import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet';
-import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet';
-import { ValueSetRegistry } from 'hl7.fhir.uv.smart-app-launch-generated';
-
-const { UserAccessCategoryValueSetConcepts } = ValueSetRegistry.UserAccessCategoryValueSet;
+import { isValidUserAccessCategoryValueSetCode, UserAccessCategoryValueSetConcepts } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
