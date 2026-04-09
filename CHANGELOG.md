@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-beta.202604091636.12e24ecc] - 2026-04-09
+
+- ✨ Features: Expose ensurePostLogoutRedirectUris in backend/src/init.ts; add comprehensive tests for post-logout redirect URI behavior (creation, update, startup repair) with token validation and Keycloak mocks.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/304
+
+
 ## [0.0.3-alpha.202604090837.7f0be1bf] - 2026-04-09
 
 - 🔧 Chores & Improvements: CI/CD tweaks and testing updates
