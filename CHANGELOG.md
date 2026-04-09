@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604080058.cda7f4b7] - 2026-04-08
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix: convert Union([Literal(...)]) to UnionEnum for MCP compatibility
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #295
+  - docs: update CHANGELOG.md for PR #294
+  - docs: update CHANGELOG.md for PR #293
+
+- 🔧 Chores & Improvements
+  - fix: introspection patient claim + backend services JWKS format
+  - fix: fix dtr-app tgz (stale cache) and move PASClaimResponse to main import
+  - Update version to 0.0.3-alpha.202604080058.cda7f4b7
+
+- ⚠️ Breaking Changes
+  - None
+
+- Note: Skipped non-meaningful or duplicate commits (update, merge, metadata, CI-only).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/296
+
+
 ## [0.0.3-beta.202604072243.17a845f3] - 2026-04-07
 
 - 🔧 Chores & Improvements: CI/CD updates and maintenance (version bump in CI, testing report updates)
