@@ -41,7 +41,7 @@ async function ensureCornerstoneInit() {
   await tools.init()
 
   // Configure WADO-RS loader to inject auth headers
-  loader.default?.configure?.({
+  loader.internal.setOptions({
     beforeSend: async (xhr: XMLHttpRequest) => {
       const token = getAccessToken()
       if (token) {
