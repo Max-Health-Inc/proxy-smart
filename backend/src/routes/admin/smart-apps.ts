@@ -332,7 +332,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.scopeSetId && { 'scope_set_id': body.scopeSetId }),
           
           // PKCE configuration
-          ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' })
+          ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' }),
+
+          // Keycloak 25+ requires explicit post-logout redirect URI config
+          'post.logout.redirect.uris': '+',
         },
         // Configure client authentication method
         clientAuthenticatorType,
@@ -638,6 +641,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         webOrigins: body.webOrigins,
         attributes: {
           ...clients[0].attributes,
+          // Keycloak 25+ requires explicit post-logout redirect URI config
+          'post.logout.redirect.uris': clients[0].attributes?.['post.logout.redirect.uris'] || '+',
           smart_version: body.smartVersion ? [body.smartVersion] : clients[0].attributes?.smart_version,
           fhir_version: body.fhirVersion ? [body.fhirVersion] : clients[0].attributes?.fhir_version,
           // MCP server access control

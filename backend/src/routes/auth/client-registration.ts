@@ -230,6 +230,8 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
           'smart.launch_uris': body.launch_uris?.join(',') || '',
           'smart.client_uri': body.client_uri || '',
           'smart.logo_uri': body.logo_uri || '',
+          // Keycloak 25+ requires explicit post-logout redirect URI config
+          'post.logout.redirect.uris': '+',
           // Dynamic registration metadata
           'dynamic_registration': 'true',
           'registration_date': Date.now().toString(),
