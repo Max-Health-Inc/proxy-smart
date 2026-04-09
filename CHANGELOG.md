@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604090720.61696ba9] - 2026-04-09
+
+- ✨ Features: Add DicomViewer component with Cornerstone3D lazy init, WADO-RS auth integration, dynamic imports, and image loader token injection; extend ImagingStudyCard to support quick-view via DicomViewer
+- 🔧 Chores & Improvements: Expand dicomweb.ts with helpers (getAccessToken, buildImageId, fetchSeriesImageIds) for building Cornerstone imageIds; update patient-portal package.json with new dependencies and devDependency; adjust vite.config.ts to include viteCommonjs plugin and optimizeDeps updates
+- ⚠️ Breaking Changes: None detected
+- 📚 Documentation: None detected
+- 🐛 Bug Fixes: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/299
+
+
 ## [0.0.3-alpha.202604080110.a6a53b7c] - 2026-04-09
 
 - 🔧 Chores & Improvements: Add key_ops: ["sign"] to RS384 private JWKS entries (dev and alpha)
