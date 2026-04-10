@@ -147,7 +147,8 @@
     "shared-ui",
     "dtr-app",
     "consent-app",
-    "patient-portal"
+    "patient-portal",
+    "apps/smart-dicom-template"
   ],
   "main": "eslint.config.js",
   "directories": {
