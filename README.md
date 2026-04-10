@@ -144,12 +144,13 @@ graph TB
 | Workspace | Description |
 |---|---|
 | `backend/` | Elysia API server, FHIR proxy, OAuth endpoints |
-| `ui/` | React admin dashboard |
-| `consent-app/` | Patient consent management UI |
-| `dtr-app/` | Documentation, Templates & Rules (DTR) app |
+| `apps/ui/` | React admin dashboard |
+| `apps/consent-app/` | Patient consent management UI |
+| `apps/dtr-app/` | Documentation, Templates & Rules (DTR) app |
+| `apps/patient-portal/` | International Patient Portal (IPS/IPA) |
+| `apps/smart-dicom-template/` | Starter kit for imaging AI SMART apps |
 | `shared-ui/` | Shared React components and utilities |
 | `infra/` | AWS CDK infrastructure |
-| `mcp-server/` | Generated Python MCP server |
 
 ### Tech Stack
 
