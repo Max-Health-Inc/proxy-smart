@@ -81,7 +81,7 @@ jobs:
           echo "🔄 Generating frontend API client from backend OpenAPI spec..."
           bun install
           cd backend && bun install && cd ..
-          cd ui && bun install && cd ..
+          cd apps/ui && bun install && cd ../..
           bun run generate:ui:normalized
           
           # Configure git for potential commits
@@ -102,7 +102,7 @@ jobs:
         id: frontend-build
         run: |
           echo "=== Building Frontend ==="
-          cd ui
+          cd apps/ui
           bun install
           set -o pipefail  # Ensure pipeline fails if any command fails
           bun run build 2>&1 | tee ../frontend-build.log
@@ -293,7 +293,7 @@ jobs:
           CI: true
         run: |
           echo "Running frontend tests..."
-          cd ui
+          cd apps/ui
           bun run test 2>&1 | tee ../frontend-test.log
 
       - name: Check Test Results
@@ -422,7 +422,7 @@ jobs:
           if python scripts/apply-changes.py scripts/reviewed-frontend-test-fixes.json; then
             echo "✅ Frontend TEST fixes applied successfully"
             echo "🔄 Retrying tests..."
-            cd ui
+            cd apps/ui
             if bun run test; then
               echo "✅ Tests successful after AI fixes!"
               echo "TEST_RETRY_SUCCESS=true" >> $GITHUB_OUTPUT

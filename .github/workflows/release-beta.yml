@@ -4,7 +4,7 @@ on:
   push:
     branches: [test]
     paths-ignore:
-      - 'ui/src/lib/api-client/**'
+      - 'apps/ui/src/lib/api-client/**'
   workflow_dispatch:
 
 permissions:

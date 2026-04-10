@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "ui/src/lib/api-client/**"
+      - "apps/ui/src/lib/api-client/**"
       - ".github/workflows/**"
   workflow_dispatch:
 
