@@ -153,6 +153,10 @@ describe('Smart-Apps POST / — post.logout.redirect.uris on create', () => {
       attributes: { smart_app: 'true', 'post.logout.redirect.uris': '+' },
     })
     mockValidateToken.mockClear()
+
+    // Required for config.keycloak.isConfigured (checked by createAdminClient)
+    process.env.KEYCLOAK_BASE_URL = 'http://localhost:8080'
+    process.env.KEYCLOAK_REALM = 'proxy-smart'
   })
 
   it('includes post.logout.redirect.uris: "+" in the Keycloak create payload', async () => {
@@ -178,7 +182,7 @@ describe('Smart-Apps POST / — post.logout.redirect.uris on create', () => {
   it('sets post.logout.redirect.uris alongside PKCE config', async () => {
     const app = buildApp()
 
-    await app.handle(
+    const res = await app.handle(
       new Request('http://localhost/smart-apps', {
         method: 'POST',
         headers: bearerHeaders(),
@@ -191,6 +195,7 @@ describe('Smart-Apps POST / — post.logout.redirect.uris on create', () => {
       }),
     )
 
+    expect(res.status).toBe(200)
     expect(capturedCreatePayload).not.toBeNull()
     expect(capturedCreatePayload.attributes['post.logout.redirect.uris']).toBe('+')
     expect(capturedCreatePayload.attributes['pkce.code.challenge.method']).toBe('S256')
@@ -208,6 +213,10 @@ describe('Smart-Apps PUT /:clientId — post.logout.redirect.uris on update', ()
     capturedCreatePayload = null
     kcClientsFindResult = [] // ensure route-mode
     mockValidateToken.mockClear()
+
+    // Required for config.keycloak.isConfigured (checked by createAdminClient)
+    process.env.KEYCLOAK_BASE_URL = 'http://localhost:8080'
+    process.env.KEYCLOAK_REALM = 'proxy-smart'
   })
 
   it('preserves existing post.logout.redirect.uris value on update', async () => {
