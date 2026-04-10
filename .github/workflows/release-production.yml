@@ -11,6 +11,7 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  packages: write
 
 concurrency:
   group: releases-production

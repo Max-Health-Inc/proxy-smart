@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604101128.7fdbfc46] - 2026-04-10
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - Expose ensurePostLogoutRedirectUris helper and add tests for post-logout redirect URI behavior (creation, update, startup repair) with mocks for token validation and admin calls.
+
+- 📚 Documentation
+  - None
+
+- 🔧 Chores & Improvements
+  - CI/CD: Add GitHub Actions permissions level for packages in release-production workflow.
+  - Repo/Codebase hygiene: Major workspace path refactor—rename ui/ to apps/ui/ across configs, Dockerfiles, and type/script references; update API client models to align with new app paths; adjust build and lint configurations accordingly.
+
+- ⚠️ Breaking Changes
+  - None
+
+Note: Filtered out update/merge/metadata commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/309
+
+
 ## [0.0.3-alpha.202604101119.fb892148] - 2026-04-10
 
 - 🔧 Chores & Improvements: Major refactor of workspace paths and UI app references (ui/ → apps/ui/), updated CI/CD/build configs, Dockerfiles, and TypeScript configs to reflect new monorepo structure
