@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604101219.41a64d4f] - 2026-04-10
+
+- ✨ Features
+  - SMART Apps: reorganized app structure and added new SMART App docs (consent-app, dtr-app, patient-portal, smart-dicom-template) with updated navigation.
+
+- 🔧 Chores & Improvements
+  - CI/CD: add permissions write for release-production workflow.
+  - Monorepo path normalization: migrate UI app references from ui/ to apps/ui/ across codebase, docs, and configs.
+  - Documentation: update docs sidebar and add SMART Apps docs.
+
+- 🐛 Bug Fixes
+  - Backend: expose ensurePostLogoutRedirectUris and add comprehensive tests for post-logout redirect URI behavior.
+
+- 📚 Documentation
+  - Documentation: add SMART App docs and update navigation.
+
+- ⚠️ Breaking Changes
+  - None identified.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/313
+
+
 ## [0.0.3-alpha.202604101213.09484d6c] - 2026-04-10
 
 - ✨ Features
