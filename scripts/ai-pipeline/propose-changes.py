@@ -1592,18 +1592,18 @@ class UnifiedChangeProposer:
         # Match various error patterns for TypeScript files
         patterns = [
             r'((?:backend|ui|src)/[^\s:()]+\.tsx?)\((\d+),\d+\)',
-            r'Error in ((?:backend|ui|src)/[^\s:()]+\.tsx?):(\d+)',
-            r'((?:backend|ui|src)/[^\s:()]+\.tsx?):(\d+):\d+',
+            r'Error in ((?:backend|apps/ui|apps|src)/[^\s:()]+\.tsx?):(\d+)',
+            r'((?:backend|apps/ui|apps|src)/[^\s:()]+\.tsx?):(\d+):\d+',
         ]
         
         for pattern in patterns:
             for match in re.finditer(pattern, error_log):
                 file_path, line_num = match.groups()
                 # Normalize path to repo root
-                if not file_path.startswith(('backend/', 'ui/')):
+                if not file_path.startswith(('backend/', 'apps/')):
                     # Try to infer the correct path
                     if 'components' in file_path or 'pages' in file_path:
-                        file_path = f"ui/{file_path}"
+                        file_path = f"apps/ui/{file_path}"
                     else:
                         file_path = f"backend/{file_path}"
                 
@@ -2003,7 +2003,7 @@ Remember: BASE TOOLS = Your workshop foundation, CUSTOM TOOLS = Your specialized
                             # Strategy 3: Default fallback for common tools
                             if arguments is None:
                                 if function_name == "list_directory" and "ui/src" in raw_args:
-                                    arguments = {"path": "ui/src"}
+                                    arguments = {"path": "apps/ui/src"}
                                     print(f"✅ Strategy 3 fallback for {function_name}", file=sys.stderr)
                                 elif function_name == "read_file" and "/" in raw_args:
                                     # Try to extract a file path

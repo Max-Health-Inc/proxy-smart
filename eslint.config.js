@@ -14,7 +14,7 @@ export default defineConfig(
       'dist/**',
       'node_modules/**',
       'backend/dist/**',
-      'ui/dist/**',
+      'apps/ui/dist/**',
       '**/lib/api-client/**',
       '**/*.generated.*',
       'coverage/**'
