@@ -1,0 +1,17 @@
+{
+  "name": "@proxy-smart/e2e",
+  "version": "0.0.3-beta.202604101119.fb892148",
+  "private": true,
+  "description": "End-to-end Playwright tests for Proxy Smart apps",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "test:patient-portal": "npx playwright test --project=patient-portal",
+    "report": "npx playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  }
+}

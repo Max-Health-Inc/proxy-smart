@@ -4,6 +4,7 @@ import { initializeServer, displayServerEndpoints } from './init'
 import { oauthMetricsLogger } from './lib/oauth-metrics-logger'
 import { consentMetricsLogger } from './lib/consent-metrics-logger'
 import { fhirHealthLogger } from './lib/fhir-health-logger'
+import { fhirProxyMetricsLogger } from './lib/fhir-proxy-metrics-logger'
 import { adminAuditLogger } from './lib/admin-audit-logger'
 import { createApp } from './app-factory'
 import { existsSync, readFileSync } from 'fs'
@@ -28,6 +29,9 @@ initializeServer()
     // Initialize FHIR health logger and start background checks (every 30s)
     await fhirHealthLogger.initialize();
     fhirHealthLogger.start();
+
+    // Initialize FHIR proxy metrics logger
+    await fhirProxyMetricsLogger.initialize();
 
     try {
       // In containerized environments (Docker), listen on all interfaces

@@ -74,7 +74,7 @@ jobs:
     - name: Install Frontend Dependencies
       run: |
         echo "📦 Installing frontend dependencies..."
-        cd ui
+        cd apps/ui
         bun install
 
     # === FRONTEND TESTING & COVERAGE ===
@@ -84,7 +84,7 @@ jobs:
       continue-on-error: true
       run: |
         echo "🧪 Running frontend tests with coverage..."
-        cd ui
+        cd apps/ui
         
         # Run tests with coverage
         bun run test:coverage --reporter=verbose --reporter=json --outputFile=test-results.json 2>&1 | tee test-output.log
@@ -105,7 +105,7 @@ jobs:
       id: analyze-frontend
       run: |
         echo "🔍 Analyzing frontend test results..."
-        cd ui
+        cd apps/ui
         
         # Check if tests failed (exit code OR output contains failures)
         test_exit_code="${{ steps.frontend-test-coverage.outputs.frontend_test_exit_code }}"
@@ -938,7 +938,7 @@ jobs:
           echo "   • New tests: ${{ steps.generate-frontend-tests.outputs.frontend_tests_added || 0 }}"
           echo ""
           echo "📊 Running frontend test suite with coverage..."
-          cd ui
+          cd apps/ui
           bun run test:coverage --reporter=verbose 2>&1 | tee ../scripts/frontend-retest.log
           frontend_retest_exit=$?
           echo "frontend_retest_exit_code=$frontend_retest_exit" >> $GITHUB_OUTPUT

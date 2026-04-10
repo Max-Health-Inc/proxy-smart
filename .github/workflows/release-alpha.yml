@@ -4,7 +4,7 @@ on:
   push:
     branches: [develop]
     paths-ignore:
-      - 'ui/src/lib/api-client/**'
+      - 'apps/ui/src/lib/api-client/**'
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,6 @@ jobs:
 
   # Note: Deployment is handled automatically by Northflank
   # When code is pushed to 'develop', Northflank detects the commit and deploys automatically
-  # No explicit deploy step needed!
 
   # Test the deployed alpha application
   #test-alpha-deployment:

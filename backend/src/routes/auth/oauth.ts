@@ -378,17 +378,22 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         try {
           const tokenPayload = await validateToken(data.access_token)
 
+          // Determine granted scopes for gating launch context (SMART 2.2.0 Section 2.0.7)
+          const grantedScopes = new Set(
+            (data.scope || requestedScope || '').split(' ').filter(Boolean)
+          )
+
           // Add SMART launch context parameters from token claims (if available)
-          // This requires proper Keycloak configuration with protocol mappers
-          if (tokenPayload.smart_patient) {
+          // Only include context parameters when the corresponding scope was granted
+          if (tokenPayload.smart_patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
             data.patient = tokenPayload.smart_patient
           }
 
-          if (tokenPayload.smart_encounter) {
+          if (tokenPayload.smart_encounter && (grantedScopes.has('launch/encounter') || grantedScopes.has('launch'))) {
             data.encounter = tokenPayload.smart_encounter
           }
 
-          if (tokenPayload.fhirUser) {
+          if (tokenPayload.fhirUser && (grantedScopes.has('fhirUser') || grantedScopes.has('openid'))) {
             // Convert relative fhirUser reference to absolute URL per SMART spec
             // The fhirUser claim should be a full URL to the FHIR resource
             const fhirUserValue = tokenPayload.fhirUser
@@ -522,6 +527,21 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         description: data.error_description,
         status: resp.status
       })
+    }
+
+    // Enrich active introspection response with SMART launch context claims.
+    // Keycloak stores them as smart_patient, smart_encounter, fhirUser etc.
+    // but SMART STU 2.2 Token Introspection expects top-level patient, encounter, fhirUser.
+    if (data.active) {
+      if (data.smart_patient && !data.patient) {
+        data.patient = data.smart_patient
+      }
+      if (data.smart_encounter && !data.encounter) {
+        data.encounter = data.smart_encounter
+      }
+      if (data.fhirUser === undefined && data.fhir_user) {
+        data.fhirUser = data.fhir_user
+      }
     }
 
     return data

@@ -16,6 +16,7 @@ import {
   type UpdateIdentityProviderRequestType
 } from '@/schemas'
 import { handleAdminError } from '@/lib/admin-error-handler'
+import { extractBearerToken } from '@/lib/admin-utils'
 import type IdentityProviderRepresentation from '@keycloak/keycloak-admin-client/lib/defs/identityProviderRepresentation.js'
 
 const normalizeProvider = (
@@ -46,7 +47,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
   .get('/count', async ({ getAdmin, headers, set }): Promise<CountResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -75,7 +76,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
   .get('/', async ({ getAdmin, headers, set }): Promise<IdentityProviderResponseType[] | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -103,7 +104,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
   .post('/', async ({ getAdmin, body, headers, set }): Promise<IdentityProviderResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -143,7 +144,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
   .get('/:alias', async ({ getAdmin, params, headers, set }): Promise<IdentityProviderResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -161,6 +162,9 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       return { error: 'Failed to fetch identity provider', details: error }
     }
   }, {
+    params: t.Object({
+      alias: t.String({ description: 'Identity provider alias' })
+    }),
     response: {
       200: IdentityProviderResponse,
       ...CommonErrorResponses
@@ -175,7 +179,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
   .put('/:alias', async ({ getAdmin, params, body, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -197,6 +201,9 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       return { error: 'Failed to update identity provider', details: error }
     }
   }, {
+    params: t.Object({
+      alias: t.String({ description: 'Identity provider alias' })
+    }),
     body: UpdateIdentityProviderRequest,
     response: {
       200: SuccessResponse,
@@ -212,7 +219,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
   .delete('/:alias', async ({ getAdmin, params, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -226,6 +233,9 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       return { error: 'Identity provider not found or could not be deleted', details: error }
     }
   }, {
+    params: t.Object({
+      alias: t.String({ description: 'Identity provider alias' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses

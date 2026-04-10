@@ -6,11 +6,731 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.3-alpha.202604101119.fb892148] - 2026-04-10
+
+- 🔧 Chores & Improvements: Major refactor of workspace paths and UI app references (ui/ → apps/ui/), updated CI/CD/build configs, Dockerfiles, and TypeScript configs to reflect new monorepo structure
+- 🔧 Chores & Improvements: API client scaffolding moved/generated under apps/ui/lib/api-client (from ui/), enabling UI API interactions
+- 🧪 Features: Expose ensurePostLogoutRedirectUris from backend init for external usage
+- 🧪 Features: New tests for post-logout redirect URI behavior (creation, update, startup repair) with mocks and state tracking
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/308
+
+
+## [0.0.3-alpha.202604092223.826788c7] - 2026-04-10
+
+- 🔧 Chores & Improvements: Expose ensurePostLogoutRedirectUris in backend/init.ts and add comprehensive tests for post-logout redirect URI behavior (creation, update, startup repair) with mocks for token validation and Keycloak admin interactions
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/306
+
+
+
+- ✨ Features: Expose ensurePostLogoutRedirectUris and add comprehensive tests for post-logout redirect URI behavior (creation, update, startup repair) with mocks.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/307
+
+
+## [0.0.3-beta.202604091636.12e24ecc] - 2026-04-09
+
+- ✨ Features: Expose ensurePostLogoutRedirectUris in backend/src/init.ts; add comprehensive tests for post-logout redirect URI behavior (creation, update, startup repair) with token validation and Keycloak mocks.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/304
+
+
+
+- 🔧 Chores & Improvements: Expose ensurePostLogoutRedirectUris from backend/init.ts and add comprehensive tests for post-logout redirect URI behavior (creation, update, startup repair) with mocks for token validation and Keycloak interactions
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/305
+
+
+## [0.0.3-alpha.202604090837.7f0be1bf] - 2026-04-09
+
+- 🔧 Chores & Improvements: CI/CD tweaks and testing updates
+  - ci: add [skip ci] to version-bump commits to prevent duplicate workflow runs
+  - chore(testing): update beta SMART compliance report
+  - chore(testing): update dev SMART compliance report
+- 📚 Documentation: docs for DICOMweb proxy & Patient Portal Imaging
+- ⚠️ Breaking Changes: none
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/302
+
+
+## [0.0.3-alpha.202604090747.47995eb3] - 2026-04-09
+
+- ✨ Features: add post.logout.redirect.uris for Keycloak 25+ compatibility
+- 🔧 Chores & Improvements: CI/testing updates and version bumps
+- 📚 Documentation: changelog entry updated for PR #300
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/301
+
+
+## [0.0.3-alpha.202604090735.37497a36] - 2026-04-09
+
+- 🔧 Chores & Improvements: internal setup and maintenance
+  - fix: use internal.setOptions for dicom-image-loader auth config (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/300
+
+
+## [0.0.3-alpha.202604090720.61696ba9] - 2026-04-09
+
+- ✨ Features: Add DicomViewer component with Cornerstone3D lazy init, WADO-RS auth integration, dynamic imports, and image loader token injection; extend ImagingStudyCard to support quick-view via DicomViewer
+- 🔧 Chores & Improvements: Expand dicomweb.ts with helpers (getAccessToken, buildImageId, fetchSeriesImageIds) for building Cornerstone imageIds; update patient-portal package.json with new dependencies and devDependency; adjust vite.config.ts to include viteCommonjs plugin and optimizeDeps updates
+- ⚠️ Breaking Changes: None detected
+- 📚 Documentation: None detected
+- 🐛 Bug Fixes: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/299
+
+
+## [0.0.3-alpha.202604080110.a6a53b7c] - 2026-04-09
+
+- 🔧 Chores & Improvements: Add key_ops: ["sign"] to RS384 private JWKS entries (dev and alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/297
+
+
+## [0.0.3-alpha.202604080058.cda7f4b7] - 2026-04-08
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix: convert Union([Literal(...)]) to UnionEnum for MCP compatibility
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #295
+  - docs: update CHANGELOG.md for PR #294
+  - docs: update CHANGELOG.md for PR #293
+
+- 🔧 Chores & Improvements
+  - fix: introspection patient claim + backend services JWKS format
+  - fix: fix dtr-app tgz (stale cache) and move PASClaimResponse to main import
+  - Update version to 0.0.3-alpha.202604080058.cda7f4b7
+
+- ⚠️ Breaking Changes
+  - None
+
+- Note: Skipped non-meaningful or duplicate commits (update, merge, metadata, CI-only).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/296
+
+
+## [0.0.3-beta.202604072243.17a845f3] - 2026-04-07
+
+- 🔧 Chores & Improvements: CI/CD updates and maintenance (version bump in CI, testing report updates)
+- 🐛 Bug Fixes: Fix dtr-app tarball cache and adjust PASClaimResponse import
+- 📚 Documentation: Update CHANGELOG entry for PR #293
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/294
+
+
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix: introspection patient claim + backend services JWKS format (quotentiroler)
+  - fix: fix dtr-app tgz (stale cache) and move PASClaimResponse to main import (quotentiroler)
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #294
+  - docs: update CHANGELOG.md for PR #293
+
+- 🔧 Chores & Improvements
+  - chore(testing): update beta/dev SMART compliance reports (proxy-smart-releaser[bot])
+  - chore(testing): update version to 0.0.3-beta.202604072243.17a845f3 (beta) (github-actions[bot])
+
+- ⚠️ Breaking Changes
+  - None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/295
+
+
+## [0.0.3-alpha.202604072243.17a845f3] - 2026-04-07
+
+- ⚠️ Breaking Changes: none
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+- 📚 Documentation: none
+- 🔧 Chores & Improvements: minor build/test tooling updates
+
+Note: No user-facing changes detected beyond version bumps and internal maintenance.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/293
+
+
+## [0.0.3-alpha.202604072226.d14c7f94] - 2026-04-07
+
+- 🔧 Chores & Improvements: Regenerate FHIR tgz packages with babelfhir-ts 1.2.5; update testing reports
+- 📚 Documentation: Update CHANGELOG.md for PR #291
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/292
+
+
+## [0.0.3-alpha.202604072220.eb426fd8] - 2026-04-07
+
+- 🔧 Chores & Improvements: Update dependencies and bump version strings across bun.lock and multiple packages to 202604072212.97a1f997
+  - Added dependency "@vue/server-renderer" ^3.5.30
+  - Updated package.json and bun.lock version tags for backend, infra, patient-portal, and ui components
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/291
+
+
+## [0.0.3-alpha.202604072212.97a1f997] - 2026-04-07
+
+- 🔧 Chores & Improvements: Drop .js from valueset imports to align with exports wildcard (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/290
+
+
+## [0.0.3-beta.202604072115.7fa57ae1] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal maintenance (version metadata updates skipped; exclude noisy update commits)
+- ✨ Features: None
+- 🐛 Bug Fixes: fix(patient-portal): regenerate ips-generated with babelfhir-ts 1.2.5 (valuesets exports)
+- 📚 Documentation: docs: update CHANGELOG.md for PR #288
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/289
+
+
+## [0.0.3-alpha.202604071925.75928c50] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Minor: Update CHANGELOG for PR #287
+  - Chore: Update version metadata and related release steps to alpha 0.0.3-alpha.202604071925.75928c50
+  - Chore: Update dev beta/alpha SMART compliance reports (cleanup/internal)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/288
+
+
+## [0.0.3-alpha.202604071628.96af1239] - 2026-04-07
+
+- 🔧 Chores & Improvements: Remove explicit GHCR build/push workflow step for alpha; retain automatic Northflank deployment on develop pushes; reduce top-level permissions by removing write access from certain packages.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/287
+
+
+## [0.0.3-alpha.202604071618.6e486c97] - 2026-04-07
+
+- 🔧 Chores & Improvements: Copy root lib/ tarballs into Docker build context
+
+- 📚 Documentation: Update CHANGELOG.md for PR #284
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/285
+
+
+## [0.0.3-alpha.202604071545.70936f2d] - 2026-04-07
+
+- 🔧 Chores & Improvements: CI/CD workflow enhancements
+  - Add GitHub Actions steps to build and push the alpha Docker image to GHCR, extend workflow permissions (packages: write)
+  - Introduce build-alpha-image job: checkout develop, login to GHCR, setup Buildx, compute image prefix, build/push mono:alpha-<version> and mono:alpha-latest, enable caching for alpha-mono
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/284
+
+
+## [0.0.3-alpha.202604071536.80de429f] - 2026-04-07
+
+- ✨ Features:  
+  - Add CI/CD workflow to build and push beta Docker images to GHCR (backend and frontend) with versioned and latest tags, plus Buildx caching.  
+  - Introduce GHCR-based image usage in docker-compose.beta.yml for backend, frontend, and Keycloak (default to beta-latest tags).
+
+- 🔧 Chores & Improvements:  
+  - Implement isolated dependency install layer for mono build with per-package workspace installation and cached bun install.  
+  - Compute and export lowercase GHCR path (IMAGE_PREFIX) at two workflow points to ensure consistent image references.  
+  - Update GitHub Actions workflow permissions to grant write access to release packaging.
+
+- ⚠️ Breaking Changes:  
+  - Switched docker-compose.beta.yml to use prebuilt GHCR images instead of local Docker builds.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/283
+
+
+## [0.0.3-beta.202604070736.41e900cf] - 2026-04-07
+
+- 🔧 Chores & Improvements: CI/CD updates
+  - Add GitHub Actions workflow to build and push beta Docker images to GHCR (backend and frontend) with versioned and latest tags, plus Buildx caching
+  - Update docker-compose.beta.yml to use GHCR prebuilt images via env vars (BACKEND_IMAGE, FRONTEND_IMAGE, KEYCLOAK_IMAGE) with defaults to beta-latest; remove local Docker builds for Keycloak, Backend, and Frontend
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/280
+
+
+
+- 🔧 Chores & Improvements: Ensure IMAGE_PREFIX is always lowercase GHCR path at runtime (two build/deploy steps) and remove the old definition
+- 🔧 Chores & Improvements: Update GitHub Actions to grant package write access in release-beta workflow
+- ✨ Features: Add beta GitHub Actions workflow to build and push beta Docker images to GHCR (backend and frontend) with versioned and latest tags, plus Buildx caching
+- 🔧 Chores & Improvements: Switch docker-compose.beta.yml to use prebuilt GHCR images (BACKEND_IMAGE, FRONTEND_IMAGE, KEYCLOAK_IMAGE) with default beta-latest tags; remove local builds for Keycloak, Backend, and Frontend
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/282
+
+
+## [0.0.3-alpha.202604070736.41e900cf] - 2026-04-07
+
+- 🐛 Bug Fixes: Health checks treat unconfigured subsystems as neutral
+  - Not_configured state added for FHIR when no servers configured
+  - Keycloak health: if KEYCLOAK_BASE_URL missing, report not_configured (not unhealthy)
+  - Overall system health now filters out not_configured subsystems and reports healthy/degraded/unhealthy accurately
+- 🔧 Chores & Improvements: Use JAVA_TOOL_OPTIONS for Keycloak build heap limit (JVM-level) instead of JAVA_OPTS_KC_BUILD
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/279
+
+
+## [0.0.3-beta.202604070709.d55c0d66] - 2026-04-07
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+- ⚠️ Breaking Changes: None
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/278
+
+
+## [0.0.3-alpha.202604070601.47816146] - 2026-04-07
+
+- ✨ Features: integrate remaining babelfhir-ts IPS/PAS types across both apps (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/276
+
+
+## [0.0.3-alpha.202604070519.fa24d1e7] - 2026-04-07
+
+- ✨ Features: integrate babelfhir-ts 1.2.2 PAS/IPS types into dtr-app and patient-portal
+- 🔧 Chores & Improvements: update dev SMART compliance report
+- 🔧 Chores & Improvements: internal version metadata updates (CI/CD)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/275
+
+
+## [0.0.3-alpha.202604070510.aa1fb797] - 2026-04-07
+
+- ✨ Features: None
+- 🐛 Bug Fixes:
+  - fix: add date-fns@1.30.1 as direct backend dependency to fix Bun linker bug
+- 📚 Documentation:
+  - docs: update CHANGELOG.md for PR #273
+- 🔧 Chores & Improvements:
+  - chore(testing): update dev SMART compliance report
+  - Update version to 0.0.3-alpha.202604070510.aa1fb797 (alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/274
+
+
+## [0.0.3-alpha.202604070454.f050a94b] - 2026-04-07
+
+- ✨ Features: Integrate TaskStatusCode, TaskIntentCode, and BundleTypeCode across consent-app and backend (quotentiroler)
+- 🔧 Chores & Improvements: Update changelog reference and version metadata
+- ⚠️ Breaking Changes: None
+- 📚 Documentation: None
+- 🐛 Bug Fixes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/273
+
+
+## [0.0.3-alpha.202604070450.422fa383] - 2026-04-07
+
+- ✨ Features: use extension validators and ValueSet codes in brand-bundle (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/272
+
+
+## [0.0.3-alpha.202604070423.c1b1db1c] - 2026-04-07
+
+- 🔧 Chores & Improvements: Significant dependency lockfile updates and prebuilt binary refresh
+  - Substantial Bun.lock churn with widespread dependency/version updates
+  - Updated prebuilt artifact: hl7.fhir.uv.smart-app-launch-generated.tgz
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/271
+
+
+## [0.0.3-alpha.202603270523.8a72cdae] - 2026-03-27
+
+- ✨ Features: add Proxy Smart logo icon to /apps page nav
+- 🔧 Chores & Improvements: update beta/alpha version references for pre-release 0.0.3-alpha.202603270523.8a72cdae
+- 📚 Documentation: update CHANGELOG.md for PR #269
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/270
+
+
+## [0.0.3-alpha.202603270508.c9253829] - 2026-03-27
+
+- 🐛 Bug Fixes: Show App Store only when user is signed out
+- 🔧 Chores & Improvements: CI/CD and testing updates (dev SMART compliance report)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/269
+
+
+## [0.0.3-alpha.202603270447.2f9c80a0] - 2026-03-27
+
+- 🔧 Chores & Improvements: Internal maintenance and refactoring
+  - Refactor(shared-ui): extract AppHeader component from app headers
+  - CI/CD: Update version to 0.0.3-alpha.202603270447.2f9c80a0 (alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/268
+
+
+## [0.0.3-alpha.202603270441.5b5ab954] - 2026-03-27
+
+- 🔧 Chores & Improvements: Internal maintenance updates and CI/CD housekeeping
+- ✨ Features: None
+- 🐛 Bug Fixes: Restore useMemo import in consent-app
+- 📚 Documentation: Update CHANGELOG.md for PR #266
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/267
+
+
+## [0.0.3-alpha.202603270436.f1547658] - 2026-03-27
+
+- 🔧 Chores & Improvements: Refactor access request logic to use primitive mode helpers (modeBy, modeKey) for stable dependencies
+  - Remove react useMemo import from useAccessRequests.ts
+  - Guard fetchRequests with modeBy/modeKey instead of mode
+  - Switch searchTasksByPatient/searchTasksByRequester to modeBy/modeKey
+  - Update effect dependencies to [modeBy, modeKey] and remove direct [mode]
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/266
+
+
+## [0.0.3-alpha.202603270407.6aa704dc] - 2026-03-27
+
+- ✨ Features: expose MCP resources (GET routes) in admin endpoint config UI (quotentiroler)
+- 🔧 Chores & Improvements: update beta/alpha version metadata and SMART compliance reports (ci-related)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/265
+
+
+## [0.0.3-alpha.202603270356.21873b4b] - 2026-03-27
+
+- ✨ Features: add agent scope context and Device fhirUser support (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/264
+
+
+## [0.0.3-alpha.202603270335.6642cc28] - 2026-03-27
+
+- 🔧 Chores & Improvements: Consolidate OAuth & Events into a single OAuth tab; fix memory stats
+- 🔧 Chores & Improvements: Update beta/dev SMART compliance reports (internal testing automation)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/263
+
+
+## [0.0.3-alpha.202603270323.2babb9a9] - 2026-03-27
+
+- ✨ Features: replace static 429 stat card with dynamic Top Error card (quotentiroler)
+- 🔧 Chores & Improvements: update dev SMART compliance report (proxy-smart-releaser[bot])
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/262
+
+
+## [0.0.3-alpha.202603270307.b7318334] - 2026-03-27
+
+- 🔧 Chores & Improvements: use generated API client types instead of manual duplicates (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/261
+
+
+## [0.0.3-alpha.202603270233.e884c722] - 2026-03-27
+
+- 🐛 Bug Fixes: auto-logout on monitoring 401 and improvements to E2E test stability
+- 🔧 Chores & Improvements: CI/CD and versioning updates for alpha pre-release 0.0.3-alpha.202603270233.e884c722
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/260
+
+
+## [0.0.3-alpha.202603270112.2b029cbe] - 2026-03-27
+
+- ✨ Features: FHIR proxy request monitoring with 429/error tracking (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/259
+
+
+## [0.0.3-alpha.202603270100.b4b79f74] - 2026-03-27
+
+- 🐛 Bug Fixes: Rate-limit avoidance for patient-portal via batch FHIR requests to reduce 429s
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603270100.b4b79f74 (alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/258
+
+
+## [0.0.3-alpha.202603270005.c4f44147] - 2026-03-27
+
+- ✨ Features: Add E2E Playwright tests for patient-portal (70 test specs)
+- 🔧 Chores & Improvements: Testing updates and internal maintenance (dev SMART compliance reports)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/257
+
+
+## [0.0.3-alpha.202603262231.bcef1334] - 2026-03-27
+
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603262231.bcef1334
+- ✨ Features: SMART scope protocol mapper auto-provisioning, management UI, and logout fixes (quotentiroler)
+- 📚 Documentation: CHANGELOG update note (from PR #255)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/256
+
+
+## [0.0.3-alpha.202603262210.ca39219f] - 2026-03-26
+
+- 🐛 Bug Fixes: set postLogoutRedirectUri in all SMART apps (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/255
+
+
+## [0.0.3-alpha.202603262146.90e44e07] - 2026-03-26
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Fix: use mutable token ref in MCP sessions to prevent stale auth
+
+Note: No user-facing features, bug fixes beyond internal auth fix, or documentation changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/254
+
+
+## [0.0.3-alpha.202603262109.1f1eb8d7] - 2026-03-26
+
+- ✨ Features:
+  - Add missing params schemas to admin routes for MCP tool exposure (quotentiroler)
+
+- 🔧 Chores & Improvements:
+  - CI/CI: Update version references to 0.0.3-alpha.202603262109.1f1eb8d7
+  - Documentation: Update CHANGELOG with PR metadata
+
+Note: No breaking changes, bug fixes, or documentation/content changes beyond housekeeping detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/253
+
+
+## [0.0.3-alpha.202603262009.6c2d2717] - 2026-03-26
+
+- ✨ Features: Add comprehensive SMART Access Control tests (scope, write blocking, role-based filtering) plus test utilities.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/252
+
+
+## [0.0.3-alpha.202603261959.0eedf22a] - 2026-03-26
+
+- ✨ Features: SMART on FHIR access control feature set
+  - Adds configurable access control with scope enforcement, role-based filtering, and optional write blocking
+  - Introduces SMART access control module and core types, wired into backend config
+  - Adds new backend route integration for FHIR access control
+
+- 🔧 Chores & Improvements: CI/config updates for new feature
+  - Extends backend/config.ts with accessControl options (scopeEnforcement, roleBasedFiltering, readOnlyForUsers, patientScopedResources)
+
+- 📚 Documentation: (none)
+
+- ⚠️ Breaking Changes: (none)
+
+- 🐛 Bug Fixes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/251
+
+
+## [0.0.3-alpha.202603261915.b85b32ac] - 2026-03-26
+
+- ✨ Features: Introduce SMART on FHIR access control
+  - Add configurable accessControl settings (scopeEnforcement, roleBasedFiltering, readOnlyForUsers, patientScopedResources)
+  - Implement SMART access control module with scope enforcement, role-based filtering, and optional write blocking
+  - Wire config usage and logging into backend routes (FHIR)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/250
+
+
+## [0.0.3-alpha.202603261227.e58ce3fa] - 2026-03-26
+
+- 🐛 Bug Fixes: ESLint config fixes, lint error resolutions, CSS build fixes, and App Store button issue (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/249
+
+
+## [0.0.3-alpha.202603261153.437fd3f4] - 2026-03-26
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements: 
+  - Refactor: remove redundancies and consolidate shared code (quotentiroler)
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/248
+
+
+## [0.0.3-alpha.202603261142.f2bbdb5a] - 2026-03-26
+
+- ✨ Features: wire IAL enforcement in FHIR proxy and complete Person link management UI
+- 🔧 Chores & Improvements: internal maintenance (CI/CD and testing updates)
+- 📚 Documentation: update CHANGELOG.md with PR notes
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/247
+
+
+## [0.0.3-alpha.202603260616.9f8b1020] - 2026-03-26
+
+- 🔧 Chores & Improvements: Cleanup and maintenance of deploy-beta workflow
+  - Performs remote Docker prune/cleanup (images, containers, volumes, builders with 2GB kept) via SSH and outputs disk usage after cleanup
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/246
+
+
+## [0.0.3-alpha.202603260600.c6b0d8d9] - 2026-03-26
+
+- 🐛 Bug Fixes: Remove hardcoded fake data from CertificatesDialog and LaunchContextManager (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/244
+
+
+## [0.0.3-alpha.202603260505.b938bcb4] - 2026-03-26
+
+- ✨ Features: Wire up real SMART capabilities in FHIR server management UI (quotentiroler)
+- 🔧 Chores & Improvements: Update dev SMART compliance report
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603260505.b938bcb4
+- 📚 Documentation: Update CHANGELOG.md for PR #242
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/243
+
+
+## [0.0.3-alpha.202603260458.782b5ec9] - 2026-03-26
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Refactor: replace client-side CQL engine with server-side (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/242
+
+
+## [0.0.3-alpha.202603260233.96d79d26] - 2026-03-26
+
+- ✨ Features: wire up CQL engine and Smart Forms SDC renderer in DTR app (quotentiroler)
+
+- 🔧 Chores & Improvements: update dev SMART compliance report
+
+- 🔧 Chores & Improvements: update version to 0.0.3-beta.202603260210.50141671 (beta)
+- 🔧 Chores & Improvements: update version to 0.0.3-alpha.202603260233.96d79d26 (alpha)
+
+Note: No user-facing breaking changes, docs, or other fixes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/241
+
+
+## [0.0.3-alpha.202603260210.50141671] - 2026-03-26
+
+- 🔧 Chores & Improvements: Deduplicated app configs, CSS theme, chart colors, and admin tabs into shared-ui
+- 📚 Documentation: Updated CHANGELOG entry for PR #239
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/240
+
+
+## [0.0.3-alpha.202603252257.1f554a11] - 2026-03-26
+
+- ✨ Features: Register patient-portal in App Store and mono build pipeline (quotentiroler)
+
+- 🔧 Chores & Improvements: Update dev SMART compliance report (proxy-smart-releaser[bot])
+- 🔧 Chores & Improvements: Update version to 0.0.3-beta.202603252246.f07ac170 (beta) (github-actions[bot])
+- 📚 Documentation: Update CHANGELOG.md for PR #238 [skip ci] (github-actions[bot])
+- 🔧 Chores & Improvements: Update version to 0.0.3-alpha.202603252257.1f554a11 (alpha) (github-actions[bot])
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/239
+
+
+## [0.0.3-alpha.202603252246.f07ac170] - 2026-03-25
+
+- 🔧 Chores & Improvements: Introduced file-backed persistence for dynamically added FHIR servers
+  - Add fs/path usage, PersistedServer interface, and SERVERS_JSON_PATH
+  - Implement loadPersistedServers and savePersistedServers
+  - Prepare groundwork for persisting servers to fhir-servers.json
+- 🔧 Chores & Improvements: Standardize newline handling and update ignore rules for backend
+  - Update backend/.gitignore with fhir-servers.json
+  - Ensure mcp.json newline issue is fixed
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/238
+
+
+## [0.0.3-alpha.202603252123.0938d55e] - 2026-03-25
+
+- ✨ Features: Scaffold international patient portal with IPS/IPA (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/237
+
+
+## [0.0.3-alpha.202603252036.bae2a0a9] - 2026-03-25
+
+- ✨ Features: surface brand logo in consent-app and dtr-app (quotentiroler)
+- 🔧 Chores & Improvements: update beta and dev SMART compliance reports (proxy-smart-releaser[bot])
+- 🔧 Chores & Improvements: update version to 0.0.3-alpha.202603252036.bae2a0a9 (github-actions[bot])
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/236
+
+
+## [0.0.3-alpha.202603251947.f10c9f3b] - 2026-03-25
+
+- ✨ Features: pass OPENAI_API_KEY through beta deployment pipeline (quotentiroler)
+- 🔧 Chores & Improvements: update beta and dev SMART compliance reports (proxy-smart-releaser[bot])
+- 🔧 Chores & Improvements: update changelog reference and version metadata (CI)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/235
+
+
+## [0.0.3-alpha.202603251933.c56cbe7f] - 2026-03-25
+
+- 🐛 Bug Fixes: Preserve bundle type on 304 response — return empty string cast to bundle type when If-None-Match matches ETag (ETag and Cache-Control behavior unchanged)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/234
+
+
+## [0.0.3-alpha.202603251928.7a647e6d] - 2026-03-25
+
+- ✨ Features: MCP resources, FHIR server delete, AI assistant fixes, IAL encoding fix; user-access branding, dynamic roles, code cleanup
+- 🧪 ⚠️ Breaking Changes: (none)
+- 🐛 Bug Fixes: wrap IALSettings hardcoded strings with t() for i18n
+- 📚 Documentation: update CHANGELOG.md for PR #231, PR #232
+- 🔧 Chores & Improvements: version bumps, CI/CD housekeeping, SMART compliance report updates, code cleanup
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/233
+
+
+## [0.0.3-alpha.202603251726.4eb5bd90] - 2026-03-25
+
+- ✨ Features: MCP resources, FHIR server delete, AI assistant fixes, IAL encoding fix
+- 🔧 Chores & Improvements: user-access branding, dynamic roles, code cleanup
+- 📚 Documentation: update CHANGELOG.md for PR #231
+- ⚠️ Breaking Changes: none
+- 🐛 Bug Fixes: (none explicit beyond features)
+Note: Only changes since last release included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/232
+
+
+## [0.0.3-alpha.202603241627.cdee7ff7] - 2026-03-25
+
+- ✨ Features: user-access branding, dynamic roles, code cleanup (quotentiroler)
+- 🔧 Chores & Improvements: internal maintenance and CI/CD updates
+- 📚 Documentation: changelog update for PR #230
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/231
+
+
+## [0.0.3-alpha.202603240754.fe065af2] - 2026-03-24
+
+- 🔧 Chores & Improvements: UI spacing adjustments for hero container across breakpoints; header bottom padding tweaks
+- 🔧 Chores & Improvements: Added enum-like validation sets and runtime sanitization for appType (fallback to backend-service or standalone-app) in admin routes
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/230
+
+
 ## [0.0.2-beta.202603240700.0cadb793] - 2026-03-24
 
 - 🔧 Chores & Improvements: Update version to 0.0.2-beta.202603240700.0cadb793 (beta)
 
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/199
+
+
+
+- 🔧 Chores & Improvements: CI workflow updates and versioning
+  - Enable production release workflow and fix workflow_dispatch
+  - Update version to 0.0.2-beta.202603240700.0cadb793 (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/228
 
 
 ## [0.0.2-alpha.202603240346.274d844f] - 2026-03-24

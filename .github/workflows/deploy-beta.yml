@@ -42,10 +42,101 @@ on:
         required: true
       VITE_ENCRYPTION_SECRET:
         required: true
+      OPENAI_API_KEY:
+        required: false
+
+env:
+  REGISTRY: ghcr.io
 
 jobs:
+  # ── Build images on GA runners (7 GB RAM) and push to GHCR ──
+  build-images:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_branch }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image prefix (GHCR requires lowercase)
+        run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          target: backend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
+            ${{ env.IMAGE_PREFIX }}/backend:beta-latest
+          cache-from: type=gha,scope=beta-backend
+          cache-to: type=gha,mode=max,scope=beta-backend
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          target: ui
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/frontend:beta-${{ inputs.app_version }}
+            ${{ env.IMAGE_PREFIX }}/frontend:beta-latest
+          build-args: |
+            VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
+            VITE_BASE=/webapp/
+          cache-from: type=gha,scope=beta-frontend
+          cache-to: type=gha,mode=max,scope=beta-frontend
+
+      - name: Build & push keycloak image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.keycloak
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/keycloak:beta-${{ inputs.app_version }}
+            ${{ env.IMAGE_PREFIX }}/keycloak:beta-latest
+          cache-from: type=gha,scope=beta-keycloak
+          cache-to: type=gha,mode=max,scope=beta-keycloak
+
+      - name: Verify no localhost in backend image
+        run: |
+          echo "🔍 Checking production bundles for hardcoded localhost references..."
+          docker pull ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
+          CID=$(docker create ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }})
+          MATCHES=$(docker export "$CID" | tar -t 2>/dev/null | head -1 > /dev/null && \
+            docker cp "$CID":/app/backend/public/apps /tmp/apps 2>/dev/null && \
+            grep -rl 'localhost:8445' /tmp/apps/ 2>/dev/null || true)
+          docker rm "$CID" > /dev/null
+
+          if [ -n "$MATCHES" ]; then
+            echo "::error::Found hardcoded localhost:8445 in production bundles:"
+            echo "$MATCHES"
+            exit 1
+          fi
+          echo "✅ No localhost references found in production bundles"
+
+  # ── Pull pre-built images on VPS and restart services ──
   deploy:
     name: Deploy Beta (VPS – Docker Compose)
+    needs: build-images
     runs-on: ubuntu-latest
     outputs:
       fhir_server_url: ${{ steps.deploy.outputs.fhir_server_url }}
@@ -69,6 +160,9 @@ jobs:
           echo "$VPS_SSH_KEY" > ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Compute image prefix
+        run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
       - name: Deploy via Docker Compose
         id: deploy
         env:
@@ -78,11 +172,15 @@ jobs:
           BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
           BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
           VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
         run: |
-          echo "🚀 Deploying Beta v${{ inputs.app_version }} to VPS (Docker Compose)..."
+          echo "🚀 Deploying Beta v${{ inputs.app_version }} to VPS (pre-built GHCR images)..."
 
           DEPLOY_DIR="/opt/proxy-smart-beta"
           VPS_URL="https://beta.proxy-smart.com"
+          IMAGE_TAG="beta-${{ inputs.app_version }}"
           SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${VPS_USER}@${VPS_HOST}"
 
           # Ensure deploy directory and repo exist on VPS
@@ -95,16 +193,30 @@ jobs:
             fi
           "
 
-          # Write env file from CI secrets (printf runs on CI, piped to VPS via SSH)
+          # Clean up unused Docker resources to prevent disk-full failures
+          ${SSH_CMD} "
+            echo '🧹 Cleaning up unused Docker resources...'
+            docker image prune -af --filter 'until=168h' 2>/dev/null || true
+            docker container prune -f 2>/dev/null || true
+            docker volume prune -f 2>/dev/null || true
+            docker builder prune -af --keep-storage=512mb 2>/dev/null || true
+            echo \"📊 Disk usage: \$(df -h / | tail -1 | awk '{print \$5}') used\"
+          "
+
+          # Write env file from CI secrets
           printf '%s\n' \
             "POSTGRES_PASSWORD=${BETA_POSTGRES_PASSWORD}" \
             "KC_DB_PASSWORD=${BETA_POSTGRES_PASSWORD}" \
             "KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}" \
             "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
             "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
+            "OPENAI_API_KEY=${OPENAI_API_KEY}" \
+            "BACKEND_IMAGE=${{ env.IMAGE_PREFIX }}/backend:${IMAGE_TAG}" \
+            "FRONTEND_IMAGE=${{ env.IMAGE_PREFIX }}/frontend:${IMAGE_TAG}" \
+            "KEYCLOAK_IMAGE=${{ env.IMAGE_PREFIX }}/keycloak:${IMAGE_TAG}" \
           | ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta && chmod 600 ${DEPLOY_DIR}/.env.beta"
 
-          # Pull latest code and rebuild containers
+          # Pull latest compose files, pull pre-built images, restart
           ${SSH_CMD} "
             set -e
             cd ${DEPLOY_DIR}
@@ -112,14 +224,16 @@ jobs:
             git checkout ${{ inputs.source_branch }}
             git pull origin ${{ inputs.source_branch }}
 
+            # Log in to GHCR for pulling images
+            echo '${GH_TOKEN}' | docker login ghcr.io -u '${GH_ACTOR}' --password-stdin
+
             # Ensure shared Caddy proxy is running
             docker network create caddy 2>/dev/null || true
             docker rm -f caddy-proxy 2>/dev/null || true
             docker compose -p caddy-proxy -f docker-compose.caddy.yml up -d
 
-            echo '📦 Rebuilding and restarting beta stack...'
-            docker compose -f docker-compose.beta.yml --env-file .env.beta pull postgres
-            docker compose -f docker-compose.beta.yml --env-file .env.beta build --parallel
+            echo '📦 Pulling pre-built images and restarting beta stack...'
+            docker compose -f docker-compose.beta.yml --env-file .env.beta pull
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d --remove-orphans
 
             echo '⏳ Waiting for services to become healthy...'
@@ -168,25 +282,3 @@ jobs:
           echo "📍 App:       ${VPS_URL}"
           echo "📍 FHIR:      ${VPS_URL}/proxy-smart-backend/hapi-fhir-server/R4"
           echo "📍 Keycloak:  ${VPS_URL}/auth"
-
-      - name: Verify no localhost in production bundles
-        env:
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          echo "🔍 Checking production bundles for hardcoded localhost references..."
-          SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST}"
-
-          # Scan all JS bundles in /apps for localhost:8445
-          MATCHES=$(${SSH_CMD} "docker exec proxy-smart-backend-beta grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null" || true)
-
-          if [ -n "$MATCHES" ]; then
-            echo "::error::Found hardcoded localhost:8445 in production bundles:"
-            echo "$MATCHES"
-            echo ""
-            echo "This means .env files with VITE_PROXY_BASE=http://localhost:8445 leaked into the Docker build."
-            echo "Check .dockerignore includes **/.env patterns."
-            exit 1
-          fi
-
-          echo "✅ No localhost references found in production bundles"

@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import path from "path";
@@ -6,7 +7,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default tseslint.config(
+export default defineConfig(
   { ignores: ["dist/**", "node_modules/**", "**/lib/api-client/**", "**/lib/mcp-registry-client/**", "public/**"] },
   {
     files: ["**/*.{js,ts}"],
@@ -24,7 +25,7 @@ export default tseslint.config(
       "no-console": "off", // Allow console.log in backend
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { argsIgnorePattern: "^_" },
+        { argsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
     },

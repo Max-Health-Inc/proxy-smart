@@ -18,6 +18,8 @@ import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
+import { brandingAdminRoutes } from './branding'
+import { scopeMappersRoutes } from './scope-mappers'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -95,6 +97,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(launchContextRoutes)
   .use(identityProvidersRoutes)
   .use(smartConfigAdminRoutes)
+  .use(brandingAdminRoutes)
   .use(clientRegistrationSettingsRoutes)
   .use(keycloakConfigRoutes)
   // MCP servers management
@@ -109,6 +112,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(accessControlRoutes)
   // LDAP User Federation management
   .use(userFederationRoutes)
+  // SMART scope protocol mapper management
+  .use(scopeMappersRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

@@ -13,6 +13,8 @@ import {
 } from '@/schemas'
 import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
+import { extractBearerToken } from '@/lib/admin-utils'
+import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -22,6 +24,11 @@ function getAttr(attrs: Record<string, any> | undefined, key: string): string | 
   if (Array.isArray(val)) return val[0]
   return typeof val === 'string' ? val : undefined
 }
+
+/** Valid literal values for schema-validated enums */
+const VALID_APP_TYPES = new Set(['standalone-app', 'ehr-launch', 'backend-service', 'agent'])
+const VALID_SERVER_ACCESS_TYPES = new Set(['all-servers', 'selected-servers', 'user-person-servers'])
+const VALID_MCP_ACCESS_TYPES = new Set(['none', 'all-mcp-servers', 'selected-mcp-servers'])
 
 /**
  * Register JWKS for a Backend Services client in Keycloak.
@@ -75,7 +82,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
   .get('/', async ({ getAdmin, headers, set }): Promise<SmartAppType[] | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -165,7 +172,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               ...fullClient,
               defaultClientScopes: defaultScopeNames,
               optionalClientScopes: optionalScopeNames,
-              appType: appType || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
+              appType: (VALID_APP_TYPES.has(appType!) ? appType : undefined) || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
               clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
               
               // Client secret (only included for confidential clients with client-secret auth)
@@ -179,11 +186,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               contacts: getAttr(fullClient.attributes, 'contacts')?.split(',').filter(Boolean),
               
               // Server access control
-              serverAccessType: getAttr(fullClient.attributes, 'server_access_type') as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
+              serverAccessType: (VALID_SERVER_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'server_access_type')!) ? getAttr(fullClient.attributes, 'server_access_type') : undefined) as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
               allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
               
               // MCP server access control
-              mcpAccessType: (getAttr(fullClient.attributes, 'mcp_access_type') || 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
+              mcpAccessType: (VALID_MCP_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'mcp_access_type')!) ? getAttr(fullClient.attributes, 'mcp_access_type') : 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
               allowedMcpServerNames: getAttr(fullClient.attributes, 'allowed_mcp_server_names')?.split(',').filter(Boolean) || [],
               
               // Skills access control
@@ -222,7 +229,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
   .post('/', async ({ getAdmin, body, headers, set }): Promise<SmartAppType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -325,7 +332,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.scopeSetId && { 'scope_set_id': body.scopeSetId }),
           
           // PKCE configuration
-          ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' })
+          ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' }),
+
+          // Keycloak 25+ requires explicit post-logout redirect URI config
+          'post.logout.redirect.uris': '+',
         },
         // Configure client authentication method
         clientAuthenticatorType,
@@ -394,6 +404,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             await admin.clients.addOptionalClientScope({ id: fullClient.id!, clientScopeId: scopeId })
           } catch (error) {
             logger.admin.warn('Failed to assign optional scope to client', { clientId: fullClient.clientId, scopeId, error })
+          }
+        }
+
+        // Auto-provision SMART protocol mappers on scopes that need them
+        const allScopeNames = [...defaultScopesToAssign, ...optionalScopesToAssign]
+        for (const scopeName of allScopeNames) {
+          if (SMART_SCOPE_MAPPERS[scopeName]) {
+            const scope = allClientScopes.find(s => s.name === scopeName)
+            if (scope?.id) {
+              await ensureScopeMappers(admin, scope.id, scopeName)
+            }
           }
         }
 
@@ -469,7 +490,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
   .get('/:clientId', async ({ getAdmin, params, headers, set }): Promise<SmartAppType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -599,7 +620,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
   .put('/:clientId', async ({ getAdmin, params, body, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -620,6 +641,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         webOrigins: body.webOrigins,
         attributes: {
           ...clients[0].attributes,
+          // Keycloak 25+ requires explicit post-logout redirect URI config
+          'post.logout.redirect.uris': clients[0].attributes?.['post.logout.redirect.uris'] || '+',
           smart_version: body.smartVersion ? [body.smartVersion] : clients[0].attributes?.smart_version,
           fhir_version: body.fhirVersion ? [body.fhirVersion] : clients[0].attributes?.fhir_version,
           // MCP server access control
@@ -700,6 +723,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             }
           }
 
+          // Auto-provision SMART protocol mappers on updated scopes
+          const updatedScopeNames = [...(body.defaultClientScopes || []), ...(body.optionalClientScopes || [])]
+          for (const scopeName of updatedScopeNames) {
+            if (SMART_SCOPE_MAPPERS[scopeName]) {
+              const scope = allClientScopes.find(s => s.name === scopeName)
+              if (scope?.id) {
+                await ensureScopeMappers(admin, scope.id, scopeName)
+              }
+            }
+          }
+
           logger.admin.debug('Scopes updated for client', {
             clientId: clients[0].clientId,
             defaultScopes: body.defaultClientScopes,
@@ -733,7 +767,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
   .delete('/:clientId', async ({ getAdmin, params, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }

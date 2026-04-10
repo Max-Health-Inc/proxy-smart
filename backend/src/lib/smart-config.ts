@@ -18,6 +18,7 @@ interface OpenIDConfiguration {
     authorization_endpoint: string
     token_endpoint: string
     introspection_endpoint?: string
+    end_session_endpoint?: string
     grant_types_supported: string[]
     response_types_supported: string[]
     code_challenge_methods_supported: string[]
@@ -116,6 +117,9 @@ class SmartConfigService {
             introspection_endpoint: `${config.baseUrl}/auth/introspect`,
             registration_endpoint: `${config.baseUrl}/auth/register`, // RFC 7591 Dynamic Client Registration
 
+            // RP-Initiated Logout (OpenID Connect RP-Initiated Logout 1.0)
+            ...(openidConfig.end_session_endpoint ? { end_session_endpoint: `${config.baseUrl}/auth/logout` } : {}),
+
             // JWKS URI - required when sso-openid-connect capability is supported
             // Use Keycloak's JWKS endpoint directly for token validation
             jwks_uri: openidConfig.jwks_uri,
@@ -131,7 +135,14 @@ class SmartConfigService {
             scopes_supported: allScopes,
 
             // SMART capabilities based on what we support
-            capabilities: this.getSmartCapabilities()
+            capabilities: this.getSmartCapabilities(),
+
+            // User-Access Brands (SMART 2.2.0 Section 8) — RECOMMENDED
+            user_access_brand_bundle: `${config.baseUrl}/branding.json`,
+            user_access_brand_identifier: {
+                system: 'urn:ietf:rfc:3986',
+                value: config.brand.identifier
+            }
         }
     }
 

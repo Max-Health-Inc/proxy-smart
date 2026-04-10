@@ -27,7 +27,7 @@ services:
       - proxy-smart
 
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     container_name: proxy-smart-postgres-prod
     environment:
       POSTGRES_DB: keycloak

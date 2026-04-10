@@ -1,14 +1,16 @@
 import { Elysia, t } from 'elysia'
 import fetch, { Headers } from 'cross-fetch'
 import { validateToken } from '../lib/auth'
-import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
+import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
 import { config } from '../config'
 import { fhirServerStore, getServerByName, getServerInfoByName } from '../lib/fhir-server-store'
 import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigurationResponse, FhirProxyResponse, type SmartConfigurationResponseType } from '../schemas'
 import { smartConfigService } from '../lib/smart-config'
 import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
-import { checkConsent, getConsentConfig } from '../lib/consent'
+import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
+import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
+import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
@@ -39,12 +41,12 @@ async function proxyFHIR({ params, request, set }: any) {
       tokenPayload = await validateToken(auth)
     }
 
-    // 2) Consent enforcement check
+    // 2) Consent + IAL enforcement check
     if (tokenPayload) {
       const parts = new URL(request.url).pathname.split('/').filter(Boolean)
       const resourcePath = parts.slice(3).join('/')
       
-      const consentResult = await checkConsent(
+      const consentResult = await checkConsentWithIal(
         tokenPayload,
         params.server_name,
         serverUrl,
@@ -53,11 +55,11 @@ async function proxyFHIR({ params, request, set }: any) {
         authHeader
       )
 
-      // If consent denied and mode is 'enforce', block the request
+      // If consent or IAL denied and mode is 'enforce', block the request
       if (consentResult.decision === 'deny' && getConsentConfig().mode === 'enforce') {
         set.status = 403
         return {
-          error: 'consent_denied',
+          error: consentResult.ialCheck && !consentResult.ialCheck.allowed ? 'ial_verification_failed' : 'consent_denied',
           message: consentResult.reason,
           consentId: consentResult.consentId,
           patientId: consentResult.context.patientId,
@@ -71,7 +73,54 @@ async function proxyFHIR({ params, request, set }: any) {
     const requestUrl = new URL(request.url)
     const parts = requestUrl.pathname.split('/').filter(Boolean)
     const resourcePath = parts.slice(3).join('/')
-    const queryString = requestUrl.search
+    let queryString = requestUrl.search
+
+    // Resolve mTLS config once per request (used by both access control and proxy fetch)
+    const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
+    const serverFetch = async (url: string, init?: RequestInit) => {
+      const useMtls = mtlsConfig?.enabled === true && url.startsWith('https://')
+      return useMtls
+        ? fetchWithMtls(url, { ...init, serverId: serverInfo.identifier })
+        : fetch(url, init)
+    }
+
+    // 3–5) SMART access control (scope enforcement, write blocking, role-based filtering)
+    if (tokenPayload) {
+      const acCtx: AccessControlContext = {
+        tokenPayload,
+        resourcePath,
+        method: request.method,
+        serverUrl,
+        serverId: serverInfo.identifier,
+        serverName: params.server_name,
+        authHeader,
+        upstreamFetch: serverFetch,
+      }
+
+      // 3) SMART scope enforcement
+      const scopeResult = enforceScopeAccess(acCtx)
+      if (!scopeResult.allowed) {
+        set.status = scopeResult.status
+        return scopeResult.body
+      }
+
+      // 4) Write blocking
+      const writeResult = enforceWriteBlocking(acCtx)
+      if (!writeResult.allowed) {
+        set.status = writeResult.status
+        return writeResult.body
+      }
+
+      // 5) Role-based filtering
+      const roleResult = await enforceRoleBasedFiltering(acCtx, queryString)
+      if (!roleResult.allowed) {
+        set.status = roleResult.status
+        // Check for early return (e.g. empty bundle for practitioner with no patients)
+        return roleResult.body
+      }
+      queryString = roleResult.modifiedQueryString ?? queryString
+    }
+
     const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()
@@ -87,13 +136,29 @@ async function proxyFHIR({ params, request, set }: any) {
     }
 
     // Check if mTLS is configured for this server
-    const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
     const useMtls = mtlsConfig?.enabled === true && target.startsWith('https://')
 
     // Use appropriate fetch method based on mTLS configuration
+    const fetchStart = performance.now()
     const resp = useMtls
       ? await fetchWithMtls(target, { ...fetchOptions, serverId: serverInfo.identifier })
       : await fetch(target, fetchOptions)
+    const fetchMs = Math.round(performance.now() - fetchStart)
+
+    // Extract resource type from path (e.g. "Patient/123" → "Patient")
+    const resourceType = resourcePath.split('/')[0] || 'unknown'
+
+    // Track proxied request metrics (fire-and-forget)
+    fhirProxyMetricsLogger.logRequest({
+      serverName: params.server_name,
+      method: request.method,
+      resourcePath,
+      resourceType,
+      statusCode: resp.status,
+      responseTimeMs: fetchMs,
+      clientId: tokenPayload?.azp || tokenPayload?.client_id,
+      error: resp.status >= 400 ? `HTTP ${resp.status}` : undefined,
+    })
 
     // copy status & CORS headers
     set.status = resp.status
@@ -249,7 +314,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
   // Admin endpoint to refresh FHIR server cache
   .post('/cache/refresh', async ({ set, headers, params }) => {
     // Require authentication for cache management
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     if (!auth) {
       set.status = 401
       return { error: 'Authentication required' }

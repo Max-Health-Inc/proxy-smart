@@ -36,11 +36,7 @@ export const SmartApp = t.Object({
   contacts: t.Optional(t.Array(t.String(), { description: 'Contact emails or names' })),
   
   // Server access control
-  serverAccessType: t.Optional(t.Union([
-    t.Literal('all-servers'),
-    t.Literal('selected-servers'),
-    t.Literal('user-person-servers')
-  ], { description: 'FHIR server access control type' })),
+  serverAccessType: t.Optional(t.UnionEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' })),
   allowedServerIds: t.Optional(t.Array(t.String(), { description: 'List of allowed FHIR server IDs' })),
   
   // Scope set reference
@@ -51,11 +47,7 @@ export const SmartApp = t.Object({
   allowOfflineAccess: t.Optional(t.Boolean({ description: 'Allow offline access (refresh tokens)' })),
   
   // MCP server access control
-  mcpAccessType: t.Optional(t.Union([
-    t.Literal('none'),
-    t.Literal('all-mcp-servers'),
-    t.Literal('selected-mcp-servers')
-  ], { description: 'MCP server access control type' })),
+  mcpAccessType: t.Optional(t.UnionEnum(['none', 'all-mcp-servers', 'selected-mcp-servers'], { description: 'MCP server access control type' })),
   allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
   
   // Skills access control
@@ -89,11 +81,7 @@ export const CreateSmartAppRequest = t.Object({
   contacts: t.Optional(t.Array(t.String(), { description: 'Contact emails or names' })),
   
   // Server access control
-  serverAccessType: t.Optional(t.Union([
-    t.Literal('all-servers'),
-    t.Literal('selected-servers'),
-    t.Literal('user-person-servers')
-  ], { description: 'FHIR server access control type' })),
+  serverAccessType: t.Optional(t.UnionEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' })),
   allowedServerIds: t.Optional(t.Array(t.String(), { description: 'List of allowed FHIR server IDs (when serverAccessType is selected-servers)' })),
   
   // Scope set reference
@@ -104,11 +92,7 @@ export const CreateSmartAppRequest = t.Object({
   allowOfflineAccess: t.Optional(t.Boolean({ description: 'Allow offline access (refresh tokens)' })),
   
   // MCP server access control
-  mcpAccessType: t.Optional(t.Union([
-    t.Literal('none'),
-    t.Literal('all-mcp-servers'),
-    t.Literal('selected-mcp-servers')
-  ], { description: 'MCP server access control type (none = no MCP access, all-mcp-servers = access all, selected-mcp-servers = specific servers only)' })),
+  mcpAccessType: t.Optional(t.UnionEnum(['none', 'all-mcp-servers', 'selected-mcp-servers'], { description: 'MCP server access control type (none = no MCP access, all-mcp-servers = access all, selected-mcp-servers = specific servers only)' })),
   allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
   
   // Skills access control
@@ -142,11 +126,7 @@ export const UpdateSmartAppRequest = t.Object({
   contacts: t.Optional(t.Array(t.String(), { description: 'Contact emails or names' })),
   
   // Server access control
-  serverAccessType: t.Optional(t.Union([
-    t.Literal('all-servers'),
-    t.Literal('selected-servers'),
-    t.Literal('user-person-servers')
-  ], { description: 'FHIR server access control type' })),
+  serverAccessType: t.Optional(t.UnionEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' })),
   allowedServerIds: t.Optional(t.Array(t.String(), { description: 'List of allowed FHIR server IDs' })),
   
   // Scope set reference
@@ -157,11 +137,7 @@ export const UpdateSmartAppRequest = t.Object({
   allowOfflineAccess: t.Optional(t.Boolean({ description: 'Allow offline access (refresh tokens)' })),
   
   // MCP server access control
-  mcpAccessType: t.Optional(t.Union([
-    t.Literal('none'),
-    t.Literal('all-mcp-servers'),
-    t.Literal('selected-mcp-servers')
-  ], { description: 'MCP server access control type' })),
+  mcpAccessType: t.Optional(t.UnionEnum(['none', 'all-mcp-servers', 'selected-mcp-servers'], { description: 'MCP server access control type' })),
   allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names' })),
   
   // Skills access control

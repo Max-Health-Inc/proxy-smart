@@ -60,7 +60,7 @@ function getPackagePaths() {
     return [
       'package.json',
       'backend/package.json', 
-      'ui/package.json',
+      'apps/ui/package.json',
       'scripts/package.json',
       'testing/package.json',
       'testing/alpha/package.json',

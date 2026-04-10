@@ -79,7 +79,7 @@ jobs:
         VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
       run: |
         echo "🔨 Building frontend..."
-        cd ui
+        cd apps/ui
         bun run build
 
     # Backend Tests
@@ -101,7 +101,7 @@ jobs:
         TAILWIND_DISABLE_LIGHTNINGCSS: "1"
       run: |
         echo "🧪 Testing frontend..."
-        cd ui
+        cd apps/ui
         bun run test
 
     - name: Upload Build Artifacts
@@ -111,5 +111,5 @@ jobs:
         name: build-artifacts
         path: |
           backend/dist
-          ui/dist
+          apps/ui/dist
         retention-days: 7

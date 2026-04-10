@@ -13,13 +13,17 @@ import { oauthWebSocket } from './routes/oauth-websocket'
 import { consentMonitoringRoutes } from './routes/consent-monitoring'
 import { consentWebSocket } from './routes/consent-websocket'
 import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
+import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
 import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { mcpEndpointRoutes } from './routes/mcp-endpoint'
+import { dicomwebRoutes } from './routes/dicomweb'
 import { docsRoutes } from './routes/docs'
+import { brandBundleService } from './lib/brand-bundle'
+import { UserAccessBrandBundle } from './schemas'
 
 /** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
 function discoverApps() {
@@ -69,6 +73,7 @@ export function createApp() {
             allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']
         }))
         .use(openapi({
+            path: '/swagger',
             references: fromTypes(
                 process.env.NODE_ENV === 'production' ? 'dist/index.d.ts' : 'src/index.ts',
                 { projectRoot: join(import.meta.dir, '..') }
@@ -95,7 +100,9 @@ export function createApp() {
                     { name: 'mcp-endpoint', description: 'Built-in MCP Streamable HTTP server endpoint' },
                     { name: 'consent-monitoring', description: 'Consent decision monitoring and analytics' },
                     { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
+                    { name: 'fhir-proxy-monitoring', description: 'FHIR proxy request metrics and error tracking' },
                     { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
+                    { name: 'dicomweb', description: 'DICOMweb proxy for WADO-RS and QIDO-RS imaging services' },
                 ],
                 servers: [
                     { url: config.baseUrl, description: 'Development server' }
@@ -116,20 +123,51 @@ export function createApp() {
         .get('/apps/', () => Bun.file('public/apps/index.html'))
         // Public SMART app discovery endpoint
         .get('/apps.json', () => ({ apps: discoverApps() }))
-        // SPA fallbacks for sub-apps under /apps/*
-        .get('/apps/dtr', () => Bun.file('public/apps/dtr/index.html'))
-        .get('/apps/dtr/', () => Bun.file('public/apps/dtr/index.html'))
-        .get('/apps/dtr/*', () => Bun.file('public/apps/dtr/index.html'))
-        .get('/apps/consent', () => Bun.file('public/apps/consent/index.html'))
-        .get('/apps/consent/', () => Bun.file('public/apps/consent/index.html'))
-        .get('/apps/consent/*', () => Bun.file('public/apps/consent/index.html'))
+        // User-Access Brand Bundle (SMART 2.2.0 Section 8)
+        .get('/branding.json', async ({ set, headers }) => {
+            const { bundle, etag } = await brandBundleService.getBrandBundle()
+            // Support conditional requests (ETag / If-None-Match)
+            const ifNoneMatch = headers['if-none-match']
+            if (ifNoneMatch && ifNoneMatch === etag) {
+                set.status = 304
+                return '' as unknown as typeof bundle
+            }
+            set.headers['etag'] = etag
+            set.headers['cache-control'] = 'public, max-age=60'
+            return bundle
+        }, {
+            response: { 200: UserAccessBrandBundle },
+            detail: {
+                summary: 'User-Access Brand Bundle',
+                description: 'FHIR Bundle (collection) of Organization and Endpoint resources for User-Access Brands (SMART 2.2.0 Section 8)',
+                tags: ['smart-apps']
+            }
+        })
+        // Dynamic SPA fallback for all sub-apps under /apps/<name>/*
+        .get('/apps/:app', async ({ params, set }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            if (await index.exists()) return index
+            set.status = 404
+            return { error: 'Not Found' }
+        })
+        .get('/apps/:app/*', async ({ params, set }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            if (await index.exists()) return index
+            set.status = 404
+            return { error: 'Not Found' }
+        })
         // VitePress docs SPA fallback
         .get('/docs', () => Bun.file('public/docs/index.html'))
         .get('/docs/', () => Bun.file('public/docs/index.html'))
-        .get('/docs/*', ({ params }) => {
+        .get('/docs/*', async ({ params, set }) => {
             const path = (params as { '*': string })['*']
-            // Serve the exact file if it exists (e.g. assets/style.css), otherwise SPA fallback
-            return Bun.file(`public/docs/${path}`)
+            const file = Bun.file(`public/docs/${path}`)
+            if (await file.exists()) return file
+            // SPA fallback for clean URLs (VitePress client-side routing)
+            const index = Bun.file('public/docs/index.html')
+            if (await index.exists()) return index
+            set.status = 404
+            return { error: 'Not Found' }
         })
         .use(keycloakPlugin)
         .use(docsRoutes)
@@ -143,8 +181,10 @@ export function createApp() {
         .use(consentMonitoringRoutes)
         .use(consentWebSocket)
         .use(fhirMonitoringRoutes)
+        .use(fhirProxyMonitoringRoutes)
         .use(adminAuditMonitoringRoutes)
         .use(mcpEndpointRoutes)
+        .use(dicomwebRoutes)
         .use(fhirRoutes)
         .onError(({ code, set, request }) => {
             if (code === 'NOT_FOUND') {
@@ -164,7 +204,7 @@ export function createApp() {
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg"/>
-<title>404 — Proxy Smart</title>
+<title>404 — ${Bun.escapeHTML(config.displayName)}</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{color-scheme:dark}

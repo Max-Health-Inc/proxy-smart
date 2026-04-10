@@ -15,7 +15,7 @@ import {
   saveMcpEndpointConfig,
   type McpEndpointConfig,
 } from '@/lib/mcp-endpoint-config'
-import { getToolRegistry, isToolRegistryInitialized, generateToolDefinitions } from '@/lib/ai/tool-registry'
+import { getToolRegistry, isToolRegistryInitialized, generateToolDefinitions, getResourceRegistry, isResourceRegistryInitialized, pathToResourceUri } from '@/lib/ai/tool-registry'
 import { config } from '@/config'
 
 // ── Route ────────────────────────────────────────────────────────────────────
@@ -34,6 +34,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
 
     const cfg = loadMcpEndpointConfig()
     const tools = buildToolList(cfg)
+    const resources = buildResourceList(cfg)
 
     const configSource =
       process.env.MCP_ENDPOINT_ENABLED !== undefined
@@ -48,6 +49,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,
+      resources,
       disabledTools: cfg.disabledTools,
       enabledTools: cfg.enabledTools,
       updatedAt: cfg.updatedAt,
@@ -84,6 +86,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
     })
 
     const tools = buildToolList(cfg)
+    const resources = buildResourceList(cfg)
 
     return {
       enabled: cfg.enabled || config.mcp.enabled,
@@ -91,6 +94,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,
+      resources,
       disabledTools: cfg.disabledTools,
       enabledTools: cfg.enabledTools,
       updatedAt: cfg.updatedAt,
@@ -139,4 +143,21 @@ function buildToolList(cfg: McpEndpointConfig) {
   })
 
   return tools
+}
+
+function buildResourceList(cfg: McpEndpointConfig) {
+  if (!isResourceRegistryInitialized()) return []
+
+  const registry = getResourceRegistry()
+  return Array.from(registry.entries()).map(([name, meta]) => {
+    let exposed: boolean
+    if (cfg.enabledTools !== null) {
+      exposed = cfg.enabledTools.includes(name)
+    } else {
+      exposed = !cfg.disabledTools.includes(name)
+    }
+    const parts = name.split('_')
+    const description = `Read ${parts.join(' ')}. ${meta.public ? '(Public)' : '(Admin only)'}`
+    return { name, description, uri: pathToResourceUri(meta.path), exposed }
+  })
 }

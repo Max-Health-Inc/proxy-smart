@@ -14,17 +14,22 @@ RUN apt-get update -qq && \
 # Copy root package files first
 COPY package.json bun.lock ./
 
+# Copy root lib (contains shared tarballs like smart-app-launch-generated.tgz)
+COPY lib/ ./lib/
+
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
-COPY ui/package.json ./ui/
-COPY consent-app/package.json ./consent-app/
-COPY consent-app/lib/ ./consent-app/lib/
-COPY dtr-app/package.json ./dtr-app/
-COPY dtr-app/lib/ ./dtr-app/lib/
+COPY apps/ui/package.json ./apps/ui/
+COPY apps/consent-app/package.json ./apps/consent-app/
+COPY apps/consent-app/lib/ ./apps/consent-app/lib/
+COPY apps/dtr-app/package.json ./apps/dtr-app/
+COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
+COPY apps/patient-portal/package.json ./apps/patient-portal/
+COPY apps/patient-portal/lib/ ./apps/patient-portal/lib/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","ui","shared-ui","consent-app","dtr-app"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -43,8 +48,8 @@ RUN bun run export-openapi
 FROM build-deps AS api-client-gen
 COPY scripts/generate-ts-fetch-client.py scripts/runtime-template.ts ./scripts/
 COPY --from=backend-build /app/backend/dist/openapi.json ./backend/dist/openapi.json
-RUN mkdir -p ui/src/lib/api-client && \
-    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json ui/src/lib/api-client
+RUN mkdir -p apps/ui/src/lib/api-client && \
+    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client
 
 # UI build stage
 FROM build-deps AS ui-build
@@ -59,13 +64,13 @@ ENV VITE_BASE=${VITE_BASE}
 
 # Copy UI source code
 COPY shared-ui/ ./shared-ui/
-COPY ui/ ./ui/
+COPY apps/ui/ ./apps/ui/
 
 # Copy generated API client from the generation stage
-COPY --from=api-client-gen /app/ui/src/lib/api-client ./ui/src/lib/api-client/
+COPY --from=api-client-gen /app/apps/ui/src/lib/api-client ./apps/ui/src/lib/api-client/
 
 # Build UI
-WORKDIR /app/ui
+WORKDIR /app/apps/ui
 
 # Build UI for standalone deployment
 RUN bun run build
@@ -73,15 +78,22 @@ RUN bun run build
 # Consent App build stage
 FROM build-deps AS consent-app-build
 COPY shared-ui/ ./shared-ui/
-COPY consent-app/ ./consent-app/
-WORKDIR /app/consent-app
+COPY apps/consent-app/ ./apps/consent-app/
+WORKDIR /app/apps/consent-app
 RUN bun run build
 
 # DTR App build stage
 FROM build-deps AS dtr-app-build
 COPY shared-ui/ ./shared-ui/
-COPY dtr-app/ ./dtr-app/
-WORKDIR /app/dtr-app
+COPY apps/dtr-app/ ./apps/dtr-app/
+WORKDIR /app/apps/dtr-app
+RUN bun run build
+
+# Patient Portal build stage
+FROM build-deps AS patient-portal-build
+COPY shared-ui/ ./shared-ui/
+COPY apps/patient-portal/ ./apps/patient-portal/
+WORKDIR /app/apps/patient-portal
 RUN bun run build
 
 # Docs build stage (VitePress)
@@ -108,8 +120,9 @@ COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-s
 COPY --from=backend-build /app/backend/public ./backend/public
 
 # Copy built SMART apps into backend public
-COPY --from=consent-app-build /app/consent-app/dist ./backend/public/apps/consent
-COPY --from=dtr-app-build /app/dtr-app/dist ./backend/public/apps/dtr
+COPY --from=consent-app-build /app/apps/consent-app/dist ./backend/public/apps/consent
+COPY --from=dtr-app-build /app/apps/dtr-app/dist ./backend/public/apps/dtr
+COPY --from=patient-portal-build /app/apps/patient-portal/dist ./backend/public/apps/patient-portal
 
 # Verify no localhost URLs leaked into production bundles
 RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \
@@ -140,7 +153,7 @@ FROM nginx:alpine AS ui
 WORKDIR /usr/share/nginx/html
 
 # Copy built UI into /webapp/ subdirectory
-COPY --from=ui-build /app/ui/dist /usr/share/nginx/html/webapp
+COPY --from=ui-build /app/apps/ui/dist /usr/share/nginx/html/webapp
 
 # Copy custom nginx config for SPA routing under /webapp/
 COPY <<EOF /etc/nginx/conf.d/default.conf

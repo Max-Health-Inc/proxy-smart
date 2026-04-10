@@ -13,12 +13,20 @@ export const McpEndpointToolInfo = t.Object({
   exposed: t.Boolean({ description: 'Whether tool is currently exposed via MCP' }),
 })
 
+export const McpEndpointResourceInfo = t.Object({
+  name: t.String({ description: 'Resource name' }),
+  description: t.String({ description: 'Resource description' }),
+  uri: t.String({ description: 'MCP resource URI or URI template' }),
+  exposed: t.Boolean({ description: 'Whether resource is currently exposed via MCP' }),
+})
+
 export const McpEndpointStatusResponse = t.Object({
   enabled: t.Boolean({ description: 'Whether the MCP endpoint is active' }),
   configSource: t.String({ description: 'Where the enabled flag comes from (env | file | default)' }),
   endpointPath: t.String({ description: 'URL path where MCP is mounted' }),
   endpointUrl: t.String({ description: 'Full URL of the MCP endpoint' }),
   tools: t.Array(McpEndpointToolInfo, { description: 'Available tools and their exposure status' }),
+  resources: t.Array(McpEndpointResourceInfo, { description: 'Available resources (GET routes) and their exposure status' }),
   disabledTools: t.Array(t.String(), { description: 'Blocklisted tool names' }),
   enabledTools: t.Union([t.Array(t.String()), t.Null()], {
     description: 'Allowlisted tool names (null = blocklist mode)',

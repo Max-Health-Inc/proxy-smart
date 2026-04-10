@@ -1,6 +1,8 @@
 import { Elysia } from 'elysia'
 import { smartConfigService } from '@/lib/smart-config'
+import { brandBundleService } from '@/lib/brand-bundle'
 import { validateToken } from '@/lib/auth'
+import { extractBearerToken } from '@/lib/admin-utils'
 import { CommonErrorResponses, SmartConfigRefreshResponse, type SmartConfigurationResponseType } from '@/schemas'
 
 /**
@@ -9,7 +11,7 @@ import { CommonErrorResponses, SmartConfigRefreshResponse, type SmartConfigurati
 export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags: ['admin'] })
   .post('/refresh', async ({ set, headers }) => {
     // Require authentication for cache management
-    const auth = headers.authorization?.replace('Bearer ', '')
+    const auth = extractBearerToken(headers)
     if (!auth) {
       set.status = 401
       return { error: 'Authentication required' }
@@ -18,12 +20,13 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
     try {
       await validateToken(auth)
 
-      // Clear cache and fetch fresh data
+      // Clear both SMART config and brand bundle caches
       smartConfigService.clearCache()
+      brandBundleService.clearCache()
       const freshConfig = await smartConfigService.getSmartConfiguration()
 
       return {
-        message: 'SMART configuration cache refreshed successfully',
+        message: 'SMART configuration and brand bundle caches refreshed successfully',
         timestamp: new Date().toISOString(),
         config: freshConfig as SmartConfigurationResponseType
       }
@@ -38,7 +41,7 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
     },
     detail: {
       summary: 'Refresh SMART Configuration Cache',
-      description: 'Manually refresh the cached SMART configuration from Keycloak',
+      description: 'Manually refresh the cached SMART configuration and User-Access Brand Bundle from Keycloak',
       tags: ['admin', 'smart-apps'],
       security: [{ BearerAuth: [] }]
     }

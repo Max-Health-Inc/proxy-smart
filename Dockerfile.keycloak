@@ -13,7 +13,8 @@ ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 
 # Build Keycloak to optimize startup time
-RUN /opt/keycloak/bin/kc.sh build
+# JAVA_TOOL_OPTIONS is read by the JVM itself, ensuring kc.sh build respects the heap limit
+RUN JAVA_TOOL_OPTIONS="-Xmx512m" /opt/keycloak/bin/kc.sh build
 
 # Start Keycloak in production mode with realm import and optimized settings
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--import-realm"]

@@ -291,27 +291,27 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### Basic Branding (SMART 2.1+)
 
-- [ ] **Discovery Properties** *(RECOMMENDED)*
+- [x] **Discovery Properties** *(RECOMMENDED)*
   - `user_access_brand_bundle` - URL for Brand Bundle
   - `user_access_brand_identifier` - Identifier for primary entry in Brand Bundle
-- [ ] **Brand Information**
-  - `name` - Provider/organization name
-  - `logo` - Logo URL with specifications
-  - `description` - Provider description
-  - `url` - Provider website
+- [x] **Brand Information**
+  - `name` - Provider/organization name (via `BRAND_NAME` env)
+  - `logo` - Logo URL with specifications (via `BRAND_LOGO_URL` env)
+  - `description` - Provider description (via portal description)
+  - `url` - Provider website (via `BRAND_WEBSITE` env)
 - [ ] **Patient-Facing UX**
   - "Connect to my records" interface
   - Provider selection with branding
 
 ### Enhanced Branding (SMART 2.2+)
 
-- [ ] **Endpoint-Level Branding**
-  - Brand information surfacing for endpoints
-  - Endpoint-specific branding support
-- [ ] **Organization-Level Branding**
-  - Organization-level branding metadata
-  - Enhanced brand discovery mechanisms
-  - Organization-specific visual consistency
+- [x] **Endpoint-Level Branding**
+  - Brand information surfacing for endpoints (auto-generated from FHIR server store)
+  - Endpoint-specific branding support (FHIR version, connection type, contact)
+- [x] **Organization-Level Branding**
+  - Organization-level branding metadata (`organization-brand` + `organization-portal` extensions)
+  - Enhanced brand discovery mechanisms (Brand Bundle at `/branding.json` with ETag support)
+  - Organization-specific visual consistency (logo, aliases, categories, address)
 
 ---
 

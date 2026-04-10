@@ -138,8 +138,10 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       set.status = 400
       return { error: 'Failed to set fhirUser context', details: error }
     }
-  }, {
-    response: {
+  }, {    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' }),
+      fhirUserId: t.String({ description: 'FHIR User reference (e.g. Patient/123, Practitioner/456)' })
+    }),    response: {
       200: SuccessResponse,
       ...CommonErrorResponses
     },
@@ -183,6 +185,10 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set patient context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' }),
+      patientId: t.String({ description: 'FHIR Patient resource ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -197,7 +203,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .post('/:userId/encounter/:encounterId', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -218,6 +224,10 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set encounter context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' }),
+      encounterId: t.String({ description: 'FHIR Encounter resource ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -232,7 +242,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .post('/:userId/fhir-context', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -269,6 +279,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set fhirContext', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     body: SetFhirContextRequest,
     response: {
       200: SuccessResponse,
@@ -285,7 +298,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/fhir-user', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -303,6 +316,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove fhirUser context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -317,7 +333,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/patient', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -337,6 +353,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove patient context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -351,7 +370,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/encounter', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -371,6 +390,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove encounter context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -385,7 +407,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/fhir-context', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -403,6 +425,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove fhirContext', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -418,7 +443,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/intent', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -435,6 +460,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set intent context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     body: SetIntentRequest,
     response: {
       200: SuccessResponse,
@@ -450,7 +478,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/need-patient-banner', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -467,6 +495,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set need-patient-banner context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     body: SetNeedPatientBannerRequest,
     response: {
       200: SuccessResponse,
@@ -482,7 +513,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/smart-style-url', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -499,6 +530,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set smart-style-url context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     body: SetSmartStyleUrlRequest,
     response: {
       200: SuccessResponse,
@@ -514,7 +548,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .put('/:userId/tenant', async ({ getAdmin, params, body, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -531,6 +565,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to set tenant context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     body: SetTenantRequest,
     response: {
       200: SuccessResponse,
@@ -547,7 +584,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/intent', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -565,6 +602,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove intent context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -579,7 +619,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/need-patient-banner', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -597,6 +637,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove need-patient-banner context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -611,7 +654,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/smart-style-url', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -629,6 +672,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove smart-style-url context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses
@@ -643,7 +689,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
   .delete('/:userId/tenant', async ({ getAdmin, params, headers, set }) => {
     try {
       // Extract user's token from Authorization header
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -661,6 +707,9 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       return { error: 'Failed to remove tenant context', details: error }
     }
   }, {
+    params: t.Object({
+      userId: t.String({ description: 'Keycloak user ID' })
+    }),
     response: {
       200: SuccessResponse,
       ...CommonErrorResponses

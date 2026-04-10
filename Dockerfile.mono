@@ -12,19 +12,37 @@ RUN apt-get update -qq && \
     openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy all files needed for build
+# ── Dependency install layer (cached unless package.json/bun.lock/tgz change) ──
 COPY package.json bun.lock ./
+COPY lib/ ./lib/
+COPY backend/package.json ./backend/
+COPY shared-ui/package.json ./shared-ui/
+COPY apps/ui/package.json ./apps/ui/
+COPY apps/dtr-app/package.json ./apps/dtr-app/
+COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
+COPY apps/consent-app/package.json ./apps/consent-app/
+COPY apps/consent-app/lib/ ./apps/consent-app/lib/
+COPY apps/patient-portal/package.json ./apps/patient-portal/
+COPY apps/patient-portal/lib/ ./apps/patient-portal/lib/
+COPY infra/package.json ./infra/
+COPY scripts/package.json ./scripts/
+
+# Strip workspaces not included in the mono build to avoid install failures
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+
+# Install dependencies (this layer is cached when only source code changes)
+RUN bun install
+
+# ── Source copy (changes frequently, but bun install is already cached) ──
 COPY backend/ ./backend/
 COPY shared-ui/ ./shared-ui/
-COPY ui/ ./ui/
-COPY dtr-app/ ./dtr-app/
-COPY consent-app/ ./consent-app/
+COPY apps/ui/ ./apps/ui/
+COPY apps/dtr-app/ ./apps/dtr-app/
+COPY apps/consent-app/ ./apps/consent-app/
+COPY apps/patient-portal/ ./apps/patient-portal/
 COPY infra/ ./infra/
 COPY scripts/ ./scripts/
 COPY docs/ ./docs/
-
-# Install dependencies for all workspaces (includes dtr-app, consent-app, shared-ui)
-RUN bun install --frozen-lockfile
 
 # Encryption secret for browser local-storage obfuscation (baked into Vite bundle)
 ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key

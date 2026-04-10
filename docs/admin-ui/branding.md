@@ -1,0 +1,213 @@
+# Brand Management
+
+The Brand Management section lets you configure **User-Access Brands** as defined in [SMART App Launch 2.2.0 Section 8](https://hl7.org/fhir/smart-app-launch/STU2.2/brands.html). Brands help patients and app developers identify your organization when choosing healthcare providers in SMART-enabled applications.
+
+## 🎨 Overview
+
+Proxy Smart automatically publishes a **FHIR Brand Bundle** at `/branding.json` and references it from `.well-known/smart-configuration` via the `user_access_brand_bundle` and `user_access_brand_identifier` fields. The Admin UI gives you a visual editor for all brand properties without restarting the server.
+
+### How It Works
+
+1. **Environment variables** provide default brand values at startup (e.g. `BRAND_NAME`, `BRAND_WEBSITE`)
+2. **Admin overrides** are persisted in Keycloak realm attributes (prefix `brand_settings.`)
+3. At runtime, admin overrides take precedence over env defaults
+4. The FHIR Brand Bundle is rebuilt automatically when settings change
+
+## 🏢 Brand Identity
+
+Core fields that identify your organization in the SMART ecosystem:
+
+| Field | Env Variable | Description |
+|-------|-------------|-------------|
+| **Brand Name** | `BRAND_NAME` | Human-readable organization name |
+| **Website** | `BRAND_WEBSITE` | Organization website URL |
+| **Identifier** | `BRAND_IDENTIFIER` | URI that uniquely identifies the brand (defaults to website URL) |
+| **Category** | `BRAND_CATEGORY` | Organization type code (see table below) |
+| **Aliases** | `BRAND_ALIASES` | Comma-separated alternative names (e.g. abbreviations, former names) |
+
+### Organization Categories
+
+Categories follow the [FHIR organization-type CodeSystem](http://hl7.org/fhir/codesystem-organization-type.html):
+
+| Code | Display |
+|------|---------|
+| `prov` | Healthcare Provider |
+| `pay` | Payer |
+| `laboratory` | Laboratory |
+| `imaging` | Imaging Center |
+| `pharmacy` | Pharmacy |
+| `network` | Health Information Network |
+| `aggregator` | Data Aggregator |
+
+## 🖼️ Logo & Branding
+
+Logo URLs are included in the FHIR Organization resource via the `organization-brand` extension.
+
+| Field | Env Variable | Description |
+|-------|-------------|-------------|
+| **Brand Logo URL** | `BRAND_LOGO_URL` | SVG or 1024 px PNG with transparent background |
+| **Logo License URL** | `BRAND_LOGO_LICENSE_URL` | URL to the logo license |
+| **Portal Logo URL** | `BRAND_PORTAL_LOGO_URL` | Logo for the patient-facing portal |
+| **Portal Logo License URL** | `BRAND_PORTAL_LOGO_LICENSE_URL` | License for the portal logo |
+
+> **Tip**: Per the SMART spec, logos should be SVG (preferred) or at least 1024 px PNG with a transparent background for best results across apps.
+
+## 🌐 Patient Portal
+
+Portal settings are published via the `organization-portal` FHIR extension. App developers use these to help patients connect to your patient-facing portal.
+
+| Field | Env Variable | Description |
+|-------|-------------|-------------|
+| **Portal Name** | `BRAND_PORTAL_NAME` | Name of the patient-facing portal (e.g. "MyChart") |
+| **Portal URL** | `BRAND_PORTAL_URL` | Portal login or home URL |
+| **Portal Description** | `BRAND_PORTAL_DESCRIPTION` | Markdown description of the portal |
+
+## 📍 Organization Address
+
+Address fields are included in the FHIR Organization resource for geographic identification.
+
+| Field | Env Variable | Description |
+|-------|-------------|-------------|
+| **City** | `BRAND_ADDRESS_CITY` | Organization city |
+| **State / Province** | `BRAND_ADDRESS_STATE` | State or province |
+| **Postal Code** | `BRAND_ADDRESS_POSTAL_CODE` | ZIP or postal code |
+| **Country** | `BRAND_ADDRESS_COUNTRY` | ISO country code (e.g. `US`) |
+
+## 🔌 Admin API
+
+Brand settings can also be managed programmatically via the REST API.
+
+### Get Brand Configuration
+
+```http
+GET /admin/branding
+Authorization: Bearer <token>
+```
+
+**Response** `200 OK`:
+
+```json
+{
+  "message": "Brand configuration retrieved",
+  "config": {
+    "name": "Acme Health",
+    "website": "https://acmehealth.example.com",
+    "logoUrl": "https://acmehealth.example.com/logo.svg",
+    "logoLicenseUrl": null,
+    "aliases": ["Acme", "AH"],
+    "category": "prov",
+    "portalName": "MyAcme",
+    "portalUrl": "https://portal.acmehealth.example.com",
+    "portalDescription": "Access your health records",
+    "portalLogoUrl": null,
+    "portalLogoLicenseUrl": null,
+    "addressCity": "Boston",
+    "addressState": "MA",
+    "addressPostalCode": "02101",
+    "addressCountry": "US",
+    "identifier": "https://acmehealth.example.com"
+  },
+  "timestamp": "2026-03-24T12:00:00.000Z"
+}
+```
+
+### Update Brand Configuration
+
+```http
+PUT /admin/branding
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Acme Health System",
+  "website": "https://acmehealth.example.com",
+  "logoUrl": "https://acmehealth.example.com/logo.svg",
+  "logoLicenseUrl": null,
+  "aliases": ["Acme", "AH", "Acme Health"],
+  "category": "prov",
+  "portalName": "MyAcme",
+  "portalUrl": "https://portal.acmehealth.example.com",
+  "portalDescription": "Access your health records online.",
+  "portalLogoUrl": null,
+  "portalLogoLicenseUrl": null,
+  "addressCity": "Boston",
+  "addressState": "MA",
+  "addressPostalCode": "02101",
+  "addressCountry": "US",
+  "identifier": "https://acmehealth.example.com"
+}
+```
+
+A successful update clears the Brand Bundle cache so the next request to `/branding.json` returns fresh data.
+
+## 📦 FHIR Brand Bundle
+
+The published bundle at `/branding.json` is a FHIR `Bundle` (type `collection`) containing:
+
+- **Organization** — the brand itself, with `organization-brand` and `organization-portal` extensions
+- **Endpoint** — one per registered FHIR server, with FHIR version and connection metadata
+
+### Example Bundle Structure
+
+```json
+{
+  "resourceType": "Bundle",
+  "id": "user-access-brands",
+  "type": "collection",
+  "timestamp": "2026-03-24T12:00:00.000Z",
+  "entry": [
+    {
+      "fullUrl": "https://proxy.example.com/branding/Organization/primary-brand",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "primary-brand",
+        "active": true,
+        "name": "Acme Health",
+        "type": [{ "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "prov" }] }],
+        "extension": [
+          { "url": "http://hl7.org/fhir/StructureDefinition/organization-brand", "extension": [...] },
+          { "url": "http://hl7.org/fhir/StructureDefinition/organization-portal", "extension": [...] }
+        ],
+        "endpoint": [{ "reference": "Endpoint/endpoint-main" }]
+      }
+    },
+    {
+      "fullUrl": "https://proxy.example.com/branding/Endpoint/endpoint-main",
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "endpoint-main",
+        "status": "active",
+        "connectionType": { "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type", "code": "hl7-fhir-rest" },
+        "address": "https://proxy.example.com/smart/main/R4"
+      }
+    }
+  ]
+}
+```
+
+### SMART Configuration Integration
+
+The `/.well-known/smart-configuration` response automatically includes:
+
+```json
+{
+  "user_access_brand_bundle": "https://proxy.example.com/branding.json",
+  "user_access_brand_identifier": "https://acmehealth.example.com"
+}
+```
+
+## ⚙️ Configuration Precedence
+
+Brand settings resolve in the following order (first non-null wins):
+
+1. **Admin overrides** — values saved via the Admin UI or `PUT /admin/branding`
+2. **Environment variables** — `BRAND_*` env vars set at deployment
+3. **Built-in defaults** — package name, `BASE_URL`, `prov` category
+
+This means you can deploy with env vars for a quick setup and later fine-tune through the Admin UI without restarting.
+
+## 🔄 Cache Behavior
+
+- The Brand Bundle is cached for **60 seconds** and supports `ETag` / `If-None-Match` for conditional requests
+- Saving brand settings via the Admin UI or API **immediately clears the cache**
+- The SMART configuration endpoint picks up the current brand identifier on every request

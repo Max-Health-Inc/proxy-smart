@@ -24,6 +24,8 @@ features:
     details: Built-in assistant with semantic documentation search powered by OpenAI embeddings.
   - title: Admin Dashboard
     details: React UI for managing apps, users, servers, scopes, identity providers, and consent.
+  - title: Medical Imaging
+    details: DICOMweb proxy with QIDO-RS & WADO-RS, Patient Portal imaging viewer powered by Cornerstone3D.
   - title: Docker-Ready
     details: Mono-container and multi-container deployments with automatic version management.
 ---
@@ -45,6 +47,7 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - **MCP Server** — Streamable HTTP endpoint at `/mcp` exposing all admin tools + documentation search
 - **Consent Management** — Patient consent app for authorization flows (`consent-app/`)
 - **DTR App** — Documentation, Templates & Rules app (`dtr-app/`)
+- **Medical Imaging** — DICOMweb proxy (QIDO-RS & WADO-RS) with Cornerstone3D viewer in the Patient Portal
 - **Access Control** — Physical access integrations (Kisi, UniFi Access)
 - **AI Skills System** — Installable skills for extending AI assistant capabilities
 - **Docker-Ready** — Mono-container and multi-container deployments
@@ -72,6 +75,11 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - [Adding Custom Tools](./ai/ADDING_CUSTOM_TOOLS.md) — Guide for adding custom AI tools
 - [Action Quick Reference](./ai/action-quick-reference.md) — AI action reference card
 - [Interactive Actions Guide](./ai/interactive-actions.md) — Detailed interactive actions docs
+
+### Imaging & DICOMweb
+
+- [DICOMweb Proxy](./dicomweb-proxy.md) — QIDO-RS & WADO-RS proxy endpoints, authentication, and deployment
+- [Patient Portal Imaging](./patient-portal-imaging.md) — ImagingStudy cards, Cornerstone3D viewer, and DICOMweb client library
 
 ### SMART on FHIR
 

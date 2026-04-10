@@ -1218,12 +1218,15 @@ jobs:
           # Clean up report files before switching branches (they're backed up in /tmp)
           rm -rf "$REPORT_DIR"
           
+          # Discard generated lockfile changes and stash any other modifications before switching branches
+          git checkout -- bun.lock 2>/dev/null || true
+          git stash --include-untracked 2>/dev/null || true
+          
           # Checkout develop branch and pull latest (to avoid race conditions with version updates)
           git fetch origin develop
           git checkout develop
-          git stash
           git pull origin develop --rebase || true
-          git stash pop || true
+          git stash pop 2>/dev/null || true
           
           # Restore and add report directory after branch switch
           mkdir -p "$REPORT_DIR"

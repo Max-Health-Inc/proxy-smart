@@ -12,6 +12,9 @@ import { getCustomTools } from './custom-tools'
 // Module-level storage for tools (initialized once at startup)
 let globalTools: Map<string, ToolMetadata> | null = null
 
+// Module-level storage for resources (GET routes exposed as MCP resources)
+let globalResources: Map<string, ResourceMetadata> | null = null
+
 export interface ToolDefinition {
   type: 'function'
   function: {
@@ -34,6 +37,16 @@ export interface ToolMetadata {
   schema?: TSchema
   paramsSchema?: TSchema
   public?: boolean // Whether tool is public (no auth required)
+}
+
+export interface ResourceMetadata {
+  path: string
+  method: string
+  handler: unknown
+  paramsSchema?: TSchema
+  public?: boolean
+  /** Path param names extracted from route (e.g. ['userId', 'roleName']) */
+  pathParams: string[]
 }
 
 /**
@@ -66,6 +79,10 @@ export function initializeToolRegistry(app: unknown, options?: { prefixes?: stri
   // Log tool names for debugging
   const toolNames = Array.from(globalTools.keys())
   console.log('[tool-registry] Available tools:', toolNames.join(', '))
+
+  // Extract GET route resources for MCP resources/list + resources/read
+  globalResources = extractRouteResources(app, options)
+  console.log(`[tool-registry] Extracted ${globalResources.size} MCP resources from GET routes`)
 }
 
 /**
@@ -83,6 +100,23 @@ export function getToolRegistry(): Map<string, ToolMetadata> {
  */
 export function isToolRegistryInitialized(): boolean {
   return globalTools !== null
+}
+
+/**
+ * Get the initialized resource registry (GET routes → MCP resources)
+ */
+export function getResourceRegistry(): Map<string, ResourceMetadata> {
+  if (!globalResources) {
+    throw new Error('Resource registry not initialized. Call initializeToolRegistry() first.')
+  }
+  return globalResources
+}
+
+/**
+ * Check if resource registry is initialized
+ */
+export function isResourceRegistryInitialized(): boolean {
+  return globalResources !== null
 }
 
 /**
@@ -133,6 +167,76 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
   }
   
   return tools
+}
+
+/**
+ * Extract GET route metadata from Elysia app as MCP resources.
+ * Static (no path params) → fixed URI resources.
+ * Parameterized (e.g. :id) → URI template resources.
+ */
+export function extractRouteResources(app: unknown, options?: { prefixes?: string[] }): Map<string, ResourceMetadata> {
+  const resources = new Map<string, ResourceMetadata>()
+  const routePrefixes = options?.prefixes || ['/admin/']
+  const routes: unknown[] = (app as { routes?: unknown[] }).routes ?? []
+
+  for (const route of routes) {
+    const path = (route as { path?: unknown }).path
+    const method = (route as { method?: unknown }).method
+    const hooks = (route as { hooks?: { params?: TSchema } }).hooks
+    const legacySchema = (route as { schema?: { params?: TSchema } }).schema
+    const handler = (route as { handler?: unknown }).handler
+    const meta = (route as { meta?: { public?: boolean } }).meta
+
+    if (typeof path !== 'string' || typeof method !== 'string') continue
+    if (method !== 'GET') continue
+
+    const matchesPrefix = routePrefixes.some(prefix => path.startsWith(prefix))
+    if (!matchesPrefix) continue
+
+    // Extract path param names (e.g. /admin/roles/:roleName → ['roleName'])
+    const paramMatches = path.match(/:(\w+)/g)
+    const pathParams = paramMatches ? paramMatches.map(p => p.slice(1)) : []
+
+    const resourceName = pathToResourceName(path)
+    const paramsSchema = hooks?.params ?? legacySchema?.params
+
+    resources.set(resourceName, {
+      path,
+      method,
+      handler,
+      paramsSchema,
+      public: meta?.public || false,
+      pathParams,
+    })
+  }
+
+  return resources
+}
+
+/**
+ * Convert a GET route path to a human-readable MCP resource name.
+ * e.g. /admin/branding → admin_branding
+ *      /admin/roles/clients/:clientId → admin_roles_clients_by_clientId
+ */
+function pathToResourceName(path: string): string {
+  let name = path.replace(/^\//, '')
+  // Replace :param with by_param for readability
+  name = name.replace(/:(\w+)/g, 'by_$1')
+  name = name.replace(/\//g, '_')
+  // Replace hyphens with underscores for valid identifiers
+  name = name.replace(/-/g, '_')
+  return name
+}
+
+/**
+ * Convert an Elysia route path to an MCP resource URI.
+ * Static: proxy-smart://admin/branding
+ * Parameterized: proxy-smart://admin/roles/{roleName} (RFC 6570 URI template)
+ */
+export function pathToResourceUri(path: string): string {
+  // Convert :param to {param} for URI template syntax
+  const uriPath = path.replace(/:(\w+)/g, '{$1}')
+  return `proxy-smart:/${uriPath}`
 }
 
 /**

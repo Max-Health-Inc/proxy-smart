@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
+import { extractBearerToken } from '@/lib/admin-utils'
 import { ErrorResponse, SuccessResponse } from '@/schemas'
 import { ClientRegistrationSettings, type ClientRegistrationSettingsType } from '@/schemas/auth/client-registration'
 import { logger } from '@/lib/logger'
@@ -111,7 +112,7 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
 
   .get('/settings', async ({ getAdmin, headers, set }) => {
     try {
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -143,7 +144,7 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
 
   .put('/settings', async ({ getAdmin, body, headers, set }) => {
     try {
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }
@@ -178,7 +179,7 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
 
   .post('/reset-defaults', async ({ getAdmin, headers, set }) => {
     try {
-      const token = headers.authorization?.replace('Bearer ', '')
+      const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
         return { error: 'Authorization header required' }

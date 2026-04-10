@@ -198,6 +198,69 @@ export async function initializeFhirServers(): Promise<void> {
 }
 
 /**
+ * Ensure all Keycloak clients have the post.logout.redirect.uris attribute.
+ * Keycloak 25+ requires this attribute for post-logout redirects to work;
+ * "+" means "use the same URIs as Valid Redirect URIs".
+ * Idempotent — safe to call on every startup.
+ */
+export async function ensurePostLogoutRedirectUris(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping post-logout redirect URI check — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const clients = await admin.clients.find()
+    const INTERNAL_CLIENTS = new Set([
+      'account', 'account-console', 'admin-cli', 'broker',
+      'realm-management', 'security-admin-console',
+    ])
+
+    let repaired = 0
+    for (const client of clients) {
+      if (!client.id || !client.clientId || INTERNAL_CLIENTS.has(client.clientId)) continue
+      if (client.attributes?.['post.logout.redirect.uris']) continue
+
+      try {
+        await admin.clients.update({ id: client.id }, {
+          attributes: {
+            ...client.attributes,
+            'post.logout.redirect.uris': '+',
+          }
+        })
+        repaired++
+        logger.keycloak.debug(`Set post.logout.redirect.uris for client "${client.clientId}"`)
+      } catch (error) {
+        logger.keycloak.warn(`Could not update post.logout.redirect.uris for "${client.clientId}"`, {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+
+    if (repaired > 0) {
+      logger.keycloak.info(`✅ Set post.logout.redirect.uris on ${repaired} client(s)`)
+    } else {
+      logger.keycloak.info('✅ All clients already have post.logout.redirect.uris configured')
+    }
+  } catch (error) {
+    logger.keycloak.warn('Could not auto-repair post-logout redirect URIs', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Ensure Keycloak realm has event logging enabled.
  * Uses the service-account admin credentials (KEYCLOAK_ADMIN_CLIENT_ID/SECRET)
  * to update the realm configuration via the Admin REST API.
@@ -290,6 +353,9 @@ export async function initializeServer(): Promise<void> {
       
       // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
       await ensureKeycloakEventLogging()
+
+      // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
+      await ensurePostLogoutRedirectUris()
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')

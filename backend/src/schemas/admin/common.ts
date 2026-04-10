@@ -43,29 +43,29 @@ export const CertificateDetails = t.Object({
 /**
  * App type literal values for SMART applications
  */
-export const AppTypeLiteral = t.Union([
-  t.Literal('standalone-app'),
-  t.Literal('ehr-launch'),
-  t.Literal('backend-service'),
-  t.Literal('agent')
+export const AppTypeLiteral = t.UnionEnum([
+  'standalone-app',
+  'ehr-launch',
+  'backend-service',
+  'agent'
 ])
 
 /**
  * Client type literal values for OAuth2 clients
  */
-export const ClientTypeLiteral = t.Union([
-  t.Literal('public'),
-  t.Literal('confidential'),
-  t.Literal('backend-service')
+export const ClientTypeLiteral = t.UnionEnum([
+  'public',
+  'confidential',
+  'backend-service'
 ])
 
 /**
  * Server scope literal values for launch contexts
  */
-export const ServerScopeLiteral = t.Union([
-  t.Literal('global'),
-  t.Literal('specific'),
-  t.Literal('single')
+export const ServerScopeLiteral = t.UnionEnum([
+  'global',
+  'specific',
+  'single'
 ])
 
 // TypeScript type inference helpers

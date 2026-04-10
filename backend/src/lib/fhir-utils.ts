@@ -25,6 +25,7 @@ export interface FHIRVersionInfo {
   serverVersion?: string
   serverName?: string
   supported: boolean
+  smartCapabilities?: string[]
 }
 
 /**
@@ -32,6 +33,11 @@ export interface FHIRVersionInfo {
  */
 const fhirMetadataCache = new Map<string, { data: FHIRVersionInfo, timestamp: number }>()
 const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+/** Clear cached metadata for a specific server URL so the next fetch is fresh */
+export function clearMetadataCache(serverUrl: string): void {
+  fhirMetadataCache.delete(serverUrl)
+}
 
 /**
  * Normalize FHIR version to standard R + major version format
@@ -75,6 +81,28 @@ export function normalizeFHIRVersion(version: string): string {
 }
 
 /**
+ * Fetch SMART capabilities from an origin FHIR server's .well-known/smart-configuration
+ * Returns the capabilities array if available, empty array otherwise
+ */
+async function fetchSmartCapabilities(serverUrl: string): Promise<string[]> {
+  try {
+    const smartConfigUrl = `${serverUrl}/.well-known/smart-configuration`
+    const response = await fetch(smartConfigUrl, {
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(5000)
+    })
+
+    if (!response.ok) return []
+
+    const smartConfig = await response.json() as { capabilities?: string[] }
+    return Array.isArray(smartConfig.capabilities) ? smartConfig.capabilities : []
+  } catch {
+    // Server doesn't support .well-known/smart-configuration — that's fine
+    return []
+  }
+}
+
+/**
  * Fetch and parse FHIR server metadata to determine version
  */
 export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionInfo> {
@@ -94,7 +122,7 @@ export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionIn
       headers: {
         'Accept': 'application/fhir+json, application/json'
       },
-      signal: AbortSignal.timeout(4000)
+      signal: AbortSignal.timeout(10000)
     })
 
     if (!response.ok) {
@@ -115,6 +143,9 @@ export async function getFHIRServerInfo(baseUrl?: string): Promise<FHIRVersionIn
       serverName: capability.software?.name || 'Unknown FHIR Server',
       supported: config.fhir.supportedVersions.includes(fhirVersion)
     }
+
+    // Try to fetch SMART capabilities from the origin server's .well-known/smart-configuration
+    versionInfo.smartCapabilities = await fetchSmartCapabilities(serverUrl)
 
     // Cache the result
     fhirMetadataCache.set(cacheKey, {
@@ -189,36 +220,18 @@ export function getServerIdentifier(serverInfo: FHIRVersionInfo, serverUrl: stri
 }
 
 /**
- * Get server configuration by name (async version)
+ * Convert short FHIR version labels to semver codes (inverse of normalizeFHIRVersion)
+ * Examples: "R4" → "4.0.1", "R5" → "5.0.0", "STU3" → "3.0.2"
  */
-export async function getServerByName(serverName: string): Promise<string | null> {
-  // Try to find by generated server identifier from metadata
-  for (let i = 0; i < config.fhir.serverBases.length; i++) {
-    const serverBase = config.fhir.serverBases[i]
-
-    try {
-      const serverInfo = await getFHIRServerInfo(serverBase)
-
-      // Generate consistent server identifier
-      const serverIdentifier = getServerIdentifier(serverInfo, serverBase, i)
-      if (serverIdentifier === serverName) {
-        return serverBase
-      }
-    } catch {
-      // If metadata fetch fails, try fallback
-      const fallbackIdentifier = `server-${i}`
-      if (fallbackIdentifier === serverName) {
-        return serverBase
-      }
-    }
+export function fhirVersionToSemver(version: string): string {
+  const map: Record<string, string> = {
+    'R2': '1.0.2', 'DSTU2': '1.0.2',
+    'R3': '3.0.2', 'STU3': '3.0.2',
+    'R4': '4.0.1',
+    'R4B': '4.3.0',
+    'R5': '5.0.0'
   }
-
-  // Fallback: try to find by partial URL match (e.g., "hapi" matches "hapi.fhir.org")
-  const matchingServer = config.fhir.serverBases.find(server =>
-    server.toLowerCase().includes(serverName.toLowerCase())
-  )
-
-  return matchingServer || null
+  return map[version.toUpperCase()] || version
 }
 
 /**

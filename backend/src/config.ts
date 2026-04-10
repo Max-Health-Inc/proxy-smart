@@ -89,6 +89,28 @@ export const config = {
     capabilities: process.env.SMART_CAPABILITIES?.split(',').map(s => s.trim()),
   },
 
+  // User-Access Brands (SMART App Launch 2.2.0 Section 8)
+  brand: {
+    get name() { return process.env.BRAND_NAME || packageJson.displayName || packageJson.name },
+    get website() { return process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
+    get logoUrl() { return process.env.BRAND_LOGO_URL || null },
+    get logoLicenseUrl() { return process.env.BRAND_LOGO_LICENSE_URL || null },
+    get aliases(): string[] {
+      return process.env.BRAND_ALIASES?.split(',').map(s => s.trim()).filter(Boolean) || []
+    },
+    get category() { return process.env.BRAND_CATEGORY || 'prov' }, // prov, pay, laboratory, etc.
+    get portalName() { return process.env.BRAND_PORTAL_NAME || null },
+    get portalUrl() { return process.env.BRAND_PORTAL_URL || null },
+    get portalDescription() { return process.env.BRAND_PORTAL_DESCRIPTION || null },
+    get portalLogoUrl() { return process.env.BRAND_PORTAL_LOGO_URL || null },
+    get portalLogoLicenseUrl() { return process.env.BRAND_PORTAL_LOGO_LICENSE_URL || null },
+    get addressCity() { return process.env.BRAND_ADDRESS_CITY || null },
+    get addressState() { return process.env.BRAND_ADDRESS_STATE || null },
+    get addressPostalCode() { return process.env.BRAND_ADDRESS_POSTAL_CODE || null },
+    get addressCountry() { return process.env.BRAND_ADDRESS_COUNTRY || null },
+    get identifier() { return process.env.BRAND_IDENTIFIER || process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
+  },
+
   ai: {
     // Always use internal AI (unified ai.ts with direct Elysia tool execution)
     // Can connect to external MCP servers via EXTERNAL_MCP_SERVERS env variable
@@ -169,6 +191,31 @@ export const config = {
     }
   },
 
+  accessControl: {
+    // SMART scope enforcement — validates token scopes against requested FHIR resources
+    get scopeEnforcement(): 'enforce' | 'audit-only' | 'disabled' {
+      const mode = process.env.SCOPE_ENFORCEMENT_MODE || 'disabled'
+      if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
+      return 'disabled'
+    },
+    // Role-based filtering using fhirUser claim (e.g. generalPractitioner-based isolation)
+    get roleBasedFiltering(): 'enforce' | 'audit-only' | 'disabled' {
+      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'disabled'
+      if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
+      return 'disabled'
+    },
+    // Block write operations for non-admin users (users with fhirUser claim)
+    get readOnlyForUsers() {
+      return process.env.READ_ONLY_FOR_USERS === 'true'
+    },
+    // Clinical resource types subject to patient-scoped filtering
+    get patientScopedResources(): string[] {
+      const defaults = ['Observation', 'Condition', 'Procedure', 'MedicationRequest', 'MedicationStatement', 'DiagnosticReport', 'Encounter', 'AllergyIntolerance', 'ImagingStudy', 'CarePlan', 'Consent']
+      const env = process.env.PATIENT_SCOPED_RESOURCES?.split(',').map(s => s.trim()).filter(Boolean)
+      return env && env.length > 0 ? env : defaults
+    },
+  },
+
   kisi: {
     // Kisi Access Control integration
     get apiKey() {
@@ -211,6 +258,29 @@ export const config = {
     },
     get path() {
       return process.env.MCP_ENDPOINT_PATH || '/mcp'
+    },
+  },
+
+  dicomweb: {
+    // DICOMweb proxy configuration — proxies WADO-RS / QIDO-RS requests to a PACS
+    get enabled() {
+      return !!this.baseUrl
+    },
+    get baseUrl() {
+      return process.env.DICOMWEB_BASE_URL || null // e.g. http://orthanc:8042/dicom-web
+    },
+    get wadoRoot() {
+      return process.env.DICOMWEB_WADO_ROOT || this.baseUrl // WADO-RS root, defaults to baseUrl
+    },
+    get qidoRoot() {
+      return process.env.DICOMWEB_QIDO_ROOT || this.baseUrl // QIDO-RS root, defaults to baseUrl
+    },
+    // Optional auth for upstream PACS (e.g. Basic auth for Orthanc)
+    get upstreamAuth() {
+      return process.env.DICOMWEB_UPSTREAM_AUTH || null // e.g. "Basic dGVzdDp0ZXN0"
+    },
+    get timeoutMs() {
+      return Number.parseInt(process.env.DICOMWEB_TIMEOUT_MS || '30000', 10)
     },
   },
 

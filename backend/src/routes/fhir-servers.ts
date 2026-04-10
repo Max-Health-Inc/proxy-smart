@@ -1,8 +1,9 @@
 import { Elysia, t } from 'elysia'
 import { config } from '../config'
-import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer } from '../lib/fhir-server-store'
+import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
+import { extractBearerToken } from '../lib/admin-utils'
 import { mtlsStore } from '../lib/mtls-store'
 import * as forge from 'node-forge'
 import * as crypto from 'crypto'
@@ -246,7 +247,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .post('/', async ({ body, set, headers }) => {
     try {
       // Require authentication for server management
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -276,6 +277,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           serverVersion: serverInfo.metadata.serverVersion,
           serverName: serverInfo.metadata.serverName,
           supported: serverInfo.metadata.supported,
+          smartCapabilities: serverInfo.metadata.smartCapabilities,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -323,7 +325,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .put('/:server_id', async ({ params, body, set, headers }) => {
     try {
       // Require authentication for server management
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -353,6 +355,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           serverVersion: serverInfo.metadata.serverVersion,
           serverName: serverInfo.metadata.serverName,
           supported: serverInfo.metadata.supported,
+          smartCapabilities: serverInfo.metadata.smartCapabilities,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -403,6 +406,9 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       // Ensure servers are initialized
       await ensureServersInitialized()
 
+      // Auto-retry metadata for servers that previously failed (non-blocking)
+      await retryUnknownServers()
+
       // Get all servers from the store
       const serverInfos = await getAllServers()
 
@@ -414,6 +420,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         serverVersion: serverInfo.metadata.serverVersion,
         serverName: serverInfo.metadata.serverName,
         supported: serverInfo.metadata.supported,
+        smartCapabilities: serverInfo.metadata.smartCapabilities,
         endpoints: {
           base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
           smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -467,6 +474,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         serverVersion: serverInfo.metadata.serverVersion,
         serverName: serverInfo.metadata.serverName,
         supported: serverInfo.metadata.supported,
+        smartCapabilities: serverInfo.metadata.smartCapabilities,
         endpoints: {
           // Proxy's FHIR endpoints
           base: proxyBase,
@@ -504,7 +512,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .get('/:server_id/mtls', async ({ params, set, headers }) => {
     try {
       // Require authentication
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -558,7 +566,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .put('/:server_id/mtls', async ({ params, body, set, headers }) => {
     try {
       // Require authentication
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -615,7 +623,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
   .post('/:server_id/mtls/certificates', async ({ params, body, set, headers }) => {
     try {
       // Require authentication
-      const auth = headers.authorization?.replace('Bearer ', '')
+      const auth = extractBearerToken(headers)
       if (!auth) {
         set.status = 401
         return { error: 'Authentication required' }
@@ -673,6 +681,108 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
     detail: {
       summary: 'Upload Certificate',
       description: 'Upload a certificate or private key for mTLS authentication',
+      tags: ['servers'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  // Delete a FHIR server
+  .delete('/:server_id', async ({ params, set, headers }) => {
+    try {
+      const auth = extractBearerToken(headers)
+      if (!auth) {
+        set.status = 401
+        return { error: 'Authentication required' }
+      }
+
+      await validateToken(auth)
+
+      await deleteServer(params.server_id)
+
+      return {
+        success: true,
+        message: `FHIR server '${params.server_id}' deleted successfully`,
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        set.status = 404
+        return { error: error.message }
+      }
+      logger.fhir.error('Failed to delete FHIR server', { error, serverId: params.server_id })
+      set.status = 500
+      return { error: 'Failed to delete FHIR server', details: error }
+    }
+  }, {
+    params: ServerIdParam,
+    response: {
+      200: t.Object({
+        success: t.Boolean({ description: 'Whether the server was deleted successfully' }),
+        message: t.String({ description: 'Success message' }),
+      }, { title: 'DeleteFhirServerResponse' }),
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Delete FHIR Server',
+      description: 'Remove a FHIR server from the system. This does not delete any patient data on the FHIR server itself.',
+      tags: ['servers'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  // Refresh metadata for a FHIR server (re-fetch from origin)
+  .post('/:server_id/refresh', async ({ params, set, headers }) => {
+    try {
+      const auth = extractBearerToken(headers)
+      if (!auth) {
+        set.status = 401
+        return { error: 'Authentication required' }
+      }
+
+      await validateToken(auth)
+
+      const updated = await refreshServer(params.server_id)
+
+      return {
+        success: true,
+        message: `Server metadata refreshed successfully`,
+        server: {
+          id: updated.identifier,
+          name: updated.name,
+          url: updated.url,
+          fhirVersion: updated.metadata.fhirVersion,
+          serverName: updated.metadata.serverName || 'Unknown FHIR Server',
+          supported: updated.metadata.supported,
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        set.status = 404
+        return { error: error.message }
+      }
+      logger.fhir.error('Failed to refresh FHIR server metadata', { error, serverId: params.server_id })
+      set.status = 500
+      return { error: 'Failed to refresh server metadata', details: error }
+    }
+  }, {
+    params: ServerIdParam,
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        message: t.String(),
+        server: t.Object({
+          id: t.String(),
+          name: t.String(),
+          url: t.String(),
+          fhirVersion: t.String(),
+          serverName: t.String(),
+          supported: t.Boolean(),
+        }),
+      }, { title: 'RefreshFhirServerResponse' }),
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Refresh FHIR Server Metadata',
+      description: 'Re-fetch the CapabilityStatement from the FHIR server to update metadata like server name, version, and connection status.',
       tags: ['servers'],
       security: [{ BearerAuth: [] }]
     }

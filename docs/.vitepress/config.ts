@@ -18,6 +18,7 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Admin UI', link: '/admin-ui/dashboard' },
       { text: 'AI & MCP', link: '/MCP_HTTP_SERVER' },
+      { text: 'Imaging', link: '/dicomweb-proxy' },
       { text: 'SMART on FHIR', link: '/SMART_2.2.0_CHECKLIST' },
     ],
 
@@ -37,6 +38,17 @@ export default defineConfig({
           { text: 'SMART Apps', link: '/admin-ui/smart-apps' },
           { text: 'FHIR Servers', link: '/admin-ui/fhir-servers' },
           { text: 'Scope Management', link: '/admin-ui/scope-management' },
+          { text: 'Brand Management', link: '/admin-ui/branding' },
+          { text: 'Access Control', link: '/admin-ui/access-control' },
+          { text: 'Monitoring', link: '/admin-ui/monitoring' },
+        ],
+      },
+      {
+        text: 'Imaging & DICOMweb',
+        collapsed: false,
+        items: [
+          { text: 'DICOMweb Proxy', link: '/dicomweb-proxy' },
+          { text: 'Patient Portal Imaging', link: '/patient-portal-imaging' },
         ],
       },
       {

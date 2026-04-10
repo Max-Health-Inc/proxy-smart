@@ -13,10 +13,11 @@ const backendPublicPath = path.join(projectRoot, 'backend', 'public');
 
 // App definitions: [sourceDistDir, mountPath]
 const apps = [
-  { name: 'Admin UI',    src: path.join(projectRoot, 'ui', 'dist'),                      dest: path.join(backendPublicPath, 'webapp') },
-  { name: 'DTR App',     src: path.join(projectRoot, 'dtr-app', 'dist'),                  dest: path.join(backendPublicPath, 'apps', 'dtr') },
-  { name: 'Consent App', src: path.join(projectRoot, 'consent-app', 'dist'),               dest: path.join(backendPublicPath, 'apps', 'consent') },
-  { name: 'Docs',        src: path.join(projectRoot, 'docs', '.vitepress', 'dist'),        dest: path.join(backendPublicPath, 'docs') },
+  { name: 'Admin UI',        src: path.join(projectRoot, 'apps', 'ui', 'dist'),                      dest: path.join(backendPublicPath, 'webapp') },
+  { name: 'DTR App',         src: path.join(projectRoot, 'apps', 'dtr-app', 'dist'),                  dest: path.join(backendPublicPath, 'apps', 'dtr') },
+  { name: 'Consent App',     src: path.join(projectRoot, 'apps', 'consent-app', 'dist'),               dest: path.join(backendPublicPath, 'apps', 'consent') },
+  { name: 'Patient Portal',  src: path.join(projectRoot, 'apps', 'patient-portal', 'dist'),            dest: path.join(backendPublicPath, 'apps', 'patient-portal') },
+  { name: 'Docs',            src: path.join(projectRoot, 'docs', '.vitepress', 'dist'),        dest: path.join(backendPublicPath, 'docs') },
 ];
 
 console.log('🔄 Copying app dists to backend public directory...');
