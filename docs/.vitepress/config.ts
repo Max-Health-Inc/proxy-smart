@@ -44,6 +44,16 @@ export default defineConfig({
         ],
       },
       {
+        text: 'SMART Apps',
+        collapsed: false,
+        items: [
+          { text: 'Consent App', link: '/apps/consent-app' },
+          { text: 'DTR App', link: '/apps/dtr-app' },
+          { text: 'Patient Portal', link: '/apps/patient-portal' },
+          { text: 'SMART DICOM Template', link: '/apps/smart-dicom-template' },
+        ],
+      },
+      {
         text: 'Imaging & DICOMweb',
         collapsed: false,
         items: [
