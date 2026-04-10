@@ -88,12 +88,6 @@ Built-in React admin UI for managing SMART apps, FHIR server connections, users,
 
 Built-in AI assistant with RAG for documentation queries, exposed via an [MCP server](docs/MCP_HTTP_SERVER.md) for programmatic integration with AI tools.
 
-| Layer | Protocol | What |
-|---|---|---|
-| **Internal tools** | Function calling (AI SDK) | Elysia routes called in-process by the built-in AI assistant |
-| **Generated MCP server** | MCP Streamable HTTP | Python FastMCP server auto-generated from the backend OpenAPI spec |
-| **External MCP servers** | MCP Streamable HTTP / SSE | User-configured third-party servers (GitHub, Pylance, custom) |
-
 ### 🐳 Docker-Ready
 
 One-command development and production deployments with Docker Compose, including mono-container and multi-container options.
