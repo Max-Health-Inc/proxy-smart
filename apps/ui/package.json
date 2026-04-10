@@ -11,7 +11,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate": "python ../scripts/generate-ts-fetch-client.py ../backend/dist/openapi.json ./src/lib/api-client",
+    "generate": "python ../../scripts/generate-ts-fetch-client.py ../../backend/dist/openapi.json ./src/lib/api-client",
     "test": "vitest",
     "test:coverage": "vitest --coverage"
   },
