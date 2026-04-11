@@ -1,6 +1,7 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { reportAuthError } from "@/lib/auth-error"
 import { FhirClient } from "hl7.fhir.uv.ips-generated/fhir-client"
+import { FhirClient as GenomicsFhirClient } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
 import type {
   PatientUvIps,
   ConditionUvIps,
@@ -22,6 +23,12 @@ import type {
   ImagingStudyUvIps,
   BundleUvIps,
 } from "hl7.fhir.uv.ips-generated"
+import type {
+  GenomicReport,
+  Variant,
+  DiagnosticImplication,
+  TherapeuticImplication,
+} from "hl7.fhir.uv.genomics-reporting-generated"
 import type {
   Observation,
   DocumentReference,
@@ -49,6 +56,7 @@ export type {
   BundleUvIps as IpsBundle,
 }
 export type { Observation, DocumentReference }
+export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
@@ -281,3 +289,39 @@ export async function searchRadiologyResults(patientId: string): Promise<Observa
 
 // Re-export from shared-ui to avoid duplication
 export { formatHumanName } from "@proxy-smart/shared-ui"
+
+// ── Genomics Reporting (HL7 Genomics Reporting 3.0.0) ────────────────────────
+
+const genomicsClient = new GenomicsFhirClient(fhirBaseUrl, authFetch)
+
+export async function searchGenomicReports(patientId: string): Promise<GenomicReport[]> {
+  return genomicsClient.read().genomicReport().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 50,
+    _sort: "-date",
+  })
+}
+
+export async function searchVariants(patientId: string): Promise<Variant[]> {
+  return genomicsClient.read().variant().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 100,
+    _sort: "-date",
+  })
+}
+
+export async function searchDiagnosticImplications(patientId: string): Promise<DiagnosticImplication[]> {
+  return genomicsClient.read().diagnosticImplication().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 100,
+    _sort: "-date",
+  })
+}
+
+export async function searchTherapeuticImplications(patientId: string): Promise<TherapeuticImplication[]> {
+  return genomicsClient.read().therapeuticImplication().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 100,
+    _sort: "-date",
+  })
+}

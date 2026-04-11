@@ -19,6 +19,10 @@ import {
   searchDeviceUseStatements,
   searchImagingStudies,
   searchRadiologyResults,
+  searchGenomicReports,
+  searchVariants,
+  searchDiagnosticImplications,
+  searchTherapeuticImplications,
   type Patient,
   type Condition,
   type AllergyIntolerance,
@@ -36,12 +40,17 @@ import {
   type FlagAlert,
   type DeviceUseStatement,
   type ImagingStudy,
+  type GenomicReport,
+  type Variant,
+  type DiagnosticImplication,
+  type TherapeuticImplication,
 } from "@/lib/fhir-client"
 import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps"
 import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps"
 import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps"
 import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
+import { GenomicsCard } from "@/components/GenomicsCard"
 import {
   Heart,
   Pill,
@@ -80,6 +89,10 @@ export function Dashboard() {
   const [deviceUse, setDeviceUse] = useState<DeviceUseStatement[]>([])
   const [imagingStudies, setImagingStudies] = useState<ImagingStudy[]>([])
   const [radiologyResults, setRadiologyResults] = useState<RadiologyResult[]>([])
+  const [genomicReports, setGenomicReports] = useState<GenomicReport[]>([])
+  const [variants, setVariants] = useState<Variant[]>([])
+  const [diagnosticImplications, setDiagnosticImplications] = useState<DiagnosticImplication[]>([])
+  const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
 
   useEffect(() => {
     async function loadData() {
@@ -141,6 +154,17 @@ export function Dashboard() {
         if (devices.status === "fulfilled") setDeviceUse(devices.value)
         if (imaging.status === "fulfilled") setImagingStudies(imaging.value)
         if (radiology.status === "fulfilled") setRadiologyResults(radiology.value)
+
+        const [gReports, gVariants, gDiagImpl, gTheraImpl] = await Promise.allSettled([
+          searchGenomicReports(patientId),
+          searchVariants(patientId),
+          searchDiagnosticImplications(patientId),
+          searchTherapeuticImplications(patientId),
+        ])
+        if (gReports.status === "fulfilled") setGenomicReports(gReports.value)
+        if (gVariants.status === "fulfilled") setVariants(gVariants.value)
+        if (gDiagImpl.status === "fulfilled") setDiagnosticImplications(gDiagImpl.value)
+        if (gTheraImpl.status === "fulfilled") setTherapeuticImplications(gTheraImpl.value)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
       } finally {
@@ -620,6 +644,14 @@ export function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Genomic Results */}
+        <GenomicsCard
+          reports={genomicReports}
+          variants={variants}
+          diagnosticImplications={diagnosticImplications}
+          therapeuticImplications={therapeuticImplications}
+        />
 
         {/* Imaging Studies */}
         <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
