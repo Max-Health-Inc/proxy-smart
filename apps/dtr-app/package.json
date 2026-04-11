@@ -3,7 +3,11 @@
   "displayName": "Proxy Smart DTR App",
   "description": "Da Vinci DTR (Documentation Templates & Rules) — SMART on FHIR app for prior authorization documentation, questionnaire rendering, and CQL-based auto-population.",
   "private": true,
+<<<<<<< Updated upstream
   "version": "0.0.4-beta.202604111924.6ff9c348",
+=======
+  "version": "0.0.4-alpha.202604112116.0c08004f",
+>>>>>>> Stashed changes
   "type": "module",
   "scripts": {
     "dev": "vite --port 5175",
