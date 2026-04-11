@@ -54,44 +54,46 @@ const sessions = new Map<string, McpSession>()
  * Register all exposed tools from the tool-registry onto an McpServer instance.
  */
 function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
-  if (!isToolRegistryInitialized()) return
+  // Register route-based tools from the tool registry (if initialized)
+  if (isToolRegistryInitialized()) {
+    const registry = getToolRegistry()
 
-  const registry = getToolRegistry()
+    for (const [toolName, meta] of registry) {
+      // Respect admin MCP-endpoint tool config
+      if (!isToolExposed(toolName)) continue
 
-  for (const [toolName, meta] of registry) {
-    // Respect admin MCP-endpoint tool config
-    if (!isToolExposed(toolName)) continue
+      // Permission: skip admin-only tools when caller has no admin role
+      if (!meta.public && !userRoles.includes('admin')) continue
 
-    // Permission: skip admin-only tools when caller has no admin role
-    if (!meta.public && !userRoles.includes('admin')) continue
+      // MCP SDK expects Zod schemas — convert merged TypeBox (body + path params) via z.fromJSONSchema
+      const inputSchema = getMergedInputSchema(meta)
+      const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
 
-    // MCP SDK expects Zod schemas — convert merged TypeBox (body + path params) via z.fromJSONSchema
-    const inputSchema = getMergedInputSchema(meta)
-    const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
-
-    if (zodSchema) {
-      server.registerTool(
-        toolName,
-        {
-          description: generateDescription(toolName, meta),
-          inputSchema: zodSchema,
-        },
-        async (args: unknown) => {
-          return executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current)
-        },
-      )
-    } else {
-      server.tool(
-        toolName,
-        generateDescription(toolName, meta),
-        async () => {
-          return executeTool(toolName, meta, {}, tokenRef.current)
-        },
-      )
+      if (zodSchema) {
+        server.registerTool(
+          toolName,
+          {
+            description: generateDescription(toolName, meta),
+            inputSchema: zodSchema,
+          },
+          async (args: unknown) => {
+            return executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current)
+          },
+        )
+      } else {
+        server.tool(
+          toolName,
+          generateDescription(toolName, meta),
+          async () => {
+            return executeTool(toolName, meta, {}, tokenRef.current)
+          },
+        )
+      }
     }
   }
 
-  // Register RAG documentation search tool (respects admin expose config)
+  // Register RAG documentation search tool independently of tool registry
+  // (search_documentation doesn't depend on route-based tools)
   if (isToolExposed('search_documentation')) {
     server.registerTool(
       'search_documentation',
@@ -387,7 +389,10 @@ async function authenticateRequest(request: Request): Promise<AuthResult | Respo
     return unauthorized()
   }
 
-  const token = authHeader.substring(7)
+  const token = authHeader.substring(7).trim()
+  if (!token) {
+    return unauthorized()
+  }
   try {
     const payload = await validateToken(token)
     // Extract Keycloak roles
@@ -424,7 +429,7 @@ function unauthorized(): Response {
 async function handleMcpRequest(request: Request): Promise<Response> {
   // Check master switch (runtime config file overrides env-based config)
   const endpointCfg = loadMcpEndpointConfig()
-  if (!endpointCfg.enabled && !config.mcp.enabled) {
+  if (!endpointCfg.enabled || !config.mcp.enabled) {
     return new Response(JSON.stringify({ error: 'MCP endpoint is disabled' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' },
@@ -443,6 +448,18 @@ async function handleMcpRequest(request: Request): Promise<Response> {
     // Update the token ref so tool/resource handlers use the freshest token
     if (auth.token) session.tokenRef.current = auth.token
     return session.transport.handleRequest(request)
+  }
+
+  // ── Unknown session ID → 404 (MCP spec §Session Management rule 3) ────
+  if (sessionId) {
+    return new Response(
+      JSON.stringify({
+        jsonrpc: '2.0',
+        error: { code: -32000, message: 'Session not found' },
+        id: null,
+      }),
+      { status: 404, headers: { 'Content-Type': 'application/json' } },
+    )
   }
 
   // ── New session (initialization) ───────────────────────────────────────
