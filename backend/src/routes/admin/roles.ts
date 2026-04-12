@@ -144,7 +144,8 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       }
 
       const updateData = {
-        description: body.description,
+        ...role,
+        description: body.description ?? role.description,
         attributes: {
           ...role.attributes,
           fhir_scopes: body.fhirScopes || role.attributes?.fhir_scopes || []
