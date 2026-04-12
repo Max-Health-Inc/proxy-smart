@@ -66,28 +66,11 @@ process.env.KEYCLOAK_BASE_URL = 'http://localhost:8080'
 process.env.KEYCLOAK_PUBLIC_URL = 'http://localhost:8080'
 process.env.KEYCLOAK_REALM = 'proxy-smart'
 
-// Mock mcp-endpoint-config
-let mockMcpEnabled = true
-let mockDisabledTools: string[] = []
-let mockEnabledTools: string[] | null = null
-
-mock.module('../src/lib/mcp-endpoint-config', () => ({
-  loadMcpEndpointConfig: () => ({
-    enabled: mockMcpEnabled,
-    disabledTools: mockDisabledTools,
-    enabledTools: mockEnabledTools,
-    updatedAt: new Date().toISOString(),
-  }),
-  saveMcpEndpointConfig: () => {},
-  isToolExposed: (name: string) => {
-    if (mockEnabledTools !== null) return mockEnabledTools.includes(name)
-    return !mockDisabledTools.includes(name)
-  },
-  isResourceExposed: (name: string) => {
-    if (mockEnabledTools !== null) return mockEnabledTools.includes(name)
-    return !mockDisabledTools.includes(name)
-  },
-}))
+// Use the REAL mcp-endpoint-config module. Control it via saveMcpEndpointConfig
+// in beforeEach. Do NOT mock.module('../src/lib/mcp-endpoint-config') — that
+// permanently replaces the module for all subsequent test files in the same bun
+// process, breaking mcp-endpoint-config.test.ts.
+import { saveMcpEndpointConfig } from '../src/lib/mcp-endpoint-config'
 
 // ── Import route after mocks are in place ────────────────────────────────────
 
@@ -214,9 +197,13 @@ describe('MCP Endpoint — /mcp', () => {
       resource_access: {},
     }))
     mockSearchDocumentation.mockClear()
-    mockMcpEnabled = true
-    mockDisabledTools = []
-    mockEnabledTools = null
+    // Reset the real mcp-endpoint-config to defaults via its public API
+    saveMcpEndpointConfig({
+      enabled: true,
+      disabledTools: [],
+      enabledTools: null,
+      updatedAt: new Date().toISOString(),
+    })
   })
 
   // ── Authentication (all HTTP methods) ──────────────────────────────────
@@ -326,14 +313,14 @@ describe('MCP Endpoint — /mcp', () => {
     it('returns 404 when file-config disables MCP even if env config says enabled', async () => {
       // File config says disabled, env config says enabled.
       // An admin toggling "disable MCP" in the UI should actually disable it.
-      mockMcpEnabled = false
+      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
       const app = createApp()
       const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
       expect(res.status).toBe(404)
     })
 
     it('returns 404 response body is JSON with error message', async () => {
-      mockMcpEnabled = false
+      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
       const app = createApp()
       const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
       const body = await res.json()
