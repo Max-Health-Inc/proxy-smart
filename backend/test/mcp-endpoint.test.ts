@@ -57,20 +57,14 @@ mock.module('../src/lib/ai/rag-tools', () => ({
   searchDocumentation: mockSearchDocumentation,
 }))
 
-// Mock config — env-level mcp.enabled is true
-mock.module('../src/config', () => ({
-  config: {
-    baseUrl: 'http://localhost:8445',
-    displayName: 'Proxy Smart Test',
-    version: '0.0.1-test',
-    mcp: { enabled: true, path: '/mcp' },
-    keycloak: {
-      baseUrl: 'http://localhost:8080',
-      publicUrl: 'http://localhost:8080',
-      realm: 'proxy-smart',
-    },
-  },
-}))
+// Set env vars so the real config module returns the values we need.
+// IMPORTANT: Do NOT mock.module('../src/config') — that replaces the entire
+// singleton with a partial object, permanently stripping ial, accessControl,
+// etc. for all subsequent test files in the same bun process.
+process.env.MCP_ENDPOINT_ENABLED = 'true'
+process.env.KEYCLOAK_BASE_URL = 'http://localhost:8080'
+process.env.KEYCLOAK_PUBLIC_URL = 'http://localhost:8080'
+process.env.KEYCLOAK_REALM = 'proxy-smart'
 
 // Mock mcp-endpoint-config
 let mockMcpEnabled = true
@@ -374,8 +368,10 @@ describe('MCP Endpoint — /mcp', () => {
       const result = body.result as Record<string, unknown>
       expect(result.protocolVersion).toBe('2025-03-26')
       const serverInfo = result.serverInfo as Record<string, unknown>
-      expect(serverInfo.name).toBe('Proxy Smart Test')
-      expect(serverInfo.version).toBe('0.0.1-test')
+      expect(typeof serverInfo.name).toBe('string')
+      expect((serverInfo.name as string).length).toBeGreaterThan(0)
+      expect(typeof serverInfo.version).toBe('string')
+      expect((serverInfo.version as string).length).toBeGreaterThan(0)
     })
 
     it('initialize response declares tools and resources capabilities', async () => {
