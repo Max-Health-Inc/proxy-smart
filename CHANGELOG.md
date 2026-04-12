@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604122004.5a4c4b6d] - 2026-04-12
+
+- 🔧 Chores & Improvements: Use first supported server for endpoints; SMART_CONFIG_URL and BASE_FHIR_URL now derive from the first supported server (fallback remains if none exist)
+
+- 🔧 Chores & Improvements: Bump pre-release version to 0.0.5-beta.202604121818.799a8983 across apps and e2e package
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/334
+
+
 ## [0.0.5-alpha.202604121912.0eb1a789] - 2026-04-12
 
 - 🔧 Chores & Improvements: Select first supported server for endpoints; derive SMART_CONFIG_URL and BASE_FHIR_URL from that server (fallback to empty/null if none). This refines endpoint configuration behavior.
