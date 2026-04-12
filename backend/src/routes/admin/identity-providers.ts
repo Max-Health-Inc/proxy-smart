@@ -186,13 +186,23 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       }
 
       const admin = await getAdmin(token)
+      const existing = await admin.identityProviders.findOne({ alias: params.alias })
+      if (!existing) {
+        set.status = 404
+        return { error: 'Identity provider not found' }
+      }
+
       const updatePayload = body as UpdateIdentityProviderRequestType
 
       await admin.identityProviders.update(
         { alias: params.alias },
         {
+          ...existing,
           ...updatePayload,
-          config: updatePayload.config ?? undefined
+          alias: params.alias,
+          config: updatePayload.config
+            ? { ...existing.config, ...updatePayload.config }
+            : existing.config
         } as IdentityProviderRepresentation
       )
       return { success: true }

@@ -6,6 +6,91 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.4-alpha.202604121402.09b13ece] - 2026-04-12
+
+- 🔧 Chores & Improvements: Update MCP endpoint enabling logic to OR between file config and env config; endpoint 404 only when both sources disable. Tests updated accordingly.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/325
+
+
+## [0.0.4-beta.202604120932.31b6b439] - 2026-04-12
+
+- 🔧 Chores & Improvements: Update MCP endpoint enabling logic to use OR between file config and env config; endpoint now 404 only if both sources are disabled. Tests updated to reflect OR behavior and environment-variable handling.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/323
+
+
+
+- 🔧 Chores & Improvements: Change MCP endpoint enabling logic to use OR between file config and env config; endpoint now 404 only when both sources are disabled
+- 🐛 Bug Fixes: Update tests to reflect OR logic for MCP enabling; tests now expect 404 when both file-config and env-config are disabled
+- 🔧 Chores & Improvements: Add environment-variable handling and test cleanup for MCP config logic
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/324
+
+
+## [0.0.4-alpha.202604120909.30466170] - 2026-04-12
+
+- ✨ Features: 
+  - Backend MCP endpoint: switch to route-based tool registration (explicit MCP tool exposure)
+  - Added backend test: backend/test/tool-registry-merge.test.ts for getMergedInputSchema regression (TypeBox)
+
+- 🧪 Chores & Improvements:
+  - Tests: switch config mocks to env-var-based config with explicit env setup; preserve singleton behavior
+  - E2E: update package versions across apps and tests
+  - Removed/cleaned Python MCP server test scaffolding and deprecated test structures
+
+Note: No breaking changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/321
+
+
+## [0.0.4-alpha.202604120851.2512256f] - 2026-04-12
+
+- 🔧 Chores & Improvements: Version bumps across apps/tests to 0.0.4-alpha.202604120842.314f2bb8 and 0.0.4-alpha.202604112116.0c08004f
+- 🔧 Chores & Improvements: Replace config mocks with env-vars-based config in tests to preserve singleton behavior
+- 📚 Documentation: (No explicit docs changes)
+- ⚠️ Breaking Changes: Backend MCP: refactor from registry-driven to route-based tool registration; more explicit MCP endpoint tests and removal of legacy Python MCP server test scaffolding
+
+Note: Merge/update commits skipped; only meaningful changes included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/320
+
+
+## [0.0.4-alpha.202604112116.0c08004f] - 2026-04-12
+
+- 🔧 Chores & Improvements: Refactor MCP backend to route-based tool registration (removing reliance on whole tool registry)
+- 🔧 Chores & Improvements: Add extensive MCP endpoint integration tests (authentication, sessions, tools, protocol) via new backend/test/mcp-endpoint.test.ts
+- 🗑️ Documentation / Maintenance: Remove legacy Python MCP server test scaffolding and deprecated test structure (pytest config, test utils, old test modules, and related files)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/319
+
+
+## [0.0.4-alpha.202604112026.a30739f5] - 2026-04-11
+
+- 🔧 Chores & Improvements: Refactor MCP endpoint to route-based tool registration (removes registry-driven exposure)  
+- 🧪 🔧 Chores & Improvements: Large backend test suite added for MCP endpoint authentication, sessions, tools, and protocol compliance (with mocks)  
+- 📚 Documentation: Removed unused Python MCP server test scaffolding and deprecated test structure (cleanup of old test config and files)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/318
+
+
+## [0.0.4-alpha.202604111924.6ff9c348] - 2026-04-11
+
+- 🔧 Chores & Improvements: Refactor MCP backend registration to route-based tool exposure (removes registry-driven dependency)
+- 🔧 Chores & Improvements: Introduce extensive MCP endpoint test suite (integration tests for authentication, sessions, tools, protocol compliance)
+- 🧪 🐛 Bug Fixes: Cleanup of legacy MCP server test scaffolding and deprecated test structure (removal of old Python test config and files)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/317
+
+
+## [0.0.3-alpha.202604101244.fdcfb135] - 2026-04-10
+
+- 🔧 Chores & Improvements: Update versioning to 0.0.3-alpha.202604101244.fdcfb135
+- 📚 Documentation: Update CHANGELOG.md (PR #313)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/315
+
+
 ## [0.0.3-alpha.202604101219.41a64d4f] - 2026-04-10
 
 - ✨ Features

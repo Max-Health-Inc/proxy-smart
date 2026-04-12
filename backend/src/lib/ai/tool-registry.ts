@@ -5,8 +5,9 @@
  * OpenAI function calling tools, eliminating the need for manual tool definitions.
  */
 
-import type { TSchema } from '@sinclair/typebox'
+import type { TSchema, TProperties } from '@sinclair/typebox'
 import { Value } from '@sinclair/typebox/value'
+import { Type } from '@sinclair/typebox'
 import { getCustomTools } from './custom-tools'
 
 // Module-level storage for tools (initialized once at startup)
@@ -300,26 +301,30 @@ export function getMergedInputSchema(meta: ToolMetadata): TSchema | undefined {
   if (!paramsSchema) return bodySchema
   if (!bodySchema) return paramsSchema
 
-  // JSON-safe copies strip TypeBox Symbol metadata (fine for JSON-Schema-based consumers)
-  const body = JSON.parse(JSON.stringify(bodySchema)) as Record<string, unknown>
-  const params = JSON.parse(JSON.stringify(paramsSchema)) as Record<string, unknown>
+  // Both schemas exist — merge their properties using TypeBox's Type.Object()
+  // to preserve [Kind] symbols that Value.Check requires.
+  const bodyProps = (bodySchema as { properties?: TProperties }).properties ?? {}
+  const paramsProps = (paramsSchema as { properties?: TProperties }).properties ?? {}
 
-  if (body.type !== 'object' || params.type !== 'object') return bodySchema
+  const bodyRequired = (bodySchema as { required?: readonly string[] }).required ?? []
+  const paramsRequired = (paramsSchema as { required?: readonly string[] }).required ?? []
 
-  return {
-    type: 'object',
-    properties: {
-      ...(params.properties as Record<string, unknown>),
-      ...(body.properties as Record<string, unknown>),
-    },
-    required: [
-      ...new Set([
-        ...((params.required as string[]) ?? []),
-        ...((body.required as string[]) ?? []),
-      ]),
-    ],
-    additionalProperties: false,
-  } as unknown as TSchema
+  // Merge: path params take priority (they're always required)
+  const mergedProps: TProperties = { ...bodyProps, ...paramsProps }
+
+  // Build a proper TypeBox schema — all merged fields initially optional,
+  // then mark the required ones via the required array
+  const merged = Type.Object(mergedProps, { additionalProperties: false })
+
+  // Override the required array to include both sets
+  const allRequired = [...new Set([...paramsRequired, ...bodyRequired])]
+  if (allRequired.length > 0) {
+    ;(merged as unknown as { required: string[] }).required = allRequired
+  } else {
+    delete (merged as unknown as { required?: string[] }).required
+  }
+
+  return merged
 }
 
 /**

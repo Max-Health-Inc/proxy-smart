@@ -89,7 +89,9 @@ jobs:
           with open('package.json', encoding='utf-8') as f:
               version = json.load(f).get('version', 'unknown')
 
-          version_base = version.split('+')[0]
+          # Strip build metadata (+...) and prerelease suffix (-alpha.xxx, -beta.xxx, -RELEASE.xxx)
+          # to get the base semver, e.g. "0.0.3-RELEASE.202604101219.41a64d4f" -> "0.0.3"
+          semver_base = re.sub(r'[-+].*$', '', version)
 
           try:
               with open('CHANGELOG.md', 'r', encoding='utf-8') as f:
@@ -98,16 +100,49 @@ jobs:
               print("found=false", file=sys.stderr)
               sys.exit(0)
 
-          pattern = rf'## \[{re.escape(version_base)}[^\]]*\][^\n]*\n(.*?)(?=\n## \[|$)'
-          match = re.search(pattern, content, re.DOTALL)
+          # First try exact match (for alpha/beta where version_base exists in CHANGELOG)
+          version_no_build = version.split('+')[0]
+          exact_pattern = rf'## \[{re.escape(version_no_build)}[^\]]*\][^\n]*\n(.*?)(?=\n## \[|$)'
+          exact_match = re.search(exact_pattern, content, re.DOTALL)
 
-          if match and match.group(1).strip():
-              notes = match.group(1).strip()
+          if exact_match and exact_match.group(1).strip():
+              notes = exact_match.group(1).strip()
               with open('changelog.txt', 'w', encoding='utf-8') as f:
                   f.write(notes)
-              print(f"✅ Extracted changelog for {version_base}", file=sys.stderr)
+              print(f"✅ Extracted changelog for {version_no_build}", file=sys.stderr)
           else:
-              print(f"⚠️  No changelog section for {version_base}", file=sys.stderr)
+              # For production releases: collect ALL sections matching the base semver
+              # e.g. "0.0.3" matches "0.0.3-alpha.xxx", "0.0.3-beta.xxx", "0.0.3"
+              all_pattern = rf'## \[{re.escape(semver_base)}[^\]]*\][^\n]*\n(.*?)(?=\n## \[|$)'
+              matches = re.findall(all_pattern, content, re.DOTALL)
+
+              if matches:
+                  # Collect unique non-empty lines from all matching sections, preserving order
+                  seen = set()
+                  lines = []
+                  for body in matches:
+                      for line in body.strip().splitlines():
+                          stripped = line.strip()
+                          # Skip empty lines, "Full Changelog" links, and "None" entries
+                          if not stripped:
+                              continue
+                          if stripped.startswith('**Full Changelog**'):
+                              continue
+                          if stripped == '- None':
+                              continue
+                          if stripped not in seen:
+                              seen.add(stripped)
+                              lines.append(line)
+
+                  if lines:
+                      notes = '\n'.join(lines)
+                      with open('changelog.txt', 'w', encoding='utf-8') as f:
+                          f.write(notes)
+                      print(f"✅ Aggregated changelog from {len(matches)} section(s) for {semver_base}", file=sys.stderr)
+                  else:
+                      print(f"⚠️  Changelog sections found for {semver_base} but all empty", file=sys.stderr)
+              else:
+                  print(f"⚠️  No changelog section for {version_no_build} or {semver_base}", file=sys.stderr)
           PYEOF
 
           if [ -s changelog.txt ]; then
@@ -138,9 +173,18 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_BRANCH: ${{ inputs.source_branch }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
         run: |
-          # Find last release tag
-          LAST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          # For production releases, find the last RELEASE tag to get a meaningful commit range.
+          # For alpha/beta, use the most recent tag of any kind.
+          if [ "$RELEASE_TYPE" = "RELEASE" ] || [ "$RELEASE_TYPE" = "production" ]; then
+            LAST_TAG=$(git tag -l 'v*-RELEASE*' --sort=-v:refname | head -1)
+            if [ -z "$LAST_TAG" ]; then
+              LAST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+            fi
+          else
+            LAST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+          fi
 
           if [ -z "$LAST_TAG" ]; then
             FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
