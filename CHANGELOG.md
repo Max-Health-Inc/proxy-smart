@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.4-alpha.202604120851.2512256f] - 2026-04-12
+
+- 🔧 Chores & Improvements: Version bumps across apps/tests to 0.0.4-alpha.202604120842.314f2bb8 and 0.0.4-alpha.202604112116.0c08004f
+- 🔧 Chores & Improvements: Replace config mocks with env-vars-based config in tests to preserve singleton behavior
+- 📚 Documentation: (No explicit docs changes)
+- ⚠️ Breaking Changes: Backend MCP: refactor from registry-driven to route-based tool registration; more explicit MCP endpoint tests and removal of legacy Python MCP server test scaffolding
+
+Note: Merge/update commits skipped; only meaningful changes included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/320
+
+
 ## [0.0.4-alpha.202604112116.0c08004f] - 2026-04-12
 
 - 🔧 Chores & Improvements: Refactor MCP backend to route-based tool registration (removing reliance on whole tool registry)
