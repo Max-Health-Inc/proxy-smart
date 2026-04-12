@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.4-beta.202604120932.31b6b439] - 2026-04-12
+
+- 🔧 Chores & Improvements: Update MCP endpoint enabling logic to use OR between file config and env config; endpoint now 404 only if both sources are disabled. Tests updated to reflect OR behavior and environment-variable handling.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/323
+
+
 ## [0.0.4-alpha.202604120909.30466170] - 2026-04-12
 
 - ✨ Features: 
