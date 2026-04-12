@@ -9,4 +9,16 @@ if ! git pull --rebase --autostash --quiet; then
 fi
 
 echo "✅ Up to date with remote"
+
+# After rebase, version strings in package.json files may be out of sync
+# (rebase conflict resolution can leave stale version stamps). Re-sync
+# and amend the latest commit if anything changed.
+node scripts/version.js sync
+if ! git diff --quiet; then
+  echo "⚠️  Version drift detected after rebase — syncing..."
+  git add -u
+  git commit --amend --no-edit --no-verify
+  echo "✅ Versions re-synced"
+fi
+
 exit 0
