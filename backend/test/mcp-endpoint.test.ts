@@ -307,24 +307,59 @@ describe('MCP Endpoint — /mcp', () => {
   })
 
   // ── Disabled endpoint ────────────────────────────────────────────────────
-  // BUG: Code uses `&&` (both must be false). File config should independently disable.
+  // Either file-config OR env-config being enabled is sufficient (OR logic).
+  // Only when BOTH are disabled should the endpoint return 404.
 
   describe('Disabled endpoint', () => {
-    it('returns 404 when file-config disables MCP even if env config says enabled', async () => {
-      // File config says disabled, env config says enabled.
-      // An admin toggling "disable MCP" in the UI should actually disable it.
+    it('returns 404 when both file-config and env-config disable MCP', async () => {
+      // Both sources disabled → endpoint must be off
       saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
-      const app = createApp()
-      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-      expect(res.status).toBe(404)
+      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
+      process.env.MCP_ENDPOINT_ENABLED = 'false'
+      try {
+        const app = createApp()
+        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+        expect(res.status).toBe(404)
+      } finally {
+        process.env.MCP_ENDPOINT_ENABLED = prevEnv
+      }
     })
 
     it('returns 404 response body is JSON with error message', async () => {
       saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
+      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
+      process.env.MCP_ENDPOINT_ENABLED = 'false'
+      try {
+        const app = createApp()
+        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+        const body = await res.json()
+        expect(body.error).toBeDefined()
+      } finally {
+        process.env.MCP_ENDPOINT_ENABLED = prevEnv
+      }
+    })
+
+    it('stays enabled when file-config is disabled but env-config is enabled', async () => {
+      // Admin UI toggled off, but env says enabled → endpoint stays up (OR logic)
+      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
       const app = createApp()
       const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-      const body = await res.json()
-      expect(body.error).toBeDefined()
+      // Should NOT be 404 — env config keeps it alive
+      expect(res.status).not.toBe(404)
+    })
+
+    it('stays enabled when env-config is disabled but file-config is enabled', async () => {
+      // Env says disabled, but admin toggled on → endpoint stays up (OR logic)
+      saveMcpEndpointConfig({ enabled: true, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
+      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
+      process.env.MCP_ENDPOINT_ENABLED = 'false'
+      try {
+        const app = createApp()
+        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+        expect(res.status).not.toBe(404)
+      } finally {
+        process.env.MCP_ENDPOINT_ENABLED = prevEnv
+      }
     })
   })
 
