@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604121818.799a8983] - 2026-04-12
+
+- ✨ Features: enable forgot-password with Resend SMTP (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/331
+
+
 ## [0.0.5-alpha.202604121808.dc78aff2] - 2026-04-12
 
 - 🔧 Chores & Improvements: Refactor UI into focused modules (SmartAppAddForm, SmartProxyOverview)
