@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604121912.0eb1a789] - 2026-04-12
+
+- 🔧 Chores & Improvements: Select first supported server for endpoints; derive SMART_CONFIG_URL and BASE_FHIR_URL from that server (fallback to empty/null if none). This refines endpoint configuration behavior.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/333
+
+
 ## [0.0.5-beta.202604121818.799a8983] - 2026-04-12
 
 - ✨ Features: enable forgot-password with Resend SMTP (quotentiroler)
