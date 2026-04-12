@@ -261,6 +261,68 @@ export async function ensurePostLogoutRedirectUris(): Promise<void> {
 }
 
 /**
+ * Ensure Keycloak realm has SMTP configured and password reset enabled.
+ * Uses RESEND_API_KEY env var. Idempotent — safe to call on every startup.
+ */
+async function ensureKeycloakSmtp(): Promise<void> {
+  const resendApiKey = process.env.RESEND_API_KEY
+  if (!resendApiKey || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping SMTP setup — RESEND_API_KEY or admin credentials not configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) {
+      logger.keycloak.warn('Could not read realm — skipping SMTP setup')
+      return
+    }
+
+    const needsUpdate = !realm.resetPasswordAllowed || !realm.smtpServer?.host
+
+    if (!needsUpdate) {
+      logger.keycloak.info('✅ Keycloak SMTP and password reset already configured')
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      {
+        resetPasswordAllowed: true,
+        smtpServer: {
+          host: 'smtp.resend.dev',
+          port: '465',
+          from: 'noreply@maxhealth.tech',
+          fromDisplayName: 'Proxy Smart',
+          replyTo: 'noreply@maxhealth.tech',
+          ssl: 'true',
+          auth: 'true',
+          user: 'resend',
+          password: resendApiKey,
+        },
+      },
+    )
+
+    logger.keycloak.info('✅ Keycloak SMTP configured (Resend) and password reset enabled')
+  } catch (error) {
+    logger.keycloak.warn('Could not auto-configure SMTP', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Ensure Keycloak realm has event logging enabled.
  * Uses the service-account admin credentials (KEYCLOAK_ADMIN_CLIENT_ID/SECRET)
  * to update the realm configuration via the Admin REST API.
@@ -353,6 +415,9 @@ export async function initializeServer(): Promise<void> {
       
       // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
       await ensureKeycloakEventLogging()
+
+      // Ensure Keycloak SMTP/password-reset is configured if RESEND_API_KEY is set
+      await ensureKeycloakSmtp()
 
       // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
       await ensurePostLogoutRedirectUris()
