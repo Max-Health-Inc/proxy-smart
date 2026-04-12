@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604121755.3e5e8666] - 2026-04-12
+
+- 🔧 Chores & Improvements: Major refactor of AdminAuditDashboard into modular structure
+  - Replaced monolithic AdminAuditDashboard.tsx with modular component set under AdminAuditDashboard/
+  - Added core component and tab subcomponents: OverviewTab, EventLogTab, AnalyticsTab, FailuresTab
+  - Introduced helpers.ts (ACTION_ICONS, actionColor, statusColor) and index export
+  - Updated imports to use new subcomponents and services
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/328
+
+
 ## [0.0.5-alpha.202604121738.ec363779] - 2026-04-12
 
 - ✨ Features: Introduced a new MCP Servers management UI with dialog-driven workflows
