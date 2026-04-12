@@ -16,7 +16,7 @@
     "ssl": "true",
     "auth": "true",
     "user": "resend",
-    "password": "**RESEND_API_KEY**"
+    "password": "REPLACE_WITH_RESEND_API_KEY_AT_RUNTIME"
   },
   "accessTokenLifespan": 3600,
   "accessTokenLifespanForImplicitFlow": 900,
