@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.4-alpha.202604120909.30466170] - 2026-04-12
+
+- ✨ Features: 
+  - Backend MCP endpoint: switch to route-based tool registration (explicit MCP tool exposure)
+  - Added backend test: backend/test/tool-registry-merge.test.ts for getMergedInputSchema regression (TypeBox)
+
+- 🧪 Chores & Improvements:
+  - Tests: switch config mocks to env-var-based config with explicit env setup; preserve singleton behavior
+  - E2E: update package versions across apps and tests
+  - Removed/cleaned Python MCP server test scaffolding and deprecated test structures
+
+Note: No breaking changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/321
+
+
 ## [0.0.4-alpha.202604120851.2512256f] - 2026-04-12
 
 - 🔧 Chores & Improvements: Version bumps across apps/tests to 0.0.4-alpha.202604120842.314f2bb8 and 0.0.4-alpha.202604112116.0c08004f
