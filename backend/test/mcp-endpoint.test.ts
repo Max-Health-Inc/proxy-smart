@@ -186,7 +186,8 @@ async function parseResponse(res: Response): Promise<Record<string, unknown>> {
  * Full MCP handshake: initialize → extract session ID → send notifications/initialized.
  * Returns the session ID for subsequent requests.
  */
-async function initializeSession(app: InstanceType<typeof Elysia>, token = 'valid-token') {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function initializeSession(app: any, token = 'valid-token') {
   const initRes = await app.handle(mcpPost(jsonRpcInitialize(), { token }))
   expect(initRes.status).toBe(200)
   const sessionId = initRes.headers.get('mcp-session-id')!
@@ -637,7 +638,7 @@ describe('MCP Endpoint — Path Parameter Extraction', () => {
 
   it('extracts single path param and removes it from body args', () => {
     const path = '/admin/users/:userId'
-    const args = { userId: '123', name: 'John', email: 'john@example.com' }
+    const args: Record<string, unknown> = { userId: '123', name: 'John', email: 'john@example.com' }
     const params = extractPathParams(path, args)
     expect(params).toEqual({ userId: '123' })
 

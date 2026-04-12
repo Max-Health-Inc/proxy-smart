@@ -74,7 +74,7 @@ describe('getMergedInputSchema', () => {
     const merged = getMergedInputSchema(fakeTool({ bodySchema: body, paramsSchema: params }))
 
     // The old JSON.parse(JSON.stringify()) approach stripped this symbol
-    expect((merged as Record<symbol | string, unknown>)[Kind]).toBe('Object')
+    expect((merged as unknown as Record<symbol | string, unknown>)[Kind]).toBe('Object')
   })
 
   it('REGRESSION: merged property schemas preserve [Kind] symbols', () => {
