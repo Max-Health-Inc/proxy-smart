@@ -44,6 +44,8 @@ on:
         required: true
       OPENAI_API_KEY:
         required: false
+      RESEND_API_KEY:
+        required: false
 
 env:
   REGISTRY: ghcr.io
@@ -173,6 +175,7 @@ jobs:
           BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
           VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
         run: |
@@ -211,6 +214,7 @@ jobs:
             "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
             "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
             "OPENAI_API_KEY=${OPENAI_API_KEY}" \
+            "RESEND_API_KEY=${RESEND_API_KEY}" \
             "BACKEND_IMAGE=${{ env.IMAGE_PREFIX }}/backend:${IMAGE_TAG}" \
             "FRONTEND_IMAGE=${{ env.IMAGE_PREFIX }}/frontend:${IMAGE_TAG}" \
             "KEYCLOAK_IMAGE=${{ env.IMAGE_PREFIX }}/keycloak:${IMAGE_TAG}" \
@@ -255,6 +259,59 @@ jobs:
               sleep 5
             done
           "
+
+          # Configure Keycloak SMTP (Resend) and enable password reset
+          if [ -n "${RESEND_API_KEY}" ]; then
+            echo "📧 Configuring Keycloak SMTP via Resend..."
+            ${SSH_CMD} "
+              cd ${DEPLOY_DIR}
+
+              # Wait for Keycloak to be ready
+              for i in \$(seq 1 30); do
+                if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak curl -sf http://localhost:8080/auth/health/ready >/dev/null 2>&1; then
+                  echo '  ✅ Keycloak ready for SMTP config'
+                  break
+                fi
+                sleep 5
+              done
+
+              # Get admin token
+              KC_TOKEN=\$(docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak \
+                curl -sf -X POST 'http://localhost:8080/auth/realms/master/protocol/openid-connect/token' \
+                -H 'Content-Type: application/x-www-form-urlencoded' \
+                -d 'username=admin' \
+                -d \"password=\$(grep KEYCLOAK_ADMIN_PASSWORD .env.beta | cut -d= -f2)\" \
+                -d 'grant_type=password' \
+                -d 'client_id=admin-cli' | grep -o '\"access_token\":\"[^\"]*\"' | cut -d'\"' -f4)
+
+              if [ -n \"\$KC_TOKEN\" ]; then
+                # Update realm with SMTP settings and enable password reset
+                docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak \
+                  curl -sf -X PUT 'http://localhost:8080/auth/admin/realms/proxy-smart' \
+                  -H 'Content-Type: application/json' \
+                  -H \"Authorization: Bearer \$KC_TOKEN\" \
+                  -d '{
+                    \"resetPasswordAllowed\": true,
+                    \"smtpServer\": {
+                      \"host\": \"smtp.resend.dev\",
+                      \"port\": \"465\",
+                      \"from\": \"noreply@maxhealth.tech\",
+                      \"fromDisplayName\": \"Proxy Smart\",
+                      \"replyTo\": \"noreply@maxhealth.tech\",
+                      \"ssl\": \"true\",
+                      \"auth\": \"true\",
+                      \"user\": \"resend\",
+                      \"password\": \"${RESEND_API_KEY}\"
+                    }
+                  }'
+                echo '  ✅ Keycloak SMTP configured (Resend via maxhealth.tech)'
+              else
+                echo '  ⚠️ Could not get Keycloak admin token — SMTP not configured'
+              fi
+            "
+          else
+            echo "⚠️ RESEND_API_KEY not set — skipping SMTP configuration"
+          fi
 
           # External health check through Caddy
           echo "⏳ Verifying external access at ${VPS_URL}..."

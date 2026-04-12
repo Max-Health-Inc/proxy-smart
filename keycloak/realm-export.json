@@ -6,6 +6,18 @@
     "userProfileEnabled": "true"
   },
   "displayNameHtml": "<div class=\"kc-logo-text\"><span>Proxy Smart</span></div>",
+  "resetPasswordAllowed": true,
+  "smtpServer": {
+    "host": "smtp.resend.dev",
+    "port": "465",
+    "from": "noreply@maxhealth.tech",
+    "fromDisplayName": "Proxy Smart",
+    "replyTo": "noreply@maxhealth.tech",
+    "ssl": "true",
+    "auth": "true",
+    "user": "resend",
+    "password": "**RESEND_API_KEY**"
+  },
   "accessTokenLifespan": 3600,
   "accessTokenLifespanForImplicitFlow": 900,
   "accessCodeLifespan": 300,
