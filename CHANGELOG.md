@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604121808.dc78aff2] - 2026-04-12
+
+- 🔧 Chores & Improvements: Refactor UI into focused modules (SmartAppAddForm, SmartProxyOverview)
+- 🔧 Chores & Improvements: Sync package versions after rebase
+- 📚 Documentation: Update CHANGELOG.md for PR #328
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/329
+
+
 ## [0.0.5-alpha.202604121755.3e5e8666] - 2026-04-12
 
 - 🔧 Chores & Improvements: Major refactor of AdminAuditDashboard into modular structure
