@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/331
 
 
+
+- 🔧 Chores & Improvements: Bump pre-release version to 0.0.5-beta.202604121818.799a8983 across all apps and e2e package (no code changes)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/332
+
+
 ## [0.0.5-alpha.202604121808.dc78aff2] - 2026-04-12
 
 - 🔧 Chores & Improvements: Refactor UI into focused modules (SmartAppAddForm, SmartProxyOverview)
