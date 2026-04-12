@@ -21,25 +21,17 @@ const TEST_KEYCLOAK_BASE = 'http://localhost:8080'
 const TEST_REALM = 'proxy-smart'
 const TEST_MCP_PATH = '/mcp'
 
-mock.module('../src/config', () => ({
-  config: {
-    baseUrl: TEST_BASE_URL,
-    mcp: { enabled: true, path: TEST_MCP_PATH },
-    keycloak: {
-      baseUrl: TEST_KEYCLOAK_BASE,
-      publicUrl: TEST_KEYCLOAK_BASE,
-      realm: TEST_REALM,
-    },
-  },
-}))
+// Set env vars so the real config module returns the values we need.
+// IMPORTANT: Do NOT mock.module('../src/config') — that replaces the entire
+// singleton with a partial object, permanently stripping ial, accessControl,
+// etc. for all subsequent test files in the same bun process.
+process.env.MCP_ENDPOINT_ENABLED = 'true'
+process.env.KEYCLOAK_BASE_URL = TEST_KEYCLOAK_BASE
+process.env.KEYCLOAK_PUBLIC_URL = TEST_KEYCLOAK_BASE
+process.env.KEYCLOAK_REALM = TEST_REALM
 
-// Mock logger to avoid file system cleanup issues
-mock.module('../src/lib/logger', () => ({
-  logger: {
-    server: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
-    access: { info: () => {}, warn: () => {} },
-  },
-}))
+// NOTE: Do NOT mock.module('../src/lib/logger') — partial logger mocks leak
+// to subsequent test files and break tests that use logger.consent, etc.
 
 // ── Import routes after mocks ────────────────────────────────────────────────
 
