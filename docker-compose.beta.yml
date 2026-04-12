@@ -83,7 +83,7 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
-      FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly
+      FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir,https://hapi.fhir.org/baseR4,https://server.fire.ly
       CORS_ORIGINS: https://beta.proxy-smart.com
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     labels:
@@ -96,6 +96,25 @@ services:
     networks:
       - proxy-smart
       - caddy
+
+  hapi-fhir:
+    image: hapiproject/hapi:latest
+    container_name: proxy-smart-hapi-fhir-beta
+    restart: unless-stopped
+    environment:
+      spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
+      spring.datasource.username: postgres
+      spring.datasource.password: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.cors.allow_Credentials: "true"
+      hapi.fhir.cors.allowed_origin: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxy-smart
 
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/max-health-inc/proxy-smart/frontend:beta-latest}
