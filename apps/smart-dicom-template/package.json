@@ -3,7 +3,7 @@
   "displayName": "SMART DICOM Algorithm Template",
   "description": "Starter kit for building SMART on FHIR imaging algorithm apps. Clone, implement your algorithm in src/algorithm.ts, and deploy as a SMART app.",
   "private": true,
-  "version": "0.0.4-beta.202604120932.31b6b439",
+  "version": "0.0.4-alpha.202604121402.09b13ece",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5180",
