@@ -1008,9 +1008,9 @@ jobs:
           echo "Available FHIR servers:"
           echo "$SERVERS" | jq '.' 2>/dev/null || echo "$SERVERS"
           
-          # Get the first server's endpoints
-          SMART_CONFIG_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.smartConfig // empty' 2>/dev/null)
-          BASE_FHIR_URL=$(echo "$SERVERS" | jq -r '.servers[0].endpoints.base // empty' 2>/dev/null)
+          # Get the first supported server's endpoints (skip unsupported servers)
+          SMART_CONFIG_URL=$(echo "$SERVERS" | jq -r '[.servers[] | select(.supported == true)][0].endpoints.smartConfig // empty' 2>/dev/null)
+          BASE_FHIR_URL=$(echo "$SERVERS" | jq -r '[.servers[] | select(.supported == true)][0].endpoints.base // empty' 2>/dev/null)
           
           if [ -z "$SMART_CONFIG_URL" ] || [ "$SMART_CONFIG_URL" = "null" ]; then
             echo "::error::No FHIR servers configured - cannot test SMART configuration"
