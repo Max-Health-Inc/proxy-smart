@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604121738.ec363779] - 2026-04-12
+
+- ✨ Features: Introduced a new MCP Servers management UI with dialog-driven workflows
+  - Added McpDialogs.tsx (AddServerDialog) and related dialogs module
+  - Created McpServersManager with subcomponents: McpServersManager.tsx, McpServersTab.tsx, SkillsTab.tsx, and index.ts
+  - Added shared types (McpServer, McpServerHealth, McpServerTool, RegistryServer, Skill, McpTemplate, McpTemplatesData) and re-export of SmartApp
+  - Wire-up exports for new McpServersManager
+- 🔧 Chores & Improvements: Major code refactor and UI expansion to support templates, skills, and tabbed interface
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/326
+
+
 ## [0.0.4-alpha.202604121402.09b13ece] - 2026-04-12
 
 - 🔧 Chores & Improvements: Update MCP endpoint enabling logic to OR between file config and env config; endpoint 404 only when both sources disable. Tests updated accordingly.
