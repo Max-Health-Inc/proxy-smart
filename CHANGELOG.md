@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.4-alpha.202604112116.0c08004f] - 2026-04-12
+
+- 🔧 Chores & Improvements: Refactor MCP backend to route-based tool registration (removing reliance on whole tool registry)
+- 🔧 Chores & Improvements: Add extensive MCP endpoint integration tests (authentication, sessions, tools, protocol) via new backend/test/mcp-endpoint.test.ts
+- 🗑️ Documentation / Maintenance: Remove legacy Python MCP server test scaffolding and deprecated test structure (pytest config, test utils, old test modules, and related files)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/319
+
+
 ## [0.0.4-alpha.202604112026.a30739f5] - 2026-04-11
 
 - 🔧 Chores & Improvements: Refactor MCP endpoint to route-based tool registration (removes registry-driven exposure)  
