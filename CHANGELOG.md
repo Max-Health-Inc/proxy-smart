@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131524.f9c8fc5d] - 2026-04-13
+
+- 🔧 Chores & Improvements: CI optimizations (skip SMTP config when already set, reduce Keycloak wait)
+
+- 📚 Documentation: Update CHANGELOG for PR #347
+
+- 🔧 Chores & Improvements: Update version references to 0.0.5-alpha.202604131524.f9c8fc5d
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/348
+
+
 ## [0.0.5-alpha.202604131404.221b9263] - 2026-04-13
 
 - 🔧 Chores & Improvements: CI/CD housekeeping and maintenance (Docker pruning, SMART compliance report updates)
