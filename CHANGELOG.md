@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131634.3494abfa] - 2026-04-13
+
+- ✨ Features: 
+  - Introduced OpenDataLoader-based PDF extraction path (PDF to Markdown via @opendataloader/pdf)
+  - Added PDF extraction types and engine plumbing (PdfEngine, PdfExtractResult)
+
+- 🔧 Chores & Improvements:
+  - Dockerfiles updated to install Java 21 JRE across backend and mono/prod stages; clarifying Java 21 requirement for @opendataloader/pdf
+  - Backend build and package adjustments:
+    - Refined build command usage for backend (target handling and removing external sharp reference)
+    - Replaced zerox dependency with @opendataloader/pdf in backend package.json
+  - Updated document-import flows to pass engine through admin and API routes to use the new PDF extraction path
+
+- ⚠️ Breaking Changes: None detected
+
+- 📚 Documentation: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/353
+
+
 ## [0.0.5-alpha.202604131611.0165ae0c] - 2026-04-13
 
 - 🔧 Chores & Improvements: Minor string escaping update in deploy-beta workflow (no logic changes)
