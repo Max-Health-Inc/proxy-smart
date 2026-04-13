@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604130118.674918ed] - 2026-04-13
+
+- 🔧 Chores & Improvements: Update beta/alpha SMART compliance reports and testing tooling
+- 🐛 Bug Fixes: Deploy health check uses correct Keycloak management port (9000)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/340
+
+
 ## [0.0.5-alpha.202604130043.6db4bfd4] - 2026-04-13
 
 - 🔧 Chores & Improvements: Dynamic Keycloak IP resolution for beta deploy workflow; replaces hard-coded localhost with KC_BASE, adds guard for unresolved IP, and updates health check/token endpoints accordingly
