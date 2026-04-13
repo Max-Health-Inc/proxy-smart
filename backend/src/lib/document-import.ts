@@ -1,14 +1,16 @@
 /**
  * Document Import Pipeline
  *
- * PDF → Zerox OCR → AI (generate FHIR JSON) → babelfhir-ts validate() loop
+ * PDF → OCR/extract → AI (generate FHIR JSON) → babelfhir-ts validate() loop
  *
  * Returns validated resources to the caller — the SMART app (patient portal)
  * is responsible for persisting them through the FHIR proxy using its own
  * access token so that scope enforcement, consent, and audit all apply.
  *
- * Uses:
- * - zerox (MIT) for PDF-to-markdown via vision model
+ * PDF extraction engines (caller chooses):
+ * - opendataloader — local, deterministic, no cloud calls (requires Java 11+)
+ *
+ * Also uses:
  * - Vercel AI SDK generateText with Output.json() for FHIR generation
  * - babelfhir-ts IPS-generated classes for FHIRPath-based validation
  * - Self-healing loop: validation errors are fed back to the LLM (max 10 retries)
@@ -16,7 +18,8 @@
 
 import { generateText, Output } from 'ai'
 import { openai } from '@ai-sdk/openai'
-import { zerox } from 'zerox'
+import { extractTextFromPdf as opendataloaderExtract } from '@/lib/pdf-extract-opendataloader'
+import type { PdfExtractResult, PdfEngine } from '@/lib/pdf-extract-types'
 import { logger } from '@/lib/logger'
 import { config } from '@/config'
 import {
@@ -40,6 +43,8 @@ export interface DocumentImportResult {
   fileName: string
   pagesProcessed: number
   extractedText: string
+  /** Which PDF extraction engine was used */
+  engine: PdfEngine
   /** Validated FHIR resources ready for the client to POST through the FHIR proxy */
   resources: ValidatedResource[]
   /** Resources that could not be fixed after all retries */
@@ -69,6 +74,8 @@ export interface DocumentImportOptions {
   patientId: string
   maxRetries?: number
   model?: string
+  /** PDF extraction engine. Default: 'opendataloader' */
+  engine?: PdfEngine
 }
 
 // ---------------------------------------------------------------------------
@@ -118,25 +125,12 @@ Rules:
 // Pipeline steps
 // ---------------------------------------------------------------------------
 
-/** Step 1: OCR a PDF into markdown using Zerox (vision model) */
-export async function extractTextFromPdf(filePath: string): Promise<{ markdown: string; pages: number }> {
-  const apiKey = config.ai.openaiApiKey
-  if (!apiKey) throw new Error('OPENAI_API_KEY not configured')
-
-  logger.server.info('📄 Starting OCR extraction', { filePath })
-
-  const result = await zerox({
-    filePath,
-    credentials: { apiKey },
-    model: 'gpt-5.4-mini' as never,
-    cleanup: true,
-    concurrency: 5,
-    maintainFormat: true,
-  })
-
-  const markdown = result.pages.map((p) => p.content ?? '').join('\n\n---\n\n')
-  logger.server.info('📄 OCR complete', { pages: result.pages.length, chars: markdown.length })
-  return { markdown, pages: result.pages.length }
+/** Step 1: Extract text from a PDF using the chosen engine */
+export async function extractTextFromPdf(
+  filePath: string,
+  engine: PdfEngine = 'opendataloader',
+): Promise<PdfExtractResult> {
+  return opendataloaderExtract(filePath)
 }
 
 /** Step 2: Ask the LLM to produce FHIR resources from the OCR text */
@@ -261,9 +255,10 @@ export async function importDocument(
   const start = performance.now()
   const maxRetries = options.maxRetries ?? 10
   const model = options.model ?? 'gpt-5.4'
+  const engine = options.engine ?? 'opendataloader'
 
-  // Step 1: OCR
-  const { markdown, pages } = await extractTextFromPdf(filePath)
+  // Step 1: Extract text from PDF
+  const { markdown, pages } = await extractTextFromPdf(filePath, engine)
 
   // Step 2: AI generates FHIR resources
   const rawResources = await generateFhirResources(markdown, options.patientId, model)
@@ -293,6 +288,7 @@ export async function importDocument(
     fileName,
     pagesProcessed: pages,
     extractedText: markdown,
+    engine,
     resources,
     failed,
     documentReference,

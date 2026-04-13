@@ -64,10 +64,11 @@ RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \
 FROM base AS production
 WORKDIR /app
 
-# Install minimal runtime dependencies
+# Install minimal runtime dependencies (Java 21 needed for @opendataloader/pdf)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     ca-certificates \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy built backend

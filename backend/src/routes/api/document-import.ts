@@ -45,7 +45,7 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         return { error: 'AI not configured', details: 'Document import requires AI to be configured' }
       }
 
-      const { file, patientId } = body
+      const { file, patientId, engine } = body
 
       // Verify the token grants access to this patient
       const tokenPatientId = tokenPayload.patient || tokenPayload.sub
@@ -61,7 +61,7 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         return { error: 'Invalid file type', details: 'Only PDF files are supported' }
       }
 
-      // Write to temp file for zerox
+      // Write to temp file for PDF extraction
       const tempDir = join(tmpdir(), 'proxy-smart-doc-import')
       await mkdir(tempDir, { recursive: true })
       const tempPath = join(tempDir, `${randomUUID()}.pdf`)
@@ -72,12 +72,13 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         await writeFile(tempPath, buffer)
 
         const pdfBase64 = buffer.toString('base64')
-        const result = await importDocument(tempPath, file.name, pdfBase64, { patientId })
+        const result = await importDocument(tempPath, file.name, pdfBase64, { patientId, engine })
 
         return {
           success: true,
           fileName: result.fileName,
           pagesProcessed: result.pagesProcessed,
+          engine: result.engine,
           resources: result.resources.map(r => ({
             resourceType: r.resourceType,
             resource: r.resource,
@@ -105,12 +106,14 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
       body: t.Object({
         file: t.File({ description: 'PDF document to import' }),
         patientId: t.String({ description: 'FHIR Patient ID to associate resources with' }),
+        engine: t.Optional(t.Literal('opendataloader', { default: 'opendataloader', description: 'PDF extraction engine' })),
       }),
       response: {
         200: t.Object({
           success: t.Boolean(),
           fileName: t.String(),
           pagesProcessed: t.Number(),
+          engine: t.Literal('opendataloader'),
           resources: t.Array(t.Object({
             resourceType: t.String(),
             resource: t.Any({ description: 'Validated FHIR R4 resource' }),
