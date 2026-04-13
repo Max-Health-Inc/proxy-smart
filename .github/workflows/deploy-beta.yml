@@ -199,11 +199,18 @@ jobs:
           # Clean up unused Docker resources to prevent disk-full failures
           ${SSH_CMD} "
             echo '🧹 Cleaning up unused Docker resources...'
-            docker image prune -af --filter 'until=168h' 2>/dev/null || true
+            docker image prune -af --filter 'until=72h' 2>/dev/null || true
             docker container prune -f 2>/dev/null || true
             docker volume prune -f 2>/dev/null || true
-            docker builder prune -af --keep-storage=512mb 2>/dev/null || true
+            docker builder prune -af 2>/dev/null || true
             echo \"📊 Disk usage: \$(df -h / | tail -1 | awk '{print \$5}') used\"
+            DISK_PCT=\$(df / | tail -1 | awk '{print \$5}' | tr -d '%')
+            if [ \"\$DISK_PCT\" -gt 85 ]; then
+              echo '⚠️  Disk usage >85%, running aggressive cleanup...'
+              docker image prune -af 2>/dev/null || true
+              docker system prune -af 2>/dev/null || true
+              echo \"📊 Disk after aggressive cleanup: \$(df -h / | tail -1 | awk '{print \$5}') used\"
+            fi
           "
 
           # Write env file from CI secrets
