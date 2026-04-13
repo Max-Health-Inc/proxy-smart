@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131352.a13c604e] - 2026-04-13
+
+- 🔧 Chores & Improvements: PACS status pre-check on mount and enhanced status handling across UI and backend
+  - Dashboard.tsx: add PACS status check on mount; store pacsAvailable state; integrate non-blocking check in data load flow
+  - DicomUpload.tsx: extend status handling with PACS pre-check; new PacsStatus type usage; added ServerOff icon; new UploadStep "checking"/"unavailable"; initial step set to "checking"
+  - dicomweb.ts: introduce PacsStatus type; implement checkPacsStatus() calling /status; improve STOW error handling with connection/refusal details
+  - backend dicomweb routes: enhanced error logging for connection/refused scenarios; friendlier messages; minor status handling improvements
+
+- ⚠️ Breaking Changes: None identified
+
+- ✨ Features: PACS availability status integration and pre-checks
+
+- 🐛 Bug Fixes: Improved error messaging for upstream/DICOMweb issues
+
+- 📚 Documentation: None identified
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/346
+
+
 ## [0.0.5-alpha.202604131345.23848337] - 2026-04-13
 
 - 🔧 Chores & Improvements: PACS status pre-check on mount integrated into dashboard and upload flow; enhanced PacsStatus typing and status handling across dicomweb.ts and UI components
