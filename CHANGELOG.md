@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604122030.b73417f0] - 2026-04-13
+
+- ✨ Features: expose GET routes as tools with readOnlyHint; add admin toggle (quotentiroler)
+- 🐛 Bug Fixes: none
+- 📚 Documentation: none
+- 🔧 Chores & Improvements: update beta SMART compliance reports (CI skip) across testing/dev; update version to 0.0.5-beta.202604122030.b73417f0
+- ⚠️ Breaking Changes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/337
+
+
 ## [0.0.5-beta.202604122004.5a4c4b6d] - 2026-04-12
 
 - ✨ Features: Auto-configure Keycloak SMTP on startup if RESEND_API_KEY is set (backend)
