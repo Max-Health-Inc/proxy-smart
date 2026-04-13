@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131547.1bf214db] - 2026-04-13
+
+- 🔧 Chores & Improvements: Exclude external dependency (sharp) from bundling in build process (bun build --external sharp) to reduce bundle size and avoid bundling issues.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/349
+
+
 ## [0.0.5-alpha.202604131524.f9c8fc5d] - 2026-04-13
 
 - 🔧 Chores & Improvements: CI optimizations (skip SMTP config when already set, reduce Keycloak wait)
