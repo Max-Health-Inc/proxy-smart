@@ -325,3 +325,66 @@ export async function searchTherapeuticImplications(patientId: string): Promise<
     _sort: "-date",
   })
 }
+
+// ── Write operations ─────────────────────────────────────────────────────────
+
+/** Create a FHIR resource through the proxy (requires patient/*.write scope) */
+export async function createResource<T extends { resourceType: string }>(resource: T): Promise<T> {
+  const res = await authFetch(`${fhirBaseUrl}/${resource.resourceType}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/fhir+json',
+      Accept: 'application/fhir+json',
+    },
+    body: JSON.stringify(resource),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Failed to create ${resource.resourceType} (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<T>
+}
+
+// ── Document Import ──────────────────────────────────────────────────────────
+
+export interface ImportedResource {
+  resourceType: string
+  resource: Record<string, unknown>
+  retriesNeeded: number
+  warnings: string[]
+}
+
+export interface FailedResource {
+  resourceType: string
+  errors: string[]
+  warnings: string[]
+  retriesAttempted: number
+}
+
+export interface DocumentImportResponse {
+  success: boolean
+  fileName: string
+  pagesProcessed: number
+  resources: ImportedResource[]
+  failed: FailedResource[]
+  documentReference: Record<string, unknown>
+  processingTimeMs: number
+}
+
+/** Upload a PDF for AI-powered FHIR extraction (calls /api/document-import) */
+export async function importDocument(file: File, patientId: string): Promise<DocumentImportResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('patientId', patientId)
+
+  const baseUrl = fhirBaseUrl.split('/fhir/')[0] // strip /fhir/<server>/<version>
+  const res = await authFetch(`${baseUrl}/api/document-import`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Document import failed (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<DocumentImportResponse>
+}

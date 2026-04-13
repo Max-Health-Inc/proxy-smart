@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.5-beta.202604130310.7e87e126",
+  "version": "0.0.5-alpha.202604131159.af43b3e2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quotentiroler/proxy-smart.git"
@@ -13,7 +13,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.2.0",
     "glob": "^13.0.6",
-    "globals": "^17.4.0",
+    "globals": "^17.5.0",
     "rollup": "^4.60.1",
     "typescript": "6.0.2",
     "typescript-eslint": "^8.58.0",

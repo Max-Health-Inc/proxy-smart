@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Spinner } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import {
   getPatient,
@@ -51,6 +51,7 @@ import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/values
 import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
+import { DocumentImport } from "@/components/DocumentImport"
 import {
   Heart,
   Pill,
@@ -66,12 +67,14 @@ import {
   Baby,
   Stethoscope,
   Laptop,
+  Upload,
 } from "lucide-react"
 import { format } from "date-fns"
 
 export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showImport, setShowImport] = useState(false)
   const [patient, setPatient] = useState<Patient | null>(null)
   const [conditions, setConditions] = useState<Condition[]>([])
   const [allergies, setAllergies] = useState<AllergyIntolerance[]>([])
@@ -196,6 +199,18 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {patient && <PatientBanner patient={patient} />}
+
+      {/* Document Import */}
+      {showImport ? (
+        <DocumentImport onClose={() => setShowImport(false)} />
+      ) : (
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <Upload className="size-4" />
+            Import Document
+          </Button>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* Active Conditions */}

@@ -1,21 +1,21 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-04-13 03:15:48,405 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 9247ms
+2026-04-13 12:03:41,120 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8287ms
 Running the server in development mode. DO NOT use this configuration in production.
-2026-04-13 03:15:51,905 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
-2026-04-13 03:15:52,717 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-04-13 03:15:53,777 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-04-13 03:16:01,345 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-04-13 03:16:01,705 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_760247, Site name: null
-2026-04-13 03:16:01,890 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
-2026-04-13 03:16:02,046 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
-2026-04-13 03:16:03,565 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
-2026-04-13 03:16:06,454 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
-2026-04-13 03:16:06,454 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: IGNORE_EXISTING
-2026-04-13 03:16:06,455 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
-2026-04-13 03:16:06,455 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
-2026-04-13 03:16:06,455 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
-2026-04-13 03:16:06,517 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
-2026-04-13 03:16:06,677 INFO  [io.quarkus] (main) Keycloak 26.5.6 on JVM (powered by Quarkus 3.27.2) started in 18.121s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
-2026-04-13 03:16:06,677 INFO  [io.quarkus] (main) Profile dev activated. 
-2026-04-13 03:16:06,677 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
-2026-04-13 03:17:47,016 WARN  [org.keycloak.events] (executor-thread-5) type="INTROSPECT_TOKEN_ERROR", realmId="e85732ac-ef3f-4d89-97fd-9ce91891a981", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="invalid_token", reason="Access token JWT check failed", client_auth_method="client-secret"
+2026-04-13 12:03:44,468 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
+2026-04-13 12:03:45,295 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-04-13 12:03:46,353 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-04-13 12:03:53,602 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-04-13 12:03:53,917 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_458557, Site name: null
+2026-04-13 12:03:54,146 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-04-13 12:03:54,311 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-04-13 12:03:55,696 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
+2026-04-13 12:03:58,992 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
+2026-04-13 12:03:58,992 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: IGNORE_EXISTING
+2026-04-13 12:03:58,993 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
+2026-04-13 12:03:58,993 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
+2026-04-13 12:03:58,993 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
+2026-04-13 12:03:59,050 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
+2026-04-13 12:03:59,218 INFO  [io.quarkus] (main) Keycloak 26.5.6 on JVM (powered by Quarkus 3.27.2) started in 17.951s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
+2026-04-13 12:03:59,218 INFO  [io.quarkus] (main) Profile dev activated. 
+2026-04-13 12:03:59,218 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
+2026-04-13 12:05:40,763 WARN  [org.keycloak.events] (executor-thread-3) type="INTROSPECT_TOKEN_ERROR", realmId="72d6c9e6-b160-4aef-b085-6bd3d6b502f5", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="invalid_token", reason="Access token JWT check failed", client_auth_method="client-secret"

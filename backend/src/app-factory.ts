@@ -22,6 +22,7 @@ import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { mcpEndpointRoutes } from './routes/mcp-endpoint'
 import { dicomwebRoutes } from './routes/dicomweb'
 import { docsRoutes } from './routes/docs'
+import { apiRoutes } from './routes/api'
 import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
 
@@ -176,6 +177,7 @@ export function createApp() {
         .use(serverDiscoveryRoutes)
         .use(authRoutes)
         .use(adminRoutes)
+        .use(apiRoutes)
         .use(oauthMonitoringRoutes)
         .use(oauthWebSocket)
         .use(consentMonitoringRoutes)

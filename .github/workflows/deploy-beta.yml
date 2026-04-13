@@ -261,39 +261,39 @@ jobs:
           "
 
           # Configure Keycloak SMTP (Resend) and enable password reset
+          # Uses backend container for curl (same Docker network — avoids host→container IP issues)
           if [ -n "${RESEND_API_KEY}" ]; then
             echo "📧 Configuring Keycloak SMTP via Resend..."
             ${SSH_CMD} "
               cd ${DEPLOY_DIR}
+              COMPOSE='docker compose -f docker-compose.beta.yml --env-file .env.beta'
+              KC_BASE='http://keycloak:8080/auth'
 
-              # Resolve Keycloak container IP on the docker network (curl not available inside KC container)
-              KC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' proxy-smart-keycloak-beta 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-              if [ -z \"\$KC_IP\" ]; then
-                echo '  ⚠️ Could not resolve Keycloak container IP — SMTP not configured'
-                exit 0
-              fi
-              KC_BASE=\"http://\${KC_IP}:8080/auth\"
-
-              # Wait for Keycloak to be ready (health endpoint is on management port 9000, not under /auth)
-              for i in \$(seq 1 30); do
-                if curl -sf \"http://\${KC_IP}:9000/health/ready\" >/dev/null 2>&1; then
+              # Wait for Keycloak to be ready via backend container (Docker DNS)
+              for i in \$(seq 1 40); do
+                if \$COMPOSE exec -T backend curl -sf http://keycloak:9000/health/ready >/dev/null 2>&1; then
                   echo '  ✅ Keycloak ready for SMTP config'
                   break
+                fi
+                if [ \$i -eq 40 ]; then
+                  echo '  ⚠️ Keycloak health check timed out — SMTP not configured'
+                  exit 0
                 fi
                 sleep 5
               done
 
-              # Get admin token
-              KC_TOKEN=\$(curl -sf -X POST \"\${KC_BASE}/realms/master/protocol/openid-connect/token\" \
+              # Get admin token via backend container
+              KC_PASS=\$(grep KEYCLOAK_ADMIN_PASSWORD .env.beta | cut -d= -f2)
+              KC_TOKEN=\$(\$COMPOSE exec -T backend curl -sf -X POST \"\${KC_BASE}/realms/master/protocol/openid-connect/token\" \
                 -H 'Content-Type: application/x-www-form-urlencoded' \
                 -d 'username=admin' \
-                -d \"password=\$(grep KEYCLOAK_ADMIN_PASSWORD .env.beta | cut -d= -f2)\" \
+                -d \"password=\${KC_PASS}\" \
                 -d 'grant_type=password' \
                 -d 'client_id=admin-cli' | grep -o '\"access_token\":\"[^\"]*\"' | cut -d'\"' -f4)
 
               if [ -n \"\$KC_TOKEN\" ]; then
                 # Update realm with SMTP settings and enable password reset
-                curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
+                \$COMPOSE exec -T backend curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
                   -H 'Content-Type: application/json' \
                   -H \"Authorization: Bearer \$KC_TOKEN\" \
                   -d '{
