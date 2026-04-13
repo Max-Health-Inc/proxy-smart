@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131328.38a77534] - 2026-04-13
+
+- ✨ Features: patient DICOM upload via Orthanc PACS (beta)
+- 🔧 Chores & Improvements: update dev SMART compliance report
+- 🔧 Chores & Improvements: preserve line endings in version.js to avoid dirty tree on Windows
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/344
+
+
 ## [0.0.5-alpha.202604131315.6d98337c] - 2026-04-13
 
 - ⚠️ Breaking Changes: None
