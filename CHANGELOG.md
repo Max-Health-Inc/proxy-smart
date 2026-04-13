@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131404.221b9263] - 2026-04-13
+
+- 🔧 Chores & Improvements: CI/CD housekeeping and maintenance (Docker pruning, SMART compliance report updates)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/347
+
+
 ## [0.0.5-alpha.202604131352.a13c604e] - 2026-04-13
 
 - 🔧 Chores & Improvements: PACS status pre-check on mount and enhanced status handling across UI and backend
