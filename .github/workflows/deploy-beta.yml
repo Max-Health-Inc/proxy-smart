@@ -319,6 +319,40 @@ jobs:
             echo "⚠️ RESEND_API_KEY not set — skipping SMTP configuration"
           fi
 
+          # Seed HAPI FHIR with sample data (idempotent — uses PUT)
+          echo "🏥 Seeding HAPI FHIR with sample data..."
+          ${SSH_CMD} "
+            cd ${DEPLOY_DIR}
+
+            # Resolve HAPI container IP
+            HAPI_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' proxy-smart-hapi-fhir-beta 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -z \"\$HAPI_IP\" ]; then
+              echo '  ⚠️ Could not resolve HAPI FHIR container IP — skipping seed'
+              exit 0
+            fi
+            HAPI_BASE=\"http://\${HAPI_IP}:8080/fhir\"
+
+            # Wait for HAPI to be ready
+            for i in \$(seq 1 30); do
+              if curl -sf \"\${HAPI_BASE}/metadata\" >/dev/null 2>&1; then
+                echo '  ✅ HAPI FHIR ready'
+                break
+              fi
+              sleep 5
+            done
+
+            # POST the seed bundle (transaction with PUT entries = idempotent)
+            HTTP_CODE=\$(curl -sf -o /dev/null -w '%{http_code}' -X POST \"\${HAPI_BASE}\" \
+              -H 'Content-Type: application/fhir+json' \
+              -d @deploy/fhir-seed-bundle.json)
+
+            if [ \"\$HTTP_CODE\" = '200' ]; then
+              echo '  ✅ FHIR sample data seeded successfully'
+            else
+              echo \"  ⚠️ FHIR seed returned HTTP \${HTTP_CODE} (non-fatal)\"
+            fi
+          "
+
           # External health check through Caddy
           echo "⏳ Verifying external access at ${VPS_URL}..."
           for i in $(seq 1 30); do
