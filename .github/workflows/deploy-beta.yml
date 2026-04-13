@@ -243,8 +243,65 @@ jobs:
             docker rm -f caddy-proxy 2>/dev/null || true
             docker compose -p caddy-proxy -f docker-compose.caddy.yml up -d
 
-            echo '📦 Pulling pre-built images and restarting beta stack...'
+            echo '📦 Pulling pre-built images...'
             docker compose -f docker-compose.beta.yml --env-file .env.beta pull
+
+            # ── Blue-Green: canary-test the new backend image before swapping ──
+            echo '🔬 Canary-testing new backend image before swap...'
+            BACKEND_IMG=\$(grep BACKEND_IMAGE .env.beta | cut -d= -f2)
+            CANARY_NAME=proxy-smart-backend-canary
+
+            # Remove any leftover canary from a previous failed deploy
+            docker rm -f \$CANARY_NAME 2>/dev/null || true
+
+            # Start canary on the same Docker network so it can reach Keycloak/Postgres
+            # Use a different port (9445) to avoid conflict with the running backend
+            docker run -d --name \$CANARY_NAME \\
+              --network proxy-smart-beta-network \\
+              --env-file .env.beta \\
+              -e NODE_ENV=production \\
+              -e PORT=9445 \\
+              -e BASE_URL=https://beta.proxy-smart.com \\
+              -e KEYCLOAK_BASE_URL=http://keycloak:8080/auth \\
+              -e KEYCLOAK_PUBLIC_URL=https://beta.proxy-smart.com/auth \\
+              -e KEYCLOAK_DOMAIN=beta.proxy-smart.com \\
+              -e KEYCLOAK_REALM=proxy-smart \\
+              -e KEYCLOAK_JWKS_URI=http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs \\
+              -e KEYCLOAK_ADMIN_CLIENT_ID=admin-service \\
+              -e FHIR_SERVER_BASE=http://hapi-fhir:8080/fhir \\
+              -e CORS_ORIGINS=https://beta.proxy-smart.com \\
+              -e DICOMWEB_BASE_URL=http://orthanc:8042/dicom-web \\
+              \$BACKEND_IMG
+
+            # Wait for canary to pass health check (max 60s)
+            CANARY_OK=false
+            for i in \$(seq 1 12); do
+              # Check if container is still running (not crash-looping)
+              if ! docker inspect -f '{{.State.Running}}' \$CANARY_NAME 2>/dev/null | grep -q true; then
+                echo '  ❌ Canary container crashed!'
+                docker logs --tail 30 \$CANARY_NAME 2>&1 || true
+                break
+              fi
+              if docker exec \$CANARY_NAME curl -sf http://localhost:9445/health >/dev/null 2>&1; then
+                CANARY_OK=true
+                echo '  ✅ Canary health check passed — safe to swap'
+                break
+              fi
+              echo "  ⏳ Canary not ready yet (attempt \$i/12)..."
+              sleep 5
+            done
+
+            # Clean up canary regardless
+            docker rm -f \$CANARY_NAME 2>/dev/null || true
+
+            if [ "\$CANARY_OK" != 'true' ]; then
+              echo '❌ CANARY FAILED — aborting deploy to keep current version running'
+              echo '   The old backend remains live. Fix the image and re-deploy.'
+              exit 1
+            fi
+
+            # ── Canary passed — safe to swap ──
+            echo '🔄 Swapping to new version...'
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d --remove-orphans
 
             echo '⏳ Waiting for services to become healthy...'
@@ -257,7 +314,7 @@ jobs:
               sleep 2
             done
 
-            # Wait for backend health endpoint
+            # Wait for backend health check (Docker healthcheck + HTTP)
             for i in \$(seq 1 60); do
               if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend curl -sf http://localhost:8445/health >/dev/null 2>&1; then
                 echo '  ✅ Backend ready'
