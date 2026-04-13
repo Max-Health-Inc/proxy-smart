@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.0.5-alpha.202604131524.f9c8fc5d",
+  "version": "0.0.5-alpha.202604131547.1bf214db",
   "type": "module",
   "scripts": {
     "test": "bun test",
@@ -9,7 +9,7 @@
     "dev": "bun run --watch --watch-path src src/index.ts",
     "start": "bun run src/index.ts",
     "mcp": "bun run src/mcp-server.ts",
-    "build": "tsc --noEmit && bun build src/index.ts --outdir dist --target node",
+    "build": "tsc --noEmit && bun build src/index.ts --outdir dist --target node --external sharp",
     "export-openapi": "mkdir -p dist && bun run src/export-openapi.ts && bun run scripts/sanitize-openapi.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
