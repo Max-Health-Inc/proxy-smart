@@ -59,6 +59,30 @@ export async function fetchSeriesImageIds(
 /** DICOM multipart/related boundary for STOW-RS */
 const STOW_BOUNDARY = "----DICOMwebBoundary"
 
+// ── PACS Status ──────────────────────────────────────────────────────────
+
+export interface PacsStatus {
+  configured: boolean
+  reachable: boolean | null
+  message: string
+}
+
+/**
+ * Check if the PACS is configured and reachable.
+ * Calls the unauthenticated `/dicomweb/status` endpoint.
+ */
+export async function checkPacsStatus(): Promise<PacsStatus> {
+  try {
+    const resp = await fetch(`${dicomwebBase}/status`)
+    if (!resp.ok) {
+      return { configured: false, reachable: null, message: "Could not check PACS status" }
+    }
+    return await resp.json() as PacsStatus
+  } catch {
+    return { configured: false, reachable: null, message: "Backend is not reachable" }
+  }
+}
+
 /**
  * Build a STOW-RS multipart/related body from raw .dcm file ArrayBuffers.
  * Each part is application/dicom.
@@ -96,15 +120,34 @@ export async function storeInstances(files: File[]): Promise<StowResult> {
   const token = smartAuth.getToken()?.access_token
   if (!token) throw new Error("No valid SMART token for STOW-RS upload")
 
-  const resp = await fetch(`${dicomwebBase}/studies`, {
-    method: "POST",
-    headers: {
-      "Content-Type": `multipart/related; type="application/dicom"; boundary=${STOW_BOUNDARY}`,
-      Authorization: `Bearer ${token}`,
-      Accept: "application/dicom+json",
-    },
-    body,
-  })
+  let resp: Response
+  try {
+    resp = await fetch(`${dicomwebBase}/studies`, {
+      method: "POST",
+      headers: {
+        "Content-Type": `multipart/related; type="application/dicom"; boundary=${STOW_BOUNDARY}`,
+        Authorization: `Bearer ${token}`,
+        Accept: "application/dicom+json",
+      },
+      body,
+    })
+  } catch {
+    throw new Error("Unable to connect to the imaging server. Please try again later.")
+  }
+
+  // Parse structured error responses from the proxy
+  if (!resp.ok) {
+    try {
+      const errBody = await resp.json() as { error?: string; message?: string }
+      const msg = errBody.message || errBody.error || `PACS returned status ${resp.status}`
+      throw new Error(msg)
+    } catch (parseErr) {
+      if (parseErr instanceof Error && parseErr.message !== `PACS returned status ${resp.status}`) {
+        throw parseErr // re-throw the structured message
+      }
+      throw new Error(`Upload failed with status ${resp.status}`)
+    }
+  }
 
   return {
     status: resp.status,

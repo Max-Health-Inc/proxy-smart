@@ -136,9 +136,15 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
       set.status = 504
       return { error: 'DICOMweb upstream timeout' }
     }
-    logger.fhir.error('DICOMweb proxy error', { target, error: err })
+    const errMsg = err instanceof Error ? err.message : 'Unknown error'
+    const isConnectionRefused = errMsg.includes('ECONNREFUSED') || errMsg.includes('fetch failed')
+    logger.fhir.error('DICOMweb proxy error', { target, error: errMsg, isConnectionRefused })
     set.status = 502
-    return { error: 'DICOMweb upstream error', details: err instanceof Error ? { message: err.message } : undefined }
+    return {
+      error: isConnectionRefused ? 'PACS server is not reachable' : 'DICOMweb upstream error',
+      message: isConnectionRefused ? 'The imaging server (PACS) is not responding. It may be offline or not yet started.' : undefined,
+      details: err instanceof Error ? { message: err.message } : undefined,
+    }
   } finally {
     clearTimeout(timeout)
   }
@@ -223,9 +229,61 @@ async function proxyDicomWebPost(request: Request, subPath: string, set: Record<
       set.status = 504
       return { error: 'DICOMweb upstream timeout (STOW-RS)' }
     }
-    logger.fhir.error('DICOMweb STOW-RS error', { target, error: err })
+    const errMsg = err instanceof Error ? err.message : 'Unknown error'
+    const isConnectionRefused = errMsg.includes('ECONNREFUSED') || errMsg.includes('fetch failed')
+    logger.fhir.error('DICOMweb STOW-RS error', { target, error: errMsg, isConnectionRefused })
     set.status = 502
-    return { error: 'DICOMweb upstream error', details: err instanceof Error ? { message: err.message } : undefined }
+    return {
+      error: isConnectionRefused ? 'PACS server is not reachable' : 'DICOMweb upstream error',
+      message: isConnectionRefused ? 'The imaging server (PACS) is not responding. It may be offline or not yet started.' : undefined,
+      details: err instanceof Error ? { message: err.message } : undefined,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+// ----- PACS health probe -----
+
+export interface PacsStatus {
+  configured: boolean
+  reachable: boolean | null
+  message: string
+}
+
+/** Lightweight probe: is PACS configured + can we reach it? */
+async function probePacs(): Promise<PacsStatus> {
+  if (!config.dicomweb.enabled || !config.dicomweb.baseUrl) {
+    return { configured: false, reachable: null, message: 'DICOMweb is not configured. No PACS connection available.' }
+  }
+
+  const base = config.dicomweb.baseUrl.replace(/\/+$/, '')
+  const headers = new Headers()
+  if (config.dicomweb.upstreamAuth) headers.set('authorization', config.dicomweb.upstreamAuth)
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5_000) // 5 s ceiling for health probe
+
+  try {
+    // Orthanc DICOMweb exposes /studies, a minimal QIDO-RS query with limit=1 is a fast probe
+    const resp = await fetch(`${base}/studies?limit=1`, {
+      method: 'GET',
+      headers,
+      signal: controller.signal,
+    })
+    return {
+      configured: true,
+      reachable: resp.ok || resp.status === 401, // 401 means PACS is up but auth differs
+      message: resp.ok ? 'PACS is available' : `PACS responded with HTTP ${resp.status}`,
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    logger.fhir.warn('PACS health probe failed', { base, error: msg })
+    return {
+      configured: true,
+      reachable: false,
+      message: `Cannot reach PACS: ${msg.includes('ECONNREFUSED') || msg.includes('fetch failed') ? 'Connection refused — is the PACS server running?' : msg}`,
+    }
   } finally {
     clearTimeout(timeout)
   }
@@ -239,6 +297,12 @@ const DicomWebErrorResponse = t.Object({
   details: t.Optional(t.Object({ message: t.Optional(t.String()) })),
 })
 
+const PacsStatusResponse = t.Object({
+  configured: t.Boolean(),
+  reachable: t.Union([t.Boolean(), t.Null()]),
+  message: t.String(),
+})
+
 const dicomwebDetail = (summary: string, description: string) => ({
   summary,
   description,
@@ -247,6 +311,19 @@ const dicomwebDetail = (summary: string, description: string) => ({
 })
 
 export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb'] })
+
+  // ==================== Health / Status ====================
+
+  .get('/status', async () => {
+    return probePacs()
+  }, {
+    response: PacsStatusResponse,
+    detail: {
+      summary: 'PACS Status',
+      description: 'Check whether a PACS is configured and reachable. Does not require authentication so the frontend can show appropriate UI before users attempt to upload.',
+      tags: ['dicomweb'],
+    },
+  })
 
   // ==================== QIDO-RS (Query) ====================
 

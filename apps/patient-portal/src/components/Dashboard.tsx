@@ -53,6 +53,7 @@ import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
 import { DocumentImport } from "@/components/DocumentImport"
 import { DicomUpload } from "@/components/DicomUpload"
+import { checkPacsStatus } from "@/lib/dicomweb"
 import {
   Heart,
   Pill,
@@ -78,6 +79,7 @@ export function Dashboard() {
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
   const [showDicomUpload, setShowDicomUpload] = useState(false)
+  const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null) // null = not yet checked
   const [patient, setPatient] = useState<Patient | null>(null)
   const [conditions, setConditions] = useState<Condition[]>([])
   const [allergies, setAllergies] = useState<AllergyIntolerance[]>([])
@@ -171,6 +173,9 @@ export function Dashboard() {
         if (gVariants.status === "fulfilled") setVariants(gVariants.value)
         if (gDiagImpl.status === "fulfilled") setDiagnosticImplications(gDiagImpl.value)
         if (gTheraImpl.status === "fulfilled") setTherapeuticImplications(gTheraImpl.value)
+
+        // Non-blocking PACS availability check
+        checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
       } finally {
@@ -210,9 +215,15 @@ export function Dashboard() {
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowDicomUpload(true)}>
-            <FileImage className="size-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDicomUpload(true)}
+            title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : undefined}
+          >
+            <FileImage className={`size-4 ${pacsAvailable === false ? "opacity-50" : ""}`} />
             Upload Imaging
+            {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">(offline)</span>}
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
             <Upload className="size-4" />
