@@ -144,6 +144,93 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
   }
 }
 
+/** Forward a POST (STOW-RS) request to the upstream PACS, streaming the body through */
+async function proxyDicomWebPost(request: Request, subPath: string, set: Record<string, any>): Promise<Response | string | object> {
+  if (!config.dicomweb.enabled) {
+    set.status = 501
+    return { error: 'DICOMweb proxy is not configured', message: 'Set DICOMWEB_BASE_URL to enable DICOM imaging' }
+  }
+
+  const authHeader = request.headers.get('authorization') || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '')
+  if (!token) {
+    set.status = 401
+    return { error: 'Authentication required' }
+  }
+
+  try {
+    await validateToken(token)
+  } catch (err) {
+    if (err instanceof AuthenticationError) {
+      set.status = 401
+      return { error: 'Authentication failed', details: { message: err.message } }
+    }
+    throw err
+  }
+
+  const requestUrl = new URL(request.url)
+  const target = buildUpstreamUrl(subPath, requestUrl.search)
+
+  const headers = new Headers()
+  // STOW-RS requires the Content-Type with boundary for multipart/related
+  const contentType = request.headers.get('content-type')
+  if (contentType) headers.set('content-type', contentType)
+  const accept = request.headers.get('accept')
+  if (accept) headers.set('accept', accept)
+  if (config.dicomweb.upstreamAuth) {
+    headers.set('authorization', config.dicomweb.upstreamAuth)
+  }
+
+  const controller = new AbortController()
+  // STOW-RS uploads can be large — use 5× the normal timeout
+  const timeout = setTimeout(() => controller.abort(), config.dicomweb.timeoutMs * 5)
+
+  try {
+    logger.fhir.info('DICOMweb STOW-RS →', { target })
+
+    const resp = await fetch(target, {
+      method: 'POST',
+      headers,
+      body: request.body,
+      signal: controller.signal,
+      // @ts-expect-error duplex needed for streaming body in some runtimes
+      duplex: 'half',
+    })
+
+    set.status = resp.status
+    const passthroughHeaders = ['content-type', 'content-length', 'etag']
+    for (const h of passthroughHeaders) {
+      const v = resp.headers.get(h)
+      if (v) set.headers = { ...set.headers, [h]: v }
+    }
+
+    const respContentType = resp.headers.get('content-type') || ''
+    if (respContentType.includes('json') || respContentType.includes('xml')) {
+      return new Response(await resp.text(), {
+        status: resp.status,
+        headers: { 'content-type': respContentType },
+      })
+    }
+
+    const buffer = await resp.arrayBuffer()
+    return new Response(buffer, {
+      status: resp.status,
+      headers: { 'content-type': respContentType },
+    })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      logger.fhir.error('DICOMweb STOW-RS timeout', { target })
+      set.status = 504
+      return { error: 'DICOMweb upstream timeout (STOW-RS)' }
+    }
+    logger.fhir.error('DICOMweb STOW-RS error', { target, error: err })
+    set.status = 502
+    return { error: 'DICOMweb upstream error', details: err instanceof Error ? { message: err.message } : undefined }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 // ----- Elysia route plugin -----
 
 const DicomWebErrorResponse = t.Object({
@@ -292,4 +379,19 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
   }, {
     params: t.Object({ studyUID: UidParam, seriesUID: UidParam, sopUID: UidParam }),
     detail: dicomwebDetail('Retrieve Bulkdata (WADO-RS)', 'Retrieve bulkdata for an instance (e.g. pixel data by tag)'),
+  })
+
+  // ==================== STOW-RS (Store) ====================
+
+  .post('/studies', async ({ request, set }) => {
+    return proxyDicomWebPost(request, '/studies', set)
+  }, {
+    detail: dicomwebDetail('Store Instances (STOW-RS)', 'Store DICOM instances via multipart/related POST. Body must be multipart/related with application/dicom parts.'),
+  })
+
+  .post('/studies/:studyUID', async ({ request, params, set }) => {
+    return proxyDicomWebPost(request, `/studies/${params.studyUID}`, set)
+  }, {
+    params: t.Object({ studyUID: UidParam }),
+    detail: dicomwebDetail('Store Instances in Study (STOW-RS)', 'Store DICOM instances into a specific study via multipart/related POST.'),
   })

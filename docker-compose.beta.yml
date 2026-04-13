@@ -85,11 +85,12 @@ services:
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com
+      DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
     labels:
       caddy: beta.proxy-smart.com
-      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg"
+      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg"
       caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
       caddy.3_reverse_proxy: "{{upstreams 8445}}"
     depends_on:
@@ -111,6 +112,31 @@ services:
       hapi.fhir.fhir_version: R4
       hapi.fhir.cors.allow_Credentials: "true"
       hapi.fhir.cors.allowed_origin: "*"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxy-smart
+
+  orthanc:
+    image: orthancteam/orthanc:26.1.0
+    container_name: proxy-smart-orthanc-beta
+    restart: unless-stopped
+    environment:
+      ORTHANC__NAME: "Proxy Smart PACS"
+      ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      ORTHANC__DICOM_WEB__ENABLE: "true"
+      ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
+      ORTHANC__POSTGRESQL__ENABLE_INDEX: "true"
+      ORTHANC__POSTGRESQL__HOST: "postgres"
+      ORTHANC__POSTGRESQL__PORT: 5432
+      ORTHANC__POSTGRESQL__DATABASE: "orthanc"
+      ORTHANC__POSTGRESQL__USERNAME: "postgres"
+      ORTHANC__POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      ORTHANC__POSTGRESQL__ENABLE_STORAGE: "false"
+    volumes:
+      - orthanc_data:/var/lib/orthanc/db
     depends_on:
       postgres:
         condition: service_healthy
@@ -142,3 +168,4 @@ networks:
 
 volumes:
   postgres_data:
+  orthanc_data:

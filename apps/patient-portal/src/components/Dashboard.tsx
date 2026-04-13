@@ -52,6 +52,7 @@ import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
 import { DocumentImport } from "@/components/DocumentImport"
+import { DicomUpload } from "@/components/DicomUpload"
 import {
   Heart,
   Pill,
@@ -68,6 +69,7 @@ import {
   Stethoscope,
   Laptop,
   Upload,
+  FileImage,
 } from "lucide-react"
 import { format } from "date-fns"
 
@@ -75,6 +77,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
+  const [showDicomUpload, setShowDicomUpload] = useState(false)
   const [patient, setPatient] = useState<Patient | null>(null)
   const [conditions, setConditions] = useState<Condition[]>([])
   const [allergies, setAllergies] = useState<AllergyIntolerance[]>([])
@@ -200,11 +203,17 @@ export function Dashboard() {
     <div className="space-y-6">
       {patient && <PatientBanner patient={patient} />}
 
-      {/* Document Import */}
+      {/* Document Import / DICOM Upload */}
       {showImport ? (
         <DocumentImport onClose={() => setShowImport(false)} />
+      ) : showDicomUpload ? (
+        <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowDicomUpload(true)}>
+            <FileImage className="size-4" />
+            Upload Imaging
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
             <Upload className="size-4" />
             Import Document
