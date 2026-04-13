@@ -319,7 +319,8 @@ describe('DICOMweb proxy routes', () => {
 
     expect(res.status).toBe(502)
     const json = await res.json()
-    expect(json.error).toContain('upstream error')
+    expect(json.error).toContain('PACS server is not reachable')
+    expect(json.message).toContain('not responding')
   })
 
   // ==================== Series-level routes ====================
