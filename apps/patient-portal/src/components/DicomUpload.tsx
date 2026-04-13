@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import {
   Card,
   CardContent,
@@ -13,19 +13,33 @@ import {
   FileImage,
   CheckCircle2,
   AlertTriangle,
+  ServerOff,
   X,
 } from "lucide-react"
-import { storeInstances, type StowResult } from "@/lib/dicomweb"
+import { storeInstances, checkPacsStatus, type StowResult, type PacsStatus } from "@/lib/dicomweb"
 
-type UploadStep = "select" | "uploading" | "done"
+type UploadStep = "checking" | "unavailable" | "select" | "uploading" | "done"
 
 export function DicomUpload({ onClose }: { onClose: () => void }) {
-  const [step, setStep] = useState<UploadStep>("select")
+  const [step, setStep] = useState<UploadStep>("checking")
   const [files, setFiles] = useState<File[]>([])
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<StowResult | null>(null)
+  const [pacsStatus, setPacsStatus] = useState<PacsStatus | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Pre-check PACS availability on mount
+  useEffect(() => {
+    checkPacsStatus().then(status => {
+      setPacsStatus(status)
+      if (status.configured && status.reachable) {
+        setStep("select")
+      } else {
+        setStep("unavailable")
+      }
+    })
+  }, [])
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     const dcmFiles = Array.from(incoming).filter(f =>
@@ -72,6 +86,72 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  // ── Checking PACS status step ───────────────────────────────────────────
+
+  if (step === "checking") {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Spinner size="sm" />
+            Checking Imaging Server
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            Verifying connection to the imaging server (PACS)...
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // ── PACS unavailable step ──────────────────────────────────────────────
+
+  if (step === "unavailable") {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ServerOff className="size-4 text-muted-foreground" />
+            Imaging Upload Unavailable
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {pacsStatus?.message || "The imaging server (PACS) is not available at this time."}
+          </p>
+          {pacsStatus && !pacsStatus.configured && (
+            <p className="text-xs text-muted-foreground">
+              DICOM imaging upload has not been configured for this environment.
+              Contact your administrator to set up a PACS connection.
+            </p>
+          )}
+          {pacsStatus?.configured && !pacsStatus.reachable && (
+            <p className="text-xs text-muted-foreground">
+              A PACS server is configured but not responding. This may be a temporary issue.
+              Please try again later or contact your administrator.
+            </p>
+          )}
+          <div className="flex items-center justify-between">
+            <Button variant="outline" size="sm" onClick={onClose}>
+              Close
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => {
+              setStep("checking")
+              checkPacsStatus().then(status => {
+                setPacsStatus(status)
+                setStep(status.configured && status.reachable ? "select" : "unavailable")
+              })
+            }}>
+              Retry
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   // ── Select files step ──────────────────────────────────────────────────
