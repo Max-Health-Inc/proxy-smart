@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131802.68b7ac1e] - 2026-04-13
+
+- 🔧 Chores & Improvements: Sync package versions after rebase
+- 🔧 Chores & Improvements: Start infra services before canary; dump logs on failure
+- 📚 Documentation: Update CHANGELOG.md for PR #356
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/357
+
+
 ## [0.0.5-alpha.202604131748.f8c77aab] - 2026-04-13
 
 - ✨ Features: Introduces expectedIssuer getter for OpenID issuer validation; lazy JWKS handling with runtime-config-aware client and caching; dynamic reinitialization on JWKS URI changes
