@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131748.f8c77aab] - 2026-04-13
+
+- ✨ Features: Introduces expectedIssuer getter for OpenID issuer validation; lazy JWKS handling with runtime-config-aware client and caching; dynamic reinitialization on JWKS URI changes
+- 🔧 Chores & Improvements: Test utilities updated to use a no-op logger proxy to safely isolate tests; ensured docker network for canary starts only if proxy-smart-beta-network exists to prevent issues after prune/full stop
+- ⚠️ Breaking Changes: None
+- 📚 Documentation: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/356
+
+
 ## [0.0.5-alpha.202604131657.d291256d] - 2026-04-13
 
 - 🔧 Chores & Improvements: Update GitHub Actions caching scope for beta backend image (cache-from/cache-to) from beta-backend to beta-backend-v2
