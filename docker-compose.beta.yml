@@ -93,6 +93,12 @@ services:
       caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg"
       caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
       caddy.3_reverse_proxy: "{{upstreams 8445}}"
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:8445/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       - keycloak
     networks:
