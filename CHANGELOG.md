@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131345.23848337] - 2026-04-13
+
+- 🔧 Chores & Improvements: PACS status pre-check on mount integrated into dashboard and upload flow; enhanced PacsStatus typing and status handling across dicomweb.ts and UI components
+- 🐛 Bug Fixes: Improved error logging for backend dicomweb routes to include connection/refusal details and friendlier messages
+- ⚠️ Breaking Changes: None detected
+- 📚 Documentation: None detected
+- ✨ Features: Added PACS status check flow (including new UploadStep states and non-blocking availability check)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/345
+
+
 ## [0.0.5-alpha.202604131328.38a77534] - 2026-04-13
 
 - ✨ Features: patient DICOM upload via Orthanc PACS (beta)
