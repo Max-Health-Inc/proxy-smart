@@ -20,6 +20,7 @@ import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
 import { brandingAdminRoutes } from './branding'
 import { scopeMappersRoutes } from './scope-mappers'
+import { documentImportRoutes } from './document-import'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -114,6 +115,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(userFederationRoutes)
   // SMART scope protocol mapper management
   .use(scopeMappersRoutes)
+  // Document import (PDF → AI → FHIR)
+  .use(documentImportRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

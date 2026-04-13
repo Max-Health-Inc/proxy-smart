@@ -1,0 +1,13 @@
+/**
+ * Patient-facing API routes (/api/*)
+ *
+ * These endpoints are accessible with SMART access tokens (unlike /admin/*
+ * which requires Keycloak admin tokens). Each route validates the Bearer
+ * token independently.
+ */
+
+import { Elysia } from 'elysia'
+import { patientDocumentImportRoutes } from './document-import'
+
+export const apiRoutes = new Elysia({ prefix: '/api' })
+  .use(patientDocumentImportRoutes)

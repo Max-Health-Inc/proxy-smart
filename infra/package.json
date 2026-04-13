@@ -27,10 +27,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.6.0",
     "aws-cdk": "^2.1113.0",
     "eslint": "^10.1.0",
-    "globals": "^17.4.0",
+    "globals": "^17.5.0",
     "tsx": "^4.21.0",
     "typescript": "6.0.2",
     "typescript-eslint": "^8.57.2"
