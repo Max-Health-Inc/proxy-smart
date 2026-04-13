@@ -248,6 +248,8 @@ jobs:
 
             # ── Ensure infrastructure services are up before canary testing ──
             echo '🏗️ Starting infrastructure services (postgres, keycloak, hapi-fhir, orthanc)...'
+            # Remove orphaned network (may exist from manual docker network create after prune)
+            docker network rm proxy-smart-beta-network 2>/dev/null || true
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d postgres
             # Wait for postgres before starting keycloak
             for i in \$(seq 1 30); do
