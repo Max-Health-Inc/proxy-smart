@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131601.650eb30a] - 2026-04-13
+
+- 🔧 Chores & Improvements: Add health checks across services and Docker Compose, including health-based readiness for Caddy reverse_proxy entries and a new healthcheck script
+- 🔧 Chores & Improvements: Implement blue/green canary deployment flow with separate canary container and pre-swap validation
+- 🔧 Chores & Improvements: Update beta deploy workflow to use canary flow and Bun-based backend health check on port 8445
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/351
+
+
 ## [0.0.5-alpha.202604131554.90d89c8d] - 2026-04-13
 
 - 🔧 Chores & Improvements: Beta deploy workflow updated to blue/green canary flow with separate canary container and pre-swap validation on port 9445
