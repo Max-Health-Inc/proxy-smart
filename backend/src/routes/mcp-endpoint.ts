@@ -57,10 +57,14 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
   // Register route-based tools from the tool registry (if initialized)
   if (isToolRegistryInitialized()) {
     const registry = getToolRegistry()
+    const cfg = loadMcpEndpointConfig()
 
     for (const [toolName, meta] of registry) {
       // Respect admin MCP-endpoint tool config
       if (!isToolExposed(toolName)) continue
+
+      // Skip readOnly (GET) tools when exposeResourcesAsTools is disabled
+      if (meta.readOnly && !cfg.exposeResourcesAsTools) continue
 
       // Permission: skip admin-only tools when caller has no admin role
       if (!meta.public && !userRoles.includes('admin')) continue
@@ -69,21 +73,30 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       const inputSchema = getMergedInputSchema(meta)
       const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
 
+      // Add readOnlyHint annotation for GET routes so clients skip confirmation
+      const annotations = meta.readOnly
+        ? { readOnlyHint: true, idempotentHint: true } as const
+        : undefined
+
       if (zodSchema) {
         server.registerTool(
           toolName,
           {
             description: generateDescription(toolName, meta),
             inputSchema: zodSchema,
+            ...(annotations && { annotations }),
           },
           async (args: unknown) => {
             return executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current)
           },
         )
       } else {
-        server.tool(
+        server.registerTool(
           toolName,
-          generateDescription(toolName, meta),
+          {
+            description: generateDescription(toolName, meta),
+            ...(annotations && { annotations }),
+          },
           async () => {
             return executeTool(toolName, meta, {}, tokenRef.current)
           },
@@ -303,9 +316,11 @@ async function executeTool(
     for (const key of Object.keys(pathParams)) {
       delete bodyArgs[key]
     }
+    // For GET routes, non-path-param args are query params; for mutations they're body
+    const isGetRoute = meta.method === 'GET'
     let responseStatus = 200
     const elysiaContext = {
-      body: bodyArgs,
+      body: isGetRoute ? {} : bodyArgs,
       headers: {
         ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
         'content-type': 'application/json',
@@ -315,7 +330,7 @@ async function executeTool(
         headers: {} as Record<string, string>,
       },
       params: pathParams,
-      query: {},
+      query: isGetRoute ? bodyArgs : {},
       request: new Request(`http://localhost${meta.path}`, {
         method: meta.method,
         headers: {

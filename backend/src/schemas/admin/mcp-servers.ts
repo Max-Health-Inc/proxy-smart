@@ -13,8 +13,7 @@ export const McpServerInfo = t.Object({
   url: t.String({ description: 'MCP server URL' }),
   type: t.Union([
     t.Literal('internal'),
-    t.Literal('external'),
-    t.Literal('generated')
+    t.Literal('external')
   ], { description: 'Server type' }),
   status: t.Union([
     t.Literal('connected'),

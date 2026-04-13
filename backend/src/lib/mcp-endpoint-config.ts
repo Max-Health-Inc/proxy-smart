@@ -18,6 +18,8 @@ export interface McpEndpointConfig {
   disabledTools: string[]
   /** When set, only these tools are exposed (allowlist). null = use blocklist mode. */
   enabledTools: string[] | null
+  /** When true, read-only GET resources are also exposed as MCP tools with readOnlyHint annotation */
+  exposeResourcesAsTools: boolean
   /** Last modified timestamp */
   updatedAt: string
 }
@@ -30,6 +32,7 @@ const DEFAULT_CONFIG: McpEndpointConfig = {
   enabled: true,
   disabledTools: [],
   enabledTools: null,
+  exposeResourcesAsTools: true,
   updatedAt: new Date().toISOString(),
 }
 
@@ -48,6 +51,7 @@ export function loadMcpEndpointConfig(): McpEndpointConfig {
       enabled: data.enabled ?? DEFAULT_CONFIG.enabled,
       disabledTools: Array.isArray(data.disabledTools) ? data.disabledTools : [],
       enabledTools: Array.isArray(data.enabledTools) ? data.enabledTools : null,
+      exposeResourcesAsTools: data.exposeResourcesAsTools ?? DEFAULT_CONFIG.exposeResourcesAsTools,
       updatedAt: data.updatedAt ?? new Date().toISOString(),
     }
     return cached

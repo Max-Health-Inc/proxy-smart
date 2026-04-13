@@ -1140,7 +1140,6 @@
   "UUID LDAP Attribute": "UUID LDAP Attribute",
   "Unable to Connect": "Unable to Connect",
   "Unable to Load Launch Contexts": "Unable to Load Launch Contexts",
-  "Unable to connect to MCP server. Please make sure it is running:\\n\\n```bash\\ncd mcp-server\\nuv run python run.py\\n```": "Unable to connect to MCP server. Please make sure it is running:\\n\\n```bash\\ncd mcp-server\\nuv run python run.py\\n```",
   "Unable to connect to server": "Unable to connect to server",
   "Unable to connect to the AI service. Please check your connection and try again.": "Unable to connect to the AI service. Please check your connection and try again.",
   "Unable to connect to this FHIR server or retrieve metadata": "Unable to connect to this FHIR server or retrieve metadata",

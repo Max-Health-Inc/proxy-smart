@@ -66,10 +66,13 @@ describe('Tool Registry — Schema Extraction', () => {
     expect(names).toContain('create_admin_restart')
   })
 
-  it('skips GET routes', () => {
+  it('includes GET routes as read-only tools', () => {
     const names = Array.from(tools.keys())
-    const hasGet = names.some(n => n.includes('health'))
-    expect(hasGet).toBe(false)
+    expect(names).toContain('get_admin_health')
+    const healthTool = tools.get('get_admin_health')
+    expect(healthTool).toBeDefined()
+    expect(healthTool!.readOnly).toBe(true)
+    expect(healthTool!.method).toBe('GET')
   })
 
   it('skips routes outside the prefix', () => {

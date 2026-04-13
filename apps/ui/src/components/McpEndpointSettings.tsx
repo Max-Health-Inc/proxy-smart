@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Badge, Button } from '@proxy-smart/shared-ui';
 import { Checkbox } from './ui/checkbox';
+import { Switch } from './ui/switch';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ interface McpEndpointStatus {
   resources: McpResourceInfo[];
   disabledTools: string[];
   enabledTools: string[] | null;
+  exposeResourcesAsTools: boolean;
   updatedAt: string;
 }
 
@@ -64,7 +66,7 @@ async function fetchEndpointStatus(): Promise<McpEndpointStatus> {
 }
 
 async function updateEndpointConfig(
-  body: Partial<{ enabled: boolean; disabledTools: string[]; enabledTools: string[] | null }>,
+  body: Partial<{ enabled: boolean; disabledTools: string[]; enabledTools: string[] | null; exposeResourcesAsTools: boolean }>,
 ): Promise<McpEndpointStatus> {
   const token = await getStoredToken();
   const res = await fetch(`${config.api.baseUrl}/admin/mcp-endpoint`, {
@@ -113,6 +115,20 @@ export function McpEndpointSettings() {
     try {
       const data = await updateEndpointConfig({ enabled: !status.enabled });
       setStatus(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleExposeResourcesAsTools = async () => {
+    if (!status) return;
+    setSaving(true);
+    try {
+      const data = await updateEndpointConfig({ exposeResourcesAsTools: !status.exposeResourcesAsTools });
+      setStatus(data);
+      setPendingDisabled(new Set(data.disabledTools));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -257,6 +273,30 @@ export function McpEndpointSettings() {
           </div>
         )}
       </div>
+
+      {/* ── Resources as Tools Toggle ─────────────────────────────── */}
+      {status.enabled && (
+        <div className="bg-card/70 backdrop-blur-sm p-5 rounded-2xl border border-border/50 shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Database className="w-5 h-5 text-blue-500" />
+              <div>
+                <h4 className="text-sm font-semibold text-foreground">
+                  {t('Expose Resources as Tools')}
+                </h4>
+                <p className="text-xs text-muted-foreground">
+                  {t('Read-only GET endpoints are always available as MCP resources. Enable this to also register them as tools with readOnlyHint so AI models can invoke them directly.')}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={status.exposeResourcesAsTools}
+              onCheckedChange={toggleExposeResourcesAsTools}
+              disabled={saving}
+            />
+          </div>
+        </div>
+      )}
 
       {/* ── Tool Selection ────────────────────────────────────────────── */}
       {status.enabled && (

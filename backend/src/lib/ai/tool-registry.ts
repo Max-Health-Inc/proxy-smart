@@ -38,6 +38,7 @@ export interface ToolMetadata {
   schema?: TSchema
   paramsSchema?: TSchema
   public?: boolean // Whether tool is public (no auth required)
+  readOnly?: boolean // Whether tool is read-only (GET route)
 }
 
 export interface ResourceMetadata {
@@ -145,25 +146,30 @@ export function extractRouteTools(app: unknown, options?: { prefixes?: string[] 
     const matchesPrefix = routePrefixes.some(prefix => path.startsWith(prefix))
     if (!matchesPrefix) continue
     
-    // Skip read-only / non-action methods (tools should be actions)
-    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') continue
+    // Skip non-action methods that aren't useful as tools
+    if (method === 'HEAD' || method === 'OPTIONS') continue
     
     // Convert route path to tool name
-    // e.g., /api/users/:id -> update_user_by_id (if PUT)
-    //       /api/users -> create_user (if POST)
     const toolName = pathToToolName(path, method)
     
     // Extract schema from route — prefer hooks (Elysia 1.x), fall back to schema (legacy)
     const bodySchema = hooks?.body ?? legacySchema?.body
     const paramsSchema = hooks?.params ?? legacySchema?.params
+    // GET routes use query params instead of body
+    const querySchema = (route as { hooks?: { query?: TSchema } }).hooks?.query
+      ?? (route as { schema?: { query?: TSchema } }).schema?.query
+    
+    const isGet = method === 'GET'
     
     tools.set(toolName, {
       path,
       method,
       handler,
-      schema: bodySchema,
+      // For GET routes, use query schema as the input; for mutations, use body
+      schema: isGet ? querySchema : bodySchema,
       paramsSchema,
       public: meta?.public || false,
+      readOnly: isGet,
     })
   }
   
@@ -273,6 +279,7 @@ function pathToToolName(path: string, method: string): string {
   
   // Add method prefix based on HTTP verb
   const methodMap: Record<string, string> = {
+    GET: 'get',
     POST: 'create',
     PUT: 'update',
     PATCH: 'update',
@@ -382,8 +389,7 @@ function generateDescription(toolName: string, metadata: ToolMetadata): string {
     create: 'Create a new',
     update: 'Update an existing',
     delete: 'Delete an existing',
-    list: 'List all',
-    get: 'Get details of',
+    get: 'Get',
   }
   
   const actionDesc = actionDescriptions[action] || action

@@ -221,15 +221,6 @@ const exportSpec = async () => {
     const specJson = JSON.stringify(spec, null, 2)
     writeFileSync(outputPath, specJson)
     console.log(`✅ OpenAPI spec exported to: ${outputPath}`)
-
-    // Also copy to mcp-server folder for the Python generator
-    const mcpServerPath = join(process.cwd(), '..', 'mcp-server', 'openapi.json')
-    try {
-      writeFileSync(mcpServerPath, specJson)
-      console.log(`✅ OpenAPI spec copied to: ${mcpServerPath}`)
-    } catch (copyError) {
-      console.warn(`⚠️  Failed to copy to mcp-server folder: ${copyError}`)
-    }
     
     serverInstance?.stop()
     process.exit(0)

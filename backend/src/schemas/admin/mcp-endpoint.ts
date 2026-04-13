@@ -31,6 +31,7 @@ export const McpEndpointStatusResponse = t.Object({
   enabledTools: t.Union([t.Array(t.String()), t.Null()], {
     description: 'Allowlisted tool names (null = blocklist mode)',
   }),
+  exposeResourcesAsTools: t.Boolean({ description: 'Whether read-only GET resources are also exposed as MCP tools with readOnlyHint' }),
   updatedAt: t.String({ description: 'Last config update timestamp' }),
 })
 
@@ -40,6 +41,7 @@ export const McpEndpointUpdateBody = t.Object({
   enabledTools: t.Optional(
     t.Union([t.Array(t.String()), t.Null()], { description: 'Tools to allow (null = blocklist mode)' }),
   ),
+  exposeResourcesAsTools: t.Optional(t.Boolean({ description: 'Whether to also expose read-only GET resources as MCP tools with readOnlyHint' })),
 })
 
 // ── Inferred types ───────────────────────────────────────────────────────────
