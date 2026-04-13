@@ -15,8 +15,25 @@ mock.module('@opendataloader/pdf', () => ({
   convert: convertMock,
 }))
 
+// NOTE: mock.module is global in Bun — partial mocks leak to other test files.
+// Use a Proxy so every namespace (server, consent, fhir, …) and top-level
+// method (info, debug, …) resolves to a no-op, keeping other suites safe.
+const noop = () => {}
+const noopCategory = { error: noop, warn: noop, info: noop, debug: noop, trace: noop }
+const noopLogger = new Proxy({} as Record<string, unknown>, {
+  get(_target, prop) {
+    if (typeof prop === 'string') {
+      if (['error', 'warn', 'info', 'debug', 'trace'].includes(prop)) return noop
+      return noopCategory
+    }
+    return undefined
+  },
+})
 mock.module('@/lib/logger', () => ({
-  logger: { server: { info: () => {}, warn: () => {}, error: () => {} } },
+  logger: noopLogger,
+  createLogger: () => noopLogger,
+  PerformanceTimer: class { start() {} stop() {} },
+  createRequestLogger: () => ({ request: noop, response: noop }),
 }))
 
 // Import the adapter AFTER mocking

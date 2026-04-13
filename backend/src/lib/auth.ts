@@ -1,20 +1,37 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
+import jwksClient, { JwksClient } from 'jwks-rsa'
 import { config } from '../config'
 import { AuthenticationError, ConfigurationError } from './admin-utils'
 import { logger } from './logger'
 
-// Only initialize JWKS client if Keycloak is configured
-const jwks = config.keycloak.jwksUri ? jwksClient({ jwksUri: config.keycloak.jwksUri }) : null
+/**
+ * Lazy JWKS client that re-creates itself when the configured JWKS URI changes.
+ * This is necessary because the Keycloak realm/URL can be changed at runtime
+ * via the admin keycloak-config endpoint.
+ */
+let _jwks: JwksClient | null = null
+let _jwksUri: string | null = null
+
+function getJwksClient(): JwksClient {
+  const currentUri = config.keycloak.jwksUri
+  if (!currentUri) {
+    throw new ConfigurationError('Keycloak is not configured - cannot validate tokens')
+  }
+  // Re-create the client if the URI changed (e.g. realm was reconfigured)
+  if (!_jwks || _jwksUri !== currentUri) {
+    _jwks = jwksClient({ jwksUri: currentUri, cache: true, rateLimit: true })
+    _jwksUri = currentUri
+    logger.auth.debug('JWKS client (re-)initialized', { jwksUri: currentUri })
+  }
+  return _jwks
+}
 
 async function getKey(header: jwt.JwtHeader) {
   try {
-    if (!jwks) {
-      throw new ConfigurationError('Keycloak is not configured - cannot validate tokens')
-    }
+    const client = getJwksClient()
     
     logger.auth.debug('Fetching signing key', { kid: header.kid, alg: header.alg })
-    const key = await jwks.getSigningKey(header.kid!)
+    const key = await client.getSigningKey(header.kid!)
     logger.auth.debug('Successfully fetched signing key')
     return key.getPublicKey()
   } catch (error) {
@@ -28,7 +45,9 @@ async function getKey(header: jwt.JwtHeader) {
 }
 
 /**
- * Validates a JWT token using Keycloak's public keys
+ * Validates a JWT token using Keycloak's public keys.
+ * Verifies signature, expiry, and issuer (iss).
+ *
  * @param token JWT token to validate
  * @returns Decoded token payload
  * @throws AuthenticationError for invalid/expired tokens
@@ -57,9 +76,15 @@ export async function validateToken(token: string): Promise<JwtPayload> {
     // Get the signing key
     const key = await getKey(decoded.header)
     
-    // Verify the token
-    logger.auth.debug('Verifying token with public key')
-    const verified = jwt.verify(token, key) as JwtPayload
+    // Build verify options — enforce issuer when configured
+    const verifyOptions: jwt.VerifyOptions = {}
+    const expectedIssuer = config.keycloak.expectedIssuer
+    if (expectedIssuer) {
+      verifyOptions.issuer = expectedIssuer
+    }
+
+    // Verify the token (signature + expiry + issuer)
+    const verified = jwt.verify(token, key, verifyOptions) as JwtPayload
     logger.auth.debug('Token verified successfully')
     
     return verified
