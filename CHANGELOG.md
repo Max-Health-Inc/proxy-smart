@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131611.0165ae0c] - 2026-04-13
+
+- 🔧 Chores & Improvements: Minor string escaping update in deploy-beta workflow (no logic changes)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/352
+
+
 ## [0.0.5-alpha.202604131601.650eb30a] - 2026-04-13
 
 - 🔧 Chores & Improvements: Add health checks across services and Docker Compose, including health-based readiness for Caddy reverse_proxy entries and a new healthcheck script
