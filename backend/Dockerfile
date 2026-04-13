@@ -25,6 +25,14 @@ RUN bun run build
 
 # Production stage
 FROM base AS production
+
+# Install minimal runtime dependencies (Java 21 needed for @opendataloader/pdf)
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+    ca-certificates \
+    openjdk-21-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./

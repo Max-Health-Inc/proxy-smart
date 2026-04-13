@@ -105,10 +105,11 @@ RUN bun run docs:build
 FROM base AS backend
 WORKDIR /app
 
-# Install minimal runtime dependencies
+# Install minimal runtime dependencies (Java 21 needed for @opendataloader/pdf)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     ca-certificates \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy built backend

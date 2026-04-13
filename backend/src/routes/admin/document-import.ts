@@ -28,14 +28,14 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
         return { error: 'AI not configured', details: 'OPENAI_API_KEY is required for document import' }
       }
 
-      const { file, patientId } = body
+      const { file, patientId, engine } = body
 
       if (file.type !== 'application/pdf') {
         set.status = 400
         return { error: 'Invalid file type', details: 'Only PDF files are supported' }
       }
 
-      // Write to temp file for zerox
+      // Write to temp file for PDF extraction
       const tempDir = join(tmpdir(), 'proxy-smart-doc-import')
       await mkdir(tempDir, { recursive: true })
       const tempPath = join(tempDir, `${randomUUID()}.pdf`)
@@ -47,13 +47,14 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
 
         const pdfBase64 = buffer.toString('base64')
 
-        const result = await importDocument(tempPath, file.name, pdfBase64, { patientId })
+        const result = await importDocument(tempPath, file.name, pdfBase64, { patientId, engine })
 
         // Return validated resources — the client POSTs them through the FHIR proxy
         return {
           success: true,
           fileName: result.fileName,
           pagesProcessed: result.pagesProcessed,
+          engine: result.engine,
           /** Validated FHIR resources — POST each through your FHIR proxy */
           resources: result.resources.map(r => ({
             resourceType: r.resourceType,
@@ -83,12 +84,14 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
       body: t.Object({
         file: t.File({ description: 'PDF document to import' }),
         patientId: t.String({ description: 'FHIR Patient ID to associate resources with' }),
+        engine: t.Optional(t.Literal('opendataloader', { default: 'opendataloader', description: 'PDF extraction engine' })),
       }),
       response: {
         200: t.Object({
           success: t.Boolean(),
           fileName: t.String(),
           pagesProcessed: t.Number(),
+          engine: t.Literal('opendataloader'),
           resources: t.Array(t.Object({
             resourceType: t.String(),
             resource: t.Any({ description: 'Validated FHIR R4 resource — POST to your FHIR proxy' }),
@@ -110,7 +113,7 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
       },
       detail: {
         summary: 'Import Document',
-        description: 'Upload a PDF, extract clinical data using AI + OCR (Zerox), validate against IPS FHIR profiles (babelfhir-ts) with up to 10 self-healing retries. Returns validated FHIR resources for the client to POST through the FHIR proxy.',
+        description: 'Upload a PDF, extract clinical data using AI + OCR (OpenDataLoader), validate against IPS FHIR profiles (babelfhir-ts) with up to 10 self-healing retries. Returns validated FHIR resources for the client to POST through the FHIR proxy.',
         tags: ['admin', 'document-import'],
       },
     },
