@@ -87,8 +87,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/backend:beta-latest
-          cache-from: type=gha,scope=beta-backend
-          cache-to: type=gha,mode=max,scope=beta-backend
+          cache-from: type=gha,scope=beta-backend-v2
+          cache-to: type=gha,mode=max,scope=beta-backend-v2
 
       - name: Build & push frontend image
         uses: docker/build-push-action@v6
