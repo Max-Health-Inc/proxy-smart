@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131159.af43b3e2] - 2026-04-13
+
+- ✨ Features: PDF document import pipeline (OCR → AI → FHIR validation + patient portal review UI)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/342
+
+
 ## [0.0.5-alpha.202604130310.7e87e126] - 2026-04-13
 
 - ✨ Features: add FHIR sample data seeding on beta deploy
