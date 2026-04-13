@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604130310.7e87e126] - 2026-04-13
+
+- ✨ Features: add FHIR sample data seeding on beta deploy
+- 🐛 Bug Fixes: none
+- 📚 Documentation: update CHANGELOG.md for PR #340
+- 🔧 Chores & Improvements: update SMART compliance reports (beta/dev/test) [skip ci], update version to 0.0.5-alpha.202604130310.7e87e126 [skip ci]
+- ⚠️ Breaking Changes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/341
+
+
 ## [0.0.5-alpha.202604130118.674918ed] - 2026-04-13
 
 - 🔧 Chores & Improvements: Update beta/alpha SMART compliance reports and testing tooling
