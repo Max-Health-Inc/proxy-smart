@@ -202,6 +202,7 @@ describe('MCP Endpoint — /mcp', () => {
       enabled: true,
       disabledTools: [],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
   })
@@ -313,7 +314,7 @@ describe('MCP Endpoint — /mcp', () => {
   describe('Disabled endpoint', () => {
     it('returns 404 when both file-config and env-config disable MCP', async () => {
       // Both sources disabled → endpoint must be off
-      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
+      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
       const prevEnv = process.env.MCP_ENDPOINT_ENABLED
       process.env.MCP_ENDPOINT_ENABLED = 'false'
       try {
@@ -326,7 +327,7 @@ describe('MCP Endpoint — /mcp', () => {
     })
 
     it('returns 404 response body is JSON with error message', async () => {
-      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
+      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
       const prevEnv = process.env.MCP_ENDPOINT_ENABLED
       process.env.MCP_ENDPOINT_ENABLED = 'false'
       try {
@@ -341,7 +342,7 @@ describe('MCP Endpoint — /mcp', () => {
 
     it('stays enabled when file-config is disabled but env-config is enabled', async () => {
       // Admin UI toggled off, but env says enabled → endpoint stays up (OR logic)
-      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
+      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
       const app = createApp()
       const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
       // Should NOT be 404 — env config keeps it alive
@@ -350,7 +351,7 @@ describe('MCP Endpoint — /mcp', () => {
 
     it('stays enabled when env-config is disabled but file-config is enabled', async () => {
       // Env says disabled, but admin toggled on → endpoint stays up (OR logic)
-      saveMcpEndpointConfig({ enabled: true, disabledTools: [], enabledTools: null, updatedAt: new Date().toISOString() })
+      saveMcpEndpointConfig({ enabled: true, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
       const prevEnv = process.env.MCP_ENDPOINT_ENABLED
       process.env.MCP_ENDPOINT_ENABLED = 'false'
       try {
