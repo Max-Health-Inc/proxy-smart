@@ -1,0 +1,391 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-max",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "max-nussbaumer",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://proxy-smart.com/identifiers/patients",
+            "value": "quotentiroler"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Nussbaumer",
+            "given": ["Maximilian"]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "email",
+            "value": "max.nussbaumer@maxhealth.tech",
+            "use": "work"
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1995-01-01",
+        "address": [
+          {
+            "use": "home",
+            "line": ["Innsbruck"],
+            "city": "Innsbruck",
+            "state": "Tirol",
+            "postalCode": "6020",
+            "country": "AT"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/max-nussbaumer"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:practitioner-jane",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "dr-jane-smith",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-practitioner"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "https://proxy-smart.com/identifiers/practitioners",
+            "value": "doctor"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Smith",
+            "given": ["Jane"],
+            "prefix": ["Dr."]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "email",
+            "value": "doctor@example.com",
+            "use": "work"
+          }
+        ],
+        "gender": "female"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Practitioner/dr-jane-smith"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:patient-test",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "test-patient",
+        "identifier": [
+          {
+            "system": "https://proxy-smart.com/identifiers/patients",
+            "value": "testuser"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "User",
+            "given": ["Test"]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "email",
+            "value": "testuser@example.com"
+          }
+        ],
+        "gender": "unknown",
+        "birthDate": "1990-06-15"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/test-patient"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:condition-hypertension",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "max-hypertension",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/condition-category",
+                "code": "encounter-diagnosis",
+                "display": "Encounter Diagnosis"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertension"
+            }
+          ],
+          "text": "Hypertension"
+        },
+        "subject": {
+          "reference": "Patient/max-nussbaumer"
+        },
+        "onsetDateTime": "2024-03-15"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/max-hypertension"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:observation-bp",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-bp-latest",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital Signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "85354-9",
+              "display": "Blood pressure panel"
+            }
+          ],
+          "text": "Blood Pressure"
+        },
+        "subject": {
+          "reference": "Patient/max-nussbaumer"
+        },
+        "effectiveDateTime": "2026-04-01T10:00:00Z",
+        "component": [
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8480-6",
+                  "display": "Systolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 128,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          },
+          {
+            "code": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "8462-4",
+                  "display": "Diastolic blood pressure"
+                }
+              ]
+            },
+            "valueQuantity": {
+              "value": 82,
+              "unit": "mmHg",
+              "system": "http://unitsofmeasure.org",
+              "code": "mm[Hg]"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/max-bp-latest"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:encounter-checkup",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "max-annual-checkup",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "185349003",
+                "display": "Encounter for check up"
+              }
+            ],
+            "text": "Annual Check-up"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/max-nussbaumer"
+        },
+        "participant": [
+          {
+            "individual": {
+              "reference": "Practitioner/dr-jane-smith"
+            }
+          }
+        ],
+        "period": {
+          "start": "2026-04-01T09:00:00Z",
+          "end": "2026-04-01T10:30:00Z"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/max-annual-checkup"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:medication-request",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "max-lisinopril",
+        "status": "active",
+        "intent": "order",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 10 MG Oral Tablet"
+            }
+          ],
+          "text": "Lisinopril 10mg"
+        },
+        "subject": {
+          "reference": "Patient/max-nussbaumer"
+        },
+        "authoredOn": "2024-03-15",
+        "requester": {
+          "reference": "Practitioner/dr-jane-smith"
+        },
+        "dosageInstruction": [
+          {
+            "text": "Take one tablet daily in the morning",
+            "timing": {
+              "repeat": {
+                "frequency": 1,
+                "period": 1,
+                "periodUnit": "d"
+              }
+            },
+            "doseAndRate": [
+              {
+                "doseQuantity": {
+                  "value": 1,
+                  "unit": "tablet",
+                  "system": "http://terminology.hl7.org/CodeSystem/v3-orderableDrugForm",
+                  "code": "TAB"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationRequest/max-lisinopril"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:allergy-penicillin",
+      "resource": {
+        "resourceType": "AllergyIntolerance",
+        "id": "max-penicillin-allergy",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/allergyintolerance-verification",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "type": "allergy",
+        "category": ["medication"],
+        "criticality": "high",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "764146007",
+              "display": "Penicillin"
+            }
+          ],
+          "text": "Penicillin"
+        },
+        "patient": {
+          "reference": "Patient/max-nussbaumer"
+        },
+        "recordedDate": "2020-01-10"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "AllergyIntolerance/max-penicillin-allergy"
+      }
+    }
+  ]
+}
