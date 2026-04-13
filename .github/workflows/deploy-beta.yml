@@ -246,6 +246,19 @@ jobs:
             echo '📦 Pulling pre-built images...'
             docker compose -f docker-compose.beta.yml --env-file .env.beta pull
 
+            # ── Ensure infrastructure services are up before canary testing ──
+            echo '🏗️ Starting infrastructure services (postgres, keycloak, hapi-fhir, orthanc)...'
+            docker compose -f docker-compose.beta.yml --env-file .env.beta up -d postgres
+            # Wait for postgres before starting keycloak
+            for i in \$(seq 1 30); do
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T postgres pg_isready -U postgres -d keycloak >/dev/null 2>&1; then
+                echo '  ✅ Postgres ready'
+                break
+              fi
+              sleep 2
+            done
+            docker compose -f docker-compose.beta.yml --env-file .env.beta up -d keycloak hapi-fhir orthanc
+
             # ── Blue-Green: canary-test the new backend image before swapping ──
             echo '🔬 Canary-testing new backend image before swap...'
             BACKEND_IMG=\$(grep BACKEND_IMAGE .env.beta | cut -d= -f2)
@@ -253,9 +266,6 @@ jobs:
 
             # Remove any leftover canary from a previous failed deploy
             docker rm -f \$CANARY_NAME 2>/dev/null || true
-
-            # Ensure the compose network exists (may be missing after prune/full stop)
-            docker network create proxy-smart-beta-network 2>/dev/null || true
 
             # Start canary on the same Docker network so it can reach Keycloak/Postgres
             # Use a different port (9445) to avoid conflict with the running backend
@@ -282,7 +292,7 @@ jobs:
               # Check if container is still running (not crash-looping)
               if ! docker inspect -f '{{.State.Running}}' \$CANARY_NAME 2>/dev/null | grep -q true; then
                 echo '  ❌ Canary container crashed!'
-                docker logs --tail 30 \$CANARY_NAME 2>&1 || true
+                docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
               fi
               if docker exec \$CANARY_NAME curl -sf http://localhost:9445/health >/dev/null 2>&1; then
@@ -293,6 +303,12 @@ jobs:
               echo \"  ⏳ Canary not ready yet (attempt \$i/12)...\"
               sleep 5
             done
+
+            # Always dump canary logs on failure for debugging
+            if [ "\$CANARY_OK" != 'true' ]; then
+              echo '📋 Canary container logs:'
+              docker logs --tail 80 \$CANARY_NAME 2>&1 || true
+            fi
 
             # Clean up canary regardless
             docker rm -f \$CANARY_NAME 2>/dev/null || true
