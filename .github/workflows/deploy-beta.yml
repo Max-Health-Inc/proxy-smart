@@ -269,27 +269,30 @@ jobs:
 
           # Configure Keycloak SMTP (Resend) and enable password reset
           # Uses backend container for curl (same Docker network — avoids host→container IP issues)
+          # SMTP config is persisted in Keycloak's DB, so we skip if already configured.
           if [ -n "${RESEND_API_KEY}" ]; then
-            echo "📧 Configuring Keycloak SMTP via Resend..."
+            echo "📧 Checking Keycloak SMTP configuration..."
             ${SSH_CMD} "
               cd ${DEPLOY_DIR}
               COMPOSE='docker compose -f docker-compose.beta.yml --env-file .env.beta'
               KC_BASE='http://keycloak:8080/auth'
 
-              # Wait for Keycloak to be ready via backend container (Docker DNS)
-              for i in \$(seq 1 40); do
+              # Wait for Keycloak to be ready (it should already be up from the earlier health loop)
+              KC_READY=false
+              for i in \$(seq 1 20); do
                 if \$COMPOSE exec -T backend curl -sf http://keycloak:9000/health/ready >/dev/null 2>&1; then
-                  echo '  ✅ Keycloak ready for SMTP config'
+                  KC_READY=true
                   break
                 fi
-                if [ \$i -eq 40 ]; then
-                  echo '  ⚠️ Keycloak health check timed out — SMTP not configured'
-                  exit 0
-                fi
-                sleep 5
+                sleep 3
               done
 
-              # Get admin token via backend container
+              if [ \"\$KC_READY\" != 'true' ]; then
+                echo '  ⚠️ Keycloak not ready — skipping SMTP config (will retry next deploy)'
+                exit 0
+              fi
+
+              # Get admin token
               KC_PASS=\$(grep KEYCLOAK_ADMIN_PASSWORD .env.beta | cut -d= -f2)
               KC_TOKEN=\$(\$COMPOSE exec -T backend curl -sf -X POST \"\${KC_BASE}/realms/master/protocol/openid-connect/token\" \
                 -H 'Content-Type: application/x-www-form-urlencoded' \
@@ -298,29 +301,39 @@ jobs:
                 -d 'grant_type=password' \
                 -d 'client_id=admin-cli' | grep -o '\"access_token\":\"[^\"]*\"' | cut -d'\"' -f4)
 
-              if [ -n \"\$KC_TOKEN\" ]; then
-                # Update realm with SMTP settings and enable password reset
-                \$COMPOSE exec -T backend curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
-                  -H 'Content-Type: application/json' \
-                  -H \"Authorization: Bearer \$KC_TOKEN\" \
-                  -d '{
-                    \"resetPasswordAllowed\": true,
-                    \"smtpServer\": {
-                      \"host\": \"smtp.resend.dev\",
-                      \"port\": \"465\",
-                      \"from\": \"noreply@maxhealth.tech\",
-                      \"fromDisplayName\": \"Proxy Smart\",
-                      \"replyTo\": \"noreply@maxhealth.tech\",
-                      \"ssl\": \"true\",
-                      \"auth\": \"true\",
-                      \"user\": \"resend\",
-                      \"password\": \"${RESEND_API_KEY}\"
-                    }
-                  }'
-                echo '  ✅ Keycloak SMTP configured (Resend via maxhealth.tech)'
-              else
+              if [ -z \"\$KC_TOKEN\" ]; then
                 echo '  ⚠️ Could not get Keycloak admin token — SMTP not configured'
+                exit 0
               fi
+
+              # Check if SMTP is already configured (skip the PUT if host is already set)
+              EXISTING_HOST=\$(\$COMPOSE exec -T backend curl -sf \"\${KC_BASE}/admin/realms/proxy-smart\" \
+                -H \"Authorization: Bearer \$KC_TOKEN\" | grep -o '\"host\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4 || true)
+
+              if [ \"\$EXISTING_HOST\" = 'smtp.resend.dev' ]; then
+                echo '  ✅ Keycloak SMTP already configured — skipping'
+                exit 0
+              fi
+
+              # Update realm with SMTP settings and enable password reset
+              \$COMPOSE exec -T backend curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
+                -H 'Content-Type: application/json' \
+                -H \"Authorization: Bearer \$KC_TOKEN\" \
+                -d '{
+                  \"resetPasswordAllowed\": true,
+                  \"smtpServer\": {
+                    \"host\": \"smtp.resend.dev\",
+                    \"port\": \"465\",
+                    \"from\": \"noreply@maxhealth.tech\",
+                    \"fromDisplayName\": \"Proxy Smart\",
+                    \"replyTo\": \"noreply@maxhealth.tech\",
+                    \"ssl\": \"true\",
+                    \"auth\": \"true\",
+                    \"user\": \"resend\",
+                    \"password\": \"${RESEND_API_KEY}\"
+                  }
+                }'
+              echo '  ✅ Keycloak SMTP configured (Resend via maxhealth.tech)'
             "
           else
             echo "⚠️ RESEND_API_KEY not set — skipping SMTP configuration"
