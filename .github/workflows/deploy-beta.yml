@@ -274,9 +274,9 @@ jobs:
               fi
               KC_BASE=\"http://\${KC_IP}:8080/auth\"
 
-              # Wait for Keycloak to be ready
+              # Wait for Keycloak to be ready (health endpoint is on management port 9000, not under /auth)
               for i in \$(seq 1 30); do
-                if curl -sf \"\${KC_BASE}/health/ready\" >/dev/null 2>&1; then
+                if curl -sf \"http://\${KC_IP}:9000/health/ready\" >/dev/null 2>&1; then
                   echo '  ✅ Keycloak ready for SMTP config'
                   break
                 fi
