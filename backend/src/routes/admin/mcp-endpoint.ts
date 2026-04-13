@@ -144,6 +144,7 @@ function buildToolList(cfg: McpEndpointConfig) {
     name: ragName,
     description: 'Search the platform documentation knowledge base using semantic similarity.',
     exposed: ragExposed,
+    readOnly: false,
   })
 
   return tools

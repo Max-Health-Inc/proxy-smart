@@ -48,7 +48,8 @@ function restoreConfig() {
         enabled: true,
         disabledTools: [],
         enabledTools: null,
-        updatedAt: new Date().toISOString(),
+        exposeResourcesAsTools: true,
+      updatedAt: new Date().toISOString(),
       })
     }
   } else if (existsSync(CONFIG_PATH)) {
@@ -58,6 +59,7 @@ function restoreConfig() {
       enabled: true,
       disabledTools: [],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
   }
@@ -79,6 +81,7 @@ describe('MCP Endpoint Config — isToolExposed', () => {
       enabled: true,
       disabledTools: [],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
@@ -91,6 +94,7 @@ describe('MCP Endpoint Config — isToolExposed', () => {
       enabled: true,
       disabledTools: ['dangerous_tool', 'another_tool'],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
@@ -104,6 +108,7 @@ describe('MCP Endpoint Config — isToolExposed', () => {
       enabled: true,
       disabledTools: [],
       enabledTools: ['tool_a', 'tool_b'],
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
@@ -117,6 +122,7 @@ describe('MCP Endpoint Config — isToolExposed', () => {
       enabled: true,
       disabledTools: ['tool_a'], // also in blocklist
       enabledTools: ['tool_a', 'tool_b'], // allowlist overrides
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
@@ -131,6 +137,7 @@ describe('MCP Endpoint Config — isToolExposed', () => {
       enabled: true,
       disabledTools: [],
       enabledTools: [],
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
@@ -143,6 +150,7 @@ describe('MCP Endpoint Config — isToolExposed', () => {
       enabled: true,
       disabledTools: ['blocked_resource'],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
@@ -165,6 +173,7 @@ describe('MCP Endpoint Config — saveMcpEndpointConfig', () => {
       enabled: false,
       disabledTools: ['test_tool'],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: '', // should be overwritten
     })
 
@@ -181,6 +190,7 @@ describe('MCP Endpoint Config — saveMcpEndpointConfig', () => {
       enabled: true,
       disabledTools: [],
       enabledTools: null,
+      exposeResourcesAsTools: true,
       updatedAt: '2020-01-01T00:00:00Z',
     })
 
@@ -193,6 +203,7 @@ describe('MCP Endpoint Config — saveMcpEndpointConfig', () => {
       enabled: false,
       disabledTools: ['x'],
       enabledTools: ['y'],
+      exposeResourcesAsTools: true,
       updatedAt: new Date().toISOString(),
     })
 
