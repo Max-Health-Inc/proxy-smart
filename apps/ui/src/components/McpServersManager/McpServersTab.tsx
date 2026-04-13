@@ -484,8 +484,6 @@ function EmptyServerState({ onAdd }: { onAdd: () => void }) {
       </p>
       <div className="mt-2 bg-muted/30 p-4 rounded-lg text-left max-w-md mx-auto">
         <code className="text-xs font-mono text-foreground">
-          GENERATED_MCP_URL=http://localhost:8081
-          <br />
           EXTERNAL_MCP_SERVERS=[{'{'}name: ..., url: ...{'}'}]
         </code>
       </div>

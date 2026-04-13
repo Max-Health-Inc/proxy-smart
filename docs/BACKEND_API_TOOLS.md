@@ -32,13 +32,9 @@ The MCP server now exposes backend API endpoints as tools/functions that the AI 
 
 ## Components
 
-### 1. Python OpenAPI Client
+### 1. Backend API Tools
 
-Generated from the backend's OpenAPI spec:
-
-- **Location**: `mcp-server/src/api_client/`
-- **Generation**: Run `python scripts/generate_backend_python_client.py`
-- **APIs**: HealthcareUsersApi, SmartAppsApi, ServersApi, RolesApi, etc.
+The backend exposes admin API routes as MCP tools via the built-in MCP endpoint:
 
 ### 2. Backend API Tools Wrapper
 
@@ -135,8 +131,8 @@ During streaming responses, the frontend receives these event types:
 When backend APIs change:
 
 1. **Export OpenAPI spec**: `cd backend && bun run export-openapi`
-2. **Generate Python client**: `python scripts/generate_backend_python_client.py`
-3. **Restart MCP server**: The new APIs will be automatically registered
+2. **Generate UI client**: `bun run generate:ui`
+3. Routes are automatically discovered and exposed via the built-in MCP endpoint
 
 ## Security Considerations
 

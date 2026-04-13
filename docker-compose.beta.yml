@@ -83,7 +83,7 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
-      FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir,https://hapi.fhir.org/baseR4,https://server.fire.ly
+      FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
