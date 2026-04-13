@@ -254,6 +254,9 @@ jobs:
             # Remove any leftover canary from a previous failed deploy
             docker rm -f \$CANARY_NAME 2>/dev/null || true
 
+            # Ensure the compose network exists (may be missing after prune/full stop)
+            docker network create proxy-smart-beta-network 2>/dev/null || true
+
             # Start canary on the same Docker network so it can reach Keycloak/Postgres
             # Use a different port (9445) to avoid conflict with the running backend
             docker run -d --name \$CANARY_NAME \\
