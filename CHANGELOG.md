@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131554.90d89c8d] - 2026-04-13
+
+- 🔧 Chores & Improvements: Beta deploy workflow updated to blue/green canary flow with separate canary container and pre-swap validation on port 9445
+- 🔧 Chores & Improvements: docker-compose.beta.yml now includes backend healthcheck on port 8445 using Bun for /health, plus standard healthcheck settings
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/350
+
+
 ## [0.0.5-alpha.202604131547.1bf214db] - 2026-04-13
 
 - 🔧 Chores & Improvements: Exclude external dependency (sharp) from bundling in build process (bun build --external sharp) to reduce bundle size and avoid bundling issues.
