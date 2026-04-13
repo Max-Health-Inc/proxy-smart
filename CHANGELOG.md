@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131315.6d98337c] - 2026-04-13
+
+- ⚠️ Breaking Changes: None
+- ✨ Features: None
+- 🐛 Bug Fixes: In pre-push hook, discard potential no-op file rewrites from line endings by running git checkout -- . before exiting to keep the tree clean
+- 📚 Documentation: None
+- 🔧 Chores & Improvements: None
+
+Note: Only one meaningful change detected; grouped as a bug fix.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/343
+
+
 ## [0.0.5-alpha.202604131159.af43b3e2] - 2026-04-13
 
 - ✨ Features: PDF document import pipeline (OCR → AI → FHIR validation + patient portal review UI)
