@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604131657.d291256d] - 2026-04-13
+
+- 🔧 Chores & Improvements: Update GitHub Actions caching scope for beta backend image (cache-from/cache-to) from beta-backend to beta-backend-v2
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/354
+
+
 ## [0.0.5-alpha.202604131634.3494abfa] - 2026-04-13
 
 - ✨ Features: 
