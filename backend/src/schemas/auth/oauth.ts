@@ -55,6 +55,9 @@ export const AuthorizationQuery = t.Object({
   state: t.Optional(t.String({ description: 'OAuth state parameter' })),
   code_challenge: t.Optional(t.String({ description: 'PKCE code challenge' })),
   code_challenge_method: t.Optional(t.String({ description: 'PKCE code challenge method' })),
+  aud: t.Optional(t.String({ description: 'SMART App Launch: FHIR server URL the app wishes to access. Prevents token leakage to counterfeit resource servers (required by SMART App Launch 2.2.0)' })),
+  resource: t.Optional(t.String({ description: 'RFC 8707 Resource Indicator — synonym for aud (servers MAY support)' })),
+  launch: t.Optional(t.String({ description: 'EHR Launch: opaque launch context identifier received from the EHR (SMART App Launch 2.2.0)' })),
   authorization_details: t.Optional(t.String({ description: 'Authorization details JSON string for multiple FHIR servers' })),
   kc_idp_hint: t.Optional(t.String({ description: 'Keycloak Identity Provider hint to skip provider selection' }))
 }, { title: 'AuthorizationQuery' })

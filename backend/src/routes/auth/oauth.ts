@@ -100,7 +100,33 @@ async function generateAuthorizationDetailsFromToken(
  */
 export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   // redirect into Keycloak's /auth endpoint
-  .get('/authorize', ({ query, redirect }) => {
+  .get('/authorize', async ({ query, redirect, set }) => {
+    // SMART App Launch 2.2.0: validate the aud parameter against our FHIR endpoints.
+    // "aud" is the FHIR server URL the app wants to access — prevents token
+    // leakage to counterfeit resource servers.  RFC 8707 "resource" is a synonym.
+    const aud = query.aud || query.resource
+    if (aud) {
+      await ensureServersInitialized()
+      const servers = await getAllServers()
+      const fhirBasePrefix = `${config.baseUrl}/${config.name}/`
+      // Valid aud values: exact FHIR base or any sub-path under it
+      const isValidAud = aud.startsWith(fhirBasePrefix) ||
+        servers.some(s =>
+          config.fhir.supportedVersions.some(v => {
+            const endpoint = `${fhirBasePrefix}${s.identifier}/${v}`
+            return aud === endpoint || aud.startsWith(endpoint + '/')
+          })
+        )
+      if (!isValidAud) {
+        logger.auth.warn('SMART authorize rejected — aud does not match any FHIR endpoint', {
+          aud,
+          expectedPrefix: fhirBasePrefix,
+        })
+        set.status = 400
+        return { error: 'invalid_request', error_description: `aud parameter does not match a known FHIR endpoint on this server` }
+      }
+    }
+
     const url = new URL(
       `${config.keycloak.publicUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/auth`
     )
