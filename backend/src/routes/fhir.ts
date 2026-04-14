@@ -11,6 +11,7 @@ import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
 import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
 import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
+import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, parseFhirPath } from '../lib/fhir-capabilities'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
@@ -121,6 +122,47 @@ async function proxyFHIR({ params, request, set }: any) {
       queryString = roleResult.modifiedQueryString ?? queryString
     }
 
+    // 6) Capability-aware request normalization
+    // Parse the FHIR path to understand what kind of request this is
+    const fhirCtx = parseFhirPath(resourcePath, request.method)
+    const resourceType = fhirCtx.resourceType || 'unknown'
+
+    const capabilities = await getServerCapabilities(serverUrl, serverInfo.identifier)
+
+    if (capabilities && fhirCtx.resourceType) {
+      // Check if the interaction itself is supported
+      if (!isInteractionSupported(capabilities, fhirCtx.resourceType, request.method, fhirCtx.hasSearchSemantics)) {
+        set.status = 405
+        return {
+          resourceType: 'OperationOutcome',
+          issue: [{
+            severity: 'error',
+            code: 'not-supported',
+            diagnostics: `${request.method} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+          }],
+        }
+      }
+
+      // Normalize query params on any request that has them and targets a known resource
+      if (queryString.length > 1) {
+        const normResult = normalizeSearchParams(capabilities, fhirCtx.resourceType, queryString)
+        if (normResult.strippedParams.length > 0) {
+          const normalized = normResult.normalizedParams.toString()
+          queryString = normalized ? `?${normalized}` : ''
+          logger.fhir.debug('Stripped unsupported search params', {
+            server: params.server_name,
+            resourceType: fhirCtx.resourceType,
+            path: resourcePath,
+            stripped: normResult.strippedParams,
+          })
+          set.headers = {
+            ...set.headers,
+            'x-proxy-stripped-params': normResult.strippedParams.join(','),
+          }
+        }
+      }
+    }
+
     const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()
@@ -144,9 +186,6 @@ async function proxyFHIR({ params, request, set }: any) {
       ? await fetchWithMtls(target, { ...fetchOptions, serverId: serverInfo.identifier })
       : await fetch(target, fetchOptions)
     const fetchMs = Math.round(performance.now() - fetchStart)
-
-    // Extract resource type from path (e.g. "Patient/123" → "Patient")
-    const resourceType = resourcePath.split('/')[0] || 'unknown'
 
     // Track proxied request metrics (fire-and-forget)
     fhirProxyMetricsLogger.logRequest({
