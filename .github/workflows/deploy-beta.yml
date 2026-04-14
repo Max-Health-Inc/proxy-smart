@@ -170,13 +170,18 @@ jobs:
           IMAGE_TAG="beta-${{ inputs.app_version }}"
           SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${VPS_USER}@${VPS_HOST}"
 
-          # Ensure deploy directory and repo exist on VPS
+          # Ensure deploy directory exists with only the files we need (sparse checkout)
           ${SSH_CMD} "
             if [ ! -d ${DEPLOY_DIR}/.git ]; then
               sudo mkdir -p ${DEPLOY_DIR}
               sudo chown \$(whoami):\$(whoami) ${DEPLOY_DIR}
-              git clone --branch ${{ inputs.source_branch }} \
-                https://github.com/${{ github.repository }}.git ${DEPLOY_DIR}
+              cd ${DEPLOY_DIR}
+              git init
+              git remote add origin https://github.com/${{ github.repository }}.git
+              git sparse-checkout init --cone
+              git sparse-checkout set docker-compose.beta.yml docker-compose.caddy.yml keycloak/database deploy
+              git fetch origin ${{ inputs.source_branch }} --depth 1
+              git checkout ${{ inputs.source_branch }}
             fi
           "
 
@@ -215,9 +220,16 @@ jobs:
           ${SSH_CMD} "
             set -e
             cd ${DEPLOY_DIR}
-            git fetch origin
+
+            # Ensure sparse checkout is configured (handles migration from full clone)
+            if ! git sparse-checkout list >/dev/null 2>&1; then
+              git sparse-checkout init --cone
+              git sparse-checkout set docker-compose.beta.yml docker-compose.caddy.yml keycloak/database deploy
+            fi
+
+            git fetch origin ${{ inputs.source_branch }} --depth 1
             git checkout ${{ inputs.source_branch }}
-            git pull origin ${{ inputs.source_branch }}
+            git reset --hard origin/${{ inputs.source_branch }}
 
             # Log in to GHCR for pulling images
             echo '${GH_TOKEN}' | docker login ghcr.io -u '${GH_ACTOR}' --password-stdin
