@@ -217,7 +217,8 @@ export async function getServerCapabilities(
   }
 }
 
-function parseCapabilityStatement(
+/** Exported for testing — parses raw CapabilityStatement JSON into structured model */
+export function parseCapabilityStatement(
   raw: CapabilityStatementRaw,
   serverUrl: string,
   serverIdentifier: string
