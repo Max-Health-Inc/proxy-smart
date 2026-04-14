@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604132116.231c33d9] - 2026-04-13
+
+- 🔧 Chores & Improvements: Added aud/resource validation in /authorize for SMART App Launch; expands AuthorizationQuery with aud, resource, and launch fields and per-version endpoint checks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/359
+
+
 ## [0.0.5-alpha.202604131823.7abd63e1] - 2026-04-13
 
 - 🔧 Chores & Improvements: Update versioning and documentation references
