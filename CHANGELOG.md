@@ -13,6 +13,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/361
 
 
+
+- ✨ Features: Add alpha fallback when beta backend is down (lb_policy first)
+- 🔧 Chores & Improvements: Sync package versions after rebase
+- 🔧 Chores & Improvements: Update beta SMART compliance reports (dev/beta) 
+- 🔧 Chores & Improvements: Update version to 0.0.5-beta.202604140029.1e628bdb
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/362
+
+
 ## [0.0.5-alpha.202604132116.231c33d9] - 2026-04-13
 
 - 🔧 Chores & Improvements: Added aud/resource validation in /authorize for SMART App Launch; expands AuthorizationQuery with aud, resource, and launch fields and per-version endpoint checks
