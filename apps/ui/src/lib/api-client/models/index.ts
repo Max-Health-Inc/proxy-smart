@@ -155,6 +155,8 @@ export * from './SetFhirContextRequest';
 export * from './SetIntentRequest';
 export * from './SetNeedPatientBannerRequest';
 export * from './SetSmartStyleUrlRequest';
+export * from './SetStrictCapabilitiesRequest';
+export * from './SetStrictCapabilitiesResponse';
 export * from './SetTenantRequest';
 export * from './SmartApp';
 export * from './SmartConfigRefreshResponse';

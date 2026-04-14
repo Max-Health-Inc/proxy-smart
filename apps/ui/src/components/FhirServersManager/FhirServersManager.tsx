@@ -321,6 +321,22 @@ export function FhirServersManager() {
     });
   };
 
+  const handleToggleStrictCapabilities = useCallback(async (server: FhirServerWithState, strict: boolean) => {
+    try {
+      await clientApis.servers.patchFhirServersByServerIdStrictCapabilities({
+        serverId: server.id,
+        setStrictCapabilitiesRequest: { strict }
+      });
+      // Optimistic update
+      setServers(prev => prev.map(s =>
+        s.id === server.id ? { ...s, strictCapabilities: strict } : s
+      ));
+    } catch (err) {
+      console.error('Failed to toggle strict capabilities:', err);
+      setError('Failed to update strict capabilities setting');
+    }
+  }, [clientApis]);
+
   useEffect(() => {
     fetchServers();
   }, [fetchServers]);
@@ -398,6 +414,7 @@ export function FhirServersManager() {
               onCheckSecurity={handleCheckSecurity}
               onEditServer={handleEditServer}
               onDeleteServer={handleDeleteServer}
+              onToggleStrictCapabilities={handleToggleStrictCapabilities}
             />
           </TabsContent>
 

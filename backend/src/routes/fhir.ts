@@ -121,68 +121,73 @@ async function proxyFHIR({ params, request, set }: any) {
     const resourceType = fhirCtx.resourceType || 'unknown'
 
     const capabilities = await getServerCapabilities(serverUrl, serverInfo.identifier)
+    const strictMode = serverInfo.strictCapabilities === true
 
     if (capabilities && fhirCtx.resourceType) {
-      // 5a) Interaction support check
-      if (!fhirCtx.isOperation && !fhirCtx.isHistory) {
-        if (!isInteractionSupported(capabilities, fhirCtx.resourceType, request.method, fhirCtx.hasSearchSemantics)) {
+      // 5a–d) Strict enforcement: reject requests the CapabilityStatement doesn't declare
+      if (strictMode) {
+        // 5a) Interaction support check
+        if (!fhirCtx.isOperation && !fhirCtx.isHistory) {
+          if (!isInteractionSupported(capabilities, fhirCtx.resourceType, request.method, fhirCtx.hasSearchSemantics)) {
+            set.status = 405
+            return {
+              resourceType: 'OperationOutcome',
+              issue: [{
+                severity: 'error',
+                code: 'not-supported',
+                diagnostics: `${request.method} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+              }],
+            }
+          }
+        }
+
+        // 5b) _history support check
+        if (fhirCtx.isHistory && !isHistorySupported(capabilities, fhirCtx.resourceType, fhirCtx.isInstance)) {
           set.status = 405
           return {
             resourceType: 'OperationOutcome',
             issue: [{
               severity: 'error',
               code: 'not-supported',
-              diagnostics: `${request.method} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+              diagnostics: `_history on ${fhirCtx.resourceType} is not supported by this FHIR server`,
             }],
           }
         }
-      }
 
-      // 5b) _history support check
-      if (fhirCtx.isHistory && !isHistorySupported(capabilities, fhirCtx.resourceType, fhirCtx.isInstance)) {
-        set.status = 405
-        return {
-          resourceType: 'OperationOutcome',
-          issue: [{
-            severity: 'error',
-            code: 'not-supported',
-            diagnostics: `_history on ${fhirCtx.resourceType} is not supported by this FHIR server`,
-          }],
-        }
-      }
-
-      // 5c) $operation support check
-      if (fhirCtx.isOperation && fhirCtx.operationName) {
-        if (!isOperationSupported(capabilities, fhirCtx.resourceType, fhirCtx.operationName)) {
-          set.status = 405
-          return {
-            resourceType: 'OperationOutcome',
-            issue: [{
-              severity: 'error',
-              code: 'not-supported',
-              diagnostics: `$${fhirCtx.operationName} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
-            }],
+        // 5c) $operation support check
+        if (fhirCtx.isOperation && fhirCtx.operationName) {
+          if (!isOperationSupported(capabilities, fhirCtx.resourceType, fhirCtx.operationName)) {
+            set.status = 405
+            return {
+              resourceType: 'OperationOutcome',
+              issue: [{
+                severity: 'error',
+                code: 'not-supported',
+                diagnostics: `$${fhirCtx.operationName} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+              }],
+            }
           }
         }
-      }
 
-      // 5d) PATCH content-type check
-      if (request.method === 'PATCH') {
-        const contentType = request.headers.get('content-type') || ''
-        if (contentType && !isPatchFormatSupported(capabilities, contentType)) {
-          set.status = 415
-          return {
-            resourceType: 'OperationOutcome',
-            issue: [{
-              severity: 'error',
-              code: 'not-supported',
-              diagnostics: `PATCH content-type '${contentType}' is not supported. Supported: ${[...capabilities.patchFormat].join(', ') || 'none declared'}`,
-            }],
+        // 5d) PATCH content-type check
+        if (request.method === 'PATCH') {
+          const contentType = request.headers.get('content-type') || ''
+          if (contentType && !isPatchFormatSupported(capabilities, contentType)) {
+            set.status = 415
+            return {
+              resourceType: 'OperationOutcome',
+              issue: [{
+                severity: 'error',
+                code: 'not-supported',
+                diagnostics: `PATCH content-type '${contentType}' is not supported. Supported: ${[...capabilities.patchFormat].join(', ') || 'none declared'}`,
+              }],
+            }
           }
         }
       }
 
       // 5e) Normalize query params (strip unsupported search params + _include/_revinclude values)
+      // This runs regardless of strict mode as it's a non-breaking optimization
       if (queryString.length > 1) {
         const normResult = normalizeSearchParams(capabilities, fhirCtx.resourceType, queryString)
         const allStripped = [...normResult.strippedParams, ...normResult.strippedIncludes]
