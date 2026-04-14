@@ -61,13 +61,13 @@ jobs:
       - name: Generate token (for update operations only)
         id: generate_token
         if: inputs.operation == 'update'
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token || github.token }}

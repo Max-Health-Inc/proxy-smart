@@ -46,7 +46,7 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0  # Need full history for coverage comparison
 
@@ -1147,7 +1147,7 @@ jobs:
         echo "📋 Enhanced test summary generated"
 
     - name: Upload Test Reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: ai-test-builder-reports
@@ -1162,7 +1162,7 @@ jobs:
     - name: Comment on PR
       if: ${{ github.event_name == 'push' }}
       continue-on-error: true
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const fs = require('fs');
