@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604140357.b70b6a3c] - 2026-04-14
+
+- ✨ Features: Introduced shared hook useSmartAuth (with SmartAppState, SmartAuthLike, UseSmartAuthOptions) and integrated startAuth/onAuthenticated flow across apps; updated AppHeader/Button/Spinner and re-exported useSmartAuth from shared-ui.
+- 🐛 Bug Fixes: Handle “state mismatch” errors across apps robustly—clear token, reset URL, show friendly message, and mark session as expired; preserve existing error handling for auth callback failures.
+- 🔧 Chores & Improvements: Improve admin utils to explicitly update user fields (firstName, lastName, email, enabled, emailVerified) and merge existing user attributes on updates rather than wholesale replacement.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/369
+
+
 ## [0.0.5-alpha.202604140338.9e4b2b09] - 2026-04-14
 
 - ⚠️ Breaking Changes
