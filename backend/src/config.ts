@@ -212,10 +212,6 @@ export const config = {
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
       return 'disabled'
     },
-    // Block write operations for non-admin users (users with fhirUser claim)
-    get readOnlyForUsers() {
-      return process.env.READ_ONLY_FOR_USERS === 'true'
-    },
     // Clinical resource types subject to patient-scoped filtering
     get patientScopedResources(): string[] {
       const defaults = ['Observation', 'Condition', 'Procedure', 'MedicationRequest', 'MedicationStatement', 'DiagnosticReport', 'Encounter', 'AllergyIntolerance', 'ImagingStudy', 'CarePlan', 'Consent']

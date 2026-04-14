@@ -14,6 +14,7 @@ import { consentMonitoringRoutes } from './routes/consent-monitoring'
 import { consentWebSocket } from './routes/consent-websocket'
 import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
 import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
+import { fhirCapabilitiesRoutes } from './routes/fhir-capabilities'
 import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
@@ -184,6 +185,7 @@ export function createApp() {
         .use(consentWebSocket)
         .use(fhirMonitoringRoutes)
         .use(fhirProxyMonitoringRoutes)
+        .use(fhirCapabilitiesRoutes)
         .use(adminAuditMonitoringRoutes)
         .use(mcpEndpointRoutes)
         .use(dicomwebRoutes)
