@@ -1,88 +1,14 @@
-import { useEffect, useRef, useState } from "react"
 import { Dashboard } from "@/components/Dashboard"
-import { AppHeader, Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"
-import { onAuthError } from "@/lib/auth-error"
 import { ShieldCheck, LogIn, AlertTriangle } from "lucide-react"
 import "./index.css"
 
-type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error" | "session-expired"
-
 export default function App() {
-  const [state, setState] = useState<AppState>("loading")
-  const [error, setError] = useState<string | null>(null)
-  const callbackHandled = useRef(false)
+  const { state, error, handleLogin, handleLogout } = useSmartAuth({ smartAuth, ehrLaunch: false })
   const brand = useBranding()
-
-  useEffect(() => {
-    // Subscribe to auth errors from fetch wrapper
-    onAuthError((msg) => {
-      setError(msg)
-      setState("session-expired")
-    })
-
-    // Check if we're on the callback path
-    const params = new URLSearchParams(window.location.search)
-    if (params.has("code")) {
-      // Guard against React StrictMode double-mount
-      if (callbackHandled.current) return
-      callbackHandled.current = true
-
-      setState("callback")
-      smartAuth.handleCallback()
-        .then(() => {
-          // Clear callback params from URL
-          window.history.replaceState({}, "", window.location.pathname)
-          setState("authenticated")
-        })
-        .catch((err) => {
-          const msg = err instanceof Error ? err.message : "Auth callback failed"
-          if (/state mismatch/i.test(msg)) {
-            window.history.replaceState({}, "", window.location.pathname)
-            smartAuth.clearToken()
-            setError("Your session was reset (e.g. after a password change). Please sign in again.")
-            setState("session-expired")
-          } else {
-            setError(msg)
-            setState("error")
-          }
-        })
-      return
-    }
-
-    // Check existing token — validate it's not expired
-    if (smartAuth.isAuthenticated()) {
-      if (smartAuth.isTokenExpired()) {
-        smartAuth.refreshAccessToken().then((refreshed) => {
-          if (refreshed) {
-            setState("authenticated")
-          } else {
-            smartAuth.clearToken()
-            setState("session-expired")
-            setError("Your session has expired. Please sign in again.")
-          }
-        })
-      } else {
-        setState("authenticated")
-      }
-    } else {
-      setState("unauthenticated")
-    }
-  }, [])
-
-  const handleLogin = () => {
-    smartAuth.authorize().catch((err) => {
-      setError(err instanceof Error ? err.message : "Failed to start SMART launch")
-      setState("error")
-    })
-  }
-
-  const handleLogout = () => {
-    smartAuth.logout()
-    // logout() is async — it will redirect to Keycloak's end_session_endpoint
-  }
 
   return (
     <div className="min-h-screen bg-background">
