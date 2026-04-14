@@ -30,3 +30,9 @@ export * from './consent'
 
 // Admin audit schemas (audit trail events + analytics)
 export * from './admin-audit'
+
+// Email monitoring schemas (Keycloak email event tracking)
+export * from './email-monitoring'
+
+// Auth monitoring schemas (Keycloak login/logout/register event tracking)
+export * from './auth-monitoring'

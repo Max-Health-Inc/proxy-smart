@@ -231,6 +231,13 @@ class Logger {
     info: (message: string, data?: Record<string, unknown>) => this.info('kisi', message, data),
     debug: (message: string, data?: Record<string, unknown>) => this.debug('kisi', message, data)
   };
+
+  email = {
+    error: (message: string, data?: Record<string, unknown>, error?: Error) => this.error('email', message, data, error),
+    warn: (message: string, data?: Record<string, unknown>) => this.warn('email', message, data),
+    info: (message: string, data?: Record<string, unknown>) => this.info('email', message, data),
+    debug: (message: string, data?: Record<string, unknown>) => this.debug('email', message, data)
+  };
 }
 
 // Create and export singleton logger instance

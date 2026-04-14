@@ -383,6 +383,13 @@ async function ensureKeycloakEventLogging(): Promise<void> {
           'UPDATE_PROFILE', 'UPDATE_PASSWORD',
           'GRANT_CONSENT', 'REVOKE_GRANT',
           'PERMISSION_TOKEN',
+          // Email events
+          'SEND_RESET_PASSWORD', 'SEND_RESET_PASSWORD_ERROR',
+          'SEND_VERIFY_EMAIL', 'SEND_VERIFY_EMAIL_ERROR',
+          'SEND_IDENTITY_PROVIDER_LINK', 'SEND_IDENTITY_PROVIDER_LINK_ERROR',
+          'EXECUTE_ACTIONS', 'EXECUTE_ACTIONS_ERROR',
+          'EXECUTE_ACTION_TOKEN', 'EXECUTE_ACTION_TOKEN_ERROR',
+          'CUSTOM_REQUIRED_ACTION', 'CUSTOM_REQUIRED_ACTION_ERROR',
         ],
       },
     )

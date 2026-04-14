@@ -6,6 +6,8 @@ import { consentMetricsLogger } from './lib/consent-metrics-logger'
 import { fhirHealthLogger } from './lib/fhir-health-logger'
 import { fhirProxyMetricsLogger } from './lib/fhir-proxy-metrics-logger'
 import { adminAuditLogger } from './lib/admin-audit-logger'
+import { emailEventsLogger } from './lib/email-events-logger'
+import { authEventsLogger } from './lib/auth-events-logger'
 import { createApp } from './app-factory'
 import { existsSync, readFileSync } from 'fs'
 
@@ -32,6 +34,14 @@ initializeServer()
 
     // Initialize FHIR proxy metrics logger
     await fhirProxyMetricsLogger.initialize();
+
+    // Initialize Email events logger and start background polling (every 60s)
+    await emailEventsLogger.initialize();
+    emailEventsLogger.start();
+
+    // Initialize Auth events logger and start background polling (every 60s)
+    await authEventsLogger.initialize();
+    authEventsLogger.start();
 
     try {
       // In containerized environments (Docker), listen on all interfaces

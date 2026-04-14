@@ -19,6 +19,8 @@ import { createServerApi, createAdminApi, createFhirMonitoringApi, handleApiErro
 import { EventsPanel } from './DoorManagement/EventsPanel';
 import { ConsentMonitoringDashboard } from './ConsentMonitoringDashboard';
 import { AdminAuditDashboard } from './AdminAuditDashboard';
+import { AuthMonitoringDashboard } from './AuthMonitoringDashboard';
+import { EmailMonitoringDashboard } from './EmailMonitoringDashboard';
 import { RealTimeStatusBanner } from './OAuthMonitoring/RealTimeStatusBanner';
 import { SystemHealthTab } from './OAuthMonitoring/SystemHealthTab';
 import { OAuthAnalyticsTab } from './OAuthMonitoring/OAuthAnalyticsTab';
@@ -417,10 +419,12 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6 bg-muted/50 rounded-t-2xl">
+            <TabsList className="grid w-full grid-cols-8 bg-muted/50 rounded-t-2xl">
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Dashboard')}</TabsTrigger>
               <TabsTrigger value="fhir-proxy" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('FHIR Proxy')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth')}</TabsTrigger>
+              <TabsTrigger value="auth-events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Auth')}</TabsTrigger>
+              <TabsTrigger value="email-events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Email')}</TabsTrigger>
               <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
               <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
               <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
@@ -453,6 +457,14 @@ export function OAuthMonitoringDashboard() {
 
             <TabsContent value="fhir-proxy">
               <FhirProxyTab fhirProxyAnalytics={fhirProxyAnalytics} />
+            </TabsContent>
+
+            <TabsContent value="auth-events" className="space-y-6">
+              <AuthMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
+            </TabsContent>
+
+            <TabsContent value="email-events" className="space-y-6">
+              <EmailMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
             </TabsContent>
 
             <TabsContent value="door-access" className="space-y-6">
