@@ -29,7 +29,7 @@ export const statusRoutes = new Elysia({ tags: ['server', 'info', 'health'] })
         uptime: full.uptime
       };
     } catch {
-      return { status: 'degraded', timestamp: new Date().toISOString() };
+      return { status: 'degraded', timestamp: new Date().toISOString(), uptime: process.uptime() * 1000 };
     }
   }, {
     query: t.Object({

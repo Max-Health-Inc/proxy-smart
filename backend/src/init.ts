@@ -446,24 +446,20 @@ export async function initializeServer(): Promise<void> {
     
     // Check if it's a Keycloak-related error
     if (error instanceof Error && error.message.includes('Keycloak connection verification failed')) {
-      if (process.env.NODE_ENV === 'production') {
-        logger.server.error('🔐 Keycloak connection failed in production — aborting startup')
-        logger.server.error(`   Keycloak URL: ${config.keycloak.baseUrl}`)
-        logger.server.error(`   Realm: ${config.keycloak.realm}`)
-        logger.server.error(`   JWKS: ${config.keycloak.jwksUri}`)
-        throw error
-      }
-      logger.server.warn('🔐 Keycloak connection failed - server will start with limited authentication')
+      logger.server.warn('🔐 Keycloak connection failed — server will start with limited authentication')
+      logger.server.warn(`   Keycloak URL: ${config.keycloak.baseUrl}`)
+      logger.server.warn(`   Realm: ${config.keycloak.realm}`)
+      logger.server.warn(`   JWKS: ${config.keycloak.jwksUri}`)
       logger.server.warn('')
       logger.server.warn('🔍 Keycloak troubleshooting:')
       logger.server.warn(`   1. Check if Keycloak is running at: ${config.keycloak.baseUrl}`)
       logger.server.warn(`   2. Verify realm "${config.keycloak.realm}" exists`)
       logger.server.warn(`   3. Test JWKS endpoint: ${config.keycloak.jwksUri}`)
       logger.server.warn('   4. Check network connectivity and firewall settings')
-      logger.server.warn('   5. Verify Keycloak admin console is accessible')
-      logger.server.warn('   6. Configure Keycloak in the admin UI once the server is running')
+      logger.server.warn('   5. Configure Keycloak in the admin UI once the server is running')
       logger.server.warn('')
-      // Continue server startup even with Keycloak issues
+      // Continue server startup — landing page, admin UI, docs all work without KC.
+      // Auth-dependent routes will degrade gracefully (friendly error pages).
     } else {
       logger.server.error('❌ Server initialization failed', {
         error: errorDetails,
