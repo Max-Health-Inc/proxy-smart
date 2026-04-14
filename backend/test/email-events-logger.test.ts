@@ -28,6 +28,7 @@ function makeEvent(overrides: Record<string, unknown> = {}) {
     clientId: 'my-app',
     ipAddress: '127.0.0.1',
     success: true,
+    error: undefined as string | undefined,
     ...overrides,
   }
 }
