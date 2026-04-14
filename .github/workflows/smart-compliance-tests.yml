@@ -58,6 +58,17 @@ on:
       - 'main'     # Production deployed
     tags:
       - 'v*'
+    paths:
+      - 'backend/**'
+      - 'lib/**'
+      - 'shared-ui/**'
+      - 'apps/**'
+      - 'Dockerfile'
+      - 'Dockerfile.keycloak'
+      - 'package.json'
+      - 'keycloak/**'
+      - 'testing/**'
+      - '.github/workflows/smart-compliance-tests.yml'
   
   # Scheduled weekly run
   schedule:
