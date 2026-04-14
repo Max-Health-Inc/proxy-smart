@@ -1,9 +1,1 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-04-14 03:56:43,721 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8016ms
-Running the server in development mode. DO NOT use this configuration in production.
-2026-04-14 03:56:47,465 INFO  [org.infinispan.CONTAINER] (main) Virtual threads support enabled
-2026-04-14 03:56:48,317 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-04-14 03:56:49,520 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-04-14 03:56:57,542 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-04-14 03:56:57,904 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_324778, Site name: null
-2026-04-14 03:56:58,131 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import

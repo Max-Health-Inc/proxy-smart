@@ -129,7 +129,7 @@ services:
     restart: unless-stopped
     mem_limit: 1024m
     environment:
-      JAVA_TOOL_OPTIONS: "-Xmx512m"
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx384m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=64m -XX:+UseSerialGC"
       spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
       spring.datasource.username: postgres
       spring.datasource.password: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}

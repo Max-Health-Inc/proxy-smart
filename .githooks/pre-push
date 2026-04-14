@@ -3,7 +3,10 @@ set -euo pipefail
 
 echo "Auto-rebasing before push..."
 
-if ! git pull --rebase --autostash --quiet; then
+# --rebase=merges preserves merge commits (e.g. "absorb test branch" merges).
+# Plain --rebase linearizes history and destroys merge commits, causing
+# version-string conflicts every time we merge test/main back into develop.
+if ! git pull --rebase=merges --autostash --quiet; then
   echo "❌ Auto-rebase failed (likely conflicts). Please resolve them manually (git status), then re-push."
   exit 1
 fi

@@ -15,7 +15,6 @@ export { AppHeader, type AppHeaderProps } from "./components/app-header"
 export { cn } from "./lib/utils"
 export { createSmartAppConfig, type SmartAppConfig } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
-export { ADMIN_TABS, type AdminTab } from "./lib/admin-tabs"
 
 // FHIR helpers
 export { formatHumanName } from "./lib/fhir-helpers"

@@ -415,6 +415,18 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
             data.patient = tokenPayload.smart_patient
           }
 
+          // Fallback: derive patient ID from fhirUser when launch/patient was requested
+          // but smart_patient isn't set (e.g. patient portal where user IS the patient)
+          if (!data.patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
+            const fhirUser = tokenPayload.fhirUser as string | undefined
+            if (fhirUser) {
+              const match = fhirUser.match(/Patient\/([^/]+)$/)
+              if (match) {
+                data.patient = match[1]
+              }
+            }
+          }
+
           if (tokenPayload.smart_encounter && (grantedScopes.has('launch/encounter') || grantedScopes.has('launch'))) {
             data.encounter = tokenPayload.smart_encounter
           }

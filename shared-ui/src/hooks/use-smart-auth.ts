@@ -14,7 +14,7 @@ export interface SmartAuthLike {
   handleCallback(): Promise<unknown>
   isAuthenticated(): boolean
   isTokenExpired(): boolean
-  refreshAccessToken(): Promise<boolean>
+  refreshAccessToken(): Promise<unknown>
   clearToken(): void
   authorize(): Promise<void>
   logout(): void
