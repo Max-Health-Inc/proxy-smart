@@ -100,11 +100,13 @@ services:
     labels:
       caddy: beta.proxy-smart.com
       caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg"
-      caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
+      caddy.1_reverse_proxy: "@backend {{upstreams 8445}} https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
+      caddy.1_reverse_proxy.lb_policy: first
       caddy.1_reverse_proxy.health_uri: /health
       caddy.1_reverse_proxy.health_interval: 10s
       caddy.1_reverse_proxy.health_timeout: 5s
-      caddy.3_reverse_proxy: "{{upstreams 8445}}"
+      caddy.3_reverse_proxy: "{{upstreams 8445}} https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
+      caddy.3_reverse_proxy.lb_policy: first
       caddy.3_reverse_proxy.health_uri: /health
       caddy.3_reverse_proxy.health_interval: 10s
       caddy.3_reverse_proxy.health_timeout: 5s
