@@ -8,8 +8,10 @@ export { Spinner } from "./components/spinner"
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "./components/select"
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants } from "./components/tabs"
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip"
+export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./components/dialog"
 export { ErrorBoundary } from "./components/error-boundary"
 export { AppHeader, type AppHeaderProps } from "./components/app-header"
+export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 
 // Utilities
 export { cn } from "./lib/utils"

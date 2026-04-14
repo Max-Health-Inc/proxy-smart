@@ -1,13 +1,17 @@
-import { Card, CardContent, Badge } from "@proxy-smart/shared-ui"
+import { Card, CardContent, Badge, Button } from "@proxy-smart/shared-ui"
 import { formatHumanName, type Patient } from "@/lib/fhir-client"
-import { User } from "lucide-react"
+import { User, Pencil } from "lucide-react"
 import { format, differenceInYears } from "date-fns"
+import { useState } from "react"
+import { PatientEditModal } from "@/components/PatientEditModal"
 
 interface PatientBannerProps {
   patient: Patient
+  onPatientUpdated?: (patient: Patient) => void
 }
 
-export function PatientBanner({ patient }: PatientBannerProps) {
+export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps) {
+  const [editOpen, setEditOpen] = useState(false)
   const name = formatHumanName(patient.name)
   const birthDate = patient.birthDate ? new Date(patient.birthDate) : null
   const age = birthDate ? differenceInYears(new Date(), birthDate) : null
@@ -21,6 +25,7 @@ export function PatientBanner({ patient }: PatientBannerProps) {
   )?.valueCodeableConcept?.coding?.[0]?.display
 
   return (
+    <>
     <Card>
       <CardContent className="flex items-center gap-4 py-4">
         <div className="flex items-center justify-center size-12 rounded-full bg-muted">
@@ -40,7 +45,25 @@ export function PatientBanner({ patient }: PatientBannerProps) {
             )}
           </div>
         </div>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={() => setEditOpen(true)}
+          title="Edit profile"
+        >
+          <Pencil className="size-4" />
+        </Button>
       </CardContent>
     </Card>
+
+    {editOpen && (
+      <PatientEditModal
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        patient={patient}
+        onUpdated={(updated) => onPatientUpdated?.(updated)}
+      />
+    )}
+    </>
   )
 }
