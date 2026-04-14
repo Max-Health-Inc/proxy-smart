@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604140206.9147fc91] - 2026-04-14
+
+- 🔧 Chores & Improvements: Update healthcheck to use HTTP/1.0 and extend timeout (10s) for more reliable readiness checks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/365
+
+
 ## [0.0.5-alpha.202604140101.5ffd0475] - 2026-04-14
 
 - ✨ Features: add alpha fallback when beta backend is down (lb_policy first)
