@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604140457.1f5d7b71] - 2026-04-14
+
+- ✨ Features
+  - Backend: Keycloak startup behavior improved with reachability checks and a friendly downtime page; uptime is now included in degraded status responses. 
+  - Health: /health endpoint updated to be a liveness probe always returning 200 with subsystem statuses; degraded when issues exist but unhealthy state removed.
+
+- 🐛 Bug Fixes
+  - Health/status logic: refine overall health computation to ignore not_configured components and treat Keycloak not_configured as non-blocking; preserve degraded state if any configured component is degraded.
+  - Proxy memory/Java options: adjust resource limits and JVM flags for proxy-smart-hapi-fhir-beta to optimize performance.
+
+- 🔧 Chores & Improvements
+  - CI/CD: pre-push hooks updated to preserve merge commits during rebase; CI rebase prep for develop/test branches.
+  - Admin/UI refactor: reorganized Admin Tabs imports and paths due to rename/move of admin-tabs module; updated exports accordingly.
+  - Versioning: bump versions across workspace packages to 0.0.5-alpha.202604140457.1f5d7b71.
+
+- 📚 Documentation
+  - Changelog note added for 0.0.5-alpha pre-release with mention of meaningful changes and Admin UI export breaking change.
+
+- ⚠️ Breaking Changes
+  - AdminTabs export removed from shared-ui; access via new app-local path after module rename.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/371
+
+
 ## [0.0.5-alpha.202604140433.915ebd9f] - 2026-04-14
 
 - ✨ Features
