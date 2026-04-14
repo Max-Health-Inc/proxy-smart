@@ -38,8 +38,16 @@ export default function App() {
           setState("authenticated")
         })
         .catch((err) => {
-          setError(err instanceof Error ? err.message : "Auth callback failed")
-          setState("error")
+          const msg = err instanceof Error ? err.message : "Auth callback failed"
+          if (/state mismatch/i.test(msg)) {
+            window.history.replaceState({}, "", window.location.pathname)
+            smartAuth.clearToken()
+            setError("Your session was reset (e.g. after a password change). Please sign in again.")
+            setState("session-expired")
+          } else {
+            setError(msg)
+            setState("error")
+          }
         })
       return
     }
