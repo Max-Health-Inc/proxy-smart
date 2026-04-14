@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604140029.1e628bdb] - 2026-04-14
+
+- 🐛 Bug Fixes: Publish canary port and host curl check (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/361
+
+
 ## [0.0.5-alpha.202604132116.231c33d9] - 2026-04-13
 
 - 🔧 Chores & Improvements: Added aud/resource validation in /authorize for SMART App Launch; expands AuthorizationQuery with aud, resource, and launch fields and per-version endpoint checks
