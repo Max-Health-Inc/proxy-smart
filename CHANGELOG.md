@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604141522.6c31e760] - 2026-04-14
+
+- 🔧 Chores & Improvements: Remove readOnlyForUsers config flag and related write-blocking feature; update FHIR proxy and tests to reflect scope/role-based filtering only
+- 🧪 Features: Add FHIR capabilities feature (parsing, server capabilities model, and admin route) with proxy checks for capability support
+- 📚 Documentation: README adds Scalability section with Keycloak-based details
+- 🔧 Chores & Improvements: Extend fhir-capabilities exports/utilities and tests; wire new route into app factory
+- 🐛 Bug Fixes: Harden searchFlags handling in fhir-client to gracefully handle unsupported Flag searches
+- 🔧 Chores & Improvements: Version bumps across apps/tests and minor test/utility updates to accommodate new capability checks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/377
+
+
 ## [0.0.5-alpha.202604140601.c4e1fb8a] - 2026-04-14
 
 - 🔧 Chores & Improvements: CI/CD modernization with widespread GitHub Actions upgrades (checkout, tokens, core actions, Python setup) across pipelines
