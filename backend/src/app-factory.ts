@@ -16,6 +16,8 @@ import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
 import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
 import { fhirCapabilitiesRoutes } from './routes/fhir-capabilities'
 import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
+import { emailMonitoringRoutes } from './routes/email-monitoring'
+import { authMonitoringRoutes } from './routes/auth-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
@@ -104,6 +106,8 @@ export function createApp() {
                     { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
                     { name: 'fhir-proxy-monitoring', description: 'FHIR proxy request metrics and error tracking' },
                     { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
+                    { name: 'email-monitoring', description: 'Email event monitoring (password resets, verifications)' },
+                    { name: 'auth-monitoring', description: 'Auth event monitoring (logins, logouts, registrations, token exchanges)' },
                     { name: 'dicomweb', description: 'DICOMweb proxy for WADO-RS and QIDO-RS imaging services' },
                 ],
                 servers: [
@@ -187,6 +191,8 @@ export function createApp() {
         .use(fhirProxyMonitoringRoutes)
         .use(fhirCapabilitiesRoutes)
         .use(adminAuditMonitoringRoutes)
+        .use(emailMonitoringRoutes)
+        .use(authMonitoringRoutes)
         .use(mcpEndpointRoutes)
         .use(dicomwebRoutes)
         .use(fhirRoutes)

@@ -10,11 +10,12 @@ export interface FHIRServerInfo {
   identifier: string
   metadata: FHIRVersionInfo
   lastUpdated: number
+  strictCapabilities?: boolean
 }
 
 // ── File-backed persistence for dynamically added servers ────────────────────
 
-interface PersistedServer { url: string; name?: string }
+interface PersistedServer { url: string; name?: string; strictCapabilities?: boolean }
 
 const SERVERS_JSON_PATH = join(process.cwd(), 'fhir-servers.json')
 
@@ -121,7 +122,8 @@ class FHIRServerStore {
             url: persisted.url,
             identifier,
             metadata,
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
+            strictCapabilities: persisted.strictCapabilities
           }
           serverInfos.set(identifier, serverInfo)
           logger.fhir.info(`Loaded persisted FHIR server: ${serverInfo.name}`, {
@@ -136,7 +138,8 @@ class FHIRServerStore {
             url: persisted.url,
             identifier,
             metadata: { fhirVersion: 'Unknown', serverName: 'Unknown FHIR Server', supported: false },
-            lastUpdated: Date.now()
+            lastUpdated: Date.now(),
+            strictCapabilities: persisted.strictCapabilities
           })
         }
       }
@@ -438,6 +441,27 @@ export async function deleteServer(serverIdentifier: string): Promise<void> {
     url: server.url,
     identifier: serverIdentifier,
   })
+}
+
+// Toggle strict capability enforcement for a server
+export async function setStrictCapabilities(serverIdentifier: string, strict: boolean): Promise<FHIRServerInfo> {
+  await ensureServersInitialized()
+
+  const server = fhirServerStore.getServerByName(serverIdentifier)
+  if (!server) {
+    throw new Error(`Server '${serverIdentifier}' not found`)
+  }
+
+  const updated: FHIRServerInfo = { ...server, strictCapabilities: strict }
+  fhirServerStore.updateServer(serverIdentifier, updated)
+
+  // Persist the setting
+  const persisted = dynamicServers.get(serverIdentifier) || { url: server.url, name: server.name }
+  dynamicServers.set(serverIdentifier, { ...persisted, strictCapabilities: strict })
+  savePersistedServers(dynamicServers)
+
+  logger.fhir.info(`Set strictCapabilities=${strict} for server ${server.name}`, { identifier: serverIdentifier })
+  return updated
 }
 
 // Helper function to ensure servers are initialized

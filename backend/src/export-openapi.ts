@@ -9,6 +9,11 @@ import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
 import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
+import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
+import { consentMonitoringRoutes } from './routes/consent-monitoring'
+import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
+import { emailMonitoringRoutes } from './routes/email-monitoring'
+import { authMonitoringRoutes } from './routes/auth-monitoring'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { aiRoutes, aiPublicRoutes } from './routes/admin/ai'
@@ -84,6 +89,11 @@ const app = new Elysia({
         { name: 'oauth-sse-monitoring', description: 'OAuth monitoring via Server-Sent Events' },
         { name: 'ai', description: 'AI assistant endpoints with unified internal and MCP tools' },
         { name: 'mcp-management', description: 'MCP server management endpoints' },
+        { name: 'consent-monitoring', description: 'Consent decision monitoring and analytics' },
+        { name: 'fhir-proxy-monitoring', description: 'FHIR proxy request metrics and error tracking' },
+        { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
+        { name: 'email-monitoring', description: 'Email event monitoring (password resets, verifications)' },
+        { name: 'auth-monitoring', description: 'Auth event monitoring (logins, logouts, registrations, token exchanges)' },
       ],
       components: {
         securitySchemes: {
@@ -160,6 +170,11 @@ const app = new Elysia({
   .use(oauthMonitoringRoutes)
   .use(oauthWebSocket)
   .use(fhirMonitoringRoutes)
+  .use(fhirProxyMonitoringRoutes)
+  .use(consentMonitoringRoutes)
+  .use(adminAuditMonitoringRoutes)
+  .use(emailMonitoringRoutes)
+  .use(authMonitoringRoutes)
   .use(aiPublicRoutes) // Public AI health checks (no auth)
   .use(aiRoutes) // Protected AI routes (with auth)
   .use(fhirRoutes)
