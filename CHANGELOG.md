@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/365
 
 
+
+- 🔧 Chores & Improvements: Refine user attribute handling and merge logic
+  - Expand setUserAttribute updates to include explicit fields (firstName, lastName, email, enabled, emailVerified)
+  - For healthcare-users, change PUT handling to merge existing attributes with incoming data (preserve existing attrs when not provided; handle arrays/strings correctly) instead of wholesale replacement
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/367
+
+
 ## [0.0.5-alpha.202604140101.5ffd0475] - 2026-04-14
 
 - ✨ Features: add alpha fallback when beta backend is down (lb_policy first)
