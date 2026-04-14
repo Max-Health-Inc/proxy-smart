@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604140505.378c2cf1] - 2026-04-14
+
+- 🔧 Chores & Improvements: CI/CD simplifications for beta workflow
+  - Remove separate frontend image build; beta now builds only backend and Keycloak
+  - Dropped frontend image variable in beta deployments; adjust .env.beta wiring
+  - Dockerfile: consolidate multi-stage build; remove UI-specific ARGs; set UI base path to /webapp/
+  - Dockerfile.mono removed; CI uses Dockerfile for mono image
+  - docker-compose: prod config now excludes separate frontend service; single-container front-end approach
+  - Infra: update backend image source to use Dockerfile (not Dockerfile.mono) for mono container
+  - package.json: simplify docker:mono script to use default Dockerfile
+
+Note: No user-facing feature changes detected; only maintenance/CI improvements.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/374
+
+
 ## [0.0.5-alpha.202604140457.1f5d7b71] - 2026-04-14
 
 - ✨ Features
