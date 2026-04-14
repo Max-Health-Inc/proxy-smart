@@ -6,13 +6,13 @@
  *
  *   HTTP request → auth check → scope enforcement → upstream proxy → response
  *
- * Uses the real enforceScopeAccess() and enforceWriteBlocking() functions,
+ * Uses the real enforceScopeAccess() function,
  * mocking only external dependencies (token validation, upstream FHIR server).
  */
 
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { Elysia } from 'elysia'
-import { enforceScopeAccess, enforceWriteBlocking, type AccessControlContext } from '../src/lib/smart-access-control'
+import { enforceScopeAccess, type AccessControlContext } from '../src/lib/smart-access-control'
 
 // ── Mock token validator ─────────────────────────────────────────────────────
 
@@ -85,7 +85,7 @@ function buildTestApp() {
         }
       }
 
-      // 4) SMART access control (scope enforcement + write blocking)
+      // 4) SMART access control (scope enforcement)
       if (tokenPayload) {
         const acCtx: AccessControlContext = {
           tokenPayload,
@@ -104,13 +104,6 @@ function buildTestApp() {
           set.status = scopeResult.status!
           return scopeResult.body
         }
-
-        // Write blocking
-        const writeResult = enforceWriteBlocking(acCtx)
-        if (!writeResult.allowed) {
-          set.status = writeResult.status!
-          return writeResult.body
-        }
       }
 
       // 5) Proxy to upstream (mocked)
@@ -128,7 +121,6 @@ function setEnv(vars: Record<string, string>) {
 
 function resetEnv() {
   delete process.env.SCOPE_ENFORCEMENT_MODE
-  delete process.env.READ_ONLY_FOR_USERS
   delete process.env.ROLE_BASED_FILTERING_MODE
 }
 
@@ -459,66 +451,6 @@ describe('Scope Enforcement E2E — FHIR Proxy Pipeline', () => {
 
     it('should allow writes without write scopes in audit-only mode', async () => {
       const res = await app.handle(fhirRequest('POST', 'Observation', 'patient-obs-read'))
-      expect(res.status).toBe(201)
-    })
-  })
-
-  // ── Write blocking integration ─────────────────────────────────────────────
-
-  describe('write blocking (READ_ONLY_FOR_USERS)', () => {
-    beforeEach(() => setEnv({ READ_ONLY_FOR_USERS: 'true' }))
-
-    it('should block POST for users with fhirUser claim', async () => {
-      const res = await app.handle(fhirRequest('POST', 'Observation', 'patient-obs-write'))
-      expect(res.status).toBe(403)
-      const body = await res.json()
-      expect(body.error).toBe('access_denied')
-    })
-
-    it('should block PUT for users with fhirUser claim', async () => {
-      const res = await app.handle(fhirRequest('PUT', 'Patient/123', 'patient-cruds'))
-      expect(res.status).toBe(403)
-    })
-
-    it('should block DELETE for users with fhirUser claim', async () => {
-      const res = await app.handle(fhirRequest('DELETE', 'Patient/123', 'patient-cruds'))
-      expect(res.status).toBe(403)
-    })
-
-    it('should allow GET for users with fhirUser claim', async () => {
-      const res = await app.handle(fhirRequest('GET', 'Patient', 'patient-read-all'))
-      expect(res.status).toBe(200)
-    })
-
-    it('should allow writes for service accounts (no fhirUser)', async () => {
-      const res = await app.handle(fhirRequest('POST', 'Patient', 'superuser'))
-      expect(res.status).toBe(201)
-    })
-  })
-
-  // ── Combined scope enforcement + write blocking ────────────────────────────
-
-  describe('combined scope enforcement + write blocking', () => {
-    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'enforce', READ_ONLY_FOR_USERS: 'true' }))
-
-    it('scope check runs first — insufficient scope returns 403 before write blocking', async () => {
-      // patient-obs-read has read scope — POST should fail on scope check (not write blocking)
-      const res = await app.handle(fhirRequest('POST', 'Observation', 'patient-obs-read'))
-      expect(res.status).toBe(403)
-      const body = await res.json()
-      expect(body.error).toBe('insufficient_scope')
-    })
-
-    it('with valid write scopes, write blocking still denies users', async () => {
-      // patient-cruds has full CRUD — but write blocking should still deny
-      const res = await app.handle(fhirRequest('POST', 'Patient', 'patient-cruds'))
-      expect(res.status).toBe(403)
-      const body = await res.json()
-      expect(body.error).toBe('access_denied')
-    })
-
-    it('service account with system/*.* bypasses both checks', async () => {
-      const res = await app.handle(fhirRequest('POST', 'Patient', 'superuser'))
       expect(res.status).toBe(201)
     })
   })

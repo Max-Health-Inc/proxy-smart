@@ -9,7 +9,7 @@ import { smartConfigService } from '../lib/smart-config'
 import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
-import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
+import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
 import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
 import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, isHistorySupported, isOperationSupported, isPatchFormatSupported, parseFhirPath } from '../lib/fhir-capabilities'
 
@@ -85,7 +85,7 @@ async function proxyFHIR({ params, request, set }: any) {
         : fetch(url, init)
     }
 
-    // 3–5) SMART access control (scope enforcement, write blocking, role-based filtering)
+    // 3–4) SMART access control (scope enforcement, role-based filtering)
     if (tokenPayload) {
       const acCtx: AccessControlContext = {
         tokenPayload,
@@ -105,14 +105,7 @@ async function proxyFHIR({ params, request, set }: any) {
         return scopeResult.body
       }
 
-      // 4) Write blocking
-      const writeResult = enforceWriteBlocking(acCtx)
-      if (!writeResult.allowed) {
-        set.status = writeResult.status
-        return writeResult.body
-      }
-
-      // 5) Role-based filtering
+      // 4) Role-based filtering
       const roleResult = await enforceRoleBasedFiltering(acCtx, queryString)
       if (!roleResult.allowed) {
         set.status = roleResult.status
@@ -122,7 +115,7 @@ async function proxyFHIR({ params, request, set }: any) {
       queryString = roleResult.modifiedQueryString ?? queryString
     }
 
-    // 6) Capability-aware request normalization
+    // 5) Capability-aware request normalization
     // Parse the FHIR path to understand what kind of request this is
     const fhirCtx = parseFhirPath(resourcePath, request.method)
     const resourceType = fhirCtx.resourceType || 'unknown'
@@ -130,7 +123,7 @@ async function proxyFHIR({ params, request, set }: any) {
     const capabilities = await getServerCapabilities(serverUrl, serverInfo.identifier)
 
     if (capabilities && fhirCtx.resourceType) {
-      // 6a) Interaction support check
+      // 5a) Interaction support check
       if (!fhirCtx.isOperation && !fhirCtx.isHistory) {
         if (!isInteractionSupported(capabilities, fhirCtx.resourceType, request.method, fhirCtx.hasSearchSemantics)) {
           set.status = 405
@@ -145,7 +138,7 @@ async function proxyFHIR({ params, request, set }: any) {
         }
       }
 
-      // 6b) _history support check
+      // 5b) _history support check
       if (fhirCtx.isHistory && !isHistorySupported(capabilities, fhirCtx.resourceType, fhirCtx.isInstance)) {
         set.status = 405
         return {
@@ -158,7 +151,7 @@ async function proxyFHIR({ params, request, set }: any) {
         }
       }
 
-      // 6c) $operation support check
+      // 5c) $operation support check
       if (fhirCtx.isOperation && fhirCtx.operationName) {
         if (!isOperationSupported(capabilities, fhirCtx.resourceType, fhirCtx.operationName)) {
           set.status = 405
@@ -173,7 +166,7 @@ async function proxyFHIR({ params, request, set }: any) {
         }
       }
 
-      // 6d) PATCH content-type check
+      // 5d) PATCH content-type check
       if (request.method === 'PATCH') {
         const contentType = request.headers.get('content-type') || ''
         if (contentType && !isPatchFormatSupported(capabilities, contentType)) {
@@ -189,7 +182,7 @@ async function proxyFHIR({ params, request, set }: any) {
         }
       }
 
-      // 6e) Normalize query params (strip unsupported search params + _include/_revinclude values)
+      // 5e) Normalize query params (strip unsupported search params + _include/_revinclude values)
       if (queryString.length > 1) {
         const normResult = normalizeSearchParams(capabilities, fhirCtx.resourceType, queryString)
         const allStripped = [...normResult.strippedParams, ...normResult.strippedIncludes]

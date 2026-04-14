@@ -1,12 +1,12 @@
 /**
  * SMART Access Control Tests
  *
- * Tests for scope enforcement, write blocking, and role-based filtering.
+ * Tests for scope enforcement and role-based filtering.
  * These features are opt-in (disabled by default) and configured via env vars.
  */
 
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
-import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../src/lib/smart-access-control'
+import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../src/lib/smart-access-control'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -59,7 +59,6 @@ function resetEnv() {
   // Remove test-specific env vars
   delete process.env.SCOPE_ENFORCEMENT_MODE
   delete process.env.ROLE_BASED_FILTERING_MODE
-  delete process.env.READ_ONLY_FOR_USERS
   delete process.env.PATIENT_SCOPED_RESOURCES
 }
 
@@ -622,66 +621,7 @@ describe('SMART Scope Enforcement', () => {
 })
 
 // ══════════════════════════════════════════════════════════════════════════════
-// 2. Write Blocking
-// ══════════════════════════════════════════════════════════════════════════════
-
-describe('Write Blocking', () => {
-  afterEach(resetEnv)
-
-  describe('when disabled (default)', () => {
-    it('should allow write operations', () => {
-      const ctx = makeCtx({ method: 'POST', resourcePath: 'Observation' })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(true)
-    })
-  })
-
-  describe('when READ_ONLY_FOR_USERS = true', () => {
-    beforeEach(() => setEnv({ READ_ONLY_FOR_USERS: 'true' }))
-
-    it('should block POST for users with fhirUser', () => {
-      const ctx = makeCtx({ method: 'POST', tokenPayload: { fhirUser: 'Patient/123' } })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(false)
-      expect(result.status).toBe(403)
-      expect(result.body?.error).toBe('access_denied')
-    })
-
-    it('should block PUT for users with fhirUser', () => {
-      const ctx = makeCtx({ method: 'PUT', tokenPayload: { fhirUser: 'Practitioner/dr-1' } })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(false)
-      expect(result.status).toBe(403)
-    })
-
-    it('should block PATCH for users with fhirUser', () => {
-      const ctx = makeCtx({ method: 'PATCH', tokenPayload: { fhirUser: 'Patient/p1' } })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(false)
-    })
-
-    it('should block DELETE for users with fhirUser', () => {
-      const ctx = makeCtx({ method: 'DELETE', tokenPayload: { fhirUser: 'Patient/p1' } })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(false)
-    })
-
-    it('should allow GET even with fhirUser', () => {
-      const ctx = makeCtx({ method: 'GET', tokenPayload: { fhirUser: 'Patient/123' } })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(true)
-    })
-
-    it('should allow writes for tokens WITHOUT fhirUser (admin/service accounts)', () => {
-      const ctx = makeCtx({ method: 'POST', tokenPayload: { scope: 'openid' } })
-      const result = enforceWriteBlocking(ctx)
-      expect(result.allowed).toBe(true)
-    })
-  })
-})
-
-// ══════════════════════════════════════════════════════════════════════════════
-// 3. Role-Based Filtering
+// 2. Role-Based Filtering
 // ══════════════════════════════════════════════════════════════════════════════
 
 describe('Role-Based Filtering', () => {
