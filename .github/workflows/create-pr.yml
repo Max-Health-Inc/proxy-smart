@@ -270,6 +270,11 @@ jobs:
 
           # Push only if HEAD actually moved
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/develop)" ]; then
+            # Pull any new commits that arrived while CI was running, then push
+            git pull --rebase origin develop || {
+              echo "⚠️ Rebase failed — develop moved too far ahead. Will retry on next push."
+              exit 0
+            }
             git push origin develop
             echo "✅ Pushed merge commit — PR should now be conflict-free"
           else
@@ -418,6 +423,10 @@ jobs:
           fi
 
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/test)" ]; then
+            git pull --rebase origin test || {
+              echo "⚠️ Rebase failed — test moved too far ahead. Will retry on next push."
+              exit 0
+            }
             git push origin test
             echo "✅ Pushed merge commit — PR should now be conflict-free"
           else
