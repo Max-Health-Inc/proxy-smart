@@ -160,7 +160,14 @@ export async function setUserAttribute(
     }
   }
 
-  await admin.users.update({ id: userId }, { attributes })
+  await admin.users.update({ id: userId }, {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    enabled: user.enabled,
+    emailVerified: user.emailVerified,
+    attributes
+  })
 }
 
 /**

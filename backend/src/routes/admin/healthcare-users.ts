@@ -357,23 +357,35 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         return UNAUTHORIZED_RESPONSE
       }
 
+      const admin = await getValidatedAdmin(getAdmin, token)
+      
+      // Fetch existing user to merge — Keycloak PUT replaces the entire representation
+      const existingUser = await admin.users.findOne({ id: params.userId })
+      if (!existingUser) {
+        set.status = 404
+        return { error: 'User not found' }
+      }
+
+      const existingAttrs = existingUser.attributes || {}
+      const mergedAttributes = {
+        ...existingAttrs,
+        ...(body.organization !== undefined && { organization: body.organization ? [body.organization] : undefined }),
+        ...(body.fhirPersons && body.fhirPersons.length > 0 && { 
+          fhir_persons: [JSON.stringify(body.fhirPersons)]
+        }),
+        ...(body.npi !== undefined && { npi: body.npi ? [body.npi] : undefined }),
+        ...(body.practitionerId !== undefined && { practitioner_id: body.practitionerId ? [body.practitionerId] : undefined })
+      }
+
       const updateData = {
-        firstName: body.firstName,
-        lastName: body.lastName,
-        email: body.email,
-        enabled: body.enabled,
-        emailVerified: body.emailVerified,
-        attributes: {
-          organization: body.organization ? [body.organization] : undefined,
-          ...(body.fhirPersons && body.fhirPersons.length > 0 && { 
-            fhir_persons: [JSON.stringify(body.fhirPersons)]
-          }),
-          ...(body.npi && { npi: [body.npi] }),
-          ...(body.practitionerId && { practitioner_id: [body.practitionerId] })
-        }
+        firstName: body.firstName ?? existingUser.firstName,
+        lastName: body.lastName ?? existingUser.lastName,
+        email: body.email ?? existingUser.email,
+        enabled: body.enabled ?? existingUser.enabled,
+        emailVerified: body.emailVerified ?? existingUser.emailVerified,
+        attributes: mergedAttributes
       }
       
-      const admin = await getValidatedAdmin(getAdmin, token)
       await admin.users.update({ id: params.userId }, updateData)
       
       // Handle role updates if specified
