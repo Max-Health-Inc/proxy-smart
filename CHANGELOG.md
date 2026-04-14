@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604140433.915ebd9f] - 2026-04-14
+
+- ✨ Features
+  - Admin UI: API/structure refactor for admin tabs; updated import paths and exposure to app-local scope (da65e5d8)
+- 🐛 Bug Fixes
+  - Health: refine health derivation to treat not_configured statuses as non-blocking; keep degraded on configured outages (915ebd9f)
+  - Health: adapt /health endpoint to be a liveness probe with 200 and payloads reflecting subsystem health; 503 removed for health, degraded on error (e10f674)
+- 🔧 Chores & Improvements
+  - CI/CD: pre-push hooks to use --rebase=merges to preserve merges during rebases (0fa2524e)
+  - CI/CD: pre-push CI syncs to rebase local branches against origin (0d65ecaa)
+  - Resource limits: adjust proxy-smart-hapi-fhir-beta memory/Java options (increase, then later reduce to 768m with tuned JVM settings) (744725a1, 746b438e)
+  - Health: minor health calculation tweaks to exclude not_configured components from overall healthy status (915ebd9f)
+- 📚 Documentation
+  - N/A
+- ⚠️ Breaking Changes
+  - AdminTabs export moved: AdminTab and ADMIN_TABS removed from shared-ui index; now provided via app-local path after rename (da65e5d8)
+
+If no meaningful user-facing changes, would output a chore-only line; here there are several user-facing/maintainer-focused updates.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/370
+
+
 ## [0.0.5-alpha.202604140357.b70b6a3c] - 2026-04-14
 
 - ✨ Features: Introduced shared hook useSmartAuth (with SmartAppState, SmartAuthLike, UseSmartAuthOptions) and integrated startAuth/onAuthenticated flow across apps; updated AppHeader/Button/Spinner and re-exported useSmartAuth from shared-ui.
