@@ -42,11 +42,14 @@ export let lastSystemStatusUpdated = 0;
 const STATUS_TTL_MS = 30_000; // cache window for heavy checks
 
 function deriveOverall(fhirStatus: string, keycloakStatus: string): 'healthy' | 'degraded' | 'unhealthy' {
-  // Filter out subsystems that are not configured — they should not affect overall health
+  // Keycloak is critical (auth depends on it) — if it's down, the system is unhealthy.
+  // FHIR servers are optional/degraded — if they're down, the landing page and admin UI
+  // still work, only FHIR operations fail. This prevents Caddy from returning 503 for
+  // the entire site when only HAPI is down.
+  if (keycloakStatus !== 'not_configured' && keycloakStatus === 'unhealthy') return 'unhealthy';
   const statuses = [fhirStatus, keycloakStatus].filter(s => s !== 'not_configured');
-  if (statuses.length === 0) return 'healthy'; // nothing configured yet, server itself is healthy
+  if (statuses.length === 0) return 'healthy';
   if (statuses.every(s => s === 'healthy')) return 'healthy';
-  if (statuses.some(s => s === 'unhealthy')) return 'unhealthy';
   return 'degraded';
 }
 
