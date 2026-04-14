@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604140101.5ffd0475] - 2026-04-14
+
+- ✨ Features: add alpha fallback when beta backend is down (lb_policy first)
+- 🐛 Bug Fixes: wait for keycloak before canary; accept 503 as valid health response
+- 🔧 Chores & Improvements: update version to 0.0.5-alpha.202604140101.5ffd0475
+- 📚 Documentation: update CHANGELOG.md for PR #362
+- 📚 Documentation: update CHANGELOG.md for PR #361
+- ⚠️ Breaking Changes: none
+- 🔧 Chores & Improvements: sync package versions after rebase
+- 🔧 Chores & Improvements: update dev/beta SMART compliance reports (maintenance tasks)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/363
+
+
 ## [0.0.5-beta.202604140029.1e628bdb] - 2026-04-14
 
 - 🐛 Bug Fixes: Publish canary port and host curl check (quotentiroler)
