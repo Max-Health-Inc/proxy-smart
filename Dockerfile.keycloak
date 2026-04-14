@@ -12,6 +12,9 @@ ENV KC_HOSTNAME_STRICT=false
 ENV KC_HEALTH_ENABLED=true
 ENV KC_METRICS_ENABLED=true
 
+# Limit JVM heap at runtime (prevents OOM on small VPS instances)
+ENV JAVA_OPTS_KC_HEAP="-Xms128m -Xmx512m"
+
 # Build Keycloak to optimize startup time
 # JAVA_TOOL_OPTIONS is read by the JVM itself, ensuring kc.sh build respects the heap limit
 RUN JAVA_TOOL_OPTIONS="-Xmx512m" /opt/keycloak/bin/kc.sh build

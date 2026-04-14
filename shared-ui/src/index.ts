@@ -25,3 +25,9 @@ export { onAuthError, reportAuthError } from "./lib/auth-error"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"
+export {
+  useSmartAuth,
+  type SmartAppState,
+  type SmartAuthLike,
+  type UseSmartAuthOptions,
+} from "./hooks/use-smart-auth"

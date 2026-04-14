@@ -369,7 +369,7 @@ jobs:
               KC_BASE='http://localhost:8080/auth'
 
               # Get Keycloak container IP on the compose network
-              KC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' proxy-smart-keycloak-beta 2>/dev/null | head -c 15)
+              KC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' proxy-smart-keycloak-beta 2>/dev/null)
               if [ -z \"\$KC_IP\" ]; then
                 echo '  ⚠️ Keycloak container not found — skipping SMTP config'
                 exit 0
@@ -409,7 +409,7 @@ jobs:
               EXISTING_HOST=\$(curl -sf \"\${KC_BASE}/admin/realms/proxy-smart\" \
                 -H \"Authorization: Bearer \$KC_TOKEN\" | grep -o '\"host\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4 || true)
 
-              if [ \"\$EXISTING_HOST\" = 'smtp.resend.dev' ]; then
+              if [ \"\$EXISTING_HOST\" = 'smtp.resend.com' ]; then
                 echo '  ✅ Keycloak SMTP already configured — skipping'
                 exit 0
               fi
@@ -421,7 +421,7 @@ jobs:
                 -d '{
                   \"resetPasswordAllowed\": true,
                   \"smtpServer\": {
-                    \"host\": \"smtp.resend.dev\",
+                    \"host\": \"smtp.resend.com\",
                     \"port\": \"465\",
                     \"from\": \"noreply@maxhealth.tech\",
                     \"fromDisplayName\": \"Proxy Smart\",
