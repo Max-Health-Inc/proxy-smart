@@ -11,7 +11,7 @@ import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
 import { enforceScopeAccess, enforceWriteBlocking, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
 import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
-import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, parseFhirPath } from '../lib/fhir-capabilities'
+import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, isHistorySupported, isOperationSupported, isPatchFormatSupported, parseFhirPath } from '../lib/fhir-capabilities'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
@@ -130,34 +130,82 @@ async function proxyFHIR({ params, request, set }: any) {
     const capabilities = await getServerCapabilities(serverUrl, serverInfo.identifier)
 
     if (capabilities && fhirCtx.resourceType) {
-      // Check if the interaction itself is supported
-      if (!isInteractionSupported(capabilities, fhirCtx.resourceType, request.method, fhirCtx.hasSearchSemantics)) {
+      // 6a) Interaction support check
+      if (!fhirCtx.isOperation && !fhirCtx.isHistory) {
+        if (!isInteractionSupported(capabilities, fhirCtx.resourceType, request.method, fhirCtx.hasSearchSemantics)) {
+          set.status = 405
+          return {
+            resourceType: 'OperationOutcome',
+            issue: [{
+              severity: 'error',
+              code: 'not-supported',
+              diagnostics: `${request.method} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+            }],
+          }
+        }
+      }
+
+      // 6b) _history support check
+      if (fhirCtx.isHistory && !isHistorySupported(capabilities, fhirCtx.resourceType, fhirCtx.isInstance)) {
         set.status = 405
         return {
           resourceType: 'OperationOutcome',
           issue: [{
             severity: 'error',
             code: 'not-supported',
-            diagnostics: `${request.method} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+            diagnostics: `_history on ${fhirCtx.resourceType} is not supported by this FHIR server`,
           }],
         }
       }
 
-      // Normalize query params on any request that has them and targets a known resource
+      // 6c) $operation support check
+      if (fhirCtx.isOperation && fhirCtx.operationName) {
+        if (!isOperationSupported(capabilities, fhirCtx.resourceType, fhirCtx.operationName)) {
+          set.status = 405
+          return {
+            resourceType: 'OperationOutcome',
+            issue: [{
+              severity: 'error',
+              code: 'not-supported',
+              diagnostics: `$${fhirCtx.operationName} on ${fhirCtx.resourceType} is not supported by this FHIR server`,
+            }],
+          }
+        }
+      }
+
+      // 6d) PATCH content-type check
+      if (request.method === 'PATCH') {
+        const contentType = request.headers.get('content-type') || ''
+        if (contentType && !isPatchFormatSupported(capabilities, contentType)) {
+          set.status = 415
+          return {
+            resourceType: 'OperationOutcome',
+            issue: [{
+              severity: 'error',
+              code: 'not-supported',
+              diagnostics: `PATCH content-type '${contentType}' is not supported. Supported: ${[...capabilities.patchFormat].join(', ') || 'none declared'}`,
+            }],
+          }
+        }
+      }
+
+      // 6e) Normalize query params (strip unsupported search params + _include/_revinclude values)
       if (queryString.length > 1) {
         const normResult = normalizeSearchParams(capabilities, fhirCtx.resourceType, queryString)
-        if (normResult.strippedParams.length > 0) {
+        const allStripped = [...normResult.strippedParams, ...normResult.strippedIncludes]
+        if (allStripped.length > 0) {
           const normalized = normResult.normalizedParams.toString()
           queryString = normalized ? `?${normalized}` : ''
           logger.fhir.debug('Stripped unsupported search params', {
             server: params.server_name,
             resourceType: fhirCtx.resourceType,
             path: resourcePath,
-            stripped: normResult.strippedParams,
+            strippedParams: normResult.strippedParams,
+            strippedIncludes: normResult.strippedIncludes,
           })
           set.headers = {
             ...set.headers,
-            'x-proxy-stripped-params': normResult.strippedParams.join(','),
+            'x-proxy-stripped-params': allStripped.join(','),
           }
         }
       }
