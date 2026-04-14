@@ -24,7 +24,9 @@ services:
     image: ${KEYCLOAK_IMAGE:-ghcr.io/max-health-inc/proxy-smart/keycloak:beta-latest}
     container_name: proxy-smart-keycloak-beta
     restart: unless-stopped
+    mem_limit: 768m
     environment:
+      JAVA_OPTS_KC_HEAP: "-Xms128m -Xmx512m"
       KC_HOSTNAME: https://beta.proxy-smart.com/auth
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded
@@ -125,7 +127,9 @@ services:
     image: hapiproject/hapi:latest
     container_name: proxy-smart-hapi-fhir-beta
     restart: unless-stopped
+    mem_limit: 1024m
     environment:
+      JAVA_TOOL_OPTIONS: "-Xmx512m"
       spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
       spring.datasource.username: postgres
       spring.datasource.password: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
