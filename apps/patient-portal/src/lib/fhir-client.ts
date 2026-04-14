@@ -280,6 +280,7 @@ export async function searchImagingStudies(patientId: string): Promise<ImagingSt
 export async function searchRadiologyResults(patientId: string): Promise<ObservationResultsRadiologyUvIps[]> {
   return client.read().observationResultsRadiologyUvIps().searchAll({
     patient: `Patient/${patientId}`,
+    category: "imaging",
     _count: 50,
     _sort: "-date",
   })
@@ -297,6 +298,7 @@ const genomicsClient = new GenomicsFhirClient(fhirBaseUrl, authFetch)
 export async function searchGenomicReports(patientId: string): Promise<GenomicReport[]> {
   return genomicsClient.read().genomicReport().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomic-report",
     _count: 50,
     _sort: "-date",
   })
@@ -305,6 +307,7 @@ export async function searchGenomicReports(patientId: string): Promise<GenomicRe
 export async function searchVariants(patientId: string): Promise<Variant[]> {
   return genomicsClient.read().variant().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant",
     _count: 100,
     _sort: "-date",
   })
@@ -313,6 +316,7 @@ export async function searchVariants(patientId: string): Promise<Variant[]> {
 export async function searchDiagnosticImplications(patientId: string): Promise<DiagnosticImplication[]> {
   return genomicsClient.read().diagnosticImplication().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/diagnostic-implication",
     _count: 100,
     _sort: "-date",
   })
@@ -321,6 +325,7 @@ export async function searchDiagnosticImplications(patientId: string): Promise<D
 export async function searchTherapeuticImplications(patientId: string): Promise<TherapeuticImplication[]> {
   return genomicsClient.read().therapeuticImplication().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/therapeutic-implication",
     _count: 100,
     _sort: "-date",
   })

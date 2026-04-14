@@ -383,7 +383,9 @@ export function Dashboard() {
                     <span className="text-muted-foreground">
                       {v.valueQuantity
                         ? `${v.valueQuantity.value} ${v.valueQuantity.unit || ""}`
-                        : v.valueString || "—"}
+                        : v.component?.length
+                          ? v.component.map(c => c.valueQuantity ? `${c.valueQuantity.value}` : "").filter(Boolean).join("/") + ` ${v.component[0]?.valueQuantity?.unit || ""}`
+                          : v.valueString || "—"}
                     </span>
                   </li>
                 ))}
