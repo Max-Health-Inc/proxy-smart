@@ -164,6 +164,33 @@ graph TB
 
 > PostgreSQL only stores user/config data. Clinical data stays on your FHIR servers.
 
+## Scalability
+
+Proxy Smart inherits Keycloak's proven horizontal scalability. The proxy layer is stateless — it adds no bottleneck on top of Keycloak's auth flows.
+
+### Official Keycloak Benchmarks ([source](https://www.keycloak.org/high-availability/single-cluster/introduction))
+
+| Metric | Regularly Tested | Max Tested |
+|---|---|---|
+| **Users** | 1,000,000 | 30,000,000 |
+| **Password logins/sec** | 300 | 1,000 |
+| **Token refreshes/sec** | — | 20,000 |
+| **Client credential grants/sec** | — | 2,000 |
+
+### CPU Sizing ([source](https://www.keycloak.org/high-availability/multi-cluster/concepts-memory-and-cpu-sizing))
+
+| Operation | vCPU per unit |
+|---|---|
+| 15 password logins/sec | 1 vCPU |
+| 120 client credential grants/sec | 1 vCPU |
+| 120 refresh token requests/sec | 1 vCPU |
+
+Base memory per Keycloak pod: **1,250 MB** (includes caches for 10,000 sessions).
+
+### Max Tested Setup
+
+6 Pods across 3 AWS availability zones, each with 40 vCPU / 8 GB RAM, backed by Aurora PostgreSQL multi-AZ — achieving **1,000 logins + 20,000 token refreshes per second**. CPU usage scales linearly with request count.
+
 ## Documentation
 
 <table>
