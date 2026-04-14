@@ -53,7 +53,7 @@ export class BackendStack extends cdk.Stack {
     super(scope, id, props);
 
     // ECR repository for mono container (backend + UI)
-    // Image is built from Dockerfile.mono in CI/CD pipeline
+    // Image is built from Dockerfile in CI/CD pipeline
     this.repository = new ecr.Repository(this, 'BackendRepo', {
       repositoryName: 'proxy-smart-backend',
       removalPolicy: cdk.RemovalPolicy.RETAIN,
@@ -222,7 +222,7 @@ export class BackendStack extends cdk.Stack {
         sslPolicy: elbv2.SslPolicy.TLS13_RES,
         
         taskImageOptions: {
-          // Built from Dockerfile.mono (backend + UI in single container)
+          // Built from Dockerfile (backend + UI in single container)
           image: ecs.ContainerImage.fromEcrRepository(this.repository, 'latest'),
           containerPort: 8445,
           environment,
