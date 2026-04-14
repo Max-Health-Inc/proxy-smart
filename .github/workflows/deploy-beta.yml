@@ -261,6 +261,19 @@ jobs:
             done
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d keycloak hapi-fhir orthanc
 
+            # Wait for Keycloak to be ready (backend health check depends on it)
+            echo '  ⏳ Waiting for Keycloak...'
+            for i in \$(seq 1 40); do
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
+                echo '  ✅ Keycloak ready'
+                break
+              fi
+              if [ \$i -eq 40 ]; then
+                echo '  ⚠️ Keycloak not ready after 120s — proceeding anyway'
+              fi
+              sleep 3
+            done
+
             # ── Blue-Green: canary-test the new backend image before swapping ──
             echo '🔬 Canary-testing new backend image before swap...'
             BACKEND_IMG=\$(grep BACKEND_IMAGE .env.beta | cut -d= -f2)
@@ -298,7 +311,7 @@ jobs:
                 docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
               fi
-              if curl -sf http://localhost:9445/health >/dev/null 2>&1; then
+              if curl -s -o /dev/null -w '%{http_code}' http://localhost:9445/health | grep -qE '^(200|503)$'; then
                 CANARY_OK=true
                 echo '  ✅ Canary health check passed — safe to swap'
                 break
