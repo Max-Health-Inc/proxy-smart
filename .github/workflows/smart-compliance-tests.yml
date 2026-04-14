@@ -165,13 +165,13 @@ jobs:
       - name: Generate token
         id: app-token
         continue-on-error: true
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ steps.app-token.outputs.token || github.token }}
 
@@ -239,7 +239,7 @@ jobs:
       # Cache Docker images to speed up workflow (only for local targets)
       - name: Cache Docker images
         if: steps.config.outputs.target != 'deployed'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: docker-cache
         with:
           path: /tmp/docker-images
@@ -700,7 +700,7 @@ jobs:
 
       # Setup Node.js for Playwright
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -1184,7 +1184,7 @@ jobs:
 
       - name: Upload Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: inferno-test-results-${{ env.TEST_STAGE }}
           path: test-results/

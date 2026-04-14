@@ -38,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Bun with version scripts
         uses: ./.github/actions/setup-bun-version
@@ -67,7 +67,7 @@ jobs:
 
       - name: Authenticate as GitHub App for API Generation
         id: api-app-auth
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -164,7 +164,7 @@ jobs:
         if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.frontend-build.outcome == 'failure') }}
         id: frontend-app-auth
         continue-on-error: true
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -328,7 +328,7 @@ jobs:
       - name: Authenticate as GitHub App (Frontend Tests)
         if: ${{ inputs.run_tests && steps.test-status.outputs.TEST_FAILED == 'true' }}
         id: frontend-test-app-auth
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}

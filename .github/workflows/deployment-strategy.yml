@@ -162,7 +162,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Discord Deployment Success Notification
         uses: ./.github/actions/discord-notify
@@ -191,7 +191,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Discord Deployment Failure Notification
         uses: ./.github/actions/discord-notify
