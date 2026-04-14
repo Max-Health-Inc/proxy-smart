@@ -264,7 +264,7 @@ jobs:
             # Wait for Keycloak to be ready (backend health check depends on it)
             echo '  ⏳ Waiting for Keycloak...'
             for i in \$(seq 1 40); do
-              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /auth/health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
                 echo '  ✅ Keycloak ready'
                 break
               fi
@@ -351,7 +351,7 @@ jobs:
 
             # Wait for backend health check (Docker healthcheck + HTTP)
             for i in \$(seq 1 60); do
-              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend curl -sf http://localhost:8445/health >/dev/null 2>&1; then
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend bun -e 'fetch(\"http://localhost:8445/health\").then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))' >/dev/null 2>&1; then
                 echo '  ✅ Backend ready'
                 break
               fi
@@ -360,19 +360,26 @@ jobs:
           "
 
           # Configure Keycloak SMTP (Resend) and enable password reset
-          # Uses backend container for curl (same Docker network — avoids host→container IP issues)
           # SMTP config is persisted in Keycloak's DB, so we skip if already configured.
+          # Uses host curl via docker network (backend container lacks curl in bun:slim)
           if [ -n "${RESEND_API_KEY}" ]; then
             echo "📧 Checking Keycloak SMTP configuration..."
             ${SSH_CMD} "
               cd ${DEPLOY_DIR}
-              COMPOSE='docker compose -f docker-compose.beta.yml --env-file .env.beta'
-              KC_BASE='http://keycloak:8080/auth'
+              KC_BASE='http://localhost:8080/auth'
 
-              # Wait for Keycloak to be ready (it should already be up from the earlier health loop)
+              # Get Keycloak container IP on the compose network
+              KC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' proxy-smart-keycloak-beta 2>/dev/null | head -c 15)
+              if [ -z \"\$KC_IP\" ]; then
+                echo '  ⚠️ Keycloak container not found — skipping SMTP config'
+                exit 0
+              fi
+              KC_BASE=\"http://\${KC_IP}:8080/auth\"
+
+              # Wait for Keycloak to be ready
               KC_READY=false
               for i in \$(seq 1 20); do
-                if \$COMPOSE exec -T backend curl -sf http://keycloak:9000/health/ready >/dev/null 2>&1; then
+                if curl -sf \"http://\${KC_IP}:9000/auth/health/ready\" >/dev/null 2>&1; then
                   KC_READY=true
                   break
                 fi
@@ -386,7 +393,7 @@ jobs:
 
               # Get admin token
               KC_PASS=\$(grep KEYCLOAK_ADMIN_PASSWORD .env.beta | cut -d= -f2)
-              KC_TOKEN=\$(\$COMPOSE exec -T backend curl -sf -X POST \"\${KC_BASE}/realms/master/protocol/openid-connect/token\" \
+              KC_TOKEN=\$(curl -sf -X POST \"\${KC_BASE}/realms/master/protocol/openid-connect/token\" \
                 -H 'Content-Type: application/x-www-form-urlencoded' \
                 -d 'username=admin' \
                 -d \"password=\${KC_PASS}\" \
@@ -399,7 +406,7 @@ jobs:
               fi
 
               # Check if SMTP is already configured (skip the PUT if host is already set)
-              EXISTING_HOST=\$(\$COMPOSE exec -T backend curl -sf \"\${KC_BASE}/admin/realms/proxy-smart\" \
+              EXISTING_HOST=\$(curl -sf \"\${KC_BASE}/admin/realms/proxy-smart\" \
                 -H \"Authorization: Bearer \$KC_TOKEN\" | grep -o '\"host\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4 || true)
 
               if [ \"\$EXISTING_HOST\" = 'smtp.resend.dev' ]; then
@@ -408,7 +415,7 @@ jobs:
               fi
 
               # Update realm with SMTP settings and enable password reset
-              \$COMPOSE exec -T backend curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
+              curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
                 -H 'Content-Type: application/json' \
                 -H \"Authorization: Bearer \$KC_TOKEN\" \
                 -d '{
