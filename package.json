@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.5-alpha.202604140433.915ebd9f",
+  "version": "0.0.5-beta.202604140433.915ebd9f",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quotentiroler/proxy-smart.git"
