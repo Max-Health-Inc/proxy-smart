@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604140338.9e4b2b09] - 2026-04-14
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- ✨ Features
+  - None detected
+
+- 🐛 Bug Fixes
+  - State mismatch error handling across apps: on auth callback failures, now clear token, reset URL, show friendly message, and mark session as expired.
+
+- 🔧 Chores & Improvements
+  - Admin utilities: expand setUserAttribute updates to include explicit fields (firstName, lastName, email, enabled, emailVerified).
+  - Healthcare users: improve PUT handling to merge existing attributes with updates instead of wholesale replacement; preserve existing attributes when not provided and handle correct array/string merging.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/368
+
+
 ## [0.0.5-beta.202604140206.9147fc91] - 2026-04-14
 
 - 🔧 Chores & Improvements: Update healthcheck to use HTTP/1.0 and extend timeout (10s) for more reliable readiness checks
