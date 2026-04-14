@@ -274,6 +274,7 @@ jobs:
             docker run -d --name \$CANARY_NAME \\
               --network proxy-smart-beta-network \\
               --env-file .env.beta \\
+              -p 9445:9445 \\
               -e NODE_ENV=production \\
               -e PORT=9445 \\
               -e BASE_URL=https://beta.proxy-smart.com \\
@@ -297,7 +298,7 @@ jobs:
                 docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
               fi
-              if docker exec \$CANARY_NAME bun -e "fetch('http://localhost:9445/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))" >/dev/null 2>&1; then
+              if curl -sf http://localhost:9445/health >/dev/null 2>&1; then
                 CANARY_OK=true
                 echo '  ✅ Canary health check passed — safe to swap'
                 break
