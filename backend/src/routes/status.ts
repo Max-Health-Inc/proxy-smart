@@ -2,11 +2,8 @@ import { Elysia, t } from 'elysia'
 import { collectSystemStatus } from '../lib/system-status'
 import { 
   HealthResponse, 
-  HealthErrorResponse, 
   SystemStatusResponse, 
-  ErrorResponse,
   HealthResponseType,
-  HealthErrorResponseType,
   SystemStatusResponseType
 } from '../schemas'
 
@@ -17,46 +14,43 @@ import {
  */
 export const statusRoutes = new Elysia({ tags: ['server', 'info', 'health'] })
 
-  // Health check endpoint - check if server is healthy
-  .get('/health', async ({ set, query }): Promise<HealthResponseType | HealthErrorResponseType> => {
+  // Liveness probe — always 200 as long as the process is running.
+  // Subsystem health (FHIR, Keycloak) is reported in the payload body
+  // but never affects the HTTP status code. Caddy uses this to decide
+  // whether to route traffic; we ALWAYS want it routed to us so we can
+  // serve the landing page, admin UI, and graceful error messages.
+  .get('/health', async ({ query }): Promise<HealthResponseType> => {
     const force = query.force === '1';
     try {
       const full = await collectSystemStatus(force);
-      const payload = {
+      return {
         status: full.overall,
         timestamp: full.timestamp,
         uptime: full.uptime
       };
-      if (full.overall === 'unhealthy') set.status = 503;
-      return payload;
     } catch {
-      set.status = 503;
-      return { status: 'unhealthy', timestamp: new Date().toISOString(), error: 'Health collection failed' };
+      return { status: 'degraded', timestamp: new Date().toISOString() };
     }
   }, {
     query: t.Object({
       force: t.Optional(t.String())
     }),
     response: {
-      200: HealthResponse,
-      503: HealthErrorResponse
+      200: HealthResponse
     },
     detail: {
-      summary: 'Health Check (lean)',
-      description: 'Fast liveness/readiness probe. Use /status for detailed system information.',
+      summary: 'Liveness Probe',
+      description: 'Always returns 200 if the backend process is running. Subsystem health is in the response body. Use /status for detailed diagnostics.',
       tags: ['server']
     }
   })
 
   // System status endpoint - comprehensive system health check
-  .get('/status', async ({ set }): Promise<SystemStatusResponseType> => {
-    const status = await collectSystemStatus(true);
-    if (status.overall === 'unhealthy') set.status = 503;
-    return status;
+  .get('/status', async (): Promise<SystemStatusResponseType> => {
+    return await collectSystemStatus(true);
   }, {
     response: {
-      200: SystemStatusResponse,
-      503: ErrorResponse
+      200: SystemStatusResponse
     },
     detail: {
       summary: 'System Status',
