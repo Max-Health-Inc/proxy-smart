@@ -297,7 +297,7 @@ jobs:
                 docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
               fi
-              if docker exec \$CANARY_NAME curl -sf http://localhost:9445/health >/dev/null 2>&1; then
+              if docker exec \$CANARY_NAME bun -e "fetch('http://localhost:9445/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))" >/dev/null 2>&1; then
                 CANARY_OK=true
                 echo '  ✅ Canary health check passed — safe to swap'
                 break
