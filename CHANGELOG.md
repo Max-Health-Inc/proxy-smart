@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604142134.629fe5cd] - 2026-04-14
+
+- ✨ Features: Introduced strict capabilities checks across UI and backend, including SetStrictCapabilities API/types, UI toggle in FhirServersManager, and persistence/enforcement of strictCapability statements. Added monitoring dashboards/services (auth/email) and new AdminAudit/Email/Auth monitoring models and routes. Expanded OpenAPI typings and health/status models to support monitoring features.
+- 🔧 Chores & Improvements: Version bumps across multiple apps/tests; updated Admin/OpenAPI client references; added new logger hooks for backend monitoring; refreshed health-related models and system status representations. 
+- 📚 Documentation: (none)
+- ⚠️ Breaking Changes: (none detected)
+- 🐛 Bug Fixes: (none detected)
+
+If you need stricter grouping or fewer categories, I can adjust.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/380
+
+
 ## [0.0.5-alpha.202604141522.6c31e760] - 2026-04-14
 
 - 🔧 Chores & Improvements: Remove readOnlyForUsers config flag and related write-blocking feature; update FHIR proxy and tests to reflect scope/role-based filtering only
