@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604140601.c4e1fb8a] - 2026-04-14
+
+- 🔧 Chores & Improvements: CI/CD modernization with widespread GitHub Actions upgrades (checkout, tokens, core actions, Python setup) across pipelines
+- 🔧 Chores & Improvements: Restrict workflow triggers to backend/lib/shared-ui/apps/Dockerfiles/keycloak/package.json/testing/keycam and workflow file changes; preserve existing main push with tags
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/376
+
+
 ## [0.0.5-beta.202604140505.378c2cf1] - 2026-04-14
 
 - 🔧 Chores & Improvements: CI/CD simplifications for beta workflow
