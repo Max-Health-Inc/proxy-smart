@@ -6,7 +6,7 @@
 # The VPS only pulls images — no Docker builds happen here.
 #
 # Image env vars (set in .env.beta by CI):
-#   BACKEND_IMAGE, FRONTEND_IMAGE, KEYCLOAK_IMAGE
+#   BACKEND_IMAGE, KEYCLOAK_IMAGE
 #
 # Prerequisites:
 #   docker network create caddy
@@ -102,7 +102,7 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
     labels:
       caddy: beta.proxy-smart.com
-      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg"
+      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg /webapp /webapp/*"
       caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
       caddy.1_reverse_proxy.health_uri: /health
       caddy.1_reverse_proxy.health_interval: 10s
@@ -124,12 +124,12 @@ services:
       - caddy
 
   hapi-fhir:
-    image: hapiproject/hapi:latest
+    image: hapiproject/hapi:v8.6.5
     container_name: proxy-smart-hapi-fhir-beta
     restart: unless-stopped
     mem_limit: 1536m
     environment:
-      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx768m -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=64m -XX:+UseSerialGC"
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx640m -XX:MaxMetaspaceSize=200m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=64m -XX:+UseSerialGC"
       spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
       spring.datasource.username: postgres
       spring.datasource.password: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
@@ -180,31 +180,6 @@ services:
         condition: service_healthy
     networks:
       - proxy-smart
-
-  frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/max-health-inc/proxy-smart/frontend:beta-latest}
-    container_name: proxy-smart-frontend-beta
-    restart: unless-stopped
-    environment:
-      VITE_API_BASE_URL: https://beta.proxy-smart.com
-    labels:
-      caddy: beta.proxy-smart.com
-      caddy.@webapp.path: "/webapp /webapp/*"
-      caddy.2_reverse_proxy: "@webapp {{upstreams 80}}"
-      caddy.2_reverse_proxy.health_uri: /webapp/
-      caddy.2_reverse_proxy.health_interval: 15s
-      caddy.2_reverse_proxy.health_timeout: 5s
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:80/ > /dev/null"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    depends_on:
-      - backend
-    networks:
-      - proxy-smart
-      - caddy
 
 networks:
   proxy-smart:

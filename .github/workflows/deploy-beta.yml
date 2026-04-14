@@ -90,22 +90,6 @@ jobs:
           cache-from: type=gha,scope=beta-backend-v2
           cache-to: type=gha,mode=max,scope=beta-backend-v2
 
-      - name: Build & push frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile
-          target: ui
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/frontend:beta-${{ inputs.app_version }}
-            ${{ env.IMAGE_PREFIX }}/frontend:beta-latest
-          build-args: |
-            VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
-            VITE_BASE=/webapp/
-          cache-from: type=gha,scope=beta-frontend
-          cache-to: type=gha,mode=max,scope=beta-frontend
-
       - name: Build & push keycloak image
         uses: docker/build-push-action@v6
         with:
@@ -223,7 +207,7 @@ jobs:
             "OPENAI_API_KEY=${OPENAI_API_KEY}" \
             "RESEND_API_KEY=${RESEND_API_KEY}" \
             "BACKEND_IMAGE=${{ env.IMAGE_PREFIX }}/backend:${IMAGE_TAG}" \
-            "FRONTEND_IMAGE=${{ env.IMAGE_PREFIX }}/frontend:${IMAGE_TAG}" \
+
             "KEYCLOAK_IMAGE=${{ env.IMAGE_PREFIX }}/keycloak:${IMAGE_TAG}" \
           | ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta && chmod 600 ${DEPLOY_DIR}/.env.beta"
 

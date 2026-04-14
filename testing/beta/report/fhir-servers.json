@@ -1,1 +1,1 @@
-{"error":"backend unreachable"}
+{"totalServers":1,"servers":[{"id":"hapi-fhir","name":"Unknown FHIR Server","url":"http://hapi-fhir:8080/fhir","fhirVersion":"Unknown","serverName":"Unknown FHIR Server","supported":false,"endpoints":{"base":"https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir/Unknown","smartConfig":"https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir/Unknown/.well-known/smart-configuration","metadata":"https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir/Unknown/metadata"}}]}
