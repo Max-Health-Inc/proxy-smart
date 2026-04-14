@@ -124,7 +124,7 @@ services:
       - caddy
 
   hapi-fhir:
-    image: hapiproject/hapi:v8.6.5
+    image: hapiproject/hapi:v8.6.5-1
     container_name: proxy-smart-hapi-fhir-beta
     restart: unless-stopped
     mem_limit: 1536m
