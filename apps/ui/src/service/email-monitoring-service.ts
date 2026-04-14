@@ -5,29 +5,8 @@
  */
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
-
-// ─── Types (mirror backend EmailEvent / EmailAnalytics) ──────────────
-
-export interface EmailEvent {
-  id: string;
-  timestamp: string;
-  type: string;
-  userId?: string;
-  clientId?: string;
-  ipAddress?: string;
-  error?: string;
-  success: boolean;
-  details?: Record<string, string>;
-}
-
-export interface EmailAnalytics {
-  totalEvents: number;
-  successRate: number;
-  eventsByType: Record<string, number>;
-  recentErrors: EmailEvent[];
-  hourlyStats: Array<{ hour: string; success: number; failure: number; total: number }>;
-  timestamp?: string;
-}
+import type { EmailEvent, EmailAnalyticsResponse as EmailAnalytics } from '@/lib/types/api';
+export type { EmailEvent, EmailAnalytics };
 
 // ─── Service ─────────────────────────────────────────────────────────
 

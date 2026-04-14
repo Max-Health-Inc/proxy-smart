@@ -5,31 +5,8 @@
  */
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
-
-// ─── Types (mirror backend AuthEvent / AuthAnalytics) ────────────────
-
-export interface AuthEvent {
-  id: string;
-  timestamp: string;
-  type: string;
-  userId?: string;
-  clientId?: string;
-  sessionId?: string;
-  ipAddress?: string;
-  error?: string;
-  success: boolean;
-  details?: Record<string, string>;
-}
-
-export interface AuthAnalytics {
-  totalEvents: number;
-  successRate: number;
-  eventsByType: Record<string, number>;
-  recentErrors: AuthEvent[];
-  hourlyStats: Array<{ hour: string; success: number; failure: number; total: number }>;
-  topClients: Array<{ clientId: string; count: number }>;
-  timestamp?: string;
-}
+import type { AuthEvent, AuthAnalyticsResponse as AuthAnalytics } from '@/lib/types/api';
+export type { AuthEvent, AuthAnalytics };
 
 // ─── Service ─────────────────────────────────────────────────────────
 
