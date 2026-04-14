@@ -206,7 +206,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {patient && <PatientBanner patient={patient} />}
+      {patient && <PatientBanner patient={patient} onPatientUpdated={setPatient} />}
 
       {/* Document Import / DICOM Upload */}
       {showImport ? (

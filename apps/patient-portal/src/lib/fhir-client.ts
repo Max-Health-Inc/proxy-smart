@@ -82,6 +82,27 @@ export async function getPatient(id: string): Promise<PatientUvIps> {
   return client.read().patientUvIps().read(id)
 }
 
+// ── Update Patient demographics ──────────────────────────────────────────────
+
+export async function updatePatient(
+  id: string,
+  resource: PatientUvIps
+): Promise<PatientUvIps> {
+  const res = await authFetch(`${fhirBaseUrl}/Patient/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/fhir+json",
+      Accept: "application/fhir+json",
+    },
+    body: JSON.stringify(resource),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Patient update failed (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<PatientUvIps>
+}
+
 // ── IPS: International Patient Summary ($summary operation) ──────────────────
 
 export async function getPatientSummary(patientId: string): Promise<BundleUvIps> {
