@@ -209,11 +209,15 @@ export async function searchProcedures(patientId: string): Promise<ProcedureUvIp
 // ── Flags / Alerts (IPS-profiled) ────────────────────────────────────────────
 
 export async function searchFlags(patientId: string): Promise<FlagAlertUvIps[]> {
-  return client.read().flagAlertUvIps().searchAll({
-    patient: `Patient/${patientId}`,
-    status: "active",
-    _count: 20,
-  })
+  try {
+    return await client.read().flagAlertUvIps().searchAll({
+      patient: `Patient/${patientId}`,
+      _count: 20,
+    })
+  } catch {
+    // HAPI may not support Flag search — return empty gracefully
+    return []
+  }
 }
 
 // ── Pregnancy (IPS-profiled) ─────────────────────────────────────────────────
