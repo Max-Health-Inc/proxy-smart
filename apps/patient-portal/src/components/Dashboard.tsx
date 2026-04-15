@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Button, Spinner } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Spinner, Badge } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import {
   getPatient,
@@ -55,27 +55,42 @@ import { GenomicsCard } from "@/components/GenomicsCard"
 import { DocumentImport } from "@/components/DocumentImport"
 import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
+import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
 import { checkPacsStatus } from "@/lib/dicomweb"
 import {
-  Heart,
-  Pill,
-  ShieldAlert,
-  Syringe,
-  Activity,
-  FlaskConical,
-  AlertCircle,
-  Cigarette,
-  Wine,
-  Scissors,
-  Flag,
-  Baby,
-  Stethoscope,
-  Laptop,
-  Upload,
-  FileImage,
-  MessageSquare,
+  Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle,
+  Cigarette, Wine, Scissors, Flag, Baby, Stethoscope, Laptop, Upload,
+  FileImage, MessageSquare, Eye, EyeOff,
 } from "lucide-react"
 import { format } from "date-fns"
+
+// ── Clickable record name ────────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyResource = Record<string, any>
+
+function RecordName({
+  children,
+  resource,
+  onOpen,
+}: {
+  children: React.ReactNode
+  resource: AnyResource
+  onOpen: (title: string, resource: AnyResource) => void
+}) {
+  const label = typeof children === "string" ? children : ""
+  return (
+    <button
+      type="button"
+      className="font-medium text-left hover:underline hover:text-primary cursor-pointer transition-colors"
+      onClick={() => onOpen(label, resource)}
+    >
+      {children}
+    </button>
+  )
+}
+
+// ── Main Dashboard ───────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const [loading, setLoading] = useState(true)
@@ -84,9 +99,23 @@ export function Dashboard() {
   const [showScribe, setShowScribe] = useState(false)
   const [showDicomUpload, setShowDicomUpload] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null) // null = not yet checked
+  const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null)
+  const [showUnverified, setShowUnverified] = useState(true)
+
+  // Record detail modal state
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailTitle, setDetailTitle] = useState("")
+  const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
+
+  const openDetail = useCallback((title: string, resource: AnyResource) => {
+    setDetailTitle(title)
+    setDetailResource(resource)
+    setDetailOpen(true)
+  }, [])
 
   const refreshData = useCallback(() => setRefreshKey(k => k + 1), [])
+
+  // Clinical data state
   const [patient, setPatient] = useState<Patient | null>(null)
   const [conditions, setConditions] = useState<Condition[]>([])
   const [allergies, setAllergies] = useState<AllergyIntolerance[]>([])
@@ -109,6 +138,12 @@ export function Dashboard() {
   const [diagnosticImplications, setDiagnosticImplications] = useState<DiagnosticImplication[]>([])
   const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
 
+  // Filter helper
+  const filterVerified = useCallback(<T extends AnyResource>(items: T[]): T[] => {
+    if (showUnverified) return items
+    return items.filter(isResourceVerified)
+  }, [showUnverified])
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -122,33 +157,27 @@ export function Dashboard() {
         const pt = await getPatient(patientId)
         setPatient(pt)
 
-        // Load clinical data in small batches to avoid 429 rate limits
         const [cond, allergy] = await Promise.allSettled([
-          searchConditions(patientId),
-          searchAllergies(patientId),
+          searchConditions(patientId), searchAllergies(patientId),
         ])
         if (cond.status === "fulfilled") setConditions(cond.value)
         if (allergy.status === "fulfilled") setAllergies(allergy.value)
 
         const [meds, imm] = await Promise.allSettled([
-          searchMedicationStatements(patientId),
-          searchImmunizations(patientId),
+          searchMedicationStatements(patientId), searchImmunizations(patientId),
         ])
         if (meds.status === "fulfilled") setMedications(meds.value)
         if (imm.status === "fulfilled") setImmunizations(imm.value)
 
         const [vit, lab] = await Promise.allSettled([
-          searchVitals(patientId),
-          searchLabs(patientId),
+          searchVitals(patientId), searchLabs(patientId),
         ])
         if (vit.status === "fulfilled") setVitals(vit.value)
         if (lab.status === "fulfilled") setLabs(lab.value)
 
         const [tobacco, alcohol, proc, flag] = await Promise.allSettled([
-          searchTobaccoUse(patientId),
-          searchAlcoholUse(patientId),
-          searchProcedures(patientId),
-          searchFlags(patientId),
+          searchTobaccoUse(patientId), searchAlcoholUse(patientId),
+          searchProcedures(patientId), searchFlags(patientId),
         ])
         if (tobacco.status === "fulfilled") setTobaccoUse(tobacco.value)
         if (alcohol.status === "fulfilled") setAlcoholUse(alcohol.value)
@@ -156,12 +185,9 @@ export function Dashboard() {
         if (flag.status === "fulfilled") setFlags(flag.value)
 
         const [pregStatus, pregEdd, medReqs, devices, imaging, radiology] = await Promise.allSettled([
-          searchPregnancyStatus(patientId),
-          searchPregnancyEdd(patientId),
-          searchMedicationRequests(patientId),
-          searchDeviceUseStatements(patientId),
-          searchImagingStudies(patientId),
-          searchRadiologyResults(patientId),
+          searchPregnancyStatus(patientId), searchPregnancyEdd(patientId),
+          searchMedicationRequests(patientId), searchDeviceUseStatements(patientId),
+          searchImagingStudies(patientId), searchRadiologyResults(patientId),
         ])
         if (pregStatus.status === "fulfilled") setPregnancyStatus(pregStatus.value)
         if (pregEdd.status === "fulfilled") setPregnancyEdd(pregEdd.value)
@@ -171,17 +197,14 @@ export function Dashboard() {
         if (radiology.status === "fulfilled") setRadiologyResults(radiology.value)
 
         const [gReports, gVariants, gDiagImpl, gTheraImpl] = await Promise.allSettled([
-          searchGenomicReports(patientId),
-          searchVariants(patientId),
-          searchDiagnosticImplications(patientId),
-          searchTherapeuticImplications(patientId),
+          searchGenomicReports(patientId), searchVariants(patientId),
+          searchDiagnosticImplications(patientId), searchTherapeuticImplications(patientId),
         ])
         if (gReports.status === "fulfilled") setGenomicReports(gReports.value)
         if (gVariants.status === "fulfilled") setVariants(gVariants.value)
         if (gDiagImpl.status === "fulfilled") setDiagnosticImplications(gDiagImpl.value)
         if (gTheraImpl.status === "fulfilled") setTherapeuticImplications(gTheraImpl.value)
 
-        // Non-blocking PACS availability check
         checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
@@ -189,7 +212,6 @@ export function Dashboard() {
         setLoading(false)
       }
     }
-
     loadData()
   }, [refreshKey])
 
@@ -215,7 +237,7 @@ export function Dashboard() {
     <div className="space-y-6">
       {patient && <PatientBanner patient={patient} onPatientUpdated={setPatient} />}
 
-      {/* Document Import / Patient Scribe / DICOM Upload */}
+      {/* Top actions bar */}
       {showImport ? (
         <DocumentImport onClose={() => { setShowImport(false); refreshData() }} />
       ) : showScribe ? (
@@ -223,25 +245,37 @@ export function Dashboard() {
       ) : showDicomUpload ? (
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
-        <div className="flex justify-end gap-2">
+        <div className="flex items-center justify-between gap-2">
+          {/* Show Unverified toggle */}
           <Button
-            variant="outline"
+            variant={showUnverified ? "outline" : "secondary"}
             size="sm"
-            onClick={() => setShowDicomUpload(true)}
-            title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : undefined}
+            onClick={() => setShowUnverified(v => !v)}
+            className="gap-1.5"
           >
-            <FileImage className={`size-4 ${pacsAvailable === false ? "opacity-50" : ""}`} />
-            Upload Imaging
-            {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">(offline)</span>}
+            {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+            {showUnverified ? "Showing All" : "Verified Only"}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
-            <Upload className="size-4" />
-            Import Document
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowScribe(true)}>
-            <MessageSquare className="size-4" />
-            Patient Scribe
-          </Button>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline" size="sm"
+              onClick={() => setShowDicomUpload(true)}
+              title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : undefined}
+            >
+              <FileImage className={`size-4 ${pacsAvailable === false ? "opacity-50" : ""}`} />
+              Upload Imaging
+              {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">(offline)</span>}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+              <Upload className="size-4" />
+              Import Document
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowScribe(true)}>
+              <MessageSquare className="size-4" />
+              Patient Scribe
+            </Button>
+          </div>
         </div>
       )}
 
@@ -255,15 +289,15 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {conditions.length === 0 ? (
+            {filterVerified(conditions).length === 0 ? (
               <p className="text-sm text-muted-foreground">No active conditions on record</p>
             ) : (
               <ul className="space-y-2">
-                {conditions.map((c, i) => (
+                {filterVerified(conditions).map((c, i) => (
                   <li key={c.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={c} onOpen={openDetail}>
                       {c.code?.coding?.[0]?.display || c.code?.text || "Unknown condition"}
-                    </span>
+                    </RecordName>
                     {c.onsetDateTime && (
                       <span className="text-muted-foreground ml-2">
                         since {format(new Date(c.onsetDateTime), "MMM yyyy")}
@@ -285,15 +319,15 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {allergies.length === 0 ? (
+            {filterVerified(allergies).length === 0 ? (
               <p className="text-sm text-muted-foreground">No known allergies</p>
             ) : (
               <ul className="space-y-2">
-                {allergies.map((a, i) => (
+                {filterVerified(allergies).map((a, i) => (
                   <li key={a.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={a} onOpen={openDetail}>
                       {a.code?.coding?.[0]?.display || a.code?.text || "Unknown allergen"}
-                    </span>
+                    </RecordName>
                     {a.reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display && (
                       <span className="text-muted-foreground ml-2">
                         — {a.reaction[0].manifestation[0].coding[0].display}
@@ -315,17 +349,16 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {medications.length === 0 ? (
+            {filterVerified(medications).length === 0 ? (
               <p className="text-sm text-muted-foreground">No active medications</p>
             ) : (
               <ul className="space-y-2">
-                {medications.map((m, i) => (
+                {filterVerified(medications).map((m, i) => (
                   <li key={m.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={m} onOpen={openDetail}>
                       {m.medicationCodeableConcept?.coding?.[0]?.display ||
-                        m.medicationCodeableConcept?.text ||
-                        "Unknown medication"}
-                    </span>
+                        m.medicationCodeableConcept?.text || "Unknown medication"}
+                    </RecordName>
                     {m.dosage?.[0]?.text && (
                       <span className="text-muted-foreground ml-2">— {m.dosage[0].text}</span>
                     )}
@@ -345,20 +378,19 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {immunizations.length === 0 ? (
+            {filterVerified(immunizations).length === 0 ? (
               <p className="text-sm text-muted-foreground">No immunization records</p>
             ) : (
               <ul className="space-y-2">
-                {immunizations.map((imm, i) => {
+                {filterVerified(immunizations).map((imm, i) => {
                   const targetDiseaseCode = imm.protocolApplied?.[0]?.targetDisease?.[0]?.coding?.[0]?.code
                   const targetDisease = targetDiseaseCode
-                    ? getVaccineTargetDiseasesUvIpsConcept(targetDiseaseCode)?.display
-                    : undefined
+                    ? getVaccineTargetDiseasesUvIpsConcept(targetDiseaseCode)?.display : undefined
                   return (
                     <li key={imm.id || i} className="text-sm">
-                      <span className="font-medium">
+                      <RecordName resource={imm} onOpen={openDetail}>
                         {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || "Unknown vaccine"}
-                      </span>
+                      </RecordName>
                       {targetDisease && (
                         <span className="text-muted-foreground ml-1 text-xs">({targetDisease})</span>
                       )}
@@ -390,9 +422,9 @@ export function Dashboard() {
               <ul className="space-y-2">
                 {vitals.slice(0, 10).map((v, i) => (
                   <li key={v.id || i} className="text-sm flex justify-between">
-                    <span className="font-medium">
+                    <RecordName resource={v} onOpen={openDetail}>
                       {v.code?.coding?.[0]?.display || v.code?.text || "Unknown"}
-                    </span>
+                    </RecordName>
                     <span className="text-muted-foreground">
                       {v.valueQuantity
                         ? `${v.valueQuantity.value} ${v.valueQuantity.unit || ""}`
@@ -422,9 +454,9 @@ export function Dashboard() {
               <ul className="space-y-2">
                 {labs.slice(0, 10).map((l, i) => (
                   <li key={l.id || i} className="text-sm flex justify-between">
-                    <span className="font-medium truncate mr-2">
+                    <RecordName resource={l} onOpen={openDetail}>
                       {l.code?.coding?.[0]?.display || l.code?.text || "Unknown"}
-                    </span>
+                    </RecordName>
                     <span className="text-muted-foreground whitespace-nowrap">
                       {l.valueQuantity
                         ? `${l.valueQuantity.value} ${l.valueQuantity.unit || ""}`
@@ -453,13 +485,12 @@ export function Dashboard() {
                 {tobaccoUse.map((obs, i) => {
                   const statusCode = obs.valueCodeableConcept?.coding?.[0]?.code
                   const statusDisplay = statusCode
-                    ? getCurrentSmokingStatusUvIpsConcept(statusCode)?.display
-                    : undefined
+                    ? getCurrentSmokingStatusUvIpsConcept(statusCode)?.display : undefined
                   return (
                     <li key={obs.id || i} className="text-sm flex justify-between">
-                      <span className="font-medium">
+                      <RecordName resource={obs} onOpen={openDetail}>
                         {statusDisplay || obs.valueCodeableConcept?.text || "Unknown"}
-                      </span>
+                      </RecordName>
                       {obs.effectiveDateTime && (
                         <span className="text-muted-foreground">
                           {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -488,13 +519,13 @@ export function Dashboard() {
               <ul className="space-y-2">
                 {alcoholUse.map((obs, i) => (
                   <li key={obs.id || i} className="text-sm flex justify-between">
-                    <span className="font-medium">
+                    <RecordName resource={obs} onOpen={openDetail}>
                       {obs.valueCodeableConcept?.coding?.[0]?.display ||
                         obs.valueCodeableConcept?.text ||
                         obs.valueQuantity
                           ? `${obs.valueQuantity?.value ?? ""} ${obs.valueQuantity?.unit ?? ""}`.trim()
                           : "Unknown"}
-                    </span>
+                    </RecordName>
                     {obs.effectiveDateTime && (
                       <span className="text-muted-foreground">
                         {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -516,24 +547,22 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {procedures.length === 0 ? (
+            {filterVerified(procedures).length === 0 ? (
               <p className="text-sm text-muted-foreground">No procedure records</p>
             ) : (
               <ul className="space-y-2">
-                {procedures.map((proc, i) => (
+                {filterVerified(procedures).map((proc, i) => (
                   <li key={proc.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={proc} onOpen={openDetail}>
                       {proc.code?.coding?.[0]?.display || proc.code?.text || "Unknown procedure"}
-                    </span>
+                    </RecordName>
                     {proc.performedDateTime && (
                       <span className="text-muted-foreground ml-2">
                         {format(new Date(proc.performedDateTime), "MMM d, yyyy")}
                       </span>
                     )}
                     {proc.status && (
-                      <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                        {proc.status}
-                      </span>
+                      <Badge variant="outline" className="ml-2 text-xs">{proc.status}</Badge>
                     )}
                   </li>
                 ))}
@@ -557,14 +586,10 @@ export function Dashboard() {
               <ul className="space-y-2">
                 {flags.map((flag, i) => (
                   <li key={flag.id || i} className="text-sm flex items-center gap-2">
-                    <span
-                      className={`inline-block size-2 rounded-full ${
-                        flag.status === "active" ? "bg-red-500" : "bg-gray-400"
-                      }`}
-                    />
-                    <span className="font-medium">
+                    <span className={`inline-block size-2 rounded-full ${flag.status === "active" ? "bg-red-500" : "bg-gray-400"}`} />
+                    <RecordName resource={flag} onOpen={openDetail}>
                       {flag.code?.coding?.[0]?.display || flag.code?.text || "Unknown flag"}
-                    </span>
+                    </RecordName>
                     {flag.period?.start && (
                       <span className="text-muted-foreground text-xs">
                         since {format(new Date(flag.period.start), "MMM d, yyyy")}
@@ -592,14 +617,12 @@ export function Dashboard() {
               <ul className="space-y-2">
                 {pregnancyStatus.map((obs, i) => {
                   const code = obs.valueCodeableConcept?.coding?.[0]?.code
-                  const display = code
-                    ? getPregnancyStatusUvIpsConcept(code)?.display
-                    : undefined
+                  const display = code ? getPregnancyStatusUvIpsConcept(code)?.display : undefined
                   return (
                     <li key={obs.id || `ps-${i}`} className="text-sm flex justify-between">
-                      <span className="font-medium">
+                      <RecordName resource={obs} onOpen={openDetail}>
                         {display || obs.valueCodeableConcept?.text || "Unknown status"}
-                      </span>
+                      </RecordName>
                       {obs.effectiveDateTime && (
                         <span className="text-muted-foreground">
                           {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -610,11 +633,9 @@ export function Dashboard() {
                 })}
                 {pregnancyEdd.map((obs, i) => (
                   <li key={obs.id || `edd-${i}`} className="text-sm flex justify-between">
-                    <span className="font-medium">
-                      EDD: {obs.valueDateTime
-                        ? format(new Date(obs.valueDateTime), "MMM d, yyyy")
-                        : "Unknown"}
-                    </span>
+                    <RecordName resource={obs} onOpen={openDetail}>
+                      EDD: {obs.valueDateTime ? format(new Date(obs.valueDateTime), "MMM d, yyyy") : "Unknown"}
+                    </RecordName>
                     <span className="text-muted-foreground text-xs">
                       {obs.code?.coding?.[0]?.display || "Expected Delivery Date"}
                     </span>
@@ -634,17 +655,16 @@ export function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {medicationRequests.length === 0 ? (
+            {filterVerified(medicationRequests).length === 0 ? (
               <p className="text-sm text-muted-foreground">No active prescriptions</p>
             ) : (
               <ul className="space-y-2">
-                {medicationRequests.map((rx, i) => (
+                {filterVerified(medicationRequests).map((rx, i) => (
                   <li key={rx.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={rx} onOpen={openDetail}>
                       {rx.medicationCodeableConcept?.coding?.[0]?.display ||
-                        rx.medicationCodeableConcept?.text ||
-                        "Unknown medication"}
-                    </span>
+                        rx.medicationCodeableConcept?.text || "Unknown medication"}
+                    </RecordName>
                     {rx.dosageInstruction?.[0]?.text && (
                       <span className="text-muted-foreground ml-2">— {rx.dosageInstruction[0].text}</span>
                     )}
@@ -675,18 +695,16 @@ export function Dashboard() {
               <ul className="space-y-2">
                 {deviceUse.map((du, i) => (
                   <li key={du.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={du} onOpen={openDetail}>
                       {du.device?.display || du.device?.reference || "Unknown device"}
-                    </span>
+                    </RecordName>
                     {du.timingPeriod?.start && (
                       <span className="text-muted-foreground ml-2">
                         since {format(new Date(du.timingPeriod.start), "MMM d, yyyy")}
                       </span>
                     )}
                     {du.status && (
-                      <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                        {du.status}
-                      </span>
+                      <Badge variant="outline" className="ml-2 text-xs">{du.status}</Badge>
                     )}
                   </li>
                 ))}
@@ -713,6 +731,14 @@ export function Dashboard() {
           <HealthChartsCard vitals={vitals} labs={labs} />
         </div>
       </div>
+
+      {/* Record Detail Modal */}
+      <RecordDetailModal
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        title={detailTitle}
+        resource={detailResource}
+      />
     </div>
   )
 }

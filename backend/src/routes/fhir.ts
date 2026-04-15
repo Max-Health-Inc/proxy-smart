@@ -337,7 +337,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
   // CORS preflight is handled by the global @elysiajs/cors plugin
 
   // Root FHIR path - serve the FHIR server base URL content
-  .get('/', async ({ params, set }) => {
+  .get('/', async ({ params, set, request }) => {
     // early version sanity check
     if (!config.fhir.supportedVersions.includes(params.fhir_version)) {
       set.status = 400
@@ -352,10 +352,13 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
         return { error: `FHIR server '${params.server_name}' not found` }
       }
 
+      // Forward query params (e.g. _getpages pagination) to upstream
+      const queryString = new URL(request.url).search
+
       const headers = new Headers()
       headers.set('accept', 'application/fhir+json')
 
-      const resp = await fetch(serverUrl, {
+      const resp = await fetch(`${serverUrl}${queryString}`, {
         method: 'GET',
         headers
       })
