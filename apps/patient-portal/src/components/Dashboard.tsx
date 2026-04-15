@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, Button, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import {
@@ -82,7 +82,10 @@ export function Dashboard() {
   const [showImport, setShowImport] = useState(false)
   const [showScribe, setShowScribe] = useState(false)
   const [showDicomUpload, setShowDicomUpload] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null) // null = not yet checked
+
+  const refreshData = useCallback(() => setRefreshKey(k => k + 1), [])
   const [patient, setPatient] = useState<Patient | null>(null)
   const [conditions, setConditions] = useState<Condition[]>([])
   const [allergies, setAllergies] = useState<AllergyIntolerance[]>([])
@@ -187,7 +190,7 @@ export function Dashboard() {
     }
 
     loadData()
-  }, [])
+  }, [refreshKey])
 
   if (loading) {
     return (
@@ -213,9 +216,9 @@ export function Dashboard() {
 
       {/* Document Import / Patient Scribe / DICOM Upload */}
       {showImport ? (
-        <DocumentImport onClose={() => setShowImport(false)} />
+        <DocumentImport onClose={() => { setShowImport(false); refreshData() }} />
       ) : showScribe ? (
-        <PatientScribe onClose={() => setShowScribe(false)} />
+        <PatientScribe onClose={() => { setShowScribe(false); refreshData() }} />
       ) : showDicomUpload ? (
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
