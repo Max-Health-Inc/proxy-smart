@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604151504.df46b9f0] - 2026-04-15
+
+- 🔧 Chores & Improvements: Version bump across all packages to 0.0.5-alpha.202604151504.df46b9f0
+- 🔧 Chores & Improvements: UI refresh logic added (useCallback, refreshKey, refreshData) in patient-portal Dashboard
+- 🔧 Chores & Improvements: refreshData triggered on close for DocumentImport and PatientScribe
+- 🔧 Chores & Improvements: useEffect dependency updated to include refreshKey
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/385
+
+
 ## [0.0.5-alpha.202604151036.3c3941a0] - 2026-04-15
 
 - 🔧 Chores & Improvements: Simplify base URL handling for patient-portal (use config.proxyBase for importDocument and scribeFromText)
