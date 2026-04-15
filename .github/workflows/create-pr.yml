@@ -270,12 +270,23 @@ jobs:
 
           # Push only if HEAD actually moved
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/develop)" ]; then
-            # Pull any new commits that arrived while CI was running, then push
-            git pull --rebase origin develop || {
-              echo "⚠️ Rebase failed — develop moved too far ahead. Will retry on next push."
+            # Fetch + merge (not rebase!) to handle concurrent pushes from release-alpha.
+            # Rebase fails silently on merge commits; merge -X ours is safe.
+            git fetch origin develop
+            git merge origin/develop -X ours --no-edit \
+              -m "chore: merge latest develop [proxy-smart-releaser]" || {
+              CONFLICTED=$(git diff --name-only --diff-filter=U)
+              if [ -n "$CONFLICTED" ]; then
+                echo "$CONFLICTED" | xargs git checkout --ours
+                git add -A
+              fi
+              git commit --no-edit \
+                -m "chore: merge latest develop [proxy-smart-releaser]" || true
+            }
+            git push origin develop || {
+              echo "⚠️ Push failed — will absorb on next cycle."
               exit 0
             }
-            git push origin develop
             echo "✅ Pushed merge commit — PR should now be conflict-free"
           else
             echo "✅ Already up-to-date with test"
@@ -423,11 +434,23 @@ jobs:
           fi
 
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/test)" ]; then
-            git pull --rebase origin test || {
-              echo "⚠️ Rebase failed — test moved too far ahead. Will retry on next push."
+            # Fetch + merge (not rebase!) to handle concurrent pushes from release-beta.
+            # Rebase fails silently on merge commits; merge -X ours is safe.
+            git fetch origin test
+            git merge origin/test -X ours --no-edit \
+              -m "chore: merge latest test [proxy-smart-releaser]" || {
+              CONFLICTED=$(git diff --name-only --diff-filter=U)
+              if [ -n "$CONFLICTED" ]; then
+                echo "$CONFLICTED" | xargs git checkout --ours
+                git add -A
+              fi
+              git commit --no-edit \
+                -m "chore: merge latest test [proxy-smart-releaser]" || true
+            }
+            git push origin test || {
+              echo "⚠️ Push failed — will absorb on next cycle."
               exit 0
             }
-            git push origin test
             echo "✅ Pushed merge commit — PR should now be conflict-free"
           else
             echo "✅ Already up-to-date with main"
