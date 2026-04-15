@@ -14,6 +14,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/389
 
 
+
+- 🔧 Chores & Improvements: Enable Keycloak Organizations on startup and ensure realm export includes organizationsEnabled: true
+  - Add ensureOrganizationsEnabled() on startup
+  - Authenticate admin and enable organizationsEnabled when possible
+  - Updated realm export to persist organizationsEnabled setting
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/390
+
+
 ## [0.0.5-beta.202604151830.cce514f1] - 2026-04-15
 
 - ✨ Features: 
