@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604152103.e8069208] - 2026-04-15
+
+- 🔧 Chores & Improvements: CI: rename install step and add separate Playwright browsers install; version bumps across apps and testing package.json from beta to alpha
+- 🔧 Chores & Improvements: Testing: E2E package.json version bump
+- ✨ Features: Smart DICOM: add Cornerstone lazy init (cornerstone-init.ts) and ensureCornerstoneInit() usage to initialize Cornerstone and set OAuth token on WADO-RS requests
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/393
+
+
 ## [0.0.5-alpha.202604152049.bc89605a] - 2026-04-15
 
 - ✨ Features: Add Cornerstone lazy init (cornerstone-init.ts; ensureCornerstoneInit usage to initialize Cornerstone and set OAuth token on WADO-RS requests)
