@@ -309,7 +309,12 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Playwright
+      - name: Install E2E dependencies
+        run: |
+          cd testing/e2e
+          npm install
+
+      - name: Install Playwright browsers
         run: |
           cd testing/e2e
           npx playwright install chromium --with-deps

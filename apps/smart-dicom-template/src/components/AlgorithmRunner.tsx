@@ -13,6 +13,7 @@ import {
   getStudyThumbnailUrl,
 } from "@/lib/dicomweb"
 import { type AlgorithmResult, runAlgorithm } from "@/algorithm"
+import { ensureCornerstoneInit } from "@/lib/cornerstone-init"
 import { Play, ImageIcon, CheckCircle, AlertTriangle, Info, RefreshCw } from "lucide-react"
 
 type RunState = "idle" | "loading-images" | "running" | "done" | "error"
@@ -61,6 +62,8 @@ export function AlgorithmRunner() {
     try {
       // 1. Collect all series image IDs
       setRunState("loading-images")
+      await ensureCornerstoneInit()
+
       const studyUID = getStudyInstanceUID(study)
       if (!studyUID) throw new Error("Study has no Study Instance UID")
 
