@@ -11,6 +11,8 @@ export interface E2EEnv {
   keycloakURL: string
   /** Full URL to patient-portal app */
   patientPortalURL: string
+  /** Full URL to consent-app */
+  consentAppURL: string
   /** Full URL to the admin UI */
   adminURL: string
   /** FHIR proxy base path */
@@ -19,7 +21,7 @@ export interface E2EEnv {
 
 const target = (process.env.E2E_TARGET ?? "alpha") as TargetEnv
 
-const envMap: Record<TargetEnv, Omit<E2EEnv, "target" | "patientPortalURL" | "adminURL" | "fhirProxyPath">> = {
+const envMap: Record<TargetEnv, Omit<E2EEnv, "target" | "patientPortalURL" | "consentAppURL" | "adminURL" | "fhirProxyPath">> = {
   local: {
     baseURL: "http://localhost:8445",
     keycloakURL: "http://localhost:8080",
@@ -40,6 +42,7 @@ export const env: E2EEnv = {
   ...base,
   target,
   patientPortalURL: `${base.baseURL}/apps/patient-portal/`,
+  consentAppURL: `${base.baseURL}/apps/consent/`,
   adminURL: `${base.baseURL}/webapp/`,
   fhirProxyPath: "proxy-smart-backend/hapi-fhir-server/R4",
 }

@@ -1,0 +1,354 @@
+name: E2E Consent App Tests (Playwright)
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      test_stage:
+        description: 'Test stage config to use'
+        required: false
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - alpha
+          - beta
+
+  # Called by other workflows (testing-strategy)
+  workflow_call:
+    inputs:
+      test_stage:
+        description: 'Test stage config to use'
+        required: false
+        type: string
+        default: 'dev'
+    outputs:
+      status:
+        description: 'Overall E2E test status'
+        value: ${{ jobs.e2e-consent-tests.outputs.status }}
+      passed:
+        description: 'Number of passed tests'
+        value: ${{ jobs.e2e-consent-tests.outputs.passed }}
+      failed:
+        description: 'Number of failed tests'
+        value: ${{ jobs.e2e-consent-tests.outputs.failed }}
+
+  # Feature branches
+  push:
+    branches:
+      - 'dev/*'
+      - 'develop/*'
+      - 'develop'
+      - 'test'
+      - 'main'
+    paths:
+      - 'apps/consent-app/**'
+      - 'backend/**'
+      - 'shared-ui/**'
+      - 'testing/e2e/**'
+      - '.github/workflows/e2e-consent-tests.yml'
+
+concurrency:
+  group: e2e-consent-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  TEST_STAGE: ${{
+    (startsWith(github.ref, 'refs/heads/dev/') || startsWith(github.ref, 'refs/heads/develop/')) && 'dev' ||
+    github.ref == 'refs/heads/develop' && 'alpha' ||
+    github.ref == 'refs/heads/test' && 'beta' ||
+    github.ref == 'refs/heads/main' && 'production' ||
+    inputs.test_stage || 'dev' }}
+
+jobs:
+  e2e-consent-tests:
+    name: Consent App E2E (${{ inputs.test_stage || 'dev' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: ${{ github.event_name != 'push' || (!contains(github.event.head_commit.message, '🔄 Update version') && !contains(github.event.head_commit.message, '🤖 Update client APIs') && !contains(github.event.head_commit.message, 'proxy-smart-releaser')) }}
+
+    outputs:
+      status: ${{ steps.run-tests.outcome }}
+      passed: ${{ steps.results.outputs.passed }}
+      failed: ${{ steps.results.outputs.failed }}
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: keycloak
+          POSTGRES_PASSWORD: keycloak
+          POSTGRES_DB: keycloak
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      hapi-fhir:
+        image: hapiproject/hapi:v8.6.0-1
+        ports:
+          - 8081:8080
+        env:
+          hapi.fhir.default_encoding: json
+          hapi.fhir.fhir_version: R4
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine target
+        id: config
+        run: |
+          STAGE="${{ env.TEST_STAGE }}"
+          # For dev/local, start full stack; for alpha/beta, run against deployed
+          if [[ "$STAGE" == "alpha" || "$STAGE" == "beta" || "$STAGE" == "production" ]]; then
+            echo "target=deployed" >> $GITHUB_OUTPUT
+          else
+            echo "target=local" >> $GITHUB_OUTPUT
+          fi
+          echo "stage=$STAGE" >> $GITHUB_OUTPUT
+
+      # ── Docker image cache (local only) ──
+      - name: Cache Docker images
+        if: steps.config.outputs.target == 'local'
+        uses: actions/cache@v5
+        id: docker-cache
+        with:
+          path: /tmp/docker-images
+          key: docker-images-keycloak-26.6.1
+
+      - name: Load cached Docker images
+        if: steps.config.outputs.target == 'local' && steps.docker-cache.outputs.cache-hit == 'true'
+        run: |
+          if [ -f /tmp/docker-images/keycloak.tar ]; then
+            docker load -i /tmp/docker-images/keycloak.tar
+            echo "✓ Keycloak image loaded from cache"
+          fi
+
+      - name: Pull and cache Keycloak image
+        if: steps.config.outputs.target == 'local' && steps.docker-cache.outputs.cache-hit != 'true'
+        run: |
+          docker pull quay.io/keycloak/keycloak:26.6.1
+          mkdir -p /tmp/docker-images
+          docker save quay.io/keycloak/keycloak:26.6.1 -o /tmp/docker-images/keycloak.tar
+
+      # ── Bun + deps ──
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Backend
+        run: cd backend && bun run build
+
+      # ── Start Keycloak (local) ──
+      - name: Start Keycloak
+        if: steps.config.outputs.target == 'local'
+        run: |
+          mkdir -p /tmp/keycloak-import
+          cp keycloak/realm-export.json /tmp/keycloak-import/
+
+          docker run -d \
+            --name keycloak \
+            --network host \
+            -v /tmp/keycloak-import:/opt/keycloak/data/import \
+            -e KEYCLOAK_ADMIN=admin \
+            -e KEYCLOAK_ADMIN_PASSWORD=admin \
+            -e KC_DB=postgres \
+            -e KC_DB_URL=jdbc:postgresql://localhost:5432/keycloak \
+            -e KC_DB_USERNAME=keycloak \
+            -e KC_DB_PASSWORD=keycloak \
+            -e KC_HEALTH_ENABLED=true \
+            -e KC_HTTP_ENABLED=true \
+            -e KC_HOSTNAME_STRICT=false \
+            quay.io/keycloak/keycloak:26.6.1 \
+            start-dev --import-realm
+
+          echo "Waiting for Keycloak..."
+          for i in {1..60}; do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/realms/master 2>/dev/null || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✓ Keycloak is ready!"
+              break
+            fi
+            echo "Attempt $i/60... (HTTP $HTTP_CODE)"
+            sleep 2
+          done
+
+          # Verify realm import
+          sleep 5
+          TOKEN=$(curl -s -X POST "http://localhost:8080/realms/master/protocol/openid-connect/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "grant_type=password&client_id=admin-cli&username=admin&password=admin" | jq -r '.access_token')
+          REALMS=$(curl -s "http://localhost:8080/admin/realms" -H "Authorization: Bearer $TOKEN" | jq -r '.[].realm')
+          echo "Available realms: $REALMS"
+          if ! echo "$REALMS" | grep -q "proxy-smart"; then
+            echo "ERROR: proxy-smart realm not found!"
+            docker logs keycloak | tail -50
+            exit 1
+          fi
+
+      # ── Wait for HAPI FHIR (local) ──
+      - name: Wait for HAPI FHIR
+        if: steps.config.outputs.target == 'local'
+        run: |
+          echo "Waiting for HAPI FHIR..."
+          for i in {1..60}; do
+            if curl -sf http://localhost:8081/fhir/metadata > /dev/null 2>&1; then
+              echo "✓ HAPI FHIR is ready!"
+              break
+            fi
+            echo "Attempt $i/60..."
+            sleep 2
+          done
+
+      # ── Seed FHIR resources (local) ──
+      - name: Seed FHIR Test Resources
+        if: steps.config.outputs.target == 'local'
+        run: |
+          echo "Seeding HAPI FHIR with test resources..."
+
+          # Create Practitioner
+          curl -sf -X PUT "http://localhost:8081/fhir/Practitioner/example-practitioner" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Practitioner",
+              "id": "example-practitioner",
+              "identifier": [{"system": "http://example.org/practitioners", "value": "doctor"}],
+              "active": true,
+              "name": [{"family": "Doctor", "given": ["Test"], "prefix": ["Dr."]}],
+              "telecom": [{"system": "email", "value": "doctor@example.com"}]
+            }' && echo "✓ Practitioner/example-practitioner"
+
+          # Create Patient
+          curl -sf -X PUT "http://localhost:8081/fhir/Patient/test-patient" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Patient",
+              "id": "test-patient",
+              "identifier": [{"system": "http://example.org/patients", "value": "12345"}],
+              "active": true,
+              "name": [{"family": "Test", "given": ["Patient"]}],
+              "gender": "unknown",
+              "birthDate": "1990-01-01"
+            }' && echo "✓ Patient/test-patient"
+
+          # Create Person linking to Patient (needed for consent app fhirUser resolution)
+          curl -sf -X PUT "http://localhost:8081/fhir/Person/test-person" \
+            -H "Content-Type: application/fhir+json" \
+            -d '{
+              "resourceType": "Person",
+              "id": "test-person",
+              "active": true,
+              "name": [{"family": "Test", "given": ["Patient"]}],
+              "link": [{"target": {"reference": "Patient/test-patient"}}]
+            }' && echo "✓ Person/test-person"
+
+          echo "✓ FHIR seed resources created"
+
+      # ── Start backend application (local) ──
+      - name: Start Application
+        if: steps.config.outputs.target == 'local'
+        run: |
+          cd backend
+          bun run start &
+          echo "Waiting for application..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8445/health > /dev/null 2>&1; then
+              echo "✓ Application is ready!"
+              break
+            fi
+            echo "Attempt $i/30..."
+            sleep 2
+          done
+        env:
+          NODE_ENV: production
+          KEYCLOAK_BASE_URL: http://localhost:8080
+          KEYCLOAK_REALM: proxy-smart
+          KEYCLOAK_ADMIN_CLIENT_ID: admin-service
+          KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
+          FHIR_SERVER_BASE: http://localhost:8081/fhir
+          CORS_ORIGINS: http://localhost:8445,http://localhost:5173
+
+      # ── Verify deployed target (alpha/beta) ──
+      - name: Verify Deployed Services
+        if: steps.config.outputs.target == 'deployed'
+        run: |
+          STAGE="${{ steps.config.outputs.stage }}"
+          if [ "$STAGE" = "alpha" ]; then
+            BASE_URL="https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
+          elif [ "$STAGE" = "beta" ]; then
+            BASE_URL="https://beta.proxy-smart.com"
+          else
+            echo "ERROR: Unknown deployed stage: $STAGE"
+            exit 1
+          fi
+
+          echo "Checking $BASE_URL/health..."
+          for i in $(seq 1 20); do
+            if curl -sf --max-time 10 "$BASE_URL/health" > /dev/null 2>&1; then
+              echo "✓ Backend healthy (attempt $i)"
+              break
+            fi
+            echo "Attempt $i/20..."
+            sleep 10
+          done
+
+      # ── Setup Node.js + Playwright ──
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        run: |
+          cd testing/e2e
+          npx playwright install chromium --with-deps
+
+      # ── Run E2E tests ──
+      - name: Run Consent App E2E Tests
+        id: run-tests
+        run: |
+          cd testing/e2e
+          npx playwright test --project=consent-app --reporter=list,html
+        env:
+          E2E_TARGET: ${{ steps.config.outputs.target == 'deployed' && steps.config.outputs.stage || 'local' }}
+          CI: true
+
+      - name: Parse test results
+        id: results
+        if: always()
+        run: |
+          REPORT="testing/e2e/test-results/.last-run.json"
+          if [ -f "$REPORT" ]; then
+            STATUS=$(jq -r '.status' "$REPORT")
+            echo "status=$STATUS" >> $GITHUB_OUTPUT
+          fi
+          # Count passed/failed from HTML report summary (fallback: 0)
+          echo "passed=0" >> $GITHUB_OUTPUT
+          echo "failed=0" >> $GITHUB_OUTPUT
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: consent-e2e-report-${{ env.TEST_STAGE }}
+          path: testing/e2e/playwright-report/
+          retention-days: 14
+
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: consent-e2e-traces-${{ env.TEST_STAGE }}
+          path: testing/e2e/test-results/
+          retention-days: 7

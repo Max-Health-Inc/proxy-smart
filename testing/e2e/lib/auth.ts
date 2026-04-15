@@ -87,3 +87,50 @@ export async function smartLogout(page: Page): Promise<void> {
     page.getByRole("button", { name: "Sign In with SMART" }),
   ).toBeVisible({ timeout: 15_000 })
 }
+
+/**
+ * Navigate to consent-app and perform full SMART login flow.
+ * Returns the page in authenticated state showing the Consent Manager dashboard.
+ */
+export async function consentLogin(
+  page: Page,
+  user: keyof typeof testUsers = "patient",
+): Promise<void> {
+  await page.goto(env.consentAppURL, { waitUntil: "domcontentloaded" })
+
+  // Check if already authenticated
+  const signOutButton = page.getByRole("button", { name: "Sign Out" })
+  if (await signOutButton.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    return
+  }
+
+  // Click sign in
+  const signInButton = page.getByRole("button", { name: "Sign In with SMART" })
+  await expect(signInButton).toBeVisible({ timeout: 10_000 })
+  await signInButton.click()
+
+  // Handle Keycloak login
+  await keycloakLogin(page, user)
+
+  // Handle "Update Account Information" page if it appears
+  const updateHeading = page.getByRole("heading", { name: "Update Account Information" })
+  if (await updateHeading.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    const creds = testUsers[user]
+    const emailField = page.getByLabel("Email")
+    if (await emailField.inputValue() === "") {
+      await emailField.fill(`${creds.username}@proxy-smart.test`)
+    }
+    const firstNameField = page.getByLabel("First name")
+    if (await firstNameField.inputValue() === "") {
+      await firstNameField.fill("Test")
+    }
+    const lastNameField = page.getByLabel("Last name")
+    if (await lastNameField.inputValue() === "") {
+      await lastNameField.fill("User")
+    }
+    await page.getByRole("button", { name: "Submit" }).click()
+  }
+
+  // Wait for authenticated state
+  await expect(signOutButton).toBeVisible({ timeout: 30_000 })
+}
