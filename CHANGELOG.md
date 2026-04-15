@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604152049.bc89605a] - 2026-04-15
+
+- ✨ Features: Add Cornerstone lazy init (cornerstone-init.ts; ensureCornerstoneInit usage to initialize Cornerstone and set OAuth token on WADO-RS requests)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/392
+
+
 ## [0.0.5-alpha.202604152034.0c3c9092] - 2026-04-15
 
 - 🔧 Chores & Improvements: CI/CD and test strategy enhancements
