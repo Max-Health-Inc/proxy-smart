@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
   Button,
-  Badge,
   Spinner,
 } from "@proxy-smart/shared-ui"
 import {
@@ -14,13 +13,6 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  Heart,
-  ShieldAlert,
-  Pill,
-  Syringe,
-  TestTubes,
-  Stethoscope,
-  ClipboardList,
   Check,
   X,
 } from "lucide-react"
@@ -28,111 +20,19 @@ import { smartAuth } from "@/lib/smart-auth"
 import {
   importDocument,
   createResource,
-  type ImportedResource,
   type FailedResource,
   type DocumentImportResponse,
 } from "@/lib/fhir-client"
-import { format } from "date-fns"
-
-// ── Resource type display config ─────────────────────────────────────────────
-
-const RESOURCE_ICONS: Record<string, typeof Heart> = {
-  Condition: Heart,
-  AllergyIntolerance: ShieldAlert,
-  MedicationRequest: Stethoscope,
-  MedicationStatement: Pill,
-  Observation: TestTubes,
-  Immunization: Syringe,
-  Procedure: ClipboardList,
-  DiagnosticReport: FileText,
-}
-
-const RESOURCE_COLORS: Record<string, string> = {
-  Condition: "text-rose-500",
-  AllergyIntolerance: "text-amber-500",
-  MedicationRequest: "text-cyan-500",
-  MedicationStatement: "text-blue-500",
-  Observation: "text-purple-500",
-  Immunization: "text-green-500",
-  Procedure: "text-indigo-500",
-  DiagnosticReport: "text-orange-500",
-}
-
-// ── Helpers to extract display text from FHIR resources ──────────────────────
-
-function getResourceTitle(resource: Record<string, unknown>): string {
-  const rt = resource.resourceType as string
-
-  // CodeableConcept-based resources
-  const code = resource.code as { coding?: { display?: string }[]; text?: string } | undefined
-  if (code) {
-    return code.coding?.[0]?.display || code.text || `Unknown ${rt}`
-  }
-
-  // MedicationRequest / MedicationStatement
-  const medCode = resource.medicationCodeableConcept as { coding?: { display?: string }[]; text?: string } | undefined
-  if (medCode) {
-    return medCode.coding?.[0]?.display || medCode.text || `Unknown medication`
-  }
-
-  // Immunization
-  const vaccineCode = resource.vaccineCode as { coding?: { display?: string }[]; text?: string } | undefined
-  if (vaccineCode) {
-    return vaccineCode.coding?.[0]?.display || vaccineCode.text || `Unknown vaccine`
-  }
-
-  return `${rt} resource`
-}
-
-function getResourceDetail(resource: Record<string, unknown>): string | null {
-  // Condition onset
-  if (resource.onsetDateTime) {
-    return `Onset: ${formatDate(resource.onsetDateTime as string)}`
-  }
-
-  // Medication dosage
-  const dosage = resource.dosageInstruction as { text?: string }[] | undefined
-  if (dosage?.[0]?.text) return dosage[0].text
-
-  const dosageStmt = resource.dosage as { text?: string }[] | undefined
-  if (dosageStmt?.[0]?.text) return dosageStmt[0].text
-
-  // Observation value
-  const valueQuantity = resource.valueQuantity as { value?: number; unit?: string } | undefined
-  if (valueQuantity?.value != null) {
-    return `${valueQuantity.value} ${valueQuantity.unit ?? ""}`
-  }
-  const valueString = resource.valueString as string | undefined
-  if (valueString) return valueString
-
-  // Allergy reaction
-  const reaction = resource.reaction as { manifestation?: { coding?: { display?: string }[] }[] }[] | undefined
-  if (reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display) {
-    return `Reaction: ${reaction[0].manifestation[0].coding[0].display}`
-  }
-
-  // Date
-  if (resource.authoredOn) return `Authored: ${formatDate(resource.authoredOn as string)}`
-  if (resource.occurrenceDateTime) return formatDate(resource.occurrenceDateTime as string)
-
-  return null
-}
-
-function formatDate(iso: string): string {
-  try {
-    return format(new Date(iso), "MMM d, yyyy")
-  } catch {
-    return iso
-  }
-}
+import { ResourceReviewCard } from "./ResourceReviewCard"
 
 // ── State machine ────────────────────────────────────────────────────────────
 
 type ImportStep = "upload" | "processing" | "review" | "saving" | "done"
 
 interface ResourceSelection {
-  resource: ImportedResource
+  resource: import("@/lib/fhir-client").ImportedResource
   selected: boolean
+  editedResource?: Record<string, unknown>
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -196,17 +96,29 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
     setSelections(prev => prev.map(s => ({ ...s, selected })))
   }, [])
 
+  const handleResourceEdited = useCallback((index: number, updated: Record<string, unknown>) => {
+    setSelections(prev => prev.map((s, i) =>
+      i === index ? { ...s, editedResource: updated } : s
+    ))
+  }, [])
+
   const handleConfirm = useCallback(async () => {
     const toSave = selections.filter(s => s.selected)
+    const rejected = selections.filter(s => !s.selected)
     if (toSave.length === 0) return
 
+    const totalSteps = toSave.length
+      + (result?.documentReference ? 1 : 0)
+      + (rejected.length > 0 ? 1 : 0) // audit step
     setStep("saving")
-    setSaveProgress({ saved: 0, total: toSave.length + 1 }) // +1 for DocumentReference
+    setSaveProgress({ saved: 0, total: totalSteps })
     const errors: string[] = []
 
+    // Save accepted resources (use edited version if available)
     for (let i = 0; i < toSave.length; i++) {
+      const resourceData = toSave[i].editedResource ?? toSave[i].resource.resource
       try {
-        await createResource(toSave[i].resource.resource as { resourceType: string })
+        await createResource(resourceData as { resourceType: string })
         setSaveProgress(p => ({ ...p, saved: p.saved + 1 }))
       } catch (err) {
         errors.push(
@@ -215,7 +127,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
       }
     }
 
-    // Save the DocumentReference wrapping the original PDF
+    // Save DocumentReference only when resources were accepted
     if (result?.documentReference) {
       try {
         await createResource(result.documentReference as { resourceType: string })
@@ -225,9 +137,50 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
       }
     }
 
+    // Audit trail for rejected resources
+    if (rejected.length > 0 && patientId) {
+      try {
+        const auditEvent = {
+          resourceType: "AuditEvent",
+          type: {
+            system: "http://terminology.hl7.org/CodeSystem/audit-event-type",
+            code: "rest",
+            display: "RESTful Operation",
+          },
+          subtype: [{
+            system: "http://proxy-smart.dev/audit",
+            code: "document-import-rejection",
+            display: "Document Import Resource Rejection",
+          }],
+          action: "C",
+          recorded: new Date().toISOString(),
+          outcome: "0",
+          outcomeDesc: `Patient declined ${rejected.length} extracted resource(s) during document import of ${result?.fileName ?? "unknown"}`,
+          agent: [{
+            who: { reference: `Patient/${patientId}` },
+            requestor: true,
+          }],
+          source: {
+            observer: { display: "Patient Portal - Document Import" },
+          },
+          entity: rejected.map(r => ({
+            what: { display: `${r.resource.resourceType} (rejected)` },
+            detail: [{
+              type: "resource-json",
+              valueString: JSON.stringify(r.resource.resource),
+            }],
+          })),
+        }
+        await createResource(auditEvent as { resourceType: string })
+        setSaveProgress(p => ({ ...p, saved: p.saved + 1 }))
+      } catch (err) {
+        errors.push(`Audit trail: ${err instanceof Error ? err.message : "Failed"}`)
+      }
+    }
+
     setSaveErrors(errors)
     setStep("done")
-  }, [selections, result])
+  }, [selections, result, patientId])
 
   const selectedCount = selections.filter(s => s.selected).length
 
@@ -346,58 +299,18 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
 
         {/* Resource cards */}
         <div className="grid gap-3 md:grid-cols-2">
-          {selections.map((sel, i) => {
-            const r = sel.resource
-            const Icon = RESOURCE_ICONS[r.resourceType] || FileText
-            const color = RESOURCE_COLORS[r.resourceType] || "text-gray-500"
-
-            return (
-              <Card
-                key={i}
-                className={`cursor-pointer transition-all ${
-                  sel.selected
-                    ? "ring-2 ring-primary/50"
-                    : "opacity-60"
-                }`}
-                onClick={() => toggleSelection(i)}
-              >
-                <CardContent className="py-3">
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 ${sel.selected ? "text-primary" : "text-muted-foreground"}`}>
-                      {sel.selected ? <CheckCircle2 className="size-5" /> : <div className="size-5 rounded-full border-2 border-muted-foreground/30" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Icon className={`size-4 ${color}`} />
-                        <Badge variant="outline" className="text-xs">
-                          {r.resourceType}
-                        </Badge>
-                        {r.retriesNeeded > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {r.retriesNeeded} fix{r.retriesNeeded !== 1 ? "es" : ""}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm font-medium mt-1 truncate">
-                        {getResourceTitle(r.resource as Record<string, unknown>)}
-                      </p>
-                      {getResourceDetail(r.resource as Record<string, unknown>) && (
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                          {getResourceDetail(r.resource as Record<string, unknown>)}
-                        </p>
-                      )}
-                      {r.warnings.length > 0 && (
-                        <div className="flex items-center gap-1 mt-1">
-                          <AlertTriangle className="size-3 text-amber-500" />
-                          <span className="text-xs text-amber-600">{r.warnings.length} warning{r.warnings.length !== 1 ? "s" : ""}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
+          {selections.map((sel, i) => (
+            <ResourceReviewCard
+              key={i}
+              resource={sel.editedResource
+                ? { ...sel.resource, resource: sel.editedResource }
+                : sel.resource
+              }
+              selected={sel.selected}
+              onToggleSelect={() => toggleSelection(i)}
+              onResourceEdited={(updated) => handleResourceEdited(i, updated)}
+            />
+          ))}
         </div>
 
         {/* Failed resources */}
