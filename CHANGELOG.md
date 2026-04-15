@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604151909.07673e90] - 2026-04-15
+
+- 🔧 Chores & Improvements: Fix recurring package.json merge conflicts on develop→test PRs
+- 📚 Documentation: Update SMART compliance reports (alpha/beta/dev) [skip ci]
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/389
+
+
 ## [0.0.5-beta.202604151830.cce514f1] - 2026-04-15
 
 - ✨ Features: 
