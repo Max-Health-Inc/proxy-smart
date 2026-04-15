@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604151618.09324581] - 2026-04-15
+
+- ✨ Features: 
+  - UI/dashboard: added HealthChartsCard component for vitals/labs charting; ImagingStudyCard layout tweaks (full-width container)
+  - HealthChartsCard.tsx added for extensive charting (Recharts)
+
+- 🔧 Chores & Improvements:
+  - CI/CD: Beta deployment workflow seeds DICOM into Orthanc (seed-dicom.sh added and made executable; copies CTImage.dcm; creates dicom dir); attempts runtime seeding if Orthanc IP resolvable
+  - Version bumps across multiple apps to 0.0.5-alpha.202604151601.1dba7fb1
+  - UI/consent/dtr/patient-portal/smart-dicom-template/ui updates to reflect new version
+  - patient-portal: added recharts dependency
+
+- 🧪 Bug Fixes (minor):
+  - E2E test: patient-portal imaging-pipeline test updated OAuth client_id from patient-portal to inferno-test-client
+
+- 📚 Documentation:
+  - (None)
+
+- ⚠️ Breaking Changes:
+  - (None)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/386
+
+
 ## [0.0.5-alpha.202604151504.df46b9f0] - 2026-04-15
 
 - 🔧 Chores & Improvements: Version bump across all packages to 0.0.5-alpha.202604151504.df46b9f0
