@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604151830.cce514f1] - 2026-04-15
+
+- ✨ Features: 
+  - Add organizations module (UI) including OrgAddForm, OrgBrandingTab, OrgTable, OrgMembersDialog, OrgStatisticsCards, OrgBrandConfig, OrgBrandConfigResponse; extended admin routes to support per-org branding/config and organizations.
+  - Extend API models to include organizationId/organizationIds payloads; add CreateOrganizationRequest and related Organization types.
+
+- 🔧 Chores & Improvements:
+  - Bump Keycloak image/version references and update CI/CD assets to new alpha tag.
+  - Align UI and API clients with new Organization-related models (shared Organization type, updated payloads and validations).
+  - Update generated models, runtime schemas, and validation logic to support newly introduced Organization entities.
+
+Notes:
+- No breaking changes detected.
+- No user-facing API removals identified beyond new organization-branding features.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/387
+
+
 ## [0.0.5-alpha.202604151618.09324581] - 2026-04-15
 
 - ✨ Features: 
