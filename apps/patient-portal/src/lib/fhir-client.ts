@@ -418,3 +418,27 @@ export async function importDocument(file: File, patientId: string): Promise<Doc
   }
   return res.json() as Promise<DocumentImportResponse>
 }
+
+// ── Patient Scribe ───────────────────────────────────────────────────────────
+
+export interface ScribeResponse {
+  success: boolean
+  resources: ImportedResource[]
+  failed: FailedResource[]
+  processingTimeMs: number
+}
+
+/** Send free text to the AI scribe and get back validated FHIR resources */
+export async function scribeFromText(text: string, patientId: string): Promise<ScribeResponse> {
+  const baseUrl = fhirBaseUrl.split('/fhir/')[0]
+  const res = await authFetch(`${baseUrl}/api/patient-scribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, patientId }),
+  })
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`Scribe failed (${res.status}): ${errText}`)
+  }
+  return res.json() as Promise<ScribeResponse>
+}

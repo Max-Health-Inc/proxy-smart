@@ -8,6 +8,8 @@
 
 import { Elysia } from 'elysia'
 import { patientDocumentImportRoutes } from './document-import'
+import { patientScribeRoutes } from './patient-scribe'
 
 export const apiRoutes = new Elysia({ prefix: '/api' })
   .use(patientDocumentImportRoutes)
+  .use(patientScribeRoutes)
