@@ -11,6 +11,7 @@ import {
   LaunchContextsApi,
   McpManagementApi,
   OauthMonitoringApi,
+  OrganizationsApi,
   RolesApi,
   SmartAppsApi,
   ServersApi,
@@ -119,6 +120,7 @@ export const createServerApi = (token?: string) => new ServerApi(createConfig(to
 export const createAiToolsApi = (token?: string) => new AiToolsApi(createConfig(token));
 export const createFhirMonitoringApi = (token?: string) => new FhirMonitoringApi(createConfig(token));
 export const createUserFederationApi = (token?: string) => new UserFederationApi(createConfig(token));
+export const createOrganizationsApi = (token?: string) => new OrganizationsApi(createConfig(token));
 
 // Create a wrapper that automatically handles auth errors for any API method
 const wrapApiClient = <T extends object>(client: T): T => {
@@ -174,6 +176,7 @@ export const createClientApis = (token?: string) => ({
   servers: wrapApiClient(createServersApi(token)),
   server: wrapApiClient(createServerApi(token)),
   userFederation: wrapApiClient(createUserFederationApi(token)),
+  organizations: wrapApiClient(createOrganizationsApi(token)),
 });
 
 // Helper to get token from encrypted storage (always returns stored token)

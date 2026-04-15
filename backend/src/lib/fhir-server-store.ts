@@ -11,11 +11,12 @@ export interface FHIRServerInfo {
   metadata: FHIRVersionInfo
   lastUpdated: number
   strictCapabilities?: boolean
+  organizationIds?: string[]
 }
 
 // ── File-backed persistence for dynamically added servers ────────────────────
 
-interface PersistedServer { url: string; name?: string; strictCapabilities?: boolean }
+interface PersistedServer { url: string; name?: string; strictCapabilities?: boolean; organizationIds?: string[] }
 
 const SERVERS_JSON_PATH = join(process.cwd(), 'fhir-servers.json')
 
@@ -123,7 +124,8 @@ class FHIRServerStore {
             identifier,
             metadata,
             lastUpdated: Date.now(),
-            strictCapabilities: persisted.strictCapabilities
+            strictCapabilities: persisted.strictCapabilities,
+            organizationIds: persisted.organizationIds
           }
           serverInfos.set(identifier, serverInfo)
           logger.fhir.info(`Loaded persisted FHIR server: ${serverInfo.name}`, {
@@ -139,7 +141,8 @@ class FHIRServerStore {
             identifier,
             metadata: { fhirVersion: 'Unknown', serverName: 'Unknown FHIR Server', supported: false },
             lastUpdated: Date.now(),
-            strictCapabilities: persisted.strictCapabilities
+            strictCapabilities: persisted.strictCapabilities,
+            organizationIds: persisted.organizationIds
           })
         }
       }
@@ -262,7 +265,7 @@ export async function getAllServers(): Promise<FHIRServerInfo[]> {
 }
 
 // Add a new server to the store
-export async function addServer(serverUrl: string, name?: string): Promise<FHIRServerInfo> {
+export async function addServer(serverUrl: string, name?: string, organizationIds?: string[]): Promise<FHIRServerInfo> {
   try {
     // Ensure store is initialized first
     await ensureServersInitialized()
@@ -295,14 +298,15 @@ export async function addServer(serverUrl: string, name?: string): Promise<FHIRS
       url: normalizedUrl,
       identifier,
       metadata,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
+      organizationIds
     }
     
     // Add to store
     fhirServerStore.addServer(identifier, serverInfo)
     
     // Persist dynamically added server
-    dynamicServers.set(identifier, { url: normalizedUrl, name: serverInfo.name })
+    dynamicServers.set(identifier, { url: normalizedUrl, name: serverInfo.name, organizationIds })
     savePersistedServers(dynamicServers)
     
     logger.fhir.info(`Added new FHIR server: ${serverInfo.name}`, { 
@@ -319,7 +323,7 @@ export async function addServer(serverUrl: string, name?: string): Promise<FHIRS
 }
 
 // Update an existing server in the store
-export async function updateServer(serverIdentifier: string, newServerUrl: string, name?: string): Promise<FHIRServerInfo> {
+export async function updateServer(serverIdentifier: string, newServerUrl: string, name?: string, organizationIds?: string[]): Promise<FHIRServerInfo> {
   try {
     // Ensure store is initialized first
     await ensureServersInitialized()
@@ -344,14 +348,15 @@ export async function updateServer(serverIdentifier: string, newServerUrl: strin
       url: normalizedUrl,
       identifier: serverIdentifier, // Keep the same identifier
       metadata,
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
+      organizationIds
     }
     
     // Update in store
     fhirServerStore.updateServer(serverIdentifier, serverInfo)
     
     // Persist if this is a dynamic server (or promote it to dynamic)
-    dynamicServers.set(serverIdentifier, { url: normalizedUrl, name: serverInfo.name })
+    dynamicServers.set(serverIdentifier, { url: normalizedUrl, name: serverInfo.name, organizationIds })
     savePersistedServers(dynamicServers)
     
     logger.fhir.info(`Updated FHIR server: ${serverInfo.name}`, { 
@@ -461,6 +466,28 @@ export async function setStrictCapabilities(serverIdentifier: string, strict: bo
   savePersistedServers(dynamicServers)
 
   logger.fhir.info(`Set strictCapabilities=${strict} for server ${server.name}`, { identifier: serverIdentifier })
+  return updated
+}
+
+// Update the organization assignments for a server
+export async function setServerOrganizations(serverIdentifier: string, organizationIds: string[]): Promise<FHIRServerInfo> {
+  await ensureServersInitialized()
+
+  const server = fhirServerStore.getServerByName(serverIdentifier)
+  if (!server) {
+    throw new Error(`Server '${serverIdentifier}' not found`)
+  }
+
+  const ids = organizationIds.length > 0 ? organizationIds : undefined
+  const updated: FHIRServerInfo = { ...server, organizationIds: ids }
+  fhirServerStore.updateServer(serverIdentifier, updated)
+
+  // Persist the setting
+  const persisted = dynamicServers.get(serverIdentifier) || { url: server.url, name: server.name }
+  dynamicServers.set(serverIdentifier, { ...persisted, organizationIds: ids })
+  savePersistedServers(dynamicServers)
+
+  logger.fhir.info(`Set organizationIds for server ${server.name}`, { identifier: serverIdentifier, organizationIds: ids })
   return updated
 }
 

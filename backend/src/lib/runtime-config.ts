@@ -14,6 +14,7 @@ import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
 import type { BrandConfigType, BrandCategoryType } from '@/schemas'
 import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
+import { loadAllOrgBrands } from './org-branding'
 
 // Module-level cache
 let consentOverrides: Partial<ConsentConfig> | null = null
@@ -123,6 +124,9 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     ialOverrides = parseIalFromAttributes(attrs)
     brandOverrides = parseBrandFromAttributes(attrs)
     loaded = true
+
+    // Load per-org brand overrides into cache
+    await loadAllOrgBrands(admin)
 
     logger.admin.info('Runtime config loaded from Keycloak', {
       consentOverrides: !!consentOverrides,

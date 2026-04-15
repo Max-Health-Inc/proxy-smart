@@ -51,7 +51,10 @@ export const SmartApp = t.Object({
   allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
   
   // Skills access control
-  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' }))
+  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
+  
+  // Organization assignment
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to. Empty/undefined means available to all organizations.' }))
 }, { title: 'SmartApp' })
 
 export const CreateSmartAppRequest = t.Object({
@@ -96,7 +99,10 @@ export const CreateSmartAppRequest = t.Object({
   allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
   
   // Skills access control
-  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' }))
+  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
+  
+  // Organization assignment
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' }))
 }, { title: 'CreateSmartAppRequest' })
 
 export const UpdateSmartAppRequest = t.Object({
@@ -141,7 +147,10 @@ export const UpdateSmartAppRequest = t.Object({
   allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names' })),
   
   // Skills access control
-  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' }))
+  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
+  
+  // Organization assignment
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' }))
 }, { title: 'UpdateSmartAppRequest' })
 
 export const ClientIdParam = t.Object({

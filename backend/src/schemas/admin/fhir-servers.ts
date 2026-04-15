@@ -16,7 +16,8 @@ const FhirServerCoreFields = {
   serverName: t.Optional(t.String({ description: 'FHIR server software name' })),
   supported: t.Boolean({ description: 'Whether the server is supported by this proxy' }),
   smartCapabilities: t.Optional(t.Array(t.String(), { description: 'SMART App Launch capabilities from the server\'s .well-known/smart-configuration' })),
-  strictCapabilities: t.Optional(t.Boolean({ description: 'When true, the proxy enforces the FHIR CapabilityStatement (rejects unsupported interactions/operations). When false (default), requests pass through unchecked.' }))
+  strictCapabilities: t.Optional(t.Boolean({ description: 'When true, the proxy enforces the FHIR CapabilityStatement (rejects unsupported interactions/operations). When false (default), requests pass through unchecked.' })),
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this server is assigned to. Empty/undefined means available to all organizations.' }))
 }
 
 export const FhirServerResponse = t.Object({
@@ -56,12 +57,14 @@ export const FhirServerConfig = t.Object({
 
 export const AddFhirServerRequest = t.Object({
   url: t.String({ description: 'Base URL of the FHIR server to add' }),
-  name: t.Optional(t.String({ description: 'Optional custom name for the server' }))
+  name: t.Optional(t.String({ description: 'Optional custom name for the server' })),
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs to assign this server to' }))
 }, { title: 'AddFhirServerRequest' })
 
 export const UpdateFhirServerRequest = t.Object({
   url: t.String({ description: 'New base URL for the FHIR server' }),
-  name: t.Optional(t.String({ description: 'New name for the server' }))
+  name: t.Optional(t.String({ description: 'New name for the server' })),
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs to assign this server to' }))
 }, { title: 'UpdateFhirServerRequest' })
 
 export const ServerIdParam = t.Object({

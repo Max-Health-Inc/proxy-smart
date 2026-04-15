@@ -196,6 +196,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               // Skills access control
               allowedSkillNames: getAttr(fullClient.attributes, 'allowed_skill_names')?.split(',').filter(Boolean) || [],
               
+              // Organization assignment
+              organizationIds: getAttr(fullClient.attributes, 'organization_ids')?.split(',').filter(Boolean) || [],
+              
               // Scope set reference
               scopeSetId: getAttr(fullClient.attributes, 'scope_set_id'),
               
@@ -326,6 +329,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // Skills access control
           ...(body.allowedSkillNames && body.allowedSkillNames.length > 0 && {
             'allowed_skill_names': body.allowedSkillNames.join(',')
+          }),
+          
+          // Organization assignment
+          ...(body.organizationIds && body.organizationIds.length > 0 && {
+            'organization_ids': body.organizationIds.join(',')
           }),
           
           // Scope set reference
@@ -587,6 +595,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             // Skills access control
             allowedSkillNames: getAttr(fullClient.attributes, 'allowed_skill_names')?.split(',').filter(Boolean) || [],
             
+            // Organization assignment
+            organizationIds: getAttr(fullClient.attributes, 'organization_ids')?.split(',').filter(Boolean) || [],
+            
             // Scope set reference
             scopeSetId: getAttr(fullClient.attributes, 'scope_set_id'),
             
@@ -658,6 +669,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.serverAccessType !== undefined && { 'server_access_type': body.serverAccessType }),
           ...(body.allowedServerIds !== undefined && {
             'allowed_server_ids': body.allowedServerIds.length > 0 ? body.allowedServerIds.join(',') : ''
+          }),
+          // Organization assignment
+          ...(body.organizationIds !== undefined && {
+            'organization_ids': body.organizationIds.length > 0 ? body.organizationIds.join(',') : ''
           }),
         }
       }

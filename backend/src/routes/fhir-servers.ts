@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { config } from '../config'
-import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities } from '../lib/fhir-server-store'
+import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities, setServerOrganizations } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
@@ -264,7 +264,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
 
       // Add the server to the store (this will test connectivity)
-      const serverInfo = await addServer(body.url, body.name)
+      const serverInfo = await addServer(body.url, body.name, body.organizationIds)
 
       return {
         success: true,
@@ -279,6 +279,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           supported: serverInfo.metadata.supported,
           smartCapabilities: serverInfo.metadata.smartCapabilities,
           strictCapabilities: serverInfo.strictCapabilities ?? false,
+          organizationIds: serverInfo.organizationIds,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -343,7 +344,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
 
       // Update the server in the store
-      const serverInfo = await updateServer(params.server_id, body.url, body.name)
+      const serverInfo = await updateServer(params.server_id, body.url, body.name, body.organizationIds)
 
       return {
         success: true,
@@ -358,6 +359,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           supported: serverInfo.metadata.supported,
           smartCapabilities: serverInfo.metadata.smartCapabilities,
           strictCapabilities: serverInfo.strictCapabilities ?? false,
+          organizationIds: serverInfo.organizationIds,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -424,6 +426,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         supported: serverInfo.metadata.supported,
         smartCapabilities: serverInfo.metadata.smartCapabilities,
         strictCapabilities: serverInfo.strictCapabilities ?? false,
+        organizationIds: serverInfo.organizationIds,
         endpoints: {
           base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
           smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,

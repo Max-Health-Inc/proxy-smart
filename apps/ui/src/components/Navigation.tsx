@@ -33,6 +33,7 @@ import {
   Monitor,
   DoorOpen,
   Building2,
+  Landmark,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -166,6 +167,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('Branding'), 
       description: t('Brand Identity'),
       icon: Building2
+    },
+    { 
+      id: 'organizations', 
+      label: t('Organizations'), 
+      description: t('Multi-Tenancy'),
+      icon: Landmark
     },
 
   ];
