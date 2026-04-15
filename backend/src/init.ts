@@ -404,6 +404,55 @@ async function ensureKeycloakEventLogging(): Promise<void> {
 }
 
 /**
+ * Ensure Keycloak realm has the Organizations feature enabled.
+ * KC 26+ ships Organizations as a supported feature, but it must be
+ * explicitly enabled on the realm before the Organizations Admin API
+ * returns anything other than 404.
+ * Idempotent — safe to call on every startup.
+ */
+async function ensureOrganizationsEnabled(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping organizations check — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) {
+      logger.keycloak.warn('Could not read realm — skipping organizations check')
+      return
+    }
+
+    if ((realm as any).organizationsEnabled) {
+      logger.keycloak.info('✅ Keycloak Organizations already enabled')
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      { organizationsEnabled: true } as any,
+    )
+
+    logger.keycloak.info('✅ Keycloak Organizations enabled on realm')
+  } catch (error) {
+    logger.keycloak.warn('Could not auto-enable Organizations on realm', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Initialize all server components (Keycloak + FHIR servers)
  */
 export async function initializeServer(): Promise<void> {
@@ -428,6 +477,9 @@ export async function initializeServer(): Promise<void> {
 
       // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
       await ensurePostLogoutRedirectUris()
+
+      // Ensure Keycloak Organizations feature is enabled on the realm
+      await ensureOrganizationsEnabled()
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')
