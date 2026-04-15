@@ -1,4 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
+import { config } from "@/config"
 import { reportAuthError } from "@/lib/auth-error"
 import { FhirClient } from "hl7.fhir.uv.ips-generated/fhir-client"
 import { FhirClient as GenomicsFhirClient } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
@@ -407,7 +408,7 @@ export async function importDocument(file: File, patientId: string): Promise<Doc
   formData.append('file', file)
   formData.append('patientId', patientId)
 
-  const baseUrl = fhirBaseUrl.split('/fhir/')[0] // strip /fhir/<server>/<version>
+  const baseUrl = `${config.proxyBase}/${config.proxyPrefix}`
   const res = await authFetch(`${baseUrl}/api/document-import`, {
     method: 'POST',
     body: formData,
@@ -430,7 +431,7 @@ export interface ScribeResponse {
 
 /** Send free text to the AI scribe and get back validated FHIR resources */
 export async function scribeFromText(text: string, patientId: string): Promise<ScribeResponse> {
-  const baseUrl = fhirBaseUrl.split('/fhir/')[0]
+  const baseUrl = `${config.proxyBase}/${config.proxyPrefix}`
   const res = await authFetch(`${baseUrl}/api/patient-scribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
