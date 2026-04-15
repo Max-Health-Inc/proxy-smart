@@ -22,7 +22,7 @@
     "@elysiajs/eden": "^1.4.8",
     "@elysiajs/openapi": "^1.4.14",
     "@elysiajs/static": "^1.4.9",
-    "@keycloak/keycloak-admin-client": "^26.5.6",
+    "@keycloak/keycloak-admin-client": "^26.6.1",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@sinclair/typebox": "^0.34.48",
     "ai": "^6.0.158",
