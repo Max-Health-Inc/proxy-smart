@@ -110,7 +110,7 @@ Rules:
 - Output a JSON object with a "resources" array containing FHIR R4 resources
 - Each resource MUST have a valid "resourceType" field
 - Use IPS (International Patient Summary) profile conventions
-- Include meta.tag with code "patient-submitted" and system "http://proxy-smart.dev/tags" on every resource
+- Do NOT include meta.tag on extracted resources — provenance is tracked separately on the DocumentReference
 - For Patient resources, include name, birthDate, gender when available
 - For Observations, include code (LOINC preferred), value, effectiveDateTime, status
 - For Conditions, include code (SNOMED preferred), clinicalStatus, verificationStatus
