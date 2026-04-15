@@ -6,6 +6,73 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604151504.df46b9f0] - 2026-04-15
+
+- 🔧 Chores & Improvements: Version bump across all packages to 0.0.5-alpha.202604151504.df46b9f0
+- 🔧 Chores & Improvements: UI refresh logic added (useCallback, refreshKey, refreshData) in patient-portal Dashboard
+- 🔧 Chores & Improvements: refreshData triggered on close for DocumentImport and PatientScribe
+- 🔧 Chores & Improvements: useEffect dependency updated to include refreshKey
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/385
+
+
+## [0.0.5-alpha.202604151036.3c3941a0] - 2026-04-15
+
+- 🔧 Chores & Improvements: Simplify base URL handling for patient-portal (use config.proxyBase for importDocument and scribeFromText)
+- 🔧 Chores & Improvements: Streamline Keycloak realm-export.json by keeping only realm-admin client in realm-management permissions
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/384
+
+
+## [0.0.5-beta.202604150924.45a4b086] - 2026-04-15
+
+- ✨ Features
+  - Added PatientScribe feature (frontend UI in Patient Portal; backend Scribe support with new API route /api/patient-scribe and generateFromText flow)
+
+- 🔧 Chores & Improvements
+  - UI/UX: minor Pie component label formatting fix to handle undefined percent
+  - Backend: remove meta.tag from extracted resources in doc-import.ts
+  - Version bumps across multiple apps and testing packages
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None
+
+- 🐛 Bug Fixes
+  - None detected
+
+If you want stricter grouping or want to exclude version bumps, say the word.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/382
+
+
+## [0.0.5-beta.202604142134.629fe5cd] - 2026-04-14
+
+- ✨ Features: Introduced strict capabilities checks across UI and backend, including SetStrictCapabilities API/types, UI toggle in FhirServersManager, and persistence/enforcement of strictCapability statements. Added monitoring dashboards/services (auth/email) and new AdminAudit/Email/Auth monitoring models and routes. Expanded OpenAPI typings and health/status models to support monitoring features.
+- 🔧 Chores & Improvements: Version bumps across multiple apps/tests; updated Admin/OpenAPI client references; added new logger hooks for backend monitoring; refreshed health-related models and system status representations. 
+- 📚 Documentation: (none)
+- ⚠️ Breaking Changes: (none detected)
+- 🐛 Bug Fixes: (none detected)
+
+If you need stricter grouping or fewer categories, I can adjust.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/380
+
+
+## [0.0.5-alpha.202604141522.6c31e760] - 2026-04-14
+
+- 🔧 Chores & Improvements: Remove readOnlyForUsers config flag and related write-blocking feature; update FHIR proxy and tests to reflect scope/role-based filtering only
+- 🧪 Features: Add FHIR capabilities feature (parsing, server capabilities model, and admin route) with proxy checks for capability support
+- 📚 Documentation: README adds Scalability section with Keycloak-based details
+- 🔧 Chores & Improvements: Extend fhir-capabilities exports/utilities and tests; wire new route into app factory
+- 🐛 Bug Fixes: Harden searchFlags handling in fhir-client to gracefully handle unsupported Flag searches
+- 🔧 Chores & Improvements: Version bumps across apps/tests and minor test/utility updates to accommodate new capability checks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/377
+
+
 ## [0.0.5-alpha.202604140601.c4e1fb8a] - 2026-04-14
 
 - 🔧 Chores & Improvements: CI/CD modernization with widespread GitHub Actions upgrades (checkout, tokens, core actions, Python setup) across pipelines
