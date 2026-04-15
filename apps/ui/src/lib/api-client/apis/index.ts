@@ -16,6 +16,7 @@ export * from './IdentityProvidersApi';
 export * from './LaunchContextsApi';
 export * from './McpManagementApi';
 export * from './OauthMonitoringApi';
+export * from './OrganizationsApi';
 export * from './RolesApi';
 export * from './ServerApi';
 export * from './ServersApi';

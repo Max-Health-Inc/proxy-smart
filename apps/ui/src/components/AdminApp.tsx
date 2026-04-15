@@ -22,6 +22,7 @@ import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
 import { BrandSettings } from './BrandSettings';
+import { OrganizationsManager } from './OrganizationsManager/OrganizationsManager';
 
 
 // Get tab from URL hash
@@ -163,6 +164,7 @@ export function AdminApp() {
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'branding' && <BrandSettings />}
+                            {currentTab === 'organizations' && <OrganizationsManager />}
                         </Panel>
                     </div>
                 </div>

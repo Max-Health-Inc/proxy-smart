@@ -162,6 +162,17 @@ function CornerstoneViewport({
           }) as EventListener,
         )
 
+        // Catch async image decode errors (e.g. corrupt DICOM, missing pixel data)
+        elementRef.current.addEventListener(
+          csCore.Enums.Events.IMAGE_LOAD_ERROR,
+          ((e: CustomEvent) => {
+            console.warn('DICOM image load error:', e.detail?.error ?? e.detail)
+            if (!cancelled) {
+              setError('Failed to decode DICOM image. The file may be corrupt or unsupported.')
+            }
+          }) as EventListener,
+        )
+
         setLoading(false)
       } catch (err) {
         if (!cancelled) {
@@ -238,7 +249,12 @@ export function DicomViewerDialog({
         <DialogPrimitive.Content
           className="fixed inset-4 z-50 flex flex-col rounded-lg border border-border/30 bg-background/95 backdrop-blur-sm shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
           onPointerDownOutside={(e) => e.preventDefault()}
+          aria-describedby={undefined}
         >
+          <DialogPrimitive.Title className="sr-only">
+            {target?.seriesDescription || "DICOM Viewer"}
+          </DialogPrimitive.Title>
+
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-border/30">
             <div className="flex items-center gap-2 min-w-0">

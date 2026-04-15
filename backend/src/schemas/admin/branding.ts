@@ -56,3 +56,19 @@ export const BrandConfigUpdateResponse = t.Object({
 }, { title: 'BrandConfigUpdateResponse' })
 
 export type BrandConfigUpdateResponseType = Static<typeof BrandConfigUpdateResponse>
+
+/**
+ * Partial brand config for per-organization overrides.
+ * Every field is optional — unset fields cascade to realm-level defaults.
+ */
+export const OrgBrandConfig = t.Partial(BrandConfig, { title: 'OrgBrandConfig' })
+export type OrgBrandConfigType = Partial<BrandConfigType>
+
+export const OrgBrandConfigResponse = t.Object({
+  message: t.String(),
+  orgId: t.String(),
+  config: OrgBrandConfig,
+  timestamp: t.String(),
+}, { title: 'OrgBrandConfigResponse' })
+
+export type OrgBrandConfigResponseType = Static<typeof OrgBrandConfigResponse>

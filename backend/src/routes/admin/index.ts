@@ -21,6 +21,7 @@ import { userFederationRoutes } from './user-federation'
 import { brandingAdminRoutes } from './branding'
 import { scopeMappersRoutes } from './scope-mappers'
 import { documentImportRoutes } from './document-import'
+import { organizationsRoutes } from './organizations'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -117,6 +118,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(scopeMappersRoutes)
   // Document import (PDF → AI → FHIR)
   .use(documentImportRoutes)
+  // Keycloak Organizations management
+  .use(organizationsRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 
