@@ -110,7 +110,7 @@ Rules:
 - Output a JSON object with a "resources" array containing FHIR R4 resources
 - Each resource MUST have a valid "resourceType" field
 - Use IPS (International Patient Summary) profile conventions
-- Include meta.tag with code "patient-submitted" and system "http://proxy-smart.dev/tags" on every resource
+- Do NOT include meta.tag on extracted resources — provenance is tracked separately on the DocumentReference
 - For Patient resources, include name, birthDate, gender when available
 - For Observations, include code (LOINC preferred), value, effectiveDateTime, status
 - For Conditions, include code (SNOMED preferred), clinicalStatus, verificationStatus
@@ -292,6 +292,52 @@ export async function importDocument(
     resources,
     failed,
     documentReference,
+    processingTimeMs: Math.round(performance.now() - start),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Text-based generation (Patient Scribe)
+// ---------------------------------------------------------------------------
+
+export interface ScribeResult {
+  resources: ValidatedResource[]
+  failed: FailedResource[]
+  processingTimeMs: number
+}
+
+/**
+ * Generate FHIR resources from free text (no PDF involved).
+ * Reuses the same AI generation prompt + babelfhir-ts validation loop.
+ */
+export async function generateFromText(
+  text: string,
+  options: { patientId: string; maxRetries?: number; model?: string },
+): Promise<ScribeResult> {
+  const start = performance.now()
+  const maxRetries = options.maxRetries ?? 10
+  const model = options.model ?? 'gpt-5.4'
+
+  const rawResources = await generateFhirResources(text, options.patientId, model)
+  logger.server.info('🤖 Scribe generated resources', {
+    count: rawResources.length,
+    types: rawResources.map(r => (r as { resourceType?: string }).resourceType),
+  })
+
+  const results = await Promise.all(
+    rawResources.map(r => validateWithRetry(r, options.patientId, model, maxRetries)),
+  )
+
+  const resources: ValidatedResource[] = []
+  const failed: FailedResource[] = []
+  for (const r of results) {
+    if ('errors' in r) failed.push(r)
+    else resources.push(r)
+  }
+
+  return {
+    resources,
+    failed,
     processingTimeMs: Math.round(performance.now() - start),
   }
 }

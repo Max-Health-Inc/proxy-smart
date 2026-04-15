@@ -52,6 +52,7 @@ import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
 import { DocumentImport } from "@/components/DocumentImport"
+import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
 import { checkPacsStatus } from "@/lib/dicomweb"
 import {
@@ -71,6 +72,7 @@ import {
   Laptop,
   Upload,
   FileImage,
+  MessageSquare,
 } from "lucide-react"
 import { format } from "date-fns"
 
@@ -78,6 +80,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
+  const [showScribe, setShowScribe] = useState(false)
   const [showDicomUpload, setShowDicomUpload] = useState(false)
   const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null) // null = not yet checked
   const [patient, setPatient] = useState<Patient | null>(null)
@@ -208,9 +211,11 @@ export function Dashboard() {
     <div className="space-y-6">
       {patient && <PatientBanner patient={patient} onPatientUpdated={setPatient} />}
 
-      {/* Document Import / DICOM Upload */}
+      {/* Document Import / Patient Scribe / DICOM Upload */}
       {showImport ? (
         <DocumentImport onClose={() => setShowImport(false)} />
+      ) : showScribe ? (
+        <PatientScribe onClose={() => setShowScribe(false)} />
       ) : showDicomUpload ? (
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
@@ -228,6 +233,10 @@ export function Dashboard() {
           <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
             <Upload className="size-4" />
             Import Document
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowScribe(true)}>
+            <MessageSquare className="size-4" />
+            Patient Scribe
           </Button>
         </div>
       )}
