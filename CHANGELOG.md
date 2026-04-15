@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604151036.3c3941a0] - 2026-04-15
+
+- 🔧 Chores & Improvements: Simplify base URL handling for patient-portal (use config.proxyBase for importDocument and scribeFromText)
+- 🔧 Chores & Improvements: Streamline Keycloak realm-export.json by keeping only realm-admin client in realm-management permissions
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/384
+
+
 ## [0.0.5-beta.202604150924.45a4b086] - 2026-04-15
 
 - ✨ Features
