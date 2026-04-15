@@ -9,6 +9,7 @@
     "test:ui": "npx playwright test --ui",
     "test:debug": "npx playwright test --debug",
     "test:patient-portal": "npx playwright test --project=patient-portal",
+    "test:consent-app": "npx playwright test --project=consent-app",
     "report": "npx playwright show-report"
   },
   "devDependencies": {
