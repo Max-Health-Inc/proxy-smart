@@ -1,6 +1,7 @@
 {
   "realm": "proxy-smart",
   "enabled": true,
+  "organizationsEnabled": true,
   "displayName": "Proxy Smart",
   "attributes": {
     "userProfileEnabled": "true"
