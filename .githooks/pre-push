@@ -1,27 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-echo "Auto-rebasing before push..."
+# Sync version strings across all package.json files before pushing.
+# We deliberately do NOT auto-rebase here — rebasing causes version-string
+# conflicts on every merge because CI stamps different alpha/beta versions
+# on develop vs test.  If you need to rebase, do it manually.
 
-# --rebase=merges preserves merge commits (e.g. "absorb test branch" merges).
-# Plain --rebase linearizes history and destroys merge commits, causing
-# version-string conflicts every time we merge test/main back into develop.
-if ! git pull --rebase=merges --autostash --quiet; then
-  echo "❌ Auto-rebase failed (likely conflicts). Please resolve them manually (git status), then re-push."
-  exit 1
-fi
+echo "Syncing package versions before push..."
 
-echo "✅ Up to date with remote"
-
-# After rebase, version strings in package.json files may be out of sync
-# (rebase conflict resolution can leave stale version stamps). Re-sync
-# and create a fixup commit if anything changed.
 node scripts/version.js sync
 if ! git diff --quiet; then
-  echo "⚠️  Version drift detected after rebase — syncing..."
+  echo "⚠️  Version drift detected — syncing..."
   git add -u
-  git commit --no-verify -m "chore: sync package versions after rebase"
-  echo "✅ Versions re-synced"
+  git commit --no-verify -m "chore: sync package versions"
+  echo "✅ Versions synced"
 else
   # version.js may rewrite files with identical content but different line endings
   # (CRLF vs LF) — discard those no-op rewrites to keep the tree clean

@@ -178,6 +178,9 @@ jobs:
           ${SCP_CMD} docker-compose.beta.yml ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/
           ${SCP_CMD} docker-compose.caddy.yml ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/
           ${SCP_CMD} deploy/fhir-seed-bundle.json ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/fhir-seed-bundle.json
+          ${SCP_CMD} deploy/seed-dicom.sh ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/seed-dicom.sh
+          ${SSH_CMD} "chmod +x ${DEPLOY_DIR}/seed-dicom.sh && mkdir -p ${DEPLOY_DIR}/dicom"
+          ${SCP_CMD} deploy/dicom/CTImage.dcm ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/dicom/CTImage.dcm
           ${SSH_CMD} "mkdir -p ${DEPLOY_DIR}/keycloak/database"
           ${SCP_CMD} keycloak/database/init.sql ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/keycloak/database/init.sql
 
@@ -450,6 +453,15 @@ jobs:
               echo '  ✅ FHIR sample data seeded successfully'
             else
               echo \"  ⚠️ FHIR seed returned HTTP \${HTTP_CODE} (non-fatal)\"
+            fi
+
+            # Seed Orthanc PACS with sample DICOM images
+            echo '🏥 Seeding Orthanc with sample DICOM images...'
+            ORTHANC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' proxy-smart-orthanc-beta 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -n \"\$ORTHANC_IP\" ]; then
+              bash ./seed-dicom.sh \"http://\${ORTHANC_IP}:8042\" ./dicom
+            else
+              echo '  ⚠️ Could not resolve Orthanc container IP — skipping DICOM seed'
             fi
           "
 

@@ -50,6 +50,7 @@ import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/
 import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps"
 import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
+import { HealthChartsCard } from "@/components/HealthChartsCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
 import { DocumentImport } from "@/components/DocumentImport"
 import { PatientScribe } from "@/components/PatientScribe"
@@ -703,7 +704,14 @@ export function Dashboard() {
         />
 
         {/* Imaging Studies */}
-        <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
+        <div className="md:col-span-2">
+          <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
+        </div>
+
+        {/* Health Charts */}
+        <div className="md:col-span-2">
+          <HealthChartsCard vitals={vitals} labs={labs} />
+        </div>
       </div>
     </div>
   )
