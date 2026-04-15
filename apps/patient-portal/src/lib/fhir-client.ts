@@ -408,7 +408,7 @@ export async function importDocument(file: File, patientId: string): Promise<Doc
   formData.append('file', file)
   formData.append('patientId', patientId)
 
-  const baseUrl = `${config.proxyBase}/${config.proxyPrefix}`
+  const baseUrl = config.proxyBase
   const res = await authFetch(`${baseUrl}/api/document-import`, {
     method: 'POST',
     body: formData,
@@ -431,7 +431,7 @@ export interface ScribeResponse {
 
 /** Send free text to the AI scribe and get back validated FHIR resources */
 export async function scribeFromText(text: string, patientId: string): Promise<ScribeResponse> {
-  const baseUrl = `${config.proxyBase}/${config.proxyPrefix}`
+  const baseUrl = config.proxyBase
   const res = await authFetch(`${baseUrl}/api/patient-scribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
