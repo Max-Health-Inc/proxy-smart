@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604152034.0c3c9092] - 2026-04-15
+
+- 🔧 Chores & Improvements: CI/CD and test strategy enhancements
+  - Add e2e consent Playwright workflow and integrate e2e-consent-tests into testing strategy with parallel execution and status propagation
+  - Bump versions from alpha to beta across multiple apps and testing package
+  - Enable Keycloak Organizations on realm startup (idempotent) and update realm export to include organizationsEnabled
+
+Note: No user-facing breaking changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/391
+
+
 ## [0.0.5-beta.202604151909.07673e90] - 2026-04-15
 
 - 🔧 Chores & Improvements: Fix recurring package.json merge conflicts on develop→test PRs
