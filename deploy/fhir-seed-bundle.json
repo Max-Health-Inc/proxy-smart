@@ -386,6 +386,66 @@
         "method": "PUT",
         "url": "AllergyIntolerance/max-penicillin-allergy"
       }
+    },
+    {
+      "fullUrl": "urn:uuid:imaging-ct-chest",
+      "resource": {
+        "resourceType": "ImagingStudy",
+        "id": "max-ct-chest",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/uv/ips/StructureDefinition/ImagingStudy-uv-ips"
+          ]
+        },
+        "status": "available",
+        "subject": {
+          "reference": "Patient/max-nussbaumer"
+        },
+        "started": "2001-01-05",
+        "identifier": [
+          {
+            "system": "urn:dicom:uid",
+            "value": "urn:oid:1.2.840.113619.2.30.1.1762295590.1623.978668949.886"
+          }
+        ],
+        "modality": [
+          {
+            "system": "http://dicom.nema.org/resources/ontology/DCM",
+            "code": "CT",
+            "display": "Computed Tomography"
+          }
+        ],
+        "description": "CHEST",
+        "numberOfSeries": 1,
+        "numberOfInstances": 1,
+        "series": [
+          {
+            "uid": "1.2.840.113619.2.30.1.1762295590.1623.978668949.890",
+            "number": 1,
+            "modality": {
+              "system": "http://dicom.nema.org/resources/ontology/DCM",
+              "code": "CT",
+              "display": "Computed Tomography"
+            },
+            "description": "HELICAL CHEST",
+            "numberOfInstances": 1,
+            "instance": [
+              {
+                "uid": "1.2.840.113619.2.30.1.1762295590.1623.978668950.109",
+                "sopClass": {
+                  "system": "urn:ietf:rfc:3986",
+                  "code": "urn:oid:1.2.840.10008.5.1.4.1.1.2"
+                },
+                "number": 1
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ImagingStudy/max-ct-chest"
+      }
     }
   ]
 }
