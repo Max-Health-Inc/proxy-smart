@@ -8,7 +8,7 @@ import { t, type Static } from 'elysia'
 export const OrganizationDomain = t.Object({
   name: t.Optional(t.String({ description: 'Domain name (e.g. acme.com)' })),
   verified: t.Optional(t.Boolean({ description: 'Whether the domain has been verified' }))
-})
+}, { title: 'OrganizationDomain' })
 
 /** Full Keycloak Organization representation */
 export const Organization = t.Object({
@@ -24,7 +24,7 @@ export const Organization = t.Object({
   domains: t.Optional(t.Array(OrganizationDomain, {
     description: 'Email domains owned by this organization'
   }))
-})
+}, { title: 'Organization' })
 
 /** Request body for creating a new organization */
 export const CreateOrganizationRequest = t.Object({
@@ -35,7 +35,7 @@ export const CreateOrganizationRequest = t.Object({
   enabled: t.Optional(t.Boolean({ description: 'Enabled state (defaults to true)', default: true })),
   attributes: t.Optional(t.Record(t.String(), t.Array(t.String()))),
   domains: t.Optional(t.Array(OrganizationDomain))
-})
+}, { title: 'CreateOrganizationRequest' })
 
 /** Request body for updating an organization */
 export const UpdateOrganizationRequest = t.Object({
@@ -45,12 +45,12 @@ export const UpdateOrganizationRequest = t.Object({
   enabled: t.Optional(t.Boolean({ description: 'Enabled state' })),
   attributes: t.Optional(t.Record(t.String(), t.Array(t.String()))),
   domains: t.Optional(t.Array(OrganizationDomain))
-})
+}, { title: 'UpdateOrganizationRequest' })
 
 /** Path parameter for org-level routes */
 export const OrgIdParam = t.Object({
   orgId: t.String({ description: 'Keycloak organization ID' })
-})
+}, { title: 'OrgIdParam' })
 
 /** Organization member (lightweight) */
 export const OrganizationMember = t.Object({
@@ -61,12 +61,12 @@ export const OrganizationMember = t.Object({
   lastName: t.Optional(t.String()),
   enabled: t.Optional(t.Boolean()),
   membershipType: t.Optional(t.String({ description: 'MANAGED or UNMANAGED' }))
-})
+}, { title: 'OrganizationMember' })
 
 /** Request to add a member */
 export const AddMemberRequest = t.Object({
   userId: t.String({ description: 'Keycloak user ID to add as member' })
-})
+}, { title: 'AddMemberRequest' })
 
 // TS type helpers
 export type OrganizationType = Static<typeof Organization>

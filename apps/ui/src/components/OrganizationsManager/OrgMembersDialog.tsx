@@ -17,8 +17,8 @@ import {
 import { Users, UserPlus, Trash2, Search, Loader2, X } from 'lucide-react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
-  GetAdminOrganizations200ResponseInner,
-  GetAdminOrganizationsByOrgIdMembers200ResponseInner,
+  Organization,
+  OrganizationMember,
   HealthcareUser,
 } from '@/lib/api-client';
 import { useAuth } from '@/stores/authStore';
@@ -27,13 +27,13 @@ import { useTranslation } from 'react-i18next';
 interface OrgMembersDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  org: GetAdminOrganizations200ResponseInner | null;
+  org: Organization | null;
 }
 
 export function OrgMembersDialog({ isOpen, onClose, org }: OrgMembersDialogProps) {
   const { t } = useTranslation();
   const { clientApis } = useAuth();
-  const [members, setMembers] = useState<GetAdminOrganizationsByOrgIdMembers200ResponseInner[]>([]);
+  const [members, setMembers] = useState<OrganizationMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);

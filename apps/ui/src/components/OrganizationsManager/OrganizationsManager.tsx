@@ -12,17 +12,17 @@ import { OrgEditDialog } from './OrgEditDialog';
 import { OrgMembersDialog } from './OrgMembersDialog';
 import type { OrgFormData } from './OrgAddForm';
 
-import type { GetAdminOrganizations200ResponseInner } from '@/lib/api-client';
+import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 export function OrganizationsManager() {
   const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
-  const [orgs, setOrgs] = useState<GetAdminOrganizations200ResponseInner[]>([]);
+  const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingOrg, setEditingOrg] = useState<GetAdminOrganizations200ResponseInner | null>(null);
-  const [membersOrg, setMembersOrg] = useState<GetAdminOrganizations200ResponseInner | null>(null);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [membersOrg, setMembersOrg] = useState<Organization | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const refreshOrgs = useCallback(async () => {

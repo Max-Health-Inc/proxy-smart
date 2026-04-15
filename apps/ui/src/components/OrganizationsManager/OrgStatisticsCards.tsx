@@ -1,10 +1,10 @@
 import { Building2, CheckCircle2, XCircle, Users } from 'lucide-react';
 import { StatCard } from '@/components/ui/stat-card';
-import type { GetAdminOrganizations200ResponseInner } from '@/lib/api-client';
+import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 interface OrgStatisticsCardsProps {
-  orgs: GetAdminOrganizations200ResponseInner[];
+  orgs: Organization[];
 }
 
 export function OrgStatisticsCards({ orgs }: OrgStatisticsCardsProps) {

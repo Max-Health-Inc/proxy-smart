@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Edit, X, Palette, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import type { GetAdminOrganizations200ResponseInner } from '@/lib/api-client';
+import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 import { OrgBrandingTab } from './OrgBrandingTab';
 
@@ -25,7 +25,7 @@ interface OrgEditDialogProps {
     redirectUrl?: string;
     domains?: Array<{ name: string; verified?: boolean }>;
   }) => Promise<void>;
-  org: GetAdminOrganizations200ResponseInner | null;
+  org: Organization | null;
 }
 
 export function OrgEditDialog({ isOpen, onClose, onUpdate, org }: OrgEditDialogProps) {

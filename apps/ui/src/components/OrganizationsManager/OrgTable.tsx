@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Users, Power, Globe } from 'lucide-react';
-import type { GetAdminOrganizations200ResponseInner } from '@/lib/api-client';
+import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 interface OrgTableProps {
