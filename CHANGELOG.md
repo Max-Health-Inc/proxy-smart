@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604150924.45a4b086] - 2026-04-15
+
+- ✨ Features
+  - Added PatientScribe feature (frontend UI in Patient Portal; backend Scribe support with new API route /api/patient-scribe and generateFromText flow)
+
+- 🔧 Chores & Improvements
+  - UI/UX: minor Pie component label formatting fix to handle undefined percent
+  - Backend: remove meta.tag from extracted resources in doc-import.ts
+  - Version bumps across multiple apps and testing packages
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None
+
+- 🐛 Bug Fixes
+  - None detected
+
+If you want stricter grouping or want to exclude version bumps, say the word.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/382
+
+
 ## [0.0.5-beta.202604142134.629fe5cd] - 2026-04-14
 
 - ✨ Features: Introduced strict capabilities checks across UI and backend, including SetStrictCapabilities API/types, UI toggle in FhirServersManager, and persistence/enforcement of strictCapability statements. Added monitoring dashboards/services (auth/email) and new AdminAudit/Email/Auth monitoring models and routes. Expanded OpenAPI typings and health/status models to support monitoring features.
