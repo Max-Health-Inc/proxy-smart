@@ -27,7 +27,7 @@ async function getAccessToken(): Promise<string> {
 
   const body = new URLSearchParams({
     grant_type: "password",
-    client_id: "patient-portal",
+    client_id: "inferno-test-client",
     username: creds.username,
     password: creds.password,
     scope: "openid fhirUser launch/patient",
