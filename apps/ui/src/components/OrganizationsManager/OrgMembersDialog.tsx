@@ -127,7 +127,7 @@ export function OrgMembersDialog({ isOpen, onClose, org }: OrgMembersDialogProps
     try {
       await clientApis.organizations.postAdminOrganizationsByOrgIdMembers({
         orgId: org.id,
-        postAdminOrganizationsByOrgIdMembersRequest: { userId: selectedUser.id },
+        addMemberRequest: { userId: selectedUser.id },
       });
       clearSelection();
       await loadMembers();

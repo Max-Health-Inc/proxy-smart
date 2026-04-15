@@ -49,7 +49,7 @@ export function OrganizationsManager() {
     if (!clientApis.organizations) return;
     try {
       await clientApis.organizations.postAdminOrganizations({
-        postAdminOrganizationsRequest: {
+        createOrganizationRequest: {
           name: form.name,
           alias: form.alias || undefined,
           description: form.description || undefined,
@@ -78,7 +78,7 @@ export function OrganizationsManager() {
     try {
       await clientApis.organizations.putAdminOrganizationsByOrgId({
         orgId,
-        putAdminOrganizationsByOrgIdRequest: data,
+        updateOrganizationRequest: data,
       });
       await refreshOrgs();
       setEditingOrg(null);
@@ -108,7 +108,7 @@ export function OrganizationsManager() {
     try {
       await clientApis.organizations.putAdminOrganizationsByOrgId({
         orgId,
-        putAdminOrganizationsByOrgIdRequest: { enabled: !(org.enabled !== false) },
+        updateOrganizationRequest: { enabled: !(org.enabled !== false) },
       });
       await refreshOrgs();
     } catch (error) {

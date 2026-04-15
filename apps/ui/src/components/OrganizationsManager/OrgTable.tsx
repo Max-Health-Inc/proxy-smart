@@ -18,11 +18,11 @@ import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 interface OrgTableProps {
-  orgs: GetAdminOrganizations200ResponseInner[];
-  onEdit: (org: GetAdminOrganizations200ResponseInner) => void;
+  orgs: Organization[];
+  onEdit: (org: Organization) => void;
   onDelete: (orgId: string) => void;
   onToggleStatus: (orgId: string) => void;
-  onManageMembers: (org: GetAdminOrganizations200ResponseInner) => void;
+  onManageMembers: (org: Organization) => void;
 }
 
 export function OrgTable({ orgs, onEdit, onDelete, onToggleStatus, onManageMembers }: OrgTableProps) {
