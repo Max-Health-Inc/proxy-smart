@@ -23,7 +23,9 @@ import {
   searchVariants,
   searchDiagnosticImplications,
   searchTherapeuticImplications,
+  searchDocuments,
   type Patient,
+  type DocumentReference,
   type Condition,
   type AllergyIntolerance,
   type MedicationStatement,
@@ -60,6 +62,7 @@ import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import { HealthChartsCard } from "@/components/HealthChartsCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
+import { DocumentsCard } from "@/components/DocumentsCard"
 import { DocumentImport } from "@/components/DocumentImport"
 import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
@@ -104,6 +107,7 @@ export function Dashboard() {
   const [genomicReports, setGenomicReports] = useState<GenomicReport[]>([]); const [variants, setVariants] = useState<Variant[]>([])
   const [diagnosticImplications, setDiagnosticImplications] = useState<DiagnosticImplication[]>([])
   const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
+  const [documents, setDocuments] = useState<DocumentReference[]>([])
 
   // Filter helper
   const filterVerified = useCallback(<T extends AnyResource>(items: T[]): T[] => {
@@ -136,11 +140,12 @@ export function Dashboard() {
           searchImagingStudies(patientId), searchRadiologyResults(patientId),
           searchGenomicReports(patientId), searchVariants(patientId),
           searchDiagnosticImplications(patientId), searchTherapeuticImplications(patientId),
+          searchDocuments(patientId),
         ])
         const v = <T,>(r: PromiseSettledResult<T>): T | undefined => r.status === "fulfilled" ? r.value : undefined
         const [cond, allergy, meds, imm, vit, lab, tobacco, alcohol, proc, flag,
           pregStatus, pregEdd, medReqs, devices, imaging, radiology,
-          gReports, gVariants, gDiagImpl, gTheraImpl] = results
+          gReports, gVariants, gDiagImpl, gTheraImpl, docs] = results
 
         // Apply results — each setter is a no-op if the search failed
         const apply = <T,>(r: PromiseSettledResult<T>, set: (v: T) => void) => { if (v(r)) set(v(r)!) }
@@ -154,6 +159,7 @@ export function Dashboard() {
         apply(imaging, setImagingStudies); apply(radiology, setRadiologyResults)
         apply(gReports, setGenomicReports); apply(gVariants, setVariants)
         apply(gDiagImpl, setDiagnosticImplications); apply(gTheraImpl, setTherapeuticImplications)
+        apply(docs, setDocuments)
 
         checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
       } catch (err) {
@@ -673,6 +679,8 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
+        <DocumentsCard documents={documents} onOpenDetail={openDetail} />
+
         <GenomicsCard
           reports={genomicReports}
           variants={variants}
@@ -694,6 +702,7 @@ export function Dashboard() {
         onOpenChange={setDetailOpen}
         title={detailTitle}
         resource={detailResource}
+        documents={documents}
       />
     </div>
   )

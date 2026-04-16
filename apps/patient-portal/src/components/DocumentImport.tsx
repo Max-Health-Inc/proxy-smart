@@ -114,11 +114,15 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
     setSaveProgress({ saved: 0, total: totalSteps })
     const errors: string[] = []
 
-    // Save accepted resources (use edited version if available)
+    // Save accepted resources (use edited version if available) and collect references
+    const savedRefs: { reference: string }[] = []
     for (let i = 0; i < toSave.length; i++) {
       const resourceData = toSave[i].editedResource ?? toSave[i].resource.resource
       try {
-        await createResource(resourceData as { resourceType: string })
+        const saved = await createResource(resourceData as { resourceType: string })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const id = (saved as any).id as string | undefined
+        if (id) savedRefs.push({ reference: `${toSave[i].resource.resourceType}/${id}` })
         setSaveProgress(p => ({ ...p, saved: p.saved + 1 }))
       } catch (err) {
         errors.push(
@@ -127,10 +131,14 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
       }
     }
 
-    // Save DocumentReference only when resources were accepted
+    // Save DocumentReference with context.related linking to saved resources
     if (result?.documentReference) {
       try {
-        await createResource(result.documentReference as { resourceType: string })
+        const docRef = { ...result.documentReference } as Record<string, unknown>
+        if (savedRefs.length > 0) {
+          docRef.context = { ...(docRef.context as object ?? {}), related: savedRefs }
+        }
+        await createResource(docRef as { resourceType: string })
         setSaveProgress(p => ({ ...p, saved: p.saved + 1 }))
       } catch (err) {
         errors.push(`DocumentReference: ${err instanceof Error ? err.message : "Failed"}`)
