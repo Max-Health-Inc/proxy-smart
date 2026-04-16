@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604160334.ca7dae83] - 2026-04-16
+
+- ✨ Features: 
+  - Introduced DocumentsCard component (DocumentsCard.tsx) to render DocumentReference resources.
+  - Dashboard now uses DocumentsCard and includes documents state; DocumentsCard/documents integrated into types.
+  - DocumentImport now saves resource references and attaches them to DocumentReference.context.related; collects saved resource IDs.
+  - RecordDetailModal updated to import Link2, expose documents prop, and cross-reference usage for document linkage.
+
+- 🔧 Chores & Improvements:
+  - General version bump across multiple packages to 0.0.5-beta.202604160334.ca7dae83.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/403
+
+
 ## [0.0.5-alpha.202604160313.bf090bfc] - 2026-04-16
 
 - ✨ Features: None
