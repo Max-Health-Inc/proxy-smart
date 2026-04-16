@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604160313.bf090bfc] - 2026-04-16
+
+- ✨ Features: None
+- 🐛 Bug Fixes:
+  - fix(consent-app): replace missing TaskIntentCode import with Task["intent"] (quotentiroler)
+- 📚 Documentation: 
+  - docs: update CHANGELOG.md for PR #400
+- 🔧 Chores & Improvements:
+  - chore(testing): update alpha SMART compliance report
+  - update version to 0.0.5-alpha.202604160313.bf090bfc (alpha) [skip ci]
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/401
+
+
 ## [0.0.5-alpha.202604160240.90c9ae50] - 2026-04-16
 
 - 🔧 Chores & Improvements: CI workflow updated to manual CI via workflow_dispatch with per-branch concurrency; version bumps across apps from beta to alpha; bun.lock updates.
