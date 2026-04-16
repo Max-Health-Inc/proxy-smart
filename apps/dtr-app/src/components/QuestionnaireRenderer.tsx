@@ -6,7 +6,6 @@ import type {
   QuestionnaireItem,
   QuestionnaireResponseItem,
 } from "fhir/r4"
-import type { DTRStdQuestionnaireItem } from "hl7.fhir.us.davinci-dtr-generated"
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge } from "@proxy-smart/shared-ui"
 import {
   Select,
@@ -170,7 +169,7 @@ interface QuestionnaireItemFieldProps {
 }
 
 function QuestionnaireItemField({ item, value, onChange, answers, onChangeNested }: QuestionnaireItemFieldProps) {
-  const ext = getItemExtensions(item as DTRStdQuestionnaireItem)
+  const ext = getItemExtensions(item)
   const [collapsed, setCollapsed] = useState(ext.collapsible === "default-closed")
 
   // Hidden items: skip rendering entirely
