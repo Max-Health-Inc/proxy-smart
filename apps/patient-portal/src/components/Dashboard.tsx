@@ -55,8 +55,8 @@ import {
   criticalityStyles, categoryEmoji, severityStyles,
   getInterpretationFlag, getProcedureStatusStyle, getDeviceStatusStyle, conditionSeverityStyles, RecordName,
   type AllergyIntoleranceCriticalityCode, type AllergyIntoleranceCategoryCode,
-  type ReactionEventSeverityCode, type EventStatusCode, type DeviceStatementStatusCode,
-  type ConditionSeverityCode, type AnyResource,
+  type AllergyIntoleranceSeverityCode, type EventStatusCode, type DeviceUseStatementStatusCode,
+  type ConditionDiagnosisSeverityCode, type AnyResource,
 } from "@/lib/ips-display-helpers"
 import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
@@ -247,7 +247,7 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {filterVerified(conditions).map((c, i) => {
-                  const sevCode = c.severity?.coding?.[0]?.code as ConditionSeverityCode | undefined
+                  const sevCode = c.severity?.coding?.[0]?.code as ConditionDiagnosisSeverityCode | undefined
                   const sev = sevCode ? conditionSeverityStyles[sevCode] : undefined
                   return (
                   <li key={c.id || i} className="text-sm">
@@ -283,7 +283,7 @@ export function Dashboard() {
                 {filterVerified(allergies).map((a, i) => {
                   const cat = a.category?.[0] as AllergyIntoleranceCategoryCode | undefined
                   const crit = a.criticality ? criticalityStyles[a.criticality as AllergyIntoleranceCriticalityCode] : undefined
-                  const sev = a.reaction?.[0]?.severity ? severityStyles[a.reaction[0].severity as ReactionEventSeverityCode] : undefined
+                  const sev = a.reaction?.[0]?.severity ? severityStyles[a.reaction[0].severity as AllergyIntoleranceSeverityCode] : undefined
                   return (
                     <li key={a.id || i} className="text-sm">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -670,7 +670,7 @@ export function Dashboard() {
                       </span>
                     )}
                     {du.status && (
-                      <Badge variant={getDeviceStatusStyle(du.status as DeviceStatementStatusCode)} className="ml-2 text-xs">{du.status}</Badge>
+                      <Badge variant={getDeviceStatusStyle(du.status as DeviceUseStatementStatusCode)} className="ml-2 text-xs">{du.status}</Badge>
                     )}
                   </li>
                 ))}

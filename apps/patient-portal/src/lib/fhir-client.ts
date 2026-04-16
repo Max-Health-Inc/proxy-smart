@@ -34,15 +34,15 @@ import type {
   Observation,
   DocumentReference,
 } from "fhir/r4"
-import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
-import type { AllergyintoleranceClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceClinical"
-import type { MedicationStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationStatementStatus"
+import type { ConditionClinicalStatusCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinicalStatusCodes"
+import type { AllergyIntoleranceClinicalStatusCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyIntoleranceClinicalStatusCodes"
+import type { MedicationStatusCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationStatusCodes"
 import type { MedicationrequestStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationrequestStatus"
-import type { ObservationCategoryCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationCategory"
+import type { ObservationCategoryCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationCategoryCodes"
 import type { ImmunizationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImmunizationStatus"
-import type { DeviceStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceStatementStatus"
-import type { DiagnosticReportStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
-import type { ResultsStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ResultsStatusUvIps"
+import type { DeviceUseStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceUseStatementStatus"
+import type { DiagnosticReportStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatus"
+import type { ObservationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationStatus"
 
 export type {
   PatientUvIps as Patient,
@@ -67,7 +67,7 @@ export type {
 }
 export type { Observation, DocumentReference }
 export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
-export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ResultsStatusUvIpsCode, ImmunizationStatusCode }
+export type { DeviceUseStatementStatusCode, DiagnosticReportStatusCode, ObservationStatusCode, ImmunizationStatusCode }
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
@@ -132,7 +132,7 @@ export async function getPatientSummary(patientId: string): Promise<BundleUvIps>
 export async function searchConditions(patientId: string): Promise<ConditionUvIps[]> {
   return client.read().conditionUvIps().searchAll({
     patient: `Patient/${patientId}`,
-    "clinical-status": "active" satisfies ConditionClinicalCode,
+    "clinical-status": "active" satisfies ConditionClinicalStatusCodesCode,
     _count: 50,
     _sort: "-onset-date",
   })
@@ -143,7 +143,7 @@ export async function searchConditions(patientId: string): Promise<ConditionUvIp
 export async function searchAllergies(patientId: string): Promise<AllergyIntoleranceUvIps[]> {
   return client.read().allergyIntolerance().searchAll({
     patient: `Patient/${patientId}`,
-    "clinical-status": "active" satisfies AllergyintoleranceClinicalCode,
+    "clinical-status": "active" satisfies AllergyIntoleranceClinicalStatusCodesCode,
     _count: 50,
   }) as Promise<AllergyIntoleranceUvIps[]>
 }
@@ -153,7 +153,7 @@ export async function searchAllergies(patientId: string): Promise<AllergyIntoler
 export async function searchMedicationStatements(patientId: string): Promise<MedicationStatementIPS[]> {
   return client.read().medicationStatement().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active" satisfies MedicationStatementStatusCode,
+    status: "active" satisfies MedicationStatusCodesCode,
     _count: 50,
   }) as Promise<MedicationStatementIPS[]>
 }
@@ -173,7 +173,7 @@ export async function searchImmunizations(patientId: string): Promise<Immunizati
 export async function searchVitals(patientId: string): Promise<Observation[]> {
   return client.read().observation().searchAll({
     patient: `Patient/${patientId}`,
-    category: "vital-signs" satisfies ObservationCategoryCode,
+    category: "vital-signs" satisfies ObservationCategoryCodesCode,
     _count: 20,
     _sort: "-date",
   })
@@ -182,7 +182,7 @@ export async function searchVitals(patientId: string): Promise<Observation[]> {
 export async function searchLabs(patientId: string): Promise<ObservationResultsLaboratoryPathologyUvIps[]> {
   return client.read().observationResultsLaboratoryPathologyUvIps().searchAll({
     patient: `Patient/${patientId}`,
-    category: "laboratory" satisfies ObservationCategoryCode,
+    category: "laboratory" satisfies ObservationCategoryCodesCode,
     _count: 50,
     _sort: "-date",
   })
@@ -316,7 +316,7 @@ export async function searchImagingStudies(patientId: string): Promise<ImagingSt
 export async function searchRadiologyResults(patientId: string): Promise<ObservationResultsRadiologyUvIps[]> {
   return client.read().observationResultsRadiologyUvIps().searchAll({
     patient: `Patient/${patientId}`,
-    category: "imaging" satisfies ObservationCategoryCode,
+    category: "imaging" satisfies ObservationCategoryCodesCode,
     _count: 50,
     _sort: "-date",
   })
