@@ -23,7 +23,6 @@ COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY apps/ui/package.json ./apps/ui/
 COPY apps/consent-app/package.json ./apps/consent-app/
-COPY apps/consent-app/lib/ ./apps/consent-app/lib/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
 COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
 COPY apps/patient-portal/package.json ./apps/patient-portal/
