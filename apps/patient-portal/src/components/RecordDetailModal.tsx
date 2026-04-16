@@ -11,6 +11,8 @@ import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText } from "
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
 import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
 import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
+import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
+import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,10 +86,21 @@ function extractVerificationStatus(r: FhirResource): { verified: boolean; label:
   }
 }
 
-function extractClinicalStatus(r: FhirResource): string | undefined {
+function extractClinicalStatus(r: FhirResource): { code: ConditionClinicalCode | string; display: string } | undefined {
   const cs = r.clinicalStatus
   if (!cs) return undefined
-  return cs.coding?.[0]?.display ?? cs.text ?? cs.coding?.[0]?.code
+  const code = (cs.coding?.[0]?.code ?? "") as ConditionClinicalCode | string
+  const display = cs.coding?.[0]?.display ?? cs.text ?? code
+  return { code, display }
+}
+
+const SEVERITY_LABELS: Record<string, string> = { "24484000": "Severe", "6736007": "Moderate", "255604002": "Mild" }
+
+function extractSeverity(r: FhirResource): string | undefined {
+  const sev = r.severity?.coding?.[0]?.code
+  if (!sev) return undefined
+  if (isValidConditionSeverityCode(sev)) return SEVERITY_LABELS[sev] ?? sev
+  return r.severity?.coding?.[0]?.display ?? r.severity?.text ?? sev
 }
 
 function extractCategory(r: FhirResource): string | undefined {
@@ -127,6 +140,12 @@ function formatShortDate(dateStr: string | undefined): string {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
+const severityBadgeStyles: Record<ReactionEventSeverityCode, string> = {
+  severe: "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/20",
+  moderate: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/20",
+  mild: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20",
+}
+
 export function RecordDetailModal({ open, onOpenChange, title, resource }: RecordDetailModalProps) {
   if (!resource) return null
 
@@ -135,6 +154,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
   const performer = extractPerformer(resource)
   const verification = extractVerificationStatus(resource)
   const clinicalStatus = extractClinicalStatus(resource)
+  const severity = extractSeverity(resource)
   const category = extractCategory(resource)
   const code = extractCode(resource)
   const resourceType = resource.resourceType as string | undefined
@@ -187,7 +207,15 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
           {/* Clinical status */}
           {clinicalStatus && (
             <DetailRow icon={<Tag className="size-4 text-teal-500" />} label="Clinical Status">
-              <span className="capitalize">{clinicalStatus}</span>
+              <Badge variant={(clinicalStatus.code as ConditionClinicalCode) === "active" ? "default" : "secondary"} className="text-xs">
+                {clinicalStatus.display}
+              </Badge>
+            </DetailRow>
+          )}
+
+          {severity && (
+            <DetailRow icon={<Tag className="size-4 text-orange-500" />} label="Severity">
+              <span className="capitalize">{severity}</span>
             </DetailRow>
           )}
 
@@ -267,12 +295,6 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
               {resource.dosageInstruction[0].text}
             </DetailRow>
           )}
-
-const severityBadgeStyles: Record<ReactionEventSeverityCode, string> = {
-  severe: "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/20",
-  moderate: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/20",
-  mild: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20",
-}
 
           {/* Reaction (allergies) */}
           {resource.reaction?.[0] && (

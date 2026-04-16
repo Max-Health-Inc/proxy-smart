@@ -35,6 +35,7 @@ const initialFormData: HealthcareUserFormData = {
   enabled: true,
   emailVerified: false,
   organization: '',
+  fhirUser: '',
   password: '',
   temporaryPassword: false,
   realmRoles: [],
@@ -197,6 +198,17 @@ export function HealthcareUserAddForm({
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
               className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
             />
+          </div>
+          <div className="space-y-3">
+            <Label htmlFor="fhirUser" className="text-sm font-semibold text-foreground">{t('FHIR User Identity')}</Label>
+            <Input
+              id="fhirUser"
+              placeholder="e.g., Patient/123 or Practitioner/456"
+              value={formData.fhirUser ?? ''}
+              onChange={(e) => setFormData({ ...formData, fhirUser: e.target.value })}
+              className="rounded-xl border-border/50 focus:border-primary focus:ring-primary shadow-sm"
+            />
+            <p className="text-xs text-muted-foreground">{t('Maps this user to a FHIR resource (used in SMART fhirUser claim)')}</p>
           </div>
           <div className="space-y-3">
             <Label htmlFor="fhirPersons" className="text-sm font-semibold text-foreground">{t('FHIR Person Associations')}</Label>

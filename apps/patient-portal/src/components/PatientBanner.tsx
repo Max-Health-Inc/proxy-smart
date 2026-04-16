@@ -1,5 +1,6 @@
 import { Card, CardContent, Badge, Button } from "@proxy-smart/shared-ui"
 import { formatHumanName, type Patient } from "@/lib/fhir-client"
+import type { AdministrativeGenderCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AdministrativeGender"
 import { User, Pencil } from "lucide-react"
 import { format, differenceInYears } from "date-fns"
 import { useState } from "react"
@@ -37,7 +38,7 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
             {birthDate && (
               <span>{format(birthDate, "MMM d, yyyy")}{age !== null && ` (${age} years)`}</span>
             )}
-            {patient.gender && <Badge variant="outline">{patient.gender}</Badge>}
+            {patient.gender && <Badge variant="outline">{(patient.gender as AdministrativeGenderCode)}</Badge>}
             {genderIdentity && <Badge variant="outline">{genderIdentity}</Badge>}
             {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
             {patient.identifier?.[0]?.value && (

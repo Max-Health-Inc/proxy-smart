@@ -51,9 +51,10 @@ import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/values
 import type { FlagStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-FlagStatus"
 import {
   criticalityStyles, categoryEmoji, severityStyles,
-  getInterpretationFlag, getProcedureStatusStyle, RecordName,
+  getInterpretationFlag, getProcedureStatusStyle, getDeviceStatusStyle, conditionSeverityStyles, RecordName,
   type AllergyIntoleranceCriticalityCode, type AllergyIntoleranceCategoryCode,
-  type ReactionEventSeverityCode, type EventStatusCode, type AnyResource,
+  type ReactionEventSeverityCode, type EventStatusCode, type DeviceStatementStatusCode,
+  type ConditionSeverityCode, type AnyResource,
 } from "@/lib/ips-display-helpers"
 import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
@@ -74,18 +75,14 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
-  const [showScribe, setShowScribe] = useState(false)
-  const [showDicomUpload, setShowDicomUpload] = useState(false)
+  const [showScribe, setShowScribe] = useState(false); const [showDicomUpload, setShowDicomUpload] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null)
   const [showUnverified, setShowUnverified] = useState(true)
   const [detailOpen, setDetailOpen] = useState(false)
-  const [detailTitle, setDetailTitle] = useState("")
-  const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
+  const [detailTitle, setDetailTitle] = useState(""); const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
 
-  const openDetail = useCallback((title: string, resource: AnyResource) => {
-    setDetailTitle(title); setDetailResource(resource); setDetailOpen(true)
-  }, [])
+  const openDetail = useCallback((title: string, resource: AnyResource) => { setDetailTitle(title); setDetailResource(resource); setDetailOpen(true) }, [])
   const refreshData = useCallback(() => setRefreshKey(k => k + 1), [])
 
   const [patient, setPatient] = useState<Patient | null>(null)
@@ -97,16 +94,14 @@ export function Dashboard() {
   const [labs, setLabs] = useState<LabResult[]>([])
   const [tobaccoUse, setTobaccoUse] = useState<TobaccoUseObservation[]>([])
   const [alcoholUse, setAlcoholUse] = useState<AlcoholUseObservation[]>([])
-  const [procedures, setProcedures] = useState<Procedure[]>([])
-  const [flags, setFlags] = useState<FlagAlert[]>([])
+  const [procedures, setProcedures] = useState<Procedure[]>([]); const [flags, setFlags] = useState<FlagAlert[]>([])
   const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus[]>([])
   const [pregnancyEdd, setPregnancyEdd] = useState<PregnancyEdd[]>([])
   const [medicationRequests, setMedicationRequests] = useState<MedicationRequest[]>([])
   const [deviceUse, setDeviceUse] = useState<DeviceUseStatement[]>([])
   const [imagingStudies, setImagingStudies] = useState<ImagingStudy[]>([])
   const [radiologyResults, setRadiologyResults] = useState<RadiologyResult[]>([])
-  const [genomicReports, setGenomicReports] = useState<GenomicReport[]>([])
-  const [variants, setVariants] = useState<Variant[]>([])
+  const [genomicReports, setGenomicReports] = useState<GenomicReport[]>([]); const [variants, setVariants] = useState<Variant[]>([])
   const [diagnosticImplications, setDiagnosticImplications] = useState<DiagnosticImplication[]>([])
   const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
 
@@ -245,18 +240,23 @@ export function Dashboard() {
               <p className="text-sm text-muted-foreground">No active conditions on record</p>
             ) : (
               <ul className="space-y-2">
-                {filterVerified(conditions).map((c, i) => (
+                {filterVerified(conditions).map((c, i) => {
+                  const sevCode = c.severity?.coding?.[0]?.code as ConditionSeverityCode | undefined
+                  const sev = sevCode ? conditionSeverityStyles[sevCode] : undefined
+                  return (
                   <li key={c.id || i} className="text-sm">
                     <RecordName resource={c} onOpen={openDetail}>
                       {c.code?.coding?.[0]?.display || c.code?.text || "Unknown condition"}
                     </RecordName>
+                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{sev.label}</Badge>}
                     {c.onsetDateTime && (
                       <span className="text-muted-foreground ml-2">
                         since {format(new Date(c.onsetDateTime), "MMM yyyy")}
                       </span>
                     )}
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             )}
           </CardContent>
@@ -664,7 +664,7 @@ export function Dashboard() {
                       </span>
                     )}
                     {du.status && (
-                      <Badge variant="outline" className="ml-2 text-xs">{du.status}</Badge>
+                      <Badge variant={getDeviceStatusStyle(du.status as DeviceStatementStatusCode)} className="ml-2 text-xs">{du.status}</Badge>
                     )}
                   </li>
                 ))}

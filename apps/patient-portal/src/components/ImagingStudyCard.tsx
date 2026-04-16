@@ -114,9 +114,9 @@ function StudyRow({
                 {modalityInfo.emoji} {modalityInfo.label}
               </Badge>
             )}
-            {study.status && (study.status as ImagingStudyStatusUvIpsCode) !== "available" && (
+            {study.status && (study.status as ImagingStudyStatusUvIpsCode) !== ("available" satisfies ImagingStudyStatusUvIpsCode) && (
               <Badge
-                variant={(study.status as ImagingStudyStatusUvIpsCode) === "cancelled" ? "destructive" : "outline"}
+                variant={(study.status as ImagingStudyStatusUvIpsCode) === ("cancelled" satisfies ImagingStudyStatusUvIpsCode) ? "destructive" : "outline"}
                 className="shrink-0"
               >
                 {study.status}

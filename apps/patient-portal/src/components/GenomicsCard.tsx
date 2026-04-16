@@ -8,6 +8,7 @@ import type {
   DiagnosticImplication,
   TherapeuticImplication,
 } from "@/lib/fhir-client"
+import type { DiagnosticReportStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
 
 // ── LOINC component code helpers ────────────────────────────────────────────
 
@@ -211,9 +212,16 @@ export function GenomicsCard({
                 <ul className="space-y-1.5">
                   {reports.map((r, i) => (
                     <li key={r.id || i} className="text-sm flex justify-between">
-                      <span className="font-medium">
-                        {r.code?.coding?.[0]?.display || "Genomic Report"}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium">
+                          {r.code?.coding?.[0]?.display || "Genomic Report"}
+                        </span>
+                        {r.status && (r.status as DiagnosticReportStatusUvIpsCode) !== ("final" satisfies DiagnosticReportStatusUvIpsCode) && (
+                          <Badge variant={(r.status as DiagnosticReportStatusUvIpsCode) === ("cancelled" satisfies DiagnosticReportStatusUvIpsCode) ? "destructive" : "outline"} className="text-xs">
+                            {r.status}
+                          </Badge>
+                        )}
+                      </div>
                       <span className="text-muted-foreground text-xs">
                         {r.effectiveDateTime
                           ? format(new Date(r.effectiveDateTime), "MMM d, yyyy")
