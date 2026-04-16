@@ -33,20 +33,8 @@ on:
         description: 'Number of failed tests'
         value: ${{ jobs.e2e-consent-tests.outputs.failed }}
 
-  # Feature branches
-  push:
-    branches:
-      - 'dev/*'
-      - 'develop/*'
-      - 'develop'
-      - 'test'
-      - 'main'
-    paths:
-      - 'apps/consent-app/**'
-      - 'backend/**'
-      - 'shared-ui/**'
-      - 'testing/e2e/**'
-      - '.github/workflows/e2e-consent-tests.yml'
+  # Push trigger removed — run locally against beta.proxy-smart.com instead
+  # To run in CI manually, use workflow_dispatch above
 
 concurrency:
   group: e2e-consent-${{ github.ref }}

@@ -9,7 +9,7 @@ import { defineConfig, devices } from "@playwright/test"
  *   beta   → https://beta.proxy-smart.com
  */
 
-const target = (process.env.E2E_TARGET ?? "alpha") as "local" | "alpha" | "beta"
+const target = (process.env.E2E_TARGET ?? "beta") as "local" | "alpha" | "beta"
 
 const envMap = {
   local: {

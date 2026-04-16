@@ -19,7 +19,7 @@ export interface E2EEnv {
   fhirProxyPath: string
 }
 
-const target = (process.env.E2E_TARGET ?? "alpha") as TargetEnv
+const target = (process.env.E2E_TARGET ?? "beta") as TargetEnv
 
 const envMap: Record<TargetEnv, Omit<E2EEnv, "target" | "patientPortalURL" | "consentAppURL" | "adminURL" | "fhirProxyPath">> = {
   local: {

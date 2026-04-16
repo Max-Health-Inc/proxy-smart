@@ -10,6 +10,8 @@
     "test:debug": "npx playwright test --debug",
     "test:patient-portal": "npx playwright test --project=patient-portal",
     "test:consent-app": "npx playwright test --project=consent-app",
+    "test:consent-beta": "E2E_TARGET=beta npx playwright test --project=consent-app",
+    "test:consent-beta:headed": "E2E_TARGET=beta npx playwright test --project=consent-app --headed",
     "report": "npx playwright show-report"
   },
   "devDependencies": {
