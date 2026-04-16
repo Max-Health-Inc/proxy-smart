@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604152114.2fc91380] - 2026-04-16
+
+- 🔧 Chores & Improvements: CI updates for e2e-consent-tests and test orchestration
+- 🔧 Chores & Improvements: Dependency updates to use babelfhir-ts client-r4 in consent app
+- 🔧 Chores & Improvements: Dependency and asset housekeeping (bun.lock bump, updated tgz assets)
+- 🔧 Chores & Improvements: Updated smart-auth import and FHIR client writers usage
+- 📚 Documentation: (None)
+- ✨ Features: (None)
+- 🐛 Bug Fixes: (None)
+- ⚠️ Breaking Changes: (None)
+
+If no meaningful changes beyond maintenance, return:
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/394
+
+
 ## [0.0.5-alpha.202604152103.e8069208] - 2026-04-15
 
 - 🔧 Chores & Improvements: CI: rename install step and add separate Playwright browsers install; version bumps across apps and testing package.json from beta to alpha
