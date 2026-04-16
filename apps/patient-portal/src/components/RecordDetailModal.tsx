@@ -8,6 +8,9 @@ import {
 } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
 import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText } from "lucide-react"
+import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
+import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
+import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,14 +63,23 @@ function extractPerformer(r: FhirResource): string | undefined {
   return ref.includes("/") && !ref.includes(" ") ? ref.replace("/", " #") : ref
 }
 
+const VERIFIED_CODES: ReadonlySet<string> = new Set<ConditionVerStatusCode | string>(["confirmed"])
+
+function isVerifiedCode(code: string): boolean {
+  return isValidConditionVerStatusCode(code)
+    ? (VERIFIED_CODES.has(code))
+    : isValidAllergyintoleranceVerificationCode(code)
+      ? code === "confirmed"
+      : code === "confirmed" || code === "verified"
+}
+
 function extractVerificationStatus(r: FhirResource): { verified: boolean; label: string } | undefined {
-  // Condition & AllergyIntolerance have verificationStatus
   const vs = r.verificationStatus
   if (!vs) return undefined
   const code = vs.coding?.[0]?.code ?? vs.text ?? "unknown"
   const display = vs.coding?.[0]?.display ?? vs.text ?? code
   return {
-    verified: code === "confirmed" || code === "verified",
+    verified: isVerifiedCode(code),
     label: display,
   }
 }
@@ -256,6 +268,12 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
             </DetailRow>
           )}
 
+const severityBadgeStyles: Record<ReactionEventSeverityCode, string> = {
+  severe: "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/20",
+  moderate: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/20",
+  mild: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20",
+}
+
           {/* Reaction (allergies) */}
           {resource.reaction?.[0] && (
             <DetailRow icon={<ShieldAlert className="size-4 text-amber-500" />} label="Reaction">
@@ -263,7 +281,10 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
                 resource.reaction[0].manifestation?.[0]?.text ||
                 "Unknown reaction"}
               {resource.reaction[0].severity && (
-                <Badge variant="outline" className="ml-2 text-xs">
+                <Badge
+                  variant="outline"
+                  className={`ml-2 text-xs ${severityBadgeStyles[resource.reaction[0].severity as ReactionEventSeverityCode] || ""}`}
+                >
                   {resource.reaction[0].severity}
                 </Badge>
               )}
@@ -311,7 +332,7 @@ export function isResourceVerified(resource: FhirResource): boolean {
   const vs = resource.verificationStatus
   if (vs) {
     const code = vs.coding?.[0]?.code ?? ""
-    return code === "confirmed" || code === "verified"
+    return isVerifiedCode(code)
   }
   // Resources without verificationStatus: consider verified if asserter/performer exists
   const performer = extractPerformer(resource)

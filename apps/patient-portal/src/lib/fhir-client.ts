@@ -34,6 +34,10 @@ import type {
   Observation,
   DocumentReference,
 } from "fhir/r4"
+import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
+import type { AllergyintoleranceClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceClinical"
+import type { MedicationStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationStatementStatus"
+import type { MedicationrequestStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationrequestStatus"
 
 export type {
   PatientUvIps as Patient,
@@ -122,7 +126,7 @@ export async function getPatientSummary(patientId: string): Promise<BundleUvIps>
 export async function searchConditions(patientId: string): Promise<ConditionUvIps[]> {
   return client.read().conditionUvIps().searchAll({
     patient: `Patient/${patientId}`,
-    "clinical-status": "active",
+    "clinical-status": "active" satisfies ConditionClinicalCode,
     _count: 50,
     _sort: "-onset-date",
   })
@@ -133,7 +137,7 @@ export async function searchConditions(patientId: string): Promise<ConditionUvIp
 export async function searchAllergies(patientId: string): Promise<AllergyIntoleranceUvIps[]> {
   return client.read().allergyIntolerance().searchAll({
     patient: `Patient/${patientId}`,
-    "clinical-status": "active",
+    "clinical-status": "active" satisfies AllergyintoleranceClinicalCode,
     _count: 50,
   }) as Promise<AllergyIntoleranceUvIps[]>
 }
@@ -143,7 +147,7 @@ export async function searchAllergies(patientId: string): Promise<AllergyIntoler
 export async function searchMedicationStatements(patientId: string): Promise<MedicationStatementIPS[]> {
   return client.read().medicationStatement().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active",
+    status: "active" satisfies MedicationStatementStatusCode,
     _count: 50,
   }) as Promise<MedicationStatementIPS[]>
 }
@@ -276,7 +280,7 @@ export async function searchPregnancyOutcome(patientId: string): Promise<Observa
 export async function searchMedicationRequests(patientId: string): Promise<MedicationRequestIPS[]> {
   return client.read().medicationRequest().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active",
+    status: "active" satisfies MedicationrequestStatusCode,
     _count: 50,
     _sort: "-authoredon",
   }) as Promise<MedicationRequestIPS[]>

@@ -70,6 +70,12 @@ export async function smartLogin(
     await page.getByRole("button", { name: "Submit" }).click()
   }
 
+  // Handle Keycloak OAuth consent screen if it appears
+  const grantButton = page.getByRole("button", { name: "Yes", exact: true })
+  if (await grantButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await grantButton.click()
+  }
+
   // Wait for redirect back to patient portal in authenticated state
   await expect(signOutButton).toBeVisible({ timeout: 30_000 })
 }
@@ -129,6 +135,12 @@ export async function consentLogin(
       await lastNameField.fill("User")
     }
     await page.getByRole("button", { name: "Submit" }).click()
+  }
+
+  // Handle Keycloak OAuth consent screen if it appears
+  const grantButton = page.getByRole("button", { name: "Yes", exact: true })
+  if (await grantButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await grantButton.click()
   }
 
   // Wait for authenticated state
