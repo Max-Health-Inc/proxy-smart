@@ -112,7 +112,7 @@ export class DtrMetricSession {
       groupId: this.groupId,
       payerId: this.payerId,
       launchMode: this.launchMode,
-      orderItem: this.orderItems,
+      orderItem: this.orderItems as DTRMetricData["orderItem"],
       action: this.actions,
     }
   }
