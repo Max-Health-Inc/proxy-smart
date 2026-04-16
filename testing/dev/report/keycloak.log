@@ -1,1 +1,12 @@
-Error response from daemon: No such container: keycloak
+Updating the configuration and installing your custom providers, if any. Please wait.
+2026-04-16 02:00:34,094 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8264ms
+Running the server in development mode. DO NOT use this configuration in production.
+2026-04-16 02:00:37,535 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
+2026-04-16 02:00:38,497 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-04-16 02:00:39,466 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-04-16 02:00:46,731 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-04-16 02:00:47,046 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_406459, Site name: null
+2026-04-16 02:00:47,270 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 14:00:47, then every PT12H
+2026-04-16 02:00:47,291 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-04-16 02:00:47,439 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-04-16 02:00:49,296 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json

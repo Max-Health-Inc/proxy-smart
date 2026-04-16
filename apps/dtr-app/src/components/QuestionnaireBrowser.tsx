@@ -8,9 +8,16 @@
  * - Risk adjustment / quality reporting
  * - Any payer-published SDC Questionnaire
  */
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Input, Spinner } from "@proxy-smart/shared-ui"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proxy-smart/shared-ui"
 import { SmartFormsQuestionnaireRenderer } from "@/components/SmartFormsQuestionnaireRenderer"
 import { searchQuestionnaires, createQuestionnaireResponse } from "@/lib/fhir-client"
 import { toast } from "sonner"
@@ -22,6 +29,7 @@ import {
   Calendar,
   Building2,
   Tag,
+  Filter,
 } from "lucide-react"
 
 interface QuestionnaireBrowserProps {
@@ -35,6 +43,8 @@ export function QuestionnaireBrowser({ patient }: QuestionnaireBrowserProps) {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [publisherFilter, setPublisherFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedQ, setSelectedQ] = useState<Questionnaire | null>(null)
   const didFetch = useRef(false)
 
@@ -82,8 +92,19 @@ export function QuestionnaireBrowser({ patient }: QuestionnaireBrowserProps) {
     setView("list")
   }, [])
 
-  // Filter questionnaires by search query
+  // Extract unique publishers (payers) for filtering
+  const publishers = useMemo(() => {
+    const names = new Set<string>()
+    for (const q of questionnaires) {
+      if (q.publisher) names.add(q.publisher)
+    }
+    return Array.from(names).sort()
+  }, [questionnaires])
+
+  // Filter questionnaires by search query, publisher, and status
   const filtered = questionnaires.filter((q) => {
+    if (publisherFilter !== "all" && q.publisher !== publisherFilter) return false
+    if (statusFilter !== "all" && q.status !== statusFilter) return false
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -149,6 +170,31 @@ export function QuestionnaireBrowser({ patient }: QuestionnaireBrowserProps) {
             className="pl-9"
           />
         </div>
+        {publishers.length > 1 && (
+          <Select value={publisherFilter} onValueChange={setPublisherFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="size-3.5 mr-1" />
+              <SelectValue placeholder="All payers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All payers</SelectItem>
+              {publishers.map((pub) => (
+                <SelectItem key={pub} value={pub}>{pub}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[130px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="retired">Retired</SelectItem>
+          </SelectContent>
+        </Select>
         <Badge variant="outline">{filtered.length} available</Badge>
       </div>
 

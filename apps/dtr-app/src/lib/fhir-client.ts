@@ -115,35 +115,35 @@ export async function searchPatientByIdentifier(identifier: string): Promise<Pat
 // ── Practitioner (PAS-profiled) ──────────────────────────────────────────────
 
 export async function getPractitioner(id: string): Promise<PASPractitioner> {
-  return client.read().pASPractitioner().read(id)
+  return client.read().practitioner().read(id) as Promise<PASPractitioner>
 }
 
 export async function searchPractitioners(name: string): Promise<PASPractitioner[]> {
-  return client.read().pASPractitioner().searchAll({ name, _count: 20 })
+  return client.read().practitioner().searchAll({ name, _count: 20 }) as Promise<PASPractitioner[]>
 }
 
 // ── Coverage (PAS-profiled — use generated client) ───────────────────────────
 
 export async function searchCoverage(patientId: string): Promise<PASCoverage[]> {
-  return client.read().pASCoverage().searchAll({
+  return client.read().coverage().searchAll({
     patient: `Patient/${patientId}`,
     status: "active",
     _count: 20,
-  })
+  }) as Promise<PASCoverage[]>
 }
 
 // ── ServiceRequest (PAS-profiled) ────────────────────────────────────────────
 
 export async function searchServiceRequests(patientId: string): Promise<PASServiceRequest[]> {
-  return client.read().pASServiceRequest().searchAll({
+  return client.read().serviceRequest().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-authored",
-  })
+  }) as Promise<PASServiceRequest[]>
 }
 
 export async function createServiceRequest(sr: PASServiceRequest): Promise<PASServiceRequest> {
-  return client.write().pASServiceRequest().create(sr)
+  return client.write().serviceRequest().create(sr as fhir4.ServiceRequest) as Promise<PASServiceRequest>
 }
 
 // ── Conditions ───────────────────────────────────────────────────────────────
@@ -227,7 +227,7 @@ export async function searchClaimResponses(patientId: string): Promise<PASClaimR
 // ── Organization ─────────────────────────────────────────────────────────────
 
 export async function getOrganization(id: string): Promise<PASOrganization> {
-  return client.read().pASOrganization().read(id)
+  return client.read().organization().read(id) as Promise<PASOrganization>
 }
 
 // ── Claim Inquiry ($inquire) ─────────────────────────────────────────────────
