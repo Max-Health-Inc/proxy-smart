@@ -119,8 +119,7 @@ export function mapHealthcareUser(user: KeycloakUser) {
     organization: user.attributes?.organization?.[0],
     fhirPersons,
     emailVerified: user.emailVerified,
-    npi: user.attributes?.npi?.[0],
-    practitionerId: user.attributes?.practitioner_id?.[0]
+    fhirUser: user.attributes?.fhirUser?.[0]
   }
 }
 

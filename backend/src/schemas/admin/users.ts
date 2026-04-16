@@ -34,8 +34,7 @@ export const HealthcareUser = t.Object({
   
   // Additional user properties
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
-  npi: t.Optional(t.String({ description: 'National Provider Identifier (NPI)' })),
-  practitionerId: t.Optional(t.String({ description: 'FHIR Practitioner resource ID' }))
+  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' }))
 }, { title: 'HealthcareUser' })
 
 export const CreateHealthcareUserRequest = t.Object({
@@ -53,8 +52,7 @@ export const CreateHealthcareUserRequest = t.Object({
   // Additional user properties
   enabled: t.Optional(t.Boolean({ description: 'Whether the user is enabled', default: true })),
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
-  npi: t.Optional(t.String({ description: 'National Provider Identifier (NPI) for healthcare providers' })),
-  practitionerId: t.Optional(t.String({ description: 'FHIR Practitioner resource ID' }))
+  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' }))
 }, { title: 'CreateHealthcareUserRequest' })
 
 export const UpdateHealthcareUserRequest = t.Object({
@@ -69,8 +67,7 @@ export const UpdateHealthcareUserRequest = t.Object({
   
   // Additional user properties
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
-  npi: t.Optional(t.String({ description: 'National Provider Identifier (NPI)' })),
-  practitionerId: t.Optional(t.String({ description: 'FHIR Practitioner resource ID' }))
+  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' }))
 }, { title: 'UpdateHealthcareUserRequest' })
 
 export const UserIdParam = t.Object({

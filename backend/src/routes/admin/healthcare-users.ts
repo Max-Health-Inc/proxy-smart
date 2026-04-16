@@ -188,8 +188,7 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
           ...(body.fhirPersons && body.fhirPersons.length > 0 && { 
             fhir_persons: [JSON.stringify(body.fhirPersons)]
           }),
-          ...(body.npi && { npi: [body.npi] }),
-          ...(body.practitionerId && { practitioner_id: [body.practitionerId] })
+          ...(body.fhirUser && { fhirUser: [body.fhirUser] })
         },
         credentials: body.password ? [{
           type: 'password',
@@ -373,8 +372,7 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         ...(body.fhirPersons && body.fhirPersons.length > 0 && { 
           fhir_persons: [JSON.stringify(body.fhirPersons)]
         }),
-        ...(body.npi !== undefined && { npi: body.npi ? [body.npi] : undefined }),
-        ...(body.practitionerId !== undefined && { practitioner_id: body.practitionerId ? [body.practitionerId] : undefined })
+        ...(body.fhirUser !== undefined && { fhirUser: body.fhirUser ? [body.fhirUser] : undefined })
       }
 
       const updateData = {

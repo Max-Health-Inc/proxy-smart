@@ -107,17 +107,11 @@ export interface HealthcareUser {
      */
     emailVerified?: boolean;
     /**
-     * National Provider Identifier (NPI)
+     * FHIR User identity reference (e.g. Patient/123 or Practitioner/456)
      * @type {string}
      * @memberof HealthcareUser
      */
-    npi?: string;
-    /**
-     * FHIR Practitioner resource ID
-     * @type {string}
-     * @memberof HealthcareUser
-     */
-    practitionerId?: string;
+    fhirUser?: string;
 }
 
 /**
@@ -157,8 +151,7 @@ export function HealthcareUserFromJSONTyped(json: any, ignoreDiscriminator: bool
         'organization': json['organization'] == null ? undefined : json['organization'],
         'fhirPersons': json['fhirPersons'] == null ? undefined : ((json['fhirPersons'] as Array<any>).map(FhirPersonAssociationFromJSON)),
         'emailVerified': json['emailVerified'] == null ? undefined : json['emailVerified'],
-        'npi': json['npi'] == null ? undefined : json['npi'],
-        'practitionerId': json['practitionerId'] == null ? undefined : json['practitionerId'],
+        'fhirUser': json['fhirUser'] == null ? undefined : json['fhirUser'],
     };
 }
 
@@ -187,7 +180,6 @@ export function HealthcareUserToJSONTyped(value?: HealthcareUser | null, ignoreD
         'organization': value['organization'],
         'fhirPersons': value['fhirPersons'] == null ? undefined : ((value['fhirPersons'] as Array<any>).map(FhirPersonAssociationToJSON)),
         'emailVerified': value['emailVerified'],
-        'npi': value['npi'],
-        'practitionerId': value['practitionerId'],
+        'fhirUser': value['fhirUser'],
     };
 }

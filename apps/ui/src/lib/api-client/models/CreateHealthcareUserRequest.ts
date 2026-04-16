@@ -96,17 +96,11 @@ export interface CreateHealthcareUserRequest {
      */
     emailVerified?: boolean;
     /**
-     * National Provider Identifier (NPI) for healthcare providers
+     * FHIR User identity reference (e.g. Patient/123 or Practitioner/456)
      * @type {string}
      * @memberof CreateHealthcareUserRequest
      */
-    npi?: string;
-    /**
-     * FHIR Practitioner resource ID
-     * @type {string}
-     * @memberof CreateHealthcareUserRequest
-     */
-    practitionerId?: string;
+    fhirUser?: string;
 }
 
 /**
@@ -142,8 +136,7 @@ export function CreateHealthcareUserRequestFromJSONTyped(json: any, ignoreDiscri
         'clientRoles': json['clientRoles'] == null ? undefined : json['clientRoles'],
         'enabled': json['enabled'] == null ? undefined : json['enabled'],
         'emailVerified': json['emailVerified'] == null ? undefined : json['emailVerified'],
-        'npi': json['npi'] == null ? undefined : json['npi'],
-        'practitionerId': json['practitionerId'] == null ? undefined : json['practitionerId'],
+        'fhirUser': json['fhirUser'] == null ? undefined : json['fhirUser'],
     };
 }
 
@@ -170,7 +163,6 @@ export function CreateHealthcareUserRequestToJSONTyped(value?: CreateHealthcareU
         'clientRoles': value['clientRoles'],
         'enabled': value['enabled'],
         'emailVerified': value['emailVerified'],
-        'npi': value['npi'],
-        'practitionerId': value['practitionerId'],
+        'fhirUser': value['fhirUser'],
     };
 }

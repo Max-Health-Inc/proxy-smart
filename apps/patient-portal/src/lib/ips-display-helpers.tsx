@@ -3,9 +3,11 @@ import type { AllergyIntoleranceCategoryCode } from "hl7.fhir.uv.ips-generated/v
 import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
 import type { EventStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-EventStatus"
 import type { ObservationInterpretationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationInterpretation"
+import type { DeviceStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceStatementStatus"
+import type { ConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
 
 // Re-export types used in consumers
-export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, ReactionEventSeverityCode, EventStatusCode, ObservationInterpretationCode }
+export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, ReactionEventSeverityCode, EventStatusCode, ObservationInterpretationCode, DeviceStatementStatusCode, ConditionSeverityCode }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyResource = Record<string, any>
@@ -84,4 +86,24 @@ export function getProcedureStatusStyle(status: EventStatusCode): "default" | "s
     case "not-done": case "entered-in-error": return "destructive"
     default: return "outline"
   }
+}
+
+// ── Device use status ────────────────────────────────────────────────────────
+
+export function getDeviceStatusStyle(status: DeviceStatementStatusCode): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "active": return "default"
+    case "completed": return "secondary"
+    case "entered-in-error": return "destructive"
+    case "intended": case "stopped": case "on-hold": return "outline"
+    default: return "outline"
+  }
+}
+
+// ── Condition severity ───────────────────────────────────────────────────────
+
+export const conditionSeverityStyles: Record<ConditionSeverityCode, { label: string; variant: "destructive" | "secondary" | "outline" }> = {
+  24484000: { label: "Severe", variant: "destructive" },
+  6736007: { label: "Moderate", variant: "secondary" },
+  255604002: { label: "Mild", variant: "outline" },
 }

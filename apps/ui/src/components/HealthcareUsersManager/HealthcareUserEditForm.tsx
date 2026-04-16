@@ -32,6 +32,7 @@ export interface EditUserFormData {
   lastName: string;
   email: string;
   organization?: string;
+  fhirUser?: string;
   fhirPersons: FhirPersonAssociation[];
   enabled: boolean;
   primaryRole: string;
@@ -58,6 +59,7 @@ const initialFormData: EditUserFormData = {
   lastName: '',
   email: '',
   organization: '',
+  fhirUser: '',
   fhirPersons: [],
   enabled: true,
   primaryRole: '',
@@ -169,6 +171,18 @@ export function HealthcareUserEditForm({
               value={formData.organization ?? ''}
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
             />
+          </div>
+
+          {/* FHIR User Identity */}
+          <div className="space-y-2">
+            <Label htmlFor="editFhirUser">{t('FHIR User Identity')}</Label>
+            <Input
+              id="editFhirUser"
+              placeholder="e.g., Patient/123 or Practitioner/456"
+              value={formData.fhirUser ?? ''}
+              onChange={(e) => setFormData({ ...formData, fhirUser: e.target.value })}
+            />
+            <p className="text-xs text-muted-foreground">{t('Maps this user to a FHIR resource (used in SMART fhirUser claim)')}</p>
           </div>
 
           {/* FHIR Person Associations */}
