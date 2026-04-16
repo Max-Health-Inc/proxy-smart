@@ -10,11 +10,11 @@ import { format } from "date-fns"
 import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2 } from "lucide-react"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
 import type { DocumentReference } from "@/lib/fhir-client"
-import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
-import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
-import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
-import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
-import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
+import { isValidConditionVerificationStatusCode, type ConditionVerificationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerificationStatus"
+import { isValidAllergyIntoleranceVerificationStatusCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyIntoleranceVerificationStatusCodes"
+import type { AllergyIntoleranceSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyIntoleranceSeverity"
+import type { ConditionClinicalStatusCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinicalStatusCodes"
+import { isValidConditionDiagnosisSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionDiagnosisSeverity"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -69,12 +69,12 @@ function extractPerformer(r: FhirResource): string | undefined {
   return ref.includes("/") && !ref.includes(" ") ? ref.replace("/", " #") : ref
 }
 
-const VERIFIED_CODES: ReadonlySet<string> = new Set<ConditionVerStatusCode | string>(["confirmed"])
+const VERIFIED_CODES: ReadonlySet<string> = new Set<ConditionVerificationStatusCode | string>(["confirmed"])
 
 function isVerifiedCode(code: string): boolean {
-  return isValidConditionVerStatusCode(code)
+  return isValidConditionVerificationStatusCode(code)
     ? (VERIFIED_CODES.has(code))
-    : isValidAllergyintoleranceVerificationCode(code)
+    : isValidAllergyIntoleranceVerificationStatusCodesCode(code)
       ? code === "confirmed"
       : code === "confirmed" || code === "verified"
 }
@@ -90,10 +90,10 @@ function extractVerificationStatus(r: FhirResource): { verified: boolean; label:
   }
 }
 
-function extractClinicalStatus(r: FhirResource): { code: ConditionClinicalCode | string; display: string } | undefined {
+function extractClinicalStatus(r: FhirResource): { code: ConditionClinicalStatusCodesCode | string; display: string } | undefined {
   const cs = r.clinicalStatus
   if (!cs) return undefined
-  const code = (cs.coding?.[0]?.code ?? "") as ConditionClinicalCode | string
+  const code = (cs.coding?.[0]?.code ?? "") as ConditionClinicalStatusCodesCode | string
   const display = cs.coding?.[0]?.display ?? cs.text ?? code
   return { code, display }
 }
@@ -103,7 +103,7 @@ const SEVERITY_LABELS: Record<string, string> = { "24484000": "Severe", "6736007
 function extractSeverity(r: FhirResource): string | undefined {
   const sev = r.severity?.coding?.[0]?.code
   if (!sev) return undefined
-  if (isValidConditionSeverityCode(sev)) return SEVERITY_LABELS[sev] ?? sev
+  if (isValidConditionDiagnosisSeverityCode(sev)) return SEVERITY_LABELS[sev] ?? sev
   return r.severity?.coding?.[0]?.display ?? r.severity?.text ?? sev
 }
 
@@ -144,7 +144,7 @@ function formatShortDate(dateStr: string | undefined): string {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-const severityBadgeStyles: Record<ReactionEventSeverityCode, string> = {
+const severityBadgeStyles: Record<AllergyIntoleranceSeverityCode, string> = {
   severe: "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/20",
   moderate: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/20",
   mild: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20",
@@ -212,7 +212,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           {/* Clinical status */}
           {clinicalStatus && (
             <DetailRow icon={<Tag className="size-4 text-teal-500" />} label="Clinical Status">
-              <Badge variant={(clinicalStatus.code as ConditionClinicalCode) === "active" ? "default" : "secondary"} className="text-xs">
+              <Badge variant={(clinicalStatus.code as ConditionClinicalStatusCodesCode) === "active" ? "default" : "secondary"} className="text-xs">
                 {clinicalStatus.display}
               </Badge>
             </DetailRow>
@@ -310,7 +310,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
               {resource.reaction[0].severity && (
                 <Badge
                   variant="outline"
-                  className={`ml-2 text-xs ${severityBadgeStyles[resource.reaction[0].severity as ReactionEventSeverityCode] || ""}`}
+                  className={`ml-2 text-xs ${severityBadgeStyles[resource.reaction[0].severity as AllergyIntoleranceSeverityCode] || ""}`}
                 >
                   {resource.reaction[0].severity}
                 </Badge>
