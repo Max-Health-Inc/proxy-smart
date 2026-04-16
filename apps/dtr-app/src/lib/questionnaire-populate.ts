@@ -9,7 +9,8 @@
  * $populate — the Smart Forms renderer will still handle SDC initialExpression
  * and calculatedExpression via its built-in FHIRPath engine.
  */
-import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
+import type { Patient, Questionnaire, QuestionnaireResponse, Parameters } from "fhir/r4"
+import type { DTRQuestionnairePackageInputParameters } from "hl7.fhir.us.davinci-dtr-generated"
 import { authFetch, fhirBaseUrl } from "./fhir-client"
 
 /** Result of pre-population */
@@ -46,7 +47,7 @@ export async function prePopulate(
       ? `${fhirBaseUrl}/Questionnaire/${questionnaire.id}/$populate`
       : `${fhirBaseUrl}/Questionnaire/$populate`
 
-    const body = {
+    const body: DTRQuestionnairePackageInputParameters = {
       resourceType: "Parameters",
       parameter: [
         ...(questionnaire.id
@@ -69,17 +70,18 @@ export async function prePopulate(
     })
 
     if (res.ok) {
-      const data = await res.json()
+      const data: QuestionnaireResponse | Parameters = await res.json()
 
       // $populate returns a QuestionnaireResponse directly or wrapped in Parameters
       let qr: QuestionnaireResponse
       if (data.resourceType === "QuestionnaireResponse") {
-        qr = data
+        qr = data as QuestionnaireResponse
       } else if (data.resourceType === "Parameters") {
-        const param = data.parameter?.find(
-          (p: { name: string }) => p.name === "response"
+        const params = data as Parameters
+        const param = params.parameter?.find(
+          (p) => p.name === "response"
         )
-        qr = param?.resource ?? emptyQr
+        qr = (param?.resource as QuestionnaireResponse) ?? emptyQr
       } else {
         return { questionnaireResponse: emptyQr, serverPopulated: false }
       }

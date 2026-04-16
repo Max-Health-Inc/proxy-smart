@@ -1,5 +1,5 @@
 import type { Patient } from "fhir/r4"
-import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import type { LaunchMode } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { Card, CardContent, Button, Badge } from "@proxy-smart/shared-ui"
 import { formatHumanName } from "@/lib/fhir-client"
 import { User, Calendar, Hash, X } from "lucide-react"
