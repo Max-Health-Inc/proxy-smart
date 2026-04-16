@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604160155.0d91a611] - 2026-04-16
+
+- 🔧 Chores & Improvements: CI/CD and version bumps across multiple apps to 0.0.5-alpha.202604160155.0d91a611
+- ✨ Features: DTR UI enhancements including PR list/status mapping, extended imports/types, and new UI state for filters (publisher/status) with Filter component
+- 🔧 Chores & Improvements: DTR client/fhir refactor — migrate entity methods to new client paths (pAS* → practitioner/coverage/serviceRequest) with type casts
+- ✨ Features: DTR metrics added
+- 📚 Documentation: (none)
+- 🐛 Bug Fixes: (none)
+- ⚠️ Breaking Changes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/396
+
+
 ## [0.0.5-alpha.202604160124.af7d2b79] - 2026-04-16
 
 - ✨ Features: DTR integration enhancements
