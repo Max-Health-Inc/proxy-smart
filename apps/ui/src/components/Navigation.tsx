@@ -34,6 +34,8 @@ import {
   DoorOpen,
   Building2,
   Landmark,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -45,7 +47,7 @@ interface NavigationProps {
 
 export function Navigation({ activeTab, onTabChange, profile }: NavigationProps) {
   const logout = useAuthStore((state) => state.logout);
-  const { language: currentLanguage, setLanguage } = useAppStore();
+  const { language: currentLanguage, setLanguage, hiddenTabs, setTabVisible } = useAppStore();
   const { theme: currentTheme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [showPreferences, setShowPreferences] = useState(false);
@@ -177,6 +179,16 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
 
   ];
 
+  // Tabs that can be toggled on/off in preferences
+  const togglableTabs = [
+    { id: 'ai-tools', label: t('AI Tools'), icon: Sparkles },
+    { id: 'branding', label: t('Branding'), icon: Building2 },
+    { id: 'door-management', label: t('Door Management'), icon: DoorOpen },
+    { id: 'organizations', label: t('Organizations'), icon: Landmark },
+  ];
+
+  const visibleTabs = tabs.filter((tab) => !hiddenTabs.includes(tab.id));
+
   return (
     <nav className="bg-background/80 backdrop-blur-2xl border-b border-border/40 shadow-2xl sticky top-0 z-50 transition-all duration-300">
       <div className="container mx-auto px-3 sm:px-4 lg:px-6">
@@ -209,7 +221,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
             {/* Desktop Navigation */}
             <NavigationMenu className="hidden lg:block w-full max-w-full">
               <NavigationMenuList className="flex flex-nowrap justify-start gap-1 w-max min-w-full px-1">
-                {tabs.map((tab) => {
+                {visibleTabs.map((tab) => {
                   const IconComponent = tab.icon;
                   return (
                     <NavigationMenuItem key={tab.id}>
@@ -296,7 +308,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                         </div>
                       </div>
                     </DropdownMenuItem>
-                    {tabs.map((tab) => {
+                    {visibleTabs.map((tab) => {
                       const IconComponent = tab.icon;
                       return (
                         <DropdownMenuItem
@@ -425,6 +437,38 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                     </div>
                     <DropdownMenuSeparator className="bg-border/60" />
                     
+                    <div className="px-2 py-1">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2 py-2">
+                        {t('Visible Tabs')}
+                      </p>
+                      {togglableTabs.map((tab) => {
+                        const IconComponent = tab.icon;
+                        const isVisible = !hiddenTabs.includes(tab.id);
+                        const VisibilityIcon = isVisible ? Eye : EyeOff;
+                        return (
+                          <DropdownMenuItem
+                            key={tab.id}
+                            onSelect={(e) => e.preventDefault()}
+                            onClick={() => setTabVisible(tab.id, !isVisible)}
+                            className="flex items-center justify-between space-x-3 p-3 hover:bg-muted/80 cursor-pointer rounded-xl mx-1 my-1 transition-all duration-300 transform hover:scale-105"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                                <IconComponent className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                              <span className={`font-medium ${isVisible ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                {tab.label}
+                              </span>
+                            </div>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isVisible ? 'bg-primary/20' : 'bg-muted'}`}>
+                              <VisibilityIcon className={`w-3.5 h-3.5 ${isVisible ? 'text-primary' : 'text-muted-foreground'}`} />
+                            </div>
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </div>
+                    <DropdownMenuSeparator className="bg-border/60" />
+
                     <div className="px-2 py-1">
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2 py-2">
                         {t('Language')}

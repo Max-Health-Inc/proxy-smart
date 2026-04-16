@@ -33,6 +33,10 @@ interface AppState {
   // AI Assistant state
   isAIAssistantEnabled: boolean;
   setIsAIAssistantEnabled: (enabled: boolean) => void;
+
+  // Tab visibility preferences
+  hiddenTabs: string[];
+  setTabVisible: (tabId: string, visible: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -74,6 +78,15 @@ export const useAppStore = create<AppState>()(
       // AI Assistant state
       isAIAssistantEnabled: true, // Default to true, will be updated by fetching SMART apps
       setIsAIAssistantEnabled: (enabled) => set({ isAIAssistantEnabled: enabled }),
+
+      // Tab visibility — tabs hidden by default: door-management, organizations
+      hiddenTabs: ['door-management', 'organizations'],
+      setTabVisible: (tabId, visible) =>
+        set((state) => ({
+          hiddenTabs: visible
+            ? state.hiddenTabs.filter((id) => id !== tabId)
+            : [...state.hiddenTabs, tabId],
+        })),
     }),
     {
       name: 'app-store',
@@ -85,6 +98,7 @@ export const useAppStore = create<AppState>()(
         smartAppsManagerTab: state.smartAppsManagerTab,
         notificationsEnabled: state.notificationsEnabled,
         isAIAssistantEnabled: state.isAIAssistantEnabled,
+        hiddenTabs: state.hiddenTabs,
       }),
     }
   )
