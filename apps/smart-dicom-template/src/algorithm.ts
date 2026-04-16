@@ -7,7 +7,7 @@
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-import type { ImagingStudy } from "fhir/r4"
+import type { ImagingStudyUvIps as ImagingStudy } from "hl7.fhir.uv.ips-generated"
 
 // ── Input provided to your algorithm ─────────────────────────────────────
 

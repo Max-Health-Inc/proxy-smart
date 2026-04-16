@@ -30,7 +30,11 @@ import {
   Building2,
   Tag,
   Filter,
+  PenTool,
+  BookOpen,
+  Workflow,
 } from "lucide-react"
+import { getQuestionnaireMetadata } from "@/lib/questionnaire-extensions"
 
 interface QuestionnaireBrowserProps {
   patient: Patient
@@ -243,6 +247,7 @@ function QuestionnaireCard({
   onSelect: () => void
 }) {
   const itemCount = countItems(questionnaire.item ?? [])
+  const meta = getQuestionnaireMetadata(questionnaire)
   const statusColor =
     questionnaire.status === "active"
       ? "text-emerald-600"
@@ -261,9 +266,29 @@ function QuestionnaireCard({
             <FileQuestion className="size-4 shrink-0" />
             {questionnaire.title ?? questionnaire.name ?? questionnaire.id}
           </CardTitle>
-          <Badge variant="outline" className={`text-xs ${statusColor}`}>
-            {questionnaire.status}
-          </Badge>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {meta.signatureRequired && (
+              <Badge variant="destructive" className="text-xs">
+                <PenTool className="size-3 mr-0.5" />
+                Signature
+              </Badge>
+            )}
+            {meta.hasCql && (
+              <Badge variant="secondary" className="text-xs">
+                <BookOpen className="size-3 mr-0.5" />
+                CQL
+              </Badge>
+            )}
+            {meta.modular && (
+              <Badge variant="secondary" className="text-xs">
+                <Workflow className="size-3 mr-0.5" />
+                Modular
+              </Badge>
+            )}
+            <Badge variant="outline" className={`text-xs ${statusColor}`}>
+              {questionnaire.status}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -289,6 +314,11 @@ function QuestionnaireCard({
             <Tag className="size-3" />
             {itemCount} item{itemCount !== 1 ? "s" : ""}
           </span>
+          {meta.launchContextNames.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              Context: {meta.launchContextNames.join(", ")}
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>
