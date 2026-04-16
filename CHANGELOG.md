@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604160211.102adcda] - 2026-04-16
+
+- 🔧 Chores & Improvements: Bump to 0.0.5-beta.202604160211.102adcda across apps; add new dependency hl7.fhir.uv.smart-app-launch-generated; update bun.lock with version and dependency alignment
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/399
+
+
 ## [0.0.5-alpha.202604160155.0d91a611] - 2026-04-16
 
 - 🔧 Chores & Improvements: CI/CD and version bumps across multiple apps to 0.0.5-alpha.202604160155.0d91a611
