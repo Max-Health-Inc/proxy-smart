@@ -23,6 +23,7 @@
     "@tailwindcss/vite": "^4.2.2",
     "@types/fhir": "^0.0.41",
     "@babelfhir-ts/client-r4": "^0.2.0",
+    "hl7.fhir.uv.smart-app-launch-generated": "../../lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
