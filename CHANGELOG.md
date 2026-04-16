@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604160348.25f9e5ab] - 2026-04-16
+
+- 🔧 Chores & Improvements: Version bumps across all packages for alpha release
+- ✨ Features: Added DocumentsCard component and integrated document/documentReference rendering and cross-linking in patient-portal (DocumentsCard usage, DocumentReference context linkage)
+- 🐛 Bug Fixes: Minor type and code adjustments (DTR metrics casting, questionnaire input parameter type, tsconfig isolatedModules/types)
+- 🔧 Chores & Improvements: Update imports and state handling for DocumentsCard and related document references in Dashboard and RecordDetailModal
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/404
+
+
 ## [0.0.5-beta.202604160334.ca7dae83] - 2026-04-16
 
 - ✨ Features: 
