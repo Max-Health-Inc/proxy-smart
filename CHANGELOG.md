@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604160240.90c9ae50] - 2026-04-16
+
+- 🔧 Chores & Improvements: CI workflow updated to manual CI via workflow_dispatch with per-branch concurrency; version bumps across apps from beta to alpha; bun.lock updates.
+
+- ✨ Features: 
+  - Patient portal: Type-safe IPS value-set updates, new ips-display-helpers.tsx with type exports and RecordName component; ImagingStudy status checks updated to ImagingStudyStatusUvIps; verification status logic added in RecordDetailModal.
+  - FHIR client: Added strict type checks for clinical codes in search conditions and searchAllergies queries.
+  - E2E tests: Added acceptance for Keycloak consent grant in login flows; new test scripts for beta project.
+  
+- 🔧 Chores & Improvements (CI/CD and tests): Testing config: Playwright target default updated; E2E env target default updated from alpha to beta for E2E targets.
+
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/400
+
+
 ## [0.0.5-beta.202604160211.102adcda] - 2026-04-16
 
 - 🔧 Chores & Improvements: Bump to 0.0.5-beta.202604160211.102adcda across apps; add new dependency hl7.fhir.uv.smart-app-launch-generated; update bun.lock with version and dependency alignment
