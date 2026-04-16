@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604161742.aaf0299e] - 2026-04-16
+
+- ✨ Features:
+  - Expanded DTR UI: PaReviewSubmit now uses US Core demographics to display DOB, gender, and birth sex; PatientBanner initializes and shows Birth Sex with tooltip enhancements.
+  - QuestionnaireBrowser: renders additional metadata badges (Signature, CQL, Modular) using new getQuestionnaireMetadata.
+  - Added new US Core patient extensions package (patient-extensions.ts) and questionnaireExtensions (questionnaire-extensions.ts).
+
+- 🔧 Chores & Improvements:
+  - Bumped pre-release versions to 0.0.5-alpha.202604161742.aaf0299e across multiple apps.
+  - Updated imports for ImagingStudy in DICOM template components to use hl7.fhir.uv.ips-generated types.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/407
+
+
 ## [0.0.5-alpha.202604161440.af9f8d53] - 2026-04-16
 
 - 🔧 Chores & Improvements: Bump pre-release versions from beta to alpha across multiple packages
