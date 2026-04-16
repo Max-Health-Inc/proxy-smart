@@ -1,7 +1,7 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 export { fhirBaseUrl }
 import { reportAuthError } from "@/lib/auth-error"
-import { FhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import { FhirClient } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import type {
   Patient,
   Questionnaire,
@@ -33,6 +33,11 @@ import type {
   PASMedicationRequest,
   PASClaimResponse,
 } from "hl7.fhir.us.davinci-pas-generated"
+import type {
+  DTRStdQuestionnaire,
+  DTRQuestionnaireResponse,
+  DTRQuestionnairePackageBundle,
+} from "hl7.fhir.us.davinci-dtr-generated"
 
 export type {
   Patient,
@@ -62,6 +67,9 @@ export type {
   PASInquiryResponseBundle,
   PASDeviceRequest,
   PASMedicationRequest,
+  DTRStdQuestionnaire,
+  DTRQuestionnaireResponse,
+  DTRQuestionnairePackageBundle,
 }
 
 // ── FHIR client with authenticated fetch (@babelfhir-ts/client-r4) ──────────
