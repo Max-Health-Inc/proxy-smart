@@ -2,6 +2,7 @@ import type { Patient, QuestionnaireResponse } from "fhir/r4"
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { Separator } from "@/components/ui/separator"
 import { formatHumanName } from "@/lib/fhir-client"
+import { getUSCoreDemographics } from "@/lib/patient-extensions"
 import { type SelectedService } from "@/components/ServiceSelector"
 import { Send, User, Stethoscope, FileText, CheckCircle } from "lucide-react"
 
@@ -22,6 +23,7 @@ export function PaReviewSubmit({
 }: PaReviewSubmitProps) {
   const responseItems = questionnaireResponse.item ?? []
   const answeredCount = responseItems.filter((i) => i.answer?.length).length
+  const { race, ethnicity, birthSexDisplay } = getUSCoreDemographics(patient)
 
   return (
     <Card>
@@ -38,6 +40,23 @@ export function PaReviewSubmit({
           <div>
             <p className="text-xs text-muted-foreground">Patient</p>
             <p className="text-sm font-medium">{formatHumanName(patient.name)}</p>
+            <div className="flex gap-2 mt-0.5 flex-wrap">
+              {patient.birthDate && (
+                <Badge variant="outline" className="text-xs font-normal">DOB: {patient.birthDate}</Badge>
+              )}
+              {patient.gender && (
+                <Badge variant="outline" className="text-xs font-normal capitalize">{patient.gender}</Badge>
+              )}
+              {birthSexDisplay && birthSexDisplay !== patient.gender && (
+                <Badge variant="outline" className="text-xs font-normal">Birth Sex: {birthSexDisplay}</Badge>
+              )}
+              {race?.text && (
+                <Badge variant="secondary" className="text-xs font-normal">{race.text}</Badge>
+              )}
+              {ethnicity?.text && (
+                <Badge variant="secondary" className="text-xs font-normal">{ethnicity.text}</Badge>
+              )}
+            </div>
           </div>
         </div>
 
