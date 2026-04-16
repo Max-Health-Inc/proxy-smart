@@ -57,14 +57,6 @@ jobs:
       test_stage: ${{ inputs.test_stage }}
     secrets: inherit
 
-  # E2E Playwright tests for consent app (runs in parallel)
-  e2e-consent-tests:
-    name: Consent App E2E (${{ inputs.test_stage }})
-    uses: ./.github/workflows/e2e-consent-tests.yml
-    with:
-      test_stage: ${{ inputs.test_stage }}
-    secrets: inherit
-
   # Integration tests against deployed services (runs in parallel)
   integration-tests:
     name: Integration Tests (${{ inputs.test_stage }})
@@ -204,7 +196,7 @@ jobs:
   test-summary:
     name: Test Summary (${{ inputs.test_stage }})
     runs-on: ubuntu-latest
-    needs: [smart-compliance-tests, e2e-consent-tests, integration-tests]
+    needs: [smart-compliance-tests, integration-tests]
     if: always()
     
     outputs:
@@ -226,14 +218,12 @@ jobs:
           COMPLIANCE_PASSED="${{ needs.smart-compliance-tests.outputs.passed || '0' }}"
           COMPLIANCE_FAILED="${{ needs.smart-compliance-tests.outputs.failed || '0' }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.outputs.status || 'failed' }}"
-          E2E_CONSENT_STATUS="${{ needs.e2e-consent-tests.outputs.status || 'skipped' }}"
           
           echo "SMART Compliance: $COMPLIANCE_STATUS (passed: $COMPLIANCE_PASSED, failed: $COMPLIANCE_FAILED)"
           echo "Integration Tests: $INTEGRATION_STATUS"
-          echo "E2E Consent Tests: $E2E_CONSENT_STATUS"
           
           # Determine overall status
-          if [[ "$COMPLIANCE_STATUS" == "success" && "$INTEGRATION_STATUS" == "passed" && "$E2E_CONSENT_STATUS" == "success" ]]; then
+          if [[ "$COMPLIANCE_STATUS" == "success" && "$INTEGRATION_STATUS" == "passed" ]]; then
             OVERALL_STATUS="passed"
             STATUS_EMOJI="✅"
           elif [[ "$COMPLIANCE_STATUS" == "success" || "$INTEGRATION_STATUS" == "passed" ]]; then
@@ -269,7 +259,6 @@ jobs:
           | Test Type | Status | Details |
           |-----------|--------|---------|
           | SMART 2.2.0 Compliance | $COMPLIANCE_STATUS | Passed: $COMPLIANCE_PASSED, Failed: $COMPLIANCE_FAILED |
-          | E2E Consent App | $E2E_CONSENT_STATUS | Playwright E2E tests |
           | Integration Tests | $INTEGRATION_STATUS | Health, Metadata, OAuth, SMART Config |
           
           ## Overall Result: **$OVERALL_STATUS**
@@ -295,9 +284,6 @@ jobs:
           echo "### Integration Tests" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ needs.integration-tests.outputs.status || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### E2E Consent App Tests" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ needs.e2e-consent-tests.outputs.status || 'N/A' }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Overall Result" >> $GITHUB_STEP_SUMMARY
           echo "**${{ steps.summary.outputs.overall_status }}**" >> $GITHUB_STEP_SUMMARY
 
@@ -311,7 +297,7 @@ jobs:
   # Discord notification on successful testing
   notify-testing-success:
     name: Discord Success Notification
-    needs: [smart-compliance-tests, e2e-consent-tests, integration-tests, test-summary]
+    needs: [smart-compliance-tests, integration-tests, test-summary]
     if: ${{ always() && needs.test-summary.outputs.overall_status == 'passed' }}
     runs-on: ubuntu-latest
     env:
@@ -346,7 +332,7 @@ jobs:
   # Discord notification on testing failure
   notify-testing-failure:
     name: Discord Failure Notification
-    needs: [smart-compliance-tests, e2e-consent-tests, integration-tests, test-summary]
+    needs: [smart-compliance-tests, integration-tests, test-summary]
     if: ${{ always() && needs.test-summary.outputs.overall_status != 'passed' }}
     runs-on: ubuntu-latest
     env:

@@ -2,8 +2,8 @@ import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { reportAuthError } from "@/lib/auth-error"
 import {
   FhirResourceReader,
-  FhirResourceWriterImpl,
-} from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+  FhirResourceWriter,
+} from "@babelfhir-ts/client-r4"
 import type {
   Patient,
   Person,
@@ -35,9 +35,9 @@ const persons = new FhirResourceReader<Person>(fhirBaseUrl, "Person", authFetch)
 const patients = new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", authFetch)
 const practitioners = new FhirResourceReader<Practitioner>(fhirBaseUrl, "Practitioner", authFetch)
 const consents = new FhirResourceReader<Consent>(fhirBaseUrl, "Consent", authFetch)
-const consentWriter = new FhirResourceWriterImpl<Consent>(fhirBaseUrl, "Consent", authFetch)
+const consentWriter = new FhirResourceWriter<Consent>(fhirBaseUrl, "Consent", authFetch)
 const tasks = new FhirResourceReader<Task>(fhirBaseUrl, "Task", authFetch)
-const taskWriter = new FhirResourceWriterImpl<Task>(fhirBaseUrl, "Task", authFetch)
+const taskWriter = new FhirResourceWriter<Task>(fhirBaseUrl, "Task", authFetch)
 
 // ── Resource operations ──────────────────────────────────────────────────────
 

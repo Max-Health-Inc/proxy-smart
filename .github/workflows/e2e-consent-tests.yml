@@ -147,6 +147,14 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Build Consent App
+        if: steps.config.outputs.target == 'local'
+        run: cd apps/consent-app && bun run build
+
+      - name: Copy app dists to backend
+        if: steps.config.outputs.target == 'local'
+        run: node scripts/copy-ui-dist.js
+
       - name: Build Backend
         run: cd backend && bun run build
 
