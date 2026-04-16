@@ -5,7 +5,7 @@ import type { ReviewAction } from "hl7.fhir.us.davinci-pas-generated"
 import { getX12278DiagnosisTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278DiagnosisType"
 import { getPASTaskCodesConcept, type PASTaskCodesCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes"
 import { getPASSupportingInfoTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASSupportingInfoType"
-import { type RemittanceOutcomeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-RemittanceOutcome"
+import { type ClaimProcessingCodesCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-ClaimProcessingCodes"
 import { type HrexTaskStatusCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-HrexTaskStatus"
 import { format } from "date-fns"
 import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Paperclip, Info } from "lucide-react"
@@ -21,7 +21,7 @@ interface PaDisplayItem {
 }
 
 /** Maps RemittanceOutcome codes to UI status display */
-const OUTCOME_STATUS_MAP: Record<RemittanceOutcomeCode, { label: string; variant: "success" | "destructive" | "warning" | "secondary"; icon: typeof CheckCircle }> = {
+const OUTCOME_STATUS_MAP: Record<ClaimProcessingCodesCode, { label: string; variant: "success" | "destructive" | "warning" | "secondary"; icon: typeof CheckCircle }> = {
   complete: { label: "Approved", variant: "success", icon: CheckCircle },
   error: { label: "Denied", variant: "destructive", icon: XCircle },
   partial: { label: "Partial", variant: "warning", icon: AlertTriangle },
@@ -46,7 +46,7 @@ const TASK_CODE_LABELS: Record<string, string> = {
 }
 
 function getStatusInfo(item: PaDisplayItem) {
-  const outcome = item.response?.outcome as RemittanceOutcomeCode | undefined
+  const outcome = item.response?.outcome as ClaimProcessingCodesCode | undefined
   if (outcome && outcome in OUTCOME_STATUS_MAP) {
     return OUTCOME_STATUS_MAP[outcome]
   }
