@@ -1,10 +1,11 @@
 import type { Patient, QuestionnaireResponse } from "fhir/r4"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { Separator } from "@/components/ui/separator"
-import { formatHumanName } from "@/lib/fhir-client"
+import { formatHumanName, searchCoverage, type PASCoverage } from "@/lib/fhir-client"
 import { getUSCoreDemographics } from "@/lib/patient-extensions"
 import { type SelectedService } from "@/components/ServiceSelector"
-import { Send, User, Stethoscope, FileText, CheckCircle } from "lucide-react"
+import { Send, User, Stethoscope, FileText, CheckCircle, Shield } from "lucide-react"
 
 interface PaReviewSubmitProps {
   patient: Patient
@@ -24,6 +25,13 @@ export function PaReviewSubmit({
   const responseItems = questionnaireResponse.item ?? []
   const answeredCount = responseItems.filter((i) => i.answer?.length).length
   const { race, ethnicity, birthSexDisplay } = getUSCoreDemographics(patient)
+  const [coverage, setCoverage] = useState<PASCoverage | null>(null)
+
+  useEffect(() => {
+    if (patient.id) {
+      searchCoverage(patient.id).then((c) => setCoverage(c[0] ?? null)).catch(() => {})
+    }
+  }, [patient.id])
 
   return (
     <Card>
@@ -59,6 +67,29 @@ export function PaReviewSubmit({
             </div>
           </div>
         </div>
+
+        {/* Coverage */}
+        {coverage && (
+          <div className="flex items-center gap-3">
+            <Shield className="size-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs text-muted-foreground">Insurance</p>
+              <p className="text-sm font-medium">{coverage.payor?.[0]?.display ?? "Payer"}</p>
+              <div className="flex gap-2 mt-0.5 flex-wrap">
+                {coverage.identifier?.[0]?.value && (
+                  <Badge variant="outline" className="text-xs font-normal font-mono">
+                    ID: {coverage.identifier[0].value}
+                  </Badge>
+                )}
+                {coverage.class?.find(c => c.type?.coding?.[0]?.code === "plan")?.name && (
+                  <Badge variant="outline" className="text-xs font-normal">
+                    {coverage.class.find(c => c.type?.coding?.[0]?.code === "plan")!.name}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Service */}
         <div className="flex items-center gap-3">

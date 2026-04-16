@@ -12,6 +12,78 @@
             "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
           ]
         },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2106-3",
+                  "display": "White"
+                }
+              },
+              {
+                "url": "detailed",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2113-9",
+                  "display": "Austrian"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "White"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Not Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "M"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/gender-identity",
+                  "code": "male",
+                  "display": "Male"
+                }
+              ]
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/individual-pronouns",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "LA29518-0",
+                  "display": "he/him/his"
+                }
+              ]
+            }
+          }
+        ],
         "identifier": [
           {
             "system": "https://proxy-smart.com/identifiers/patients",
@@ -31,6 +103,11 @@
             "system": "email",
             "value": "max.nussbaumer@maxhealth.tech",
             "use": "work"
+          },
+          {
+            "system": "phone",
+            "value": "+43-512-555-0199",
+            "use": "mobile"
           }
         ],
         "gender": "male",
@@ -43,6 +120,31 @@
             "state": "Tirol",
             "postalCode": "6020",
             "country": "AT"
+          }
+        ],
+        "communication": [
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "de",
+                  "display": "German"
+                }
+              ]
+            },
+            "preferred": true
+          },
+          {
+            "language": {
+              "coding": [
+                {
+                  "system": "urn:ietf:bcp:47",
+                  "code": "en",
+                  "display": "English"
+                }
+              ]
+            }
           }
         ]
       },
@@ -95,6 +197,75 @@
       "resource": {
         "resourceType": "Patient",
         "id": "test-patient",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-patient"
+          ]
+        },
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2054-5",
+                  "display": "Black or African American"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Black or African American"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+            "extension": [
+              {
+                "url": "ombCategory",
+                "valueCoding": {
+                  "system": "urn:oid:2.16.840.1.113883.6.238",
+                  "code": "2186-5",
+                  "display": "Not Hispanic or Latino"
+                }
+              },
+              {
+                "url": "text",
+                "valueString": "Not Hispanic or Latino"
+              }
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex",
+            "valueCode": "F"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://hl7.org/fhir/gender-identity",
+                  "code": "non-binary",
+                  "display": "Non-binary"
+                }
+              ]
+            }
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/individual-pronouns",
+            "valueCodeableConcept": {
+              "coding": [
+                {
+                  "system": "http://loinc.org",
+                  "code": "LA29520-6",
+                  "display": "they/them/theirs"
+                }
+              ]
+            }
+          }
+        ],
         "identifier": [
           {
             "system": "https://proxy-smart.com/identifiers/patients",
@@ -882,6 +1053,763 @@
         "referenceRange": [{"high": {"value": 5.7, "unit": "%"}, "text": "Normal: <5.7%"}]
       },
       "request": {"method": "PUT", "url": "Observation/max-hba1c-2026-04"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "payer-blue-cross",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-pas/StructureDefinition/profile-insurer"]},
+        "active": true,
+        "type": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "ins", "display": "Insurance Company"}]}],
+        "name": "Blue Cross Blue Shield",
+        "identifier": [{"system": "http://hl7.org/fhir/sid/us-npi", "value": "1234567893"}],
+        "telecom": [{"system": "phone", "value": "1-800-555-0123", "use": "work"}],
+        "address": [{"line": ["200 Insurance Blvd"], "city": "Chicago", "state": "IL", "postalCode": "60601", "country": "US"}]
+      },
+      "request": {"method": "PUT", "url": "Organization/payer-blue-cross"}
+    },
+    {
+      "resource": {
+        "resourceType": "Organization",
+        "id": "provider-maxhealth",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-pas/StructureDefinition/profile-requestor"]},
+        "active": true,
+        "type": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/organization-type", "code": "prov", "display": "Healthcare Provider"}]}],
+        "name": "MaxHealth Medical Center",
+        "identifier": [{"system": "http://hl7.org/fhir/sid/us-npi", "value": "9876543210"}],
+        "telecom": [{"system": "phone", "value": "+43-512-555-0100", "use": "work"}],
+        "address": [{"line": ["1 Medical Way"], "city": "Innsbruck", "state": "Tirol", "postalCode": "6020", "country": "AT"}]
+      },
+      "request": {"method": "PUT", "url": "Organization/provider-maxhealth"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Coverage",
+        "id": "max-coverage-bcbs",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-pas/StructureDefinition/profile-coverage"]},
+        "status": "active",
+        "type": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "HIP", "display": "health insurance plan policy"}]},
+        "subscriber": {"reference": "Patient/max-nussbaumer"},
+        "beneficiary": {"reference": "Patient/max-nussbaumer"},
+        "relationship": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/subscriber-relationship", "code": "self", "display": "Self"}]},
+        "period": {"start": "2025-01-01", "end": "2026-12-31"},
+        "payor": [{"reference": "Organization/payer-blue-cross"}],
+        "class": [
+          {"type": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/coverage-class", "code": "group"}]}, "value": "GRP-12345", "name": "MaxHealth Employees"},
+          {"type": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/coverage-class", "code": "plan"}]}, "value": "GOLD-PPO", "name": "Gold PPO Plan"}
+        ],
+        "identifier": [{"system": "https://bcbs.com/member-id", "value": "MN-2025-98765"}]
+      },
+      "request": {"method": "PUT", "url": "Coverage/max-coverage-bcbs"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "max-knee-mri",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-pas/StructureDefinition/profile-servicerequest"]},
+        "status": "active",
+        "intent": "order",
+        "category": [{"coding": [{"system": "http://snomed.info/sct", "code": "363679005", "display": "Imaging"}]}],
+        "code": {"coding": [{"system": "http://www.ama-assn.org/go/cpt", "code": "73721", "display": "MRI knee without contrast"}], "text": "MRI of Right Knee"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "requester": {"reference": "Practitioner/dr-jane-smith"},
+        "authoredOn": "2026-04-01",
+        "reasonCode": [{"coding": [{"system": "http://snomed.info/sct", "code": "30989003", "display": "Knee pain"}], "text": "Right knee pain, rule out meniscus tear"}],
+        "bodySite": [{"coding": [{"system": "http://snomed.info/sct", "code": "6757004", "display": "Right knee"}]}]
+      },
+      "request": {"method": "PUT", "url": "ServiceRequest/max-knee-mri"}
+    },
+    {
+      "resource": {
+        "resourceType": "ServiceRequest",
+        "id": "max-pt-eval",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-pas/StructureDefinition/profile-servicerequest"]},
+        "status": "active",
+        "intent": "order",
+        "category": [{"coding": [{"system": "http://snomed.info/sct", "code": "386053000", "display": "Evaluation procedure"}]}],
+        "code": {"coding": [{"system": "http://www.ama-assn.org/go/cpt", "code": "97161", "display": "Physical therapy evaluation, low complexity"}], "text": "Physical Therapy Evaluation"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "requester": {"reference": "Practitioner/dr-jane-smith"},
+        "authoredOn": "2026-04-05",
+        "reasonCode": [{"coding": [{"system": "http://snomed.info/sct", "code": "30989003", "display": "Knee pain"}], "text": "Post-injury rehabilitation"}],
+        "quantityQuantity": {"value": 12, "unit": "visits"}
+      },
+      "request": {"method": "PUT", "url": "ServiceRequest/max-pt-eval"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Immunization",
+        "id": "max-covid-booster",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Immunization-uv-ips"]},
+        "status": "completed",
+        "vaccineCode": {"coding": [{"system": "http://hl7.org/fhir/sid/cvx", "code": "308", "display": "COVID-19 mRNA, bivalent, Pfizer"}], "text": "COVID-19 Bivalent Booster (Pfizer)"},
+        "patient": {"reference": "Patient/max-nussbaumer"},
+        "occurrenceDateTime": "2025-10-15",
+        "primarySource": true,
+        "lotNumber": "FN1234-56",
+        "site": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-ActSite", "code": "LA", "display": "Left arm"}]},
+        "route": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v3-RouteOfAdministration", "code": "IM", "display": "Intramuscular"}]},
+        "performer": [{"actor": {"reference": "Practitioner/dr-jane-smith"}}],
+        "protocolApplied": [{"doseNumberPositiveInt": 5, "targetDisease": [{"coding": [{"system": "http://snomed.info/sct", "code": "840539006", "display": "COVID-19"}]}]}]
+      },
+      "request": {"method": "PUT", "url": "Immunization/max-covid-booster"}
+    },
+    {
+      "resource": {
+        "resourceType": "Immunization",
+        "id": "max-flu-2025",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Immunization-uv-ips"]},
+        "status": "completed",
+        "vaccineCode": {"coding": [{"system": "http://hl7.org/fhir/sid/cvx", "code": "197", "display": "Influenza, high-dose, quadrivalent"}], "text": "Influenza Vaccine 2025-2026"},
+        "patient": {"reference": "Patient/max-nussbaumer"},
+        "occurrenceDateTime": "2025-09-20",
+        "primarySource": true,
+        "lotNumber": "FLU-2025-789",
+        "performer": [{"actor": {"reference": "Practitioner/dr-jane-smith"}}],
+        "protocolApplied": [{"doseNumberPositiveInt": 1, "targetDisease": [{"coding": [{"system": "http://snomed.info/sct", "code": "6142004", "display": "Influenza"}]}]}]
+      },
+      "request": {"method": "PUT", "url": "Immunization/max-flu-2025"}
+    },
+    {
+      "resource": {
+        "resourceType": "Immunization",
+        "id": "max-tdap",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Immunization-uv-ips"]},
+        "status": "completed",
+        "vaccineCode": {"coding": [{"system": "http://hl7.org/fhir/sid/cvx", "code": "115", "display": "Tdap"}], "text": "Tetanus, Diphtheria, Pertussis (Tdap)"},
+        "patient": {"reference": "Patient/max-nussbaumer"},
+        "occurrenceDateTime": "2023-06-10",
+        "primarySource": true,
+        "performer": [{"actor": {"reference": "Practitioner/dr-jane-smith"}}],
+        "protocolApplied": [{"doseNumberPositiveInt": 1, "targetDisease": [{"coding": [{"system": "http://snomed.info/sct", "code": "76902006", "display": "Tetanus"}]}]}]
+      },
+      "request": {"method": "PUT", "url": "Immunization/max-tdap"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "max-knee-arthroscopy",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Procedure-uv-ips"]},
+        "status": "completed",
+        "code": {"coding": [{"system": "http://snomed.info/sct", "code": "10847001", "display": "Arthroscopy of knee"}], "text": "Right Knee Arthroscopy"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "performedDateTime": "2024-06-20",
+        "performer": [{"actor": {"reference": "Practitioner/dr-jane-smith"}}],
+        "bodySite": [{"coding": [{"system": "http://snomed.info/sct", "code": "6757004", "display": "Right knee"}]}],
+        "outcome": {"coding": [{"system": "http://snomed.info/sct", "code": "385669000", "display": "Successful"}]},
+        "followUp": [{"coding": [{"system": "http://snomed.info/sct", "code": "30989003", "display": "Knee pain"}], "text": "Physical therapy 3x/week for 6 weeks"}],
+        "note": [{"text": "Partial medial meniscectomy performed. No complications."}]
+      },
+      "request": {"method": "PUT", "url": "Procedure/max-knee-arthroscopy"}
+    },
+    {
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "max-dental-cleaning",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Procedure-uv-ips"]},
+        "status": "completed",
+        "code": {"coding": [{"system": "http://snomed.info/sct", "code": "34043003", "display": "Dental prophylaxis"}], "text": "Dental Prophylaxis (Cleaning)"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "performedDateTime": "2026-02-10",
+        "note": [{"text": "Routine cleaning. No cavities detected."}]
+      },
+      "request": {"method": "PUT", "url": "Procedure/max-dental-cleaning"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "max-cbc-report",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/DiagnosticReport-uv-ips"]},
+        "status": "final",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/v2-0074", "code": "LAB", "display": "Laboratory"}]}],
+        "code": {"coding": [{"system": "http://loinc.org", "code": "58410-2", "display": "CBC panel - Blood by Automated count"}], "text": "Complete Blood Count (CBC)"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-04-01",
+        "issued": "2026-04-01T14:30:00Z",
+        "performer": [{"reference": "Practitioner/dr-jane-smith"}],
+        "result": [
+          {"reference": "Observation/max-glucose-2026-04"},
+          {"reference": "Observation/max-cholesterol-2026-04"},
+          {"reference": "Observation/max-hba1c-2026-04"}
+        ],
+        "conclusion": "CBC within normal limits. Metabolic panel shows well-controlled glucose and improving cholesterol."
+      },
+      "request": {"method": "PUT", "url": "DiagnosticReport/max-cbc-report"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "max-discharge-summary",
+        "status": "current",
+        "type": {"coding": [{"system": "http://loinc.org", "code": "18842-5", "display": "Discharge summary"}]},
+        "category": [{"coding": [{"system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category", "code": "clinical-note", "display": "Clinical Note"}]}],
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "date": "2024-06-21T10:00:00Z",
+        "author": [{"reference": "Practitioner/dr-jane-smith"}],
+        "description": "Discharge summary following right knee arthroscopy",
+        "content": [{"attachment": {"contentType": "text/plain", "data": "UGF0aWVudDogTWF4aW1pbGlhbiBOdXNzYmF1bWVyDQpQcm9jZWR1cmU6IFJpZ2h0IEtuZWUgQXJ0aHJvc2NvcHkNCkRhdGU6IDIwMjQtMDYtMjANCg0KRmluZGluZ3M6IFBhcnRpYWwgbWVkaWFsIG1lbmlzY3VzIHRlYXIuIFBhcnRpYWwgbWVuaXNjZWN0b215IHBlcmZvcm1lZC4NCg0KRGlzY2hhcmdlIEluc3RydWN0aW9uczoNCi0gSWNlIDIwIG1pbiBldmVyeSAyIGhvdXJzDQotIEVsZXZhdGUgbGVnDQotIFBUIDN4L3dlZWsgc3RhcnRpbmcgd2VlayAyDQotIEZvbGxvdy11cCBpbiAyIHdlZWtz"}}],
+        "context": {"encounter": [{"reference": "Encounter/max-annual-checkup"}], "period": {"start": "2024-06-20", "end": "2024-06-21"}}
+      },
+      "request": {"method": "PUT", "url": "DocumentReference/max-discharge-summary"}
+    },
+    {
+      "resource": {
+        "resourceType": "DocumentReference",
+        "id": "max-lab-report-pdf",
+        "status": "current",
+        "type": {"coding": [{"system": "http://loinc.org", "code": "11502-2", "display": "Laboratory report"}]},
+        "category": [{"coding": [{"system": "http://hl7.org/fhir/us/core/CodeSystem/us-core-documentreference-category", "code": "clinical-note", "display": "Clinical Note"}]}],
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "date": "2026-04-01T15:00:00Z",
+        "author": [{"reference": "Practitioner/dr-jane-smith"}],
+        "description": "Annual lab results - comprehensive metabolic panel",
+        "content": [{"attachment": {"contentType": "application/pdf", "url": "Binary/lab-report-2026-04", "title": "Lab Results April 2026"}}]
+      },
+      "request": {"method": "PUT", "url": "DocumentReference/max-lab-report-pdf"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "max-knee-pain",
+        "clinicalStatus": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]},
+        "verificationStatus": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed"}]},
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "encounter-diagnosis", "display": "Encounter Diagnosis"}]}],
+        "severity": {"coding": [{"system": "http://snomed.info/sct", "code": "6736007", "display": "Moderate"}]},
+        "code": {"coding": [{"system": "http://snomed.info/sct", "code": "30989003", "display": "Knee pain"}], "text": "Right Knee Pain"},
+        "bodySite": [{"coding": [{"system": "http://snomed.info/sct", "code": "6757004", "display": "Right knee"}]}],
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "onsetDateTime": "2024-05-01",
+        "recorder": {"reference": "Practitioner/dr-jane-smith"},
+        "note": [{"text": "Recurrent right knee pain following meniscus tear. Managed with PT and NSAIDs."}]
+      },
+      "request": {"method": "PUT", "url": "Condition/max-knee-pain"}
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "max-hyperlipidemia",
+        "clinicalStatus": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]},
+        "verificationStatus": {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "confirmed"}]},
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-category", "code": "problem-list-item", "display": "Problem List Item"}]}],
+        "code": {"coding": [{"system": "http://snomed.info/sct", "code": "55822004", "display": "Hyperlipidemia"}], "text": "Hyperlipidemia"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "onsetDateTime": "2025-10-01",
+        "note": [{"text": "Borderline elevated cholesterol. Diet and exercise modifications initiated. Statin deferred pending lifestyle changes."}]
+      },
+      "request": {"method": "PUT", "url": "Condition/max-hyperlipidemia"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Flag",
+        "id": "max-fall-risk",
+        "status": "active",
+        "category": [{"coding": [{"system": "http://terminology.hl7.org/CodeSystem/flag-category", "code": "safety", "display": "Safety"}]}],
+        "code": {"coding": [{"system": "http://snomed.info/sct", "code": "129839007", "display": "At risk for falls"}], "text": "Fall Risk — Post knee surgery"},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "period": {"start": "2024-06-20"},
+        "author": {"reference": "Practitioner/dr-jane-smith"}
+      },
+      "request": {"method": "PUT", "url": "Flag/max-fall-risk"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "DeviceUseStatement",
+        "id": "max-knee-brace",
+        "status": "active",
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "timingPeriod": {"start": "2024-06-22"},
+        "device": {"display": "Hinged Knee Brace (DonJoy Playmaker II)"},
+        "bodySite": {"coding": [{"system": "http://snomed.info/sct", "code": "6757004", "display": "Right knee"}]},
+        "note": [{"text": "Worn during physical activity. Prescribed post-arthroscopy for stabilization."}]
+      },
+      "request": {"method": "PUT", "url": "DeviceUseStatement/max-knee-brace"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-tobacco-never",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Observation-tobaccouse-uv-ips"]},
+        "status": "final",
+        "code": {"coding": [{"system": "http://loinc.org", "code": "72166-2", "display": "Tobacco smoking status"}]},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-04-01",
+        "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "266919005", "display": "Never smoked tobacco"}]}
+      },
+      "request": {"method": "PUT", "url": "Observation/max-tobacco-never"}
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-alcohol-social",
+        "meta": {"profile": ["http://hl7.org/fhir/uv/ips/StructureDefinition/Observation-alcoholuse-uv-ips"]},
+        "status": "final",
+        "code": {"coding": [{"system": "http://loinc.org", "code": "74013-4", "display": "Alcoholic drinks per day"}]},
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-04-01",
+        "valueQuantity": {"value": 1, "unit": "drinks/day", "system": "http://unitsofmeasure.org", "code": "{drinks}/d"}
+      },
+      "request": {"method": "PUT", "url": "Observation/max-alcohol-social"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Questionnaire",
+        "id": "home-oxygen-therapy",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-dtr/StructureDefinition/dtr-std-questionnaire"]},
+        "url": "https://proxy-smart.com/Questionnaire/home-oxygen-therapy",
+        "version": "1.0.0",
+        "name": "HomeOxygenTherapy",
+        "title": "Home Oxygen Therapy — Prior Authorization Documentation",
+        "status": "active",
+        "date": "2026-01-15",
+        "publisher": "Blue Cross Blue Shield",
+        "description": "DTR documentation questionnaire for Home Oxygen Therapy (E1390). Captures medical necessity, oxygen saturation, and clinical indication data required for prior authorization.",
+        "subjectType": ["Patient"],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/cqf-library",
+            "valueCanonical": "https://proxy-smart.com/Library/HomeOxygenTherapyPrepopulation"
+          },
+          {
+            "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-launchContext",
+            "extension": [
+              {"url": "name", "valueCoding": {"system": "http://hl7.org/fhir/uv/sdc/CodeSystem/launchContext", "code": "patient", "display": "Patient"}},
+              {"url": "type", "valueCode": "Patient"}
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-launchContext",
+            "extension": [
+              {"url": "name", "valueCoding": {"system": "http://hl7.org/fhir/uv/sdc/CodeSystem/launchContext", "code": "encounter", "display": "Encounter"}},
+              {"url": "type", "valueCode": "Encounter"}
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-signatureRequired",
+            "valueCodeableConcept": {"coding": [{"system": "urn:iso-astm:E1762-95:2013", "code": "1.2.840.10065.1.12.1.1", "display": "Author's Signature"}]}
+          }
+        ],
+        "item": [
+          {
+            "linkId": "1",
+            "text": "Patient Information",
+            "type": "group",
+            "item": [
+              {
+                "linkId": "1.1",
+                "text": "Patient Name",
+                "type": "string",
+                "required": true,
+                "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-initialExpression", "valueExpression": {"language": "text/fhirpath", "expression": "%patient.name.first().family + ', ' + %patient.name.first().given.first()"}}]
+              },
+              {
+                "linkId": "1.2",
+                "text": "Date of Birth",
+                "type": "date",
+                "required": true,
+                "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-initialExpression", "valueExpression": {"language": "text/fhirpath", "expression": "%patient.birthDate"}}]
+              },
+              {
+                "linkId": "1.3",
+                "text": "Insurance Member ID",
+                "type": "string",
+                "required": true
+              }
+            ]
+          },
+          {
+            "linkId": "2",
+            "text": "Clinical Information",
+            "type": "group",
+            "item": [
+              {
+                "linkId": "2.1",
+                "text": "Primary Diagnosis Requiring Oxygen",
+                "type": "choice",
+                "required": true,
+                "answerOption": [
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "13645005", "display": "COPD"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "233604007", "display": "Pulmonary fibrosis"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "84114007", "display": "Heart failure"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "70995007", "display": "Pulmonary hypertension"}}
+                ],
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "drop-down"}]}}
+                ]
+              },
+              {
+                "linkId": "2.2",
+                "text": "Resting SpO₂ on Room Air (%)",
+                "type": "decimal",
+                "required": true,
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueDecimal": 50},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueDecimal": 100},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit", "valueCoding": {"system": "http://unitsofmeasure.org", "code": "%", "display": "%"}},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/entryFormat", "valueString": "XX.X"}
+                ]
+              },
+              {
+                "linkId": "2.3",
+                "text": "Exercise SpO₂ on Room Air (%)",
+                "type": "decimal",
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueDecimal": 50},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueDecimal": 100},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit", "valueCoding": {"system": "http://unitsofmeasure.org", "code": "%", "display": "%"}}
+                ]
+              },
+              {
+                "linkId": "2.4",
+                "text": "Has the patient been on oxygen for at least 90 days?",
+                "type": "boolean",
+                "required": true
+              },
+              {
+                "linkId": "2.5",
+                "text": "ABG Results Available?",
+                "type": "boolean"
+              }
+            ]
+          },
+          {
+            "linkId": "3",
+            "text": "Oxygen Prescription",
+            "type": "group",
+            "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-collapsible", "valueCode": "default-open"}],
+            "item": [
+              {
+                "linkId": "3.1",
+                "text": "Flow Rate (L/min)",
+                "type": "decimal",
+                "required": true,
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueDecimal": 0.5},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueDecimal": 15},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-sliderStepValue", "valueInteger": 1},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit", "valueCoding": {"system": "http://unitsofmeasure.org", "code": "L/min", "display": "L/min"}}
+                ]
+              },
+              {
+                "linkId": "3.2",
+                "text": "Delivery Method",
+                "type": "choice",
+                "required": true,
+                "answerOption": [
+                  {"valueString": "Nasal cannula"},
+                  {"valueString": "Face mask"},
+                  {"valueString": "Non-rebreather mask"},
+                  {"valueString": "Venturi mask"},
+                  {"valueString": "CPAP/BiPAP"}
+                ],
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "radio-button"}]}},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-choiceOrientation", "valueCode": "vertical"}
+                ]
+              },
+              {
+                "linkId": "3.3",
+                "text": "Hours per Day",
+                "type": "integer",
+                "required": true,
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueInteger": 1},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueInteger": 24}
+                ]
+              },
+              {
+                "linkId": "3.4",
+                "text": "Duration of Need",
+                "type": "choice",
+                "required": true,
+                "answerOption": [
+                  {"valueString": "1 month"},
+                  {"valueString": "3 months"},
+                  {"valueString": "6 months"},
+                  {"valueString": "12 months"},
+                  {"valueString": "Lifetime"}
+                ]
+              }
+            ]
+          },
+          {
+            "linkId": "4",
+            "text": "Ordering Provider Attestation",
+            "type": "group",
+            "item": [
+              {
+                "linkId": "4.1",
+                "text": "I certify that the information provided is accurate and that this patient meets the medical necessity criteria for home oxygen therapy.",
+                "type": "boolean",
+                "required": true
+              },
+              {
+                "linkId": "4.2",
+                "text": "Additional Clinical Notes",
+                "type": "text",
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-supportLink", "valueUri": "https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDId=33797"},
+                  {"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-shortText", "valueString": "Clinical notes"}
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Questionnaire/home-oxygen-therapy"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Questionnaire",
+        "id": "knee-mri-pa",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-dtr/StructureDefinition/dtr-std-questionnaire"]},
+        "url": "https://proxy-smart.com/Questionnaire/knee-mri-pa",
+        "version": "1.0.0",
+        "name": "KneeMRIPriorAuth",
+        "title": "Knee MRI — Prior Authorization Documentation",
+        "status": "active",
+        "date": "2026-03-01",
+        "publisher": "Blue Cross Blue Shield",
+        "description": "Documentation form for knee MRI prior authorization. Captures injury mechanism, conservative treatment history, and clinical exam findings.",
+        "subjectType": ["Patient"],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-launchContext",
+            "extension": [
+              {"url": "name", "valueCoding": {"system": "http://hl7.org/fhir/uv/sdc/CodeSystem/launchContext", "code": "patient", "display": "Patient"}},
+              {"url": "type", "valueCode": "Patient"}
+            ]
+          }
+        ],
+        "item": [
+          {
+            "linkId": "injury",
+            "text": "Injury & Symptoms",
+            "type": "group",
+            "item": [
+              {"linkId": "injury.mechanism", "text": "Mechanism of Injury", "type": "choice", "required": true,
+                "answerOption": [
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "282141005", "display": "Sports injury"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "217082002", "display": "Fall"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "418019003", "display": "Twisting injury"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "773760007", "display": "Traumatic event"}}
+                ],
+                "extension": [{"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "drop-down"}]}}]
+              },
+              {"linkId": "injury.date", "text": "Date of Injury/Onset", "type": "date", "required": true},
+              {"linkId": "injury.side", "text": "Affected Side", "type": "choice", "required": true,
+                "answerOption": [{"valueString": "Left"}, {"valueString": "Right"}, {"valueString": "Bilateral"}],
+                "extension": [{"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "radio-button"}]}}, {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-choiceOrientation", "valueCode": "horizontal"}]
+              },
+              {"linkId": "injury.locking", "text": "Knee locking or giving way?", "type": "boolean"},
+              {"linkId": "injury.swelling", "text": "Significant swelling within 24 hours of injury?", "type": "boolean"}
+            ]
+          },
+          {
+            "linkId": "conservative",
+            "text": "Conservative Treatment",
+            "type": "group",
+            "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-collapsible", "valueCode": "default-open"}],
+            "item": [
+              {"linkId": "conservative.pt", "text": "Physical therapy completed (≥ 4 weeks)?", "type": "boolean", "required": true},
+              {"linkId": "conservative.nsaids", "text": "NSAID trial (≥ 2 weeks)?", "type": "boolean", "required": true},
+              {"linkId": "conservative.xray", "text": "X-ray performed?", "type": "boolean", "required": true},
+              {"linkId": "conservative.xray.result", "text": "X-ray findings", "type": "text",
+                "enableWhen": [{"question": "conservative.xray", "operator": "=", "answerBoolean": true}]
+              }
+            ]
+          },
+          {
+            "linkId": "exam",
+            "text": "Physical Examination Findings",
+            "type": "group",
+            "item": [
+              {"linkId": "exam.mcmurray", "text": "McMurray test positive?", "type": "boolean"},
+              {"linkId": "exam.lachman", "text": "Lachman test positive?", "type": "boolean"},
+              {"linkId": "exam.rom", "text": "Range of motion deficit (degrees)", "type": "integer",
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueInteger": 0},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueInteger": 180},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit", "valueCoding": {"system": "http://unitsofmeasure.org", "code": "deg", "display": "degrees"}}
+                ]
+              },
+              {"linkId": "exam.effusion", "text": "Joint effusion present?", "type": "boolean"},
+              {"linkId": "exam.notes", "text": "Additional Examination Notes", "type": "text"}
+            ]
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Questionnaire/knee-mri-pa"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Questionnaire",
+        "id": "physical-therapy-pa",
+        "url": "https://proxy-smart.com/Questionnaire/physical-therapy-pa",
+        "version": "1.0.0",
+        "name": "PhysicalTherapyPA",
+        "title": "Physical Therapy — Prior Authorization",
+        "status": "active",
+        "date": "2026-02-01",
+        "publisher": "Aetna",
+        "description": "Documentation form for physical therapy prior authorization. Collects functional assessment, treatment goals, and frequency/duration details.",
+        "subjectType": ["Patient"],
+        "item": [
+          {
+            "linkId": "func",
+            "text": "Functional Assessment",
+            "type": "group",
+            "item": [
+              {"linkId": "func.pain", "text": "Current Pain Level (0-10)", "type": "integer", "required": true,
+                "extension": [
+                  {"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueInteger": 0},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueInteger": 10},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-sliderStepValue", "valueInteger": 1},
+                  {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "slider"}]}}
+                ]
+              },
+              {"linkId": "func.rom", "text": "Range of Motion Limitation", "type": "boolean", "required": true},
+              {"linkId": "func.gait", "text": "Gait deviation present?", "type": "boolean"},
+              {"linkId": "func.adl", "text": "ADL limitations", "type": "text", "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-shortText", "valueString": "Daily activity limitations"}]}
+            ]
+          },
+          {
+            "linkId": "goals",
+            "text": "Treatment Goals",
+            "type": "group",
+            "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-collapsible", "valueCode": "default-open"}],
+            "item": [
+              {"linkId": "goals.short", "text": "Short-term Goal (4 weeks)", "type": "text", "required": true},
+              {"linkId": "goals.long", "text": "Long-term Goal (12 weeks)", "type": "text", "required": true},
+              {"linkId": "goals.frequency", "text": "Requested Frequency", "type": "choice", "required": true,
+                "answerOption": [{"valueString": "1x/week"}, {"valueString": "2x/week"}, {"valueString": "3x/week"}],
+                "extension": [{"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "radio-button"}]}}, {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-choiceOrientation", "valueCode": "horizontal"}]
+              },
+              {"linkId": "goals.visits", "text": "Total Visits Requested", "type": "integer", "required": true,
+                "extension": [{"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueInteger": 1}, {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueInteger": 60}]
+              }
+            ]
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Questionnaire/physical-therapy-pa"}
+    },
+
+    {
+      "resource": {
+        "resourceType": "Questionnaire",
+        "id": "cardiac-cath-pa",
+        "meta": {"profile": ["http://hl7.org/fhir/us/davinci-dtr/StructureDefinition/dtr-std-questionnaire"]},
+        "url": "https://proxy-smart.com/Questionnaire/cardiac-cath-pa",
+        "version": "2.0.0",
+        "name": "CardiacCathPA",
+        "title": "Cardiac Catheterization — Prior Authorization",
+        "status": "active",
+        "date": "2025-11-01",
+        "publisher": "UnitedHealthcare",
+        "description": "Prior authorization documentation for cardiac catheterization procedures. Includes cardiac risk assessment, non-invasive test results, and clinical indication.",
+        "subjectType": ["Patient"],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/cqf-library",
+            "valueCanonical": "https://proxy-smart.com/Library/CardiacRiskPrepopulation"
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/cqf-library",
+            "valueCanonical": "https://proxy-smart.com/Library/CardiacLabValues"
+          },
+          {
+            "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-launchContext",
+            "extension": [
+              {"url": "name", "valueCoding": {"system": "http://hl7.org/fhir/uv/sdc/CodeSystem/launchContext", "code": "patient", "display": "Patient"}},
+              {"url": "type", "valueCode": "Patient"}
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-launchContext",
+            "extension": [
+              {"url": "name", "valueCoding": {"system": "http://hl7.org/fhir/uv/sdc/CodeSystem/launchContext", "code": "user", "display": "User"}},
+              {"url": "type", "valueCode": "Practitioner"}
+            ]
+          },
+          {
+            "url": "http://hl7.org/fhir/StructureDefinition/questionnaire-signatureRequired",
+            "valueCodeableConcept": {"coding": [{"system": "urn:iso-astm:E1762-95:2013", "code": "1.2.840.10065.1.12.1.1", "display": "Author's Signature"}]}
+          },
+          {
+            "url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-entryMode",
+            "valueCode": "sequential"
+          }
+        ],
+        "item": [
+          {
+            "linkId": "indication",
+            "text": "Clinical Indication",
+            "type": "group",
+            "item": [
+              {"linkId": "indication.primary", "text": "Primary Indication", "type": "choice", "required": true,
+                "answerOption": [
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "194828000", "display": "Angina pectoris"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "22298006", "display": "Myocardial infarction"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "84114007", "display": "Heart failure"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "49436004", "display": "Atrial fibrillation"}},
+                  {"valueCoding": {"system": "http://snomed.info/sct", "code": "429559004", "display": "Positive stress test"}}
+                ]
+              },
+              {"linkId": "indication.symptoms", "text": "Symptom Duration", "type": "choice", "required": true,
+                "answerOption": [{"valueString": "< 1 week"}, {"valueString": "1-4 weeks"}, {"valueString": "1-3 months"}, {"valueString": "> 3 months"}]
+              },
+              {"linkId": "indication.ccs", "text": "CCS Angina Class", "type": "choice",
+                "answerOption": [{"valueString": "Class I"}, {"valueString": "Class II"}, {"valueString": "Class III"}, {"valueString": "Class IV"}],
+                "extension": [{"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-itemControl", "valueCodeableConcept": {"coding": [{"system": "http://hl7.org/fhir/questionnaire-item-control", "code": "radio-button"}]}}, {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-choiceOrientation", "valueCode": "vertical"}]
+              }
+            ]
+          },
+          {
+            "linkId": "noninvasive",
+            "text": "Non-invasive Testing",
+            "type": "group",
+            "extension": [{"url": "http://hl7.org/fhir/uv/sdc/StructureDefinition/sdc-questionnaire-collapsible", "valueCode": "default-open"}],
+            "item": [
+              {"linkId": "noninvasive.stress", "text": "Stress test performed?", "type": "boolean", "required": true},
+              {"linkId": "noninvasive.stress.result", "text": "Stress test result", "type": "choice",
+                "enableWhen": [{"question": "noninvasive.stress", "operator": "=", "answerBoolean": true}],
+                "answerOption": [{"valueString": "Positive"}, {"valueString": "Equivocal"}, {"valueString": "Negative"}]
+              },
+              {"linkId": "noninvasive.echo", "text": "Echocardiogram EF (%)", "type": "decimal",
+                "extension": [{"url": "http://hl7.org/fhir/StructureDefinition/minValue", "valueDecimal": 5}, {"url": "http://hl7.org/fhir/StructureDefinition/maxValue", "valueDecimal": 80}, {"url": "http://hl7.org/fhir/StructureDefinition/questionnaire-unit", "valueCoding": {"system": "http://unitsofmeasure.org", "code": "%", "display": "%"}}]
+              },
+              {"linkId": "noninvasive.ct", "text": "CT Coronary Calcium Score", "type": "integer"}
+            ]
+          },
+          {
+            "linkId": "risk",
+            "text": "Risk Factors",
+            "type": "group",
+            "item": [
+              {"linkId": "risk.diabetes", "text": "Diabetes", "type": "boolean"},
+              {"linkId": "risk.hypertension", "text": "Hypertension", "type": "boolean"},
+              {"linkId": "risk.smoking", "text": "Current/former smoker", "type": "boolean"},
+              {"linkId": "risk.family", "text": "Family history of premature CAD", "type": "boolean"},
+              {"linkId": "risk.cholesterol", "text": "Hyperlipidemia", "type": "boolean"}
+            ]
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Questionnaire/cardiac-cath-pa"}
     }
   ]
 }
