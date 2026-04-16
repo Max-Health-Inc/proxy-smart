@@ -1,7 +1,8 @@
 import { useState, useCallback, useRef } from "react"
 import type { Patient } from "fhir/r4"
 import { searchPatients, searchPatientByIdentifier, formatHumanName } from "@/lib/fhir-client"
-import { Input, Card, CardContent, Spinner } from "@proxy-smart/shared-ui"
+import { getUSCoreDemographics } from "@/lib/patient-extensions"
+import { Input, Card, CardContent, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { Search, User, Calendar, Hash, ChevronRight } from "lucide-react"
 
 interface PatientSearchProps {
@@ -81,6 +82,7 @@ export function PatientSearch({ onSelect }: PatientSearchProps) {
           {results.map((patient) => {
             const name = formatHumanName(patient.name)
             const mrn = patient.identifier?.[0]?.value
+            const { race, ethnicity, birthSexDisplay } = getUSCoreDemographics(patient)
             return (
               <Card key={patient.id} className="cursor-pointer hover:bg-accent/30 transition-colors">
                 <button className="w-full text-left" onClick={() => onSelect(patient)}>
@@ -106,6 +108,15 @@ export function PatientSearch({ onSelect }: PatientSearchProps) {
                             <span className="capitalize">{patient.gender}</span>
                           )}
                         </div>
+                        {(race?.text || ethnicity?.text || birthSexDisplay) && (
+                          <div className="flex gap-1.5 mt-1">
+                            {race?.text && <Badge variant="secondary" className="text-[10px]">{race.text}</Badge>}
+                            {ethnicity?.text && <Badge variant="secondary" className="text-[10px]">{ethnicity.text}</Badge>}
+                            {birthSexDisplay && birthSexDisplay !== patient.gender && (
+                              <Badge variant="outline" className="text-[10px]">Birth Sex: {birthSexDisplay}</Badge>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <ChevronRight className="size-4 text-muted-foreground" />
