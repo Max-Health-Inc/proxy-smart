@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604160124.af7d2b79] - 2026-04-16
+
+- ✨ Features: DTR integration enhancements
+  - Switch to dtr-generated FHIR types across core UI (App.tsx, Dashboard, PatientBanner)
+  - Expanded questionnaire handling with DTR-specific imports and new extensions utilities
+  - Updated questionnaire populate flow to support DTR parameters
+  - Added new lib: dtr-extensions.ts; updated fhir-client.ts to reference dtr-generated types
+  - Minor UI/logic updates in QuestionnaireRenderer.tsx to align with DTR changes
+
+- 🔧 Chores & Improvements: Repository-wide version bump to alpha"
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/395
+
+
 ## [0.0.5-alpha.202604152114.2fc91380] - 2026-04-16
 
 - 🔧 Chores & Improvements: CI updates for e2e-consent-tests and test orchestration
