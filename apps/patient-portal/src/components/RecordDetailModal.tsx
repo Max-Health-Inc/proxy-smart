@@ -7,7 +7,9 @@ import {
   Badge,
 } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
-import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText } from "lucide-react"
+import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2 } from "lucide-react"
+import { findLinkedDocuments } from "@/components/DocumentsCard"
+import type { DocumentReference } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
 import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
 import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
@@ -27,6 +29,8 @@ export interface RecordDetailModalProps {
   title: string
   /** The underlying FHIR resource */
   resource: FhirResource | null
+  /** All patient documents — used to find cross-references */
+  documents?: DocumentReference[]
 }
 
 // ── Metadata extraction helpers ──────────────────────────────────────────────
@@ -146,7 +150,7 @@ const severityBadgeStyles: Record<ReactionEventSeverityCode, string> = {
   mild: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20",
 }
 
-export function RecordDetailModal({ open, onOpenChange, title, resource }: RecordDetailModalProps) {
+export function RecordDetailModal({ open, onOpenChange, title, resource, documents }: RecordDetailModalProps) {
   if (!resource) return null
 
   const recordedDate = extractRecordedDate(resource)
@@ -160,6 +164,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
   const resourceType = resource.resourceType as string | undefined
   const resourceId = resource.id as string | undefined
   const lastUpdated = resource.meta?.lastUpdated as string | undefined
+  const linkedDocs = findLinkedDocuments(documents ?? [], resourceType, resourceId)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -318,6 +323,39 @@ export function RecordDetailModal({ open, onOpenChange, title, resource }: Recor
             <div className="border-t pt-3 mt-3">
               <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">Notes</p>
               <p className="text-sm">{resource.note[0].text}</p>
+            </div>
+          )}
+
+          {/* Linked Documents */}
+          {linkedDocs.length > 0 && (
+            <div className="border-t pt-3 mt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Source Documents</p>
+              <div className="space-y-1.5">
+                {linkedDocs.map((doc, i) => {
+                  const docTitle = doc.content?.[0]?.attachment?.title ?? doc.description ?? "Document"
+                  const docUrl = doc.content?.[0]?.attachment?.url
+                    ?? (doc.content?.[0]?.attachment?.data && doc.content?.[0]?.attachment?.contentType
+                      ? `data:${doc.content[0].attachment.contentType};base64,${doc.content[0].attachment.data}`
+                      : undefined)
+                  return (
+                    <div key={doc.id || i} className="flex items-center gap-2 text-sm">
+                      <Link2 className="size-3.5 text-sky-500 shrink-0" />
+                      {docUrl ? (
+                        <a href={docUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">
+                          {docTitle}
+                        </a>
+                      ) : (
+                        <span className="truncate">{docTitle}</span>
+                      )}
+                      {doc.date && (
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {formatShortDate(doc.date)}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
