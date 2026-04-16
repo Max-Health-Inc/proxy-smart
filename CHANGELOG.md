@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604160405.a434e8e3] - 2026-04-16
+
+- ✨ Features
+  - Version bump to 0.0.5-alpha.202604160405.a434e8e3 across apps (consent-app, dtr-app, patient-portal, smart-dicom-template, ui, e2e) and root package.json
+
+- 🔧 Chores & Improvements
+  - Dependency: babelfhir-ts updated from 1.3.8 to 1.3.10 in root package and bun.lock
+
+- 🛠️ Bug Fixes / Refactors
+  - DTR PA Request: OUTCOME_STATUS_MAP key type updated from RemittanceOutcomeCode to ClaimProcessingCodesCode
+  - QuestionnaireRenderer: removed import of DTRStdQuestionnaireItem; use generic item type in get
+
+- ⚠️ Breaking Changes
+  - None identified
+
+- 📚 Documentation
+  - None identified
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/405
+
+
 ## [0.0.5-alpha.202604160348.25f9e5ab] - 2026-04-16
 
 - 🔧 Chores & Improvements: Version bumps across all packages for alpha release
