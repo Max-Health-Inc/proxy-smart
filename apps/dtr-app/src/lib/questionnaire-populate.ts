@@ -10,7 +10,6 @@
  * and calculatedExpression via its built-in FHIRPath engine.
  */
 import type { Patient, Questionnaire, QuestionnaireResponse, Parameters } from "fhir/r4"
-import type { DTRQuestionnairePackageInputParameters } from "hl7.fhir.us.davinci-dtr-generated"
 import { authFetch, fhirBaseUrl } from "./fhir-client"
 
 /** Result of pre-population */
@@ -47,7 +46,7 @@ export async function prePopulate(
       ? `${fhirBaseUrl}/Questionnaire/${questionnaire.id}/$populate`
       : `${fhirBaseUrl}/Questionnaire/$populate`
 
-    const body: DTRQuestionnairePackageInputParameters = {
+    const body: Parameters = {
       resourceType: "Parameters",
       parameter: [
         ...(questionnaire.id
