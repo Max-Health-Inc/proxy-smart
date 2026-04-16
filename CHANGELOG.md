@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604161440.af9f8d53] - 2026-04-16
+
+- 🔧 Chores & Improvements: Bump pre-release versions from beta to alpha across multiple packages
+- 📚 Documentation: Update TypeScript type aliases and IPS value set references to align with new FHIR IPS codes
+- 🔧 Chores & Improvements: Minor code adjustments to status code typings (DiagnosticReportStatusCode, ImagingStudyStatusCode)
+- ⚠️ Breaking Changes: Updated IPS value sets and related types may affect integrations relying on older codes
+- 🔧 Chores & Improvements: Binary artifacts and assets re-generated (tgz) and updated in lockfile
+- ⚠️ Breaking Changes: Asset generation changes may impact downstream asset consumption
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/406
+
+
 ## [0.0.5-alpha.202604160405.a434e8e3] - 2026-04-16
 
 - ✨ Features
