@@ -11,7 +11,7 @@ import { format } from "date-fns"
 import { useState } from "react"
 import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil } from "lucide-react"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
-import type { DocumentReference } from "@/lib/fhir-client"
+import type { DocumentReference, AnyFhirResource } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
 import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
 import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
@@ -22,9 +22,7 @@ import { RecordEditModal } from "@/components/RecordEditModal"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-/** Minimal shape covering all FHIR resource types used in the patient portal */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FhirResource = Record<string, any>
+type FhirResource = AnyFhirResource
 
 export interface RecordDetailModalProps {
   open: boolean

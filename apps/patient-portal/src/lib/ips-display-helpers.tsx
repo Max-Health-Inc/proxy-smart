@@ -9,8 +9,7 @@ import type { ConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/
 // Re-export types used in consumers
 export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, ReactionEventSeverityCode, EventStatusCode, ObservationInterpretationCode, DeviceStatementStatusCode, ConditionSeverityCode }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyResource = Record<string, any>
+export type { AnyFhirResource as AnyResource } from "@/lib/fhir-client"
 
 // ── Clickable record name ────────────────────────────────────────────────────
 

@@ -12,12 +12,11 @@ import {
   Badge,
 } from "@proxy-smart/shared-ui"
 import { Loader2, Pencil, Save, X, AlertTriangle } from "lucide-react"
-import { updateResource } from "@/lib/fhir-client"
+import { updateResource, type AnyFhirResource } from "@/lib/fhir-client"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FhirResource = Record<string, any>
+type FhirResource = AnyFhirResource
 
 export interface RecordEditModalProps {
   open: boolean
@@ -175,7 +174,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         updated = markAsPendingReview(updated)
       }
 
-      const result = await updateResource(updated as { resourceType: string; id?: string })
+      const result = await updateResource(updated)
       onSaved(result)
       onOpenChange(false)
     } catch (err) {
