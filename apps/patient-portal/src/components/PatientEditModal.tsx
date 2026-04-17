@@ -144,10 +144,7 @@ function applyEdits(
     updated.address[0].country = address.country || undefined
   }
 
-  // ── Gender ─────────────────────────────────
-  if (demographics.gender) {
-    updated.gender = demographics.gender
-  }
+  // ── Gender (administrative gender is read-only — not modified) ──
 
   // ── Extensions (gender identity + pronouns) ─
   const extensions = [...(updated.extension ?? [])]
@@ -251,18 +248,13 @@ export function PatientEditModal({
             </legend>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="patient-gender" className="text-xs text-muted-foreground">Gender</Label>
-                <Select
-                  value={demographics.gender}
-                  onValueChange={(v) => setDemographics((d) => ({ ...d, gender: v as AdministrativeGenderCode }))}
-                >
-                  <SelectTrigger id="patient-gender"><SelectValue placeholder="Select…" /></SelectTrigger>
-                  <SelectContent>
-                    {GENDER_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="patient-gender" className="text-xs text-muted-foreground">Admin. Gender</Label>
+                <Input
+                  id="patient-gender"
+                  value={GENDER_OPTIONS.find(o => o.value === demographics.gender)?.label ?? demographics.gender ?? "—"}
+                  disabled
+                  className="text-sm bg-muted cursor-not-allowed"
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="patient-gi" className="text-xs text-muted-foreground">Gender Identity</Label>
