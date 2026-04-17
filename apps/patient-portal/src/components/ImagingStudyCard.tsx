@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/sh
 import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X } from "lucide-react"
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"
-import type { ImagingStudyStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImagingStudyStatus"
+import type { ImagingStudy as FhirImagingStudy } from "fhir/r4"
+type ImagingStudyStatusCode = FhirImagingStudy["status"]
 import {
   getStudyInstanceUID,
   getStudyThumbnailUrl,

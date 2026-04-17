@@ -8,7 +8,7 @@ import type {
   DiagnosticImplication,
   TherapeuticImplication,
 } from "@/lib/fhir-client"
-import type { DiagnosticReportStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatus"
+import type { DiagnosticReportStatusUvIpsCode as DiagnosticReportStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
 
 // ── LOINC component code helpers ────────────────────────────────────────────
 

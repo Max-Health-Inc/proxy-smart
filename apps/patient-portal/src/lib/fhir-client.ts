@@ -41,7 +41,7 @@ import type { MedicationrequestStatusCode } from "hl7.fhir.uv.ips-generated/valu
 import type { ObservationCategoryCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationCategoryCodes"
 import type { ImmunizationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImmunizationStatus"
 import type { DeviceUseStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceUseStatementStatus"
-import type { DiagnosticReportStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatus"
+import type { DiagnosticReportStatusUvIpsCode as DiagnosticReportStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
 import type { ObservationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationStatus"
 
 export type {
