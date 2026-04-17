@@ -1,4 +1,5 @@
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { Badge } from '@proxy-smart/shared-ui';
 import {
   AlertTriangle,
@@ -7,8 +8,8 @@ import {
   ExternalLink,
   Globe,
   Loader2,
-  Search,
 } from 'lucide-react';
+import { SearchInput } from '@/components/ui/search-input';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
@@ -278,21 +279,10 @@ export function BrowseRegistryDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('Search servers...')}
-              value={registrySearch}
-              onChange={(e) => setRegistrySearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') onSearch(registrySearch);
-              }}
-              className="pl-9"
-            />
-          </div>
-          <Button onClick={() => onSearch(registrySearch)} disabled={registryLoading}>
-            {registryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Search')}
-          </Button>
+          <SearchInput value={registrySearch} onChange={setRegistrySearch} onSubmit={() => onSearch(registrySearch)} placeholder={t('Search servers...')} className="max-w-none" />
+          <LoadingButton onClick={() => onSearch(registrySearch)} loading={registryLoading}>
+            {t('Search')}
+          </LoadingButton>
         </div>
         {registryError && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
@@ -341,19 +331,15 @@ export function BrowseRegistryDialog({
                       )}
                     </div>
                   </div>
-                  <Button
+                  <LoadingButton
                     size="sm"
                     onClick={() => onInstall(server)}
-                    disabled={installingServer === server.name}
+                    loading={installingServer === server.name}
                     className="shrink-0"
                   >
-                    {installingServer === server.name ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                    ) : (
-                      <Download className="h-4 w-4 mr-1" />
-                    )}
+                    <Download className="h-4 w-4 mr-1" />
                     {t('Add')}
-                  </Button>
+                  </LoadingButton>
                 </div>
               </div>
             ))
@@ -531,21 +517,10 @@ export function SkillsRegistryDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t('Search skills... (e.g. agent, web, code)')}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') onSearch(search);
-              }}
-              className="pl-9"
-            />
-          </div>
-          <Button onClick={() => onSearch(search)} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Search')}
-          </Button>
+          <SearchInput value={search} onChange={setSearch} onSubmit={() => onSearch(search)} placeholder={t('Search skills... (e.g. agent, web, code)')} className="max-w-none" />
+          <LoadingButton onClick={() => onSearch(search)} loading={loading}>
+            {t('Search')}
+          </LoadingButton>
         </div>
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">

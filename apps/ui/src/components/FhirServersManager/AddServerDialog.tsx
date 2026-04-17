@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
   Dialog,
   DialogContent,
@@ -111,24 +112,17 @@ export function AddServerDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             onClick={handleSubmit}
-            disabled={loading || !newServerUrl.trim()}
+            loading={loading}
+            loadingText={t('Adding Server...')}
+            disabled={!newServerUrl.trim()}
             className="bg-green-600 hover:bg-green-700"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('Adding Server...')}
-              </>
-            ) : (
-              <>
-                <Plus className="w-4 h-4 mr-2" />
-                {t('Add Server')}
-              </>
-            )}
-          </Button>
+            <Plus className="w-4 h-4 mr-2" />
+            {t('Add Server')}
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

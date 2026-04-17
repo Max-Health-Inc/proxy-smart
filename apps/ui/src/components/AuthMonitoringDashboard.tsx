@@ -16,7 +16,6 @@ import {
   UserPlus,
   Key,
   RefreshCw,
-  Search,
   TrendingUp,
   Monitor,
   XCircle,
@@ -41,7 +40,7 @@ import {
   type AuthEvent,
   type AuthAnalytics,
 } from '../service/auth-monitoring-service';
-import { Input } from '@proxy-smart/shared-ui';
+import { SearchInput } from '@/components/ui/search-input';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -339,10 +338,7 @@ export function AuthMonitoringDashboard({ embedded, isRealTimeActive: parentReal
             <TabsContent value="events" className="space-y-6">
               {/* Filters */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder={t('Search events...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
-                </div>
+                <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={t('Search events...')} className="min-w-[200px] max-w-none" />
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-[180px]"><SelectValue placeholder={t('Event Type')} /></SelectTrigger>
                   <SelectContent>

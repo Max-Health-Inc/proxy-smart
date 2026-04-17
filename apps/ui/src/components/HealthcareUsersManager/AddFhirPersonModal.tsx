@@ -17,8 +17,8 @@ import {
   Server,
   AlertCircle,
   CheckCircle,
-  Loader2
 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, HealthcareUser } from '@/lib/types/api';
 import { createPersonResource, searchPersonResources, getPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
@@ -222,7 +222,7 @@ export function AddFhirPersonModal({
               <User className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">
+              <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
                 {t('Add FHIR Person Resource')}
               </DialogTitle>
               <DialogDescription className="text-gray-600 font-medium mt-1">
@@ -305,35 +305,28 @@ export function AddFhirPersonModal({
                       />
                     </div>
                     <div className="flex flex-col justify-end">
-                      <Button
+                      <LoadingButton
                         onClick={handleSearch}
-                        disabled={!selectedServer || !personId || isSearching}
+                        loading={isSearching}
+                        loadingText={t('Searching...')}
+                        disabled={!selectedServer || !personId}
                         className="px-6 py-2 rounded-xl"
                       >
-                        {isSearching ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            {t('Searching...')}
-                          </>
-                        ) : (
-                          <>
-                            <Search className="w-4 h-4 mr-2" />
-                            {t('Search')}
-                          </>
-                        )}
-                      </Button>
+                        <Search className="w-4 h-4 mr-2" />
+                        {t('Search')}
+                      </LoadingButton>
                     </div>
                   </div>
 
                   {searchResults.length > 0 && (
                     <div className="space-y-3">
-                      <h4 className="font-medium text-gray-900">{t('Search Results')}</h4>
+                      <h4 className="font-medium text-foreground">{t('Search Results')}</h4>
                       {searchResults.map((result, index) => (
                         <div key={index} className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-xl">
                           <div className="flex items-center space-x-3">
                             <CheckCircle className="w-5 h-5 text-green-600" />
                             <div>
-                              <p className="font-medium text-gray-900">{result.display}</p>
+                              <p className="font-medium text-foreground">{result.display}</p>
                               <p className="text-sm text-gray-600">Person ID: {result.id}</p>
                             </div>
                           </div>
@@ -384,23 +377,15 @@ export function AddFhirPersonModal({
                   </div>
 
                   <div className="flex justify-center">
-                    <Button
+                    <LoadingButton
                       onClick={handleCreatePerson}
-                      disabled={isCreating}
+                      loading={isCreating}
+                      loadingText={t('Creating Person Resource...')}
                       className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all duration-200"
                     >
-                      {isCreating ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {t('Creating Person Resource...')}
-                        </>
-                      ) : (
-                        <>
                           <Database className="w-4 h-4 mr-2" />
                           {t('Create Person Resource')}
-                        </>
-                      )}
-                    </Button>
+                    </LoadingButton>
                   </div>
                 </CardContent>
               </Card>

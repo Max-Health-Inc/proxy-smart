@@ -7,10 +7,11 @@ interface SearchInputProps {
   placeholder?: string;
   value: string;
   onChange: (value: string) => void;
+  onSubmit?: () => void;
   className?: string;
 }
 
-function SearchInput({ placeholder, value, onChange, className }: SearchInputProps) {
+function SearchInput({ placeholder, value, onChange, onSubmit, className }: SearchInputProps) {
   const { t } = useTranslation();
   const resolvedPlaceholder = placeholder ?? t('Search...');
   return (
@@ -20,6 +21,7 @@ function SearchInput({ placeholder, value, onChange, className }: SearchInputPro
         placeholder={resolvedPlaceholder}
         value={value}
         onChange={e => onChange(e.target.value)}
+        onKeyDown={onSubmit ? e => { if (e.key === 'Enter') onSubmit(); } : undefined}
         className="pl-9"
       />
     </div>

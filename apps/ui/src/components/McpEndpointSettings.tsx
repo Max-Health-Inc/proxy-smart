@@ -23,6 +23,7 @@ import {
   Database,
 } from 'lucide-react';
 import { Badge, Button } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { Checkbox } from './ui/checkbox';
 import { Switch } from './ui/switch';
 
@@ -314,10 +315,9 @@ export function McpEndpointSettings() {
               </p>
             </div>
             {hasToolChanges && (
-              <Button size="sm" onClick={saveToolConfig} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              <LoadingButton size="sm" onClick={saveToolConfig} loading={saving}>
                 {t('Save Changes')}
-              </Button>
+              </LoadingButton>
             )}
           </div>
 
@@ -381,10 +381,9 @@ export function McpEndpointSettings() {
               </p>
             </div>
             {hasToolChanges && (
-              <Button size="sm" onClick={saveToolConfig} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              <LoadingButton size="sm" onClick={saveToolConfig} loading={saving}>
                 {t('Save Changes')}
-              </Button>
+              </LoadingButton>
             )}
           </div>
 

@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Users, UserPlus, Trash2, Search, Loader2, X } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   Organization,
@@ -216,10 +217,10 @@ export function OrgMembersDialog({ isOpen, onClose, org }: OrgMembersDialogProps
                   </button>
                 )}
               </div>
-              <Button onClick={handleAddMember} disabled={adding || !selectedUser}>
-                {adding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+              <LoadingButton onClick={handleAddMember} loading={adding} disabled={!selectedUser}>
+                <UserPlus className="h-4 w-4 mr-2" />
                 {t('Add')}
-              </Button>
+              </LoadingButton>
             </div>
 
             {showDropdown && !selectedUser && (

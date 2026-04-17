@@ -10,9 +10,9 @@ import {
   ChevronDown,
   ChevronRight,
   X,
-  Loader2,
 } from 'lucide-react';
 import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';
@@ -324,9 +324,9 @@ export function GroupsPanel() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>{t('Cancel')}</Button>
-            <Button onClick={handleCreateGroup} disabled={!newGroupName.trim() || creating}>
-              {creating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('Creating...')}</> : t('Create')}
-            </Button>
+            <LoadingButton onClick={handleCreateGroup} disabled={!newGroupName.trim()} loading={creating} loadingText={t('Creating...')}>
+              {t('Create')}
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -342,9 +342,9 @@ export function GroupsPanel() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('Cancel')}</Button>
-            <Button variant="destructive" onClick={handleDeleteGroup} disabled={deleting}>
-              {deleting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('Deleting...')}</> : t('Delete')}
-            </Button>
+            <LoadingButton variant="destructive" onClick={handleDeleteGroup} loading={deleting} loadingText={t('Deleting...')}>
+              {t('Delete')}
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -385,9 +385,9 @@ export function GroupsPanel() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAssignGroupId(null)}>{t('Cancel')}</Button>
-            <Button onClick={handleAssignDoor} disabled={!assignDoorId || assigning}>
-              {assigning ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('Assigning...')}</> : t('Assign')}
-            </Button>
+            <LoadingButton onClick={handleAssignDoor} disabled={!assignDoorId} loading={assigning} loadingText={t('Assigning...')}>
+              {t('Assign')}
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

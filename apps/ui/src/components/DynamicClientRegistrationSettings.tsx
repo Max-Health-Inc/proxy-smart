@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
+import { StatCard } from '@/components/ui/stat-card';
 import {
   Alert,
   AlertDescription,
@@ -245,62 +246,10 @@ export function DynamicClientRegistrationSettings() {
 
       {/* Statistics Cards matching app style */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-                  <Settings className="w-6 h-6 text-primary" />
-                </div>
-                <div className="text-sm font-semibold text-primary tracking-wide">{t('Registration')}</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{settings.enabled ? 'Active' : 'Inactive'}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-emerald-500/10 dark:bg-emerald-400/20 rounded-xl flex items-center justify-center shadow-sm">
-                  <Shield className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 tracking-wide">{t('Allowed Scopes')}</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{settings.allowedScopes.length}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-violet-500/10 dark:bg-violet-400/20 rounded-xl flex items-center justify-center shadow-sm">
-                  <Clock className="w-6 h-6 text-violet-600 dark:text-violet-400" />
-                </div>
-                <div className="text-sm font-semibold text-violet-700 dark:text-violet-300 tracking-wide">{t('Client Lifetime')}</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{settings.maxClientLifetime || '∞'}</div>
-              <div className="text-sm text-violet-600 dark:text-violet-400">{settings.maxClientLifetime ? 'days' : 'unlimited'}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-orange-500/10 dark:bg-orange-400/20 rounded-xl flex items-center justify-center shadow-sm">
-                  <Globe className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <div className="text-sm font-semibold text-orange-700 dark:text-orange-300 tracking-wide">{t('URI Patterns')}</div>
-              </div>
-              <div className="text-3xl font-bold text-foreground mb-2">{settings.allowedRedirectUriPatterns.length}</div>
-            </div>
-          </div>
-        </div>
+        <StatCard icon={Settings} label={t('Registration')} value={settings.enabled ? t('Active') : t('Inactive')} color="primary" />
+        <StatCard icon={Shield} label={t('Allowed Scopes')} value={settings.allowedScopes.length} color="emerald" />
+        <StatCard icon={Clock} label={t('Client Lifetime')} value={settings.maxClientLifetime || '∞'} subtitle={settings.maxClientLifetime ? t('days') : t('unlimited')} color="violet" />
+        <StatCard icon={Globe} label={t('URI Patterns')} value={settings.allowedRedirectUriPatterns.length} color="orange" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
