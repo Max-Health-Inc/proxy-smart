@@ -101,7 +101,7 @@ export function ConsentSettings() {
   };
 
   if (loading) {
-    return <PageLoadingState message="Loading consent settings..." />;
+    return <PageLoadingState message={t('Loading consent settings...')} />;
   }
 
   return (

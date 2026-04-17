@@ -3,7 +3,7 @@ import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
-import { NotificationToast } from '../ui/NotificationToast';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { StatCard } from '@/components/ui/stat-card';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
@@ -342,7 +342,7 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
   const [testingConnection, setTestingConnection] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<UserFederationSyncResultResponse | null>(null);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { notify } = useNotificationStore();
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated || !clientApis?.userFederation) {
@@ -358,7 +358,7 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
     } catch (error) {
       console.error('Failed to load user federations:', error);
       setFederations([]);
-      setNotification({ type: 'error', message: t('Failed to load user federations') });
+      notify({ type: 'error', message: t('Failed to load user federations') });
     }
   }, [isAuthenticated, clientApis, t]);
 
@@ -424,7 +424,7 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
 
   const handleAdd = async () => {
     if (!form.name || !form.connectionUrl || !form.usersDn) {
-      setNotification({ type: 'error', message: t('Name, Connection URL, and Users DN are required') });
+      notify({ type: 'error', message: t('Name, Connection URL, and Users DN are required') });
       return;
     }
     try {
@@ -434,10 +434,10 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
       await refresh();
       setShowAddForm(false);
       setForm({ ...defaultFormData });
-      setNotification({ type: 'success', message: t('LDAP federation created successfully') });
+      notify({ type: 'success', message: t('LDAP federation created successfully') });
     } catch (error) {
       console.error('Failed to create federation:', error);
-      setNotification({ type: 'error', message: t('Failed to create LDAP federation') });
+      notify({ type: 'error', message: t('Failed to create LDAP federation') });
     }
   };
 
@@ -454,10 +454,10 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
       await refresh();
       setEditingId(null);
       setForm({ ...defaultFormData });
-      setNotification({ type: 'success', message: t('LDAP federation updated successfully') });
+      notify({ type: 'success', message: t('LDAP federation updated successfully') });
     } catch (error) {
       console.error('Failed to update federation:', error);
-      setNotification({ type: 'error', message: t('Failed to update LDAP federation') });
+      notify({ type: 'error', message: t('Failed to update LDAP federation') });
     }
   };
 
@@ -465,10 +465,10 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
     try {
       await clientApis.userFederation.deleteAdminUserFederationById({ id });
       await refresh();
-      setNotification({ type: 'success', message: t('LDAP federation deleted') });
+      notify({ type: 'success', message: t('LDAP federation deleted') });
     } catch (error) {
       console.error('Failed to delete federation:', error);
-      setNotification({ type: 'error', message: t('Failed to delete LDAP federation') });
+      notify({ type: 'error', message: t('Failed to delete LDAP federation') });
     }
   };
 
@@ -481,7 +481,7 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
         userFederationSyncRequest: { action },
       });
       setSyncResult(result);
-      setNotification({
+      notify({
         type: 'success',
         message: t('Sync completed: {{added}} added, {{updated}} updated, {{removed}} removed, {{failed}} failed', {
           added: result.added ?? 0,
@@ -492,7 +492,7 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
       });
     } catch (error) {
       console.error('Sync failed:', error);
-      setNotification({ type: 'error', message: t('User sync failed') });
+      notify({ type: 'error', message: t('User sync failed') });
     } finally {
       setSyncing(null);
     }
@@ -501,20 +501,20 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
   const handleRemoveImported = async (id: string) => {
     try {
       await clientApis.userFederation.postAdminUserFederationByIdRemoveImported({ id });
-      setNotification({ type: 'success', message: t('Imported users removed') });
+      notify({ type: 'success', message: t('Imported users removed') });
     } catch (error) {
       console.error('Failed to remove imported users:', error);
-      setNotification({ type: 'error', message: t('Failed to remove imported users') });
+      notify({ type: 'error', message: t('Failed to remove imported users') });
     }
   };
 
   const handleUnlink = async (id: string) => {
     try {
       await clientApis.userFederation.postAdminUserFederationByIdUnlink({ id });
-      setNotification({ type: 'success', message: t('Federated users unlinked') });
+      notify({ type: 'success', message: t('Federated users unlinked') });
     } catch (error) {
       console.error('Failed to unlink users:', error);
-      setNotification({ type: 'error', message: t('Failed to unlink federated users') });
+      notify({ type: 'error', message: t('Failed to unlink federated users') });
     }
   };
 
@@ -531,9 +531,9 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
       await clientApis.userFederation.postAdminUserFederationTestConnection({
         ldapTestConnectionRequest: payload,
       });
-      setNotification({ type: 'success', message: t('LDAP connection test successful') });
+      notify({ type: 'success', message: t('LDAP connection test successful') });
     } catch {
-      setNotification({ type: 'error', message: t('LDAP connection test failed') });
+      notify({ type: 'error', message: t('LDAP connection test failed') });
     } finally {
       setTestingConnection(false);
     }
@@ -547,7 +547,6 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
 
   return (
     <div className={embedded ? "space-y-6" : "p-4 sm:p-6 space-y-6 bg-background min-h-full"}>
-      <NotificationToast notification={notification} onClose={() => setNotification(null)} />
 
       {/* Header */}
       {embedded ? (

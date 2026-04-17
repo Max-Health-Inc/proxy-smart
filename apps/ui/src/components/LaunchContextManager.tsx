@@ -344,7 +344,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
 
 
   if (loading) {
-    return <PageLoadingState message="Loading Launch Contexts..." className="min-h-[400px]" />;
+    return <PageLoadingState message={t('Loading Launch Contexts...')} className="min-h-[400px]" />;
   }
 
   return (
@@ -590,7 +590,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
             </div>
 
             {launchContextsLoading ? (
-              <PageLoadingState message="Loading launch contexts..." className="min-h-[200px]" />
+              <PageLoadingState message={t('Loading launch contexts...')} className="min-h-[200px]" />
             ) : error ? (
               <div className="space-y-6">
                 <div className="bg-destructive/10 border border-destructive/20 rounded-2xl p-6">

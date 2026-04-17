@@ -3,8 +3,8 @@ import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Shield } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 
-import { NotificationToast } from '../ui/NotificationToast';
 import { IdPStatisticsCards } from './IdPStatisticsCards';
 import { IdPAddForm } from './IdPAddForm';
 import { IdPTable } from './IdPTable';
@@ -110,6 +110,7 @@ const formDataFromStats = (provider: IdentityProviderWithStats): IdentityProvide
 export function IdPManager() {
   const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
+  const { notify } = useNotificationStore();
   const [idps, setIdps] = useState<IdentityProviderWithStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -117,7 +118,6 @@ export function IdPManager() {
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
   const [connectionResults, setConnectionResults] = useState<Record<string, { success: boolean; message: string; testedAt?: string }>>({});
   const [showCertificates, setShowCertificates] = useState<string | null>(null);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [newIdp, setNewIdp] = useState<IdentityProviderFormData>(createEmptyFormData());
 
   const refreshIdps = useCallback(async () => {
@@ -132,7 +132,7 @@ export function IdPManager() {
     } catch (error) {
       console.error('Failed to load Identity Providers:', error);
       setIdps([]);
-      setNotification({ type: 'error', message: 'Failed to load Identity Providers. Please try again.' });
+      notify({ type: 'error', message: t('Failed to load Identity Providers. Please try again.') });
     }
   }, [isAuthenticated, clientApis.identityProviders]);
 
@@ -148,7 +148,7 @@ export function IdPManager() {
       .replace(/\s+/g, '-');
 
     if (!derivedAlias) {
-      setNotification({ type: 'error', message: 'Alias or display name is required to create an Identity Provider.' });
+      notify({ type: 'error', message: t('Alias or display name is required to create an Identity Provider.') });
       return;
     }
 
@@ -178,7 +178,7 @@ export function IdPManager() {
         });
 
         await refreshIdps();
-        setNotification({ type: 'success', message: 'Identity Provider added successfully!' });
+        notify({ type: 'success', message: t('Identity Provider added successfully!') });
       } else {
         const localEntry: IdentityProviderWithStats = {
           alias: derivedAlias,
@@ -193,11 +193,11 @@ export function IdPManager() {
         };
 
         setIdps((prev) => [...prev, localEntry]);
-        setNotification({ type: 'success', message: 'Identity Provider added (local only).' });
+        notify({ type: 'success', message: t('Identity Provider added (local only).') });
       }
     } catch (error) {
       console.error('Failed to add IdP:', error);
-      setNotification({ type: 'error', message: 'Failed to add Identity Provider. Please try again.' });
+      notify({ type: 'error', message: t('Failed to add Identity Provider. Please try again.') });
     } finally {
       setNewIdp(createEmptyFormData());
       setShowAddForm(false);
@@ -210,7 +210,7 @@ export function IdPManager() {
 
   const handleUpdateIdp = async (updatedIdp: IdentityProviderFormData) => {
     if (!updatedIdp.alias) {
-      setNotification({ type: 'error', message: 'Alias is required to update an Identity Provider.' });
+      notify({ type: 'error', message: t('Alias is required to update an Identity Provider.') });
       return;
     }
 
@@ -235,7 +235,7 @@ export function IdPManager() {
         });
 
         await refreshIdps();
-        setNotification({ type: 'success', message: 'Identity Provider updated successfully!' });
+        notify({ type: 'success', message: t('Identity Provider updated successfully!') });
       } else {
         setIdps((prev) =>
           prev.map((idp) =>
@@ -252,11 +252,11 @@ export function IdPManager() {
               : idp,
           ),
         );
-        setNotification({ type: 'success', message: 'Identity Provider updated (local only).' });
+        notify({ type: 'success', message: t('Identity Provider updated (local only).') });
       }
     } catch (error) {
       console.error('Failed to update IdP:', error);
-      setNotification({ type: 'error', message: 'Failed to update Identity Provider. Please try again.' });
+      notify({ type: 'error', message: t('Failed to update Identity Provider. Please try again.') });
     } finally {
       setEditingIdp(null);
     }
@@ -265,7 +265,7 @@ export function IdPManager() {
   const handleTestConnection = async (idp: IdentityProviderWithStats) => {
     const alias = idp.alias ?? '';
     if (!alias) {
-      setNotification({ type: 'error', message: 'Cannot test connection for providers without an alias.' });
+      notify({ type: 'error', message: t('Cannot test connection for providers without an alias.') });
       return;
     }
 
@@ -305,7 +305,7 @@ export function IdPManager() {
 
   const handleDeleteIdp = async (alias: string) => {
     if (!alias) {
-      setNotification({ type: 'error', message: 'Unable to delete provider without an alias.' });
+      notify({ type: 'error', message: t('Unable to delete provider without an alias.') });
       return;
     }
 
@@ -313,20 +313,20 @@ export function IdPManager() {
       if (isAuthenticated && clientApis.identityProviders) {
         await clientApis.identityProviders.deleteAdminIdpsByAlias({ alias });
         await refreshIdps();
-        setNotification({ type: 'success', message: 'Identity Provider deleted successfully!' });
+        notify({ type: 'success', message: t('Identity Provider deleted successfully!') });
       } else {
         setIdps((prev) => prev.filter((idp) => (idp.alias ?? '') !== alias));
-        setNotification({ type: 'success', message: 'Identity Provider deleted (local only).' });
+        notify({ type: 'success', message: t('Identity Provider deleted (local only).') });
       }
     } catch (error) {
       console.error('Failed to delete IdP:', error);
-      setNotification({ type: 'error', message: 'Failed to delete Identity Provider. Please try again.' });
+      notify({ type: 'error', message: t('Failed to delete Identity Provider. Please try again.') });
     }
   };
 
   const toggleIdpStatus = async (alias: string) => {
     if (!alias) {
-      setNotification({ type: 'error', message: 'Unable to toggle status without an alias.' });
+      notify({ type: 'error', message: t('Unable to toggle status without an alias.') });
       return;
     }
 
@@ -356,21 +356,16 @@ export function IdPManager() {
       }
     } catch (error) {
       console.error('Failed to toggle IdP status:', error);
-      setNotification({ type: 'error', message: 'Failed to update Identity Provider status. Please try again.' });
+      notify({ type: 'error', message: t('Failed to update Identity Provider status. Please try again.') });
     }
   };
 
   if (loading) {
-    return <PageLoadingState message="Loading Identity Providers..." className="min-h-[300px]" />;
+    return <PageLoadingState message={t('Loading Identity Providers...')} className="min-h-[300px]" />;
   }
 
   return (
     <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
-      <NotificationToast
-        notification={notification}
-        onClose={() => setNotification(null)}
-      />
-
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">

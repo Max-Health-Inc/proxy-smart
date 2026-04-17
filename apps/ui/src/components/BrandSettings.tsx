@@ -139,7 +139,7 @@ export function BrandSettings() {
   };
 
   if (loading) {
-    return <PageLoadingState message="Loading brand settings..." />;
+    return <PageLoadingState message={t('Loading brand settings...')} />;
   }
 
   return (

@@ -328,7 +328,7 @@ export function FhirServersManager() {
   }, [fetchServers]);
 
   if (loading) {
-    return <PageLoadingState message="Loading FHIR Servers..." />;
+    return <PageLoadingState message={t('Loading FHIR Servers...')} />;
   }
 
   if (error) {

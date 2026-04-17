@@ -5,9 +5,9 @@ import { createAuthenticatedClientApis } from '@/lib/apiClient';
 import type { 
   FhirServerList,
   FhirServerListServersInner,
-  HealthcareUser,
-  ContextSet 
+  HealthcareUser
 } from '@/lib/api-client';
+import type { ContextSet } from '@/lib/types/api';
 
 interface SmartState {
   // FHIR Servers

@@ -170,7 +170,7 @@ export function DynamicClientRegistrationSettings() {
   };
 
   if (loading) {
-    return <PageLoadingState message="Loading registration settings..." />;
+    return <PageLoadingState message={t('Loading registration settings...')} />;
   }
 
   return (

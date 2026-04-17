@@ -163,7 +163,7 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
   const typePieData = useMemo(() => {
     if (!analytics?.eventsByType) return [];
     return Object.entries(analytics.eventsByType)
-      .map(([name, value]) => ({ name: EVENT_TYPE_LABELS[name] || name, value }))
+      .map(([name, value]) => ({ name: t(EVENT_TYPE_LABELS[name] || name), value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
   }, [analytics?.eventsByType]);
@@ -307,7 +307,7 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                   <SelectContent>
                     <SelectItem value="all">{t('All Types')}</SelectItem>
                     {uniqueTypes.map(type => (
-                      <SelectItem key={type} value={type}>{EVENT_TYPE_LABELS[type] || type}</SelectItem>
+                      <SelectItem key={type} value={type}>{t(EVENT_TYPE_LABELS[type] || type)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -349,7 +349,7 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 {eventTypeIcon(event.type)}
-                                <span className="text-sm font-medium">{EVENT_TYPE_LABELS[event.type] || event.type}</span>
+                                <span className="text-sm font-medium">{t(EVENT_TYPE_LABELS[event.type] || event.type)}</span>
                               </div>
                             </TableCell>
                             <TableCell className="text-sm font-mono truncate max-w-[150px]">{event.clientId || '—'}</TableCell>
@@ -416,7 +416,7 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 {eventTypeIcon(event.type)}
-                                <Badge variant="destructive">{EVENT_TYPE_LABELS[event.type] || event.type}</Badge>
+                                <Badge variant="destructive">{t(EVENT_TYPE_LABELS[event.type] || event.type)}</Badge>
                               </div>
                             </TableCell>
                             <TableCell className="text-sm font-mono truncate max-w-[120px]">{event.clientId || '—'}</TableCell>
