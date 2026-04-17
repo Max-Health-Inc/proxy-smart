@@ -174,7 +174,7 @@ export async function searchQuestionnaires(context?: string): Promise<Questionna
 export async function createQuestionnaireResponse(
   qr: QuestionnaireResponse
 ): Promise<QuestionnaireResponse> {
-  return dtrClient.write().dTRQuestionnaireResponse().create(qr)
+  return dtrClient.write().dTRQuestionnaireResponse().create(qr as unknown as DTRQuestionnaireResponse) as unknown as Promise<QuestionnaireResponse>
 }
 
 export async function searchQuestionnaireResponses(
@@ -184,7 +184,7 @@ export async function searchQuestionnaireResponses(
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-authored",
-  })
+  }) as unknown as Promise<QuestionnaireResponse[]>
 }
 
 // ── Claim / Prior Authorization (PAS-profiled) ──────────────────────────────
