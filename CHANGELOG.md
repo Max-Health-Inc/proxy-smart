@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604171638.2b948412] - 2026-04-17
+
+- 🔧 Chores & Improvements: Version bump to 0.0.5-beta.202604171638.2b948412 across multiple apps/packages
+- 🔧 Chores & Improvements: Enhancement in patient-portal fhir-client.ts to support polymorphic fields by broadening AnyFhirResource type (Resource & Record<string, any>)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/424
+
+
 ## [0.0.5-alpha.202604171601.38ae67c2] - 2026-04-17
 
 - ✨ Features: Version bump to 0.0.5-alpha.202604171601.38ae67c2 across multiple apps/packages (consent-app, dtr-app, patient-portal, smart-dicom-template, ui, testing/e2e) indicating pre-release readiness. Updated bun.lock to reflect new alpha versions.
