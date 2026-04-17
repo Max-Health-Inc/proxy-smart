@@ -4,6 +4,7 @@ export * from './AdminApi';
 export * from './AdminAuditMonitoringApi';
 export * from './AiApi';
 export * from './AiToolsApi';
+export * from './AppStoreApi';
 export * from './AuthMonitoringApi';
 export * from './AuthenticationApi';
 export * from './ConsentMonitoringApi';
