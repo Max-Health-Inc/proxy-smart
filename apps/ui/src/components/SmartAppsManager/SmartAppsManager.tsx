@@ -24,12 +24,14 @@ import {
   CheckCircle,
   UserPlus,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Store
 } from 'lucide-react';
 import { SmartAppAddForm } from './SmartAppAddForm';
 import { SmartAppEditModal } from './SmartAppEditModal';
 import { SmartAppsTable } from './SmartAppsTable';
 import { SmartAppsStatistics } from './SmartAppsStatistics';
+import { AppStoreManagement } from './AppStoreManagement';
 import { DynamicClientRegistrationSettings } from '../DynamicClientRegistrationSettings';
 import { NotificationToast } from '../ui/NotificationToast';
 import { useAuth } from '@/stores/authStore';
@@ -330,10 +332,14 @@ export function SmartAppsManager() {
           {/* Tabs for different sections */}
           <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={smartAppsManagerTab} onValueChange={setSmartAppsManagerTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
                 <TabsTrigger value="apps" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Shield className="w-4 h-4" />
                   <span>{t('Registered Apps')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="app-store" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                  <Store className="w-4 h-4" />
+                  <span>{t('App Store')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="registration" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <UserPlus className="w-4 h-4" />
@@ -810,6 +816,10 @@ export function SmartAppsManager() {
 
               <TabsContent value="registration" className="p-6 space-y-6">
                 <DynamicClientRegistrationSettings />
+              </TabsContent>
+
+              <TabsContent value="app-store" className="p-6 space-y-6">
+                <AppStoreManagement />
               </TabsContent>
             </Tabs>
           </div>
