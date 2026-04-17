@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604172056.45e770a6] - 2026-04-17
+
+- 🔧 Chores & Improvements: Internal maintenance and metadata updates across apps and testing packages
+
+- 🐛 Bug Fixes: Align DTR and return typings for Questionnaire responses to DTR types; ensure idempotent upsert/registration for Keycloak Declarative User Profile
+
+- 📚 Documentation: Extend admin-ui navigation with new sub-tabs; update monitoring, scope-management docs, and reflect new declarative user-profile attributes in realm export
+
+- ⚠️ Breaking Changes: None detected
+
+- ✨ Features: Back-end: add required custom user-profile attribute declarations and ensure registration/upsert logic for Keycloak Declarative User Profile
+
+Notes:
+- Skipped: update-only commits, merge commits, and metadata-only changes.
+- Grouped related changes to DTR typings, user-profile handling, and documentation updates.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/441
+
+
 ## [0.0.6-alpha.202604172046.f7c12859] - 2026-04-17
 
 - 🔧 Chores & Improvements: Remove local FHIR client typing/imports and delegate formatHumanName to shared-ui; simplify fhir-client.ts
