@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170523.033834ca] - 2026-04-17
+
+- ✨ Features: Internationalization groundwork
+  - Added i18n initialization and language-switching support across Patient Portal and related components.
+  - Introduced language switching UI and translation keys integration.
+
+- 🔧 Chores & Improvements: Dependency and UI tweaks
+  - Added i18next-related dependencies to Patient Portal.
+  - UI refinements for compact StatCard and AI Agents statistics (smaller icons, tighter spacing, right-aligned monospaced numbers, adjusted subtitles).
+
+- 🔧 Chores & Improvements: Build and lockfile updates
+  - Updated bun.lock with version bumps and new i18n dependencies reflected in patient-portal.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/420
+
+
 ## [0.0.5-beta.202604170514.a417a1fe] - 2026-04-17
 
 - ✨ Features: 
