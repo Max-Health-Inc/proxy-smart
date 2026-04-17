@@ -157,7 +157,7 @@ class UnifiedChangeReviewer:
     def review_changes(self, changes_data: Dict, error_log: str) -> Dict:
         """Review and validate proposed changes."""
         if not self.api_key:
-            print("❌ OPENAI_API_KEY is not set - skipping AI review", file=sys.stderr)
+            print("❌ No API key available - skipping AI review", file=sys.stderr)
             return changes_data
 
         # First validate Junior AI output
