@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604171542.4f5f6b30] - 2026-04-17
+
+- 🔧 Chores & Improvements: Internal type tightening and imports across UI and client code
+  - Strengthened type safety for status/priority-related fields (e.g., SubscriberRelationshipCode, PublicationStatus, QuestionnaireAnswersStatusCode) and applied type-satisfies in multiple components (CoverageCard, QuestionnaireBrowser/Renderer, SmartFormsQuestionnaireRenderer, fhir-client, pas-builder, questionnaire-populate)
+  - Updated legacy priority code to "routine" in Claim.status
+
+Note: No user-facing features or breaking changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/421
+
+
 ## [0.0.5-alpha.202604170523.033834ca] - 2026-04-17
 
 - ✨ Features: Internationalization groundwork
