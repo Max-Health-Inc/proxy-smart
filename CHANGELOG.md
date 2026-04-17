@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-beta.202604170514.a417a1fe] - 2026-04-17
+
+- ✨ Features: 
+  - Patient Portal: add internationalization dependencies (i18next, i18next-browser-languagedetector, i18next-http-backend) and react-i18next for localization
+
+- 🔧 Chores & Improvements:
+  - UI tweaks:
+    - RecordEditModal: narrow type for updated resource
+    - SmartAppsStatistics: adjust AI Agents StatCard icon text size and spacing
+    - stat-card: compact card layout improvements (padding, inner layout, truncation handling); right-aligned, monospaced numbers; subtitle positioning/size adjustments
+
+- ⚠️ Breaking Changes: None
+
+- 📚 Documentation: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/419
+
+
 ## [0.0.5-alpha.202604170514.a417a1fe] - 2026-04-17
 
 - ✨ Features: Added RecordEditModal component with editable fields for multiple resource types and integration with updateResource; wrapped App and Toaster with TooltipProvider; Dashboard now refreshes on resource updates via onResourceUpdated callback.
