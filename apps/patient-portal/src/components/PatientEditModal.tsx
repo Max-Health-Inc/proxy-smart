@@ -10,16 +10,57 @@ import {
   UserProfileFormFields,
   Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   type UserProfileData,
 } from "@proxy-smart/shared-ui"
 import { updatePatient, type Patient } from "@/lib/fhir-client"
-import { Loader2, Phone, MapPin } from "lucide-react"
+import { Loader2, Phone, MapPin, User } from "lucide-react"
+import type { AdministrativeGenderCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AdministrativeGender"
 
 interface PatientEditModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   patient: Patient
   onUpdated: (patient: Patient) => void
+}
+
+// ── FHIR extension URLs ──────────────────────────────────────────────────────
+
+const GENDER_IDENTITY_URL = "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity"
+const PRONOUNS_URL = "http://hl7.org/fhir/StructureDefinition/individual-pronouns"
+
+const GENDER_OPTIONS: { value: AdministrativeGenderCode; label: string }[] = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+  { value: "unknown", label: "Unknown" },
+]
+
+const GENDER_IDENTITY_OPTIONS = [
+  { value: "male", label: "Male", system: "http://hl7.org/fhir/gender-identity", code: "male" },
+  { value: "female", label: "Female", system: "http://hl7.org/fhir/gender-identity", code: "female" },
+  { value: "non-binary", label: "Non-binary", system: "http://hl7.org/fhir/gender-identity", code: "non-binary" },
+  { value: "transgender-male", label: "Transgender male", system: "http://hl7.org/fhir/gender-identity", code: "transgender-male" },
+  { value: "transgender-female", label: "Transgender female", system: "http://hl7.org/fhir/gender-identity", code: "transgender-female" },
+  { value: "other", label: "Other", system: "http://hl7.org/fhir/gender-identity", code: "other" },
+  { value: "non-disclose", label: "Prefer not to disclose", system: "http://hl7.org/fhir/gender-identity", code: "non-disclose" },
+]
+
+const PRONOUN_OPTIONS = [
+  { value: "he-him", label: "he/him/his", system: "http://loinc.org", code: "LA29518-0", display: "he/him/his" },
+  { value: "she-her", label: "she/her/hers", system: "http://loinc.org", code: "LA29519-8", display: "she/her/hers" },
+  { value: "they-them", label: "they/them/theirs", system: "http://loinc.org", code: "LA29520-6", display: "they/them/theirs" },
+  { value: "other", label: "Other", system: "http://loinc.org", code: "other", display: "Other" },
+]
+
+interface DemographicsData {
+  gender: AdministrativeGenderCode | ""
+  genderIdentity: string  // value key from GENDER_IDENTITY_OPTIONS
+  pronouns: string        // value key from PRONOUN_OPTIONS
 }
 
 /** Extract profile fields from a FHIR Patient resource */
@@ -50,12 +91,26 @@ function extractAddress(patient: Patient) {
   }
 }
 
+/** Extract gender, gender identity, and pronouns from Patient */
+function extractDemographics(patient: Patient): DemographicsData {
+  const giCode = patient.extension?.find(e => e.url === GENDER_IDENTITY_URL)
+    ?.valueCodeableConcept?.coding?.[0]?.code ?? ""
+  const pCode = patient.extension?.find(e => e.url === PRONOUNS_URL)
+    ?.valueCodeableConcept?.coding?.[0]?.code ?? ""
+  return {
+    gender: (patient.gender as AdministrativeGenderCode) ?? "",
+    genderIdentity: GENDER_IDENTITY_OPTIONS.find(o => o.code === giCode)?.value ?? "",
+    pronouns: PRONOUN_OPTIONS.find(o => o.code === pCode)?.value ?? "",
+  }
+}
+
 /** Apply profile edits back onto the original Patient resource (immutable) */
 function applyEdits(
   original: Patient,
   profile: UserProfileData,
   phone: string,
-  address: ReturnType<typeof extractAddress>
+  address: ReturnType<typeof extractAddress>,
+  demographics: DemographicsData,
 ): Patient {
   const updated = structuredClone(original)
 
@@ -89,6 +144,48 @@ function applyEdits(
     updated.address[0].country = address.country || undefined
   }
 
+  // ── Gender ─────────────────────────────────
+  if (demographics.gender) {
+    updated.gender = demographics.gender
+  }
+
+  // ── Extensions (gender identity + pronouns) ─
+  const extensions = [...(updated.extension ?? [])]
+
+  // Gender identity
+  const giIdx = extensions.findIndex(e => e.url === GENDER_IDENTITY_URL)
+  const giOption = GENDER_IDENTITY_OPTIONS.find(o => o.value === demographics.genderIdentity)
+  if (giOption) {
+    const ext = {
+      url: GENDER_IDENTITY_URL,
+      valueCodeableConcept: {
+        coding: [{ system: giOption.system, code: giOption.code, display: giOption.label }],
+      },
+    }
+    if (giIdx >= 0) extensions[giIdx] = ext
+    else extensions.push(ext)
+  } else if (giIdx >= 0) {
+    extensions.splice(giIdx, 1) // remove if cleared
+  }
+
+  // Pronouns
+  const pIdx = extensions.findIndex(e => e.url === PRONOUNS_URL)
+  const pOption = PRONOUN_OPTIONS.find(o => o.value === demographics.pronouns)
+  if (pOption) {
+    const ext = {
+      url: PRONOUNS_URL,
+      valueCodeableConcept: {
+        coding: [{ system: pOption.system, code: pOption.code, display: pOption.display }],
+      },
+    }
+    if (pIdx >= 0) extensions[pIdx] = ext
+    else extensions.push(ext)
+  } else if (pIdx >= 0) {
+    extensions.splice(pIdx, 1) // remove if cleared
+  }
+
+  updated.extension = extensions.length > 0 ? extensions : undefined
+
   return updated
 }
 
@@ -101,6 +198,7 @@ export function PatientEditModal({
   const [profile, setProfile] = useState<UserProfileData>(() => extractProfileData(patient))
   const [phone, setPhone] = useState(() => extractPhone(patient))
   const [address, setAddress] = useState(() => extractAddress(patient))
+  const [demographics, setDemographics] = useState(() => extractDemographics(patient))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -109,6 +207,7 @@ export function PatientEditModal({
     setProfile(extractProfileData(patient))
     setPhone(extractPhone(patient))
     setAddress(extractAddress(patient))
+    setDemographics(extractDemographics(patient))
     setError(null)
   }, [patient])
 
@@ -116,7 +215,7 @@ export function PatientEditModal({
     setSaving(true)
     setError(null)
     try {
-      const updated = applyEdits(patient, profile, phone, address)
+      const updated = applyEdits(patient, profile, phone, address, demographics)
       const result = await updatePatient(patient.id!, updated)
       onUpdated(result)
       onOpenChange(false)
@@ -143,6 +242,58 @@ export function PatientEditModal({
             values={profile}
             onChange={(field, value) => setProfile((p) => ({ ...p, [field]: value }))}
           />
+
+          {/* Gender, Gender Identity, Pronouns */}
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium flex items-center gap-1.5">
+              <User className="size-3.5" />
+              Gender &amp; Identity
+            </legend>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="patient-gender" className="text-xs text-muted-foreground">Gender</Label>
+                <Select
+                  value={demographics.gender}
+                  onValueChange={(v) => setDemographics((d) => ({ ...d, gender: v as AdministrativeGenderCode }))}
+                >
+                  <SelectTrigger id="patient-gender"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectContent>
+                    {GENDER_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="patient-gi" className="text-xs text-muted-foreground">Gender Identity</Label>
+                <Select
+                  value={demographics.genderIdentity}
+                  onValueChange={(v) => setDemographics((d) => ({ ...d, genderIdentity: v }))}
+                >
+                  <SelectTrigger id="patient-gi"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectContent>
+                    {GENDER_IDENTITY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="patient-pronouns" className="text-xs text-muted-foreground">Pronouns</Label>
+                <Select
+                  value={demographics.pronouns}
+                  onValueChange={(v) => setDemographics((d) => ({ ...d, pronouns: v }))}
+                >
+                  <SelectTrigger id="patient-pronouns"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectContent>
+                    {PRONOUN_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </fieldset>
 
           {/* Patient-specific: phone */}
           <div className="space-y-2">
