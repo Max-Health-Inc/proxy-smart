@@ -15,6 +15,7 @@ import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-gener
 import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
 import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
 import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
+import { criticalityStyles, type AllergyIntoleranceCriticalityCode } from "@/lib/ips-display-helpers"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -223,6 +224,20 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
               <span className="capitalize">{severity}</span>
             </DetailRow>
           )}
+
+          {/* Criticality (AllergyIntolerance) */}
+          {resource.criticality && (() => {
+            const crit = criticalityStyles[resource.criticality as AllergyIntoleranceCriticalityCode]
+            return crit ? (
+              <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label="Criticality">
+                <Badge variant={crit.variant} className="text-xs">{crit.label}</Badge>
+              </DetailRow>
+            ) : (
+              <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label="Criticality">
+                <span className="capitalize">{resource.criticality}</span>
+              </DetailRow>
+            )
+          })()}
 
           {/* Category */}
           {category && (
