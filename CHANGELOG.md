@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604172127.ece20b21] - 2026-04-17
+
+- 🔧 Chores & Improvements: Version bumps across multiple apps to 0.0.6-alpha.202604172127.ece20b21 (update metadata only)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/443
+
+
 ## [0.0.6-alpha.202604172109.0469354b] - 2026-04-17
 
 - 🔧 Chores & Improvements: Global version bumps across multiple packages to 0.0.6-alpha
