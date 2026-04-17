@@ -34,13 +34,13 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
   return (
     <>
     <Card>
-      <CardContent className="flex items-start sm:items-center gap-3 sm:gap-4 py-4">
-        <div className="flex items-center justify-center size-10 sm:size-12 rounded-full bg-muted shrink-0">
-          <User className="size-5 sm:size-6 text-muted-foreground" />
+      <CardContent className="flex items-start sm:items-center gap-4 sm:gap-5 py-5 sm:py-6">
+        <div className="flex items-center justify-center size-12 sm:size-14 rounded-full bg-muted shrink-0">
+          <User className="size-6 sm:size-7 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-base sm:text-lg font-semibold truncate">{name}</h2>
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
+          <h2 className="text-lg sm:text-xl font-semibold truncate">{name}</h2>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-muted-foreground">
             {birthDate && (
               <span>{format(birthDate, "MMM d, yyyy")}{age !== null && ` (${t("patientBanner.age", { age })})`}</span>
             )}
