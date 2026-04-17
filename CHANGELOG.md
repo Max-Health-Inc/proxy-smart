@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604172046.f7c12859] - 2026-04-17
+
+- 🔧 Chores & Improvements: Remove local FHIR client typing/imports and delegate formatHumanName to shared-ui; simplify fhir-client.ts
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/440
+
+
 ## [0.0.6-alpha.202604172031.e2101724] - 2026-04-17
 
 - 🔧 Chores & Improvements: Type changes for FHIR resources
