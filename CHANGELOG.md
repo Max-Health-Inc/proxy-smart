@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171952.a7930959] - 2026-04-17
+
+- ✨ Features
+  - Monitoring: New MonitoringDashboard UI scaffold with analytics and charts (MonitoringDashboard.tsx).
+
+- 🔧 Chores & Improvements
+  - FHIR client typing: Extended core FHIR clients with DTR/PAS types and exports; major typing refactor.
+  - UI/UX improvements: Reworked card backgrounds (opacity tweaks) and layout adjustments; introduced centralized LoadingButton across many dialogs and dashboards; replaced redundant in-component buttons with LoadingButton and new SearchInput component.
+  - Admin/backend scaffolding: Added new admin route and schemas for client policies to support CIMD; updated CIMD-related metadata handling and HTML scaffolding.
+  - Version bumps: Updated multiple apps/packages to 0.0.6-alpha.202604171839.cb1b0696 and related variants.
+
+- ⚠️ Breaking Changes
+  - None identified.
+
+- 📚 Documentation
+  - None identified.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/436
+
+
 ## [0.0.6-alpha.202604171937.8e4540cb] - 2026-04-17
 
 - ✨ Features: 
