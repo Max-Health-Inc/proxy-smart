@@ -34,7 +34,7 @@
     },
     "apps/consent-app": {
       "name": "proxy-smart-consent-app",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "@babelfhir-ts/client-r4": "^0.2.0",
         "@fontsource-variable/geist": "^5.2.8",
@@ -78,9 +78,10 @@
     },
     "apps/dtr-app": {
       "name": "proxy-smart-dtr-app",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "@aehrc/smart-forms-renderer": "^1.3.1",
+        "@babelfhir-ts/client-r4": "^0.2.3",
         "@fontsource-variable/geist": "^5.2.8",
         "@proxy-smart/shared-ui": "workspace:*",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -130,7 +131,7 @@
     },
     "apps/patient-portal": {
       "name": "proxy-smart-patient-portal",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "0.1.1",
         "@cornerstonejs/core": "^4.21.2",
@@ -185,7 +186,7 @@
     },
     "apps/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.1",
         "@cornerstonejs/core": "^4.21.2",
@@ -225,7 +226,7 @@
     },
     "apps/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "@proxy-smart/shared-ui": "workspace:*",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -292,7 +293,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.48",
         "@elysiajs/cors": "^1.4.1",
@@ -335,7 +336,7 @@
     },
     "infra": {
       "name": "proxy-smart-infra",
-      "version": "0.0.5-alpha.202604171542.4f5f6b30",
+      "version": "0.0.6-alpha.202604171933.12fa631a",
       "dependencies": {
         "aws-cdk-lib": "^2.244.0",
         "constructs": "^10.6.0",
@@ -3906,6 +3907,8 @@
     "prop-types/react-is": ["react-is@16.13.1", "", {}, "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="],
 
     "proxy-smart-consent-app/hl7.fhir.uv.smart-app-launch-generated": ["hl7.fhir.uv.smart-app-launch-generated@../../lib/hl7.fhir.uv.smart-app-launch-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-bBJF/DaBgwkUg19iqJf0IuQ2husmGman4ZW0poUwSlBRaD6rKRN0qf8cxfgMyVgveP3dYhC4cW9DwjBdD12ueQ=="],
+
+    "proxy-smart-dtr-app/@babelfhir-ts/client-r4": ["@babelfhir-ts/client-r4@0.2.3", "", { "dependencies": { "@babelfhir-ts/smart-auth": "^0.2.0" }, "peerDependencies": { "@types/fhir": ">=0.0.41" } }, "sha512-mYysuT5OrQeOyqwg3tHTjxkinDsgj2FoYGzf/MLwOyaQNhWW5+Ueq0IRZWqoeo1aY5XWNhklg5dFKBHuUB0Bkg=="],
 
     "proxy-smart-patient-portal/hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@./lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-45o7VV1RDxXNEN4ynjxGlLcWFSgkmKRskCrRogOq3GxtxIYbYenHtC4zWxiS/TxdVuR7LeZp5MHTL/v/JoFHwA=="],
 

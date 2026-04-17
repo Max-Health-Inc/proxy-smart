@@ -75,10 +75,9 @@ export async function prePopulate(
       // $populate returns a QuestionnaireResponse directly or wrapped in Parameters
       let qr: QuestionnaireResponse
       if (data.resourceType === "QuestionnaireResponse") {
-        qr = data as QuestionnaireResponse
+        qr = data
       } else if (data.resourceType === "Parameters") {
-        const params = data as Parameters
-        const param = params.parameter?.find(
+        const param = data.parameter?.find(
           (p) => p.name === "response"
         )
         qr = (param?.resource as QuestionnaireResponse) ?? emptyQr

@@ -295,6 +295,62 @@
       }
     },
     {
+      "fullUrl": "urn:uuid:practitioner-example",
+      "resource": {
+        "resourceType": "Practitioner",
+        "id": "example-practitioner",
+        "identifier": [
+          {
+            "system": "http://example.org/practitioners",
+            "value": "doctor"
+          }
+        ],
+        "active": true,
+        "name": [
+          {
+            "family": "Doctor",
+            "given": ["Test"],
+            "prefix": ["Dr."]
+          }
+        ],
+        "telecom": [
+          {
+            "system": "email",
+            "value": "doctor@example.com"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Practitioner/example-practitioner"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:person-test",
+      "resource": {
+        "resourceType": "Person",
+        "id": "test-person",
+        "active": true,
+        "name": [
+          {
+            "family": "User",
+            "given": ["Test"]
+          }
+        ],
+        "link": [
+          {
+            "target": {
+              "reference": "Patient/test-patient"
+            }
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Person/test-person"
+      }
+    },
+    {
       "fullUrl": "urn:uuid:condition-hypertension",
       "resource": {
         "resourceType": "Condition",
