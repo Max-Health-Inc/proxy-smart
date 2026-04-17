@@ -10,6 +10,7 @@
  * and calculatedExpression via its built-in FHIRPath engine.
  */
 import type { Patient, Questionnaire, QuestionnaireResponse, Parameters } from "fhir/r4"
+import type { QuestionnaireAnswersStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-QuestionnaireAnswersStatus"
 import { authFetch, fhirBaseUrl } from "./fhir-client"
 
 /** Result of pre-population */
@@ -34,7 +35,7 @@ export async function prePopulate(
   const emptyQr: QuestionnaireResponse = {
     resourceType: "QuestionnaireResponse",
     questionnaire: questionnaire.url ?? `Questionnaire/${questionnaire.id}`,
-    status: "in-progress",
+    status: "in-progress" satisfies QuestionnaireAnswersStatusCode,
     subject: { reference: `Patient/${patient.id}` },
     authored: new Date().toISOString(),
     item: [],
@@ -87,7 +88,7 @@ export async function prePopulate(
 
       // Ensure patient subject is set
       qr.subject = { reference: `Patient/${patient.id}` }
-      qr.status = "in-progress"
+      qr.status = "in-progress" satisfies QuestionnaireAnswersStatusCode
 
       return { questionnaireResponse: qr, serverPopulated: true }
     }

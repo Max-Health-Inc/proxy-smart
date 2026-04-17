@@ -38,6 +38,8 @@ import type {
   DTRQuestionnaireResponse,
   DTRQuestionnairePackageBundle,
 } from "hl7.fhir.us.davinci-dtr-generated"
+import type { FmStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-FmStatus"
+import type { MedicationrequestIntentCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-MedicationrequestIntent"
 
 export type {
   Patient,
@@ -127,7 +129,7 @@ export async function searchPractitioners(name: string): Promise<PASPractitioner
 export async function searchCoverage(patientId: string): Promise<PASCoverage[]> {
   return client.read().coverage().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active",
+    status: "active" satisfies FmStatusCode,
     _count: 20,
   }) as Promise<PASCoverage[]>
 }
@@ -263,7 +265,7 @@ export async function searchDeviceRequests(patientId: string): Promise<PASDevice
 export async function searchMedicationRequests(patientId: string): Promise<PASMedicationRequest[]> {
   return client.read().medicationRequest().searchAll({
     patient: `Patient/${patientId}`,
-    intent: "order",
+    intent: "order" satisfies MedicationrequestIntentCode,
     _count: 50,
     _sort: "-authoredon",
   }) as Promise<PASMedicationRequest[]>

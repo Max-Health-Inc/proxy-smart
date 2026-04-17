@@ -19,6 +19,7 @@ import { formatHumanName } from "@/lib/fhir-client"
 import { type SelectedService } from "@/components/ServiceSelector"
 import { GENERIC_PA_ITEMS } from "@/lib/generic-questionnaire"
 import { getItemExtensions, type ItemExtensions } from "@/lib/dtr-extensions"
+import type { QuestionnaireAnswersStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-QuestionnaireAnswersStatus"
 import { ArrowRight, FileQuestion, Info, HelpCircle, ChevronDown, ChevronRight, ExternalLink } from "lucide-react"
 
 interface QuestionnaireRendererProps {
@@ -73,7 +74,7 @@ export function QuestionnaireRenderer({
       questionnaire: questionnaire?.url ?? questionnaire?.id
         ? `Questionnaire/${questionnaire?.id}`
         : undefined,
-      status: "completed",
+      status: "completed" satisfies QuestionnaireAnswersStatusCode,
       subject: { reference: `Patient/${patient.id}` },
       authored: new Date().toISOString(),
       item: responseItems,

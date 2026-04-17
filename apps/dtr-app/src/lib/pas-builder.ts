@@ -1,6 +1,8 @@
 import type { Patient } from "fhir/r4"
 import type { PASClaim, ExtensionRequestedService } from "hl7.fhir.us.davinci-pas-generated"
 import type { X12278RequestedServiceTypeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278RequestedServiceType"
+import type { FmStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-FmStatus"
+import type { RequestPriorityCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-RequestPriority"
 import type { SelectedService } from "@/components/ServiceSelector"
 
 interface BuildClaimParams {
@@ -19,7 +21,7 @@ export function buildPasClaim({ patient, service, questionnaireResponseId }: Bui
 
   const claim: PASClaim = {
     resourceType: "Claim",
-    status: "active",
+    status: "active" satisfies FmStatusCode,
     use: "preauthorization",
     identifier: [{
       system: "https://proxy-smart.com/fhir/claim-id",
@@ -38,8 +40,8 @@ export function buildPasClaim({ patient, service, questionnaireResponseId }: Bui
     created: now,
     priority: {
       coding: [{
-        system: "http://terminology.hl7.org/CodeSystem/processpriority",
-        code: "normal",
+        system: "http://hl7.org/fhir/request-priority",
+        code: "routine" satisfies RequestPriorityCode,
       }],
     },
     insurer: {

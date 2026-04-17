@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { searchCoverage, type PASCoverage } from "@/lib/fhir-client"
+import type { SubscriberRelationshipCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-SubscriberRelationship"
 import { Shield, Building2, Calendar, CreditCard, Users } from "lucide-react"
 
 interface CoverageCardProps {
@@ -64,7 +65,7 @@ function CoverageItem({ coverage }: { coverage: PASCoverage }) {
   const periodStart = coverage.period?.start
   const periodEnd = coverage.period?.end
 
-  const relationLabel: Record<string, string> = {
+  const relationLabel: Record<SubscriberRelationshipCode, string> = {
     self: "Self",
     spouse: "Spouse",
     child: "Child",
