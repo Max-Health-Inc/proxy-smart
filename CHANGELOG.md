@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170503.5151028d] - 2026-04-17
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+- 🐛 Bug Fixes: Hide redundant gender identity badge when it matches admin gender
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/416
+
+
 ## [0.0.5-alpha.202604170333.ed8297ff] - 2026-04-17
 
 - 🔧 Chores & Improvements: Version bump to 0.0.5-alpha.202604170333.ed8297ff across multiple packages; align lockfiles and dependencies
