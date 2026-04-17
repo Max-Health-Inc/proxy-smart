@@ -69,8 +69,10 @@ export type { Observation, DocumentReference }
 export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
 export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ObservationStatusCode, ImmunizationStatusCode }
 
-// Re-export the standard FHIR base Resource type (from @types/fhir)
-export type { Resource as AnyFhirResource } from 'fhir/r4'
+// Base FHIR Resource with index signature for polymorphic resource fields
+import type { Resource } from 'fhir/r4'
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyFhirResource = Resource & Record<string, any>
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
