@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171751.36bdde82] - 2026-04-17
+
+- 🔧 Chores & Improvements: General UI responsiveness improvements across AdminApp, Patient Portal, and shared UI components (layout/padding adjustments, responsive typography, and improved wrapping on small screens)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/430
+
+
 ## [0.0.6-alpha.202604171740.60503a70] - 2026-04-17
 
 - ✨ Features
