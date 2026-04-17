@@ -146,17 +146,17 @@ export function SmartAppEditModal({
         </DialogHeader>
 
         <Tabs defaultValue="general" className="mt-2">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="general"><Info className="size-3.5 mr-1.5" />{t('General')}</TabsTrigger>
-            <TabsTrigger value="uris"><Globe className="size-3.5 mr-1.5" />{t('URIs')}</TabsTrigger>
-            <TabsTrigger value="auth"><Key className="size-3.5 mr-1.5" />{t('Auth')}</TabsTrigger>
-            <TabsTrigger value="access"><Server className="size-3.5 mr-1.5" />{t('Access')}</TabsTrigger>
-            <TabsTrigger value="metadata"><Bot className="size-3.5 mr-1.5" />{t('Metadata')}</TabsTrigger>
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="general"><Info className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('General')}</span></TabsTrigger>
+            <TabsTrigger value="uris"><Globe className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('URIs')}</span></TabsTrigger>
+            <TabsTrigger value="auth"><Key className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('Auth')}</span></TabsTrigger>
+            <TabsTrigger value="access"><Server className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('Access')}</span></TabsTrigger>
+            <TabsTrigger value="metadata"><Bot className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('Metadata')}</span></TabsTrigger>
           </TabsList>
 
           {/* ── General Tab ─────────────────────────────────────────── */}
           <TabsContent value="general" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('Application Name')}</Label>
                 <Input value={form.name ?? ''} onChange={(e) => set('name', e.target.value)} />
@@ -173,7 +173,7 @@ export function SmartAppEditModal({
               <Label>{t('Description')}</Label>
               <Textarea value={form.description ?? ''} onChange={(e) => set('description', e.target.value)} rows={3} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('App Type')}</Label>
                 <Select value={form.appType ?? ''} onValueChange={(v) => set('appType', v as UpdateSmartAppRequest['appType'])}>
@@ -198,7 +198,7 @@ export function SmartAppEditModal({
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('SMART Version')}</Label>
                 <Input value={form.smartVersion ?? ''} onChange={(e) => set('smartVersion', e.target.value)} placeholder="e.g., 2.0.0" />
@@ -342,7 +342,7 @@ export function SmartAppEditModal({
                 <img src={form.logoUri} alt="App logo" className="size-12 rounded object-contain border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('Terms of Service URI')}</Label>
                 <Input value={form.tosUri ?? ''} onChange={(e) => set('tosUri', e.target.value)} placeholder="https://..." />

@@ -335,15 +335,15 @@ export function SmartAppsManager() {
               <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
                 <TabsTrigger value="apps" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Shield className="w-4 h-4" />
-                  <span>{t('Registered Apps')}</span>
+                  <span className="hidden sm:inline">{t('Registered Apps')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="app-store" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Store className="w-4 h-4" />
-                  <span>{t('App Store')}</span>
+                  <span className="hidden sm:inline">{t('App Store')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="registration" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <UserPlus className="w-4 h-4" />
-                  <span>{t('Dynamic Registration')}</span>
+                  <span className="hidden sm:inline">{t('Dynamic Registration')}</span>
                 </TabsTrigger>
               </TabsList>
 

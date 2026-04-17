@@ -115,7 +115,7 @@ export function DoorsPanel() {
   return (
     <div className="space-y-4">
       {/* Search and Refresh */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <SearchInput
           placeholder={t('Search doors...')}
           value={searchQuery}
