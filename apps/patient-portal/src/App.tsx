@@ -1,21 +1,26 @@
 import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
+import { useTranslation } from "react-i18next"
 import { smartAuth } from "@/lib/smart-auth"
 import { Heart, LogIn, AlertTriangle } from "lucide-react"
 import { Dashboard } from "@/components/Dashboard"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import "./index.css"
 
 export default function App() {
   const { state, error, handleLogin, handleLogout } = useSmartAuth({ smartAuth })
   const brand = useBranding()
+  const { t } = useTranslation()
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader
-        title="Patient Portal"
+        title={t("app.title")}
         icon={Heart}
         authenticated={state === "authenticated"}
         onSignOut={handleLogout}
-      />
+      >
+        <LanguageSwitcher />
+      </AppHeader>
 
       {/* Content */}
       <main className="max-w-5xl mx-auto px-4 py-6">
@@ -23,28 +28,28 @@ export default function App() {
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Spinner size="lg" />
             <p className="text-muted-foreground">
-              {state === "callback" ? "Completing sign in..." : "Loading..."}
+              {state === "callback" ? t("app.completingSignIn") : t("common.loading")}
             </p>
           </div>
         ) : state === "session-expired" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-6">
             <div className="text-center space-y-3">
               <AlertTriangle className="size-12 mx-auto text-amber-500" />
-              <h2 className="text-xl font-semibold">Session Expired</h2>
+              <h2 className="text-xl font-semibold">{t("app.sessionExpired")}</h2>
               <p className="text-muted-foreground max-w-md">
-                {error || "Your session has expired. Please sign in again to continue."}
+                {error || t("app.sessionExpiredMessage")}
               </p>
             </div>
             <Button size="lg" onClick={handleLogin}>
               <LogIn className="size-4" />
-              Sign In Again
+              {t("app.signInAgain")}
             </Button>
           </div>
         ) : state === "error" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <p className="text-destructive font-medium">Authentication Error</p>
+            <p className="text-destructive font-medium">{t("app.authError")}</p>
             <p className="text-sm text-muted-foreground max-w-md text-center">{error}</p>
-            <Button onClick={handleLogin}>Try Again</Button>
+            <Button onClick={handleLogin}>{t("app.tryAgain")}</Button>
           </div>
         ) : state === "unauthenticated" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-6">
@@ -54,14 +59,14 @@ export default function App() {
               ) : (
                 <Heart className="size-16 mx-auto text-muted-foreground/30" />
               )}
-              <h2 className="text-2xl font-semibold">Patient Portal</h2>
+              <h2 className="text-2xl font-semibold">{t("app.title")}</h2>
               <p className="text-muted-foreground max-w-md">
-                Access your health records, medications, immunizations, and lab results securely. Sign in to view your international patient summary.
+                {t("app.description")}
               </p>
             </div>
             <Button size="lg" onClick={handleLogin}>
               <LogIn className="size-4" />
-              Sign In with SMART
+              {t("app.signInWithSmart")}
             </Button>
           </div>
         ) : (

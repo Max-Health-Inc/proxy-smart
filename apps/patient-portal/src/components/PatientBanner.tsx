@@ -4,6 +4,7 @@ import type { AdministrativeGenderCode } from "hl7.fhir.uv.ips-generated/valuese
 import { User, Pencil } from "lucide-react"
 import { format, differenceInYears } from "date-fns"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { PatientEditModal } from "@/components/PatientEditModal"
 
 interface PatientBannerProps {
@@ -13,6 +14,7 @@ interface PatientBannerProps {
 
 export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps) {
   const [editOpen, setEditOpen] = useState(false)
+  const { t } = useTranslation()
   const name = formatHumanName(patient.name)
   const birthDate = patient.birthDate ? new Date(patient.birthDate) : null
   const age = birthDate ? differenceInYears(new Date(), birthDate) : null
@@ -40,16 +42,16 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
           <h2 className="text-lg font-semibold">{name}</h2>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             {birthDate && (
-              <span>{format(birthDate, "MMM d, yyyy")}{age !== null && ` (${age} years)`}</span>
+              <span>{format(birthDate, "MMM d, yyyy")}{age !== null && ` (${t("patientBanner.age", { age })})`}</span>
             )}
             {patient.gender && <Badge variant="outline">{(patient.gender as AdministrativeGenderCode)}</Badge>}
             {genderIdentity && genderIdentity.toLowerCase() !== patient.gender?.toLowerCase() && (
               <Badge variant="outline">{genderIdentity}</Badge>
             )}
-            {birthSex && <Badge variant="secondary" title="Sex assigned at birth">SAAB: {birthSex}</Badge>}
+            {birthSex && <Badge variant="secondary" title="Sex assigned at birth">{t("patientBanner.saab", { value: birthSex })}</Badge>}
             {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
             {patient.identifier?.[0]?.value && (
-              <span className="font-mono text-xs">MRN: {patient.identifier[0].value}</span>
+              <span className="font-mono text-xs">{t("patientBanner.mrn", { value: patient.identifier[0].value })}</span>
             )}
           </div>
         </div>
@@ -57,7 +59,7 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
           variant="ghost"
           size="icon-sm"
           onClick={() => setEditOpen(true)}
-          title="Edit profile"
+          title={t("patientBanner.editProfile")}
         >
           <Pencil className="size-4" />
         </Button>

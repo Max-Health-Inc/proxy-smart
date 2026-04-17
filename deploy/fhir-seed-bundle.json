@@ -1846,6 +1846,433 @@
         ]
       },
       "request": {"method": "PUT", "url": "Questionnaire/cardiac-cath-pa"}
+    },
+
+    {"_comment": "═══════════════════ GENOMICS SEED DATA ═══════════════════"},
+
+    {
+      "fullUrl": "urn:uuid:genomic-report-max",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "max-genomic-report",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomic-report"]
+        },
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "GE",
+                "display": "Genetics"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "81247-9",
+              "display": "Master HL7 genetic variant reporting panel"
+            }
+          ],
+          "text": "Comprehensive Genomic Panel"
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "issued": "2026-01-20T10:30:00Z",
+        "performer": [{"reference": "Organization/genomics-lab", "display": "Genomics Reference Laboratory"}],
+        "result": [
+          {"reference": "Observation/max-variant-brca2"},
+          {"reference": "Observation/max-variant-mthfr"},
+          {"reference": "Observation/max-variant-cyp2c19"},
+          {"reference": "Observation/max-diag-impl-brca2"},
+          {"reference": "Observation/max-diag-impl-mthfr"},
+          {"reference": "Observation/max-ther-impl-cyp2c19"},
+          {"reference": "Observation/max-ther-impl-brca2"}
+        ],
+        "conclusion": "Three clinically significant variants identified. BRCA2 pathogenic variant warrants genetic counseling and enhanced cancer screening. CYP2C19 poor metabolizer status affects clopidogrel efficacy. MTHFR variant of uncertain significance."
+      },
+      "request": {"method": "PUT", "url": "DiagnosticReport/max-genomic-report"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:variant-brca2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-variant-brca2",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "69548-6", "display": "Genetic variant assessment"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "valueCodeableConcept": {
+          "coding": [{"system": "http://loinc.org", "code": "LA9633-4", "display": "Present"}]
+        },
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48018-6", "display": "Gene studied [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.genenames.org/geneId", "code": "HGNC:1101", "display": "BRCA2"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48004-6", "display": "DNA change (c.HGVS)"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://varnomen.hgvs.org", "code": "NM_000059.4:c.5946delT", "display": "NM_000059.4:c.5946delT"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48005-3", "display": "Amino acid change (p.HGVS)"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://varnomen.hgvs.org", "code": "NP_000050.3:p.Ser1982ArgfsTer22", "display": "p.Ser1982ArgfsTer22"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6668-3", "display": "Pathogenic"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53034-5", "display": "Allelic state"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6706-1", "display": "Heterozygous"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48019-4", "display": "DNA change type"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://sequenceontology.org", "code": "SO:0000159", "display": "Deletion"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "51958-7", "display": "Transcript reference sequence [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.ncbi.nlm.nih.gov/refseq", "code": "NM_000059.4", "display": "NM_000059.4"}]
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-variant-brca2"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:variant-mthfr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-variant-mthfr",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "69548-6", "display": "Genetic variant assessment"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "valueCodeableConcept": {
+          "coding": [{"system": "http://loinc.org", "code": "LA9633-4", "display": "Present"}]
+        },
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48018-6", "display": "Gene studied [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.genenames.org/geneId", "code": "HGNC:7436", "display": "MTHFR"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48004-6", "display": "DNA change (c.HGVS)"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://varnomen.hgvs.org", "code": "NM_005957.5:c.665C>T", "display": "NM_005957.5:c.665C>T"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48005-3", "display": "Amino acid change (p.HGVS)"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://varnomen.hgvs.org", "code": "NP_005948.3:p.Ala222Val", "display": "p.Ala222Val"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA26333-7", "display": "Uncertain significance"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53034-5", "display": "Allelic state"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6706-1", "display": "Heterozygous"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48019-4", "display": "DNA change type"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://sequenceontology.org", "code": "SO:0001483", "display": "SNV"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "51958-7", "display": "Transcript reference sequence [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.ncbi.nlm.nih.gov/refseq", "code": "NM_005957.5", "display": "NM_005957.5"}]
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-variant-mthfr"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:variant-cyp2c19",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-variant-cyp2c19",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://loinc.org", "code": "69548-6", "display": "Genetic variant assessment"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "valueCodeableConcept": {
+          "coding": [{"system": "http://loinc.org", "code": "LA9633-4", "display": "Present"}]
+        },
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48018-6", "display": "Gene studied [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.genenames.org/geneId", "code": "HGNC:2621", "display": "CYP2C19"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48004-6", "display": "DNA change (c.HGVS)"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://varnomen.hgvs.org", "code": "NM_000769.4:c.681G>A", "display": "NM_000769.4:c.681G>A"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48005-3", "display": "Amino acid change (p.HGVS)"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://varnomen.hgvs.org", "code": "NP_000760.1:p.Pro227Pro", "display": "p.Pro227Pro"}],
+              "text": "Splicing variant (*2 allele)"
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6668-3", "display": "Pathogenic"}],
+              "text": "Loss of function – Poor metabolizer"
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53034-5", "display": "Allelic state"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6705-3", "display": "Homozygous"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "48019-4", "display": "DNA change type"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://sequenceontology.org", "code": "SO:0001483", "display": "SNV"}]
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "51958-7", "display": "Transcript reference sequence [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.ncbi.nlm.nih.gov/refseq", "code": "NM_000769.4", "display": "NM_000769.4"}]
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-variant-cyp2c19"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:diag-impl-brca2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-diag-impl-brca2",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/diagnostic-implication"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes-cs", "code": "diagnostic-implication", "display": "Diagnostic Implication"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "derivedFrom": [{"reference": "Observation/max-variant-brca2"}],
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "81259-4", "display": "Associated phenotype"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://snomed.info/sct", "code": "718220008", "display": "Hereditary breast and ovarian cancer syndrome"}],
+              "text": "Hereditary Breast & Ovarian Cancer Syndrome"
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6668-3", "display": "Pathogenic"}]
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-diag-impl-brca2"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:diag-impl-mthfr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-diag-impl-mthfr",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/diagnostic-implication"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes-cs", "code": "diagnostic-implication", "display": "Diagnostic Implication"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "derivedFrom": [{"reference": "Observation/max-variant-mthfr"}],
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "81259-4", "display": "Associated phenotype"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://snomed.info/sct", "code": "19471005", "display": "Hyperhomocysteinemia"}],
+              "text": "Hyperhomocysteinemia Risk"
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA26333-7", "display": "Uncertain significance"}]
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-diag-impl-mthfr"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:ther-impl-cyp2c19",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-ther-impl-cyp2c19",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/therapeutic-implication"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes-cs", "code": "therapeutic-implication", "display": "Therapeutic Implication"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "derivedFrom": [{"reference": "Observation/max-variant-cyp2c19"}],
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "51963-7", "display": "Medication assessed [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "32968", "display": "Clopidogrel"}],
+              "text": "Clopidogrel"
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6668-3", "display": "Pathogenic"}],
+              "text": "Poor Metabolizer – Reduced efficacy"
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-ther-impl-cyp2c19"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:ther-impl-brca2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "max-ther-impl-brca2",
+        "meta": {
+          "profile": ["http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/therapeutic-implication"]
+        },
+        "status": "final",
+        "category": [
+          {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "laboratory", "display": "Laboratory"}]}
+        ],
+        "code": {
+          "coding": [{"system": "http://hl7.org/fhir/uv/genomics-reporting/CodeSystem/tbd-codes-cs", "code": "therapeutic-implication", "display": "Therapeutic Implication"}]
+        },
+        "subject": {"reference": "Patient/max-nussbaumer"},
+        "effectiveDateTime": "2026-01-15",
+        "derivedFrom": [{"reference": "Observation/max-variant-brca2"}],
+        "component": [
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "51963-7", "display": "Medication assessed [ID]"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "1597177", "display": "Olaparib"}],
+              "text": "Olaparib (PARP inhibitor)"
+            }
+          },
+          {
+            "code": {"coding": [{"system": "http://loinc.org", "code": "53037-8", "display": "Genetic disease sequence variant interpretation"}]},
+            "valueCodeableConcept": {
+              "coding": [{"system": "http://loinc.org", "code": "LA6677-4", "display": "Responsive"}],
+              "text": "Responsive – BRCA2-deficient tumors sensitive to PARP inhibition"
+            }
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Observation/max-ther-impl-brca2"}
+    },
+
+    {
+      "fullUrl": "urn:uuid:org-genomics-lab",
+      "resource": {
+        "resourceType": "Organization",
+        "id": "genomics-lab",
+        "name": "Genomics Reference Laboratory",
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/organization-type",
+                "code": "prov",
+                "display": "Healthcare Provider"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {"method": "PUT", "url": "Organization/genomics-lab"}
     }
   ]
 }

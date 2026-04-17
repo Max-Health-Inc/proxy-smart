@@ -74,7 +74,9 @@ import {
   FileImage, MessageSquare, Eye, EyeOff,
 } from "lucide-react"
 import { format } from "date-fns"
+import { useTranslation } from "react-i18next"
 export function Dashboard() {
+  const { t } = useTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
@@ -120,7 +122,7 @@ export function Dashboard() {
       try {
         const patientId = smartAuth.getToken()?.patient
         if (!patientId) {
-          setError("No patient context available. Please launch from an EHR or select a patient.")
+          setError(t("dashboard.noPatientContext"))
           setLoading(false)
           return
         }
@@ -175,7 +177,7 @@ export function Dashboard() {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <Spinner size="lg" />
-        <p className="text-muted-foreground">Loading your health records...</p>
+        <p className="text-muted-foreground">{t("dashboard.loadingRecords")}</p>
       </div>
     )
   }
@@ -208,7 +210,7 @@ export function Dashboard() {
             className="gap-1.5"
           >
             {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-            {showUnverified ? "Showing All" : "Verified Only"}
+            {showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}
           </Button>
 
           <div className="flex gap-2">
@@ -218,16 +220,16 @@ export function Dashboard() {
               title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : undefined}
             >
               <FileImage className={`size-4 ${pacsAvailable === false ? "opacity-50" : ""}`} />
-              Upload Imaging
-              {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">(offline)</span>}
+              {t("dashboard.uploadImaging")}
+              {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">{t("dashboard.offline")}</span>}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
               <Upload className="size-4" />
-              Import Document
+              {t("dashboard.importDocument")}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setShowScribe(true)}>
               <MessageSquare className="size-4" />
-              Patient Scribe
+              {t("dashboard.patientScribe")}
             </Button>
           </div>
         </div>
@@ -238,12 +240,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Heart className="size-4 text-rose-500" />
-              Active Conditions
+              {t("dashboard.activeConditions")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filterVerified(conditions).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active conditions on record</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActiveConditions")}</p>
             ) : (
               <ul className="space-y-2">
                 {filterVerified(conditions).map((c, i) => {
@@ -252,12 +254,12 @@ export function Dashboard() {
                   return (
                   <li key={c.id || i} className="text-sm">
                     <RecordName resource={c} onOpen={openDetail}>
-                      {c.code?.coding?.[0]?.display || c.code?.text || "Unknown condition"}
+                      {c.code?.coding?.[0]?.display || c.code?.text || t("dashboard.unknownCondition")}
                     </RecordName>
-                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{sev.label}</Badge>}
+                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{t(`conditionSeverity.${sev.label.toLowerCase()}`)}</Badge>}
                     {c.onsetDateTime && (
                       <span className="text-muted-foreground ml-2">
-                        since {format(new Date(c.onsetDateTime), "MMM yyyy")}
+                        {t("common.since", { date: format(new Date(c.onsetDateTime), "MMM yyyy") })}
                       </span>
                     )}
                   </li>
@@ -272,12 +274,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldAlert className="size-4 text-amber-500" />
-              Allergies
+              {t("dashboard.allergies")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filterVerified(allergies).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No known allergies</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noKnownAllergies")}</p>
             ) : (
               <ul className="space-y-2">
                 {filterVerified(allergies).map((a, i) => {
@@ -289,7 +291,7 @@ export function Dashboard() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {cat && categoryEmoji[cat] && <span title={cat}>{categoryEmoji[cat]}</span>}
                         <RecordName resource={a} onOpen={openDetail}>
-                          {a.code?.coding?.[0]?.display || a.code?.text || "Unknown allergen"}
+                          {a.code?.coding?.[0]?.display || a.code?.text || t("dashboard.unknownAllergen")}
                         </RecordName>
                         {crit && <Badge variant={crit.variant} className="text-xs">{crit.label}</Badge>}
                       </div>
@@ -311,19 +313,19 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Pill className="size-4 text-blue-500" />
-              Current Medications
+              {t("dashboard.currentMedications")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filterVerified(medications).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active medications</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActiveMedications")}</p>
             ) : (
               <ul className="space-y-2">
                 {filterVerified(medications).map((m, i) => (
                   <li key={m.id || i} className="text-sm">
                     <RecordName resource={m} onOpen={openDetail}>
                       {m.medicationCodeableConcept?.coding?.[0]?.display ||
-                        m.medicationCodeableConcept?.text || "Unknown medication"}
+                        m.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
                     </RecordName>
                     {m.dosage?.[0]?.text && (
                       <span className="text-muted-foreground ml-2">— {m.dosage[0].text}</span>
@@ -339,12 +341,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Syringe className="size-4 text-green-500" />
-              Immunizations
+              {t("dashboard.immunizations")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filterVerified(immunizations).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No immunization records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noImmunizationRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {filterVerified(immunizations).map((imm, i) => {
@@ -354,7 +356,7 @@ export function Dashboard() {
                   return (
                     <li key={imm.id || i} className="text-sm">
                       <RecordName resource={imm} onOpen={openDetail}>
-                        {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || "Unknown vaccine"}
+                        {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || t("dashboard.unknownVaccine")}
                       </RecordName>
                       {targetDisease && (
                         <span className="text-muted-foreground ml-1 text-xs">({targetDisease})</span>
@@ -376,12 +378,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Activity className="size-4 text-purple-500" />
-              Recent Vitals
+              {t("dashboard.recentVitals")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {vitals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent vital signs</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noRecentVitals")}</p>
             ) : (
               <ul className="space-y-2">
                 {vitals.slice(0, 10).map((v, i) => (
@@ -407,12 +409,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <FlaskConical className="size-4 text-teal-500" />
-              Recent Lab Results
+              {t("dashboard.recentLabResults")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {labs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent lab results</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noRecentLabs")}</p>
             ) : (
               <ul className="space-y-2">
                 {labs.slice(0, 10).map((l, i) => {
@@ -444,12 +446,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Cigarette className="size-4 text-orange-500" />
-              Smoking Status
+              {t("dashboard.smokingStatus")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {tobaccoUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No tobacco use records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noTobaccoRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {tobaccoUse.map((obs, i) => {
@@ -478,12 +480,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Wine className="size-4 text-rose-500" />
-              Alcohol Use
+              {t("dashboard.alcoholUse")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {alcoholUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No alcohol use records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noAlcoholRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {alcoholUse.map((obs, i) => (
@@ -511,18 +513,18 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Scissors className="size-4 text-indigo-500" />
-              Procedures
+              {t("dashboard.procedures")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filterVerified(procedures).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No procedure records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noProcedureRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {filterVerified(procedures).map((proc, i) => (
                   <li key={proc.id || i} className="text-sm">
                     <RecordName resource={proc} onOpen={openDetail}>
-                      {proc.code?.coding?.[0]?.display || proc.code?.text || "Unknown procedure"}
+                      {proc.code?.coding?.[0]?.display || proc.code?.text || t("dashboard.unknownProcedure")}
                     </RecordName>
                     {proc.performedDateTime && (
                       <span className="text-muted-foreground ml-2">
@@ -545,23 +547,23 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Flag className="size-4 text-red-500" />
-              Flags &amp; Alerts
+              {t("dashboard.flagsAndAlerts")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {flags.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active flags</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActiveFlags")}</p>
             ) : (
               <ul className="space-y-2">
                 {flags.map((flag, i) => (
                   <li key={flag.id || i} className="text-sm flex items-center gap-2">
                     <span className={`inline-block size-2 rounded-full ${(flag.status as FlagStatusCode) === "active" ? "bg-red-500" : (flag.status as FlagStatusCode) === "inactive" ? "bg-gray-400" : "bg-amber-400"}`} />
                     <RecordName resource={flag} onOpen={openDetail}>
-                      {flag.code?.coding?.[0]?.display || flag.code?.text || "Unknown flag"}
+                      {flag.code?.coding?.[0]?.display || flag.code?.text || t("dashboard.unknownFlag")}
                     </RecordName>
                     {flag.period?.start && (
                       <span className="text-muted-foreground text-xs">
-                        since {format(new Date(flag.period.start), "MMM d, yyyy")}
+                        {t("common.since", { date: format(new Date(flag.period.start), "MMM d, yyyy") })}
                       </span>
                     )}
                   </li>
@@ -575,12 +577,12 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Baby className="size-4 text-pink-500" />
-              Pregnancy
+              {t("dashboard.pregnancy")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {pregnancyStatus.length === 0 && pregnancyEdd.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pregnancy records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noPregnancyRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {pregnancyStatus.map((obs, i) => {
@@ -589,7 +591,7 @@ export function Dashboard() {
                   return (
                     <li key={obs.id || `ps-${i}`} className="text-sm flex justify-between">
                       <RecordName resource={obs} onOpen={openDetail}>
-                        {display || obs.valueCodeableConcept?.text || "Unknown status"}
+                        {display || obs.valueCodeableConcept?.text || t("dashboard.unknownStatus")}
                       </RecordName>
                       {obs.effectiveDateTime && (
                         <span className="text-muted-foreground">
@@ -602,10 +604,10 @@ export function Dashboard() {
                 {pregnancyEdd.map((obs, i) => (
                   <li key={obs.id || `edd-${i}`} className="text-sm flex justify-between">
                     <RecordName resource={obs} onOpen={openDetail}>
-                      EDD: {obs.valueDateTime ? format(new Date(obs.valueDateTime), "MMM d, yyyy") : "Unknown"}
+                      {t("dashboard.edd", { date: obs.valueDateTime ? format(new Date(obs.valueDateTime), "MMM d, yyyy") : t("common.unknown") })}
                     </RecordName>
                     <span className="text-muted-foreground text-xs">
-                      {obs.code?.coding?.[0]?.display || "Expected Delivery Date"}
+                      {obs.code?.coding?.[0]?.display || t("dashboard.expectedDeliveryDate")}
                     </span>
                   </li>
                 ))}
@@ -618,19 +620,19 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Stethoscope className="size-4 text-cyan-500" />
-              Prescribed Medications
+              {t("dashboard.prescribedMedications")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {filterVerified(medicationRequests).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active prescriptions</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActivePrescriptions")}</p>
             ) : (
               <ul className="space-y-2">
                 {filterVerified(medicationRequests).map((rx, i) => (
                   <li key={rx.id || i} className="text-sm">
                     <RecordName resource={rx} onOpen={openDetail}>
                       {rx.medicationCodeableConcept?.coding?.[0]?.display ||
-                        rx.medicationCodeableConcept?.text || "Unknown medication"}
+                        rx.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
                     </RecordName>
                     {rx.dosageInstruction?.[0]?.text && (
                       <span className="text-muted-foreground ml-2">— {rx.dosageInstruction[0].text}</span>
@@ -651,22 +653,22 @@ export function Dashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Laptop className="size-4 text-slate-500" />
-              Medical Devices
+              {t("dashboard.medicalDevices")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {deviceUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No device records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noDeviceRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {deviceUse.map((du, i) => (
                   <li key={du.id || i} className="text-sm">
                     <RecordName resource={du} onOpen={openDetail}>
-                      {du.device?.display || du.device?.reference || "Unknown device"}
+                      {du.device?.display || du.device?.reference || t("dashboard.unknownDevice")}
                     </RecordName>
                     {du.timingPeriod?.start && (
                       <span className="text-muted-foreground ml-2">
-                        since {format(new Date(du.timingPeriod.start), "MMM d, yyyy")}
+                        {t("common.since", { date: format(new Date(du.timingPeriod.start), "MMM d, yyyy") })}
                       </span>
                     )}
                     {du.status && (

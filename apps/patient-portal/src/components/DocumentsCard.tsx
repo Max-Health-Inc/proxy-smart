@@ -3,6 +3,7 @@ import { FileText, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 import type { DocumentReference } from "@/lib/fhir-client"
 import { RecordName, type AnyResource } from "@/lib/ips-display-helpers"
+import { useTranslation } from "react-i18next"
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -48,17 +49,18 @@ interface DocumentsCardProps {
 }
 
 export function DocumentsCard({ documents, onOpenDetail }: DocumentsCardProps) {
+  const { t } = useTranslation()
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <FileText className="size-4 text-sky-500" />
-          Documents
+          {t("documents.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {documents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No documents on record</p>
+          <p className="text-sm text-muted-foreground">{t("documents.noDocuments")}</p>
         ) : (
           <ul className="space-y-2">
             {documents.map((doc, i) => {
@@ -85,7 +87,7 @@ export function DocumentsCard({ documents, onOpenDetail }: DocumentsCardProps) {
                     )}
                     {relatedCount > 0 && (
                       <Badge variant="outline" className="text-xs">
-                        {relatedCount} resource{relatedCount !== 1 ? "s" : ""}
+                        {t("documents.nResources", { n: relatedCount })}
                       </Badge>
                     )}
                     {viewUrl && (

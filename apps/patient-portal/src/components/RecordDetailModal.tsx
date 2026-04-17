@@ -19,6 +19,7 @@ import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/
 import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
 import { criticalityStyles, type AllergyIntoleranceCriticalityCode } from "@/lib/ips-display-helpers"
 import { RecordEditModal } from "@/components/RecordEditModal"
+import { useTranslation } from "react-i18next"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -162,6 +163,7 @@ const EDITABLE_TYPES = new Set([
 
 export function RecordDetailModal({ open, onOpenChange, title, resource, documents, onResourceUpdated }: RecordDetailModalProps) {
   const [editOpen, setEditOpen] = useState(false)
+  const { t } = useTranslation()
   if (!resource) return null
 
   const recordedDate = extractRecordedDate(resource)
@@ -207,7 +209,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           {onResourceUpdated && resourceType && EDITABLE_TYPES.has(resourceType) && (
             <Button variant="outline" size="sm" className="w-fit mt-1" onClick={() => setEditOpen(true)}>
               <Pencil className="size-3.5 mr-1" />
-              Edit Record
+              {t("recordDetail.editRecord")}
             </Button>
           )}
         </DialogHeader>
@@ -215,21 +217,21 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
         <div className="space-y-4 pt-2">
           {/* Recorded / effective date */}
           {recordedDate && (
-            <DetailRow icon={<Calendar className="size-4 text-blue-500" />} label="Recorded">
+            <DetailRow icon={<Calendar className="size-4 text-blue-500" />} label={t("recordDetail.recorded")}>
               {formatDate(recordedDate)}
             </DetailRow>
           )}
 
           {/* Onset date (conditions) */}
           {onsetDate && (
-            <DetailRow icon={<Clock className="size-4 text-purple-500" />} label="Onset">
+            <DetailRow icon={<Clock className="size-4 text-purple-500" />} label={t("recordDetail.onset")}>
               {formatShortDate(onsetDate)}
             </DetailRow>
           )}
 
           {/* Clinical status */}
           {clinicalStatus && (
-            <DetailRow icon={<Tag className="size-4 text-teal-500" />} label="Clinical Status">
+            <DetailRow icon={<Tag className="size-4 text-teal-500" />} label={t("recordDetail.clinicalStatus")}>
               <Badge variant={(clinicalStatus.code as ConditionClinicalCode) === "active" ? "default" : "secondary"} className="text-xs">
                 {clinicalStatus.display}
               </Badge>
@@ -237,7 +239,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           )}
 
           {severity && (
-            <DetailRow icon={<Tag className="size-4 text-orange-500" />} label="Severity">
+            <DetailRow icon={<Tag className="size-4 text-orange-500" />} label={t("recordDetail.severity")}>
               <span className="capitalize">{severity}</span>
             </DetailRow>
           )}
@@ -246,11 +248,11 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           {resource.criticality && (() => {
             const crit = criticalityStyles[resource.criticality as AllergyIntoleranceCriticalityCode]
             return crit ? (
-              <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label="Criticality">
+              <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label={t("recordDetail.criticality")}>
                 <Badge variant={crit.variant} className="text-xs">{crit.label}</Badge>
               </DetailRow>
             ) : (
-              <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label="Criticality">
+              <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label={t("recordDetail.criticality")}>
                 <span className="capitalize">{resource.criticality}</span>
               </DetailRow>
             )
@@ -258,23 +260,23 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
 
           {/* Category */}
           {category && (
-            <DetailRow icon={<FileText className="size-4 text-slate-500" />} label="Category">
+            <DetailRow icon={<FileText className="size-4 text-slate-500" />} label={t("recordDetail.category")}>
               <span className="capitalize">{category}</span>
             </DetailRow>
           )}
 
           {/* Performer / Asserter */}
-          <DetailRow icon={<User className="size-4 text-indigo-500" />} label="Verified By">
+          <DetailRow icon={<User className="size-4 text-indigo-500" />} label={t("recordDetail.verifiedBy")}>
             {performer ? (
               <span className="font-medium">{performer}</span>
             ) : (
-              <span className="text-muted-foreground italic">Not recorded</span>
+              <span className="text-muted-foreground italic">{t("recordDetail.notRecorded")}</span>
             )}
           </DetailRow>
 
           {/* Code system info */}
           {code?.code && (
-            <DetailRow icon={<Tag className="size-4 text-gray-500" />} label="Code">
+            <DetailRow icon={<Tag className="size-4 text-gray-500" />} label={t("recordDetail.code")}>
               <span className="font-mono text-xs">
                 {code.code}
                 {code.system && (
@@ -288,14 +290,14 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
 
           {/* Last updated */}
           {lastUpdated && (
-            <DetailRow icon={<Clock className="size-4 text-gray-400" />} label="Last Updated">
+            <DetailRow icon={<Clock className="size-4 text-gray-400" />} label={t("recordDetail.lastUpdated")}>
               {formatDate(lastUpdated)}
             </DetailRow>
           )}
 
           {/* Value (for Observations) */}
           {resource.valueQuantity && (
-            <DetailRow icon={<Tag className="size-4 text-emerald-500" />} label="Value">
+            <DetailRow icon={<Tag className="size-4 text-emerald-500" />} label={t("recordDetail.value")}>
               <span className="font-medium">
                 {resource.valueQuantity.value} {resource.valueQuantity.unit || ""}
               </span>
@@ -305,11 +307,11 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           {/* Components (e.g. blood pressure systolic/diastolic) */}
           {resource.component?.length > 0 && (
             <div className="border-t pt-3 mt-3">
-              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Components</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t("recordDetail.components")}</p>
               <div className="space-y-1">
                 {resource.component.map((comp: FhirResource, i: number) => (
                   <div key={i} className="flex justify-between text-sm">
-                    <span>{comp.code?.coding?.[0]?.display || comp.code?.text || `Component ${i + 1}`}</span>
+                    <span>{comp.code?.coding?.[0]?.display || comp.code?.text || t("recordDetail.component", { n: i + 1 })}</span>
                     <span className="text-muted-foreground">
                       {comp.valueQuantity
                         ? `${comp.valueQuantity.value} ${comp.valueQuantity.unit || ""}`
@@ -323,22 +325,22 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
 
           {/* Dosage info (medications) */}
           {resource.dosage?.[0]?.text && (
-            <DetailRow icon={<FileText className="size-4 text-blue-400" />} label="Dosage">
+            <DetailRow icon={<FileText className="size-4 text-blue-400" />} label={t("recordDetail.dosage")}>
               {resource.dosage[0].text}
             </DetailRow>
           )}
           {resource.dosageInstruction?.[0]?.text && (
-            <DetailRow icon={<FileText className="size-4 text-blue-400" />} label="Dosage">
+            <DetailRow icon={<FileText className="size-4 text-blue-400" />} label={t("recordDetail.dosage")}>
               {resource.dosageInstruction[0].text}
             </DetailRow>
           )}
 
           {/* Reaction (allergies) */}
           {resource.reaction?.[0] && (
-            <DetailRow icon={<ShieldAlert className="size-4 text-amber-500" />} label="Reaction">
+            <DetailRow icon={<ShieldAlert className="size-4 text-amber-500" />} label={t("recordDetail.reaction")}>
               {resource.reaction[0].manifestation?.[0]?.coding?.[0]?.display ||
                 resource.reaction[0].manifestation?.[0]?.text ||
-                "Unknown reaction"}
+                t("recordDetail.unknownReaction")}
               {resource.reaction[0].severity && (
                 <Badge
                   variant="outline"
@@ -353,7 +355,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           {/* Note */}
           {resource.note?.[0]?.text && (
             <div className="border-t pt-3 mt-3">
-              <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">Notes</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wide">{t("recordDetail.notes")}</p>
               <p className="text-sm">{resource.note[0].text}</p>
             </div>
           )}
@@ -361,7 +363,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
           {/* Linked Documents */}
           {linkedDocs.length > 0 && (
             <div className="border-t pt-3 mt-3">
-              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Source Documents</p>
+              <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{t("recordDetail.sourceDocuments")}</p>
               <div className="space-y-1.5">
                 {linkedDocs.map((doc, i) => {
                   const docTitle = doc.content?.[0]?.attachment?.title ?? doc.description ?? "Document"

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import {
   Card, CardContent, CardHeader, CardTitle, Badge,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -73,6 +74,7 @@ interface HealthChartsCardProps {
 }
 
 export function HealthChartsCard({ vitals, labs }: HealthChartsCardProps) {
+  const { t } = useTranslation()
   const allObs = useMemo(() => [...vitals, ...labs], [vitals, labs])
 
   // Detect which metrics have at least 1 data point
@@ -124,17 +126,17 @@ export function HealthChartsCard({ vitals, labs }: HealthChartsCardProps) {
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <CardTitle className="flex items-center gap-2 text-base">
             <Activity className="size-4 text-indigo-500" />
-            Health Charts
+            {t("healthCharts.title")}
             {totalObs > 0 && (
               <Badge variant="secondary" className="ml-1 text-xs">
-                {totalObs} observations
+                {t("healthCharts.nObservations", { n: totalObs })}
               </Badge>
             )}
           </CardTitle>
           {availableMetrics.length > 0 && (
             <Select value={activeMetricKey} onValueChange={setSelectedMetric}>
               <SelectTrigger className="w-52 h-8 text-sm">
-                <SelectValue placeholder="Choose metric…" />
+                <SelectValue placeholder={t("healthCharts.chooseMetric")} />
               </SelectTrigger>
               <SelectContent>
                 {availableMetrics.map(m => (
@@ -147,12 +149,12 @@ export function HealthChartsCard({ vitals, labs }: HealthChartsCardProps) {
       </CardHeader>
       <CardContent>
         {allObs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No vitals or lab data available to chart.</p>
+          <p className="text-sm text-muted-foreground">{t("healthCharts.noData")}</p>
         ) : availableMetrics.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No chartable numeric observations found.</p>
+          <p className="text-sm text-muted-foreground">{t("healthCharts.noChartable")}</p>
         ) : chartData.length < 2 ? (
           <p className="text-sm text-muted-foreground">
-            Not enough data points for "{activeMetricKey}" to draw a chart (need at least 2).
+            {t("healthCharts.notEnoughData", { metric: activeMetricKey })}
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={280}>
