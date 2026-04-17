@@ -34,7 +34,7 @@ except Exception as e:
     print(f"⚠️ Failed to load .env file: {e}, using system environment variables", file=sys.stderr)
 
 import requests
-from ai_proposal_schema import get_propose_payload_base, get_common_headers, create_system_message, create_user_content_base
+from ai_proposal_schema import get_propose_payload_base, get_common_headers, get_api_config, get_base_url, create_system_message, create_user_content_base
 
 def make_api_call_with_retry(url: str, payload: dict, headers: dict, max_retries: int = 3, timeout: int = 240) -> requests.Response:
     """Make an API call with automatic retry logic for rate limits"""
@@ -881,10 +881,10 @@ class CodeExplorerMCP:
 
 
 class UnifiedChangeProposer:
-    def __init__(self, openai_api_key: str, repo_root: str):
-        self.api_key = openai_api_key
+    def __init__(self, api_key: str, repo_root: str):
+        self.api_key = api_key
         self.repo_root = Path(repo_root)
-        self.base_url = "https://api.openai.com/v1/chat/completions"
+        self.base_url = get_base_url()
         self.mcp = CodeExplorerMCP(self.repo_root)
         self.friend_conversations = []  # Store friend AI conversations
         self.collaboration_session = None  # Initialize on first use
@@ -1620,7 +1620,7 @@ class UnifiedChangeProposer:
     def propose_changes(self, error_log: str) -> Dict:
         """Propose initial changes using MCP-enhanced AI with interactive code exploration."""
         if not self.api_key:
-            print("❌ OPENAI_API_KEY is not set - skipping AI changes", file=sys.stderr)
+            print("❌ No API key available - skipping AI changes", file=sys.stderr)
             return {"analysis": "No API key", "changes": []}
         
         print("🧠 Junior AI starting interactive code exploration...", file=sys.stderr)
@@ -2058,12 +2058,16 @@ def main():
         sys.exit(1)
     
     error_log_file = sys.argv[1]
-    api_key = os.environ.get("OPENAI_API_KEY")
     repo_root = os.environ.get("GITHUB_WORKSPACE", ".")
     
-    if not api_key:
-        print("❌ OPENAI_API_KEY environment variable is required", file=sys.stderr)
+    # Use GitHub Models API (GITHUB_TOKEN) or fallback to OpenAI
+    config = get_api_config()
+    if not config:
+        print("❌ GITHUB_TOKEN or OPENAI_API_KEY environment variable is required", file=sys.stderr)
         sys.exit(1)
+    
+    api_key = config["api_key"]
+    print(f"🔌 Using {config['provider']} API with model {config['model']}", file=sys.stderr)
     
     print("🧠 Junior AI starting unified error analysis...", file=sys.stderr)
     

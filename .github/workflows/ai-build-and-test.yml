@@ -34,8 +34,6 @@ on:
         required: false
       APP_PRIVATE_KEY:
         required: false
-      OPENAI_API_KEY:
-        required: false
 
 jobs:
   backend:
@@ -47,7 +45,6 @@ jobs:
     secrets:
       APP_ID: ${{ secrets.APP_ID }}
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   frontend:
     name: Frontend
@@ -60,4 +57,3 @@ jobs:
     secrets:
       APP_ID: ${{ secrets.APP_ID }}
       APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

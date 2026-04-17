@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.6-beta.202604172127.ece20b21",
+  "version": "0.0.6-alpha.202604172135.de7d1b11",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quotentiroler/proxy-smart.git"
@@ -156,6 +156,7 @@
   },
   "homepage": "https://github.com/quotentiroler/proxy-smart#readme",
   "dependencies": {
-    "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz"
+    "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
+    "undici": "^8.1.0"
   }
 }

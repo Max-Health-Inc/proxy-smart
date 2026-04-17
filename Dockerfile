@@ -50,8 +50,8 @@ RUN mkdir -p apps/ui/src/lib/api-client && \
 
 # Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
-ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
-ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
+ARG VITE_ENCRYPTION_SECRET
+ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET:?VITE_ENCRYPTION_SECRET build arg is required}
 ENV VITE_BASE=/webapp/
 COPY shared-ui/ ./shared-ui/
 COPY apps/ui/ ./apps/ui/
@@ -128,6 +128,12 @@ COPY --from=backend-build /app/node_modules ./node_modules
 
 # Copy system prompt for AI assistant
 COPY prompts/ ./prompts/
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 app && \
+    adduser --system --uid 1001 --ingroup app app && \
+    chown -R app:app /app
+USER app
 
 # Expose backend port
 EXPOSE 8445

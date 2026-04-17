@@ -57,10 +57,49 @@ AI_PROPOSE_RESPONSE_SCHEMA = {
 }
 
 
-def get_openai_payload_base(model: str = "gpt-5") -> Dict:
-    """Get base OpenAI API payload structure."""
+# === API Configuration ===
+# GitHub Models API (default) - uses GITHUB_TOKEN, no separate API key needed
+GITHUB_MODELS_BASE_URL = "https://models.github.ai/inference/chat/completions"
+GITHUB_MODELS_DEFAULT_MODEL = "openai/gpt-4.1"
+GITHUB_MODELS_API_VERSION = "2026-03-10"
+
+# Legacy OpenAI API (fallback)
+OPENAI_BASE_URL = "https://api.openai.com/v1/chat/completions"
+OPENAI_DEFAULT_MODEL = "gpt-5"
+
+
+def get_api_config() -> Dict:
+    """Determine which API to use based on available environment variables.
+    Priority: GITHUB_TOKEN (GitHub Models) > OPENAI_API_KEY (OpenAI direct)
+    """
+    import os
+    github_token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    openai_key = os.environ.get("OPENAI_API_KEY")
+    
+    if github_token:
+        return {
+            "provider": "github-models",
+            "api_key": github_token,
+            "base_url": GITHUB_MODELS_BASE_URL,
+            "model": os.environ.get("AI_MODEL", GITHUB_MODELS_DEFAULT_MODEL),
+        }
+    elif openai_key:
+        return {
+            "provider": "openai",
+            "api_key": openai_key,
+            "base_url": OPENAI_BASE_URL,
+            "model": os.environ.get("AI_MODEL", OPENAI_DEFAULT_MODEL),
+        }
+    else:
+        return None
+
+
+def get_openai_payload_base(model: str = None) -> Dict:
+    """Get base API payload structure (OpenAI-compatible for both providers)."""
+    config = get_api_config()
+    resolved_model = model or (config["model"] if config else GITHUB_MODELS_DEFAULT_MODEL)
     return {
-        "model": model,
+        "model": resolved_model,
         "messages": [],  # To be filled by caller
         "response_format": {
             "type": "json_schema",
@@ -73,17 +112,33 @@ def get_openai_payload_base(model: str = "gpt-5") -> Dict:
     }
 
 
-def get_propose_payload_base(model: str = "gpt-5") -> Dict:
-    """Get base OpenAI API payload structure for propose step."""
+def get_propose_payload_base(model: str = None) -> Dict:
+    """Get base API payload structure for propose step."""
     return get_openai_payload_base(model)
 
 
-def get_common_headers(api_key: str) -> Dict:
-    """Get common headers for OpenAI API requests."""
-    return {
+def get_common_headers(api_key: str = None) -> Dict:
+    """Get common headers for API requests. Auto-detects provider."""
+    config = get_api_config()
+    resolved_key = api_key or (config["api_key"] if config else "")
+    
+    headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
+        "Authorization": f"Bearer {resolved_key}"
     }
+    
+    # Add GitHub-specific headers when using GitHub Models
+    if config and config["provider"] == "github-models":
+        headers["Accept"] = "application/vnd.github+json"
+        headers["X-GitHub-Api-Version"] = GITHUB_MODELS_API_VERSION
+    
+    return headers
+
+
+def get_base_url() -> str:
+    """Get the API base URL based on available credentials."""
+    config = get_api_config()
+    return config["base_url"] if config else GITHUB_MODELS_BASE_URL
 
 
 def create_system_message(component: Literal["frontend", "backend"], 

@@ -40,10 +40,10 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     outputs:
-      backend_success: ${{ steps.backend-build.outcome == 'success' }}
-      frontend_success: ${{ steps.frontend-build.outcome == 'success' }}
-      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
-      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      backend_success: ${{ steps.backend-build.outcome == 'success' || steps.backend-build-heal.outputs.fixed == 'true' }}
+      frontend_success: ${{ steps.frontend-build.outcome == 'success' || steps.frontend-build-heal.outputs.fixed == 'true' }}
+      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || steps.backend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || steps.frontend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
     
     steps:
     - name: Checkout repository
@@ -58,51 +58,125 @@ jobs:
         echo "📦 Installing all dependencies via workspace..."
         bun install
 
-    # Backend Build
+    # === BACKEND BUILD ===
     - name: Build Backend
       id: backend-build
+      continue-on-error: true
       run: |
         echo "🔨 Building backend..."
         cd backend
-        bun run build
+        bun run build 2>&1 | tee ../backend-build.log
+
+    - name: 🤖 Copilot Self-Heal (Backend Build)
+      id: backend-build-heal
+      if: ${{ steps.backend-build.outcome == 'failure' }}
+      uses: ./.github/actions/copilot-self-heal
+      with:
+        error-log: backend-build.log
+        phase: build
+        component: backend
+        app-id: ${{ secrets.APP_ID }}
+        app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+        retry-command: 'cd backend && bun run build'
+
+    - name: Fail if Backend Build Unresolved
+      if: ${{ steps.backend-build.outcome == 'failure' && steps.backend-build-heal.outputs.fixed != 'true' }}
+      run: |
+        echo "❌ Backend build failed and Copilot could not fix it"
+        exit 1
     
     - name: Generate Client APIs
       run: |
         echo "🔨 Generating client APIs..."
         bun run generate:ui
 
-    # Frontend Build  
+    # === FRONTEND BUILD ===
     - name: Build Frontend  
       id: frontend-build
+      continue-on-error: true
       env:
         TAILWIND_DISABLE_LIGHTNINGCSS: "1"
         VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
       run: |
         echo "🔨 Building frontend..."
         cd apps/ui
-        bun run build
+        bun run build 2>&1 | tee ../../frontend-build.log
 
-    # Backend Tests
+    - name: 🤖 Copilot Self-Heal (Frontend Build)
+      id: frontend-build-heal
+      if: ${{ steps.frontend-build.outcome == 'failure' }}
+      uses: ./.github/actions/copilot-self-heal
+      with:
+        error-log: frontend-build.log
+        phase: build
+        component: frontend
+        app-id: ${{ secrets.APP_ID }}
+        app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+        retry-command: 'cd apps/ui && bun run build'
+
+    - name: Fail if Frontend Build Unresolved
+      if: ${{ steps.frontend-build.outcome == 'failure' && steps.frontend-build-heal.outputs.fixed != 'true' }}
+      run: |
+        echo "❌ Frontend build failed and Copilot could not fix it"
+        exit 1
+
+    # === BACKEND TESTS ===
     - name: Test Backend
       if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
       id: backend-test
-      continue-on-error: ${{ !inputs.fail_on_test_failure }}
+      continue-on-error: true
       run: |
         echo "🧪 Testing backend..."
         cd backend
-        bun run test
+        bun run test 2>&1 | tee ../backend-test.log
 
-    # Frontend Tests
+    - name: 🤖 Copilot Self-Heal (Backend Tests)
+      id: backend-test-heal
+      if: ${{ (inputs.run_tests == true || inputs.run_tests == null) && steps.backend-test.outcome == 'failure' }}
+      uses: ./.github/actions/copilot-self-heal
+      with:
+        error-log: backend-test.log
+        phase: test
+        component: backend
+        app-id: ${{ secrets.APP_ID }}
+        app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+        retry-command: 'cd backend && bun run test'
+
+    - name: Fail if Backend Tests Unresolved
+      if: ${{ (inputs.run_tests == true || inputs.run_tests == null) && steps.backend-test.outcome == 'failure' && steps.backend-test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}
+      run: |
+        echo "❌ Backend tests failed and Copilot could not fix them"
+        exit 1
+
+    # === FRONTEND TESTS ===
     - name: Test Frontend
       if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
       id: frontend-test
-      continue-on-error: ${{ !inputs.fail_on_test_failure }}
+      continue-on-error: true
       env:
         TAILWIND_DISABLE_LIGHTNINGCSS: "1"
       run: |
         echo "🧪 Testing frontend..."
         cd apps/ui
-        bun run test
+        bun run test 2>&1 | tee ../../frontend-test.log
+
+    - name: 🤖 Copilot Self-Heal (Frontend Tests)
+      id: frontend-test-heal
+      if: ${{ (inputs.run_tests == true || inputs.run_tests == null) && steps.frontend-test.outcome == 'failure' }}
+      uses: ./.github/actions/copilot-self-heal
+      with:
+        error-log: frontend-test.log
+        phase: test
+        component: frontend
+        app-id: ${{ secrets.APP_ID }}
+        app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+        retry-command: 'cd apps/ui && bun run test'
+
+    - name: Fail if Frontend Tests Unresolved
+      if: ${{ (inputs.run_tests == true || inputs.run_tests == null) && steps.frontend-test.outcome == 'failure' && steps.frontend-test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}
+      run: |
+        echo "❌ Frontend tests failed and Copilot could not fix them"
+        exit 1
 
     - name: Upload Build Artifacts
       if: ${{ !startsWith(github.ref, 'refs/heads/dev/') }}
