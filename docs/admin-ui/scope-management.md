@@ -276,3 +276,12 @@ Common FHIR resources with scope support:
 4. **🔄 Continuous Improvement**: Iteratively improve processes
 
 The Scope Management system provides the foundation for secure, compliant, and efficient data access control within the SMART on FHIR healthcare ecosystem.
+
+## Related Sub-Tabs
+
+The **SMART Config** page in the admin UI contains three sub-tabs:
+
+- **Scopes** — Scope configuration (documented above)
+- **Launch Context** — Per-user SMART launch context management. See the dedicated [Launch Context](launch-context) page.
+- **Protocol Mappers** — Diagnostic view and repair tool for SMART scope protocol mappers in Keycloak. Lists all configured mappers, detects issues, and provides a one-click fix action via `POST /admin/scope-mappers/fix`.
+

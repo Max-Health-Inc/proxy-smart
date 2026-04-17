@@ -8,6 +8,9 @@ Proxy Smart includes a comprehensive monitoring system covering OAuth flows, FHI
 |-----------|--------|-------------|----------------|-----------|
 | **OAuth** | `/monitoring/oauth` | 2 (events, analytics) | 5 | `logs/oauth-metrics/` |
 | **FHIR Health** | `/monitoring/fhir` | 2 (checks, summaries) | 2 | `logs/fhir-health/` |
+| **FHIR Proxy** | `/monitoring/fhir-proxy` | 2 (events, analytics) | 2 | — |
+| **Auth Events** | `/monitoring/auth` | 2 (events, analytics) | 2 | — |
+| **Email Events** | `/monitoring/email` | 2 (events, analytics) | 2 | — |
 | **Consent** | `/monitoring/consent` | 2 (events, analytics) | 3 | `logs/consent-metrics/` |
 | **Admin Audit** | `/monitoring/admin-audit` | 2 (events, analytics) | 3 | `logs/admin-audit/` |
 | **System Status** | `/health`, `/status` | — | 2 | `logs/keycloak/` |
@@ -20,12 +23,14 @@ The **Monitoring** tab in the admin dashboard is a tabbed container with:
 
 | Tab | Content |
 |-----|---------|
-| **Overview** | OAuth flow summary stats + FHIR server uptime widget |
-| **OAuth Flows** | Live event table from the OAuth SSE stream |
-| **Analytics** | Charts with predictive insights and weekday breakdowns |
-| **Door Access** | Physical access events (from access control) |
+| **Dashboard** | OAuth flow summary stats + FHIR server uptime widget |
+| **FHIR Proxy** | Proxied FHIR request metrics — throughput, response times, error rates by server and resource type |
+| **OAuth** | Live OAuth event table and analytics charts with predictive insights |
+| **Auth** | Keycloak authentication events (logins, failures, session activity) |
+| **Email** | Email delivery events from Keycloak (verification, password reset) |
+| **Door Access** | Physical access events from Kisi/UniFi access control integrations |
 | **Consent** | Consent decision monitoring dashboard |
-| **Audit Log** | Admin audit event log with filtering |
+| **Audit Log** | Admin audit event log with filtering and JSONL export |
 
 FHIR server health is also shown on the main **Dashboard** page as a status card.
 
@@ -103,6 +108,49 @@ Background poller that checks all configured FHIR servers every 30 seconds.
 ### Memory Limits
 
 Ring buffer holds 2,880 entries per server (~24 hours at 30-second intervals).
+
+## FHIR Proxy Monitoring
+
+Tracks all proxied FHIR requests with per-request metrics.
+
+### Endpoints — `/monitoring/fhir-proxy`
+
+| Method | Path | Type | Description |
+|--------|------|------|-------------|
+| `GET` | `/events/stream` | SSE | Real-time proxied request events |
+| `GET` | `/analytics/stream` | SSE | Real-time analytics updates |
+| `GET` | `/events` | REST | Query proxied request events |
+| `GET` | `/analytics` | REST | Analytics snapshot (throughput, response times, errors) |
+
+### Tracked Fields
+
+Each proxied request logs: server name, HTTP method, resource path, resource type, status code, response time (ms), client ID, and error details (if any).
+
+## Auth Event Monitoring
+
+Polls Keycloak authentication events (login, logout, session expiry, failed attempts) every 60 seconds.
+
+### Endpoints — `/monitoring/auth`
+
+| Method | Path | Type | Description |
+|--------|------|------|-------------|
+| `GET` | `/events/stream` | SSE | Real-time auth events |
+| `GET` | `/analytics/stream` | SSE | Real-time analytics updates |
+| `GET` | `/events` | REST | Query auth events |
+| `GET` | `/analytics` | REST | Analytics snapshot |
+
+## Email Event Monitoring
+
+Polls Keycloak email delivery events (verification emails, password resets, account notifications) every 60 seconds.
+
+### Endpoints — `/monitoring/email`
+
+| Method | Path | Type | Description |
+|--------|------|------|-------------|
+| `GET` | `/events/stream` | SSE | Real-time email events |
+| `GET` | `/analytics/stream` | SSE | Real-time analytics updates |
+| `GET` | `/events` | REST | Query email events |
+| `GET` | `/analytics` | REST | Analytics snapshot |
 
 ## Consent Monitoring
 
