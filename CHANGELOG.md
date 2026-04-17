@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171933.12fa631a] - 2026-04-17
+
+- ✨ Features
+  - Monitoring: New MonitoringDashboard UI scaffolding with types, charts, and analytics (UI core monitoring experience)
+
+- 🔧 Chores & Improvements
+  - Core: FHIR clients extended with DTR/PAS types and exports (major typing refactor)
+  - UI/UX: Replaced empty-state blocks with reusable EmptyState component across multiple components; introduced centralized LoadingButton and SearchInput for consistent loading states and search functionality; UI paddings and sizes adjusted in various dashboards
+  - Admin/Backend: Added new admin route and schemas to support CIMD client policies; CIMD enabled in Keycloak build and startup (kc.sh features) with updated Docker configurations
+  - Versioning: Version bumps across multiple apps/packages to 0.0.6-alpha.202604171839.cb1b0696 / 0.0.6-alpha.202604171933.12fa631a
+
+- 📚 Documentation
+  - (No user-facing docs changes detected)
+
+- ⚠️ Breaking Changes
+  - (None detected)
+
+Notes:
+- Update commits without meaningful user-facing changes have been skipped.
+- Merge/metadata-only commits skipped.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/434
+
+
 ## [0.0.6-alpha.202604171930.9e5cf48d] - 2026-04-17
 
 - ✨ Features
