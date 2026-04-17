@@ -453,6 +453,90 @@ async function ensureOrganizationsEnabled(): Promise<void> {
 }
 
 /**
+ * Required custom user-profile attributes for SMART on FHIR.
+ * Keycloak 26+ Declarative User Profile silently drops undeclared attributes,
+ * so every custom attribute we store must be listed here.
+ */
+const REQUIRED_USER_ATTRIBUTES = [
+  { name: 'fhirUser', displayName: 'FHIR User Reference', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'smart_patient', displayName: 'SMART Patient Context', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'smart_encounter', displayName: 'SMART Encounter Context', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'fhir_persons', displayName: 'FHIR Person Associations', permissions: { view: ['admin'], edit: ['admin'] }, multivalued: false },
+  { name: 'organization', displayName: 'Organization', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'lastLogin', displayName: 'Last Login', permissions: { view: ['admin'], edit: ['admin'] }, multivalued: false },
+]
+
+/**
+ * Ensure Keycloak User Profile has all required custom attributes declared.
+ * Keycloak 26+ with Declarative User Profile silently drops undeclared
+ * attributes on user updates, so every custom attribute must be registered.
+ * This is idempotent — safe to call on every startup.
+ */
+async function ensureUserProfileAttributes(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping user-profile check — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    // GET /admin/realms/{realm}/users/profile
+    const profileUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/users/profile`
+    const token = await admin.getAccessToken()
+    const res = await fetch(profileUrl, {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    })
+    if (!res.ok) {
+      logger.keycloak.warn(`Could not read user profile (${res.status}) — skipping`)
+      return
+    }
+
+    const profile = await res.json() as { attributes: Array<{ name: string; [k: string]: unknown }>; groups?: unknown[] }
+    const existingNames = new Set(profile.attributes.map((a: { name: string }) => a.name))
+
+    const missing = REQUIRED_USER_ATTRIBUTES.filter(a => !existingNames.has(a.name))
+    if (missing.length === 0) {
+      logger.keycloak.info('✅ User Profile already has all required attributes')
+      return
+    }
+
+    // Append missing attributes
+    profile.attributes.push(...missing)
+
+    const putRes = await fetch(profileUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(profile),
+    })
+
+    if (!putRes.ok) {
+      const body = await putRes.text()
+      logger.keycloak.warn(`Failed to update user profile (${putRes.status}): ${body}`)
+      return
+    }
+
+    logger.keycloak.info(`✅ User Profile updated — added ${missing.map(a => a.name).join(', ')}`)
+  } catch (error) {
+    logger.keycloak.warn('Could not auto-update User Profile attributes', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Initialize all server components (Keycloak + FHIR servers)
  */
 export async function initializeServer(): Promise<void> {
@@ -480,6 +564,9 @@ export async function initializeServer(): Promise<void> {
 
       // Ensure Keycloak Organizations feature is enabled on the realm
       await ensureOrganizationsEnabled()
+
+      // Ensure User Profile has all custom SMART attributes declared (KC 26+ requirement)
+      await ensureUserProfileAttributes()
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')

@@ -225,3 +225,9 @@ Detailed permissions grid covering:
 4. **Incident Response**: Have procedures for security events
 
 The User Management system provides the foundation for secure, compliant, and efficient healthcare user administration within the SMART on FHIR ecosystem.
+
+## User Federation (LDAP)
+
+The Users page includes a **User Federation** sub-tab for managing LDAP directory connections. This allows importing and synchronizing users from enterprise directories (Active Directory, OpenLDAP, etc.) into Keycloak.
+
+See the dedicated [User Federation](user-federation) page for full documentation on LDAP provider configuration, sync operations, and attribute mapping.
