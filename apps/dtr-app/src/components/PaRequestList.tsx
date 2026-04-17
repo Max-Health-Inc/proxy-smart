@@ -5,10 +5,8 @@ import type { ReviewAction } from "hl7.fhir.us.davinci-pas-generated"
 import { getX12278DiagnosisTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278DiagnosisType"
 import { getPASTaskCodesConcept, type PASTaskCodesCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes"
 import { getPASSupportingInfoTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASSupportingInfoType"
+import { type ClaimProcessingCodesCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-ClaimProcessingCodes"
 import { type HrexTaskStatusCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-HrexTaskStatus"
-
-/** Standard FHIR remittance-outcome codes (not PAS-specific, so not in the generated package) */
-type ClaimProcessingCodesCode = "queued" | "complete" | "error" | "partial"
 import { format } from "date-fns"
 import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Paperclip, Info } from "lucide-react"
 
