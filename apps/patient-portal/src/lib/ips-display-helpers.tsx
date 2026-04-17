@@ -1,13 +1,13 @@
 import type { AllergyIntoleranceCriticalityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyIntoleranceCriticality"
 import type { AllergyIntoleranceCategoryCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyIntoleranceCategory"
-import type { AllergyIntoleranceSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyIntoleranceSeverity"
+import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
 import type { EventStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-EventStatus"
-import type { ObservationInterpretationCodesCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationInterpretationCodes"
-import type { DeviceUseStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceUseStatementStatus"
-import type { ConditionDiagnosisSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionDiagnosisSeverity"
+import type { ObservationInterpretationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationInterpretation"
+import type { DeviceStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceStatementStatus"
+import type { ConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
 
 // Re-export types used in consumers
-export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, AllergyIntoleranceSeverityCode, EventStatusCode, ObservationInterpretationCodesCode, DeviceUseStatementStatusCode, ConditionDiagnosisSeverityCode }
+export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, ReactionEventSeverityCode, EventStatusCode, ObservationInterpretationCode, DeviceStatementStatusCode, ConditionSeverityCode }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyResource = Record<string, any>
@@ -54,7 +54,7 @@ export const categoryEmoji: Record<AllergyIntoleranceCategoryCode, string> = {
 
 // ── Reaction severity ────────────────────────────────────────────────────────
 
-export const severityStyles: Record<AllergyIntoleranceSeverityCode, { label: string; className: string }> = {
+export const severityStyles: Record<ReactionEventSeverityCode, { label: string; className: string }> = {
   severe: { label: "Severe", className: "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/20" },
   moderate: { label: "Moderate", className: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/20" },
   mild: { label: "Mild", className: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20" },
@@ -73,7 +73,7 @@ const interpretationFlags: Record<string, { label: string; className: string }> 
 }
 
 export function getInterpretationFlag(obs: AnyResource): { label: string; className: string } | undefined {
-  const code = obs.interpretation?.[0]?.coding?.[0]?.code as ObservationInterpretationCodesCode | undefined
+  const code = obs.interpretation?.[0]?.coding?.[0]?.code as ObservationInterpretationCode | undefined
   return code ? interpretationFlags[code] : undefined
 }
 
@@ -90,7 +90,7 @@ export function getProcedureStatusStyle(status: EventStatusCode): "default" | "s
 
 // ── Device use status ────────────────────────────────────────────────────────
 
-export function getDeviceStatusStyle(status: DeviceUseStatementStatusCode): "default" | "secondary" | "destructive" | "outline" {
+export function getDeviceStatusStyle(status: DeviceStatementStatusCode): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case "active": return "default"
     case "completed": return "secondary"
@@ -102,7 +102,7 @@ export function getDeviceStatusStyle(status: DeviceUseStatementStatusCode): "def
 
 // ── Condition severity ───────────────────────────────────────────────────────
 
-export const conditionSeverityStyles: Record<ConditionDiagnosisSeverityCode, { label: string; variant: "destructive" | "secondary" | "outline" }> = {
+export const conditionSeverityStyles: Record<ConditionSeverityCode, { label: string; variant: "destructive" | "secondary" | "outline" }> = {
   24484000: { label: "Severe", variant: "destructive" },
   6736007: { label: "Moderate", variant: "secondary" },
   255604002: { label: "Mild", variant: "outline" },

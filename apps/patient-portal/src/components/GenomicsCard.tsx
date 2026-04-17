@@ -8,7 +8,7 @@ import type {
   DiagnosticImplication,
   TherapeuticImplication,
 } from "@/lib/fhir-client"
-import type { DiagnosticReportStatusUvIpsCode as DiagnosticReportStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
+import type { DiagnosticReportStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
 
 // ── LOINC component code helpers ────────────────────────────────────────────
 
@@ -216,8 +216,8 @@ export function GenomicsCard({
                         <span className="font-medium">
                           {r.code?.coding?.[0]?.display || "Genomic Report"}
                         </span>
-                        {r.status && (r.status as DiagnosticReportStatusCode) !== ("final" satisfies DiagnosticReportStatusCode) && (
-                          <Badge variant={(r.status as DiagnosticReportStatusCode) === ("cancelled" satisfies DiagnosticReportStatusCode) ? "destructive" : "outline"} className="text-xs">
+                        {r.status && (r.status as DiagnosticReportStatusUvIpsCode) !== ("final" satisfies DiagnosticReportStatusUvIpsCode) && (
+                          <Badge variant={(r.status as DiagnosticReportStatusUvIpsCode) === ("cancelled" satisfies DiagnosticReportStatusUvIpsCode) ? "destructive" : "outline"} className="text-xs">
                             {r.status}
                           </Badge>
                         )}

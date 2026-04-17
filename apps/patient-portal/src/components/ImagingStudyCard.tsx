@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/sh
 import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X } from "lucide-react"
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"
-import type { ImagingStudy as FhirImagingStudy } from "fhir/r4"
-type ImagingStudyStatusCode = FhirImagingStudy["status"]
+import type { ImagingStudyStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImagingStudyStatusUvIps"
 import {
   getStudyInstanceUID,
   getStudyThumbnailUrl,
@@ -115,9 +114,9 @@ function StudyRow({
                 {modalityInfo.emoji} {modalityInfo.label}
               </Badge>
             )}
-            {study.status && (study.status as ImagingStudyStatusCode) !== ("available" satisfies ImagingStudyStatusCode) && (
+            {study.status && (study.status as ImagingStudyStatusUvIpsCode) !== ("available" satisfies ImagingStudyStatusUvIpsCode) && (
               <Badge
-                variant={(study.status as ImagingStudyStatusCode) === ("cancelled" satisfies ImagingStudyStatusCode) ? "destructive" : "outline"}
+                variant={(study.status as ImagingStudyStatusUvIpsCode) === ("cancelled" satisfies ImagingStudyStatusUvIpsCode) ? "destructive" : "outline"}
                 className="shrink-0"
               >
                 {study.status}
