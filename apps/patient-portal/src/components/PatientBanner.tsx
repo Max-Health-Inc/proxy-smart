@@ -39,7 +39,9 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
               <span>{format(birthDate, "MMM d, yyyy")}{age !== null && ` (${age} years)`}</span>
             )}
             {patient.gender && <Badge variant="outline">{(patient.gender as AdministrativeGenderCode)}</Badge>}
-            {genderIdentity && <Badge variant="outline">{genderIdentity}</Badge>}
+            {genderIdentity && genderIdentity.toLowerCase() !== patient.gender?.toLowerCase() && (
+              <Badge variant="outline">{genderIdentity}</Badge>
+            )}
             {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
             {patient.identifier?.[0]?.value && (
               <span className="font-mono text-xs">MRN: {patient.identifier[0].value}</span>
