@@ -101,34 +101,19 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
       signal: controller.signal,
     })
 
-    // Copy status
-    set.status = resp.status
-
-    // Copy relevant response headers (content-type is critical for multipart DICOM)
-    const passthroughHeaders = ['content-type', 'content-length', 'content-disposition', 'etag', 'transfer-encoding']
-    for (const h of passthroughHeaders) {
-      const v = resp.headers.get(h)
-      if (v) set.headers = { ...set.headers, [h]: v }
-    }
-
-    const contentType = resp.headers.get('content-type') || ''
-
-    // For JSON responses (QIDO-RS metadata), parse and return as object
-    if (contentType.includes('json')) {
-      const text = await resp.text()
-      try {
-        return JSON.parse(text)
-      } catch {
-        return text
-      }
-    }
-
-    // For binary/multipart responses (WADO-RS pixel data, rendered images),
-    // return raw bytes so Elysia sends them as-is
+    // Return a raw Response to preserve the exact content-type from the PACS
+    // (e.g. application/dicom+json, multipart/related).
+    // Returning a plain JS object would let Elysia re-serialize with
+    // application/json, breaking Cornerstone3D's WADO-RS metadata parser.
     const buffer = await resp.arrayBuffer()
+    const responseHeaders = new Headers()
+    for (const h of ['content-type', 'content-disposition', 'etag']) {
+      const v = resp.headers.get(h)
+      if (v) responseHeaders.set(h, v)
+    }
     return new Response(buffer, {
       status: resp.status,
-      headers: { 'content-type': contentType },
+      headers: responseHeaders,
     })
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
