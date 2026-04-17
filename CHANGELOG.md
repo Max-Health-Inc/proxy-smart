@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170317.c528b329] - 2026-04-17
+
+- 🔧 Chores & Improvements: Version bumps across apps to 0.0.5-alpha.202604170317.c528b329
+- 🔧 Chores & Improvements: Update dependencies and lockfiles to reference new alpha version
+- 🐛 Bug Fixes: Align ImagingStudy status typing with FHIR R4 and adjust ImagingStudy status retrieval
+- 🐛 Bug Fixes: Replace DiagnosticReportStatus code import with new alias (DiagnosticReportStatusUvIpsCode) in GenomicsCard and fhir-client
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/413
+
+
 ## [0.0.5-alpha.202604170307.f3dce54b] - 2026-04-17
 
 - 🔧 Chores & Improvements: Bump version fields across all apps to 0.0.5-alpha.202604170307.f3dce54b; update backend E2E tests to reference dynamic config.name in routes/constants.
