@@ -4,6 +4,7 @@ import { attemptTokenRefresh } from './tokenRefresh';
 import {
   AdminApi,
   AiToolsApi,
+  AppStoreApi,
   AuthenticationApi,
   FhirMonitoringApi,
   HealthcareUsersApi,
@@ -107,6 +108,7 @@ const createConfig = (token?: string) => {
 
 // Create individual client APIs
 export const createAdminApi = (token?: string) => new AdminApi(createConfig(token));
+export const createAppStoreApi = (token?: string) => new AppStoreApi(createConfig(token));
 export const createAuthApi = (token?: string) => new AuthenticationApi(createConfig(token));
 export const createHealthcareUsersApi = (token?: string) => new HealthcareUsersApi(createConfig(token));
 export const createIdentityProvidersApi = (token?: string) => new IdentityProvidersApi(createConfig(token));
@@ -164,6 +166,7 @@ const wrapApiClient = <T extends object>(client: T): T => {
 export const createClientApis = (token?: string) => ({
   admin: wrapApiClient(createAdminApi(token)),
   aiTools: wrapApiClient(createAiToolsApi(token)),
+  appStore: wrapApiClient(createAppStoreApi(token)),
   auth: wrapApiClient(createAuthApi(token)),
   fhirMonitoring: wrapApiClient(createFhirMonitoringApi(token)),
   healthcareUsers: wrapApiClient(createHealthcareUsersApi(token)),

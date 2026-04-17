@@ -9,6 +9,8 @@
 
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { join } from 'path'
+import { existsSync, readFileSync } from 'fs'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
@@ -287,7 +289,33 @@ function brandToAttributes(settings: BrandConfigType): Record<string, string> {
 }
 
 /**
+ * Auto-detect patient portal metadata from the deployed patient-portal app.
+ * Reads public/apps/patient-portal/smart-manifest.json if present and derives
+ * portalName, portalUrl, and portalDescription for brand configuration.
+ */
+let patientPortalCache: { portalName: string; portalUrl: string; portalDescription: string } | null | undefined
+
+function detectPatientPortal() {
+  if (patientPortalCache !== undefined) return patientPortalCache
+  try {
+    const manifestPath = join(process.cwd(), 'public', 'apps', 'patient-portal', 'smart-manifest.json')
+    if (!existsSync(manifestPath)) { patientPortalCache = null; return null }
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+    patientPortalCache = {
+      portalName: manifest.client_name || 'Patient Portal',
+      portalUrl: `${config.baseUrl}/apps/patient-portal/`,
+      portalDescription: manifest.description || null,
+    }
+    return patientPortalCache
+  } catch {
+    patientPortalCache = null
+    return null
+  }
+}
+
+/**
  * Get effective brand config: realm attribute overrides merged over env vars.
+ * Portal fields auto-populate from the deployed patient-portal app when unset.
  */
 export function getRuntimeBrandConfig(): BrandConfigType {
   const envDefaults: BrandConfigType = {
@@ -309,9 +337,19 @@ export function getRuntimeBrandConfig(): BrandConfigType {
     identifier: config.brand.identifier,
   }
 
-  if (!brandOverrides) return envDefaults
+  const merged = !brandOverrides ? envDefaults : { ...envDefaults, ...brandOverrides }
 
-  return { ...envDefaults, ...brandOverrides }
+  // Auto-fill portal fields from deployed patient-portal app when unset
+  if (!merged.portalName && !merged.portalUrl) {
+    const portal = detectPatientPortal()
+    if (portal) {
+      merged.portalName = merged.portalName || portal.portalName
+      merged.portalUrl = merged.portalUrl || portal.portalUrl
+      merged.portalDescription = merged.portalDescription || portal.portalDescription
+    }
+  }
+
+  return merged
 }
 
 /**

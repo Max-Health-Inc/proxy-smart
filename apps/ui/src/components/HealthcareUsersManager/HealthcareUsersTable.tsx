@@ -106,9 +106,11 @@ export function HealthcareUsersTable({
           <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
             <Users className="w-6 h-6 text-primary" />
           </div>
+          <div>
             <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Healthcare Users')}</h3>
             <p className="text-muted-foreground font-medium">{t('View and manage all healthcare professionals and administrative users')}</p>
           </div>
+        </div>
         </div>
         
         <div className="overflow-x-auto">
@@ -255,7 +257,6 @@ export function HealthcareUsersTable({
             </TableBody>
           </Table>
         </div>
-      </div>
     </div>
   );
 }
