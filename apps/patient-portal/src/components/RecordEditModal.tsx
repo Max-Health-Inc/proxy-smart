@@ -175,7 +175,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         updated = markAsPendingReview(updated)
       }
 
-      const result = await updateResource(updated)
+      const result = await updateResource(updated as { resourceType: string; id?: string })
       onSaved(result)
       onOpenChange(false)
     } catch (err) {

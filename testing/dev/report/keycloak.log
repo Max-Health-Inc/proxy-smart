@@ -1,1 +1,4 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
+2026-04-17 05:19:32,105 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8556ms
+Running the server in development mode. DO NOT use this configuration in production.
+2026-04-17 05:19:35,878 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
