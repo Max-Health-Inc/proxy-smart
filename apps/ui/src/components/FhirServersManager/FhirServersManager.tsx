@@ -16,6 +16,7 @@ import { getStoredToken } from '@/lib/apiClient';
 import type { 
   FhirServerWithState
 } from '@/lib/types/api';
+import type { MtlsConfig } from './types';
 
 // Imported extracted components
 import { StatsCards } from './StatsCards';
@@ -25,21 +26,6 @@ import { AddServerDialog } from './AddServerDialog';
 import { EditServerDialog } from './EditServerDialog';
 import { MtlsConfigDialog } from './MtlsConfigDialog';
 import { useTranslation } from 'react-i18next';
-
-// mTLS Configuration type
-interface MtlsConfig {
-  enabled: boolean;
-  clientCert?: File;
-  clientKey?: File;
-  caCert?: File;
-  certDetails?: {
-    subject: string;
-    issuer: string;
-    validFrom: string;
-    validTo: string;
-    fingerprint: string;
-  };
-}
 
 export function FhirServersManager() {
   const { t } = useTranslation();

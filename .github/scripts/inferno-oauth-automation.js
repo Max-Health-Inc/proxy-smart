@@ -153,6 +153,96 @@ async function waitForTestResult(sessionId, runId, browser, page) {
   throw new Error('Test run timed out');
 }
 
+/**
+ * Handle intermediate Keycloak pages that may appear between login and redirect.
+ * These include: "Update Account Information", OAuth consent grant, error pages.
+ */
+async function handleKeycloakInterstitials(page) {
+  const maxAttempts = 3;
+  const infernoHost = new URL(INFERNO_URL).host;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const currentUrl = page.url();
+
+    // Already redirected to Inferno — done
+    if (currentUrl.includes(infernoHost)) {
+      return;
+    }
+
+    // Not on a Keycloak page — nothing to handle
+    if (!currentUrl.includes('/auth/') && !currentUrl.includes('/realms/')) {
+      return;
+    }
+
+    const pageContent = await page.content();
+
+    // Handle "Update Account Information" required action
+    const hasUpdateProfile = pageContent.includes('Update Account Information') ||
+                              pageContent.includes('update-profile') ||
+                              pageContent.includes('required-action');
+    if (hasUpdateProfile) {
+      console.log('  Detected "Update Account Information" page — submitting...');
+      // Fill any empty required fields
+      const emailField = page.locator('#email, input[name="email"]');
+      if (await emailField.count() > 0 && !(await emailField.inputValue())) {
+        await emailField.fill(`${KC_USERNAME}@test.proxy-smart.com`);
+        console.log('  Filled email field');
+      }
+      const firstNameField = page.locator('#firstName, input[name="firstName"]');
+      if (await firstNameField.count() > 0 && !(await firstNameField.inputValue())) {
+        await firstNameField.fill('Test');
+        console.log('  Filled firstName field');
+      }
+      const lastNameField = page.locator('#lastName, input[name="lastName"]');
+      if (await lastNameField.count() > 0 && !(await lastNameField.inputValue())) {
+        await lastNameField.fill('User');
+        console.log('  Filled lastName field');
+      }
+      // Submit the form
+      const submitBtn = page.locator('button[type="submit"], input[type="submit"], #kc-update-profile-form button');
+      if (await submitBtn.count() > 0) {
+        await submitBtn.first().click();
+        console.log('  Clicked submit on Update Account Information');
+        await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+        continue; // Re-check for more interstitials
+      }
+    }
+
+    // Handle OAuth consent grant screen
+    const hasConsentPage = pageContent.includes('oauth-grant') ||
+                            pageContent.includes('Grant Access') ||
+                            pageContent.includes('grant access to') ||
+                            pageContent.includes('kc-oauth-grant');
+    if (hasConsentPage) {
+      console.log('  Detected OAuth consent page — approving...');
+      const yesBtn = page.locator('button:has-text("Yes"), input[name="accept"], #kc-login');
+      if (await yesBtn.count() > 0) {
+        await yesBtn.first().click();
+        console.log('  Clicked "Yes" on consent page');
+        await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+        continue;
+      }
+    }
+
+    // Handle Keycloak error page (wrong credentials, account disabled, etc.)
+    const hasError = pageContent.includes('kc-feedback-text') ||
+                      pageContent.includes('alert-error') ||
+                      pageContent.includes('Invalid username or password') ||
+                      pageContent.includes('Account is disabled');
+    if (hasError) {
+      const errorText = await page.locator('.kc-feedback-text, .alert-error, #input-error').first().textContent().catch(() => 'unknown');
+      console.error(`  Keycloak error detected: ${errorText.trim()}`);
+      throw new Error(`Keycloak login failed: ${errorText.trim()}`);
+    }
+
+    // No recognized interstitial — log and break
+    console.log(`  Post-login page not recognized (attempt ${i + 1}/${maxAttempts})`);
+    console.log(`  URL: ${currentUrl}`);
+    console.log(`  Page content (first 500 chars): ${pageContent.substring(0, 500)}`);
+    break;
+  }
+}
+
 async function handleOAuthFlow(page, authorizeUrl) {
   console.log('Handling OAuth flow...');
   console.log(`  Navigating to: ${authorizeUrl}`);
@@ -197,16 +287,34 @@ async function handleOAuthFlow(page, authorizeUrl) {
       // Click login button
       await page.click('#kc-login, button[type="submit"], input[type="submit"]');
       console.log('  Clicked login button');
-      
-      // Wait for redirect back to Inferno
+
+      // Wait for navigation after login (could be Inferno redirect OR an intermediate Keycloak page)
+      await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
       const infernoHost = new URL(INFERNO_URL).host;
-      await page.waitForURL(url => url.toString().includes(infernoHost), { timeout: 30000 });
+      const postLoginUrl = page.url();
+      console.log(`  Post-login URL: ${postLoginUrl}`);
+
+      // Handle intermediate Keycloak pages before expecting Inferno redirect
+      await handleKeycloakInterstitials(page);
+
+      // Now wait for redirect back to Inferno
+      if (!page.url().includes(infernoHost)) {
+        await page.waitForURL(url => url.toString().includes(infernoHost), { timeout: 30000 });
+      }
       console.log('  ✓ OAuth flow completed, redirected back to Inferno');
     } else {
       console.log(`  Not on Keycloak login page. Page title: ${await page.title()}`);
     }
   } catch (error) {
     console.error(`  OAuth flow error: ${error.message}`);
+    // Log page content for debugging
+    try {
+      const pageContent = await page.content();
+      const title = await page.title();
+      console.error(`  Page title: ${title}`);
+      console.error(`  Page URL: ${page.url()}`);
+      console.error(`  Page content (first 1000 chars): ${pageContent.substring(0, 1000)}`);
+    } catch (_) {}
     // Take screenshot for debugging
     try {
       await page.screenshot({ path: '/tmp/oauth-error.png' });

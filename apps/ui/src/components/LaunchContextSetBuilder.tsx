@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import type { ContextSet } from '@/lib/types/api';
 import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -42,16 +43,7 @@ const COMMON_SMART_SCOPES = [
   'launch/encounter'
 ];
 
-interface ContextSet {
-  id: string;
-  name: string;
-  description?: string;
-  contexts: string[];
-  category?: string;
-  createdAt: string;
-  updatedAt: string;
-  isTemplate: boolean;
-}
+
 
 interface LaunchContextSetBuilderProps {
   open: boolean;

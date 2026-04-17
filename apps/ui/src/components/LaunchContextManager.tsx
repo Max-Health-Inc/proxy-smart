@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { LaunchContextSetBuilder } from './LaunchContextSetBuilder';
 import { useLaunchContextSets } from '../stores/smartStore';
 import { useAuth } from '@/stores/authStore';
+import type { ContextSet } from '@/lib/types/api';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { StatCard } from '@/components/ui/stat-card';
 import {
@@ -145,16 +146,7 @@ const LAUNCH_CONTEXT_TEMPLATES = [
   }
 ];
 
-interface ContextSet {
-  id: string;
-  name: string;
-  description?: string;
-  contexts: string[];
-  category?: string;
-  createdAt: string;
-  updatedAt: string;
-  isTemplate: boolean;
-}
+
 
 interface LaunchContextUser {
   userId: string;

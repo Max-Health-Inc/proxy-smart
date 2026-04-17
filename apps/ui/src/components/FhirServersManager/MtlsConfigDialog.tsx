@@ -18,21 +18,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { FhirServerWithState } from '@/lib/types/api';
+import type { MtlsConfig } from './types';
 import { useTranslation } from 'react-i18next';
-
-interface MtlsConfig {
-  enabled: boolean;
-  clientCert?: File;
-  clientKey?: File;
-  caCert?: File;
-  certDetails?: {
-    subject: string;
-    issuer: string;
-    validFrom: string;
-    validTo: string;
-    fingerprint: string;
-  };
-}
 
 interface MtlsConfigDialogProps {
   open: boolean;
