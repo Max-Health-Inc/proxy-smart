@@ -277,6 +277,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         token_endpoint: oidcConfig.token_endpoint,
         jwks_uri: oidcConfig.jwks_uri,
         registration_endpoint: `${baseUrl}/auth/register`,
+        client_registration_types_supported: ['client_id_metadata_document', 'dynamic_client_registration'],
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,
