@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171839.cb1b0696] - 2026-04-17
+
+- ✨ Features
+  - CIMD: Enable in Keycloak build/startup (kc.sh build --features=cimd) and corresponding docker-compose/Dockerfile updates.
+  - UI/UX: Introduced centralized LoadingButton across dialogs/forms/dashboards; replaced inline loaders and spinners.
+  - UI/UX: Replaced many in-component buttons with LoadingButton, supporting loading state and status text.
+  - UI/UX: Introduced SearchInput component in multiple dashboards.
+
+- 🔧 Chores & Improvements
+  - UI/UX: Replaced inline icons/Loader2 with LoadingButton across modules; preserved disabled logic.
+  - UI/UX: Added/updated LoadingButton usage in numerous components (e.g., dialogs, dashboards, forms).
+  - UI/UX: UI refinements across several screens (empty-state improvements, paddings/sizes).
+  - MCP metadata: Added client_registration_types_supported for CIMD and DCR; minor metadata route adjustments.
+  - Backend/Frontend: HTML styling scaffold updates to reflect app presence.
+
+- 📚 Documentation
+  - Version bumps across apps/packages to 0.0.6-alpha.202604171839.cb1b0696.
+
+- ⚠️ Breaking Changes
+  - None detected.
+
+Notes:
+- No update-only, merge, or metadata commits included beyond the version bump; changes focused on feature adoption (CIMD enablement) and UI/UX improvements.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/431
+
+
 ## [0.0.6-alpha.202604171751.36bdde82] - 2026-04-17
 
 - 🔧 Chores & Improvements: General UI responsiveness improvements across AdminApp, Patient Portal, and shared UI components (layout/padding adjustments, responsive typography, and improved wrapping on small screens)
