@@ -11,6 +11,7 @@ import { useAppStore } from '../stores/appStore';
 import { LoginForm } from './LoginForm';
 import { cn } from '../lib/utils';
 import { AlertDialogs } from './AlertDialogs';
+import { NotificationToasts } from './ui/NotificationToast';
 import { AIChatOverlay } from './ai/AIChatOverlay';
 import { Panel } from './ui/panel';
 import { Button, Spinner } from '@proxy-smart/shared-ui';
@@ -176,6 +177,9 @@ export function AdminApp() {
 
             {/* Alert Dialogs */}
             <AlertDialogs />
+
+            {/* Global toast notifications */}
+            <NotificationToasts />
 
             {/* AI Chat Overlay - only show if AI Assistant is enabled */}
             {isAIAssistantEnabled && <AIChatOverlay />}

@@ -33,8 +33,8 @@ import { SmartAppsTable } from './SmartAppsTable';
 import { SmartAppsStatistics } from './SmartAppsStatistics';
 import { AppStoreManagement } from './AppStoreManagement';
 import { DynamicClientRegistrationSettings } from '../DynamicClientRegistrationSettings';
-import { NotificationToast } from '../ui/NotificationToast';
 import { useAuth } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
 import { getItem } from '@/lib/storage';
 import { createAuthenticatedClientApis } from '@/lib/apiClient';
@@ -56,10 +56,7 @@ export function SmartAppsManager() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editingApp, setEditingApp] = useState<SmartApp | null>(null);
-  const [notification, setNotification] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
+  const { notify } = useNotificationStore();
 
   // Load scope sets from ScopeManager
   useEffect(() => {
@@ -233,9 +230,9 @@ export function SmartAppsManager() {
         setIsAIAssistantEnabled(newEnabled);
       }
 
-      setNotification({
+      notify({
         type: 'success',
-        message: `Application "${app.name}" ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+        message: t('Application "{{name}}" {{action}} successfully', { name: app.name, action: newStatus === 'active' ? t('activated') : t('deactivated') })
       });
     } catch (error) {
       console.error('Failed to toggle app status:', error);
@@ -247,9 +244,9 @@ export function SmartAppsManager() {
           : a
       ));
 
-      setNotification({
+      notify({
         type: 'error',
-        message: `Failed to ${newStatus === 'active' ? 'activate' : 'deactivate'} application: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: t('Failed to {{action}} application: {{error}}', { action: newStatus === 'active' ? t('activate') : t('deactivate'), error: error instanceof Error ? error.message : 'Unknown error' })
       });
     }
   };
@@ -275,18 +272,18 @@ export function SmartAppsManager() {
       setApps(apps.filter(app => app.clientId !== editingApp.clientId));
       setBackendApps(backendApps.filter(app => app.clientId !== editingApp.clientId));
 
-      setNotification({
+      notify({
         type: 'success',
-        message: `Successfully deleted application "${editingApp.name}"`
+        message: t('Successfully deleted application "{{name}}"', { name: editingApp.name })
       });
       
       setShowDeleteDialog(false);
       setEditingApp(null);
     } catch (error) {
       console.error('Failed to delete app:', error);
-      setNotification({
+      notify({
         type: 'error',
-        message: `Failed to delete application: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: t('Failed to delete application: {{error}}', { error: error instanceof Error ? error.message : 'Unknown error' })
       });
     }
   };
@@ -294,7 +291,7 @@ export function SmartAppsManager() {
   return (
     <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {loading ? (
-        <PageLoadingState message="Loading SMART applications..." />
+        <PageLoadingState message={t('Loading SMART applications...')} />
       ) : (
         <>
           {/* Enhanced Header Section */}
@@ -566,7 +563,7 @@ export function SmartAppsManager() {
                 serverAccessType: 'all-servers',
               })));
             }
-            setNotification({ type: 'success', message: 'Application updated successfully' });
+            notify({ type: 'success', message: t('Application updated successfully') });
           }}
         />
       )}
@@ -804,14 +801,6 @@ export function SmartAppsManager() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Notification Toast */}
-      {notification && (
-        <NotificationToast
-          notification={notification}
-          onClose={() => setNotification(null)}
-        />
-      )}
               </TabsContent>
 
               <TabsContent value="registration" className="p-6 space-y-6">

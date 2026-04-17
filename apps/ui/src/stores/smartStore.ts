@@ -5,8 +5,9 @@ import { createAuthenticatedClientApis } from '@/lib/apiClient';
 import type { 
   FhirServerList,
   FhirServerListServersInner,
-  HealthcareUser 
+  HealthcareUser
 } from '@/lib/api-client';
+import type { ContextSet } from '@/lib/types/api';
 
 interface SmartState {
   // FHIR Servers
@@ -46,17 +47,7 @@ interface SmartState {
   isHealthcareUsersCacheValid: () => boolean;
 }
 
-// Launch Context Set interface
-interface ContextSet {
-  id: string;
-  name: string;
-  description?: string;
-  contexts: string[];
-  category?: string;
-  createdAt: string;
-  updatedAt: string;
-  isTemplate: boolean;
-}
+// ContextSet imported from @/lib/api-client
 
 // Cache duration: 5 minutes
 const CACHE_DURATION = 5 * 60 * 1000;

@@ -112,7 +112,7 @@ export function IALSettings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-card/80 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+      <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-violet-500/10 dark:bg-violet-400/20 rounded-xl flex items-center justify-center shadow-sm">

@@ -170,13 +170,13 @@ export function DynamicClientRegistrationSettings() {
   };
 
   if (loading) {
-    return <PageLoadingState message="Loading registration settings..." />;
+    return <PageLoadingState message={t('Loading registration settings...')} />;
   }
 
   return (
     <div className="space-y-8">
       {/* Header matching the app style */}
-      <div className="bg-card/80 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-lg">
+      <div className="bg-card/70 backdrop-blur-sm p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
           <div className="flex-1">
             <div className="flex items-center space-x-4 mb-4">
