@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604171601.38ae67c2] - 2026-04-17
+
+- ✨ Features: Version bump to 0.0.5-alpha.202604171601.38ae67c2 across multiple apps/packages (consent-app, dtr-app, patient-portal, smart-dicom-template, ui, testing/e2e) indicating pre-release readiness. Updated bun.lock to reflect new alpha versions.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/422
+
+
 ## [0.0.5-alpha.202604171542.4f5f6b30] - 2026-04-17
 
 - 🔧 Chores & Improvements: Internal type tightening and imports across UI and client code
