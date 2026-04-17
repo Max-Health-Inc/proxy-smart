@@ -13,7 +13,7 @@
     "preview": "vite preview --port 5176"
   },
   "dependencies": {
-    "@babelfhir-ts/dicomweb": "0.1.0",
+    "@babelfhir-ts/dicomweb": "0.1.1",
     "@cornerstonejs/core": "^4.21.2",
     "@cornerstonejs/dicom-image-loader": "^4.21.2",
     "@cornerstonejs/tools": "^4.21.2",

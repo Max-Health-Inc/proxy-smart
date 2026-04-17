@@ -3,7 +3,8 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X, ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react"
 import { Badge } from "@proxy-smart/shared-ui"
 import {
-  fetchSeriesImageIds,
+  initCornerstoneDicomweb,
+  getCornerstoneDicomweb,
   getAccessToken,
   getModalityInfo,
 } from "@/lib/dicomweb"
@@ -51,6 +52,9 @@ async function ensureCornerstoneInit() {
     },
   })
 
+  // Wire up the Cornerstone DICOMweb client (metadata caching + registration)
+  initCornerstoneDicomweb(loader)
+
   // Register tools
   tools.addTool(tools.StackScrollTool)
   tools.addTool(tools.WindowLevelTool)
@@ -91,9 +95,13 @@ function CornerstoneViewport({
         await ensureCornerstoneInit()
         if (cancelled || !csCore || !csTools || !elementRef.current) return
 
-        // Fetch imageIds for this series
-        const imageIds = await fetchSeriesImageIds(target.studyUID, target.seriesUID)
+        // Load series: fetches metadata, registers with Cornerstone, returns imageIds
+        const { imageIds, errors } = await getCornerstoneDicomweb().loadSeries(target.studyUID, target.seriesUID)
         if (cancelled) return
+
+        if (errors.length > 0) {
+          console.warn('DICOMweb loadSeries errors:', errors)
+        }
 
         if (imageIds.length === 0) {
           setError(t("dicomViewer.noImages"))
