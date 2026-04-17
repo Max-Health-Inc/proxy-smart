@@ -55,6 +55,7 @@ jobs:
   build-images:
     name: Build & Push Images
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
