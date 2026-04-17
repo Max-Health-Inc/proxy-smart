@@ -68,6 +68,7 @@ import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
 import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
 import { checkPacsStatus } from "@/lib/dicomweb"
+import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
   Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle,
   Cigarette, Wine, Scissors, Flag, Baby, Stethoscope, Laptop, Upload,
@@ -77,6 +78,7 @@ import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
 export function Dashboard() {
   const { t } = useTranslation()
+  const { translateCoding } = useFhirTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
@@ -254,9 +256,9 @@ export function Dashboard() {
                   return (
                   <li key={c.id || i} className="text-sm">
                     <RecordName resource={c} onOpen={openDetail}>
-                      {c.code?.coding?.[0]?.display || c.code?.text || t("dashboard.unknownCondition")}
+                      {translateCoding(c.code?.coding?.[0]) || c.code?.text || t("dashboard.unknownCondition")}
                     </RecordName>
-                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{t(`conditionSeverity.${sev.label.toLowerCase()}`)}</Badge>}
+                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{t(sev.i18nKey)}</Badge>}
                     {c.onsetDateTime && (
                       <span className="text-muted-foreground ml-2">
                         {t("common.since", { date: format(new Date(c.onsetDateTime), "MMM yyyy") })}
@@ -291,14 +293,14 @@ export function Dashboard() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {cat && categoryEmoji[cat] && <span title={cat}>{categoryEmoji[cat]}</span>}
                         <RecordName resource={a} onOpen={openDetail}>
-                          {a.code?.coding?.[0]?.display || a.code?.text || t("dashboard.unknownAllergen")}
+                          {translateCoding(a.code?.coding?.[0]) || a.code?.text || t("dashboard.unknownAllergen")}
                         </RecordName>
-                        {crit && <Badge variant={crit.variant} className="text-xs">{crit.label}</Badge>}
+                        {crit && <Badge variant={crit.variant} className="text-xs">{t(crit.i18nKey)}</Badge>}
                       </div>
                       {a.reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display && (
                         <span className="text-muted-foreground ml-2">
                           — {a.reaction[0].manifestation[0].coding[0].display}
-                          {sev && <Badge variant="outline" className={`ml-1 text-xs ${sev.className}`}>{sev.label}</Badge>}
+                          {sev && <Badge variant="outline" className={`ml-1 text-xs ${sev.className}`}>{t(sev.i18nKey)}</Badge>}
                         </span>
                       )}
                     </li>
@@ -389,7 +391,7 @@ export function Dashboard() {
                 {vitals.slice(0, 10).map((v, i) => (
                   <li key={v.id || i} className="text-sm flex justify-between">
                     <RecordName resource={v} onOpen={openDetail}>
-                      {v.code?.coding?.[0]?.display || v.code?.text || "Unknown"}
+                      {translateCoding(v.code?.coding?.[0]) || v.code?.text || t("common.unknown")}
                     </RecordName>
                     <span className="text-muted-foreground">
                       {v.valueQuantity
@@ -422,11 +424,11 @@ export function Dashboard() {
                   return (
                     <li key={l.id || i} className="text-sm flex justify-between">
                       <RecordName resource={l} onOpen={openDetail}>
-                        {l.code?.coding?.[0]?.display || l.code?.text || "Unknown"}
+                        {translateCoding(l.code?.coding?.[0]) || l.code?.text || t("common.unknown")}
                       </RecordName>
                       <span className="flex items-center gap-1.5 whitespace-nowrap">
                         {interp && (
-                          <span className={`text-xs font-medium ${interp.className}`}>{interp.label}</span>
+                          <span className={`text-xs font-medium ${interp.className}`}>{t(interp.i18nKey)}</span>
                         )}
                         <span className="text-muted-foreground">
                           {l.valueQuantity

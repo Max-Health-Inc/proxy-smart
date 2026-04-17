@@ -103,12 +103,12 @@ function extractClinicalStatus(r: FhirResource): { code: ConditionClinicalCode |
   return { code, display }
 }
 
-const SEVERITY_LABELS: Record<string, string> = { "24484000": "Severe", "6736007": "Moderate", "255604002": "Mild" }
+const SEVERITY_I18N_KEYS: Record<string, string> = { "24484000": "conditionSeverity.severe", "6736007": "conditionSeverity.moderate", "255604002": "conditionSeverity.mild" }
 
-function extractSeverity(r: FhirResource): string | undefined {
+function extractSeverity(r: FhirResource, t: (key: string) => string): string | undefined {
   const sev = r.severity?.coding?.[0]?.code
   if (!sev) return undefined
-  if (isValidConditionSeverityCode(sev)) return SEVERITY_LABELS[sev] ?? sev
+  if (isValidConditionSeverityCode(sev)) return SEVERITY_I18N_KEYS[sev] ? t(SEVERITY_I18N_KEYS[sev]) : sev
   return r.severity?.coding?.[0]?.display ?? r.severity?.text ?? sev
 }
 
@@ -171,7 +171,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
   const performer = extractPerformer(resource)
   const verification = extractVerificationStatus(resource)
   const clinicalStatus = extractClinicalStatus(resource)
-  const severity = extractSeverity(resource)
+  const severity = extractSeverity(resource, t)
   const category = extractCategory(resource)
   const code = extractCode(resource)
   const resourceType = resource.resourceType as string | undefined
@@ -249,7 +249,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
             const crit = criticalityStyles[resource.criticality as AllergyIntoleranceCriticalityCode]
             return crit ? (
               <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label={t("recordDetail.criticality")}>
-                <Badge variant={crit.variant} className="text-xs">{crit.label}</Badge>
+                <Badge variant={crit.variant} className="text-xs">{t(crit.i18nKey)}</Badge>
               </DetailRow>
             ) : (
               <DetailRow icon={<ShieldAlert className="size-4 text-red-500" />} label={t("recordDetail.criticality")}>
