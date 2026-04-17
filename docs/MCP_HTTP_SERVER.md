@@ -436,11 +436,29 @@ Both endpoints are served by `backend/src/routes/auth/mcp-metadata.ts` and proxy
 When an MCP client (e.g. VS Code, Claude Desktop) connects, it resolves a `client_id` in this order:
 
 1. **Pre-registered client** — Client already has a known `client_id` (e.g. hardcoded or from prior registration)
-2. **Client ID Metadata Document** — Client publishes a `client_id` document at a well-known URL (not commonly used)
+2. **Client ID Metadata Document (CIMD)** — Client sends its `client_id` as a URL (e.g. `https://vscode.dev/mcp-client`); Keycloak fetches the metadata document from that URL and processes the request without prior registration. Requires Keycloak `--features=cimd`.
 3. **Dynamic Client Registration (DCR)** — Client calls `registration_endpoint` (`/auth/register`) to auto-register
 4. **Prompt user** — Fallback: ask the user to provide a `client_id` manually
 
-Our server advertises `registration_endpoint` in the AS metadata, so DCR (option 3) works out of the box.
+Our server advertises both CIMD and DCR via `client_registration_types_supported` in the AS metadata. Keycloak handles CIMD natively (option 2), and our `/auth/register` proxy handles DCR (option 3).
+
+#### CIMD Setup (Keycloak Admin Console)
+
+To enable CIMD for MCP clients like VS Code, configure a client policy in Keycloak:
+
+1. **Enable the feature**: Keycloak must be started with `--features=cimd` (already configured in all deployment compose files and Dockerfile).
+2. **Create a Client Profile** (`Realm Settings → Client Policies → Profiles`):
+   - Add the `client-id-metadata-document` executor
+   - Set **Trusted domains** (e.g. `vscode.dev`, `127.0.0.1`)
+   - Set **Restrict same domain**: `OFF` (VS Code uses localhost redirects)
+   - Set **Only Allow Confidential Client**: `OFF` (VS Code is a public client)
+3. **Create a Client Policy** (`Realm Settings → Client Policies → Policies`):
+   - Add the `client-id-uri` condition
+   - Set **URI scheme**: `https`
+   - Set **Trusted domains**: `vscode.dev` (or whatever MCP clients you support)
+   - Associate the profile from step 2
+
+With this configuration, when an MCP client sends `client_id=https://vscode.dev/mcp-client`, Keycloak fetches the metadata and issues tokens without DCR. The resulting JWT is validated identically by the proxy.
 
 ### Pre-registered Clients (Keycloak)
 
@@ -766,7 +784,9 @@ curl -X POST https://keycloak.example.com/auth/realms/master/protocol/openid-con
 - [RFC 9728: OAuth 2.0 Resource Metadata](https://tools.ietf.org/html/rfc9728)
 - [RFC 8414: OAuth 2.0 Authorization Server Metadata](https://tools.ietf.org/html/rfc8414)
 - [RFC 7591: OAuth 2.0 Dynamic Client Registration](https://tools.ietf.org/html/rfc7591)
+- [OAuth Client ID Metadata Document (CIMD)](https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-01.html)
 - [RFC 6750: OAuth 2.0 Bearer Token Usage](https://tools.ietf.org/html/rfc6750)
+- [Keycloak MCP Integration Guide](https://www.keycloak.org/securing-apps/mcp-authz-server)
 - [Microsoft MCP Learn Docs](https://learn.microsoft.com/en-us/semantic-kernel/concepts/mcp/)
 - [Elysia Web Framework](https://elysiajs.com/)
 
