@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170333.ed8297ff] - 2026-04-17
+
+- 🔧 Chores & Improvements: Version bump to 0.0.5-alpha.202604170333.ed8297ff across multiple packages; align lockfiles and dependencies
+- 📚 Documentation: Add new package hl7.fhir.uv.ips-generated to patient-portal
+- 🐛 Bug Fixes: Update IPS-generated value sets and status codes usage across patient-portal components (GenomicsCard, ImagingStudyCard, Dashboard, RecordDetailModal, fhir-client, ips-display-helpers) to match new UV Ips codes
+- ⚠️ Breaking Changes: Update type imports/casts to new UV Ips codes (potential integration impact)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/414
+
+
 ## [0.0.5-alpha.202604170317.c528b329] - 2026-04-17
 
 - 🔧 Chores & Improvements: Version bumps across apps to 0.0.5-alpha.202604170317.c528b329
