@@ -1,0 +1,49 @@
+{
+  "name": "hl7.fhir.uv.ips-generated",
+  "version": "0.0.5-alpha.202604171619.09cc1939",
+  "description": "Generated TypeScript interfaces for hl7.fhir.uv.ips",
+  "type": "module",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./fhir-client": {
+      "types": "./fhir-client/index.d.ts",
+      "import": "./fhir-client/index.js"
+    },
+    "./valuesets/*": {
+      "types": "./valuesets/*.d.ts",
+      "import": "./valuesets/*.js"
+    }
+  },
+  "scripts": {},
+  "keywords": [
+    "fhir",
+    "typescript",
+    "generated"
+  ],
+  "license": "MIT",
+  "fhir": {
+    "ig": "hl7.fhir.uv.ips",
+    "version": "2.0.0",
+    "canonical": "http://hl7.org/fhir/uv/ips",
+    "fhirVersions": [
+      "4.0.1"
+    ],
+    "txServer": "https://tx.fhir.org/r4",
+    "displayLanguage": "en,de,fr,es,it"
+  },
+  "peerDependencies": {
+    "fhirpath": "^3.0.0 || ^4.0.0"
+  },
+  "dependencies": {
+    "@types/fhir": "^0.0.41",
+    "@babelfhir-ts/client-r4": "^0.2.0"
+  },
+  "devDependencies": {
+    "babelfhir-ts": "^1.4.1-dev.20260417152609.50b4048d"
+  }
+}
