@@ -3,6 +3,403 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apps — Proxy Smart</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --fg: #111; --muted: #888; --border: #e5e5e5;
+      --primary: #00d294;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    html { min-height: 100%; }
+    body {
+      font-family: var(--font); color: var(--fg); background: #fafafa;
+      min-height: 100vh; display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Top bar ─────────────────────────────────── */
+    header {
+      height: 48px; display: flex; align-items: center;
+      padding: 0 1.25rem; background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar { max-width: 960px; width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .brand { font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .35rem; }
+    .brand img { height: 16px; width: 16px; }
+    .links { display: flex; gap: 1rem; }
+    .links a { font-size: .75rem; color: var(--muted); transition: color .15s; }
+    .links a:hover { color: var(--fg); }
+
+    /* ── Main ────────────────────────────────────── */
+    main { flex: 1; max-width: 960px; width: 100%; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+
+    /* ── Toolbar ─────────────────────────────────── */
+    .toolbar {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .toolbar h1 { font-size: 1.15rem; font-weight: 500; }
+    .size-toggle {
+      display: flex; gap: 2px; background: #fff; border: 1px solid var(--border);
+      border-radius: 6px; padding: 2px; overflow: hidden;
+    }
+    .size-toggle button {
+      border: none; background: transparent; padding: 5px 10px;
+      font-size: .7rem; color: var(--muted); border-radius: 4px;
+      transition: all .15s;
+    }
+    .size-toggle button.active { background: var(--primary); color: #fff; }
+    .size-toggle button:hover:not(.active) { background: #f0f0f0; }
+
+    /* ── Store frame ─────────────────────────────── */
+    .store-frame {
+      background: #fff; border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.5rem; min-height: 300px;
+    }
+
+    /* ── Grid ────────────────────────────────────── */
+    .grid {
+      display: grid;
+      gap: 1.5rem 1rem;
+    }
+    .grid.sm  { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+    .grid.md  { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .grid.lg  { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+    .tile {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      text-decoration: none; color: inherit;
+    }
+    .icon {
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      transition: transform .15s;
+    }
+    .tile:hover .icon { transform: scale(1.06); }
+    .icon svg { stroke: currentColor; fill: none; }
+
+    /* Size variants */
+    .grid.sm .icon { width: 48px; height: 48px; border-radius: 12px; }
+    .grid.sm .icon svg { width: 22px; height: 22px; }
+    .grid.sm .label { font-size: .65rem; max-width: 80px; }
+
+    .grid.md .icon { width: 64px; height: 64px; border-radius: 16px; }
+    .grid.md .icon svg { width: 28px; height: 28px; }
+    .grid.md .label { font-size: .75rem; max-width: 100px; }
+
+    .grid.lg .icon { width: 88px; height: 88px; border-radius: 20px; }
+    .grid.lg .icon svg { width: 36px; height: 36px; }
+    .grid.lg .label { font-size: .8rem; max-width: 130px; }
+
+    .label {
+      text-align: center; line-height: 1.3;
+      overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+
+    /* Color palette */
+    .c0 { background: #dbeafe; color: #2563eb; }
+    .c1 { background: #d1fae5; color: #059669; }
+    .c2 { background: #ffedd5; color: #ea580c; }
+    .c3 { background: #ede9fe; color: #7c3aed; }
+    .c4 { background: #ffe4e6; color: #e11d48; }
+    .c5 { background: #cffafe; color: #0891b2; }
+
+    /* ── Pagination ──────────────────────────────── */
+    .pagination {
+      display: flex; justify-content: center; align-items: center;
+      gap: .5rem; margin-top: 1.5rem; padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .pagination button {
+      border: 1px solid var(--border); background: #fff; border-radius: 6px;
+      padding: 5px 12px; font-size: .75rem; color: var(--muted);
+      transition: all .15s;
+    }
+    .pagination button:hover:not(:disabled) { border-color: #ccc; color: var(--fg); }
+    .pagination button:disabled { opacity: .4; cursor: default; }
+    .pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .pagination .info { font-size: .7rem; color: var(--muted); }
+    .pagination.hidden { display: none; }
+
+    /* ── States ───────────────────────────────────── */
+    .empty, .loading { text-align: center; color: var(--muted); font-size: .85rem; padding: 4rem 0; }
+    .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--muted); border-radius: 50%; animation: s .5s linear infinite; margin: 0 auto .5rem; }
+    @keyframes s { to { transform: rotate(360deg); } }
+
+    /* ── Footer ──────────────────────────────────── */
+    footer { padding: 1rem 1.25rem; text-align: center; font-size: .7rem; color: var(--muted); }
+
+    @media (max-width: 480px) {
+      main { padding: 1.25rem 1rem 2rem; }
+      .store-frame { padding: 1rem; }
+      .grid.sm  { grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); }
+      .grid.md  { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+      .grid.lg  { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <a href="/" class="brand"><img src="/proxy-smart.svg" alt="">Proxy Smart</a>
+      <div class="links">
+        <a href="/">Home</a>
+        <a href="/webapp/">Admin</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="toolbar">
+      <h1>Applications</h1>
+      <div class="size-toggle" id="sizeToggle">
+        <button data-size="sm">S</button>
+        <button data-size="md" class="active">M</button>
+        <button data-size="lg">L</button>
+      </div>
+    </div>
+
+    <div class="store-frame">
+      <div class="grid md" id="g">
+        <div class="loading" style="grid-column:1/-1"><div class="spin"></div>Loading&hellip;</div>
+      </div>
+      <div class="pagination hidden" id="pag"></div>
+    </div>
+  </main>
+
+  <footer>&copy; <script>document.write(new Date().getFullYear())</script> Max Health Inc.</footer>
+
+  <script>
+    const ICONS = {
+      'heart-pulse': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M19.5 12.572l-7.5 7.428-7.5-7.428A5 5 0 1112 6.006a5 5 0 017.5 6.572z"/><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12h2l2-3 3 6 2-3h2"/>',
+      'document-text': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+      'shield-check': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
+      'clipboard-list': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>',
+      'app-window': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>',
+    };
+    const C = ['c0','c1','c2','c3','c4','c5'];
+    const g = document.getElementById('g');
+    const pag = document.getElementById('pag');
+    const PER_PAGE = { sm: 24, md: 18, lg: 12 };
+
+    let allApps = [];
+    let size = localStorage.getItem('app-icon-size') || 'md';
+    let page = 1;
+
+    /* ── Size toggle ─────────────────────────────── */
+    document.getElementById('sizeToggle').addEventListener('click', e => {
+      const btn = e.target.closest('[data-size]');
+      if (!btn) return;
+      size = btn.dataset.size;
+      localStorage.setItem('app-icon-size', size);
+      document.querySelectorAll('#sizeToggle button').forEach(b => b.classList.toggle('active', b === btn));
+      page = 1;
+      render();
+    });
+
+    /* Restore saved size */
+    if (size !== 'md') {
+      document.querySelectorAll('#sizeToggle button').forEach(b => {
+        b.classList.toggle('active', b.dataset.size === size);
+      });
+    }
+
+    /* ── Render ───────────────────────────────────── */
+    function render() {
+      const perPage = PER_PAGE[size];
+      const totalPages = Math.ceil(allApps.length / perPage);
+      if (page > totalPages) page = totalPages || 1;
+
+      const start = (page - 1) * perPage;
+      const visible = allApps.slice(start, start + perPage);
+
+      g.className = `grid ${size}`;
+      g.innerHTML = visible.map((a, i) => {
+        const idx = start + i;
+        const svg = ICONS[a.icon] || ICONS['app-window'];
+        return `<a href="${encodeURI(a.launch_url)}" class="tile" title="${(a.description||a.client_name).replace(/"/g,'&quot;')}">
+          <div class="icon ${C[idx % 6]}"><svg viewBox="0 0 24 24">${svg}</svg></div>
+          <span class="label">${a.client_name}</span></a>`;
+      }).join('');
+
+      /* Pagination */
+      if (totalPages <= 1) {
+        pag.className = 'pagination hidden';
+        pag.innerHTML = '';
+        return;
+      }
+      pag.className = 'pagination';
+      let html = `<button id="prev" ${page <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
+      for (let p = 1; p <= totalPages; p++) {
+        html += `<button class="pg ${p === page ? 'active' : ''}" data-page="${p}">${p}</button>`;
+      }
+      html += `<button id="next" ${page >= totalPages ? 'disabled' : ''}>Next &rsaquo;</button>`;
+      pag.innerHTML = html;
+    }
+
+    /* Pagination clicks */
+    pag.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn || btn.disabled) return;
+      if (btn.id === 'prev') page--;
+      else if (btn.id === 'next') page++;
+      else if (btn.dataset.page) page = +btn.dataset.page;
+      render();
+      g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    /* ── Load apps ────────────────────────────────── */
+    fetch('/apps.json')
+      .then(r => r.json())
+      .then(({ apps }) => {
+        if (!apps || !apps.length) {
+          g.innerHTML = '<div class="empty" style="grid-column:1/-1">No apps available.</div>';
+          return;
+        }
+        allApps = apps;
+        render();
+      })
+      .catch(() => {
+        g.innerHTML = '<div class="empty" style="grid-column:1/-1;color:#ef4444">Failed to load apps.</div>';
+      });
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apps — Proxy Smart</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --fg: #111; --muted: #888; --border: #eee;
+      --primary: #00d294;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    html { min-height: 100%; }
+    body {
+      font-family: var(--font); color: var(--fg); background: #fff;
+      min-height: 100vh; display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ── Top bar ─────────────────────────────────── */
+    header {
+      height: 48px; display: flex; align-items: center;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .bar { max-width: 720px; width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+    .brand { font-size: .85rem; font-weight: 500; display: flex; align-items: center; gap: .35rem; }
+    .brand img { height: 16px; width: 16px; }
+    .links { display: flex; gap: 1rem; }
+    .links a { font-size: .75rem; color: var(--muted); transition: color .15s; }
+    .links a:hover { color: var(--fg); }
+
+    /* ── Main ────────────────────────────────────── */
+    main { flex: 1; max-width: 720px; width: 100%; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
+    h1 { font-size: 1.15rem; font-weight: 500; margin-bottom: 1.5rem; }
+
+    /* ── Grid ────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 1.5rem 1rem;
+    }
+    .tile {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      text-decoration: none; color: inherit;
+    }
+    .icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .15s;
+    }
+    .tile:hover .icon { transform: scale(1.06); }
+    .icon svg { width: 28px; height: 28px; stroke: currentColor; fill: none; }
+    .label {
+      font-size: .75rem; text-align: center; line-height: 1.3;
+      max-width: 100px; overflow: hidden; text-overflow: ellipsis;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .c0 { background: #dbeafe; color: #2563eb; }
+    .c1 { background: #d1fae5; color: #059669; }
+    .c2 { background: #ffedd5; color: #ea580c; }
+    .c3 { background: #ede9fe; color: #7c3aed; }
+    .c4 { background: #ffe4e6; color: #e11d48; }
+    .c5 { background: #cffafe; color: #0891b2; }
+
+    .empty, .loading { text-align: center; color: var(--muted); font-size: .85rem; padding: 4rem 0; }
+    .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--muted); border-radius: 50%; animation: s .5s linear infinite; margin: 0 auto .5rem; }
+    @keyframes s { to { transform: rotate(360deg); } }
+
+    /* ── Footer ──────────────────────────────────── */
+    footer { padding: 1rem 1.25rem; text-align: center; font-size: .7rem; color: var(--muted); }
+
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 1.25rem .75rem; }
+      .icon { width: 56px; height: 56px; border-radius: 14px; }
+      .icon svg { width: 24px; height: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <a href="/" class="brand"><img src="/proxy-smart.svg" alt="">Proxy Smart</a>
+      <div class="links">
+        <a href="/">Home</a>
+        <a href="/webapp/">Admin</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <h1>Applications</h1>
+    <div class="grid" id="g">
+      <div class="loading" style="grid-column:1/-1"><div class="spin"></div>Loading&hellip;</div>
+    </div>
+  </main>
+
+  <footer>&copy; <script>document.write(new Date().getFullYear())</script> Max Health Inc.</footer>
+
+  <script>
+    const ICONS = {
+      'heart-pulse': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M19.5 12.572l-7.5 7.428-7.5-7.428A5 5 0 1112 6.006a5 5 0 017.5 6.572z"/><path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 12h2l2-3 3 6 2-3h2"/>',
+      'document-text': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>',
+      'shield-check': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>',
+      'clipboard-list': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>',
+      'app-window': '<path stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z"/>',
+    };
+    const C = ['c0','c1','c2','c3','c4','c5'];
+    const g = document.getElementById('g');
+
+    fetch('/apps.json')
+      .then(r => r.json())
+      .then(({ apps }) => {
+        if (!apps || !apps.length) { g.innerHTML = '<div class="empty" style="grid-column:1/-1">No apps available.</div>'; return; }
+        g.innerHTML = apps.map((a, i) => {
+          const svg = ICONS[a.icon] || ICONS['app-window'];
+          return `<a href="${encodeURI(a.launch_url)}" class="tile" title="${(a.description||a.client_name).replace(/"/g,'&quot;')}">
+            <div class="icon ${C[i%6]}"><svg viewBox="0 0 24 24">${svg}</svg></div>
+            <span class="label">${a.client_name}</span></a>`;
+        }).join('');
+      })
+      .catch(() => { g.innerHTML = '<div class="empty" style="grid-column:1/-1;color:#ef4444">Failed to load apps.</div>'; });
+  </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>App Store — Proxy Smart</title>
   <meta name="description" content="Browse and launch SMART on FHIR applications registered on this Proxy Smart instance." />
   <meta name="theme-color" content="#ffffff" />

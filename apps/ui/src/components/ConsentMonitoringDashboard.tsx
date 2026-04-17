@@ -8,6 +8,7 @@ import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
 import { ExportMenu } from './ui/export-menu';
 import { RealTimeBanner } from './ui/realtime-banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Activity,
   CheckCircle,
@@ -423,11 +424,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                          <p className="font-medium">{t('No consent activity data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={BarChart3} title={t('No consent activity data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -464,11 +462,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                          <p className="font-medium">{t('No resource type data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={Shield} title={t('No resource type data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -612,11 +607,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                     )}
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="font-medium">{t('No events match your filters')}</p>
-                    <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-                  </div>
+                  <EmptyState icon={Activity} title={t('No events match your filters')} description={t('Try adjusting your filter criteria')} />
                 )}
               </div>
             </TabsContent>
@@ -751,11 +742,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </div>
                       ))
                     ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                        <p className="font-medium">{t('No denied client requests')}</p>
-                        <p className="text-sm mt-2">{t('All clients are accessing resources within their consent scope')}</p>
-                      </div>
+                      <EmptyState icon={ShieldCheck} title={t('No denied client requests')} description={t('All clients are accessing resources within their consent scope')} />
                     )}
                   </div>
                 </div>
@@ -792,11 +779,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </div>
                       ))
                     ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                        <p className="font-medium">{t('No denied patient requests')}</p>
-                        <p className="text-sm mt-2">{t('All patient data access has been within consent scope')}</p>
-                      </div>
+                      <EmptyState icon={CheckCircle} title={t('No denied patient requests')} description={t('All patient data access has been within consent scope')} />
                     )}
                   </div>
                 </div>

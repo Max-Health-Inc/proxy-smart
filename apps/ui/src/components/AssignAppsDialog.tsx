@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link2, Loader2, AppWindow } from 'lucide-react';
+import { Link2, AppWindow } from 'lucide-react';
 import { Badge, Button } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { Checkbox } from './ui/checkbox';
 import {
     Dialog,
@@ -238,13 +239,9 @@ export function AssignAppsDialog({
                     <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
                         {t('Cancel')}
                     </Button>
-                    <Button onClick={handleSave} disabled={saving || smartApps.length === 0}>
-                        {saving ? (
-                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Saving...')}</>
-                        ) : (
-                            t('Save Assignments')
-                        )}
-                    </Button>
+                    <LoadingButton onClick={handleSave} loading={saving} loadingText={t('Saving...')} disabled={smartApps.length === 0}>
+                        {t('Save Assignments')}
+                    </LoadingButton>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

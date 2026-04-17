@@ -4,11 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { NotificationToast } from '../ui/NotificationToast';
+import { StatCard } from '@/components/ui/stat-card';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import {
   Plus,
-  Loader2,
   Database,
   Server,
   Shield,
@@ -23,6 +23,7 @@ import {
   XCircle,
   FolderSync,
 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type {
   UserFederationProviderResponse,
   CreateUserFederationRequest,
@@ -92,27 +93,11 @@ function StatisticsCards({ federations }: { federations: FederationWithStatus[] 
   const { t } = useTranslation();
   const active = federations.filter(f => f.status === 'active').length;
 
-  const cards = [
-    { label: t('Total Federations'), value: federations.length, icon: Database, color: 'blue' },
-    { label: t('Active'), value: active, icon: Shield, color: 'green' },
-    { label: t('Inactive'), value: federations.length - active, icon: Server, color: 'orange' },
-  ];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {cards.map(card => (
-        <div key={card.label} className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className={`w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm`}>
-              <card.icon className={`w-6 h-6 text-primary`} />
-            </div>
-            <div className={`text-sm font-semibold text-${card.color}-800 dark:text-${card.color}-300 tracking-wide`}>
-              {card.label}
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-foreground">{card.value}</div>
-        </div>
-      ))}
+      <StatCard icon={Database} label={t('Total Federations')} value={federations.length} color="blue" />
+      <StatCard icon={Shield} label={t('Active')} value={active} color="green" />
+      <StatCard icon={Server} label={t('Inactive')} value={federations.length - active} color="orange" />
     </div>
   );
 }
@@ -231,16 +216,17 @@ function LdapForm({ form, setForm, onTestConnection, testing }: {
             onChange={v => setForm(prev => ({ ...prev, connectionPooling: v }))}
           />
         </div>
-        <Button
+        <LoadingButton
           type="button"
           variant="outline"
           onClick={onTestConnection}
-          disabled={testing || !form.connectionUrl}
+          loading={testing}
+          disabled={!form.connectionUrl}
           className="rounded-xl"
         >
-          {testing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plug className="w-4 h-4 mr-2" />}
+          <Plug className="w-4 h-4 mr-2" />
           {t('Test Connection')}
-        </Button>
+        </LoadingButton>
       </div>
 
       {/* Users DN & attributes */}
@@ -732,20 +718,17 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                  <Button
+                  <LoadingButton
                     variant="outline"
                     size="sm"
                     onClick={() => fed.id && handleSync(fed.id, 'triggerFullSync')}
-                    disabled={!fed.id || syncing === fed.id}
+                    loading={syncing === fed.id}
+                    disabled={!fed.id}
                     className="rounded-xl text-xs"
                   >
-                    {syncing === fed.id ? (
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                    )}
+                    <RefreshCw className="w-3 h-3 mr-1" />
                     {t('Full Sync')}
-                  </Button>
+                  </LoadingButton>
                   <Button
                     variant="outline"
                     size="sm"

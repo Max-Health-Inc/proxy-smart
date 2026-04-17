@@ -10,11 +10,11 @@ import {
   CheckCircle,
   XCircle,
   ArrowDownUp,
-  Loader2,
   UserCheck,
   UserX,
 } from 'lucide-react';
 import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';
@@ -283,9 +283,9 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>{t('Cancel')}</Button>
-            <Button onClick={handleCreateMember} disabled={!newMemberEmail.trim() || creating}>
-              {creating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('Adding...')}</> : t('Add Member')}
-            </Button>
+            <LoadingButton onClick={handleCreateMember} disabled={!newMemberEmail.trim()} loading={creating} loadingText={t('Adding...')}>
+              {t('Add Member')}
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -303,9 +303,9 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>{t('Cancel')}</Button>
-            <Button variant="destructive" onClick={handleDeleteMember} disabled={deleting}>
-              {deleting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('Removing...')}</> : t('Remove')}
-            </Button>
+            <LoadingButton variant="destructive" onClick={handleDeleteMember} loading={deleting} loadingText={t('Removing...')}>
+              {t('Remove')}
+            </LoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -353,13 +353,9 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
               {syncResult ? t('Close') : t('Cancel')}
             </Button>
             {!syncResult && (
-              <Button onClick={handleSync} disabled={syncing}>
-                {syncing ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t('Syncing...')}</>
-                ) : (
-                  <><ArrowDownUp className="h-4 w-4 mr-2" />{t('Sync Now')}</>
-                )}
-              </Button>
+              <LoadingButton onClick={handleSync} loading={syncing} loadingText={t('Syncing...')}>
+                <ArrowDownUp className="h-4 w-4 mr-2" />{t('Sync Now')}
+              </LoadingButton>
             )}
           </DialogFooter>
         </DialogContent>

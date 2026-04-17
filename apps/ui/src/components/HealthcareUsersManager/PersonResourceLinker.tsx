@@ -148,7 +148,7 @@ export function PersonResourceLinker({
               <Link className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-bold text-gray-900 tracking-tight">
+              <DialogTitle className="text-2xl font-bold text-foreground tracking-tight">
                 {t('Person Resource Linker')}
               </DialogTitle>
               <DialogDescription className="text-gray-600 font-medium mt-1">
@@ -392,7 +392,7 @@ export function PersonResourceLinker({
               {/* Existing Links */}
               {selectedPerson.links.length > 0 ? (
                 <div className="space-y-3">
-                  <h4 className="font-semibold text-gray-900">{t('Existing Links')}</h4>
+                  <h4 className="font-semibold text-foreground">{t('Existing Links')}</h4>
                   {selectedPerson.links.map((link: CustomPersonLink) => (
                     <div key={link.id} className="p-4 bg-white border border-gray-200 rounded-xl hover:shadow-md transition-shadow duration-200">
                       <div className="flex items-center justify-between">
@@ -402,7 +402,7 @@ export function PersonResourceLinker({
                           </div>
                           <div>
                             <div className="flex items-center space-x-2">
-                              <h5 className="font-semibold text-gray-900">
+                              <h5 className="font-semibold text-foreground">
                                 {link.target.display || link.target.reference}
                               </h5>
                               <CheckCircle className="w-4 h-4 text-green-600" />
@@ -452,7 +452,7 @@ export function PersonResourceLinker({
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
                     <AlertCircle className="w-8 h-8 text-gray-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     {t('No links yet')}
                   </h3>
                   <p className="text-gray-600 mb-4">
@@ -478,7 +478,7 @@ export function PersonResourceLinker({
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
                 <User className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-foreground mb-2">
                 {t('Select a Person Resource')}
               </h3>
               <p className="text-gray-600">

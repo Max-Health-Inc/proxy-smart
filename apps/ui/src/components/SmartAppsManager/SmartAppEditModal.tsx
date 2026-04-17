@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  Loader2,
   Globe,
   Shield,
   Key,
@@ -35,6 +34,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type { SmartApp } from '@/lib/types/api';
 import type { UpdateSmartAppRequest } from '@/lib/api-client/models';
 import {
@@ -367,9 +367,9 @@ export function SmartAppEditModal({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             {t('Cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <><Loader2 className="size-4 animate-spin" />{t('Saving…')}</> : t('Save Changes')}
-          </Button>
+          <LoadingButton onClick={handleSave} loading={saving} loadingText={t('Saving…')}>
+            {t('Save Changes')}
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -30,6 +30,7 @@ import {
 import type { OAuthAnalyticsResponse, OAuthEvent, OAuthWeekdayInsight } from '../../lib/types/api';
 import type { OAuthAnalyticsTopClient } from '../../lib/api-client/models/OAuthAnalyticsTopClient';
 import { useMemo } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -346,11 +347,8 @@ export function OAuthAnalyticsTab({
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="font-medium">{t('No flow activity data available')}</p>
-                </div>
+              <div className="h-full flex items-center justify-center">
+                <EmptyState icon={BarChart3} title={t('No flow activity data available')} className="py-8" />
               </div>
             )}
           </div>
@@ -401,13 +399,7 @@ export function OAuthAnalyticsTab({
                 </div>
               ))
             ) : (
-              <div className="text-center text-muted-foreground py-8">
-                <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p>{t('No client activity data available')}</p>
-                <p className="text-sm mt-2">
-                  {t('OAuth client statistics will appear here once data is collected')}
-                </p>
-              </div>
+              <EmptyState icon={Shield} title={t('No client activity data available')} description={t('OAuth client statistics will appear here once data is collected')} />
             )}
           </div>
         </div>
@@ -696,11 +688,7 @@ export function OAuthAnalyticsTab({
             )}
           </div>
         ) : (
-          <div className="text-center text-muted-foreground py-8">
-            <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="font-medium">{t('No events match your filters')}</p>
-            <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-          </div>
+          <EmptyState icon={Activity} title={t('No events match your filters')} description={t('Try adjusting your filter criteria')} />
         )}
       </div>
     </div>

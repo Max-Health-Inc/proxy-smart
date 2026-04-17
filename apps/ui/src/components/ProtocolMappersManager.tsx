@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/stores/authStore';
-import { CheckCircle, AlertCircle, Wrench, Trash2, RefreshCw, Loader2 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Shield, Wrench, Trash2, RefreshCw, Loader2 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@proxy-smart/shared-ui';
 import { Badge } from '@proxy-smart/shared-ui';
 import type { ScopeMapperInfo } from '@/lib/api-client';
@@ -96,10 +98,10 @@ export function ProtocolMappersManager({ embedded }: ProtocolMappersManagerProps
             {t('Refresh')}
           </Button>
           {!allHealthy && (
-            <Button size="sm" onClick={handleFixAll} disabled={fixing}>
-              {fixing ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Wrench className="w-3.5 h-3.5 mr-1" />}
+            <LoadingButton size="sm" onClick={handleFixAll} loading={fixing}>
+              <Wrench className="w-3.5 h-3.5 mr-1" />
               {t('Fix All')}
-            </Button>
+            </LoadingButton>
           )}
         </div>
       </div>
@@ -118,9 +120,7 @@ export function ProtocolMappersManager({ embedded }: ProtocolMappersManagerProps
 
       {/* Scope mapper table */}
       {scopes.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {t('No SMART scopes found in Keycloak')}
-        </div>
+        <EmptyState icon={Shield} title={t('No SMART scopes found in Keycloak')} className="py-8" />
       ) : (
         <div className="rounded-xl border border-border/50 overflow-hidden">
           <table className="w-full text-sm">

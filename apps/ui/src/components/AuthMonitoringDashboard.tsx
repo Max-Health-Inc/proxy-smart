@@ -16,7 +16,6 @@ import {
   UserPlus,
   Key,
   RefreshCw,
-  Search,
   TrendingUp,
   Monitor,
   XCircle,
@@ -41,7 +40,8 @@ import {
   type AuthEvent,
   type AuthAnalytics,
 } from '../service/auth-monitoring-service';
-import { Input } from '@proxy-smart/shared-ui';
+import { SearchInput } from '@/components/ui/search-input';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -268,11 +268,8 @@ export function AuthMonitoringDashboard({ embedded, isRealTimeActive: parentReal
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No activity data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={BarChart3} title={t('No activity data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -300,11 +297,8 @@ export function AuthMonitoringDashboard({ embedded, isRealTimeActive: parentReal
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Key className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No event data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={Key} title={t('No event data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -339,10 +333,7 @@ export function AuthMonitoringDashboard({ embedded, isRealTimeActive: parentReal
             <TabsContent value="events" className="space-y-6">
               {/* Filters */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder={t('Search events...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
-                </div>
+                <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={t('Search events...')} className="min-w-[200px] max-w-none" />
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-[180px]"><SelectValue placeholder={t('Event Type')} /></SelectTrigger>
                   <SelectContent>

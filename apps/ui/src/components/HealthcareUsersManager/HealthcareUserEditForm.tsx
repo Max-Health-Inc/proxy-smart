@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Shield, Loader2, Server, Database, Trash2 } from 'lucide-react';
+import { Shield, Server, Database, Trash2 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
 import { createPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
@@ -221,16 +222,9 @@ export function HealthcareUserEditForm({
             <Button type="button" variant="outline" onClick={handleClose} disabled={submitting}>
               {t('Cancel')}
             </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t('Updating...')}
-                </>
-              ) : (
-                t('Update User')
-              )}
-            </Button>
+            <LoadingButton type="submit" loading={submitting} loadingText={t('Updating...')}>
+              {t('Update User')}
+            </LoadingButton>
           </DialogFooter>
         </form>
       </DialogContent>

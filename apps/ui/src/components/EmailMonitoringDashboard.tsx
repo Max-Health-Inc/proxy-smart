@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Badge, Button, Input, CHART_COLORS } from '@proxy-smart/shared-ui';
+import { Badge, Button, CHART_COLORS } from '@proxy-smart/shared-ui';
+import { SearchInput } from '@/components/ui/search-input';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -14,7 +16,6 @@ import {
   Mail,
   KeyRound,
   RefreshCw,
-  Search,
   TrendingUp,
   XCircle,
   Send,
@@ -258,11 +259,8 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No activity data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={BarChart3} title={t('No activity data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -290,11 +288,8 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Mail className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No email data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={Mail} title={t('No email data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -306,10 +301,7 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
             <TabsContent value="events" className="space-y-6">
               {/* Filters */}
               <div className="flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder={t('Search events...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
-                </div>
+                <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={t('Search events...')} className="min-w-[200px] max-w-none" />
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-[200px]"><SelectValue placeholder={t('Email Type')} /></SelectTrigger>
                   <SelectContent>
