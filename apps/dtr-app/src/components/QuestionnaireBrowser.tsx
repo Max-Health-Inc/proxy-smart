@@ -20,6 +20,7 @@ import {
 } from "@proxy-smart/shared-ui"
 import { SmartFormsQuestionnaireRenderer } from "@/components/SmartFormsQuestionnaireRenderer"
 import { searchQuestionnaires, createQuestionnaireResponse } from "@/lib/fhir-client"
+import type { PublicationStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-PublicationStatus"
 import { toast } from "sonner"
 import {
   FileQuestion,
@@ -249,9 +250,9 @@ function QuestionnaireCard({
   const itemCount = countItems(questionnaire.item ?? [])
   const meta = getQuestionnaireMetadata(questionnaire)
   const statusColor =
-    questionnaire.status === "active"
+    questionnaire.status === ("active" satisfies PublicationStatusCode)
       ? "text-emerald-600"
-      : questionnaire.status === "draft"
+      : questionnaire.status === ("draft" satisfies PublicationStatusCode)
         ? "text-amber-600"
         : "text-muted-foreground"
 
