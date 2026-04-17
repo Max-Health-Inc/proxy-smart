@@ -168,7 +168,6 @@ export class BackendStack extends cdk.Stack {
     const environment: Record<string, string> = {
       // Core config (matches backend/src/config.ts)
       NODE_ENV: 'production',
-      MONO_MODE: 'true',
       BASE_URL: `https://${props.domainName}`,
       PORT: '8445',
       // Keycloak config

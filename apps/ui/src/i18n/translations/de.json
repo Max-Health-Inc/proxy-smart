@@ -228,7 +228,7 @@
   "Completion tokens": "Completion tokens",
   "Confidence": "Confidence",
   "Confidential Clients": "Confidential Clients",
-  "Config source: {{source}}. Defaults to enabled in mono mode (MONO_MODE=true). Override with MCP_ENDPOINT_ENABLED env var.": "Config source: {{source}}. Defaults to enabled in mono mode (MONO_MODE=true). Override with MCP_ENDPOINT_ENABLED env var.",
+  "Config source: {{source}}. MCP endpoint is enabled by default. Override with MCP_ENDPOINT_ENABLED env var.": "Konfigurationsquelle: {{source}}. MCP-Endpunkt ist standardmäßig aktiviert. Mit MCP_ENDPOINT_ENABLED Umgebungsvariable überschreiben.",
   "Configuration Error": "Configuration Error",
   "Configure Door Management": "Configure Door Management",
   "Configure FHIR servers first": "Configure FHIR servers first",

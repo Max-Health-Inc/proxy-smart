@@ -266,7 +266,7 @@ export function McpEndpointSettings() {
               <Info className="w-4 h-4 mt-0.5 shrink-0" />
               <span>
                 {t(
-                  'Config source: {{source}}. Defaults to enabled in mono mode (MONO_MODE=true). Override with MCP_ENDPOINT_ENABLED env var.',
+                  'Config source: {{source}}. MCP endpoint is enabled by default. Override with MCP_ENDPOINT_ENABLED env var.',
                   { source: status.configSource },
                 )}
               </span>

@@ -569,7 +569,6 @@ MCP_RESOURCE_BASE=https://example.com
 MCP_SCOPE_CHALLENGE=read:mcp
 
 # AI/Internal
-MONO_MODE=true                    # Use internal Node AI v2
 OPENAI_MODEL=gpt-4-turbo         # Or gpt-5-mini, etc.
 OPENAI_API_KEY=...
 ```
@@ -584,10 +583,6 @@ export const config = {
     resourceBase: process.env.MCP_RESOURCE_BASE,
     scopeChallenge: process.env.MCP_SCOPE_CHALLENGE,
   },
-  ai: {
-    useInternalAI: process.env.MONO_MODE === 'true',
-    useRemoteAI: process.env.MONO_MODE !== 'true',
-  }
 };
 ```
 
@@ -600,7 +595,6 @@ export const config = {
 services:
   backend:
     environment:
-      - MONO_MODE=true
       - OPENAI_API_KEY=sk-...
     ports:
       - "3000:3000"
@@ -642,8 +636,6 @@ spec:
       - name: backend
         image: proxy-smart-backend:latest
         env:
-        - name: MONO_MODE
-          value: "true"
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:

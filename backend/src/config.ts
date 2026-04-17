@@ -254,11 +254,11 @@ export const config = {
 
   mcp: {
     // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server
-    // Defaults to enabled in MONO_MODE, disabled otherwise. Override with MCP_ENDPOINT_ENABLED.
+    // Enabled by default. Override with MCP_ENDPOINT_ENABLED=false to disable.
     get enabled(): boolean {
       const explicit = process.env.MCP_ENDPOINT_ENABLED
       if (explicit !== undefined) return explicit === 'true'
-      return process.env.MONO_MODE === 'true'
+      return true
     },
     get path() {
       return process.env.MCP_ENDPOINT_PATH || '/mcp'
