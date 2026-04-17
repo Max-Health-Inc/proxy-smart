@@ -1,11 +1,24 @@
 {
   "realm": "proxy-smart",
   "enabled": true,
+  "organizationsEnabled": true,
   "displayName": "Proxy Smart",
   "attributes": {
     "userProfileEnabled": "true"
   },
   "displayNameHtml": "<div class=\"kc-logo-text\"><span>Proxy Smart</span></div>",
+  "resetPasswordAllowed": true,
+  "smtpServer": {
+    "host": "smtp.resend.dev",
+    "port": "465",
+    "from": "noreply@maxhealth.tech",
+    "fromDisplayName": "Proxy Smart",
+    "replyTo": "noreply@maxhealth.tech",
+    "ssl": "true",
+    "auth": "true",
+    "user": "resend",
+    "password": "REPLACE_WITH_RESEND_API_KEY_AT_RUNTIME"
+  },
   "accessTokenLifespan": 3600,
   "accessTokenLifespanForImplicitFlow": 900,
   "accessCodeLifespan": 300,
@@ -1053,13 +1066,7 @@
           "realm-admin"
         ],
         "realm-management": [
-          "admin",
-          "realm-admin",
-          "manage-users",
-          "view-users",
-          "query-users",
-          "manage-clients",
-          "view-clients"
+          "realm-admin"
         ]
       }
     },

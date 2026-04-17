@@ -1,0 +1,1 @@
+export { ScopeManager } from './ScopeManager';

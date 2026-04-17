@@ -78,14 +78,18 @@ runs:
     - name: Determine notification color
       id: color
       shell: bash
+      env:
+        INPUT_COLOR: ${{ inputs.color }}
+        INPUT_NOTIFICATION_TYPE: ${{ inputs.notification-type }}
+        INPUT_RELEASE_TYPE: ${{ inputs.release-type }}
       run: |
-        COLOR="${{ inputs.color }}"
+        COLOR="$INPUT_COLOR"
         
         # Default colors based on notification type and release type
         if [ -z "$COLOR" ]; then
-          case "${{ inputs.notification-type }}" in
+          case "$INPUT_NOTIFICATION_TYPE" in
             "release")
-              case "${{ inputs.release-type }}" in
+              case "$INPUT_RELEASE_TYPE" in
                 "alpha") COLOR="FFA500" ;;      # Orange
                 "beta") COLOR="0099FF" ;;       # Blue  
                 "production") COLOR="00FF00" ;; # Green
@@ -105,10 +109,12 @@ runs:
     - name: Prepare changelog for Discord
       id: changelog
       shell: bash
+      env:
+        INPUT_CHANGELOG: ${{ inputs.changelog }}
       run: |
         # For safety, we'll either skip the changelog or use a simple placeholder
         # The full changelog is available in the GitHub release
-        if [ -n "${{ inputs.changelog }}" ]; then
+        if [ -n "$INPUT_CHANGELOG" ]; then
           echo "formatted_changelog=📋 Changelog available in the GitHub release" >> $GITHUB_OUTPUT
         else
           echo "formatted_changelog=" >> $GITHUB_OUTPUT
@@ -116,9 +122,27 @@ runs:
 
     - name: Send Discord notification
       shell: bash
+      env:
+        INPUT_TITLE: ${{ inputs.title }}
+        INPUT_DESCRIPTION: ${{ inputs.description }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_RELEASE_TYPE: ${{ inputs.release-type }}
+        INPUT_DEPLOYMENT_STAGE: ${{ inputs.deployment-stage }}
+        INPUT_DEPLOYMENT_TARGET: ${{ inputs.deployment-target }}
+        INPUT_ACTOR: ${{ inputs.actor }}
+        INPUT_COMMIT_SHA: ${{ inputs.commit-sha }}
+        INPUT_REPOSITORY: ${{ inputs.repository }}
+        INPUT_FHIR_SERVER_URL: ${{ inputs.fhir-server-url }}
+        INPUT_KEYCLOAK_URL: ${{ inputs.keycloak-url }}
+        INPUT_APP_URL: ${{ inputs.app-url }}
+        INPUT_WORKFLOW_URL: ${{ inputs.workflow-url }}
+        INPUT_RELEASE_URL: ${{ inputs.release-url }}
+        INPUT_WEBHOOK_URL: ${{ inputs.webhook-url }}
+        EMBED_COLOR: ${{ steps.color.outputs.color }}
+        FORMATTED_CHANGELOG: ${{ steps.changelog.outputs.formatted_changelog }}
       run: |
         TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
-        COLOR_DEC=$((0x${{ steps.color.outputs.color }}))
+        COLOR_DEC=$((0x${EMBED_COLOR}))
         
         # Build fields array using jq for safe JSON construction
         FIELDS_JSON="[]"
@@ -128,30 +152,30 @@ runs:
           FIELDS_JSON=$(echo "$FIELDS_JSON" | jq --arg n "$name" --arg v "$value" --argjson i "$inline" '. + [{"name": $n, "value": $v, "inline": $i}]')
         }
         
-        [ -n "${{ inputs.version }}" ] && add_field "Version" "${{ inputs.version }}"
-        [ -n "${{ inputs.release-type }}" ] && add_field "Type" "${{ inputs.release-type }}"
-        [ -n "${{ inputs.deployment-stage }}" ] && add_field "Stage" "${{ inputs.deployment-stage }}"
-        [ -n "${{ inputs.deployment-target }}" ] && add_field "Target" "${{ inputs.deployment-target }}"
-        [ -n "${{ inputs.actor }}" ] && add_field "Triggered by" "${{ inputs.actor }}"
+        [ -n "$INPUT_VERSION" ] && add_field "Version" "$INPUT_VERSION"
+        [ -n "$INPUT_RELEASE_TYPE" ] && add_field "Type" "$INPUT_RELEASE_TYPE"
+        [ -n "$INPUT_DEPLOYMENT_STAGE" ] && add_field "Stage" "$INPUT_DEPLOYMENT_STAGE"
+        [ -n "$INPUT_DEPLOYMENT_TARGET" ] && add_field "Target" "$INPUT_DEPLOYMENT_TARGET"
+        [ -n "$INPUT_ACTOR" ] && add_field "Triggered by" "$INPUT_ACTOR"
         
-        SHORT_SHA=$(echo "${{ inputs.commit-sha }}" | cut -c1-8)
-        add_field "Commit" "[$SHORT_SHA](https://github.com/${{ inputs.repository }}/commit/${{ inputs.commit-sha }})"
+        SHORT_SHA=$(echo "$INPUT_COMMIT_SHA" | cut -c1-8)
+        add_field "Commit" "[$SHORT_SHA](https://github.com/$INPUT_REPOSITORY/commit/$INPUT_COMMIT_SHA)"
         
-        [ -n "${{ inputs.fhir-server-url }}" ] && add_field "FHIR Server" "[Link](${{ inputs.fhir-server-url }})"
-        [ -n "${{ inputs.keycloak-url }}" ] && add_field "Keycloak" "[Link](${{ inputs.keycloak-url }})"
-        [ -n "${{ inputs.app-url }}" ] && add_field "Proxy Smart" "[Link](${{ inputs.app-url }})"
-        [ -n "${{ inputs.workflow-url }}" ] && add_field "Workflow" "[Actions](${{ inputs.workflow-url }})"
-        [ -n "${{ inputs.release-url }}" ] && add_field "Release" "[GitHub](${{ inputs.release-url }})"
-        [ -n "${{ steps.changelog.outputs.formatted_changelog }}" ] && add_field "Changelog" "${{ steps.changelog.outputs.formatted_changelog }}" false
+        [ -n "$INPUT_FHIR_SERVER_URL" ] && add_field "FHIR Server" "[Link]($INPUT_FHIR_SERVER_URL)"
+        [ -n "$INPUT_KEYCLOAK_URL" ] && add_field "Keycloak" "[Link]($INPUT_KEYCLOAK_URL)"
+        [ -n "$INPUT_APP_URL" ] && add_field "Proxy Smart" "[Link]($INPUT_APP_URL)"
+        [ -n "$INPUT_WORKFLOW_URL" ] && add_field "Workflow" "[Actions]($INPUT_WORKFLOW_URL)"
+        [ -n "$INPUT_RELEASE_URL" ] && add_field "Release" "[GitHub]($INPUT_RELEASE_URL)"
+        [ -n "$FORMATTED_CHANGELOG" ] && add_field "Changelog" "$FORMATTED_CHANGELOG" false
         
         # Build payload with jq for proper JSON escaping
         PAYLOAD=$(jq -n \
-          --arg title "${{ inputs.title }}" \
-          --arg desc "${{ inputs.description }}" \
+          --arg title "$INPUT_TITLE" \
+          --arg desc "$INPUT_DESCRIPTION" \
           --argjson color "$COLOR_DEC" \
           --arg ts "$TIMESTAMP" \
           --argjson fields "$FIELDS_JSON" \
-          --arg repo "${{ inputs.repository }}" \
+          --arg repo "$INPUT_REPOSITORY" \
           '{
             "embeds": [{
               "title": $title,
@@ -170,7 +194,7 @@ runs:
         HTTP_CODE=$(curl -s -o /tmp/discord-response.txt -w "%{http_code}" \
              -H "Content-Type: application/json" \
              -d "$PAYLOAD" \
-             "${{ inputs.webhook-url }}")
+             "$INPUT_WEBHOOK_URL")
         
         if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
           echo "Discord notification sent successfully (HTTP $HTTP_CODE)"
@@ -183,15 +207,22 @@ runs:
 
     - name: Log notification details
       shell: bash
+      env:
+        INPUT_NOTIFICATION_TYPE: ${{ inputs.notification-type }}
+        INPUT_TITLE: ${{ inputs.title }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_RELEASE_TYPE: ${{ inputs.release-type }}
+        EMBED_COLOR: ${{ steps.color.outputs.color }}
+        INPUT_REPOSITORY: ${{ inputs.repository }}
       run: |
         echo "Discord notification sent:"
-        echo "  Type: ${{ inputs.notification-type }}"
-        echo "  Title: ${{ inputs.title }}"
-        echo "  Color: #${{ steps.color.outputs.color }}"
-        echo "  Repository: ${{ inputs.repository }}"
-        if [ -n "${{ inputs.version }}" ]; then
-          echo "  Version: ${{ inputs.version }}"
+        echo "  Type: $INPUT_NOTIFICATION_TYPE"
+        echo "  Title: $INPUT_TITLE"
+        echo "  Color: #$EMBED_COLOR"
+        echo "  Repository: $INPUT_REPOSITORY"
+        if [ -n "$INPUT_VERSION" ]; then
+          echo "  Version: $INPUT_VERSION"
         fi
-        if [ -n "${{ inputs.release-type }}" ]; then
-          echo "  Release Type: ${{ inputs.release-type }}"
+        if [ -n "$INPUT_RELEASE_TYPE" ]; then
+          echo "  Release Type: $INPUT_RELEASE_TYPE"
         fi

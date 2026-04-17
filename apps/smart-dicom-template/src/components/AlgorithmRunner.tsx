@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import type { ImagingStudy } from "fhir/r4"
+import type { ImagingStudyUvIps as ImagingStudy } from "hl7.fhir.uv.ips-generated"
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { fhirBaseUrl } from "@/lib/smart-auth"
@@ -9,10 +9,11 @@ import {
   getStudyTitle,
   getModalityInfo,
   getAccessToken,
-  fetchSeriesImageIds,
+  getCornerstoneDicomweb,
   getStudyThumbnailUrl,
 } from "@/lib/dicomweb"
 import { type AlgorithmResult, runAlgorithm } from "@/algorithm"
+import { ensureCornerstoneInit } from "@/lib/cornerstone-init"
 import { Play, ImageIcon, CheckCircle, AlertTriangle, Info, RefreshCw } from "lucide-react"
 
 type RunState = "idle" | "loading-images" | "running" | "done" | "error"
@@ -61,15 +62,19 @@ export function AlgorithmRunner() {
     try {
       // 1. Collect all series image IDs
       setRunState("loading-images")
+      await ensureCornerstoneInit()
+
       const studyUID = getStudyInstanceUID(study)
       if (!studyUID) throw new Error("Study has no Study Instance UID")
 
       const allImageIds: string[] = []
+      const csDw = getCornerstoneDicomweb()
       for (const series of study.series ?? []) {
         const seriesUID = series.uid
         if (!seriesUID) continue
-        const ids = await fetchSeriesImageIds(studyUID, seriesUID)
-        allImageIds.push(...ids)
+        const { imageIds, errors } = await csDw.loadSeries(studyUID, seriesUID)
+        if (errors.length > 0) console.warn('DICOMweb loadSeries errors:', errors)
+        allImageIds.push(...imageIds)
       }
 
       if (allImageIds.length === 0) {

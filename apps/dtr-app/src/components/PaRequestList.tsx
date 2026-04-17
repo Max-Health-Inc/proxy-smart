@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardAction, Badge, Button, Sp
 import { searchClaims, searchClaimResponses, searchTasks, type PASClaim, type PASClaimResponse, type PASTask } from "@/lib/fhir-client"
 import type { ReviewAction } from "hl7.fhir.us.davinci-pas-generated"
 import { getX12278DiagnosisTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278DiagnosisType"
-import { getPASTaskCodesConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes"
+import { getPASTaskCodesConcept, type PASTaskCodesCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes"
 import { getPASSupportingInfoTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASSupportingInfoType"
+import { type RemittanceOutcomeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-RemittanceOutcome"
+import { type HrexTaskStatusCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-HrexTaskStatus"
 import { format } from "date-fns"
-import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Paperclip } from "lucide-react"
+import { FileText, Clock, CheckCircle, XCircle, AlertTriangle, Eye, Paperclip, Info } from "lucide-react"
 
 interface PaRequestListProps {
   patientId: string
@@ -18,22 +20,49 @@ interface PaDisplayItem {
   tasks: PASTask[]
 }
 
+/** Maps RemittanceOutcome codes to UI status display */
+const OUTCOME_STATUS_MAP: Record<RemittanceOutcomeCode, { label: string; variant: "success" | "destructive" | "warning" | "secondary"; icon: typeof CheckCircle }> = {
+  complete: { label: "Approved", variant: "success", icon: CheckCircle },
+  error: { label: "Denied", variant: "destructive", icon: XCircle },
+  partial: { label: "Partial", variant: "warning", icon: AlertTriangle },
+  queued: { label: "Pended", variant: "secondary", icon: Clock },
+}
+
+/** Maps HRex Task status codes to display labels */
+const TASK_STATUS_LABELS: Partial<Record<HrexTaskStatusCode, string>> = {
+  requested: "Requested",
+  accepted: "Accepted",
+  rejected: "Rejected",
+  "in-progress": "In Progress",
+  failed: "Failed",
+  completed: "Completed",
+  "on-hold": "On Hold",
+}
+
+/** Maps PAS task codes to human-readable labels */
+const TASK_CODE_LABELS: Record<string, string> = {
+  "attachment-request-questionnaire": "Questionnaire Request",
+  "attachment-request-code": "Coded Attachment Request",
+}
+
 function getStatusInfo(item: PaDisplayItem) {
-  const outcome = item.response?.outcome
-  switch (outcome) {
-    case "complete":
-      return { label: "Approved", variant: "success" as const, icon: CheckCircle }
-    case "error":
-      return { label: "Denied", variant: "destructive" as const, icon: XCircle }
-    case "partial":
-      return { label: "Partial", variant: "warning" as const, icon: AlertTriangle }
-    case "queued":
-      return { label: "Pended", variant: "secondary" as const, icon: Clock }
-    default:
-      return item.response
-        ? { label: "Responded", variant: "outline" as const, icon: FileText }
-        : { label: "Submitted", variant: "secondary" as const, icon: Clock }
+  const outcome = item.response?.outcome as RemittanceOutcomeCode | undefined
+  if (outcome && outcome in OUTCOME_STATUS_MAP) {
+    return OUTCOME_STATUS_MAP[outcome]
   }
+  return item.response
+    ? { label: "Responded", variant: "outline" as const, icon: FileText }
+    : { label: "Submitted", variant: "secondary" as const, icon: Clock }
+}
+
+function getTaskStatusLabel(status: string): string {
+  return TASK_STATUS_LABELS[status as HrexTaskStatusCode] ?? status
+}
+
+function getTaskCodeLabel(code: string | undefined): string {
+  if (!code) return "Attachment Request"
+  const pasLabel = getPASTaskCodesConcept(code)?.code
+  return TASK_CODE_LABELS[pasLabel ?? code] ?? pasLabel ?? code
 }
 
 export function PaRequestList({ patientId }: PaRequestListProps) {
@@ -218,10 +247,16 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
                     ))}
                     {/* Communication requests */}
                     {item.response.communicationRequest && item.response.communicationRequest.length > 0 && (
-                      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md">
-                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-md space-y-1">
+                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                          <Info className="size-3" />
                           Payer requests additional information ({item.response.communicationRequest.length} item{item.response.communicationRequest.length !== 1 ? "s" : ""})
                         </p>
+                        {item.response.communicationRequest.map((cr, i) => (
+                          <p key={i} className="text-xs text-blue-600 dark:text-blue-400 pl-4">
+                            {cr.display ?? cr.reference ?? "Communication request"}
+                          </p>
+                        ))}
                       </div>
                     )}
                     {/* Raw response fallback */}
@@ -242,19 +277,14 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
                     </p>
                     {item.tasks.map((task, idx) => {
                       const taskCode = task.code?.coding?.[0]?.code
-                      const taskLabel = taskCode ? getPASTaskCodesConcept(taskCode)?.code : undefined
                       return (
                         <div key={task.id || idx} className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-md">
                           <div className="flex items-center justify-between">
                             <p className="text-xs font-medium text-amber-800 dark:text-amber-200">
-                              {taskLabel === "attachment-request-questionnaire"
-                                ? "Questionnaire Request"
-                                : taskLabel === "attachment-request-code"
-                                  ? "Coded Attachment Request"
-                                  : taskCode ?? "Attachment Request"}
+                              {getTaskCodeLabel(taskCode)}
                             </p>
                             <Badge variant="outline" className="text-xs">
-                              {task.status}
+                              {getTaskStatusLabel(task.status ?? "")}
                             </Badge>
                           </div>
                           {task.description && (

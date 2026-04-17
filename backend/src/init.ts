@@ -261,6 +261,68 @@ export async function ensurePostLogoutRedirectUris(): Promise<void> {
 }
 
 /**
+ * Ensure Keycloak realm has SMTP configured and password reset enabled.
+ * Uses RESEND_API_KEY env var. Idempotent — safe to call on every startup.
+ */
+async function ensureKeycloakSmtp(): Promise<void> {
+  const resendApiKey = process.env.RESEND_API_KEY
+  if (!resendApiKey || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping SMTP setup — RESEND_API_KEY or admin credentials not configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) {
+      logger.keycloak.warn('Could not read realm — skipping SMTP setup')
+      return
+    }
+
+    const needsUpdate = !realm.resetPasswordAllowed || !realm.smtpServer?.host
+
+    if (!needsUpdate) {
+      logger.keycloak.info('✅ Keycloak SMTP and password reset already configured')
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      {
+        resetPasswordAllowed: true,
+        smtpServer: {
+          host: 'smtp.resend.dev',
+          port: '465',
+          from: 'noreply@maxhealth.tech',
+          fromDisplayName: 'Proxy Smart',
+          replyTo: 'noreply@maxhealth.tech',
+          ssl: 'true',
+          auth: 'true',
+          user: 'resend',
+          password: resendApiKey,
+        },
+      },
+    )
+
+    logger.keycloak.info('✅ Keycloak SMTP configured (Resend) and password reset enabled')
+  } catch (error) {
+    logger.keycloak.warn('Could not auto-configure SMTP', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Ensure Keycloak realm has event logging enabled.
  * Uses the service-account admin credentials (KEYCLOAK_ADMIN_CLIENT_ID/SECRET)
  * to update the realm configuration via the Admin REST API.
@@ -321,6 +383,13 @@ async function ensureKeycloakEventLogging(): Promise<void> {
           'UPDATE_PROFILE', 'UPDATE_PASSWORD',
           'GRANT_CONSENT', 'REVOKE_GRANT',
           'PERMISSION_TOKEN',
+          // Email events
+          'SEND_RESET_PASSWORD', 'SEND_RESET_PASSWORD_ERROR',
+          'SEND_VERIFY_EMAIL', 'SEND_VERIFY_EMAIL_ERROR',
+          'SEND_IDENTITY_PROVIDER_LINK', 'SEND_IDENTITY_PROVIDER_LINK_ERROR',
+          'EXECUTE_ACTIONS', 'EXECUTE_ACTIONS_ERROR',
+          'EXECUTE_ACTION_TOKEN', 'EXECUTE_ACTION_TOKEN_ERROR',
+          'CUSTOM_REQUIRED_ACTION', 'CUSTOM_REQUIRED_ACTION_ERROR',
         ],
       },
     )
@@ -329,6 +398,55 @@ async function ensureKeycloakEventLogging(): Promise<void> {
   } catch (error) {
     // Non-fatal — realm-export.json already has the config for fresh provisioning
     logger.keycloak.warn('Could not auto-enable Keycloak event logging', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
+ * Ensure Keycloak realm has the Organizations feature enabled.
+ * KC 26+ ships Organizations as a supported feature, but it must be
+ * explicitly enabled on the realm before the Organizations Admin API
+ * returns anything other than 404.
+ * Idempotent — safe to call on every startup.
+ */
+async function ensureOrganizationsEnabled(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping organizations check — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) {
+      logger.keycloak.warn('Could not read realm — skipping organizations check')
+      return
+    }
+
+    if ((realm as any).organizationsEnabled) {
+      logger.keycloak.info('✅ Keycloak Organizations already enabled')
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      { organizationsEnabled: true } as any,
+    )
+
+    logger.keycloak.info('✅ Keycloak Organizations enabled on realm')
+  } catch (error) {
+    logger.keycloak.warn('Could not auto-enable Organizations on realm', {
       error: error instanceof Error ? error.message : String(error),
     })
   }
@@ -354,8 +472,14 @@ export async function initializeServer(): Promise<void> {
       // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
       await ensureKeycloakEventLogging()
 
+      // Ensure Keycloak SMTP/password-reset is configured if RESEND_API_KEY is set
+      await ensureKeycloakSmtp()
+
       // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
       await ensurePostLogoutRedirectUris()
+
+      // Ensure Keycloak Organizations feature is enabled on the realm
+      await ensureOrganizationsEnabled()
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')
@@ -381,24 +505,20 @@ export async function initializeServer(): Promise<void> {
     
     // Check if it's a Keycloak-related error
     if (error instanceof Error && error.message.includes('Keycloak connection verification failed')) {
-      if (process.env.NODE_ENV === 'production') {
-        logger.server.error('🔐 Keycloak connection failed in production — aborting startup')
-        logger.server.error(`   Keycloak URL: ${config.keycloak.baseUrl}`)
-        logger.server.error(`   Realm: ${config.keycloak.realm}`)
-        logger.server.error(`   JWKS: ${config.keycloak.jwksUri}`)
-        throw error
-      }
-      logger.server.warn('🔐 Keycloak connection failed - server will start with limited authentication')
+      logger.server.warn('🔐 Keycloak connection failed — server will start with limited authentication')
+      logger.server.warn(`   Keycloak URL: ${config.keycloak.baseUrl}`)
+      logger.server.warn(`   Realm: ${config.keycloak.realm}`)
+      logger.server.warn(`   JWKS: ${config.keycloak.jwksUri}`)
       logger.server.warn('')
       logger.server.warn('🔍 Keycloak troubleshooting:')
       logger.server.warn(`   1. Check if Keycloak is running at: ${config.keycloak.baseUrl}`)
       logger.server.warn(`   2. Verify realm "${config.keycloak.realm}" exists`)
       logger.server.warn(`   3. Test JWKS endpoint: ${config.keycloak.jwksUri}`)
       logger.server.warn('   4. Check network connectivity and firewall settings')
-      logger.server.warn('   5. Verify Keycloak admin console is accessible')
-      logger.server.warn('   6. Configure Keycloak in the admin UI once the server is running')
+      logger.server.warn('   5. Configure Keycloak in the admin UI once the server is running')
       logger.server.warn('')
-      // Continue server startup even with Keycloak issues
+      // Continue server startup — landing page, admin UI, docs all work without KC.
+      // Auth-dependent routes will degrade gracefully (friendly error pages).
     } else {
       logger.server.error('❌ Server initialization failed', {
         error: errorDetails,

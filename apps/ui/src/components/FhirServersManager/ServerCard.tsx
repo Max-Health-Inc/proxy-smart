@@ -8,11 +8,13 @@ import {
   Eye,
   Edit,
   Shield,
+  ShieldCheck,
   Loader2,
   Lock,
   Trash2
 } from 'lucide-react';
-import { Badge, Button } from '@proxy-smart/shared-ui';
+import { Badge, Button, Label } from '@proxy-smart/shared-ui';
+import { Switch } from '@/components/ui/switch';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerWithState } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +27,7 @@ interface ServerCardProps {
   onCheckSecurity: (server: FhirServerWithState) => void;
   onEditServer: (server: FhirServerWithState) => void;
   onDeleteServer: (server: FhirServerWithState) => void;
+  onToggleStrictCapabilities?: (server: FhirServerWithState, strict: boolean) => void;
 }
 
 export function ServerCard({
@@ -34,7 +37,8 @@ export function ServerCard({
   onConfigureMtls,
   onCheckSecurity,
   onEditServer,
-  onDeleteServer
+  onDeleteServer,
+  onToggleStrictCapabilities
 }: ServerCardProps) {
   const { t } = useTranslation();
   return (
@@ -169,6 +173,28 @@ export function ServerCard({
                 <li>{t('Consider mutual TLS (mTLS) between proxy and FHIR server for extra assurance.')}</li>
               </ul>
             </div>
+          </div>
+        )}
+
+        {/* Strict Capabilities Toggle */}
+        {server.connectionStatus === 'connected' && (
+          <div className="flex items-center justify-between bg-muted/50 p-3 rounded-xl border border-border/30">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-primary" />
+              <div>
+                <Label htmlFor={`strict-cap-${server.id}`} className="text-sm font-semibold cursor-pointer">
+                  {t('Strict Capabilities')}
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  {t('Reject requests for unsupported FHIR interactions')}
+                </p>
+              </div>
+            </div>
+            <Switch
+              id={`strict-cap-${server.id}`}
+              checked={server.strictCapabilities ?? false}
+              onCheckedChange={(checked) => onToggleStrictCapabilities?.(server, checked)}
+            />
           </div>
         )}
 

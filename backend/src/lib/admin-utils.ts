@@ -119,8 +119,7 @@ export function mapHealthcareUser(user: KeycloakUser) {
     organization: user.attributes?.organization?.[0],
     fhirPersons,
     emailVerified: user.emailVerified,
-    npi: user.attributes?.npi?.[0],
-    practitionerId: user.attributes?.practitioner_id?.[0]
+    fhirUser: user.attributes?.fhirUser?.[0]
   }
 }
 
@@ -160,7 +159,14 @@ export async function setUserAttribute(
     }
   }
 
-  await admin.users.update({ id: userId }, { attributes })
+  await admin.users.update({ id: userId }, {
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    enabled: user.enabled,
+    emailVerified: user.emailVerified,
+    attributes
+  })
 }
 
 /**

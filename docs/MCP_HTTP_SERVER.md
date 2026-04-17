@@ -778,7 +778,7 @@ To extend the MCP HTTP server:
 2. Export route schemas from `backend/src/schemas/`
 3. Routes are automatically discovered and exposed via MCP
 4. Test with `bun run test:backend`
-5. Regenerate OpenAPI spec: `bun run generate`
+5. Routes are automatically discovered and exposed via the built-in MCP endpoint
 
 ---
 

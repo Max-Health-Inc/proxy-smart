@@ -6,13 +6,10 @@ import {
   getPrimaryModality,
   getStudyTitle,
   getModalityInfo,
-} from "hl7.fhir.uv.ips-generated/dicomweb"
-import {
-  buildImageId,
-  fetchSeriesImageIds as fetchSeriesImageIdsRaw,
-} from "hl7.fhir.uv.ips-generated/dicomweb/cornerstone"
+} from "@babelfhir-ts/dicomweb"
+import { createCornerstoneDicomweb, type CornerstoneDicomweb } from "@babelfhir-ts/dicomweb/cornerstone"
 
-// ── Shared DICOMweb client instance ───────────────────────────────────────
+// -- Shared DICOMweb client instance --
 
 const dicomwebBase = `${config.proxyBase || window.location.origin}/dicomweb`
 
@@ -21,11 +18,32 @@ const dw = createDicomwebClient({
   getAccessToken: () => smartAuth.getToken()?.access_token ?? null,
 })
 
-// ── Re-exports (typed to ImagingStudyUvIps) ──────────────────────────────
+// -- Cornerstone-integrated client (lazy) --
+
+let csDw: CornerstoneDicomweb | null = null
+
+export function initCornerstoneDicomweb(
+  dicomImageLoader: import("@babelfhir-ts/dicomweb/cornerstone").DicomImageLoaderLike,
+) {
+  if (csDw) return csDw
+  csDw = createCornerstoneDicomweb({
+    baseUrl: dicomwebBase,
+    getAccessToken: () => smartAuth.getToken()?.access_token ?? null,
+    cornerstone: { dicomImageLoader },
+  })
+  return csDw
+}
+
+export function getCornerstoneDicomweb(): CornerstoneDicomweb {
+  if (!csDw) throw new Error("Cornerstone DICOMweb client not initialized")
+  return csDw
+}
+
+// -- Re-exports --
 
 export { getStudyInstanceUID, getPrimaryModality, getStudyTitle, getModalityInfo }
 
-// ── URL builder wrappers ─────────────────────────────────────────────────
+// -- URL builder wrappers --
 
 export function getStudyThumbnailUrl(studyUID: string): string {
   return dw.studyThumbnailUrl(studyUID)
@@ -41,15 +59,4 @@ export function getDicomwebAuthHeaders(): HeadersInit {
 
 export function getAccessToken(): string | null {
   return smartAuth.getToken()?.access_token ?? null
-}
-
-// ── Cornerstone helpers ──────────────────────────────────────────────────
-
-export { buildImageId }
-
-export async function fetchSeriesImageIds(
-  studyUID: string,
-  seriesUID: string,
-): Promise<string[]> {
-  return fetchSeriesImageIdsRaw(dicomwebBase, studyUID, seriesUID, dw.authHeaders())
 }

@@ -14,7 +14,10 @@ import { consentMonitoringRoutes } from './routes/consent-monitoring'
 import { consentWebSocket } from './routes/consent-websocket'
 import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
 import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
+import { fhirCapabilitiesRoutes } from './routes/fhir-capabilities'
 import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
+import { emailMonitoringRoutes } from './routes/email-monitoring'
+import { authMonitoringRoutes } from './routes/auth-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
@@ -22,13 +25,17 @@ import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { mcpEndpointRoutes } from './routes/mcp-endpoint'
 import { dicomwebRoutes } from './routes/dicomweb'
 import { docsRoutes } from './routes/docs'
+import { apiRoutes } from './routes/api'
 import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
+import { getHiddenAppIds } from './lib/app-store-config'
 
 /** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
-function discoverApps() {
+function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
     if (!existsSync(appsDir)) return []
+
+    const hiddenIds = includeHidden ? [] : getHiddenAppIds()
 
     return readdirSync(appsDir, { withFileTypes: true })
         .filter(d => d.isDirectory())
@@ -48,10 +55,12 @@ function discoverApps() {
                     icon: manifest.icon ?? 'app-window',
                     grant_types: manifest.grant_types ?? ['authorization_code'],
                     token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
+                    hidden: hiddenIds.includes(d.name),
                 }
             } catch { return null }
         })
         .filter(Boolean)
+        .filter(app => includeHidden || !app!.hidden)
 }
 
 export function createApp() {
@@ -102,6 +111,8 @@ export function createApp() {
                     { name: 'fhir-monitoring', description: 'FHIR server uptime monitoring' },
                     { name: 'fhir-proxy-monitoring', description: 'FHIR proxy request metrics and error tracking' },
                     { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
+                    { name: 'email-monitoring', description: 'Email event monitoring (password resets, verifications)' },
+                    { name: 'auth-monitoring', description: 'Auth event monitoring (logins, logouts, registrations, token exchanges)' },
                     { name: 'dicomweb', description: 'DICOMweb proxy for WADO-RS and QIDO-RS imaging services' },
                 ],
                 servers: [
@@ -176,13 +187,17 @@ export function createApp() {
         .use(serverDiscoveryRoutes)
         .use(authRoutes)
         .use(adminRoutes)
+        .use(apiRoutes)
         .use(oauthMonitoringRoutes)
         .use(oauthWebSocket)
         .use(consentMonitoringRoutes)
         .use(consentWebSocket)
         .use(fhirMonitoringRoutes)
         .use(fhirProxyMonitoringRoutes)
+        .use(fhirCapabilitiesRoutes)
         .use(adminAuditMonitoringRoutes)
+        .use(emailMonitoringRoutes)
+        .use(authMonitoringRoutes)
         .use(mcpEndpointRoutes)
         .use(dicomwebRoutes)
         .use(fhirRoutes)

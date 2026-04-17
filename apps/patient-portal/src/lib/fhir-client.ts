@@ -1,4 +1,5 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
+import { config } from "@/config"
 import { reportAuthError } from "@/lib/auth-error"
 import { FhirClient } from "hl7.fhir.uv.ips-generated/fhir-client"
 import { FhirClient as GenomicsFhirClient } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
@@ -33,6 +34,15 @@ import type {
   Observation,
   DocumentReference,
 } from "fhir/r4"
+import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
+import type { AllergyintoleranceClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceClinical"
+import type { MedicationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationStatus"
+import type { MedicationrequestStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationrequestStatus"
+import type { ObservationCategoryCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationCategory"
+import type { ImmunizationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImmunizationStatus"
+import type { DeviceStatementStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DeviceStatementStatus"
+import type { DiagnosticReportStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
+import type { ObservationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationStatus"
 
 export type {
   PatientUvIps as Patient,
@@ -57,6 +67,10 @@ export type {
 }
 export type { Observation, DocumentReference }
 export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
+export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ObservationStatusCode, ImmunizationStatusCode }
+
+// Re-export the standard FHIR base Resource type (from @types/fhir)
+export type { Resource as AnyFhirResource } from 'fhir/r4'
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
@@ -82,6 +96,27 @@ export async function getPatient(id: string): Promise<PatientUvIps> {
   return client.read().patientUvIps().read(id)
 }
 
+// ── Update Patient demographics ──────────────────────────────────────────────
+
+export async function updatePatient(
+  id: string,
+  resource: PatientUvIps
+): Promise<PatientUvIps> {
+  const res = await authFetch(`${fhirBaseUrl}/Patient/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/fhir+json",
+      Accept: "application/fhir+json",
+    },
+    body: JSON.stringify(resource),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Patient update failed (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<PatientUvIps>
+}
+
 // ── IPS: International Patient Summary ($summary operation) ──────────────────
 
 export async function getPatientSummary(patientId: string): Promise<BundleUvIps> {
@@ -100,7 +135,7 @@ export async function getPatientSummary(patientId: string): Promise<BundleUvIps>
 export async function searchConditions(patientId: string): Promise<ConditionUvIps[]> {
   return client.read().conditionUvIps().searchAll({
     patient: `Patient/${patientId}`,
-    "clinical-status": "active",
+    "clinical-status": "active" satisfies ConditionClinicalCode,
     _count: 50,
     _sort: "-onset-date",
   })
@@ -111,7 +146,7 @@ export async function searchConditions(patientId: string): Promise<ConditionUvIp
 export async function searchAllergies(patientId: string): Promise<AllergyIntoleranceUvIps[]> {
   return client.read().allergyIntolerance().searchAll({
     patient: `Patient/${patientId}`,
-    "clinical-status": "active",
+    "clinical-status": "active" satisfies AllergyintoleranceClinicalCode,
     _count: 50,
   }) as Promise<AllergyIntoleranceUvIps[]>
 }
@@ -121,7 +156,7 @@ export async function searchAllergies(patientId: string): Promise<AllergyIntoler
 export async function searchMedicationStatements(patientId: string): Promise<MedicationStatementIPS[]> {
   return client.read().medicationStatement().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active",
+    status: "active" satisfies MedicationStatusCode,
     _count: 50,
   }) as Promise<MedicationStatementIPS[]>
 }
@@ -141,7 +176,7 @@ export async function searchImmunizations(patientId: string): Promise<Immunizati
 export async function searchVitals(patientId: string): Promise<Observation[]> {
   return client.read().observation().searchAll({
     patient: `Patient/${patientId}`,
-    category: "vital-signs",
+    category: "vital-signs" satisfies ObservationCategoryCode,
     _count: 20,
     _sort: "-date",
   })
@@ -150,7 +185,7 @@ export async function searchVitals(patientId: string): Promise<Observation[]> {
 export async function searchLabs(patientId: string): Promise<ObservationResultsLaboratoryPathologyUvIps[]> {
   return client.read().observationResultsLaboratoryPathologyUvIps().searchAll({
     patient: `Patient/${patientId}`,
-    category: "laboratory",
+    category: "laboratory" satisfies ObservationCategoryCode,
     _count: 50,
     _sort: "-date",
   })
@@ -209,11 +244,15 @@ export async function searchProcedures(patientId: string): Promise<ProcedureUvIp
 // ── Flags / Alerts (IPS-profiled) ────────────────────────────────────────────
 
 export async function searchFlags(patientId: string): Promise<FlagAlertUvIps[]> {
-  return client.read().flagAlertUvIps().searchAll({
-    patient: `Patient/${patientId}`,
-    status: "active",
-    _count: 20,
-  })
+  try {
+    return await client.read().flagAlertUvIps().searchAll({
+      patient: `Patient/${patientId}`,
+      _count: 20,
+    })
+  } catch {
+    // HAPI may not support Flag search — return empty gracefully
+    return []
+  }
 }
 
 // ── Pregnancy (IPS-profiled) ─────────────────────────────────────────────────
@@ -250,7 +289,7 @@ export async function searchPregnancyOutcome(patientId: string): Promise<Observa
 export async function searchMedicationRequests(patientId: string): Promise<MedicationRequestIPS[]> {
   return client.read().medicationRequest().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active",
+    status: "active" satisfies MedicationrequestStatusCode,
     _count: 50,
     _sort: "-authoredon",
   }) as Promise<MedicationRequestIPS[]>
@@ -280,6 +319,7 @@ export async function searchImagingStudies(patientId: string): Promise<ImagingSt
 export async function searchRadiologyResults(patientId: string): Promise<ObservationResultsRadiologyUvIps[]> {
   return client.read().observationResultsRadiologyUvIps().searchAll({
     patient: `Patient/${patientId}`,
+    category: "imaging" satisfies ObservationCategoryCode,
     _count: 50,
     _sort: "-date",
   })
@@ -297,6 +337,7 @@ const genomicsClient = new GenomicsFhirClient(fhirBaseUrl, authFetch)
 export async function searchGenomicReports(patientId: string): Promise<GenomicReport[]> {
   return genomicsClient.read().genomicReport().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/genomic-report",
     _count: 50,
     _sort: "-date",
   })
@@ -305,6 +346,7 @@ export async function searchGenomicReports(patientId: string): Promise<GenomicRe
 export async function searchVariants(patientId: string): Promise<Variant[]> {
   return genomicsClient.read().variant().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/variant",
     _count: 100,
     _sort: "-date",
   })
@@ -313,6 +355,7 @@ export async function searchVariants(patientId: string): Promise<Variant[]> {
 export async function searchDiagnosticImplications(patientId: string): Promise<DiagnosticImplication[]> {
   return genomicsClient.read().diagnosticImplication().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/diagnostic-implication",
     _count: 100,
     _sort: "-date",
   })
@@ -321,7 +364,113 @@ export async function searchDiagnosticImplications(patientId: string): Promise<D
 export async function searchTherapeuticImplications(patientId: string): Promise<TherapeuticImplication[]> {
   return genomicsClient.read().therapeuticImplication().searchAll({
     patient: `Patient/${patientId}`,
+    _profile: "http://hl7.org/fhir/uv/genomics-reporting/StructureDefinition/therapeutic-implication",
     _count: 100,
     _sort: "-date",
   })
+}
+
+// ── Write operations ─────────────────────────────────────────────────────────
+
+/** Create a FHIR resource through the proxy (requires patient/*.write scope) */
+export async function createResource<T extends { resourceType: string }>(resource: T): Promise<T> {
+  const res = await authFetch(`${fhirBaseUrl}/${resource.resourceType}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/fhir+json',
+      Accept: 'application/fhir+json',
+    },
+    body: JSON.stringify(resource),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Failed to create ${resource.resourceType} (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<T>
+}
+
+/** Update a FHIR resource via PUT (requires patient/*.write scope) */
+export async function updateResource<T extends { resourceType: string; id?: string }>(resource: T): Promise<T> {
+  if (!resource.id) throw new Error('Cannot update a resource without an id')
+  const res = await authFetch(`${fhirBaseUrl}/${resource.resourceType}/${resource.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/fhir+json',
+      Accept: 'application/fhir+json',
+    },
+    body: JSON.stringify(resource),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Failed to update ${resource.resourceType}/${resource.id} (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<T>
+}
+
+// ── Document Import ──────────────────────────────────────────────────────────
+
+export interface ImportedResource {
+  resourceType: string
+  resource: Record<string, unknown>
+  retriesNeeded: number
+  warnings: string[]
+}
+
+export interface FailedResource {
+  resourceType: string
+  errors: string[]
+  warnings: string[]
+  retriesAttempted: number
+}
+
+export interface DocumentImportResponse {
+  success: boolean
+  fileName: string
+  pagesProcessed: number
+  resources: ImportedResource[]
+  failed: FailedResource[]
+  documentReference: Record<string, unknown>
+  processingTimeMs: number
+}
+
+/** Upload a PDF for AI-powered FHIR extraction (calls /api/document-import) */
+export async function importDocument(file: File, patientId: string): Promise<DocumentImportResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('patientId', patientId)
+
+  const baseUrl = config.proxyBase
+  const res = await authFetch(`${baseUrl}/api/document-import`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Document import failed (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<DocumentImportResponse>
+}
+
+// ── Patient Scribe ───────────────────────────────────────────────────────────
+
+export interface ScribeResponse {
+  success: boolean
+  resources: ImportedResource[]
+  failed: FailedResource[]
+  processingTimeMs: number
+}
+
+/** Send free text to the AI scribe and get back validated FHIR resources */
+export async function scribeFromText(text: string, patientId: string): Promise<ScribeResponse> {
+  const baseUrl = config.proxyBase
+  const res = await authFetch(`${baseUrl}/api/patient-scribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, patientId }),
+  })
+  if (!res.ok) {
+    const errText = await res.text()
+    throw new Error(`Scribe failed (${res.status}): ${errText}`)
+  }
+  return res.json() as Promise<ScribeResponse>
 }

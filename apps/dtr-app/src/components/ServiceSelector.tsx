@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import type { Questionnaire } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Spinner } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge, Spinner } from "@proxy-smart/shared-ui"
 import {
   Select,
   SelectContent,
@@ -8,9 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proxy-smart/shared-ui"
-import { searchConditions, searchQuestionnaires, type Condition } from "@/lib/fhir-client"
+import { searchConditions, searchQuestionnaires, searchCoverage, type Condition, type PASCoverage } from "@/lib/fhir-client"
 import { COMMON_PROCEDURES, type ProcedureCode } from "@/lib/procedure-codes"
-import { ArrowRight, Stethoscope } from "lucide-react"
+import { ArrowRight, Stethoscope, Shield } from "lucide-react"
 
 export interface SelectedService {
   procedure: ProcedureCode
@@ -26,6 +26,7 @@ interface ServiceSelectorProps {
 
 export function ServiceSelector({ patientId, onSelect }: ServiceSelectorProps) {
   const [conditions, setConditions] = useState<Condition[]>([])
+  const [coverage, setCoverage] = useState<PASCoverage | null>(null)
   const [loadingConditions, setLoadingConditions] = useState(true)
   const [selectedProcedure, setSelectedProcedure] = useState<string>("")
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<string>("")
@@ -38,6 +39,9 @@ export function ServiceSelector({ patientId, onSelect }: ServiceSelectorProps) {
       .then(setConditions)
       .catch(() => setConditions([]))
       .finally(() => setLoadingConditions(false))
+    searchCoverage(patientId)
+      .then((c) => setCoverage(c[0] ?? null))
+      .catch(() => {})
   }, [patientId])
 
   const handleContinue = async () => {
@@ -87,6 +91,26 @@ export function ServiceSelector({ patientId, onSelect }: ServiceSelectorProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Active Coverage */}
+        {coverage && (
+          <div className="flex items-center gap-2 p-3 rounded-md bg-primary/5 border border-primary/10">
+            <Shield className="size-4 text-primary shrink-0" />
+            <div className="flex items-center gap-2 flex-wrap text-sm">
+              <span className="font-medium">{coverage.payor?.[0]?.display ?? "Payer"}</span>
+              {coverage.class?.find(c => c.type?.coding?.[0]?.code === "plan")?.name && (
+                <Badge variant="outline" className="text-xs font-normal">
+                  {coverage.class!.find(c => c.type?.coding?.[0]?.code === "plan")!.name}
+                </Badge>
+              )}
+              {coverage.identifier?.[0]?.value && (
+                <Badge variant="secondary" className="text-xs font-normal font-mono">
+                  {coverage.identifier[0].value}
+                </Badge>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Procedure */}
         <div className="space-y-2">
           <Label>Procedure / Service</Label>

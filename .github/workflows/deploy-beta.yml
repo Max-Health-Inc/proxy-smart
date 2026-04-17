@@ -44,6 +44,8 @@ on:
         required: true
       OPENAI_API_KEY:
         required: false
+      RESEND_API_KEY:
+        required: false
 
 env:
   REGISTRY: ghcr.io
@@ -58,25 +60,25 @@ jobs:
       packages: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.source_branch }}
 
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Compute image prefix (GHCR requires lowercase)
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Build & push backend image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile
@@ -85,27 +87,11 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/backend:beta-latest
-          cache-from: type=gha,scope=beta-backend
-          cache-to: type=gha,mode=max,scope=beta-backend
-
-      - name: Build & push frontend image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile
-          target: ui
-          push: true
-          tags: |
-            ${{ env.IMAGE_PREFIX }}/frontend:beta-${{ inputs.app_version }}
-            ${{ env.IMAGE_PREFIX }}/frontend:beta-latest
-          build-args: |
-            VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
-            VITE_BASE=/webapp/
-          cache-from: type=gha,scope=beta-frontend
-          cache-to: type=gha,mode=max,scope=beta-frontend
+          cache-from: type=gha,scope=beta-backend-v2
+          cache-to: type=gha,mode=max,scope=beta-backend-v2
 
       - name: Build & push keycloak image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.keycloak
@@ -147,7 +133,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.source_branch }}
 
@@ -173,6 +159,7 @@ jobs:
           BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
           VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
         run: |
@@ -183,24 +170,35 @@ jobs:
           IMAGE_TAG="beta-${{ inputs.app_version }}"
           SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=10 ${VPS_USER}@${VPS_HOST}"
 
-          # Ensure deploy directory and repo exist on VPS
-          ${SSH_CMD} "
-            if [ ! -d ${DEPLOY_DIR}/.git ]; then
-              sudo mkdir -p ${DEPLOY_DIR}
-              sudo chown \$(whoami):\$(whoami) ${DEPLOY_DIR}
-              git clone --branch ${{ inputs.source_branch }} \
-                https://github.com/${{ github.repository }}.git ${DEPLOY_DIR}
-            fi
-          "
+          # Ensure deploy directory exists on VPS
+          ${SSH_CMD} "sudo mkdir -p ${DEPLOY_DIR} && sudo chown \$(whoami):\$(whoami) ${DEPLOY_DIR}"
+
+          # Copy only the files we need (no git on VPS)
+          SCP_CMD="scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+          ${SCP_CMD} docker-compose.beta.yml ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/
+          ${SCP_CMD} docker-compose.caddy.yml ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/
+          ${SCP_CMD} deploy/fhir-seed-bundle.json ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/fhir-seed-bundle.json
+          ${SCP_CMD} deploy/seed-dicom.sh ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/seed-dicom.sh
+          ${SSH_CMD} "chmod +x ${DEPLOY_DIR}/seed-dicom.sh && mkdir -p ${DEPLOY_DIR}/dicom"
+          ${SCP_CMD} deploy/dicom/CTImage.dcm ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/dicom/CTImage.dcm
+          ${SSH_CMD} "mkdir -p ${DEPLOY_DIR}/keycloak/database"
+          ${SCP_CMD} keycloak/database/init.sql ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/keycloak/database/init.sql
 
           # Clean up unused Docker resources to prevent disk-full failures
           ${SSH_CMD} "
             echo '🧹 Cleaning up unused Docker resources...'
-            docker image prune -af --filter 'until=168h' 2>/dev/null || true
+            docker image prune -af --filter 'until=72h' 2>/dev/null || true
             docker container prune -f 2>/dev/null || true
             docker volume prune -f 2>/dev/null || true
-            docker builder prune -af --keep-storage=512mb 2>/dev/null || true
+            docker builder prune -af 2>/dev/null || true
             echo \"📊 Disk usage: \$(df -h / | tail -1 | awk '{print \$5}') used\"
+            DISK_PCT=\$(df / | tail -1 | awk '{print \$5}' | tr -d '%')
+            if [ \"\$DISK_PCT\" -gt 85 ]; then
+              echo '⚠️  Disk usage >85%, running aggressive cleanup...'
+              docker image prune -af 2>/dev/null || true
+              docker system prune -af 2>/dev/null || true
+              echo \"📊 Disk after aggressive cleanup: \$(df -h / | tail -1 | awk '{print \$5}') used\"
+            fi
           "
 
           # Write env file from CI secrets
@@ -211,18 +209,15 @@ jobs:
             "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
             "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
             "OPENAI_API_KEY=${OPENAI_API_KEY}" \
+            "RESEND_API_KEY=${RESEND_API_KEY}" \
             "BACKEND_IMAGE=${{ env.IMAGE_PREFIX }}/backend:${IMAGE_TAG}" \
-            "FRONTEND_IMAGE=${{ env.IMAGE_PREFIX }}/frontend:${IMAGE_TAG}" \
             "KEYCLOAK_IMAGE=${{ env.IMAGE_PREFIX }}/keycloak:${IMAGE_TAG}" \
           | ${SSH_CMD} "cat > ${DEPLOY_DIR}/.env.beta && chmod 600 ${DEPLOY_DIR}/.env.beta"
 
-          # Pull latest compose files, pull pre-built images, restart
+          # Pull pre-built images and restart services
           ${SSH_CMD} "
             set -e
             cd ${DEPLOY_DIR}
-            git fetch origin
-            git checkout ${{ inputs.source_branch }}
-            git pull origin ${{ inputs.source_branch }}
 
             # Log in to GHCR for pulling images
             echo '${GH_TOKEN}' | docker login ghcr.io -u '${GH_ACTOR}' --password-stdin
@@ -232,8 +227,100 @@ jobs:
             docker rm -f caddy-proxy 2>/dev/null || true
             docker compose -p caddy-proxy -f docker-compose.caddy.yml up -d
 
-            echo '📦 Pulling pre-built images and restarting beta stack...'
+            echo '📦 Pulling pre-built images...'
             docker compose -f docker-compose.beta.yml --env-file .env.beta pull
+
+            # ── Ensure infrastructure services are up before canary testing ──
+            echo '🏗️ Starting infrastructure services (postgres, keycloak, hapi-fhir, orthanc)...'
+            # Remove orphaned network (may exist from manual docker network create after prune)
+            docker network rm proxy-smart-beta-network 2>/dev/null || true
+            docker compose -f docker-compose.beta.yml --env-file .env.beta up -d postgres
+            # Wait for postgres before starting keycloak
+            for i in \$(seq 1 30); do
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T postgres pg_isready -U postgres -d keycloak >/dev/null 2>&1; then
+                echo '  ✅ Postgres ready'
+                break
+              fi
+              sleep 2
+            done
+            docker compose -f docker-compose.beta.yml --env-file .env.beta up -d keycloak hapi-fhir orthanc
+
+            # Wait for Keycloak to be ready (backend health check depends on it)
+            echo '  ⏳ Waiting for Keycloak...'
+            for i in \$(seq 1 40); do
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /auth/health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
+                echo '  ✅ Keycloak ready'
+                break
+              fi
+              if [ \$i -eq 40 ]; then
+                echo '  ⚠️ Keycloak not ready after 120s — proceeding anyway'
+              fi
+              sleep 3
+            done
+
+            # ── Blue-Green: canary-test the new backend image before swapping ──
+            echo '🔬 Canary-testing new backend image before swap...'
+            BACKEND_IMG=\$(grep BACKEND_IMAGE .env.beta | cut -d= -f2)
+            CANARY_NAME=proxy-smart-backend-canary
+
+            # Remove any leftover canary from a previous failed deploy
+            docker rm -f \$CANARY_NAME 2>/dev/null || true
+
+            # Start canary on the same Docker network so it can reach Keycloak/Postgres
+            # Use a different port (9445) to avoid conflict with the running backend
+            docker run -d --name \$CANARY_NAME \\
+              --network proxy-smart-beta-network \\
+              --env-file .env.beta \\
+              -p 9445:9445 \\
+              -e NODE_ENV=production \\
+              -e PORT=9445 \\
+              -e BASE_URL=https://beta.proxy-smart.com \\
+              -e KEYCLOAK_BASE_URL=http://keycloak:8080/auth \\
+              -e KEYCLOAK_PUBLIC_URL=https://beta.proxy-smart.com/auth \\
+              -e KEYCLOAK_DOMAIN=beta.proxy-smart.com \\
+              -e KEYCLOAK_REALM=proxy-smart \\
+              -e KEYCLOAK_JWKS_URI=http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs \\
+              -e KEYCLOAK_ADMIN_CLIENT_ID=admin-service \\
+              -e FHIR_SERVER_BASE=http://hapi-fhir:8080/fhir \\
+              -e CORS_ORIGINS=https://beta.proxy-smart.com \\
+              -e DICOMWEB_BASE_URL=http://orthanc:8042/dicom-web \\
+              \$BACKEND_IMG
+
+            # Wait for canary to pass health check (max 60s)
+            CANARY_OK=false
+            for i in \$(seq 1 12); do
+              # Check if container is still running (not crash-looping)
+              if ! docker inspect -f '{{.State.Running}}' \$CANARY_NAME 2>/dev/null | grep -q true; then
+                echo '  ❌ Canary container crashed!'
+                docker logs --tail 50 \$CANARY_NAME 2>&1 || true
+                break
+              fi
+              if curl -s -o /dev/null -w '%{http_code}' http://localhost:9445/health | grep -qE '^(200|503)$'; then
+                CANARY_OK=true
+                echo '  ✅ Canary health check passed — safe to swap'
+                break
+              fi
+              echo \"  ⏳ Canary not ready yet (attempt \$i/12)...\"
+              sleep 5
+            done
+
+            # Always dump canary logs on failure for debugging
+            if [ "\$CANARY_OK" != 'true' ]; then
+              echo '📋 Canary container logs:'
+              docker logs --tail 80 \$CANARY_NAME 2>&1 || true
+            fi
+
+            # Clean up canary regardless
+            docker rm -f \$CANARY_NAME 2>/dev/null || true
+
+            if [ "\$CANARY_OK" != 'true' ]; then
+              echo '❌ CANARY FAILED — aborting deploy to keep current version running'
+              echo '   The old backend remains live. Fix the image and re-deploy.'
+              exit 1
+            fi
+
+            # ── Canary passed — safe to swap ──
+            echo '🔄 Swapping to new version...'
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d --remove-orphans
 
             echo '⏳ Waiting for services to become healthy...'
@@ -246,14 +333,136 @@ jobs:
               sleep 2
             done
 
-            # Wait for backend health endpoint
+            # Wait for backend health check (Docker healthcheck + HTTP)
             for i in \$(seq 1 60); do
-              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend curl -sf http://localhost:8445/health >/dev/null 2>&1; then
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend bun -e 'fetch(\"http://localhost:8445/health\").then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))' >/dev/null 2>&1; then
                 echo '  ✅ Backend ready'
                 break
               fi
               sleep 5
             done
+          "
+
+          # Configure Keycloak SMTP (Resend) and enable password reset
+          # SMTP config is persisted in Keycloak's DB, so we skip if already configured.
+          # Uses host curl via docker network (backend container lacks curl in bun:slim)
+          if [ -n "${RESEND_API_KEY}" ]; then
+            echo "📧 Checking Keycloak SMTP configuration..."
+            ${SSH_CMD} "
+              cd ${DEPLOY_DIR}
+              KC_BASE='http://localhost:8080/auth'
+
+              # Get Keycloak container IP on the compose network
+              KC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' proxy-smart-keycloak-beta 2>/dev/null)
+              if [ -z \"\$KC_IP\" ]; then
+                echo '  ⚠️ Keycloak container not found — skipping SMTP config'
+                exit 0
+              fi
+              KC_BASE=\"http://\${KC_IP}:8080/auth\"
+
+              # Wait for Keycloak to be ready
+              KC_READY=false
+              for i in \$(seq 1 20); do
+                if curl -sf \"http://\${KC_IP}:9000/auth/health/ready\" >/dev/null 2>&1; then
+                  KC_READY=true
+                  break
+                fi
+                sleep 3
+              done
+
+              if [ \"\$KC_READY\" != 'true' ]; then
+                echo '  ⚠️ Keycloak not ready — skipping SMTP config (will retry next deploy)'
+                exit 0
+              fi
+
+              # Get admin token
+              KC_PASS=\$(grep KEYCLOAK_ADMIN_PASSWORD .env.beta | cut -d= -f2)
+              KC_TOKEN=\$(curl -sf -X POST \"\${KC_BASE}/realms/master/protocol/openid-connect/token\" \
+                -H 'Content-Type: application/x-www-form-urlencoded' \
+                -d 'username=admin' \
+                -d \"password=\${KC_PASS}\" \
+                -d 'grant_type=password' \
+                -d 'client_id=admin-cli' | grep -o '\"access_token\":\"[^\"]*\"' | cut -d'\"' -f4)
+
+              if [ -z \"\$KC_TOKEN\" ]; then
+                echo '  ⚠️ Could not get Keycloak admin token — SMTP not configured'
+                exit 0
+              fi
+
+              # Check if SMTP is already configured (skip the PUT if host is already set)
+              EXISTING_HOST=\$(curl -sf \"\${KC_BASE}/admin/realms/proxy-smart\" \
+                -H \"Authorization: Bearer \$KC_TOKEN\" | grep -o '\"host\":\"[^\"]*\"' | head -1 | cut -d'\"' -f4 || true)
+
+              if [ \"\$EXISTING_HOST\" = 'smtp.resend.com' ]; then
+                echo '  ✅ Keycloak SMTP already configured — skipping'
+                exit 0
+              fi
+
+              # Update realm with SMTP settings and enable password reset
+              curl -sf -X PUT \"\${KC_BASE}/admin/realms/proxy-smart\" \
+                -H 'Content-Type: application/json' \
+                -H \"Authorization: Bearer \$KC_TOKEN\" \
+                -d '{
+                  \"resetPasswordAllowed\": true,
+                  \"smtpServer\": {
+                    \"host\": \"smtp.resend.com\",
+                    \"port\": \"465\",
+                    \"from\": \"noreply@maxhealth.tech\",
+                    \"fromDisplayName\": \"Proxy Smart\",
+                    \"replyTo\": \"noreply@maxhealth.tech\",
+                    \"ssl\": \"true\",
+                    \"auth\": \"true\",
+                    \"user\": \"resend\",
+                    \"password\": \"${RESEND_API_KEY}\"
+                  }
+                }'
+              echo '  ✅ Keycloak SMTP configured (Resend via maxhealth.tech)'
+            "
+          else
+            echo "⚠️ RESEND_API_KEY not set — skipping SMTP configuration"
+          fi
+
+          # Seed HAPI FHIR with sample data (idempotent — uses PUT)
+          echo "🏥 Seeding HAPI FHIR with sample data..."
+          ${SSH_CMD} "
+            cd ${DEPLOY_DIR}
+
+            # Resolve HAPI container IP
+            HAPI_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' proxy-smart-hapi-fhir-beta 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -z \"\$HAPI_IP\" ]; then
+              echo '  ⚠️ Could not resolve HAPI FHIR container IP — skipping seed'
+              exit 0
+            fi
+            HAPI_BASE=\"http://\${HAPI_IP}:8080/fhir\"
+
+            # Wait for HAPI to be ready
+            for i in \$(seq 1 30); do
+              if curl -sf \"\${HAPI_BASE}/metadata\" >/dev/null 2>&1; then
+                echo '  ✅ HAPI FHIR ready'
+                break
+              fi
+              sleep 5
+            done
+
+            # POST the seed bundle (transaction with PUT entries = idempotent)
+            HTTP_CODE=\$(curl -sf -o /dev/null -w '%{http_code}' -X POST \"\${HAPI_BASE}\" \
+              -H 'Content-Type: application/fhir+json' \
+              -d @fhir-seed-bundle.json)
+
+            if [ \"\$HTTP_CODE\" = '200' ]; then
+              echo '  ✅ FHIR sample data seeded successfully'
+            else
+              echo \"  ⚠️ FHIR seed returned HTTP \${HTTP_CODE} (non-fatal)\"
+            fi
+
+            # Seed Orthanc PACS with sample DICOM images
+            echo '🏥 Seeding Orthanc with sample DICOM images...'
+            ORTHANC_IP=\$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' proxy-smart-orthanc-beta 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+            if [ -n \"\$ORTHANC_IP\" ]; then
+              bash ./seed-dicom.sh \"http://\${ORTHANC_IP}:8042\" ./dicom
+            else
+              echo '  ⚠️ Could not resolve Orthanc container IP — skipping DICOM seed'
+            fi
           "
 
           # External health check through Caddy

@@ -1,5 +1,5 @@
 import { config } from "@/config"
-import { SmartAuth } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import { SmartAuth } from "@babelfhir-ts/client-r4"
 
 export const fhirBaseUrl = `${config.proxyBase}/${config.proxyPrefix}/${config.fhirServerId}/${config.fhirVersion}`
 

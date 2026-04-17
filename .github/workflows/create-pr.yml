@@ -23,12 +23,12 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -162,12 +162,12 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
@@ -270,7 +270,23 @@ jobs:
 
           # Push only if HEAD actually moved
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/develop)" ]; then
-            git push origin develop
+            # Fetch + merge (not rebase!) to handle concurrent pushes from release-alpha.
+            # Rebase fails silently on merge commits; merge -X ours is safe.
+            git fetch origin develop
+            git merge origin/develop -X ours --no-edit \
+              -m "chore: merge latest develop [proxy-smart-releaser]" || {
+              CONFLICTED=$(git diff --name-only --diff-filter=U)
+              if [ -n "$CONFLICTED" ]; then
+                echo "$CONFLICTED" | xargs git checkout --ours
+                git add -A
+              fi
+              git commit --no-edit \
+                -m "chore: merge latest develop [proxy-smart-releaser]" || true
+            }
+            git push origin develop || {
+              echo "⚠️ Push failed — will absorb on next cycle."
+              exit 0
+            }
             echo "✅ Pushed merge commit — PR should now be conflict-free"
           else
             echo "✅ Already up-to-date with test"
@@ -334,12 +350,12 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
@@ -418,7 +434,23 @@ jobs:
           fi
 
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/test)" ]; then
-            git push origin test
+            # Fetch + merge (not rebase!) to handle concurrent pushes from release-beta.
+            # Rebase fails silently on merge commits; merge -X ours is safe.
+            git fetch origin test
+            git merge origin/test -X ours --no-edit \
+              -m "chore: merge latest test [proxy-smart-releaser]" || {
+              CONFLICTED=$(git diff --name-only --diff-filter=U)
+              if [ -n "$CONFLICTED" ]; then
+                echo "$CONFLICTED" | xargs git checkout --ours
+                git add -A
+              fi
+              git commit --no-edit \
+                -m "chore: merge latest test [proxy-smart-releaser]" || true
+            }
+            git push origin test || {
+              echo "⚠️ Push failed — will absorb on next cycle."
+              exit 0
+            }
             echo "✅ Pushed merge commit — PR should now be conflict-free"
           else
             echo "✅ Already up-to-date with main"
@@ -486,12 +518,12 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -600,12 +632,12 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -724,12 +756,12 @@ jobs:
     steps:
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

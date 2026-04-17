@@ -58,6 +58,17 @@ on:
       - 'main'     # Production deployed
     tags:
       - 'v*'
+    paths:
+      - 'backend/**'
+      - 'lib/**'
+      - 'shared-ui/**'
+      - 'apps/**'
+      - 'Dockerfile'
+      - 'Dockerfile.keycloak'
+      - 'package.json'
+      - 'keycloak/**'
+      - 'testing/**'
+      - '.github/workflows/smart-compliance-tests.yml'
   
   # Scheduled weekly run
   schedule:
@@ -154,13 +165,13 @@ jobs:
       - name: Generate token
         id: app-token
         continue-on-error: true
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           token: ${{ steps.app-token.outputs.token || github.token }}
 
@@ -228,11 +239,11 @@ jobs:
       # Cache Docker images to speed up workflow (only for local targets)
       - name: Cache Docker images
         if: steps.config.outputs.target != 'deployed'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: docker-cache
         with:
           path: /tmp/docker-images
-          key: docker-images-keycloak-26.5.6
+          key: docker-images-keycloak-26.6.1
 
       - name: Load cached Docker images
         if: steps.config.outputs.target != 'deployed' && steps.docker-cache.outputs.cache-hit == 'true'
@@ -247,9 +258,9 @@ jobs:
         if: steps.config.outputs.target != 'deployed' && steps.docker-cache.outputs.cache-hit != 'true'
         run: |
           echo "Pulling Keycloak image (will be cached for next run)..."
-          docker pull quay.io/keycloak/keycloak:26.5.6
+          docker pull quay.io/keycloak/keycloak:26.6.1
           mkdir -p /tmp/docker-images
-          docker save quay.io/keycloak/keycloak:26.5.6 -o /tmp/docker-images/keycloak.tar
+          docker save quay.io/keycloak/keycloak:26.6.1 -o /tmp/docker-images/keycloak.tar
           echo "✓ Keycloak image pulled and saved for caching"
 
       - name: Setup Bun
@@ -286,7 +297,7 @@ jobs:
             -e KC_HEALTH_ENABLED=true \
             -e KC_HTTP_ENABLED=true \
             -e KC_HOSTNAME_STRICT=false \
-            quay.io/keycloak/keycloak:26.5.6 \
+            quay.io/keycloak/keycloak:26.6.1 \
             start-dev --import-realm
           
           # Wait for Keycloak to be ready
@@ -689,7 +700,7 @@ jobs:
 
       # Setup Node.js for Playwright
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -1173,7 +1184,7 @@ jobs:
 
       - name: Upload Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: inferno-test-results-${{ env.TEST_STAGE }}
           path: test-results/

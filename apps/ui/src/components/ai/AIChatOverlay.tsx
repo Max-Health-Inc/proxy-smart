@@ -229,7 +229,7 @@ export function AIChatOverlay({ isOpen: externalIsOpen, onClose: externalOnClose
                 const errorMessage: ChatMessage = {
                     id: crypto.randomUUID(),
                     type: 'agent',
-                    content: '⚠️ ' + t('Unable to connect to MCP server. Please make sure it is running:\n\n```bash\ncd mcp-server\nuv run python run.py\n```'),
+                    content: '⚠️ ' + t('Unable to connect to the AI service. Please check your connection and try again.'),
                     timestamp: new Date(),
                     sources: []
                 };

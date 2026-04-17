@@ -6,7 +6,7 @@
 # The VPS only pulls images — no Docker builds happen here.
 #
 # Image env vars (set in .env.beta by CI):
-#   BACKEND_IMAGE, FRONTEND_IMAGE, KEYCLOAK_IMAGE
+#   BACKEND_IMAGE, KEYCLOAK_IMAGE
 #
 # Prerequisites:
 #   docker network create caddy
@@ -24,7 +24,9 @@ services:
     image: ${KEYCLOAK_IMAGE:-ghcr.io/max-health-inc/proxy-smart/keycloak:beta-latest}
     container_name: proxy-smart-keycloak-beta
     restart: unless-stopped
+    mem_limit: 768m
     environment:
+      JAVA_OPTS_KC_HEAP: "-Xms128m -Xmx512m"
       KC_HOSTNAME: https://beta.proxy-smart.com/auth
       KC_HTTP_RELATIVE_PATH: /auth
       KC_PROXY_HEADERS: xforwarded
@@ -42,6 +44,16 @@ services:
       caddy: beta.proxy-smart.com
       caddy.@keycloak.path: "/auth/realms/* /auth/resources/* /auth/js/*"
       caddy.0_reverse_proxy: "@keycloak {{upstreams 8080}}"
+      caddy.0_reverse_proxy.health_uri: /auth/health/ready
+      caddy.0_reverse_proxy.health_port: 9000
+      caddy.0_reverse_proxy.health_interval: 15s
+      caddy.0_reverse_proxy.health_timeout: 5s
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /auth/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n' >&3 && cat <&3 | grep -q '200'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,35 +95,91 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
-      FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly
+      FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com
+      DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
     labels:
       caddy: beta.proxy-smart.com
-      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg"
+      caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg /webapp /webapp/*"
       caddy.1_reverse_proxy: "@backend {{upstreams 8445}}"
+      caddy.1_reverse_proxy.health_uri: /health
+      caddy.1_reverse_proxy.health_interval: 10s
+      caddy.1_reverse_proxy.health_timeout: 5s
       caddy.3_reverse_proxy: "{{upstreams 8445}}"
+      caddy.3_reverse_proxy.health_uri: /health
+      caddy.3_reverse_proxy.health_interval: 10s
+      caddy.3_reverse_proxy.health_timeout: 5s
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:8445/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     depends_on:
       - keycloak
     networks:
       - proxy-smart
       - caddy
 
-  frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/max-health-inc/proxy-smart/frontend:beta-latest}
-    container_name: proxy-smart-frontend-beta
+  hapi-fhir:
+    image: hapiproject/hapi:v8.6.5-1
+    container_name: proxy-smart-hapi-fhir-beta
     restart: unless-stopped
+    mem_limit: 1536m
     environment:
-      VITE_API_BASE_URL: https://beta.proxy-smart.com
-    labels:
-      caddy: beta.proxy-smart.com
-      caddy.@webapp.path: "/webapp /webapp/*"
-      caddy.2_reverse_proxy: "@webapp {{upstreams 80}}"
+      JAVA_TOOL_OPTIONS: "-Xms256m -Xmx512m -XX:MaxMetaspaceSize=256m -XX:ReservedCodeCacheSize=64m -XX:MaxDirectMemorySize=64m -XX:+UseSerialGC"
+      spring.datasource.url: jdbc:postgresql://postgres:5432/hapi
+      spring.datasource.username: postgres
+      spring.datasource.password: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.cors.allow_Credentials: "true"
+      hapi.fhir.cors.allowed_origin: "*"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
     depends_on:
-      - backend
+      postgres:
+        condition: service_healthy
     networks:
       - proxy-smart
-      - caddy
+
+  orthanc:
+    image: orthancteam/orthanc:26.1.0
+    container_name: proxy-smart-orthanc-beta
+    restart: unless-stopped
+    environment:
+      ORTHANC__NAME: "Proxy Smart PACS"
+      ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
+      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      ORTHANC__DICOM_WEB__ENABLE: "true"
+      ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
+      ORTHANC__POSTGRESQL__ENABLE_INDEX: "true"
+      ORTHANC__POSTGRESQL__HOST: "postgres"
+      ORTHANC__POSTGRESQL__PORT: 5432
+      ORTHANC__POSTGRESQL__DATABASE: "orthanc"
+      ORTHANC__POSTGRESQL__USERNAME: "postgres"
+      ORTHANC__POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      ORTHANC__POSTGRESQL__ENABLE_STORAGE: "false"
+    volumes:
+      - orthanc_data:/var/lib/orthanc/db
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8042/system > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - proxy-smart
 
 networks:
   proxy-smart:
@@ -122,3 +190,4 @@ networks:
 
 volumes:
   postgres_data:
+  orthanc_data:

@@ -24,11 +24,14 @@ import {
   CheckCircle,
   UserPlus,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Store
 } from 'lucide-react';
 import { SmartAppAddForm } from './SmartAppAddForm';
+import { SmartAppEditModal } from './SmartAppEditModal';
 import { SmartAppsTable } from './SmartAppsTable';
 import { SmartAppsStatistics } from './SmartAppsStatistics';
+import { AppStoreManagement } from './AppStoreManagement';
 import { DynamicClientRegistrationSettings } from '../DynamicClientRegistrationSettings';
 import { NotificationToast } from '../ui/NotificationToast';
 import { useAuth } from '@/stores/authStore';
@@ -53,7 +56,6 @@ export function SmartAppsManager() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editingApp, setEditingApp] = useState<SmartApp | null>(null);
-  const [editFormData, setEditFormData] = useState<{ name: string; description: string }>({ name: '', description: '' });
   const [notification, setNotification] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -330,10 +332,14 @@ export function SmartAppsManager() {
           {/* Tabs for different sections */}
           <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={smartAppsManagerTab} onValueChange={setSmartAppsManagerTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
                 <TabsTrigger value="apps" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Shield className="w-4 h-4" />
                   <span>{t('Registered Apps')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="app-store" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+                  <Store className="w-4 h-4" />
+                  <span>{t('App Store')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="registration" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <UserPlus className="w-4 h-4" />
@@ -538,77 +544,32 @@ export function SmartAppsManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Edit App Details Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={(open) => {
-        setShowEditDialog(open);
-        if (!open) {
-          setEditFormData({ name: '', description: '' });
-        }
-      }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('Edit Application Details')}</DialogTitle>
-            <DialogDescription>
-              Update the basic information for {editingApp?.name}
-            </DialogDescription>
-          </DialogHeader>
-          {editingApp && (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium">{t('Application Name')}</Label>
-                <Input
-                  type="text"
-                  value={editFormData.name || editingApp.name || ''}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">{t('Description')}</Label>
-                <Textarea
-                  value={editFormData.description || editingApp.description || ''}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setShowEditDialog(false)}>{t('Cancel')}</Button>
-                <Button onClick={async () => {
-                  if (!editingApp?.clientId) return;
-                  try {
-                    await clientApis.smartApps.putAdminSmartAppsByClientId({
-                      clientId: editingApp.clientId,
-                      updateSmartAppRequest: {
-                        name: editFormData.name || editingApp.name,
-                        description: editFormData.description || editingApp.description,
-                      }
-                    });
-                    // Refresh apps list
-                    const updatedApps = await clientApis.smartApps.getAdminSmartApps();
-                    if (Array.isArray(updatedApps)) {
-                      setBackendApps(updatedApps);
-                      setApps(updatedApps.map((app: SmartApp) => ({
-                        ...app,
-                        status: app.enabled ? 'active' : 'inactive',
-                        lastUsed: new Date().toISOString().split('T')[0],
-                        appType: app.appType || (app.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
-                        serverAccessType: 'all-servers',
-                      })));
-                    }
-                    setNotification({ type: 'success', message: 'Application updated successfully' });
-                    setShowEditDialog(false);
-                    setEditFormData({ name: '', description: '' });
-                  } catch (error) {
-                    console.error('Failed to update app:', error);
-                    setNotification({ type: 'error', message: 'Failed to update application' });
-                  }
-                }}>{t('Save Changes')}</Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Edit App Details Modal */}
+      {editingApp && (
+        <SmartAppEditModal
+          open={showEditDialog}
+          onOpenChange={(open) => setShowEditDialog(open)}
+          app={editingApp}
+          onSave={async (clientId, data) => {
+            await clientApis.smartApps.putAdminSmartAppsByClientId({
+              clientId,
+              updateSmartAppRequest: data,
+            });
+            const updatedApps = await clientApis.smartApps.getAdminSmartApps();
+            if (Array.isArray(updatedApps)) {
+              setBackendApps(updatedApps);
+              setApps(updatedApps.map((app: SmartApp) => ({
+                ...app,
+                status: app.enabled ? 'active' : 'inactive',
+                lastUsed: new Date().toISOString().split('T')[0],
+                appType: app.appType || (app.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
+                serverAccessType: 'all-servers',
+              })));
+            }
+            setNotification({ type: 'success', message: 'Application updated successfully' });
+          }}
+        />
+      )}
 
       {/* View Configuration Dialog */}
       <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
@@ -855,6 +816,10 @@ export function SmartAppsManager() {
 
               <TabsContent value="registration" className="p-6 space-y-6">
                 <DynamicClientRegistrationSettings />
+              </TabsContent>
+
+              <TabsContent value="app-store" className="p-6 space-y-6">
+                <AppStoreManagement />
               </TabsContent>
             </Tabs>
           </div>

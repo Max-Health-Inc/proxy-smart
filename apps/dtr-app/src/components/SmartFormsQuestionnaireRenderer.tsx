@@ -12,6 +12,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
+import type { QuestionnaireAnswersStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-QuestionnaireAnswersStatus"
 import {
   BaseRenderer,
   useBuildForm,
@@ -56,7 +57,7 @@ export function SmartFormsQuestionnaireRenderer({
           questionnaireResponse: {
             resourceType: "QuestionnaireResponse",
             questionnaire: questionnaire.url ?? `Questionnaire/${questionnaire.id}`,
-            status: "in-progress",
+            status: "in-progress" satisfies QuestionnaireAnswersStatusCode,
             subject: { reference: `Patient/${patient.id}` },
             authored: new Date().toISOString(),
             item: [],
@@ -118,7 +119,7 @@ function SmartFormsRendererInner({
 
     // Ensure metadata
     cleaned.questionnaire = questionnaire.url ?? `Questionnaire/${questionnaire.id}`
-    cleaned.status = "completed"
+    cleaned.status = "completed" satisfies QuestionnaireAnswersStatusCode
     cleaned.subject = { reference: `Patient/${patient.id}` }
     cleaned.authored = new Date().toISOString()
 

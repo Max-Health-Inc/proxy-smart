@@ -52,6 +52,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
       resources,
       disabledTools: cfg.disabledTools,
       enabledTools: cfg.enabledTools,
+      exposeResourcesAsTools: cfg.exposeResourcesAsTools,
       updatedAt: cfg.updatedAt,
     }
   }, {
@@ -77,6 +78,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
     if (update.enabled !== undefined) cfg.enabled = update.enabled
     if (update.disabledTools !== undefined) cfg.disabledTools = update.disabledTools
     if (update.enabledTools !== undefined) cfg.enabledTools = update.enabledTools
+    if (update.exposeResourcesAsTools !== undefined) cfg.exposeResourcesAsTools = update.exposeResourcesAsTools
 
     saveMcpEndpointConfig(cfg)
     logger.server.info('MCP endpoint config updated', {
@@ -97,6 +99,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
       resources,
       disabledTools: cfg.disabledTools,
       enabledTools: cfg.enabledTools,
+      exposeResourcesAsTools: cfg.exposeResourcesAsTools,
       updatedAt: cfg.updatedAt,
     }
   }, {
@@ -119,13 +122,14 @@ function buildToolList(cfg: McpEndpointConfig) {
 
   const tools = defs.map((d) => {
     const name = d.function.name
+    const meta = registry.get(name)
     let exposed: boolean
     if (cfg.enabledTools !== null) {
       exposed = cfg.enabledTools.includes(name)
     } else {
       exposed = !cfg.disabledTools.includes(name)
     }
-    return { name, description: d.function.description, exposed }
+    return { name, description: d.function.description, exposed, readOnly: meta?.readOnly || false }
   })
 
   // Include the RAG search_documentation tool (registered directly on McpServer, not in route registry)
@@ -140,6 +144,7 @@ function buildToolList(cfg: McpEndpointConfig) {
     name: ragName,
     description: 'Search the platform documentation knowledge base using semantic similarity.',
     exposed: ragExposed,
+    readOnly: false,
   })
 
   return tools

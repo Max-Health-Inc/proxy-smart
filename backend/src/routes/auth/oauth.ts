@@ -96,11 +96,88 @@ async function generateAuthorizationDetailsFromToken(
 }
 
 /**
+ * Quick KC reachability check (3s timeout). Returns true if KC responds.
+ * Uses the lightweight realm endpoint, not the full OIDC discovery.
+ */
+async function isKeycloakReachable(): Promise<boolean> {
+  try {
+    const url = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}`
+    const resp = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(3000) })
+    return resp.ok
+  } catch {
+    return false
+  }
+}
+
+/** Friendly HTML page shown when Keycloak is unreachable */
+function kcUnavailablePage(): Response {
+  const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Authentication Unavailable — Proxy Smart</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}
+.card{background:#1e293b;border-radius:1rem;padding:2.5rem;max-width:480px;width:100%;text-align:center;border:1px solid #334155}
+.icon{font-size:3rem;margin-bottom:1rem}
+h1{font-size:1.5rem;margin-bottom:.75rem;color:#f8fafc}
+p{color:#94a3b8;line-height:1.6;margin-bottom:1.5rem}
+.actions{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+a,button{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.25rem;border-radius:.5rem;font-size:.875rem;font-weight:500;text-decoration:none;cursor:pointer;border:none;transition:background .15s}
+.retry{background:#3b82f6;color:#fff}.retry:hover{background:#2563eb}
+.home{background:#334155;color:#e2e8f0}.home:hover{background:#475569}
+.hint{margin-top:1.5rem;padding-top:1rem;border-top:1px solid #334155;font-size:.8rem;color:#64748b}
+</style></head><body>
+<div class="card">
+<div class="icon">🔒</div>
+<h1>Authentication Temporarily Unavailable</h1>
+<p>The authentication service is not responding. This is usually temporary — the service may be restarting or undergoing maintenance.</p>
+<div class="actions">
+<a class="retry" href="javascript:location.reload()">↻ Try Again</a>
+<a class="home" href="/">← Back to Home</a>
+</div>
+<div class="hint">If the problem persists, administrators can check the Keycloak configuration in the <a href="/webapp" style="color:#60a5fa">Admin UI</a>.</div>
+</div></body></html>`
+  return new Response(html, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Retry-After': '30' } })
+}
+
+/**
  * OAuth2/OIDC proxy routes - handles token exchange and introspection
  */
 export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   // redirect into Keycloak's /auth endpoint
-  .get('/authorize', ({ query, redirect }) => {
+  .get('/authorize', async ({ query, redirect, set }) => {
+    // Check KC is reachable before redirecting — avoids raw browser ERR_CONNECTION_REFUSED
+    if (!await isKeycloakReachable()) {
+      logger.auth.warn('Keycloak unreachable — returning friendly error page instead of redirect')
+      return kcUnavailablePage()
+    }
+
+    // SMART App Launch 2.2.0: validate the aud parameter against our FHIR endpoints.
+    // "aud" is the FHIR server URL the app wants to access — prevents token
+    // leakage to counterfeit resource servers.  RFC 8707 "resource" is a synonym.
+    const aud = query.aud || query.resource
+    if (aud) {
+      await ensureServersInitialized()
+      const servers = await getAllServers()
+      const fhirBasePrefix = `${config.baseUrl}/${config.name}/`
+      // Valid aud values: exact FHIR base or any sub-path under it
+      const isValidAud = aud.startsWith(fhirBasePrefix) ||
+        servers.some(s =>
+          config.fhir.supportedVersions.some(v => {
+            const endpoint = `${fhirBasePrefix}${s.identifier}/${v}`
+            return aud === endpoint || aud.startsWith(endpoint + '/')
+          })
+        )
+      if (!isValidAud) {
+        logger.auth.warn('SMART authorize rejected — aud does not match any FHIR endpoint', {
+          aud,
+          expectedPrefix: fhirBasePrefix,
+        })
+        set.status = 400
+        return { error: 'invalid_request', error_description: `aud parameter does not match a known FHIR endpoint on this server` }
+      }
+    }
+
     const url = new URL(
       `${config.keycloak.publicUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/auth`
     )
@@ -125,7 +202,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   })
 
   // Login page redirect - provides a simple login endpoint for UIs
-  .get('/login', ({ query, redirect }) => {
+  .get('/login', async ({ query, redirect }) => {
+    // Check KC is reachable before redirecting
+    if (!await isKeycloakReachable()) {
+      logger.auth.warn('Keycloak unreachable — returning friendly error page for /login')
+      return kcUnavailablePage()
+    }
+
     const state = query.state || crypto.randomUUID()
     const clientId = query.client_id || 'admin-ui'
     const redirectUri = query.redirect_uri || `${config.baseUrl}/`
@@ -387,6 +470,18 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           // Only include context parameters when the corresponding scope was granted
           if (tokenPayload.smart_patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
             data.patient = tokenPayload.smart_patient
+          }
+
+          // Fallback: derive patient ID from fhirUser when launch/patient was requested
+          // but smart_patient isn't set (e.g. patient portal where user IS the patient)
+          if (!data.patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
+            const fhirUser = tokenPayload.fhirUser as string | undefined
+            if (fhirUser) {
+              const match = fhirUser.match(/Patient\/([^/]+)$/)
+              if (match) {
+                data.patient = match[1]
+              }
+            }
           }
 
           if (tokenPayload.smart_encounter && (grantedScopes.has('launch/encounter') || grantedScopes.has('launch'))) {

@@ -80,9 +80,12 @@ function updateVersion(newVersion) {
   
   packagePaths.forEach(packagePath => {
     if (fs.existsSync(packagePath)) {
-      const packageContent = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+      const raw = fs.readFileSync(packagePath, 'utf8');
+      const eol = raw.includes('\r\n') ? '\r\n' : '\n';
+      const packageContent = JSON.parse(raw);
       packageContent.version = newVersion;
-      fs.writeFileSync(packagePath, JSON.stringify(packageContent, null, 2) + '\n');
+      const output = JSON.stringify(packageContent, null, 2).replace(/\n/g, eol) + eol;
+      fs.writeFileSync(packagePath, output);
       console.log(`✓ Updated ${packagePath}`);
     } else {
       console.warn(`⚠ Warning: ${packagePath} not found`);

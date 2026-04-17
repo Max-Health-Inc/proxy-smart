@@ -4,39 +4,8 @@
  */
 import { config } from '@/config';
 import { getItem } from '@/lib/storage';
-
-// ─── Types (mirror backend AdminAuditEvent / AdminAuditAnalytics) ────
-
-export interface AdminAuditEvent {
-  id: string;
-  timestamp: string;
-  actor: {
-    sub: string;
-    username?: string;
-    email?: string;
-  };
-  method: string;
-  path: string;
-  action: 'create' | 'update' | 'delete' | 'action' | 'read';
-  resource: string;
-  resourceId?: string;
-  statusCode: number;
-  success: boolean;
-  durationMs: number;
-  ipAddress?: string;
-  detail?: string;
-}
-
-export interface AdminAuditAnalytics {
-  totalActions: number;
-  successRate: number;
-  actionsByType: Record<string, number>;
-  actionsByResource: Record<string, number>;
-  topActors: Array<{ username: string; count: number }>;
-  hourlyStats: Array<{ hour: string; success: number; failure: number; total: number }>;
-  recentFailures: AdminAuditEvent[];
-  timestamp?: string;
-}
+import type { AdminAuditEvent, AdminAuditAnalyticsResponse as AdminAuditAnalytics } from '@/lib/types/api';
+export type { AdminAuditEvent, AdminAuditAnalytics };
 
 // ─── Service ─────────────────────────────────────────────────────────
 

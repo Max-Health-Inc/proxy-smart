@@ -1,4 +1,5 @@
-# Multi-stage build for Proxy Smart monorepo - Separate Backend and UI containers
+# Multi-stage build for Proxy Smart monorepo
+# Single backend image serves API + all frontend apps (Admin UI, SMART apps, docs)
 FROM oven/bun:slim AS base
 WORKDIR /app
 
@@ -22,7 +23,6 @@ COPY backend/package.json ./backend/
 COPY shared-ui/package.json ./shared-ui/
 COPY apps/ui/package.json ./apps/ui/
 COPY apps/consent-app/package.json ./apps/consent-app/
-COPY apps/consent-app/lib/ ./apps/consent-app/lib/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
 COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
 COPY apps/patient-portal/package.json ./apps/patient-portal/
@@ -36,10 +36,7 @@ RUN bun install
 
 # Backend build stage
 FROM build-deps AS backend-build
-# Copy backend source code
 COPY backend/ ./backend/
-
-# Build backend and export OpenAPI spec
 WORKDIR /app/backend
 RUN bun run build
 RUN bun run export-openapi
@@ -51,28 +48,15 @@ COPY --from=backend-build /app/backend/dist/openapi.json ./backend/dist/openapi.
 RUN mkdir -p apps/ui/src/lib/api-client && \
     python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client
 
-# UI build stage
+# Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
-
-# Encryption secret for browser local-storage obfuscation (baked into Vite bundle)
 ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
 ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
-
-# Base path for the UI (/ for mono, /webapp/ for split deployment)
-ARG VITE_BASE=/
-ENV VITE_BASE=${VITE_BASE}
-
-# Copy UI source code
+ENV VITE_BASE=/webapp/
 COPY shared-ui/ ./shared-ui/
 COPY apps/ui/ ./apps/ui/
-
-# Copy generated API client from the generation stage
 COPY --from=api-client-gen /app/apps/ui/src/lib/api-client ./apps/ui/src/lib/api-client/
-
-# Build UI
 WORKDIR /app/apps/ui
-
-# Build UI for standalone deployment
 RUN bun run build
 
 # Consent App build stage
@@ -101,14 +85,15 @@ FROM build-deps AS docs-build
 COPY docs/ ./docs/
 RUN bun run docs:build
 
-# Backend production stage
+# Production stage — single backend serves everything
 FROM base AS backend
 WORKDIR /app
 
-# Install minimal runtime dependencies
+# Install minimal runtime dependencies (Java 21 needed for @opendataloader/pdf)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     ca-certificates \
+    openjdk-21-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy built backend
@@ -116,8 +101,11 @@ COPY --from=backend-build /app/backend/dist ./backend/dist
 COPY --from=backend-build /app/backend/package.json ./backend/package.json
 COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-server-templates.json
 
-# Copy backend's public directory (landing page only, no UI)
+# Copy backend's public directory (landing page, static assets)
 COPY --from=backend-build /app/backend/public ./backend/public
+
+# Copy Admin UI into backend public (served at /webapp/)
+COPY --from=ui-build /app/apps/ui/dist ./backend/public/webapp
 
 # Copy built SMART apps into backend public
 COPY --from=consent-app-build /app/apps/consent-app/dist ./backend/public/apps/consent
@@ -144,50 +132,6 @@ COPY prompts/ ./prompts/
 # Expose backend port
 EXPOSE 8445
 
-# Start the backend API server
+# Start the backend API server (serves API + all frontend apps)
 WORKDIR /app/backend
 CMD ["bun", "run", "dist/index.js"]
-
-# UI production stage (nginx-based)
-FROM nginx:alpine AS ui
-WORKDIR /usr/share/nginx/html
-
-# Copy built UI into /webapp/ subdirectory
-COPY --from=ui-build /app/apps/ui/dist /usr/share/nginx/html/webapp
-
-# Copy custom nginx config for SPA routing under /webapp/
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 80;
-    server_name localhost;
-    root /usr/share/nginx/html;
-
-    # Serve the Admin SPA under /webapp/
-    location /webapp/ {
-        alias /usr/share/nginx/html/webapp/;
-        try_files \$uri \$uri/ /webapp/index.html;
-
-        # Cache static assets
-        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
-    }
-
-    # Redirect /webapp to /webapp/
-    location = /webapp {
-        return 301 /webapp/;
-    }
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-}
-EOF
-
-# Expose UI port
-EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]

@@ -75,19 +75,8 @@ const serverStatusCache = new Map<string, {
 /**
  * Get configured MCP servers (env + dynamically added via UI)
  */
-export function getConfiguredServers(): Array<{ name: string; url: string; type: 'internal' | 'external' | 'generated'; description?: string }> {
-  const servers: Array<{ name: string; url: string; type: 'internal' | 'external' | 'generated'; description?: string }> = []
-  
-  // Generated MCP server (Python FastMCP exposing backend API) — only if explicitly configured
-  const generatedMcpUrl = process.env.GENERATED_MCP_URL
-  if (generatedMcpUrl) {
-    servers.push({
-      name: 'generated-backend',
-      url: generatedMcpUrl,
-      type: 'generated',
-      description: 'Auto-generated MCP server exposing backend API routes as tools'
-    })
-  }
+export function getConfiguredServers(): Array<{ name: string; url: string; type: 'internal' | 'external'; description?: string }> {
+  const servers: Array<{ name: string; url: string; type: 'internal' | 'external'; description?: string }> = []
 
   // External MCP servers from environment
   const externalServers = process.env.EXTERNAL_MCP_SERVERS

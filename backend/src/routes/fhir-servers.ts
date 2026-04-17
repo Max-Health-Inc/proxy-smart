@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { config } from '../config'
-import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers } from '../lib/fhir-server-store'
+import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities, setServerOrganizations } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
@@ -264,7 +264,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
 
       // Add the server to the store (this will test connectivity)
-      const serverInfo = await addServer(body.url, body.name)
+      const serverInfo = await addServer(body.url, body.name, body.organizationIds)
 
       return {
         success: true,
@@ -278,6 +278,8 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           serverName: serverInfo.metadata.serverName,
           supported: serverInfo.metadata.supported,
           smartCapabilities: serverInfo.metadata.smartCapabilities,
+          strictCapabilities: serverInfo.strictCapabilities ?? false,
+          organizationIds: serverInfo.organizationIds,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -342,7 +344,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
 
       // Update the server in the store
-      const serverInfo = await updateServer(params.server_id, body.url, body.name)
+      const serverInfo = await updateServer(params.server_id, body.url, body.name, body.organizationIds)
 
       return {
         success: true,
@@ -356,6 +358,8 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           serverName: serverInfo.metadata.serverName,
           supported: serverInfo.metadata.supported,
           smartCapabilities: serverInfo.metadata.smartCapabilities,
+          strictCapabilities: serverInfo.strictCapabilities ?? false,
+          organizationIds: serverInfo.organizationIds,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
             smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -421,6 +425,8 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         serverName: serverInfo.metadata.serverName,
         supported: serverInfo.metadata.supported,
         smartCapabilities: serverInfo.metadata.smartCapabilities,
+        strictCapabilities: serverInfo.strictCapabilities ?? false,
+        organizationIds: serverInfo.organizationIds,
         endpoints: {
           base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
           smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
@@ -475,6 +481,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         serverName: serverInfo.metadata.serverName,
         supported: serverInfo.metadata.supported,
         smartCapabilities: serverInfo.metadata.smartCapabilities,
+        strictCapabilities: serverInfo.strictCapabilities ?? false,
         endpoints: {
           // Proxy's FHIR endpoints
           base: proxyBase,
@@ -681,6 +688,54 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
     detail: {
       summary: 'Upload Certificate',
       description: 'Upload a certificate or private key for mTLS authentication',
+      tags: ['servers'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  // Toggle strict capability enforcement for a server
+  .patch('/:server_id/strict-capabilities', async ({ params, body, set, headers }) => {
+    try {
+      const auth = extractBearerToken(headers)
+      if (!auth) {
+        set.status = 401
+        return { error: 'Authentication required' }
+      }
+
+      await validateToken(auth)
+
+      const updated = await setStrictCapabilities(params.server_id, body.strict)
+
+      return {
+        success: true,
+        message: `Strict capability enforcement ${body.strict ? 'enabled' : 'disabled'} for server '${params.server_id}'`,
+        strictCapabilities: updated.strictCapabilities ?? false
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        set.status = 404
+        return { error: error.message }
+      }
+      logger.fhir.error('Failed to update strict capabilities', { error, serverId: params.server_id })
+      set.status = 500
+      return { error: 'Failed to update strict capabilities setting', details: error }
+    }
+  }, {
+    params: ServerIdParam,
+    body: t.Object({
+      strict: t.Boolean({ description: 'Whether to enforce the FHIR CapabilityStatement strictly' })
+    }, { title: 'SetStrictCapabilitiesRequest' }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        message: t.String(),
+        strictCapabilities: t.Boolean()
+      }, { title: 'SetStrictCapabilitiesResponse' }),
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Toggle Strict Capability Enforcement',
+      description: 'Enable or disable strict CapabilityStatement enforcement on the FHIR proxy for this server. When strict, the proxy rejects requests for interactions/operations not declared in the server\'s CapabilityStatement.',
       tags: ['servers'],
       security: [{ BearerAuth: [] }]
     }

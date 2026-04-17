@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Spinner } from "@proxy-smart/shared-ui"
+import { useCallback, useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle, Button, Spinner, Badge } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import {
   getPatient,
@@ -23,7 +23,9 @@ import {
   searchVariants,
   searchDiagnosticImplications,
   searchTherapeuticImplications,
+  searchDocuments,
   type Patient,
+  type DocumentReference,
   type Condition,
   type AllergyIntolerance,
   type MedicationStatement,
@@ -48,30 +50,48 @@ import {
 import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps"
 import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps"
 import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PregnancyStatusUvIps"
+import type { FlagStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-FlagStatus"
+import {
+  criticalityStyles, categoryEmoji, severityStyles,
+  getInterpretationFlag, getProcedureStatusStyle, getDeviceStatusStyle, conditionSeverityStyles, RecordName,
+  type AllergyIntoleranceCriticalityCode, type AllergyIntoleranceCategoryCode,
+  type ReactionEventSeverityCode, type EventStatusCode, type DeviceStatementStatusCode,
+  type ConditionSeverityCode, type AnyResource,
+} from "@/lib/ips-display-helpers"
 import { PatientBanner } from "@/components/PatientBanner"
 import { ImagingStudyCard } from "@/components/ImagingStudyCard"
+import { HealthChartsCard } from "@/components/HealthChartsCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
+import { DocumentsCard } from "@/components/DocumentsCard"
+import { DocumentImport } from "@/components/DocumentImport"
+import { PatientScribe } from "@/components/PatientScribe"
+import { DicomUpload } from "@/components/DicomUpload"
+import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
+import { checkPacsStatus } from "@/lib/dicomweb"
+import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
-  Heart,
-  Pill,
-  ShieldAlert,
-  Syringe,
-  Activity,
-  FlaskConical,
-  AlertCircle,
-  Cigarette,
-  Wine,
-  Scissors,
-  Flag,
-  Baby,
-  Stethoscope,
-  Laptop,
+  Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle,
+  Cigarette, Wine, Scissors, Flag, Baby, Stethoscope, Laptop, Upload,
+  FileImage, MessageSquare, Eye, EyeOff,
 } from "lucide-react"
 import { format } from "date-fns"
-
+import { useTranslation } from "react-i18next"
 export function Dashboard() {
+  const { t } = useTranslation()
+  const { translateCoding } = useFhirTranslation()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showImport, setShowImport] = useState(false)
+  const [showScribe, setShowScribe] = useState(false); const [showDicomUpload, setShowDicomUpload] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null)
+  const [showUnverified, setShowUnverified] = useState(true)
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [detailTitle, setDetailTitle] = useState(""); const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
+
+  const openDetail = useCallback((title: string, resource: AnyResource) => { setDetailTitle(title); setDetailResource(resource); setDetailOpen(true) }, [])
+  const refreshData = useCallback(() => setRefreshKey(k => k + 1), [])
+
   const [patient, setPatient] = useState<Patient | null>(null)
   const [conditions, setConditions] = useState<Condition[]>([])
   const [allergies, setAllergies] = useState<AllergyIntolerance[]>([])
@@ -81,25 +101,30 @@ export function Dashboard() {
   const [labs, setLabs] = useState<LabResult[]>([])
   const [tobaccoUse, setTobaccoUse] = useState<TobaccoUseObservation[]>([])
   const [alcoholUse, setAlcoholUse] = useState<AlcoholUseObservation[]>([])
-  const [procedures, setProcedures] = useState<Procedure[]>([])
-  const [flags, setFlags] = useState<FlagAlert[]>([])
+  const [procedures, setProcedures] = useState<Procedure[]>([]); const [flags, setFlags] = useState<FlagAlert[]>([])
   const [pregnancyStatus, setPregnancyStatus] = useState<PregnancyStatus[]>([])
   const [pregnancyEdd, setPregnancyEdd] = useState<PregnancyEdd[]>([])
   const [medicationRequests, setMedicationRequests] = useState<MedicationRequest[]>([])
   const [deviceUse, setDeviceUse] = useState<DeviceUseStatement[]>([])
   const [imagingStudies, setImagingStudies] = useState<ImagingStudy[]>([])
   const [radiologyResults, setRadiologyResults] = useState<RadiologyResult[]>([])
-  const [genomicReports, setGenomicReports] = useState<GenomicReport[]>([])
-  const [variants, setVariants] = useState<Variant[]>([])
+  const [genomicReports, setGenomicReports] = useState<GenomicReport[]>([]); const [variants, setVariants] = useState<Variant[]>([])
   const [diagnosticImplications, setDiagnosticImplications] = useState<DiagnosticImplication[]>([])
   const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
+  const [documents, setDocuments] = useState<DocumentReference[]>([])
+
+  // Filter helper
+  const filterVerified = useCallback(<T extends AnyResource>(items: T[]): T[] => {
+    if (showUnverified) return items
+    return items.filter(isResourceVerified)
+  }, [showUnverified])
 
   useEffect(() => {
     async function loadData() {
       try {
         const patientId = smartAuth.getToken()?.patient
         if (!patientId) {
-          setError("No patient context available. Please launch from an EHR or select a patient.")
+          setError(t("dashboard.noPatientContext"))
           setLoading(false)
           return
         }
@@ -107,79 +132,54 @@ export function Dashboard() {
         const pt = await getPatient(patientId)
         setPatient(pt)
 
-        // Load clinical data in small batches to avoid 429 rate limits
-        const [cond, allergy] = await Promise.allSettled([
-          searchConditions(patientId),
-          searchAllergies(patientId),
+        // Batch all searches into a single allSettled call
+        const results = await Promise.allSettled([
+          searchConditions(patientId), searchAllergies(patientId),
+          searchMedicationStatements(patientId), searchImmunizations(patientId),
+          searchVitals(patientId), searchLabs(patientId),
+          searchTobaccoUse(patientId), searchAlcoholUse(patientId),
+          searchProcedures(patientId), searchFlags(patientId),
+          searchPregnancyStatus(patientId), searchPregnancyEdd(patientId),
+          searchMedicationRequests(patientId), searchDeviceUseStatements(patientId),
+          searchImagingStudies(patientId), searchRadiologyResults(patientId),
+          searchGenomicReports(patientId), searchVariants(patientId),
+          searchDiagnosticImplications(patientId), searchTherapeuticImplications(patientId),
+          searchDocuments(patientId),
         ])
-        if (cond.status === "fulfilled") setConditions(cond.value)
-        if (allergy.status === "fulfilled") setAllergies(allergy.value)
+        const v = <T,>(r: PromiseSettledResult<T>): T | undefined => r.status === "fulfilled" ? r.value : undefined
+        const [cond, allergy, meds, imm, vit, lab, tobacco, alcohol, proc, flag,
+          pregStatus, pregEdd, medReqs, devices, imaging, radiology,
+          gReports, gVariants, gDiagImpl, gTheraImpl, docs] = results
 
-        const [meds, imm] = await Promise.allSettled([
-          searchMedicationStatements(patientId),
-          searchImmunizations(patientId),
-        ])
-        if (meds.status === "fulfilled") setMedications(meds.value)
-        if (imm.status === "fulfilled") setImmunizations(imm.value)
+        // Apply results — each setter is a no-op if the search failed
+        const apply = <T,>(r: PromiseSettledResult<T>, set: (v: T) => void) => { if (v(r)) set(v(r)!) }
+        apply(cond, setConditions); apply(allergy, setAllergies)
+        apply(meds, setMedications); apply(imm, setImmunizations)
+        apply(vit, setVitals); apply(lab, setLabs)
+        apply(tobacco, setTobaccoUse); apply(alcohol, setAlcoholUse)
+        apply(proc, setProcedures); apply(flag, setFlags)
+        apply(pregStatus, setPregnancyStatus); apply(pregEdd, setPregnancyEdd)
+        apply(medReqs, setMedicationRequests); apply(devices, setDeviceUse)
+        apply(imaging, setImagingStudies); apply(radiology, setRadiologyResults)
+        apply(gReports, setGenomicReports); apply(gVariants, setVariants)
+        apply(gDiagImpl, setDiagnosticImplications); apply(gTheraImpl, setTherapeuticImplications)
+        apply(docs, setDocuments)
 
-        const [vit, lab] = await Promise.allSettled([
-          searchVitals(patientId),
-          searchLabs(patientId),
-        ])
-        if (vit.status === "fulfilled") setVitals(vit.value)
-        if (lab.status === "fulfilled") setLabs(lab.value)
-
-        const [tobacco, alcohol, proc, flag] = await Promise.allSettled([
-          searchTobaccoUse(patientId),
-          searchAlcoholUse(patientId),
-          searchProcedures(patientId),
-          searchFlags(patientId),
-        ])
-        if (tobacco.status === "fulfilled") setTobaccoUse(tobacco.value)
-        if (alcohol.status === "fulfilled") setAlcoholUse(alcohol.value)
-        if (proc.status === "fulfilled") setProcedures(proc.value)
-        if (flag.status === "fulfilled") setFlags(flag.value)
-
-        const [pregStatus, pregEdd, medReqs, devices, imaging, radiology] = await Promise.allSettled([
-          searchPregnancyStatus(patientId),
-          searchPregnancyEdd(patientId),
-          searchMedicationRequests(patientId),
-          searchDeviceUseStatements(patientId),
-          searchImagingStudies(patientId),
-          searchRadiologyResults(patientId),
-        ])
-        if (pregStatus.status === "fulfilled") setPregnancyStatus(pregStatus.value)
-        if (pregEdd.status === "fulfilled") setPregnancyEdd(pregEdd.value)
-        if (medReqs.status === "fulfilled") setMedicationRequests(medReqs.value)
-        if (devices.status === "fulfilled") setDeviceUse(devices.value)
-        if (imaging.status === "fulfilled") setImagingStudies(imaging.value)
-        if (radiology.status === "fulfilled") setRadiologyResults(radiology.value)
-
-        const [gReports, gVariants, gDiagImpl, gTheraImpl] = await Promise.allSettled([
-          searchGenomicReports(patientId),
-          searchVariants(patientId),
-          searchDiagnosticImplications(patientId),
-          searchTherapeuticImplications(patientId),
-        ])
-        if (gReports.status === "fulfilled") setGenomicReports(gReports.value)
-        if (gVariants.status === "fulfilled") setVariants(gVariants.value)
-        if (gDiagImpl.status === "fulfilled") setDiagnosticImplications(gDiagImpl.value)
-        if (gTheraImpl.status === "fulfilled") setTherapeuticImplications(gTheraImpl.value)
+        checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
       } finally {
         setLoading(false)
       }
     }
-
     loadData()
-  }, [])
+  }, [refreshKey])
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <Spinner size="lg" />
-        <p className="text-muted-foreground">Loading your health records...</p>
+        <p className="text-muted-foreground">{t("dashboard.loadingRecords")}</p>
       </div>
     )
   }
@@ -195,89 +195,140 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {patient && <PatientBanner patient={patient} />}
+      {patient && <PatientBanner patient={patient} onPatientUpdated={setPatient} />}
+
+      {showImport ? (
+        <DocumentImport onClose={() => { setShowImport(false); refreshData() }} />
+      ) : showScribe ? (
+        <PatientScribe onClose={() => { setShowScribe(false); refreshData() }} />
+      ) : showDicomUpload ? (
+        <DicomUpload onClose={() => setShowDicomUpload(false)} />
+      ) : (
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            variant={showUnverified ? "outline" : "secondary"}
+            size="sm"
+            onClick={() => setShowUnverified(v => !v)}
+            className="gap-1.5"
+          >
+            {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+            {showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}
+          </Button>
+
+          <div className="flex gap-2">
+            <Button
+              variant="outline" size="sm"
+              onClick={() => setShowDicomUpload(true)}
+              title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : undefined}
+            >
+              <FileImage className={`size-4 ${pacsAvailable === false ? "opacity-50" : ""}`} />
+              {t("dashboard.uploadImaging")}
+              {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">{t("dashboard.offline")}</span>}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+              <Upload className="size-4" />
+              {t("dashboard.importDocument")}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowScribe(true)}>
+              <MessageSquare className="size-4" />
+              {t("dashboard.patientScribe")}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Active Conditions */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Heart className="size-4 text-rose-500" />
-              Active Conditions
+              {t("dashboard.activeConditions")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {conditions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active conditions on record</p>
+            {filterVerified(conditions).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActiveConditions")}</p>
             ) : (
               <ul className="space-y-2">
-                {conditions.map((c, i) => (
+                {filterVerified(conditions).map((c, i) => {
+                  const sevCode = c.severity?.coding?.[0]?.code as ConditionSeverityCode | undefined
+                  const sev = sevCode ? conditionSeverityStyles[sevCode] : undefined
+                  return (
                   <li key={c.id || i} className="text-sm">
-                    <span className="font-medium">
-                      {c.code?.coding?.[0]?.display || c.code?.text || "Unknown condition"}
-                    </span>
+                    <RecordName resource={c} onOpen={openDetail}>
+                      {translateCoding(c.code?.coding?.[0]) || c.code?.text || t("dashboard.unknownCondition")}
+                    </RecordName>
+                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{t(sev.i18nKey)}</Badge>}
                     {c.onsetDateTime && (
                       <span className="text-muted-foreground ml-2">
-                        since {format(new Date(c.onsetDateTime), "MMM yyyy")}
+                        {t("common.since", { date: format(new Date(c.onsetDateTime), "MMM yyyy") })}
                       </span>
                     )}
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             )}
           </CardContent>
         </Card>
 
-        {/* Allergies */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldAlert className="size-4 text-amber-500" />
-              Allergies
+              {t("dashboard.allergies")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {allergies.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No known allergies</p>
+            {filterVerified(allergies).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("dashboard.noKnownAllergies")}</p>
             ) : (
               <ul className="space-y-2">
-                {allergies.map((a, i) => (
-                  <li key={a.id || i} className="text-sm">
-                    <span className="font-medium">
-                      {a.code?.coding?.[0]?.display || a.code?.text || "Unknown allergen"}
-                    </span>
-                    {a.reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display && (
-                      <span className="text-muted-foreground ml-2">
-                        — {a.reaction[0].manifestation[0].coding[0].display}
-                      </span>
-                    )}
-                  </li>
-                ))}
+                {filterVerified(allergies).map((a, i) => {
+                  const cat = a.category?.[0] as AllergyIntoleranceCategoryCode | undefined
+                  const crit = a.criticality ? criticalityStyles[a.criticality as AllergyIntoleranceCriticalityCode] : undefined
+                  const sev = a.reaction?.[0]?.severity ? severityStyles[a.reaction[0].severity as ReactionEventSeverityCode] : undefined
+                  return (
+                    <li key={a.id || i} className="text-sm">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {cat && categoryEmoji[cat] && <span title={cat}>{categoryEmoji[cat]}</span>}
+                        <RecordName resource={a} onOpen={openDetail}>
+                          {translateCoding(a.code?.coding?.[0]) || a.code?.text || t("dashboard.unknownAllergen")}
+                        </RecordName>
+                        {crit && <Badge variant={crit.variant} className="text-xs">{t(crit.i18nKey)}</Badge>}
+                      </div>
+                      {a.reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display && (
+                        <span className="text-muted-foreground ml-2">
+                          — {a.reaction[0].manifestation[0].coding[0].display}
+                          {sev && <Badge variant="outline" className={`ml-1 text-xs ${sev.className}`}>{t(sev.i18nKey)}</Badge>}
+                        </span>
+                      )}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </CardContent>
         </Card>
 
-        {/* Medications */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Pill className="size-4 text-blue-500" />
-              Current Medications
+              {t("dashboard.currentMedications")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {medications.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active medications</p>
+            {filterVerified(medications).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActiveMedications")}</p>
             ) : (
               <ul className="space-y-2">
-                {medications.map((m, i) => (
+                {filterVerified(medications).map((m, i) => (
                   <li key={m.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={m} onOpen={openDetail}>
                       {m.medicationCodeableConcept?.coding?.[0]?.display ||
-                        m.medicationCodeableConcept?.text ||
-                        "Unknown medication"}
-                    </span>
+                        m.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
+                    </RecordName>
                     {m.dosage?.[0]?.text && (
                       <span className="text-muted-foreground ml-2">— {m.dosage[0].text}</span>
                     )}
@@ -288,29 +339,27 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Immunizations */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Syringe className="size-4 text-green-500" />
-              Immunizations
+              {t("dashboard.immunizations")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {immunizations.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No immunization records</p>
+            {filterVerified(immunizations).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("dashboard.noImmunizationRecords")}</p>
             ) : (
               <ul className="space-y-2">
-                {immunizations.map((imm, i) => {
+                {filterVerified(immunizations).map((imm, i) => {
                   const targetDiseaseCode = imm.protocolApplied?.[0]?.targetDisease?.[0]?.coding?.[0]?.code
                   const targetDisease = targetDiseaseCode
-                    ? getVaccineTargetDiseasesUvIpsConcept(targetDiseaseCode)?.display
-                    : undefined
+                    ? getVaccineTargetDiseasesUvIpsConcept(targetDiseaseCode)?.display : undefined
                   return (
                     <li key={imm.id || i} className="text-sm">
-                      <span className="font-medium">
-                        {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || "Unknown vaccine"}
-                      </span>
+                      <RecordName resource={imm} onOpen={openDetail}>
+                        {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || t("dashboard.unknownVaccine")}
+                      </RecordName>
                       {targetDisease && (
                         <span className="text-muted-foreground ml-1 text-xs">({targetDisease})</span>
                       )}
@@ -327,28 +376,29 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Vital Signs */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Activity className="size-4 text-purple-500" />
-              Recent Vitals
+              {t("dashboard.recentVitals")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {vitals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent vital signs</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noRecentVitals")}</p>
             ) : (
               <ul className="space-y-2">
                 {vitals.slice(0, 10).map((v, i) => (
                   <li key={v.id || i} className="text-sm flex justify-between">
-                    <span className="font-medium">
-                      {v.code?.coding?.[0]?.display || v.code?.text || "Unknown"}
-                    </span>
+                    <RecordName resource={v} onOpen={openDetail}>
+                      {translateCoding(v.code?.coding?.[0]) || v.code?.text || t("common.unknown")}
+                    </RecordName>
                     <span className="text-muted-foreground">
                       {v.valueQuantity
                         ? `${v.valueQuantity.value} ${v.valueQuantity.unit || ""}`
-                        : v.valueString || "—"}
+                        : v.component?.length
+                          ? v.component.map(c => c.valueQuantity ? `${c.valueQuantity.value}` : "").filter(Boolean).join("/") + ` ${v.component[0]?.valueQuantity?.unit || ""}`
+                          : v.valueString || "—"}
                     </span>
                   </li>
                 ))}
@@ -357,59 +407,64 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Lab Results */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <FlaskConical className="size-4 text-teal-500" />
-              Recent Lab Results
+              {t("dashboard.recentLabResults")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {labs.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent lab results</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noRecentLabs")}</p>
             ) : (
               <ul className="space-y-2">
-                {labs.slice(0, 10).map((l, i) => (
-                  <li key={l.id || i} className="text-sm flex justify-between">
-                    <span className="font-medium truncate mr-2">
-                      {l.code?.coding?.[0]?.display || l.code?.text || "Unknown"}
-                    </span>
-                    <span className="text-muted-foreground whitespace-nowrap">
-                      {l.valueQuantity
-                        ? `${l.valueQuantity.value} ${l.valueQuantity.unit || ""}`
-                        : l.valueString || "—"}
-                    </span>
-                  </li>
-                ))}
+                {labs.slice(0, 10).map((l, i) => {
+                  const interp = getInterpretationFlag(l)
+                  return (
+                    <li key={l.id || i} className="text-sm flex justify-between">
+                      <RecordName resource={l} onOpen={openDetail}>
+                        {translateCoding(l.code?.coding?.[0]) || l.code?.text || t("common.unknown")}
+                      </RecordName>
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        {interp && (
+                          <span className={`text-xs font-medium ${interp.className}`}>{t(interp.i18nKey)}</span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {l.valueQuantity
+                            ? `${l.valueQuantity.value} ${l.valueQuantity.unit || ""}`
+                            : l.valueString || "—"}
+                        </span>
+                      </span>
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </CardContent>
         </Card>
 
-        {/* Social History — Tobacco Use */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Cigarette className="size-4 text-orange-500" />
-              Smoking Status
+              {t("dashboard.smokingStatus")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {tobaccoUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No tobacco use records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noTobaccoRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {tobaccoUse.map((obs, i) => {
                   const statusCode = obs.valueCodeableConcept?.coding?.[0]?.code
                   const statusDisplay = statusCode
-                    ? getCurrentSmokingStatusUvIpsConcept(statusCode)?.display
-                    : undefined
+                    ? getCurrentSmokingStatusUvIpsConcept(statusCode)?.display : undefined
                   return (
                     <li key={obs.id || i} className="text-sm flex justify-between">
-                      <span className="font-medium">
+                      <RecordName resource={obs} onOpen={openDetail}>
                         {statusDisplay || obs.valueCodeableConcept?.text || "Unknown"}
-                      </span>
+                      </RecordName>
                       {obs.effectiveDateTime && (
                         <span className="text-muted-foreground">
                           {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -423,28 +478,27 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Alcohol Use */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Wine className="size-4 text-rose-500" />
-              Alcohol Use
+              {t("dashboard.alcoholUse")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {alcoholUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No alcohol use records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noAlcoholRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {alcoholUse.map((obs, i) => (
                   <li key={obs.id || i} className="text-sm flex justify-between">
-                    <span className="font-medium">
+                    <RecordName resource={obs} onOpen={openDetail}>
                       {obs.valueCodeableConcept?.coding?.[0]?.display ||
                         obs.valueCodeableConcept?.text ||
                         obs.valueQuantity
                           ? `${obs.valueQuantity?.value ?? ""} ${obs.valueQuantity?.unit ?? ""}`.trim()
                           : "Unknown"}
-                    </span>
+                    </RecordName>
                     {obs.effectiveDateTime && (
                       <span className="text-muted-foreground">
                         {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -457,33 +511,32 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Procedures */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Scissors className="size-4 text-indigo-500" />
-              Procedures
+              {t("dashboard.procedures")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {procedures.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No procedure records</p>
+            {filterVerified(procedures).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("dashboard.noProcedureRecords")}</p>
             ) : (
               <ul className="space-y-2">
-                {procedures.map((proc, i) => (
+                {filterVerified(procedures).map((proc, i) => (
                   <li key={proc.id || i} className="text-sm">
-                    <span className="font-medium">
-                      {proc.code?.coding?.[0]?.display || proc.code?.text || "Unknown procedure"}
-                    </span>
+                    <RecordName resource={proc} onOpen={openDetail}>
+                      {proc.code?.coding?.[0]?.display || proc.code?.text || t("dashboard.unknownProcedure")}
+                    </RecordName>
                     {proc.performedDateTime && (
                       <span className="text-muted-foreground ml-2">
                         {format(new Date(proc.performedDateTime), "MMM d, yyyy")}
                       </span>
                     )}
                     {proc.status && (
-                      <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                      <Badge variant={getProcedureStatusStyle(proc.status as EventStatusCode)} className="ml-2 text-xs">
                         {proc.status}
-                      </span>
+                      </Badge>
                     )}
                   </li>
                 ))}
@@ -492,32 +545,27 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Flags / Alerts */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Flag className="size-4 text-red-500" />
-              Flags &amp; Alerts
+              {t("dashboard.flagsAndAlerts")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {flags.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active flags</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActiveFlags")}</p>
             ) : (
               <ul className="space-y-2">
                 {flags.map((flag, i) => (
                   <li key={flag.id || i} className="text-sm flex items-center gap-2">
-                    <span
-                      className={`inline-block size-2 rounded-full ${
-                        flag.status === "active" ? "bg-red-500" : "bg-gray-400"
-                      }`}
-                    />
-                    <span className="font-medium">
-                      {flag.code?.coding?.[0]?.display || flag.code?.text || "Unknown flag"}
-                    </span>
+                    <span className={`inline-block size-2 rounded-full ${(flag.status as FlagStatusCode) === "active" ? "bg-red-500" : (flag.status as FlagStatusCode) === "inactive" ? "bg-gray-400" : "bg-amber-400"}`} />
+                    <RecordName resource={flag} onOpen={openDetail}>
+                      {flag.code?.coding?.[0]?.display || flag.code?.text || t("dashboard.unknownFlag")}
+                    </RecordName>
                     {flag.period?.start && (
                       <span className="text-muted-foreground text-xs">
-                        since {format(new Date(flag.period.start), "MMM d, yyyy")}
+                        {t("common.since", { date: format(new Date(flag.period.start), "MMM d, yyyy") })}
                       </span>
                     )}
                   </li>
@@ -527,29 +575,26 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Pregnancy Status */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Baby className="size-4 text-pink-500" />
-              Pregnancy
+              {t("dashboard.pregnancy")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {pregnancyStatus.length === 0 && pregnancyEdd.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No pregnancy records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noPregnancyRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {pregnancyStatus.map((obs, i) => {
                   const code = obs.valueCodeableConcept?.coding?.[0]?.code
-                  const display = code
-                    ? getPregnancyStatusUvIpsConcept(code)?.display
-                    : undefined
+                  const display = code ? getPregnancyStatusUvIpsConcept(code)?.display : undefined
                   return (
                     <li key={obs.id || `ps-${i}`} className="text-sm flex justify-between">
-                      <span className="font-medium">
-                        {display || obs.valueCodeableConcept?.text || "Unknown status"}
-                      </span>
+                      <RecordName resource={obs} onOpen={openDetail}>
+                        {display || obs.valueCodeableConcept?.text || t("dashboard.unknownStatus")}
+                      </RecordName>
                       {obs.effectiveDateTime && (
                         <span className="text-muted-foreground">
                           {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -560,13 +605,11 @@ export function Dashboard() {
                 })}
                 {pregnancyEdd.map((obs, i) => (
                   <li key={obs.id || `edd-${i}`} className="text-sm flex justify-between">
-                    <span className="font-medium">
-                      EDD: {obs.valueDateTime
-                        ? format(new Date(obs.valueDateTime), "MMM d, yyyy")
-                        : "Unknown"}
-                    </span>
+                    <RecordName resource={obs} onOpen={openDetail}>
+                      {t("dashboard.edd", { date: obs.valueDateTime ? format(new Date(obs.valueDateTime), "MMM d, yyyy") : t("common.unknown") })}
+                    </RecordName>
                     <span className="text-muted-foreground text-xs">
-                      {obs.code?.coding?.[0]?.display || "Expected Delivery Date"}
+                      {obs.code?.coding?.[0]?.display || t("dashboard.expectedDeliveryDate")}
                     </span>
                   </li>
                 ))}
@@ -575,26 +618,24 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Prescribed Medications */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Stethoscope className="size-4 text-cyan-500" />
-              Prescribed Medications
+              {t("dashboard.prescribedMedications")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {medicationRequests.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No active prescriptions</p>
+            {filterVerified(medicationRequests).length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t("dashboard.noActivePrescriptions")}</p>
             ) : (
               <ul className="space-y-2">
-                {medicationRequests.map((rx, i) => (
+                {filterVerified(medicationRequests).map((rx, i) => (
                   <li key={rx.id || i} className="text-sm">
-                    <span className="font-medium">
+                    <RecordName resource={rx} onOpen={openDetail}>
                       {rx.medicationCodeableConcept?.coding?.[0]?.display ||
-                        rx.medicationCodeableConcept?.text ||
-                        "Unknown medication"}
-                    </span>
+                        rx.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
+                    </RecordName>
                     {rx.dosageInstruction?.[0]?.text && (
                       <span className="text-muted-foreground ml-2">— {rx.dosageInstruction[0].text}</span>
                     )}
@@ -610,33 +651,30 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Medical Devices */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Laptop className="size-4 text-slate-500" />
-              Medical Devices
+              {t("dashboard.medicalDevices")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {deviceUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No device records</p>
+              <p className="text-sm text-muted-foreground">{t("dashboard.noDeviceRecords")}</p>
             ) : (
               <ul className="space-y-2">
                 {deviceUse.map((du, i) => (
                   <li key={du.id || i} className="text-sm">
-                    <span className="font-medium">
-                      {du.device?.display || du.device?.reference || "Unknown device"}
-                    </span>
+                    <RecordName resource={du} onOpen={openDetail}>
+                      {du.device?.display || du.device?.reference || t("dashboard.unknownDevice")}
+                    </RecordName>
                     {du.timingPeriod?.start && (
                       <span className="text-muted-foreground ml-2">
-                        since {format(new Date(du.timingPeriod.start), "MMM d, yyyy")}
+                        {t("common.since", { date: format(new Date(du.timingPeriod.start), "MMM d, yyyy") })}
                       </span>
                     )}
                     {du.status && (
-                      <span className="ml-2 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                        {du.status}
-                      </span>
+                      <Badge variant={getDeviceStatusStyle(du.status as DeviceStatementStatusCode)} className="ml-2 text-xs">{du.status}</Badge>
                     )}
                   </li>
                 ))}
@@ -645,7 +683,8 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Genomic Results */}
+        <DocumentsCard documents={documents} onOpenDetail={openDetail} />
+
         <GenomicsCard
           reports={genomicReports}
           variants={variants}
@@ -653,9 +692,23 @@ export function Dashboard() {
           therapeuticImplications={therapeuticImplications}
         />
 
-        {/* Imaging Studies */}
-        <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
+        <div className="md:col-span-2">
+          <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
+        </div>
+
+        <div className="md:col-span-2">
+          <HealthChartsCard vitals={vitals} labs={labs} />
+        </div>
       </div>
+
+      <RecordDetailModal
+        open={detailOpen}
+        onOpenChange={setDetailOpen}
+        title={detailTitle}
+        resource={detailResource}
+        documents={documents}
+        onResourceUpdated={refreshData}
+      />
     </div>
   )
 }

@@ -1,0 +1,350 @@
+name: Copilot Auto-Fix (TDD)
+
+on:
+  schedule:
+    # Every 4 hours
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "What to fix (backend, frontend, all)"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - backend
+          - frontend
+      base_branch:
+        description: "Branch to check out and target for PR"
+        required: false
+        default: "develop"
+      max_attempts:
+        description: "Max Copilot fix iterations"
+        required: false
+        default: "3"
+        type: number
+      custom_prompt:
+        description: "Additional instructions for Copilot"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: copilot-auto-fix
+  cancel-in-progress: true
+
+env:
+  BASE_BRANCH: ${{ inputs.base_branch || 'develop' }}
+  MAX_ATTEMPTS: ${{ inputs.max_attempts || '3' }}
+  TARGET: ${{ inputs.target || 'all' }}
+
+jobs:
+  auto-fix:
+    name: Copilot TDD Auto-Fix
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      # ── Setup ──────────────────────────────────────────────
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASE_BRANCH }}
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Bun with version scripts
+        uses: ./.github/actions/setup-bun-version
+        with:
+          checkout: "false"
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Install Copilot CLI
+        run: |
+          curl -fsSL https://gh.io/copilot-install | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      # ── Initial test run ───────────────────────────────────
+      - name: Run backend tests (initial)
+        id: initial-backend
+        if: env.TARGET == 'all' || env.TARGET == 'backend'
+        continue-on-error: true
+        run: |
+          cd backend
+          bun test 2>&1 | tee /tmp/backend-test-output.log
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Run frontend tests (initial)
+        id: initial-frontend
+        if: env.TARGET == 'all' || env.TARGET == 'frontend'
+        continue-on-error: true
+        run: |
+          cd apps/ui
+          bun test 2>&1 | tee /tmp/frontend-test-output.log
+          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+
+      - name: Check if fixes needed
+        id: check-failures
+        run: |
+          BACKEND_FAILED="false"
+          FRONTEND_FAILED="false"
+
+          if [[ "$TARGET" == "all" || "$TARGET" == "backend" ]]; then
+            if [[ "${{ steps.initial-backend.outcome }}" == "failure" ]]; then
+              BACKEND_FAILED="true"
+            fi
+          fi
+
+          if [[ "$TARGET" == "all" || "$TARGET" == "frontend" ]]; then
+            if [[ "${{ steps.initial-frontend.outcome }}" == "failure" ]]; then
+              FRONTEND_FAILED="true"
+            fi
+          fi
+
+          if [[ "$BACKEND_FAILED" == "false" && "$FRONTEND_FAILED" == "false" ]]; then
+            echo "All tests passing — nothing to fix."
+            echo "needs_fix=false" >> $GITHUB_OUTPUT
+          else
+            echo "needs_fix=true" >> $GITHUB_OUTPUT
+            echo "backend_failed=$BACKEND_FAILED" >> $GITHUB_OUTPUT
+            echo "frontend_failed=$FRONTEND_FAILED" >> $GITHUB_OUTPUT
+          fi
+
+      # ── Create fix branch ──────────────────────────────────
+      - name: Create fix branch
+        if: steps.check-failures.outputs.needs_fix == 'true'
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M)
+          BRANCH="copilot/auto-fix-${TIMESTAMP}"
+          git checkout -b "$BRANCH"
+          echo "FIX_BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      # ── Copilot fix loop: Backend ──────────────────────────
+      - name: Copilot fix backend
+        if: steps.check-failures.outputs.backend_failed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: |
+          ATTEMPT=0
+          FIXED="false"
+          CUSTOM="${{ inputs.custom_prompt }}"
+
+          while [[ $ATTEMPT -lt $MAX_ATTEMPTS ]]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "::group::Backend fix attempt $ATTEMPT/$MAX_ATTEMPTS"
+
+            ERRORS=$(cat /tmp/backend-test-output.log | tail -200)
+
+            PROMPT="You are in a CI environment fixing failing backend tests.
+          Working directory: $(pwd)
+          Test command: cd backend && bun test
+
+          The following test failures occurred:
+          \`\`\`
+          $ERRORS
+          \`\`\`
+
+          ${CUSTOM:+Additional instructions: $CUSTOM}
+
+          Rules:
+          - Read the failing test files and the source files they test
+          - Fix the SOURCE code to make tests pass, do NOT modify test files unless the test itself is wrong
+          - Run 'cd backend && bun test' to verify your fix
+          - If tests pass, stop. If not, try another approach.
+          - Do not add new dependencies
+          - Keep changes minimal and focused"
+
+            copilot -p "$PROMPT" \
+              --allow-tool='shell(bun)' \
+              --allow-tool='shell(cat)' \
+              --allow-tool='shell(head)' \
+              --allow-tool='shell(tail)' \
+              --allow-tool='shell(grep)' \
+              --allow-tool='shell(find)' \
+              --allow-tool='shell(ls)' \
+              --allow-tool='shell(cd)' \
+              --allow-tool='shell(pwd)' \
+              --allow-tool='write' \
+              --deny-tool='shell(rm)' \
+              --deny-tool='shell(git)' \
+              --deny-tool='shell(curl)' \
+              --deny-tool='shell(wget)' \
+              --deny-tool='shell(npm)' \
+              --deny-tool='github' \
+              --model "claude-sonnet-4" \
+              2>&1 | tee /tmp/copilot-backend-attempt-${ATTEMPT}.log || true
+
+            echo "::endgroup::"
+
+            # Re-run tests to check
+            echo "::group::Backend test retry $ATTEMPT"
+            cd backend
+            if bun test 2>&1 | tee /tmp/backend-test-output.log; then
+              FIXED="true"
+              cd ..
+              echo "::endgroup::"
+              echo "Backend tests fixed on attempt $ATTEMPT"
+              break
+            fi
+            cd ..
+            echo "::endgroup::"
+          done
+
+          echo "BACKEND_FIXED=$FIXED" >> $GITHUB_ENV
+
+      # ── Copilot fix loop: Frontend ─────────────────────────
+      - name: Copilot fix frontend
+        if: steps.check-failures.outputs.frontend_failed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.COPILOT_PAT }}
+        run: |
+          ATTEMPT=0
+          FIXED="false"
+          CUSTOM="${{ inputs.custom_prompt }}"
+
+          while [[ $ATTEMPT -lt $MAX_ATTEMPTS ]]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "::group::Frontend fix attempt $ATTEMPT/$MAX_ATTEMPTS"
+
+            ERRORS=$(cat /tmp/frontend-test-output.log | tail -200)
+
+            PROMPT="You are in a CI environment fixing failing frontend tests.
+          Working directory: $(pwd)
+          Test command: cd apps/ui && bun test
+
+          The following test failures occurred:
+          \`\`\`
+          $ERRORS
+          \`\`\`
+
+          ${CUSTOM:+Additional instructions: $CUSTOM}
+
+          Rules:
+          - Read the failing test files and the source files they test
+          - Fix the SOURCE code to make tests pass, do NOT modify test files unless the test itself is wrong
+          - Run 'cd apps/ui && bun test' to verify your fix
+          - If tests pass, stop. If not, try another approach.
+          - Do not add new dependencies
+          - Keep changes minimal and focused"
+
+            copilot -p "$PROMPT" \
+              --allow-tool='shell(bun)' \
+              --allow-tool='shell(cat)' \
+              --allow-tool='shell(head)' \
+              --allow-tool='shell(tail)' \
+              --allow-tool='shell(grep)' \
+              --allow-tool='shell(find)' \
+              --allow-tool='shell(ls)' \
+              --allow-tool='shell(cd)' \
+              --allow-tool='shell(pwd)' \
+              --allow-tool='write' \
+              --deny-tool='shell(rm)' \
+              --deny-tool='shell(git)' \
+              --deny-tool='shell(curl)' \
+              --deny-tool='shell(wget)' \
+              --deny-tool='shell(npm)' \
+              --deny-tool='github' \
+              --model "claude-sonnet-4" \
+              2>&1 | tee /tmp/copilot-frontend-attempt-${ATTEMPT}.log || true
+
+            echo "::endgroup::"
+
+            echo "::group::Frontend test retry $ATTEMPT"
+            cd apps/ui
+            if bun test 2>&1 | tee /tmp/frontend-test-output.log; then
+              FIXED="true"
+              cd ../..
+              echo "::endgroup::"
+              echo "Frontend tests fixed on attempt $ATTEMPT"
+              break
+            fi
+            cd ../..
+            echo "::endgroup::"
+          done
+
+          echo "FRONTEND_FIXED=$FIXED" >> $GITHUB_ENV
+
+      # ── Commit & PR ────────────────────────────────────────
+      - name: Check for changes
+        if: steps.check-failures.outputs.needs_fix == 'true'
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changed files:"
+            git diff --stat
+          fi
+
+      - name: Commit fixes
+        if: steps.changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "copilot-auto-fix[bot]"
+          git config user.email "copilot-auto-fix[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: copilot auto-fix for failing tests
+
+          Backend fixed: ${BACKEND_FIXED:-n/a}
+          Frontend fixed: ${FRONTEND_FIXED:-n/a}
+          Triggered: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+      - name: Push and create PR
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git push origin "$FIX_BRANCH"
+
+          BODY="## Copilot Auto-Fix
+
+          | Target | Status |
+          |--------|--------|
+          | Backend | ${BACKEND_FIXED:-skipped} |
+          | Frontend | ${FRONTEND_FIXED:-skipped} |
+
+          **Run:** [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ---
+          _Auto-generated by Copilot CLI TDD workflow_"
+
+          PR_URL=$(gh pr create \
+            --base "$BASE_BRANCH" \
+            --head "$FIX_BRANCH" \
+            --title "fix: copilot auto-fix $(date +%Y-%m-%d)" \
+            --body "$BODY" \
+            --label "copilot-auto-fix")
+
+          echo "PR created: $PR_URL"
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+
+      - name: Enable auto-merge
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh pr merge "$PR_URL" --auto --squash
+
+      # ── Artifacts ──────────────────────────────────────────
+      - name: Upload logs
+        if: always() && steps.check-failures.outputs.needs_fix == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-auto-fix-logs
+          path: /tmp/copilot-*.log
+          retention-days: 14

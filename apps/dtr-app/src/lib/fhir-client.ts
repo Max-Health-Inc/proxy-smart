@@ -1,7 +1,7 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 export { fhirBaseUrl }
 import { reportAuthError } from "@/lib/auth-error"
-import { FhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import { FhirClient } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import type {
   Patient,
   Questionnaire,
@@ -33,6 +33,13 @@ import type {
   PASMedicationRequest,
   PASClaimResponse,
 } from "hl7.fhir.us.davinci-pas-generated"
+import type {
+  DTRStdQuestionnaire,
+  DTRQuestionnaireResponse,
+  DTRQuestionnairePackageBundle,
+} from "hl7.fhir.us.davinci-dtr-generated"
+import type { FmStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-FmStatus"
+import type { MedicationrequestIntentCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-MedicationrequestIntent"
 
 export type {
   Patient,
@@ -62,6 +69,9 @@ export type {
   PASInquiryResponseBundle,
   PASDeviceRequest,
   PASMedicationRequest,
+  DTRStdQuestionnaire,
+  DTRQuestionnaireResponse,
+  DTRQuestionnairePackageBundle,
 }
 
 // ── FHIR client with authenticated fetch (@babelfhir-ts/client-r4) ──────────
@@ -107,35 +117,35 @@ export async function searchPatientByIdentifier(identifier: string): Promise<Pat
 // ── Practitioner (PAS-profiled) ──────────────────────────────────────────────
 
 export async function getPractitioner(id: string): Promise<PASPractitioner> {
-  return client.read().pASPractitioner().read(id)
+  return client.read().practitioner().read(id) as Promise<PASPractitioner>
 }
 
 export async function searchPractitioners(name: string): Promise<PASPractitioner[]> {
-  return client.read().pASPractitioner().searchAll({ name, _count: 20 })
+  return client.read().practitioner().searchAll({ name, _count: 20 }) as Promise<PASPractitioner[]>
 }
 
 // ── Coverage (PAS-profiled — use generated client) ───────────────────────────
 
 export async function searchCoverage(patientId: string): Promise<PASCoverage[]> {
-  return client.read().pASCoverage().searchAll({
+  return client.read().coverage().searchAll({
     patient: `Patient/${patientId}`,
-    status: "active",
+    status: "active" satisfies FmStatusCode,
     _count: 20,
-  })
+  }) as Promise<PASCoverage[]>
 }
 
 // ── ServiceRequest (PAS-profiled) ────────────────────────────────────────────
 
 export async function searchServiceRequests(patientId: string): Promise<PASServiceRequest[]> {
-  return client.read().pASServiceRequest().searchAll({
+  return client.read().serviceRequest().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
     _sort: "-authored",
-  })
+  }) as Promise<PASServiceRequest[]>
 }
 
 export async function createServiceRequest(sr: PASServiceRequest): Promise<PASServiceRequest> {
-  return client.write().pASServiceRequest().create(sr)
+  return client.write().serviceRequest().create(sr as fhir4.ServiceRequest) as Promise<PASServiceRequest>
 }
 
 // ── Conditions ───────────────────────────────────────────────────────────────
@@ -219,7 +229,7 @@ export async function searchClaimResponses(patientId: string): Promise<PASClaimR
 // ── Organization ─────────────────────────────────────────────────────────────
 
 export async function getOrganization(id: string): Promise<PASOrganization> {
-  return client.read().pASOrganization().read(id)
+  return client.read().organization().read(id) as Promise<PASOrganization>
 }
 
 // ── Claim Inquiry ($inquire) ─────────────────────────────────────────────────
@@ -255,7 +265,7 @@ export async function searchDeviceRequests(patientId: string): Promise<PASDevice
 export async function searchMedicationRequests(patientId: string): Promise<PASMedicationRequest[]> {
   return client.read().medicationRequest().searchAll({
     patient: `Patient/${patientId}`,
-    intent: "order",
+    intent: "order" satisfies MedicationrequestIntentCode,
     _count: 50,
     _sort: "-authoredon",
   }) as Promise<PASMedicationRequest[]>

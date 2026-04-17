@@ -1,93 +1,20 @@
-import { useEffect, useRef, useState } from "react"
-import { AppHeader, Button, Spinner, useBranding } from "@proxy-smart/shared-ui"
+import { useState, useCallback } from "react"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
-import { onAuthError } from "@/lib/auth-error"
-import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import type { LaunchMode } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { Dashboard } from "@/components/Dashboard"
 import { FileCheck, LogIn, AlertTriangle } from "lucide-react"
 import "./index.css"
 
-type AppState = "loading" | "unauthenticated" | "callback" | "authenticated" | "error" | "session-expired"
-
 export default function App() {
-  const [state, setState] = useState<AppState>("loading")
-  const [error, setError] = useState<string | null>(null)
   const [launchMode, setLaunchMode] = useState<LaunchMode>("standalone")
-  const callbackHandled = useRef(false)
+  const onAuthenticated = useCallback(() => setLaunchMode(smartAuth.getLaunchMode()), [])
+  const { state, error, handleLogin, handleLogout } = useSmartAuth({
+    smartAuth,
+    onAuthenticated,
+    startAuth: () => smartAuth.startStandaloneLaunch(),
+  })
   const brand = useBranding()
-
-  useEffect(() => {
-    // Subscribe to auth errors from fetch wrapper
-    onAuthError((msg) => {
-      setError(msg)
-      setState("session-expired")
-    })
-
-    const params = new URLSearchParams(window.location.search)
-
-    // Handle OAuth callback
-    if (params.has("code")) {
-      if (callbackHandled.current) return
-      callbackHandled.current = true
-
-      setState("callback")
-      smartAuth.handleCallback()
-        .then(() => {
-          window.history.replaceState({}, "", window.location.pathname)
-          setLaunchMode(smartAuth.getLaunchMode())
-          setState("authenticated")
-        })
-        .catch((err) => {
-          setError(err instanceof Error ? err.message : "Auth callback failed")
-          setState("error")
-        })
-      return
-    }
-
-    // Handle EHR launch (has `launch` + `iss` params)
-    if (params.has("launch") && params.has("iss")) {
-      const launch = params.get("launch")!
-      const iss = params.get("iss")!
-      smartAuth.startEhrLaunch(launch, iss).catch((err) => {
-        setError(err instanceof Error ? err.message : "EHR launch failed")
-        setState("error")
-      })
-      return
-    }
-
-    // Check existing token — validate it's not expired
-    if (smartAuth.isAuthenticated()) {
-      if (smartAuth.isTokenExpired()) {
-        // Token expired — try to refresh
-        smartAuth.refreshAccessToken().then((refreshed) => {
-          if (refreshed) {
-            setLaunchMode(smartAuth.getLaunchMode())
-            setState("authenticated")
-          } else {
-            smartAuth.clearToken()
-            setState("session-expired")
-            setError("Your session has expired. Please sign in again.")
-          }
-        })
-      } else {
-        setLaunchMode(smartAuth.getLaunchMode())
-        setState("authenticated")
-      }
-    } else {
-      setState("unauthenticated")
-    }
-  }, [])
-
-  const handleLogin = () => {
-    smartAuth.startStandaloneLaunch().catch((err) => {
-      setError(err instanceof Error ? err.message : "Failed to start SMART launch")
-      setState("error")
-    })
-  }
-
-  const handleLogout = () => {
-    smartAuth.logout()
-  }
 
   return (
     <div className="min-h-screen bg-background">

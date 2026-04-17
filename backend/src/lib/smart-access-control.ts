@@ -9,8 +9,6 @@
  * 2. **Role-Based Data Isolation** — Practitioners see only their assigned patients;
  *    patients see only their own data (via `fhirUser` claim)
  *
- * 3. **Write Blocking** — optionally blocks write operations for non-admin users
- *
  * All features default to `disabled` and don't affect existing consent-based access control.
  */
 
@@ -182,34 +180,6 @@ export function enforceScopeAccess(ctx: AccessControlContext): AccessControlResu
   }
 
   return { allowed: true }
-}
-
-// ── Write Blocking ───────────────────────────────────────────────────────────
-
-export function enforceWriteBlocking(ctx: AccessControlContext): AccessControlResult {
-  if (
-    !config.accessControl.readOnlyForUsers ||
-    !['POST', 'PUT', 'PATCH', 'DELETE'].includes(ctx.method) ||
-    !ctx.tokenPayload.fhirUser
-  ) {
-    return { allowed: true }
-  }
-
-  logger.fhir.warn('Write operation blocked for non-admin user', {
-    fhirUser: ctx.tokenPayload.fhirUser,
-    method: ctx.method,
-    resourcePath: ctx.resourcePath,
-    server: ctx.serverName,
-  })
-
-  return {
-    allowed: false,
-    status: 403,
-    body: {
-      error: 'access_denied',
-      message: 'Write operations are not permitted for this user role',
-    },
-  }
 }
 
 // ── Role-Based Filtering ─────────────────────────────────────────────────────

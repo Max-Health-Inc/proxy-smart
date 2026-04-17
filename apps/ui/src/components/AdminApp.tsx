@@ -13,7 +13,8 @@ import { cn } from '../lib/utils';
 import { AlertDialogs } from './AlertDialogs';
 import { AIChatOverlay } from './ai/AIChatOverlay';
 import { Panel } from './ui/panel';
-import { Button, Spinner, ADMIN_TABS, type AdminTab } from '@proxy-smart/shared-ui';
+import { Button, Spinner } from '@proxy-smart/shared-ui';
+import { ADMIN_TABS, type AdminTab } from '@/lib/admin-tabs';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import { ShieldAlert, X } from 'lucide-react';
@@ -21,6 +22,7 @@ import { OAuthMonitoringDashboard } from './OAuthMonitoringDashboard';
 import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
 import { BrandSettings } from './BrandSettings';
+import { OrganizationsManager } from './OrganizationsManager/OrganizationsManager';
 
 
 // Get tab from URL hash
@@ -162,6 +164,7 @@ export function AdminApp() {
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}
                             {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'branding' && <BrandSettings />}
+                            {currentTab === 'organizations' && <OrganizationsManager />}
                         </Panel>
                     </div>
                 </div>

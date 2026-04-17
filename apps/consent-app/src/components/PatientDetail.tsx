@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@proxy-smart/shared-ui"
 import { formatHumanName } from "@/lib/fhir-client"
 import { useConsents } from "@/hooks/useConsents"
 import { useAccessRequests } from "@/hooks/useAccessRequests"

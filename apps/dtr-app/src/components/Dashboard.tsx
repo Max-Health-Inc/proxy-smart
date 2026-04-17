@@ -1,9 +1,10 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
-import type { LaunchMode } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
+import type { LaunchMode } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { PatientSearch } from "@/components/PatientSearch"
 import { PatientBanner } from "@/components/PatientBanner"
+import { CoverageCard } from "@/components/CoverageCard"
 import { PaRequestList } from "@/components/PaRequestList"
 import { NewPaWorkflow } from "@/components/NewPaWorkflow"
 import { QuestionnaireBrowser } from "@/components/QuestionnaireBrowser"
@@ -54,6 +55,8 @@ export function Dashboard({ launchMode }: DashboardProps) {
         launchMode={launchMode}
         onClear={launchMode === "standalone" ? () => setPatient(null) : undefined}
       />
+
+      <CoverageCard patientId={patient.id!} />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>

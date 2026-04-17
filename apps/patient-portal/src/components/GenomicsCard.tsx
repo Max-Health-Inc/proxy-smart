@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { Dna, ChevronDown, ChevronUp, FileText, AlertTriangle, Pill } from "lucide-react"
 import { format } from "date-fns"
@@ -8,6 +9,7 @@ import type {
   DiagnosticImplication,
   TherapeuticImplication,
 } from "@/lib/fhir-client"
+import type { DiagnosticReportStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticReportStatusUvIps"
 
 // ── LOINC component code helpers ────────────────────────────────────────────
 
@@ -65,6 +67,7 @@ function significanceBadge(text: string) {
 // ── Variant row ─────────────────────────────────────────────────────────────
 
 function VariantRow({ variant }: { variant: Variant }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
 
   const gene = componentDisplay(getComponent(variant, LOINC.GENE_STUDIED))
@@ -77,7 +80,7 @@ function VariantRow({ variant }: { variant: Variant }) {
 
   const title = gene
     ? `${gene}${hgvsCoding ? ` — ${hgvsCoding}` : ""}`
-    : variant.code?.coding?.[0]?.display || "Variant"
+    : variant.code?.coding?.[0]?.display || t("genomics.variant")
 
   const hasDetails = hgvsProtein || allelicState || dnaChangeType || refSeq
 
@@ -107,16 +110,16 @@ function VariantRow({ variant }: { variant: Variant }) {
       {expanded && (
         <div className="px-3 pb-3 border-t border-border/30 pt-2 space-y-1">
           {hgvsProtein && (
-            <Detail label="Protein Change" value={hgvsProtein} />
+            <Detail label={t("genomics.proteinChange")} value={hgvsProtein} />
           )}
           {allelicState && (
-            <Detail label="Allelic State" value={allelicState} />
+            <Detail label={t("genomics.allelicState")} value={allelicState} />
           )}
           {dnaChangeType && (
-            <Detail label="DNA Change Type" value={dnaChangeType} />
+            <Detail label={t("genomics.dnaChangeType")} value={dnaChangeType} />
           )}
           {refSeq && (
-            <Detail label="Transcript" value={refSeq} />
+            <Detail label={t("genomics.transcript")} value={refSeq} />
           )}
         </div>
       )}
@@ -138,6 +141,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 // ── Diagnostic implication row ──────────────────────────────────────────────
 
 function DiagnosticImplicationRow({ impl }: { impl: DiagnosticImplication }) {
+  const { t } = useTranslation()
   const disease = componentDisplay(getComponent(impl, LOINC.ASSOCIATED_DISEASE))
   const clinSig = componentDisplay(getComponent(impl, LOINC.CLINICAL_SIGNIFICANCE))
 
@@ -145,7 +149,7 @@ function DiagnosticImplicationRow({ impl }: { impl: DiagnosticImplication }) {
     <li className="flex items-center gap-2 text-sm">
       <AlertTriangle className="size-3.5 text-amber-500 shrink-0" />
       <span className="font-medium">
-        {disease || impl.code?.coding?.[0]?.display || "Diagnostic Implication"}
+        {disease || impl.code?.coding?.[0]?.display || t("genomics.diagnosticImplication")}
       </span>
       {clinSig && significanceBadge(clinSig)}
     </li>
@@ -155,6 +159,7 @@ function DiagnosticImplicationRow({ impl }: { impl: DiagnosticImplication }) {
 // ── Therapeutic implication row ─────────────────────────────────────────────
 
 function TherapeuticImplicationRow({ impl }: { impl: TherapeuticImplication }) {
+  const { t } = useTranslation()
   const drug = componentDisplay(getComponent(impl, LOINC.DRUG_ASSESSED))
   const clinSig = componentDisplay(getComponent(impl, LOINC.CLINICAL_SIGNIFICANCE))
 
@@ -162,7 +167,7 @@ function TherapeuticImplicationRow({ impl }: { impl: TherapeuticImplication }) {
     <li className="flex items-center gap-2 text-sm">
       <Pill className="size-3.5 text-blue-500 shrink-0" />
       <span className="font-medium">
-        {drug || impl.code?.coding?.[0]?.display || "Therapeutic Implication"}
+        {drug || impl.code?.coding?.[0]?.display || t("genomics.therapeuticImplication")}
       </span>
       {clinSig && significanceBadge(clinSig)}
     </li>
@@ -182,6 +187,7 @@ export function GenomicsCard({
   diagnosticImplications: DiagnosticImplication[]
   therapeuticImplications: TherapeuticImplication[]
 }) {
+  const { t } = useTranslation()
   const isEmpty =
     reports.length === 0 &&
     variants.length === 0 &&
@@ -193,12 +199,12 @@ export function GenomicsCard({
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Dna className="size-4 text-violet-500" />
-          Genomic Results
+          {t("genomics.title")}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isEmpty ? (
-          <p className="text-sm text-muted-foreground">No genomic test results on record</p>
+          <p className="text-sm text-muted-foreground">{t("genomics.noRecords")}</p>
         ) : (
           <div className="space-y-4">
             {/* Genomic Reports */}
@@ -206,14 +212,21 @@ export function GenomicsCard({
               <div>
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <FileText className="size-3" />
-                  Reports
+                  {t("genomics.reports")}
                 </h4>
                 <ul className="space-y-1.5">
                   {reports.map((r, i) => (
                     <li key={r.id || i} className="text-sm flex justify-between">
-                      <span className="font-medium">
-                        {r.code?.coding?.[0]?.display || "Genomic Report"}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium">
+                          {r.code?.coding?.[0]?.display || t("genomics.genomicReport")}
+                        </span>
+                        {r.status && (r.status as DiagnosticReportStatusUvIpsCode) !== ("final" satisfies DiagnosticReportStatusUvIpsCode) && (
+                          <Badge variant={(r.status as DiagnosticReportStatusUvIpsCode) === ("cancelled" satisfies DiagnosticReportStatusUvIpsCode) ? "destructive" : "outline"} className="text-xs">
+                            {r.status}
+                          </Badge>
+                        )}
+                      </div>
                       <span className="text-muted-foreground text-xs">
                         {r.effectiveDateTime
                           ? format(new Date(r.effectiveDateTime), "MMM d, yyyy")
@@ -232,7 +245,7 @@ export function GenomicsCard({
               <div>
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <Dna className="size-3" />
-                  Variants ({variants.length})
+                  {t("genomics.variants", { n: variants.length })}
                 </h4>
                 <ul className="space-y-1.5">
                   {variants.map((v, i) => (
@@ -247,7 +260,7 @@ export function GenomicsCard({
               <div>
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <AlertTriangle className="size-3" />
-                  Diagnostic Implications
+                  {t("genomics.diagnosticImplications")}
                 </h4>
                 <ul className="space-y-1.5">
                   {diagnosticImplications.map((di, i) => (
@@ -262,7 +275,7 @@ export function GenomicsCard({
               <div>
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
                   <Pill className="size-3" />
-                  Pharmacogenomics
+                  {t("genomics.pharmacogenomics")}
                 </h4>
                 <ul className="space-y-1.5">
                   {therapeuticImplications.map((ti, i) => (

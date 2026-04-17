@@ -101,34 +101,19 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
       signal: controller.signal,
     })
 
-    // Copy status
-    set.status = resp.status
-
-    // Copy relevant response headers (content-type is critical for multipart DICOM)
-    const passthroughHeaders = ['content-type', 'content-length', 'content-disposition', 'etag', 'transfer-encoding']
-    for (const h of passthroughHeaders) {
-      const v = resp.headers.get(h)
-      if (v) set.headers = { ...set.headers, [h]: v }
-    }
-
-    const contentType = resp.headers.get('content-type') || ''
-
-    // For JSON responses (QIDO-RS metadata), parse and return as object
-    if (contentType.includes('json')) {
-      const text = await resp.text()
-      try {
-        return JSON.parse(text)
-      } catch {
-        return text
-      }
-    }
-
-    // For binary/multipart responses (WADO-RS pixel data, rendered images),
-    // return raw bytes so Elysia sends them as-is
+    // Return a raw Response to preserve the exact content-type from the PACS
+    // (e.g. application/dicom+json, multipart/related).
+    // Returning a plain JS object would let Elysia re-serialize with
+    // application/json, breaking Cornerstone3D's WADO-RS metadata parser.
     const buffer = await resp.arrayBuffer()
+    const responseHeaders = new Headers()
+    for (const h of ['content-type', 'content-disposition', 'etag']) {
+      const v = resp.headers.get(h)
+      if (v) responseHeaders.set(h, v)
+    }
     return new Response(buffer, {
       status: resp.status,
-      headers: { 'content-type': contentType },
+      headers: responseHeaders,
     })
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
@@ -136,9 +121,154 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
       set.status = 504
       return { error: 'DICOMweb upstream timeout' }
     }
-    logger.fhir.error('DICOMweb proxy error', { target, error: err })
+    const errMsg = err instanceof Error ? err.message : 'Unknown error'
+    const isConnectionRefused = errMsg.includes('ECONNREFUSED') || errMsg.includes('fetch failed')
+    logger.fhir.error('DICOMweb proxy error', { target, error: errMsg, isConnectionRefused })
     set.status = 502
-    return { error: 'DICOMweb upstream error', details: err instanceof Error ? { message: err.message } : undefined }
+    return {
+      error: isConnectionRefused ? 'PACS server is not reachable' : 'DICOMweb upstream error',
+      message: isConnectionRefused ? 'The imaging server (PACS) is not responding. It may be offline or not yet started.' : undefined,
+      details: err instanceof Error ? { message: err.message } : undefined,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+/** Forward a POST (STOW-RS) request to the upstream PACS, streaming the body through */
+async function proxyDicomWebPost(request: Request, subPath: string, set: Record<string, any>): Promise<Response | string | object> {
+  if (!config.dicomweb.enabled) {
+    set.status = 501
+    return { error: 'DICOMweb proxy is not configured', message: 'Set DICOMWEB_BASE_URL to enable DICOM imaging' }
+  }
+
+  const authHeader = request.headers.get('authorization') || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '')
+  if (!token) {
+    set.status = 401
+    return { error: 'Authentication required' }
+  }
+
+  try {
+    await validateToken(token)
+  } catch (err) {
+    if (err instanceof AuthenticationError) {
+      set.status = 401
+      return { error: 'Authentication failed', details: { message: err.message } }
+    }
+    throw err
+  }
+
+  const requestUrl = new URL(request.url)
+  const target = buildUpstreamUrl(subPath, requestUrl.search)
+
+  const headers = new Headers()
+  // STOW-RS requires the Content-Type with boundary for multipart/related
+  const contentType = request.headers.get('content-type')
+  if (contentType) headers.set('content-type', contentType)
+  const accept = request.headers.get('accept')
+  if (accept) headers.set('accept', accept)
+  if (config.dicomweb.upstreamAuth) {
+    headers.set('authorization', config.dicomweb.upstreamAuth)
+  }
+
+  const controller = new AbortController()
+  // STOW-RS uploads can be large — use 5× the normal timeout
+  const timeout = setTimeout(() => controller.abort(), config.dicomweb.timeoutMs * 5)
+
+  try {
+    logger.fhir.info('DICOMweb STOW-RS →', { target })
+
+    const resp = await fetch(target, {
+      method: 'POST',
+      headers,
+      body: request.body,
+      signal: controller.signal,
+      // @ts-expect-error duplex needed for streaming body in some runtimes
+      duplex: 'half',
+    })
+
+    set.status = resp.status
+    const passthroughHeaders = ['content-type', 'content-length', 'etag']
+    for (const h of passthroughHeaders) {
+      const v = resp.headers.get(h)
+      if (v) set.headers = { ...set.headers, [h]: v }
+    }
+
+    const respContentType = resp.headers.get('content-type') || ''
+    if (respContentType.includes('json') || respContentType.includes('xml')) {
+      return new Response(await resp.text(), {
+        status: resp.status,
+        headers: { 'content-type': respContentType },
+      })
+    }
+
+    const buffer = await resp.arrayBuffer()
+    return new Response(buffer, {
+      status: resp.status,
+      headers: { 'content-type': respContentType },
+    })
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      logger.fhir.error('DICOMweb STOW-RS timeout', { target })
+      set.status = 504
+      return { error: 'DICOMweb upstream timeout (STOW-RS)' }
+    }
+    const errMsg = err instanceof Error ? err.message : 'Unknown error'
+    const isConnectionRefused = errMsg.includes('ECONNREFUSED') || errMsg.includes('fetch failed')
+    logger.fhir.error('DICOMweb STOW-RS error', { target, error: errMsg, isConnectionRefused })
+    set.status = 502
+    return {
+      error: isConnectionRefused ? 'PACS server is not reachable' : 'DICOMweb upstream error',
+      message: isConnectionRefused ? 'The imaging server (PACS) is not responding. It may be offline or not yet started.' : undefined,
+      details: err instanceof Error ? { message: err.message } : undefined,
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+// ----- PACS health probe -----
+
+export interface PacsStatus {
+  configured: boolean
+  reachable: boolean | null
+  message: string
+}
+
+/** Lightweight probe: is PACS configured + can we reach it? */
+async function probePacs(): Promise<PacsStatus> {
+  if (!config.dicomweb.enabled || !config.dicomweb.baseUrl) {
+    return { configured: false, reachable: null, message: 'DICOMweb is not configured. No PACS connection available.' }
+  }
+
+  const base = config.dicomweb.baseUrl.replace(/\/+$/, '')
+  const headers = new Headers()
+  if (config.dicomweb.upstreamAuth) headers.set('authorization', config.dicomweb.upstreamAuth)
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 5_000) // 5 s ceiling for health probe
+
+  try {
+    // Orthanc DICOMweb exposes /studies, a minimal QIDO-RS query with limit=1 is a fast probe
+    const resp = await fetch(`${base}/studies?limit=1`, {
+      method: 'GET',
+      headers,
+      signal: controller.signal,
+    })
+    return {
+      configured: true,
+      reachable: resp.ok || resp.status === 401, // 401 means PACS is up but auth differs
+      message: resp.ok ? 'PACS is available' : `PACS responded with HTTP ${resp.status}`,
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    logger.fhir.warn('PACS health probe failed', { base, error: msg })
+    return {
+      configured: true,
+      reachable: false,
+      message: `Cannot reach PACS: ${msg.includes('ECONNREFUSED') || msg.includes('fetch failed') ? 'Connection refused — is the PACS server running?' : msg}`,
+    }
   } finally {
     clearTimeout(timeout)
   }
@@ -152,6 +282,12 @@ const DicomWebErrorResponse = t.Object({
   details: t.Optional(t.Object({ message: t.Optional(t.String()) })),
 })
 
+const PacsStatusResponse = t.Object({
+  configured: t.Boolean(),
+  reachable: t.Union([t.Boolean(), t.Null()]),
+  message: t.String(),
+})
+
 const dicomwebDetail = (summary: string, description: string) => ({
   summary,
   description,
@@ -160,6 +296,19 @@ const dicomwebDetail = (summary: string, description: string) => ({
 })
 
 export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb'] })
+
+  // ==================== Health / Status ====================
+
+  .get('/status', async () => {
+    return probePacs()
+  }, {
+    response: PacsStatusResponse,
+    detail: {
+      summary: 'PACS Status',
+      description: 'Check whether a PACS is configured and reachable. Does not require authentication so the frontend can show appropriate UI before users attempt to upload.',
+      tags: ['dicomweb'],
+    },
+  })
 
   // ==================== QIDO-RS (Query) ====================
 
@@ -292,4 +441,19 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
   }, {
     params: t.Object({ studyUID: UidParam, seriesUID: UidParam, sopUID: UidParam }),
     detail: dicomwebDetail('Retrieve Bulkdata (WADO-RS)', 'Retrieve bulkdata for an instance (e.g. pixel data by tag)'),
+  })
+
+  // ==================== STOW-RS (Store) ====================
+
+  .post('/studies', async ({ request, set }) => {
+    return proxyDicomWebPost(request, '/studies', set)
+  }, {
+    detail: dicomwebDetail('Store Instances (STOW-RS)', 'Store DICOM instances via multipart/related POST. Body must be multipart/related with application/dicom parts.'),
+  })
+
+  .post('/studies/:studyUID', async ({ request, params, set }) => {
+    return proxyDicomWebPost(request, `/studies/${params.studyUID}`, set)
+  }, {
+    params: t.Object({ studyUID: UidParam }),
+    detail: dicomwebDetail('Store Instances in Study (STOW-RS)', 'Store DICOM instances into a specific study via multipart/related POST.'),
   })

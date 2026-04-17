@@ -8,11 +8,19 @@
  * - Risk adjustment / quality reporting
  * - Any payer-published SDC Questionnaire
  */
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
 import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Input, Spinner } from "@proxy-smart/shared-ui"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proxy-smart/shared-ui"
 import { SmartFormsQuestionnaireRenderer } from "@/components/SmartFormsQuestionnaireRenderer"
 import { searchQuestionnaires, createQuestionnaireResponse } from "@/lib/fhir-client"
+import type { PublicationStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-PublicationStatus"
 import { toast } from "sonner"
 import {
   FileQuestion,
@@ -22,7 +30,12 @@ import {
   Calendar,
   Building2,
   Tag,
+  Filter,
+  PenTool,
+  BookOpen,
+  Workflow,
 } from "lucide-react"
+import { getQuestionnaireMetadata } from "@/lib/questionnaire-extensions"
 
 interface QuestionnaireBrowserProps {
   patient: Patient
@@ -35,6 +48,8 @@ export function QuestionnaireBrowser({ patient }: QuestionnaireBrowserProps) {
   const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
+  const [publisherFilter, setPublisherFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedQ, setSelectedQ] = useState<Questionnaire | null>(null)
   const didFetch = useRef(false)
 
@@ -82,8 +97,19 @@ export function QuestionnaireBrowser({ patient }: QuestionnaireBrowserProps) {
     setView("list")
   }, [])
 
-  // Filter questionnaires by search query
+  // Extract unique publishers (payers) for filtering
+  const publishers = useMemo(() => {
+    const names = new Set<string>()
+    for (const q of questionnaires) {
+      if (q.publisher) names.add(q.publisher)
+    }
+    return Array.from(names).sort()
+  }, [questionnaires])
+
+  // Filter questionnaires by search query, publisher, and status
   const filtered = questionnaires.filter((q) => {
+    if (publisherFilter !== "all" && q.publisher !== publisherFilter) return false
+    if (statusFilter !== "all" && q.status !== statusFilter) return false
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -149,6 +175,31 @@ export function QuestionnaireBrowser({ patient }: QuestionnaireBrowserProps) {
             className="pl-9"
           />
         </div>
+        {publishers.length > 1 && (
+          <Select value={publisherFilter} onValueChange={setPublisherFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="size-3.5 mr-1" />
+              <SelectValue placeholder="All payers" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All payers</SelectItem>
+              {publishers.map((pub) => (
+                <SelectItem key={pub} value={pub}>{pub}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[130px]">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="retired">Retired</SelectItem>
+          </SelectContent>
+        </Select>
         <Badge variant="outline">{filtered.length} available</Badge>
       </div>
 
@@ -197,10 +248,11 @@ function QuestionnaireCard({
   onSelect: () => void
 }) {
   const itemCount = countItems(questionnaire.item ?? [])
+  const meta = getQuestionnaireMetadata(questionnaire)
   const statusColor =
-    questionnaire.status === "active"
+    questionnaire.status === ("active" satisfies PublicationStatusCode)
       ? "text-emerald-600"
-      : questionnaire.status === "draft"
+      : questionnaire.status === ("draft" satisfies PublicationStatusCode)
         ? "text-amber-600"
         : "text-muted-foreground"
 
@@ -215,9 +267,29 @@ function QuestionnaireCard({
             <FileQuestion className="size-4 shrink-0" />
             {questionnaire.title ?? questionnaire.name ?? questionnaire.id}
           </CardTitle>
-          <Badge variant="outline" className={`text-xs ${statusColor}`}>
-            {questionnaire.status}
-          </Badge>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {meta.signatureRequired && (
+              <Badge variant="destructive" className="text-xs">
+                <PenTool className="size-3 mr-0.5" />
+                Signature
+              </Badge>
+            )}
+            {meta.hasCql && (
+              <Badge variant="secondary" className="text-xs">
+                <BookOpen className="size-3 mr-0.5" />
+                CQL
+              </Badge>
+            )}
+            {meta.modular && (
+              <Badge variant="secondary" className="text-xs">
+                <Workflow className="size-3 mr-0.5" />
+                Modular
+              </Badge>
+            )}
+            <Badge variant="outline" className={`text-xs ${statusColor}`}>
+              {questionnaire.status}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
@@ -243,6 +315,11 @@ function QuestionnaireCard({
             <Tag className="size-3" />
             {itemCount} item{itemCount !== 1 ? "s" : ""}
           </span>
+          {meta.launchContextNames.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              Context: {meta.launchContextNames.join(", ")}
+            </span>
+          )}
         </div>
       </CardContent>
     </Card>

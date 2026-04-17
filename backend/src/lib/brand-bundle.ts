@@ -13,14 +13,14 @@ import { config } from '../config'
 import { getAllServers, ensureServersInitialized } from './fhir-server-store'
 import { fhirVersionToSemver } from './fhir-utils'
 import { getRuntimeBrandConfig } from './runtime-config'
+import { getAllOrgBrands } from './org-branding'
 import { logger } from './logger'
 import type { UserAccessBrandBundleType } from '../schemas'
 import type { UserAccessEndpoint, UserAccessBrand, UserAccessBrandsBundle, UserAccessEndpointConnectionType, UserAccessEndpointPayloadTypeCoding, EndpointFhirVersion, OrganizationBrand, OrganizationPortal } from 'hl7.fhir.uv.smart-app-launch-generated'
 import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint, validateOrganizationBrand, validateOrganizationPortal, validateEndpointFhirVersion } from 'hl7.fhir.uv.smart-app-launch-generated'
-import type { EndpointStatusCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-EndpointStatus'
 import type { ContactPointSystemCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-ContactPointSystem'
 import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'
-import type { Address } from 'fhir/r4'
+import type { Address, Endpoint } from 'fhir/r4'
 
 interface BrandBundleCache {
   bundle: UserAccessBrandBundleType
@@ -60,6 +60,7 @@ class BrandBundleService {
 
     // Build Endpoint resources from registered FHIR servers
     const endpointRefs: Array<{ reference: string }> = []
+    const serverEndpointMap = new Map<string, { ref: { reference: string }; orgIds?: string[] }>()
     for (const server of servers) {
       const endpointId = `endpoint-${server.identifier}`
       const proxyBase = `${config.baseUrl}/${config.name}/${server.identifier}/${server.metadata.fhirVersion}`
@@ -68,14 +69,34 @@ class BrandBundleService {
         fullUrl: `${config.baseUrl}/branding/Endpoint/${endpointId}`,
         resource: this.buildEndpoint(endpointId, server.name, proxyBase, server.metadata.fhirVersion, brand)
       })
-      endpointRefs.push({ reference: `Endpoint/${endpointId}` })
+      const ref = { reference: `Endpoint/${endpointId}` }
+      endpointRefs.push(ref)
+      serverEndpointMap.set(server.identifier, { ref, orgIds: server.organizationIds })
     }
 
-    // Build Organization resource (the Brand)
+    // Build Organization resource (the primary Brand) — includes ALL endpoints
     entries.unshift({
       fullUrl: `${config.baseUrl}/branding/Organization/${orgId}`,
       resource: this.buildOrganization(orgId, endpointRefs, brand)
     })
+
+    // Build per-org Organization resources (brand overrides merged with realm defaults)
+    // Each org only gets endpoints for servers assigned to it (or unscoped servers available to all)
+    const orgBrands = getAllOrgBrands()
+    for (const [kcOrgId, overrides] of orgBrands) {
+      const merged = { ...brand, ...overrides }
+      const orgResourceId = `org-${kcOrgId}`
+
+      // Filter endpoint refs: include servers that either have no org restriction or include this org
+      const orgEndpointRefs = Array.from(serverEndpointMap.values())
+        .filter(({ orgIds }) => !orgIds || orgIds.length === 0 || orgIds.includes(kcOrgId))
+        .map(({ ref }) => ref)
+
+      entries.push({
+        fullUrl: `${config.baseUrl}/branding/Organization/${orgResourceId}`,
+        resource: this.buildOrganization(orgResourceId, orgEndpointRefs, merged, orgId)
+      })
+    }
 
     const bundle: UserAccessBrandBundleType = {
       resourceType: 'Bundle',
@@ -157,7 +178,7 @@ class BrandBundleService {
     return {
       resourceType: 'Endpoint',
       id,
-      status: 'active' as EndpointStatusCode,
+      status: 'active' as Endpoint['status'],
       name: `FHIR ${fhirVersion} Endpoint for ${brand.name}`,
       address,
       connectionType: {
@@ -185,7 +206,8 @@ class BrandBundleService {
   private buildOrganization(
     id: string,
     endpointRefs: Array<{ reference: string }>,
-    brand: ReturnType<typeof getRuntimeBrandConfig>
+    brand: ReturnType<typeof getRuntimeBrandConfig>,
+    partOfId?: string,
   ): UserAccessBrand {
     const extensions: UserAccessBrand['extension'] = []
 
@@ -271,6 +293,7 @@ class BrandBundleService {
         value: brand.website
       }],
       ...(address.length > 0 && { address }),
+      ...(partOfId && { partOf: { reference: `Organization/${partOfId}` } }),
       endpoint: endpointRefs
     }
   }

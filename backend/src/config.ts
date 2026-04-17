@@ -75,6 +75,14 @@ export const config = {
       if (!this.baseUrl || !this.realm) return null
       return `${this.baseUrl}/realms/${this.realm}/protocol/openid-connect/certs`
     },
+
+    // Expected token issuer — used for JWT issuer validation
+    // Tokens from Keycloak have iss = <publicUrl>/realms/<realm>
+    get expectedIssuer() {
+      const base = this.publicUrl || this.baseUrl
+      if (!base || !this.realm) return null
+      return `${base}/realms/${this.realm}`
+    },
   },
   
   fhir: {
@@ -203,10 +211,6 @@ export const config = {
       const mode = process.env.ROLE_BASED_FILTERING_MODE || 'disabled'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
       return 'disabled'
-    },
-    // Block write operations for non-admin users (users with fhirUser claim)
-    get readOnlyForUsers() {
-      return process.env.READ_ONLY_FOR_USERS === 'true'
     },
     // Clinical resource types subject to patient-scoped filtering
     get patientScopedResources(): string[] {

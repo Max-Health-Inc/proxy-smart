@@ -53,3 +53,83 @@ jobs:
       keycloak_url: ${{ needs.deploy-beta.outputs.keycloak_url }}
       app_version: ${{ needs.beta-release.outputs.version }}
     secrets: inherit
+
+  # After beta version bump on test, absorb into develop so the next
+  # develop→test PR is conflict-free on package.json version fields.
+  absorb-version-into-develop:
+    name: Absorb test version into develop
+    needs: [beta-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v6
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Check if develop is behind test
+        id: check
+        run: |
+          git fetch origin test
+          BEHIND=$(git rev-list --count HEAD..origin/test)
+          echo "commits_behind=$BEHIND" >> $GITHUB_OUTPUT
+          echo "Develop is $BEHIND commits behind test"
+
+      - name: Absorb test versions into develop
+        if: steps.check.outputs.commits_behind != '0'
+        run: |
+          echo "::group::Absorb test version bump"
+          git config user.name "proxy-smart-releaser[bot]"
+          git config user.email "proxy-smart-releaser[bot]@users.noreply.github.com"
+
+          # Merge test into develop, keeping develop's version values
+          if git merge origin/test -X ours --no-edit \
+              -m "chore: absorb test version bump [proxy-smart-releaser]"; then
+            echo "Merge completed cleanly"
+          else
+            echo "⚠️ Conflicts remain after -X ours — force-resolving all as ours"
+            CONFLICTED=$(git diff --name-only --diff-filter=U)
+            if [ -n "$CONFLICTED" ]; then
+              echo "$CONFLICTED" | xargs git checkout --ours
+              git add -A
+            fi
+            git commit --no-edit \
+              -m "chore: absorb test version bump [proxy-smart-releaser]" || true
+          fi
+
+          # Push with retry (develop may have moved while we were running)
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/develop)" ]; then
+            for i in 1 2 3; do
+              if git push origin develop 2>/dev/null; then
+                echo "✅ Absorbed test version bump into develop"
+                break
+              fi
+              echo "Push attempt $i/3 failed, pulling latest develop..."
+              git fetch origin develop
+              git merge origin/develop -X ours --no-edit \
+                -m "chore: merge latest develop [proxy-smart-releaser]" || {
+                CONFLICTED=$(git diff --name-only --diff-filter=U)
+                if [ -n "$CONFLICTED" ]; then
+                  echo "$CONFLICTED" | xargs git checkout --ours
+                  git add -A
+                fi
+                git commit --no-edit \
+                  -m "chore: merge latest develop [proxy-smart-releaser]" || true
+              }
+              if [ $i -eq 3 ]; then
+                echo "⚠️ All push attempts failed — absorb will be retried by pr-to-test"
+              fi
+            done
+          else
+            echo "✅ Already up-to-date with test"
+          fi
+          echo "::endgroup::"
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}

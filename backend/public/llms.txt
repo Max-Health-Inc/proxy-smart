@@ -11,7 +11,7 @@ Proxy Smart sits between your SMART on FHIR app and any FHIR server, adding full
 - Stateless FHIR Proxy: No PHI touches the proxy — requests pass through to your FHIR server. Smaller attack surface, simpler HIPAA/GDPR compliance.
 - SMART App Launch 2.2.0: Full spec implementation with OAuth 2.0 + PKCE, JWT validation, scope-based access control, refresh token rotation, enterprise SSO.
 - Admin Dashboard: Built-in React UI to manage SMART apps, FHIR server connections, users, scopes, and identity providers.
-- AI Assistant & MCP Server: Built-in AI assistant with RAG over healthcare docs, plus an auto-generated MCP server from the OpenAPI spec for programmatic AI-tool integration.
+- AI Assistant & MCP Server: Built-in AI assistant with RAG over healthcare docs, plus a built-in MCP server for programmatic AI-tool integration.
 - App Store: Register, manage, and launch SMART on FHIR apps through a single admin interface with dynamic client registration.
 - BabelFHIR-TS Integration: Generate type-safe TypeScript from any FHIR Implementation Guide — profile-aware interfaces, runtime validation, and a generated FHIR client.
 - Docker-Ready: One-command dev and prod deployments with mono-container and multi-container Docker Compose setups.
