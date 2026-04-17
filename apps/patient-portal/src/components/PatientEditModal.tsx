@@ -19,6 +19,7 @@ import {
 } from "@proxy-smart/shared-ui"
 import { updatePatient, type Patient } from "@/lib/fhir-client"
 import { Loader2, Phone, MapPin, User } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { AdministrativeGenderCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AdministrativeGender"
 
 interface PatientEditModalProps {
@@ -192,6 +193,7 @@ export function PatientEditModal({
   patient,
   onUpdated,
 }: PatientEditModalProps) {
+  const { t } = useTranslation()
   const [profile, setProfile] = useState<UserProfileData>(() => extractProfileData(patient))
   const [phone, setPhone] = useState(() => extractPhone(patient))
   const [address, setAddress] = useState(() => extractAddress(patient))
@@ -217,7 +219,7 @@ export function PatientEditModal({
       onUpdated(result)
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update patient")
+      setError(err instanceof Error ? err.message : t("patientEdit.failedToUpdate"))
     } finally {
       setSaving(false)
     }
@@ -227,9 +229,9 @@ export function PatientEditModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogTitle>{t("patientEdit.title")}</DialogTitle>
           <DialogDescription>
-            Update your personal information. Changes will be saved to your health record.
+            {t("patientEdit.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -244,11 +246,11 @@ export function PatientEditModal({
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium flex items-center gap-1.5">
               <User className="size-3.5" />
-              Gender &amp; Identity
+              {t("patientEdit.genderAndIdentity")}
             </legend>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="patient-gender" className="text-xs text-muted-foreground">Admin. Gender</Label>
+                <Label htmlFor="patient-gender" className="text-xs text-muted-foreground">{t("patientEdit.adminGender")}</Label>
                 <Input
                   id="patient-gender"
                   value={GENDER_OPTIONS.find(o => o.value === demographics.gender)?.label ?? demographics.gender ?? "—"}
@@ -257,12 +259,12 @@ export function PatientEditModal({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="patient-gi" className="text-xs text-muted-foreground">Gender Identity</Label>
+                <Label htmlFor="patient-gi" className="text-xs text-muted-foreground">{t("patientEdit.genderIdentity")}</Label>
                 <Select
                   value={demographics.genderIdentity}
                   onValueChange={(v) => setDemographics((d) => ({ ...d, genderIdentity: v }))}
                 >
-                  <SelectTrigger id="patient-gi"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectTrigger id="patient-gi"><SelectValue placeholder={t("common.selectPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {GENDER_IDENTITY_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -271,12 +273,12 @@ export function PatientEditModal({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="patient-pronouns" className="text-xs text-muted-foreground">Pronouns</Label>
+                <Label htmlFor="patient-pronouns" className="text-xs text-muted-foreground">{t("patientEdit.pronouns")}</Label>
                 <Select
                   value={demographics.pronouns}
                   onValueChange={(v) => setDemographics((d) => ({ ...d, pronouns: v }))}
                 >
-                  <SelectTrigger id="patient-pronouns"><SelectValue placeholder="Select…" /></SelectTrigger>
+                  <SelectTrigger id="patient-pronouns"><SelectValue placeholder={t("common.selectPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {PRONOUN_OPTIONS.map((o) => (
                       <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
@@ -291,7 +293,7 @@ export function PatientEditModal({
           <div className="space-y-2">
             <Label htmlFor="patient-phone" className="flex items-center gap-1.5">
               <Phone className="size-3.5" />
-              Phone
+              {t("patientEdit.phone")}
             </Label>
             <Input
               id="patient-phone"
@@ -306,33 +308,33 @@ export function PatientEditModal({
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium flex items-center gap-1.5">
               <MapPin className="size-3.5" />
-              Address
+              {t("patientEdit.address")}
             </legend>
             <Input
-              placeholder="Street address"
+              placeholder={t("patientEdit.streetAddress")}
               value={address.line}
               onChange={(e) => setAddress((a) => ({ ...a, line: e.target.value }))}
             />
             <div className="grid grid-cols-2 gap-3">
               <Input
-                placeholder="City"
+                placeholder={t("patientEdit.city")}
                 value={address.city}
                 onChange={(e) => setAddress((a) => ({ ...a, city: e.target.value }))}
               />
               <Input
-                placeholder="State / Province"
+                placeholder={t("patientEdit.stateProvince")}
                 value={address.state}
                 onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Input
-                placeholder="Postal code"
+                placeholder={t("patientEdit.postalCode")}
                 value={address.postalCode}
                 onChange={(e) => setAddress((a) => ({ ...a, postalCode: e.target.value }))}
               />
               <Input
-                placeholder="Country"
+                placeholder={t("patientEdit.country")}
                 value={address.country}
                 onChange={(e) => setAddress((a) => ({ ...a, country: e.target.value }))}
               />
@@ -346,16 +348,16 @@ export function PatientEditModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving…
+                {t("common.saving")}
               </>
             ) : (
-              "Save Changes"
+              t("patientEdit.saveChanges")
             )}
           </Button>
         </DialogFooter>

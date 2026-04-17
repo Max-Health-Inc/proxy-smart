@@ -22,6 +22,7 @@ import { brandingAdminRoutes } from './branding'
 import { scopeMappersRoutes } from './scope-mappers'
 import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
+import { appStoreAdminRoutes } from './app-store'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -120,6 +121,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(documentImportRoutes)
   // Keycloak Organizations management
   .use(organizationsRoutes)
+  // App Store visibility management
+  .use(appStoreAdminRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

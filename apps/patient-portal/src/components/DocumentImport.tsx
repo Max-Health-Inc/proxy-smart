@@ -24,6 +24,7 @@ import {
   type DocumentImportResponse,
 } from "@/lib/fhir-client"
 import { ResourceReviewCard } from "./ResourceReviewCard"
+import { useTranslation } from "react-i18next"
 
 // ── State machine ────────────────────────────────────────────────────────────
 
@@ -48,15 +49,16 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const patientId = smartAuth.getToken()?.patient as string | undefined
+  const { t } = useTranslation()
 
   const processFile = useCallback(async (file: File) => {
     if (!patientId) {
-      setError("No patient context — cannot import documents without a patient ID.")
+      setError(t("documentImport.noPatientContext"))
       return
     }
 
     if (file.type !== "application/pdf") {
-      setError("Only PDF files are supported.")
+      setError(t("documentImport.onlyPdf"))
       return
     }
 
@@ -200,7 +202,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Upload className="size-4" />
-            Import Medical Document
+            {t("documentImport.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -214,9 +216,9 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
             onClick={() => fileInputRef.current?.click()}
           >
             <FileText className="size-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-sm font-medium">Drop a PDF here or click to browse</p>
+            <p className="text-sm font-medium">{t("documentImport.dropZone")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Lab reports, discharge summaries, prescriptions, etc.
+              {t("documentImport.dropZoneHint")}
             </p>
             <input
               ref={fileInputRef}
@@ -236,7 +238,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
 
           <div className="flex justify-end">
             <Button variant="outline" size="sm" onClick={onClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         </CardContent>
@@ -252,16 +254,16 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Spinner size="sm" />
-            Processing Document
+            {t("documentImport.processing")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 py-4">
             <p className="text-sm text-muted-foreground text-center">
-              Extracting text, generating FHIR resources, and validating...
+              {t("documentImport.processingHint")}
             </p>
             <p className="text-xs text-muted-foreground text-center">
-              This may take a minute for large documents.
+              {t("documentImport.processingLarge")}
             </p>
           </div>
         </CardContent>
@@ -281,9 +283,9 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
               <div>
                 <p className="text-sm font-medium">{result.fileName}</p>
                 <p className="text-xs text-muted-foreground">
-                  {result.pagesProcessed} page{result.pagesProcessed !== 1 ? "s" : ""} processed
+                  {t("common.nPagesProcessed", { n: result.pagesProcessed })}
                   {" · "}
-                  {result.resources.length} resource{result.resources.length !== 1 ? "s" : ""} extracted
+                  {t("common.nResourcesExtracted", { n: result.resources.length })}
                   {result.failed.length > 0 && (
                     <span className="text-destructive">
                       {" · "}{result.failed.length} failed
@@ -298,7 +300,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
                   size="sm"
                   onClick={() => toggleAll(selectedCount < selections.length)}
                 >
-                  {selectedCount === selections.length ? "Deselect All" : "Select All"}
+                  {selectedCount === selections.length ? t("common.deselectAll") : t("common.selectAll")}
                 </Button>
               </div>
             </div>
@@ -327,7 +329,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm text-destructive">
                 <XCircle className="size-4" />
-                Failed to Extract ({result.failed.length})
+                {t("common.failedToExtract", { n: result.failed.length })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -348,11 +350,11 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
         {/* Actions */}
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {selectedCount} of {selections.length} selected
+              {t("common.nSelected", { n: selectedCount, total: selections.length })}
             </span>
             <Button
               size="sm"
@@ -360,7 +362,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
               onClick={handleConfirm}
             >
               <Check className="size-4" />
-              Save {selectedCount} Resource{selectedCount !== 1 ? "s" : ""}
+              {t("common.saveNResources", { n: selectedCount })}
             </Button>
           </div>
         </div>
@@ -376,7 +378,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Spinner size="sm" />
-            Saving Resources
+            {t("common.savingResources")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -388,7 +390,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
               />
             </div>
             <p className="text-sm text-muted-foreground text-center">
-              {saveProgress.saved} of {saveProgress.total} saved...
+              {t("common.nOfNSaved", { n: saveProgress.saved, total: saveProgress.total })}
             </p>
           </div>
         </CardContent>
@@ -410,13 +412,12 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
             ) : (
               <CheckCircle2 className="size-4 text-green-500" />
             )}
-            {hasErrors ? "Import Completed with Errors" : "Import Complete"}
+            {hasErrors ? t("common.completedWithErrors") : t("documentImport.importComplete")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {saveProgress.saved - saveErrors.length} resource{saveProgress.saved - saveErrors.length !== 1 ? "s" : ""} saved
-            to your health record.
+            {t("common.nResourcesSaved", { n: saveProgress.saved - saveErrors.length })}
           </p>
 
           {hasErrors && (
@@ -432,7 +433,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
 
           <div className="flex justify-end">
             <Button size="sm" onClick={onClose}>
-              Done
+              {t("common.done")}
             </Button>
           </div>
         </CardContent>

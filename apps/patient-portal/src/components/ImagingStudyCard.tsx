@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X } from "lucide-react"
 import { format } from "date-fns"
@@ -68,6 +69,7 @@ function StudyRow({
   study: ImagingStudy
   onViewSeries: (target: ViewerTarget) => void
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const studyUID = getStudyInstanceUID(study)
   const modality = getPrimaryModality(study)
@@ -125,8 +127,8 @@ function StudyRow({
           </div>
           <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">
             {study.started && <span>{format(new Date(study.started), "MMM d, yyyy")}</span>}
-            {study.numberOfSeries != null && <span>{study.numberOfSeries} series</span>}
-            {study.numberOfInstances != null && <span>{study.numberOfInstances} images</span>}
+            {study.numberOfSeries != null && <span>{t("imagingStudy.nSeries", { n: study.numberOfSeries })}</span>}
+            {study.numberOfInstances != null && <span>{t("imagingStudy.nImages", { n: study.numberOfInstances })}</span>}
           </div>
         </div>
 
@@ -136,7 +138,7 @@ function StudyRow({
               type="button"
               onClick={handleQuickView}
               className="rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-              title="View images"
+              title={t("imagingStudy.viewImages")}
             >
               <Eye className="size-4" />
             </button>
@@ -152,7 +154,7 @@ function StudyRow({
       {expanded && hasSeries && studyUID && (
         <div className="border-t border-border/50 bg-muted/10 p-3 pt-2">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
-            Series
+            {t("imagingStudy.series")}
           </p>
           <ul className="space-y-2">
             {study.series!.map((series, si) => {
@@ -178,7 +180,7 @@ function StudyRow({
                     </div>
                     <div className="text-muted-foreground mt-0.5">
                       {series.numberOfInstances != null && (
-                        <span>{series.numberOfInstances} images</span>
+                        <span>{t("imagingStudy.nImages", { n: series.numberOfInstances })}</span>
                       )}
                       {series.bodySite?.display && (
                         <span className="ml-2">{series.bodySite.display}</span>
@@ -197,7 +199,7 @@ function StudyRow({
                       })
                     }
                     className="shrink-0 mt-0.5 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                    title="View series"
+                    title={t("imagingStudy.viewSeries")}
                   >
                     <Eye className="size-3.5" />
                   </button>
@@ -220,6 +222,7 @@ export function ImagingStudyCard({
   imagingStudies: ImagingStudy[]
   radiologyResults: RadiologyResult[]
 }) {
+  const { t } = useTranslation()
   const [viewerTarget, setViewerTarget] = useState<ViewerTarget | null>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -274,18 +277,18 @@ export function ImagingStudyCard({
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ScanLine className="size-4 text-violet-500" />
-            Imaging Studies
+            {t("imagingStudy.title")}
             {hasData && (
               <span className="text-xs font-normal text-muted-foreground ml-auto">
-                {imagingStudies.length} stud{imagingStudies.length !== 1 ? "ies" : "y"}
-                {radiologyResults.length > 0 && ` · ${radiologyResults.length} report${radiologyResults.length !== 1 ? "s" : ""}`}
+                {t("imagingStudy.nStudies", { count: imagingStudies.length })}
+                {radiologyResults.length > 0 && ` · ${t("imagingStudy.nReports", { n: radiologyResults.length })}`}
               </span>
             )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!hasData ? (
-            <p className="text-sm text-muted-foreground">No imaging records</p>
+            <p className="text-sm text-muted-foreground">{t("imagingStudy.noImagingRecords")}</p>
           ) : (
             <div className="space-y-3">
               {/* Search filter */}
@@ -293,7 +296,7 @@ export function ImagingStudyCard({
                 <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Search studies by name, modality, date..."
+                  placeholder={t("imagingStudy.searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -311,7 +314,7 @@ export function ImagingStudyCard({
 
               {!hasResults ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  No studies matching "{search}"
+                  {t("imagingStudy.noMatchingStudies", { query: search })}
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -333,7 +336,7 @@ export function ImagingStudyCard({
                     <>
                       {filteredStudies.length > 0 && (
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium pt-1">
-                          Radiology Reports
+                          {t("imagingStudy.radiologyReports")}
                         </p>
                       )}
                       <ul className="grid gap-1.5 md:grid-cols-2">

@@ -12,12 +12,12 @@ import {
   Badge,
 } from "@proxy-smart/shared-ui"
 import { Loader2, Pencil, Save, X, AlertTriangle } from "lucide-react"
-import { updateResource } from "@/lib/fhir-client"
+import { updateResource, type AnyFhirResource } from "@/lib/fhir-client"
+import { useTranslation } from "react-i18next"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FhirResource = Record<string, any>
+type FhirResource = AnyFhirResource
 
 export interface RecordEditModalProps {
   open: boolean
@@ -141,6 +141,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
   const resourceType = resource?.resourceType as string | undefined
   const fields = resourceType ? (EDITABLE_FIELDS[resourceType] ?? []) : []
   const wasVerified = resource ? isVerified(resource) : false
+  const { t } = useTranslation()
 
   // Populate form values when resource changes
   useEffect(() => {
@@ -175,11 +176,11 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         updated = markAsPendingReview(updated)
       }
 
-      const result = await updateResource(updated as { resourceType: string; id?: string })
+      const result = await updateResource(updated)
       onSaved(result)
       onOpenChange(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save changes")
+      setError(err instanceof Error ? err.message : t("recordEdit.failedToSave"))
     } finally {
       setSaving(false)
     }
@@ -193,13 +194,13 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Pencil className="size-4" />
-            Edit {resourceType}
+            {t("recordEdit.editTitle", { resourceType })}
           </DialogTitle>
           <DialogDescription>
             {wasVerified && (
               <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 mt-1">
                 <AlertTriangle className="size-3.5" />
-                This record is verified. Your changes will be saved as <strong>provisional</strong> until re-verified.
+                {t("recordEdit.verifiedWarning")}
               </span>
             )}
           </DialogDescription>
@@ -208,7 +209,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
           {wasVerified && (
             <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
-              Pending review after save
+              {t("recordEdit.pendingReview")}
             </Badge>
           )}
 
@@ -230,18 +231,18 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         <DialogFooter className="gap-2">
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={saving}>
             <X className="size-4 mr-1" />
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button size="sm" onClick={handleSave} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="size-4 mr-1 animate-spin" />
-                Saving…
+                {t("common.saving")}
               </>
             ) : (
               <>
                 <Save className="size-4 mr-1" />
-                {wasVerified ? "Save as Provisional" : "Save Changes"}
+                {wasVerified ? t("recordEdit.saveAsProvisional") : t("recordEdit.saveChanges")}
               </>
             )}
           </Button>

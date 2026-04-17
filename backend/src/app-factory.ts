@@ -28,11 +28,14 @@ import { docsRoutes } from './routes/docs'
 import { apiRoutes } from './routes/api'
 import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
+import { getHiddenAppIds } from './lib/app-store-config'
 
 /** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
-function discoverApps() {
+function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
     if (!existsSync(appsDir)) return []
+
+    const hiddenIds = includeHidden ? [] : getHiddenAppIds()
 
     return readdirSync(appsDir, { withFileTypes: true })
         .filter(d => d.isDirectory())
@@ -52,10 +55,12 @@ function discoverApps() {
                     icon: manifest.icon ?? 'app-window',
                     grant_types: manifest.grant_types ?? ['authorization_code'],
                     token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
+                    hidden: hiddenIds.includes(d.name),
                 }
             } catch { return null }
         })
         .filter(Boolean)
+        .filter(app => includeHidden || !app!.hidden)
 }
 
 export function createApp() {

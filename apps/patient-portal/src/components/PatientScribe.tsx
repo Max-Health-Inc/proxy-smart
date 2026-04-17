@@ -25,6 +25,7 @@ import {
   type ScribeResponse,
 } from "@/lib/fhir-client"
 import { ResourceReviewCard } from "./ResourceReviewCard"
+import { useTranslation } from "react-i18next"
 
 // ── State machine ────────────────────────────────────────────────────────────
 
@@ -48,14 +49,15 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
   const [saveErrors, setSaveErrors] = useState<string[]>([])
 
   const patientId = smartAuth.getToken()?.patient as string | undefined
+  const { t } = useTranslation()
 
   const handleSubmit = useCallback(async () => {
     if (!patientId) {
-      setError("No patient context — cannot use scribe without a patient ID.")
+      setError(t("patientScribe.noPatientContext"))
       return
     }
     if (!text.trim()) {
-      setError("Please enter some text to process.")
+      setError(t("patientScribe.emptyText"))
       return
     }
 
@@ -166,17 +168,16 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <MessageSquare className="size-4" />
-            Patient Scribe
+            {t("patientScribe.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Describe your symptoms, medications, allergies, or any health information in your own words.
-            The AI will extract structured medical records for your review.
+            {t("patientScribe.description")}
           </p>
           <textarea
             className="w-full min-h-[160px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
-            placeholder="e.g. I've been taking metformin 500mg twice daily for type 2 diabetes since 2020. I'm also allergic to penicillin — I get hives. Last week my blood pressure was 135/85..."
+            placeholder={t("patientScribe.placeholder")}
             value={text}
             onChange={e => setText(e.target.value)}
           />
@@ -188,11 +189,11 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
           )}
           <div className="flex justify-between">
             <Button variant="outline" size="sm" onClick={onClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button size="sm" onClick={handleSubmit} disabled={!text.trim()}>
               <Send className="size-4" />
-              Extract Records
+              {t("patientScribe.extractRecords")}
             </Button>
           </div>
         </CardContent>
@@ -208,16 +209,16 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Spinner size="sm" />
-            Processing Your Input
+            {t("patientScribe.processing")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 py-4">
             <p className="text-sm text-muted-foreground text-center">
-              Analyzing your text and generating medical records...
+              {t("patientScribe.processingHint")}
             </p>
             <p className="text-xs text-muted-foreground text-center">
-              This may take a moment.
+              {t("patientScribe.processingMoment")}
             </p>
           </div>
         </CardContent>
@@ -234,9 +235,9 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">Scribe Results</p>
+                <p className="text-sm font-medium">{t("patientScribe.results")}</p>
                 <p className="text-xs text-muted-foreground">
-                  {result.resources.length} resource{result.resources.length !== 1 ? "s" : ""} extracted
+                  {t("common.nResourcesExtracted", { n: result.resources.length })}
                   {result.failed.length > 0 && (
                     <span className="text-destructive">
                       {" · "}{result.failed.length} failed
@@ -251,7 +252,7 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
                   size="sm"
                   onClick={() => toggleAll(selectedCount < selections.length)}
                 >
-                  {selectedCount === selections.length ? "Deselect All" : "Select All"}
+                  {selectedCount === selections.length ? t("common.deselectAll") : t("common.selectAll")}
                 </Button>
               </div>
             </div>
@@ -278,7 +279,7 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-sm text-destructive">
                 <XCircle className="size-4" />
-                Failed to Extract ({result.failed.length})
+                {t("common.failedToExtract", { n: result.failed.length })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -298,11 +299,11 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
 
         <div className="flex items-center justify-between">
           <Button variant="outline" size="sm" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {selectedCount} of {selections.length} selected
+              {t("common.nSelected", { n: selectedCount, total: selections.length })}
             </span>
             <Button
               size="sm"
@@ -310,7 +311,7 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
               onClick={handleConfirm}
             >
               <Check className="size-4" />
-              Save {selectedCount} Resource{selectedCount !== 1 ? "s" : ""}
+              {t("common.saveNResources", { n: selectedCount })}
             </Button>
           </div>
         </div>
@@ -326,7 +327,7 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Spinner size="sm" />
-            Saving Resources
+            {t("common.savingResources")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -338,7 +339,7 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
               />
             </div>
             <p className="text-sm text-muted-foreground text-center">
-              {saveProgress.saved} of {saveProgress.total} saved...
+              {t("common.nOfNSaved", { n: saveProgress.saved, total: saveProgress.total })}
             </p>
           </div>
         </CardContent>
@@ -359,13 +360,12 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
             ) : (
               <CheckCircle2 className="size-4 text-green-500" />
             )}
-            {hasErrors ? "Completed with Errors" : "Records Saved"}
+            {hasErrors ? t("common.completedWithErrors") : t("patientScribe.recordsSaved")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {saveProgress.saved - saveErrors.length} resource{saveProgress.saved - saveErrors.length !== 1 ? "s" : ""} saved
-            to your health record.
+            {t("common.nResourcesSaved", { n: saveProgress.saved - saveErrors.length })}
           </p>
           {hasErrors && (
             <ul className="space-y-1">
@@ -379,7 +379,7 @@ export function PatientScribe({ onClose }: { onClose: () => void }) {
           )}
           <div className="flex justify-end">
             <Button size="sm" onClick={onClose}>
-              Done
+              {t("common.done")}
             </Button>
           </div>
         </CardContent>

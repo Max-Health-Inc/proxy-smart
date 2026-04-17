@@ -3,10 +3,12 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X, ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react"
 import { Badge } from "@proxy-smart/shared-ui"
 import {
-  fetchSeriesImageIds,
+  initCornerstoneDicomweb,
+  getCornerstoneDicomweb,
   getAccessToken,
   getModalityInfo,
 } from "@/lib/dicomweb"
+import { useTranslation } from "react-i18next"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +52,9 @@ async function ensureCornerstoneInit() {
     },
   })
 
+  // Wire up the Cornerstone DICOMweb client (metadata caching + registration)
+  initCornerstoneDicomweb(loader)
+
   // Register tools
   tools.addTool(tools.StackScrollTool)
   tools.addTool(tools.WindowLevelTool)
@@ -73,6 +78,7 @@ function CornerstoneViewport({
   const toolGroupRef = useRef<ReturnType<typeof import("@cornerstonejs/tools").ToolGroupManager.createToolGroup> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { t } = useTranslation()
 
   const viewportId = "dicom-stack-viewport"
   const renderingEngineId = "dicom-rendering-engine"
@@ -89,12 +95,16 @@ function CornerstoneViewport({
         await ensureCornerstoneInit()
         if (cancelled || !csCore || !csTools || !elementRef.current) return
 
-        // Fetch imageIds for this series
-        const imageIds = await fetchSeriesImageIds(target.studyUID, target.seriesUID)
+        // Load series: fetches metadata, registers with Cornerstone, returns imageIds
+        const { imageIds, errors } = await getCornerstoneDicomweb().loadSeries(target.studyUID, target.seriesUID)
         if (cancelled) return
 
+        if (errors.length > 0) {
+          console.warn('DICOMweb loadSeries errors:', errors)
+        }
+
         if (imageIds.length === 0) {
-          setError("No images found in this series")
+          setError(t("dicomViewer.noImages"))
           setLoading(false)
           return
         }
@@ -168,7 +178,7 @@ function CornerstoneViewport({
           ((e: CustomEvent) => {
             console.warn('DICOM image load error:', e.detail?.error ?? e.detail)
             if (!cancelled) {
-              setError('Failed to decode DICOM image. The file may be corrupt or unsupported.')
+              setError(t('dicomViewer.decodeFailed'))
             }
           }) as EventListener,
         )
@@ -176,7 +186,7 @@ function CornerstoneViewport({
         setLoading(false)
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load DICOM viewer")
+          setError(err instanceof Error ? err.message : t("dicomViewer.loadFailed"))
           setLoading(false)
         }
       }
@@ -230,6 +240,7 @@ export function DicomViewerDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [imageInfo, setImageInfo] = useState<{ current: number; total: number } | null>(null)
+  const { t } = useTranslation()
 
   const handleImageChange = useCallback((current: number, total: number) => {
     setImageInfo({ current, total })
@@ -252,14 +263,14 @@ export function DicomViewerDialog({
           aria-describedby={undefined}
         >
           <DialogPrimitive.Title className="sr-only">
-            {target?.seriesDescription || "DICOM Viewer"}
+            {target?.seriesDescription || t("dicomViewer.title")}
           </DialogPrimitive.Title>
 
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-border/30">
             <div className="flex items-center gap-2 min-w-0">
               <span className="font-medium text-sm truncate">
-                {target?.seriesDescription || "DICOM Viewer"}
+                {target?.seriesDescription || t("dicomViewer.title")}
               </span>
               {modalityInfo && (
                 <Badge variant="secondary" className="shrink-0">
@@ -276,9 +287,9 @@ export function DicomViewerDialog({
             <div className="flex items-center gap-1">
               {/* Controls legend */}
               <div className="hidden sm:flex items-center gap-3 mr-3 text-[10px] text-muted-foreground">
-                <span>🖱️ L: W/L</span>
-                <span>🖱️ R: Zoom</span>
-                <span>⚙️ Scroll: Slice</span>
+                <span>{t("dicomViewer.controlWL")}</span>
+                <span>{t("dicomViewer.controlZoom")}</span>
+                <span>{t("dicomViewer.controlScroll")}</span>
               </div>
               <DialogPrimitive.Close className="rounded-sm p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                 <X className="size-4" />

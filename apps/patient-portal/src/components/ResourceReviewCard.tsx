@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import type { ImportedResource } from "@/lib/fhir-client"
+import { useTranslation } from "react-i18next"
 
 // ── Resource type display config ─────────────────────────────────────────────
 
@@ -234,6 +235,7 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
   const color = RESOURCE_COLORS[r.resourceType] || "text-gray-500"
   const detailFields = useMemo(() => getDetailFields(res), [res])
   const editableFields = EDITABLE_FIELDS[r.resourceType] || []
+  const { t } = useTranslation()
 
   const openEditDialog = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
@@ -287,7 +289,7 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
                 <Badge variant="outline" className="text-xs">{r.resourceType}</Badge>
                 {r.retriesNeeded > 0 && (
                   <Badge variant="secondary" className="text-xs">
-                    {r.retriesNeeded} fix{r.retriesNeeded !== 1 ? "es" : ""}
+                    {t("common.nFixes", { n: r.retriesNeeded })}
                   </Badge>
                 )}
               </div>
@@ -311,7 +313,7 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
             {/* Expand / Edit buttons */}
             <div className="flex items-center gap-1 shrink-0">
               {editableFields.length > 0 && selected && (
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={openEditDialog} title="Edit resource">
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={openEditDialog} title={t("recordDetail.editRecord")}>
                   <Pencil className="size-3.5" />
                 </Button>
               )}
@@ -355,7 +357,7 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pencil className="size-4" />
-              Edit {r.resourceType}
+              {t("recordEdit.editTitle", { resourceType: r.resourceType })}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
@@ -379,11 +381,11 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
           <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
               <X className="size-4 mr-1" />
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button size="sm" onClick={handleSaveEdit} disabled={editableFields.length === 0}>
               <Save className="size-4 mr-1" />
-              Save Changes
+              {t("recordEdit.saveChanges")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react"
 import { storeInstances, checkPacsStatus, type StowResult, type PacsStatus } from "@/lib/dicomweb"
+import { useTranslation } from "react-i18next"
 
 type UploadStep = "checking" | "unavailable" | "select" | "uploading" | "done"
 
@@ -28,6 +29,7 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
   const [result, setResult] = useState<StowResult | null>(null)
   const [pacsStatus, setPacsStatus] = useState<PacsStatus | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { t } = useTranslation()
 
   // Pre-check PACS availability on mount
   useEffect(() => {
@@ -46,7 +48,7 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
       f.name.endsWith(".dcm") || f.name.endsWith(".DCM") || f.type === "application/dicom"
     )
     if (dcmFiles.length === 0 && incoming.length > 0) {
-      setError("Only .dcm (DICOM) files are supported.")
+      setError(t("dicomUpload.onlyDcm"))
       return
     }
     setError(null)
@@ -96,12 +98,12 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Spinner size="sm" />
-            Checking Imaging Server
+            {t("dicomUpload.checking")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            Verifying connection to the imaging server (PACS)...
+            {t("dicomUpload.checkingHint")}
           </p>
         </CardContent>
       </Card>
@@ -116,7 +118,7 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ServerOff className="size-4 text-muted-foreground" />
-            Imaging Upload Unavailable
+            {t("dicomUpload.unavailable")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -125,19 +127,17 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
           </p>
           {pacsStatus && !pacsStatus.configured && (
             <p className="text-xs text-muted-foreground">
-              DICOM imaging upload has not been configured for this environment.
-              Contact your administrator to set up a PACS connection.
+              {t("dicomUpload.notConfigured")}
             </p>
           )}
           {pacsStatus?.configured && !pacsStatus.reachable && (
             <p className="text-xs text-muted-foreground">
-              A PACS server is configured but not responding. This may be a temporary issue.
-              Please try again later or contact your administrator.
+              {t("dicomUpload.notResponding")}
             </p>
           )}
           <div className="flex items-center justify-between">
             <Button variant="outline" size="sm" onClick={onClose}>
-              Close
+              {t("common.close")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => {
               setStep("checking")
@@ -146,7 +146,7 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
                 setStep(status.configured && status.reachable ? "select" : "unavailable")
               })
             }}>
-              Retry
+              {t("common.retry")}
             </Button>
           </div>
         </CardContent>
@@ -162,7 +162,7 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileImage className="size-4" />
-            Upload DICOM Images
+            {t("dicomUpload.title")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -176,9 +176,9 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="size-10 mx-auto text-muted-foreground/50 mb-3" />
-            <p className="text-sm font-medium">Drop .dcm files here or click to browse</p>
+            <p className="text-sm font-medium">{t("dicomUpload.dropZone")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Select one or multiple DICOM files from a study
+              {t("dicomUpload.dropZoneHint")}
             </p>
             <input
               ref={fileInputRef}
@@ -194,10 +194,10 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  {files.length} file{files.length !== 1 ? "s" : ""} ({formatSize(totalSize)})
+                  {t("dicomUpload.nFiles", { n: files.length, size: formatSize(totalSize) })}
                 </span>
                 <Button variant="ghost" size="sm" onClick={() => setFiles([])}>
-                  Clear all
+                  {t("dicomUpload.clearAll")}
                 </Button>
               </div>
               <ul className="max-h-40 overflow-y-auto space-y-1">
@@ -225,11 +225,11 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
 
           <div className="flex items-center justify-between">
             <Button variant="outline" size="sm" onClick={onClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button size="sm" disabled={files.length === 0} onClick={handleUpload}>
               <Upload className="size-4" />
-              Upload {files.length > 0 ? `${files.length} File${files.length !== 1 ? "s" : ""}` : ""}
+              {t("dicomUpload.uploadNFiles", { n: files.length })}
             </Button>
           </div>
         </CardContent>
@@ -245,12 +245,12 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Spinner size="sm" />
-            Uploading to PACS
+            {t("dicomUpload.uploading")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-4">
-            Sending {files.length} DICOM file{files.length !== 1 ? "s" : ""} ({formatSize(totalSize)})...
+            {t("dicomUpload.uploadingHint", { n: files.length, size: formatSize(totalSize) })}
           </p>
         </CardContent>
       </Card>
@@ -269,18 +269,18 @@ export function DicomUpload({ onClose }: { onClose: () => void }) {
             ) : (
               <AlertTriangle className="size-4 text-amber-500" />
             )}
-            {result.ok ? "Upload Complete" : "Upload Failed"}
+            {result.ok ? t("dicomUpload.uploadComplete") : t("dicomUpload.uploadFailed")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {result.ok
-              ? `${result.instanceCount} DICOM instance${result.instanceCount !== 1 ? "s" : ""} stored successfully. They will appear in your imaging studies shortly.`
+              ? t("dicomUpload.nInstancesStored", { n: result.instanceCount })
               : error || "The PACS server rejected the upload."}
           </p>
           <div className="flex justify-end">
             <Button size="sm" onClick={onClose}>
-              Done
+              {t("common.done")}
             </Button>
           </div>
         </CardContent>

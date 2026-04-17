@@ -9,7 +9,7 @@ import {
   getStudyTitle,
   getModalityInfo,
   getAccessToken,
-  fetchSeriesImageIds,
+  getCornerstoneDicomweb,
   getStudyThumbnailUrl,
 } from "@/lib/dicomweb"
 import { type AlgorithmResult, runAlgorithm } from "@/algorithm"
@@ -68,11 +68,13 @@ export function AlgorithmRunner() {
       if (!studyUID) throw new Error("Study has no Study Instance UID")
 
       const allImageIds: string[] = []
+      const csDw = getCornerstoneDicomweb()
       for (const series of study.series ?? []) {
         const seriesUID = series.uid
         if (!seriesUID) continue
-        const ids = await fetchSeriesImageIds(studyUID, seriesUID)
-        allImageIds.push(...ids)
+        const { imageIds, errors } = await csDw.loadSeries(studyUID, seriesUID)
+        if (errors.length > 0) console.warn('DICOMweb loadSeries errors:', errors)
+        allImageIds.push(...imageIds)
       }
 
       if (allImageIds.length === 0) {

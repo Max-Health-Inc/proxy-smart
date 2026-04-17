@@ -69,6 +69,9 @@ export type { Observation, DocumentReference }
 export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
 export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ObservationStatusCode, ImmunizationStatusCode }
 
+// Re-export the standard FHIR base Resource type (from @types/fhir)
+export type { Resource as AnyFhirResource } from 'fhir/r4'
+
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
 const baseFetch = smartAuth.createAuthenticatedFetch()
