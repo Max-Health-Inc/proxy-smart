@@ -9,7 +9,8 @@ import type { ConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/
 // Re-export types used in consumers
 export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, ReactionEventSeverityCode, EventStatusCode, ObservationInterpretationCode, DeviceStatementStatusCode, ConditionSeverityCode }
 
-export type { AnyFhirResource as AnyResource } from "@/lib/fhir-client"
+import type { AnyFhirResource } from "@/lib/fhir-client"
+export type AnyResource = AnyFhirResource
 
 // ── Clickable record name ────────────────────────────────────────────────────
 
