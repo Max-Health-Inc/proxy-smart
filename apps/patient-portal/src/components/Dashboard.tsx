@@ -204,7 +204,7 @@ export function Dashboard() {
       ) : showDicomUpload ? (
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Button
             variant={showUnverified ? "outline" : "secondary"}
             size="sm"
@@ -212,26 +212,26 @@ export function Dashboard() {
             className="gap-1.5"
           >
             {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-            {showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}
+            <span className="hidden sm:inline">{showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}</span>
           </Button>
 
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline" size="sm"
               onClick={() => setShowDicomUpload(true)}
-              title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : undefined}
+              title={pacsAvailable === false ? "Imaging server is not available" : pacsAvailable === null ? "Checking imaging server..." : t("dashboard.uploadImaging")}
             >
               <FileImage className={`size-4 ${pacsAvailable === false ? "opacity-50" : ""}`} />
-              {t("dashboard.uploadImaging")}
-              {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1">{t("dashboard.offline")}</span>}
+              <span className="hidden sm:inline">{t("dashboard.uploadImaging")}</span>
+              {pacsAvailable === false && <span className="text-xs text-muted-foreground ml-1 hidden sm:inline">{t("dashboard.offline")}</span>}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+            <Button variant="outline" size="sm" onClick={() => setShowImport(true)} title={t("dashboard.importDocument")}>
               <Upload className="size-4" />
-              {t("dashboard.importDocument")}
+              <span className="hidden sm:inline">{t("dashboard.importDocument")}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowScribe(true)}>
+            <Button variant="outline" size="sm" onClick={() => setShowScribe(true)} title={t("dashboard.patientScribe")}>
               <MessageSquare className="size-4" />
-              {t("dashboard.patientScribe")}
+              <span className="hidden sm:inline">{t("dashboard.patientScribe")}</span>
             </Button>
           </div>
         </div>
@@ -389,11 +389,13 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {vitals.slice(0, 10).map((v, i) => (
-                  <li key={v.id || i} className="text-sm flex justify-between">
-                    <RecordName resource={v} onOpen={openDetail}>
-                      {translateCoding(v.code?.coding?.[0]) || v.code?.text || t("common.unknown")}
-                    </RecordName>
-                    <span className="text-muted-foreground">
+                  <li key={v.id || i} className="text-sm flex justify-between gap-2">
+                    <span className="min-w-0 truncate">
+                      <RecordName resource={v} onOpen={openDetail}>
+                        {translateCoding(v.code?.coding?.[0]) || v.code?.text || t("common.unknown")}
+                      </RecordName>
+                    </span>
+                    <span className="text-muted-foreground shrink-0 whitespace-nowrap">
                       {v.valueQuantity
                         ? `${v.valueQuantity.value} ${v.valueQuantity.unit || ""}`
                         : v.component?.length
@@ -422,11 +424,13 @@ export function Dashboard() {
                 {labs.slice(0, 10).map((l, i) => {
                   const interp = getInterpretationFlag(l)
                   return (
-                    <li key={l.id || i} className="text-sm flex justify-between">
-                      <RecordName resource={l} onOpen={openDetail}>
-                        {translateCoding(l.code?.coding?.[0]) || l.code?.text || t("common.unknown")}
-                      </RecordName>
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                    <li key={l.id || i} className="text-sm flex justify-between gap-2">
+                      <span className="min-w-0 truncate">
+                        <RecordName resource={l} onOpen={openDetail}>
+                          {translateCoding(l.code?.coding?.[0]) || l.code?.text || t("common.unknown")}
+                        </RecordName>
+                      </span>
+                      <span className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
                         {interp && (
                           <span className={`text-xs font-medium ${interp.className}`}>{t(interp.i18nKey)}</span>
                         )}
@@ -461,12 +465,12 @@ export function Dashboard() {
                   const statusDisplay = statusCode
                     ? getCurrentSmokingStatusUvIpsConcept(statusCode)?.display : undefined
                   return (
-                    <li key={obs.id || i} className="text-sm flex justify-between">
+                    <li key={obs.id || i} className="text-sm flex justify-between gap-2">
                       <RecordName resource={obs} onOpen={openDetail}>
                         {statusDisplay || obs.valueCodeableConcept?.text || "Unknown"}
                       </RecordName>
                       {obs.effectiveDateTime && (
-                        <span className="text-muted-foreground">
+                        <span className="text-muted-foreground shrink-0">
                           {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
                         </span>
                       )}
@@ -491,7 +495,7 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {alcoholUse.map((obs, i) => (
-                  <li key={obs.id || i} className="text-sm flex justify-between">
+                  <li key={obs.id || i} className="text-sm flex justify-between gap-2">
                     <RecordName resource={obs} onOpen={openDetail}>
                       {obs.valueCodeableConcept?.coding?.[0]?.display ||
                         obs.valueCodeableConcept?.text ||
@@ -591,7 +595,7 @@ export function Dashboard() {
                   const code = obs.valueCodeableConcept?.coding?.[0]?.code
                   const display = code ? getPregnancyStatusUvIpsConcept(code)?.display : undefined
                   return (
-                    <li key={obs.id || `ps-${i}`} className="text-sm flex justify-between">
+                    <li key={obs.id || `ps-${i}`} className="text-sm flex justify-between gap-2">
                       <RecordName resource={obs} onOpen={openDetail}>
                         {display || obs.valueCodeableConcept?.text || t("dashboard.unknownStatus")}
                       </RecordName>
@@ -604,7 +608,7 @@ export function Dashboard() {
                   )
                 })}
                 {pregnancyEdd.map((obs, i) => (
-                  <li key={obs.id || `edd-${i}`} className="text-sm flex justify-between">
+                  <li key={obs.id || `edd-${i}`} className="text-sm flex justify-between gap-2">
                     <RecordName resource={obs} onOpen={openDetail}>
                       {t("dashboard.edd", { date: obs.valueDateTime ? format(new Date(obs.valueDateTime), "MMM d, yyyy") : t("common.unknown") })}
                     </RecordName>
