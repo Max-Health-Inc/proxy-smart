@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171701.d8ce01a0] - 2026-04-17
+
+- 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604171701.d8ce01a0 across multiple apps/packages
+- 🔧 Chores & Improvements: Added App Store page HTML scaffold (backend/public/apps/index.html) with language and styling groundwork
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/427
+
+
 ## [0.0.6-alpha.202604171652.bfc0f3a4] - 2026-04-17
 
 - 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604171652.bfc0f3a4 across packages
