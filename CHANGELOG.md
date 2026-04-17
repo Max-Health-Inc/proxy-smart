@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171652.bfc0f3a4] - 2026-04-17
+
+- 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604171652.bfc0f3a4 across packages
+- 🔧 Chores & Improvements: Minor code adjustment in patient-portal (alias AnyFhirResource to AnyResource in ips-display-helpers.tsx)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/426
+
+
 ## [0.0.5-beta.202604171638.2b948412] - 2026-04-17
 
 - 🔧 Chores & Improvements: Version bump to 0.0.5-beta.202604171638.2b948412 across multiple apps/packages
