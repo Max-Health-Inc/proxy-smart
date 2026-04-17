@@ -11,7 +11,7 @@ import { format } from "date-fns"
 import { useState } from "react"
 import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil } from "lucide-react"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
-import type { DocumentReference, AnyFhirResource } from "@/lib/fhir-client"
+import type { DocumentReference, DynamicFhirResource } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
 import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
 import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReactionEventSeverity"
@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type FhirResource = AnyFhirResource
+type FhirResource = DynamicFhirResource
 
 export interface RecordDetailModalProps {
   open: boolean

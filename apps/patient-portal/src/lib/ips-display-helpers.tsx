@@ -9,8 +9,8 @@ import type { ConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/
 // Re-export types used in consumers
 export type { AllergyIntoleranceCriticalityCode, AllergyIntoleranceCategoryCode, ReactionEventSeverityCode, EventStatusCode, ObservationInterpretationCode, DeviceStatementStatusCode, ConditionSeverityCode }
 
-import type { AnyFhirResource } from "@/lib/fhir-client"
-export type AnyResource = AnyFhirResource
+import type { PortalFhirResource } from "@/lib/fhir-client"
+export type AnyResource = PortalFhirResource
 
 // ── Clickable record name ────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ const interpretationFlags: Record<string, { i18nKey: string; className: string }
   N: { i18nKey: "displayHelpers.interpNormal", className: "text-green-600" },
 }
 
-export function getInterpretationFlag(obs: AnyResource): { i18nKey: string; className: string } | undefined {
+export function getInterpretationFlag(obs: { interpretation?: Array<{ coding?: Array<{ code?: string }> }> }): { i18nKey: string; className: string } | undefined {
   const code = obs.interpretation?.[0]?.coding?.[0]?.code as ObservationInterpretationCode | undefined
   return code ? interpretationFlags[code] : undefined
 }
