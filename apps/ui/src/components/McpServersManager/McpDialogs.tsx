@@ -1,5 +1,6 @@
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@proxy-smart/shared-ui';
 import {
   AlertTriangle,
@@ -295,10 +296,7 @@ export function BrowseRegistryDialog({
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : registryResults.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Globe className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>{t('No servers with remote transport found.')}</p>
-            </div>
+            <EmptyState icon={Globe} title={t('No servers with remote transport found.')} />
           ) : (
             registryResults.map((server) => (
               <div
@@ -533,10 +531,7 @@ export function SkillsRegistryDialog({
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : results.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>{t('No skills found. Try a different search term.')}</p>
-            </div>
+            <EmptyState icon={BookOpen} title={t('No skills found. Try a different search term.')} />
           ) : (
             results.map((skill) => (
               <div

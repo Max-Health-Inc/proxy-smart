@@ -12,6 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ACTION_ICONS, actionColor, statusColor } from './helpers';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminAuditEvent } from '../../service/admin-audit-service';
 
 interface EventLogTabProps {
@@ -184,11 +185,7 @@ export function EventLogTab({
             )}
           </div>
         ) : (
-          <div className="text-center text-muted-foreground py-8">
-            <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="font-medium">{t('No audit events match your filters')}</p>
-            <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-          </div>
+          <EmptyState icon={Shield} title={t('No audit events match your filters')} description={t('Try adjusting your filter criteria')} />
         )}
       </div>
     </div>

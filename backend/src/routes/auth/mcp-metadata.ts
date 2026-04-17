@@ -138,26 +138,16 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         // Point to our own DCR endpoint instead of Keycloak's native one
         // (Keycloak's requires initial access tokens / trusted host policy)
         registration_endpoint: `${baseUrl}/auth/register`,
+        // MCP 2025-11-25: advertise both CIMD and DCR client registration approaches
+        // CIMD (OAuth Client ID Metadata Document) is handled by Keycloak via --features=cimd
+        // DCR (Dynamic Client Registration) is handled by our /auth/register proxy endpoint
+        client_registration_types_supported: ['client_id_metadata_document', 'dynamic_client_registration'],
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,
         token_endpoint_auth_methods_supported: authMethods,
         code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported
       }
-    } catch {
-      set.status = 500
-      return {
-        error: 'server_error',
-        error_description: 'Internal server error while fetching authorization server metadata'
-      }
-    }
-  }, {
-    detail: {
-      summary: 'Get Authorization Server Metadata',
-      description: 'Returns OAuth 2.0 Authorization Server Metadata (RFC 8414) for MCP clients',
-      tags: ['mcp-authorization']
-    }
-  })
   
   /**
    * OpenID Connect Discovery (Alternative for compatibility)

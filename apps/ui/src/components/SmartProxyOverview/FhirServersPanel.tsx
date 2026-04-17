@@ -1,4 +1,5 @@
 import { Button } from '@proxy-smart/shared-ui';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
     Database,
     AlertCircle,
@@ -101,14 +102,7 @@ export function FhirServersPanel({ fhirServersHealth, onNavigate }: FhirServersP
                         </div>
                     ))
                 ) : (
-                    <div className="text-center py-8">
-                        <div className="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Database className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                        <h4 className="text-lg font-semibold text-foreground mb-2">{t('No FHIR Servers')}</h4>
-                        <p className="text-muted-foreground text-sm">{t('No FHIR servers have been configured yet.')}</p>
-                        <p className="text-muted-foreground text-xs mt-2">{t('Click "Manage Servers" to add your first FHIR server.')}</p>
-                    </div>
+                    <EmptyState icon={Database} title={t('No FHIR Servers')} description={t('No FHIR servers have been configured yet. Click "Manage Servers" to add your first FHIR server.')} className="py-8" />
                 )}
             </div>
         </div>

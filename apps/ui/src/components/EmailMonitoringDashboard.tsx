@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Badge, Button, CHART_COLORS } from '@proxy-smart/shared-ui';
 import { SearchInput } from '@/components/ui/search-input';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
@@ -258,11 +259,8 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No activity data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={BarChart3} title={t('No activity data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -290,11 +288,8 @@ export function EmailMonitoringDashboard({ embedded, isRealTimeActive: parentRea
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Mail className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No email data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={Mail} title={t('No email data available')} className="py-8" />
                       </div>
                     )}
                   </div>

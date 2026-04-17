@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Dialog,
   DialogContent,
@@ -464,13 +465,7 @@ export function LaunchContextSetBuilder({
             
             <div className="max-h-40 overflow-y-auto border border-purple-200/50 dark:border-purple-700/30 rounded-xl p-4 bg-white/70 dark:bg-card/70 backdrop-blur-sm shadow-sm">
               {contextSet.contexts.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="w-12 h-12 mx-auto mb-3 bg-gradient-to-br from-muted/50 to-muted rounded-xl flex items-center justify-center shadow-sm">
-                    <Target className="w-6 h-6 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground font-medium">{t('No scopes added yet')}</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">{t('Add scopes using the builder above')}</p>
-                </div>
+                <EmptyState icon={Target} title={t('No scopes added yet')} description={t('Add scopes using the builder above')} className="py-8" />
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {contextSet.contexts.map((ctx, index) => (

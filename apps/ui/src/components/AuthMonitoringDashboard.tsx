@@ -41,6 +41,7 @@ import {
   type AuthAnalytics,
 } from '../service/auth-monitoring-service';
 import { SearchInput } from '@/components/ui/search-input';
+import { EmptyState } from '@/components/ui/empty-state';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -267,11 +268,8 @@ export function AuthMonitoringDashboard({ embedded, isRealTimeActive: parentReal
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No activity data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={BarChart3} title={t('No activity data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -299,11 +297,8 @@ export function AuthMonitoringDashboard({ embedded, isRealTimeActive: parentReal
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Key className="h-12 w-12 mx-auto mb-4" />
-                          <p className="font-medium">{t('No event data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={Key} title={t('No event data available')} className="py-8" />
                       </div>
                     )}
                   </div>
