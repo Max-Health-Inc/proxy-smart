@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170514.a417a1fe] - 2026-04-17
+
+- ✨ Features: Added RecordEditModal component with editable fields for multiple resource types and integration with updateResource; wrapped App and Toaster with TooltipProvider; Dashboard now refreshes on resource updates via onResourceUpdated callback.
+- 🔧 Chores & Improvements: Extend RecordDetailModal with edit capabilities (Pencil icon, updated imports/types); introduce updateResource function in fhir-client for PUT updates with error handling.  
+- 🐛 Bug Fixes: UI adjustments to PatientBanner and related modals to support birth sex and gender identity/pronouns extensions; align seed data and display labels to new sleep-related metric (Hours of Sleep) and corresponding IDs.  
+- 📚 Documentation: (None)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/418
+
+
 ## [0.0.5-alpha.202604170510.0b6481f5] - 2026-04-17
 
 - ✨ Features: Add RecordEditModal component and related UI to edit multiple resource types; extend UI to support birth sex, gender identity, and pronouns via new FHIR extensions.
