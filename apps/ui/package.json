@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Admin UI",
   "description": "A web-based administration interface for managing healthcare applications and resources via Proxy Smart.",
   "private": true,
-  "version": "0.0.6-alpha.202604171933.12fa631a",
+  "version": "0.0.6-alpha.202604171937.8e4540cb",
   "type": "module",
   "scripts": {
     "dev": "vite",
