@@ -9,13 +9,13 @@ test.describe("Consent App — Practitioner Dashboard", () => {
   test("should render practitioner identity card", async ({ page }) => {
     // Practitioner name and badge should be displayed
     await expect(page.getByText("Practitioner").first()).toBeVisible({ timeout: 15_000 })
-    // The identity card shows the practitioner name with a stethoscope icon
-    await expect(page.locator("h3, h2").filter({ hasText: /Dr\.|doctor|Test/i }).first()).toBeVisible()
+    // The identity card shows the practitioner name (may be plain text, not a heading)
+    await expect(page.getByText(/Dr\.|doctor|Test Doctor/i).first()).toBeVisible()
   })
 
   test("should show request stats cards", async ({ page }) => {
     await expect(page.getByText("Total Requests")).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText("Pending")).toBeVisible()
+    await expect(page.getByRole("paragraph").filter({ hasText: "Pending" })).toBeVisible()
     await expect(page.getByText("Approved")).toBeVisible()
     await expect(page.getByText("Rejected")).toBeVisible()
   })
