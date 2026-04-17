@@ -148,6 +148,20 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         token_endpoint_auth_methods_supported: authMethods,
         code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported
       }
+    } catch {
+      set.status = 500
+      return {
+        error: 'server_error',
+        error_description: 'Internal server error while fetching authorization server metadata'
+      }
+    }
+  }, {
+    detail: {
+      summary: 'Get OAuth 2.0 Authorization Server Metadata',
+      description: 'Returns OAuth 2.0 Authorization Server Metadata (RFC 8414) for MCP authorization discovery',
+      tags: ['mcp-authorization']
+    }
+  })
   
   /**
    * OpenID Connect Discovery (Alternative for compatibility)
