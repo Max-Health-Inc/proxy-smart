@@ -43,7 +43,7 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
       const admin = await getAdmin(token)
       const includeGlobal = query.includeGlobal === 'true'
       const result = await admin.clientPolicies.listProfiles({ includeGlobalProfiles: includeGlobal })
-      return result
+      return result as ClientProfilesResponseType
     } catch (error) {
       return handleAdminError(error, set)
     }
@@ -79,7 +79,7 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
 
       await admin.clientPolicies.createProfiles({ profiles: updated })
       const result = await admin.clientPolicies.listProfiles({ includeGlobalProfiles: false })
-      return result
+      return result as ClientProfilesResponseType
     } catch (error) {
       return handleAdminError(error, set)
     }
@@ -103,7 +103,7 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
       const admin = await getAdmin(token)
       const includeGlobal = query.includeGlobal === 'true'
       const result = await admin.clientPolicies.listPolicies({ includeGlobalPolicies: includeGlobal })
-      return result
+      return result as ClientPoliciesResponseType
     } catch (error) {
       return handleAdminError(error, set)
     }
@@ -137,7 +137,7 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
 
       await admin.clientPolicies.updatePolicy({ policies: updated })
       const result = await admin.clientPolicies.listPolicies({ includeGlobalPolicies: false })
-      return result
+      return result as ClientPoliciesResponseType
     } catch (error) {
       return handleAdminError(error, set)
     }
