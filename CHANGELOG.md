@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604172109.0469354b] - 2026-04-17
+
+- 🔧 Chores & Improvements: Global version bumps across multiple packages to 0.0.6-alpha
+- 🔧 Chores & Improvements: Remove MONO_MODE from backend config; MCP_ENDPOINT_ENABLED defaults to enabled; update/downgrade references in docs and infra
+- ✨ Features: Update MCP UI copy to reflect default MCP endpoint enabled
+- 📚 Documentation: Add new docs covering AI Tools, Identity Providers, Launch Context, Organizations, User Federation, deployment, environment variables, oauth-authentication, fhir-proxy, patient-api
+- 🔧 Chores & Improvements: Production-like environment adjustments in infra and related config/docs
+- ⚠️ Breaking Changes: MONO_MODE removal affects defaults and configuration (implicit breaking change)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/442
+
+
 ## [0.0.6-alpha.202604172056.45e770a6] - 2026-04-17
 
 - 🔧 Chores & Improvements: Internal maintenance and metadata updates across apps and testing packages
