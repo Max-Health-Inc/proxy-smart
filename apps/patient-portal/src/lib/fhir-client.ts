@@ -1,8 +1,8 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { config } from "@/config"
 import { reportAuthError } from "@/lib/auth-error"
-import { FhirClient } from "hl7.fhir.uv.ips-generated/fhir-client"
-import { FhirClient as GenomicsFhirClient } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
+import { FhirClient, type FhirResource as IpsFhirResource } from "hl7.fhir.uv.ips-generated/fhir-client"
+import { FhirClient as GenomicsFhirClient, type FhirResource as GenomicsFhirResource } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
 import type {
   PatientUvIps,
   ConditionUvIps,
@@ -69,10 +69,11 @@ export type { Observation, DocumentReference }
 export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
 export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ObservationStatusCode, ImmunizationStatusCode }
 
-// Base FHIR Resource with index signature for polymorphic resource fields
-import type { Resource } from 'fhir/r4'
+// Properly typed union covering all portal resource types (IPS + Genomics + base R4)
+export type PortalFhirResource = IpsFhirResource | GenomicsFhirResource | Observation | DocumentReference
+// Escape hatch for components needing dynamic property access (RecordEditModal, RecordDetailModal)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyFhirResource = Resource & Record<string, any>
+export type DynamicFhirResource = PortalFhirResource & Record<string, any>
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
@@ -146,21 +147,21 @@ export async function searchConditions(patientId: string): Promise<ConditionUvIp
 // ── Allergies (IPS-profiled) ─────────────────────────────────────────────────
 
 export async function searchAllergies(patientId: string): Promise<AllergyIntoleranceUvIps[]> {
-  return client.read().allergyIntolerance().searchAll({
+  return client.read().allergyIntoleranceUvIps().searchAll({
     patient: `Patient/${patientId}`,
     "clinical-status": "active" satisfies AllergyintoleranceClinicalCode,
     _count: 50,
-  }) as Promise<AllergyIntoleranceUvIps[]>
+  })
 }
 
 // ── Medications (IPS-profiled) ───────────────────────────────────────────────
 
 export async function searchMedicationStatements(patientId: string): Promise<MedicationStatementIPS[]> {
-  return client.read().medicationStatement().searchAll({
+  return client.read().medicationStatementIPS().searchAll({
     patient: `Patient/${patientId}`,
     status: "active" satisfies MedicationStatusCode,
     _count: 50,
-  }) as Promise<MedicationStatementIPS[]>
+  })
 }
 
 // ── Immunizations (IPS-profiled) ─────────────────────────────────────────────
@@ -260,50 +261,50 @@ export async function searchFlags(patientId: string): Promise<FlagAlertUvIps[]> 
 // ── Pregnancy (IPS-profiled) ─────────────────────────────────────────────────
 
 export async function searchPregnancyStatus(patientId: string): Promise<ObservationPregnancyStatusUvIps[]> {
-  return client.read().observation().searchAll({
+  return client.read().observationPregnancyStatusUvIps().searchAll({
     patient: `Patient/${patientId}`,
     code: "82810-3",
     _count: 10,
     _sort: "-date",
-  }) as Promise<ObservationPregnancyStatusUvIps[]>
+  })
 }
 
 export async function searchPregnancyEdd(patientId: string): Promise<ObservationPregnancyEddUvIps[]> {
-  return client.read().observation().searchAll({
+  return client.read().observationPregnancyEddUvIps().searchAll({
     patient: `Patient/${patientId}`,
     code: "11778-8,11779-6,11780-4",
     _count: 10,
     _sort: "-date",
-  }) as Promise<ObservationPregnancyEddUvIps[]>
+  })
 }
 
 export async function searchPregnancyOutcome(patientId: string): Promise<ObservationPregnancyOutcomeUvIps[]> {
-  return client.read().observation().searchAll({
+  return client.read().observationPregnancyOutcomeUvIps().searchAll({
     patient: `Patient/${patientId}`,
     code: "11636-8,11637-6,11638-4,11639-2,11640-0,11612-9,11613-7,33065-X",
     _count: 10,
     _sort: "-date",
-  }) as Promise<ObservationPregnancyOutcomeUvIps[]>
+  })
 }
 
 // ── Medication Requests (IPS-profiled) ───────────────────────────────────────
 
 export async function searchMedicationRequests(patientId: string): Promise<MedicationRequestIPS[]> {
-  return client.read().medicationRequest().searchAll({
+  return client.read().medicationRequestIPS().searchAll({
     patient: `Patient/${patientId}`,
     status: "active" satisfies MedicationrequestStatusCode,
     _count: 50,
     _sort: "-authoredon",
-  }) as Promise<MedicationRequestIPS[]>
+  })
 }
 
 // ── Device Use Statements (IPS-profiled) ─────────────────────────────────────
 
 export async function searchDeviceUseStatements(patientId: string): Promise<DeviceUseStatementUvIps[]> {
-  return client.read().deviceUseStatement().searchAll({
+  return client.read().deviceUseStatementUvIps().searchAll({
     patient: `Patient/${patientId}`,
     _count: 50,
-  }) as Promise<DeviceUseStatementUvIps[]>
+  })
 }
 
 // ── Imaging Studies (IPS-profiled) ───────────────────────────────────────────

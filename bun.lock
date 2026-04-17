@@ -2358,9 +2358,9 @@
 
     "hl7.fhir.us.davinci-pas-generated": ["hl7.fhir.us.davinci-pas-generated@./lib/hl7.fhir.us.davinci-pas-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-yktBUs6Gkk+NetPUpZteWf8iYroeGbuJZABx1fJ3aduaOzXz1pEnD+J5sSebW47sG51pAEad0BZBumKTpqpwdQ=="],
 
-    "hl7.fhir.uv.genomics-reporting-generated": ["hl7.fhir.uv.genomics-reporting-generated@./lib/hl7.fhir.uv.genomics-reporting-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-3Fxx+cknrqwvwmR8PzcEb89DrZcMWkMl9zITQlzwNOXcpY9JYkpDs5bmuT7gGomFFpPvqLDzFqSCDm7W4tDTJA=="],
+    "hl7.fhir.uv.genomics-reporting-generated": ["hl7.fhir.uv.genomics-reporting-generated@./lib/hl7.fhir.uv.genomics-reporting-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-QJ8UcvKQQNXd+Vb9Li7LNaoPdHnXQq4LkR0SBqApwebpEz8Ia5SU+/C2K+HR86iTSY7KKugAyZ+idpMPmFscwg=="],
 
-    "hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@../apps/patient-portal/lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-45o7VV1RDxXNEN4ynjxGlLcWFSgkmKRskCrRogOq3GxtxIYbYenHtC4zWxiS/TxdVuR7LeZp5MHTL/v/JoFHwA=="],
+    "hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@../apps/patient-portal/lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-Kxz2MoY8d1K0MtlygqiQyleZ4Zj1jNUjRE68JvHNVPeTiJqeHk5OeEI0vhmN5GvZcRUGmQRGFostQDOgooEYjg=="],
 
     "hl7.fhir.uv.smart-app-launch-generated": ["hl7.fhir.uv.smart-app-launch-generated@./lib/hl7.fhir.uv.smart-app-launch-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-bBJF/DaBgwkUg19iqJf0IuQ2husmGman4ZW0poUwSlBRaD6rKRN0qf8cxfgMyVgveP3dYhC4cW9DwjBdD12ueQ=="],
 
@@ -3910,7 +3910,7 @@
 
     "proxy-smart-dtr-app/@babelfhir-ts/client-r4": ["@babelfhir-ts/client-r4@0.2.3", "", { "dependencies": { "@babelfhir-ts/smart-auth": "^0.2.0" }, "peerDependencies": { "@types/fhir": ">=0.0.41" } }, "sha512-mYysuT5OrQeOyqwg3tHTjxkinDsgj2FoYGzf/MLwOyaQNhWW5+Ueq0IRZWqoeo1aY5XWNhklg5dFKBHuUB0Bkg=="],
 
-    "proxy-smart-patient-portal/hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@./lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-45o7VV1RDxXNEN4ynjxGlLcWFSgkmKRskCrRogOq3GxtxIYbYenHtC4zWxiS/TxdVuR7LeZp5MHTL/v/JoFHwA=="],
+    "proxy-smart-patient-portal/hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@./lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-Kxz2MoY8d1K0MtlygqiQyleZ4Zj1jNUjRE68JvHNVPeTiJqeHk5OeEI0vhmN5GvZcRUGmQRGFostQDOgooEYjg=="],
 
     "radix-ui/@radix-ui/react-avatar": ["@radix-ui/react-avatar@1.1.10", "", { "dependencies": { "@radix-ui/react-context": "1.1.2", "@radix-ui/react-primitive": "2.1.3", "@radix-ui/react-use-callback-ref": "1.1.1", "@radix-ui/react-use-is-hydrated": "0.1.0", "@radix-ui/react-use-layout-effect": "1.1.1" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-V8piFfWapM5OmNCXTzVQY+E1rDa53zY+MQ4Y7356v4fFz6vqCyUtIz2rUD44ZEdwg78/jKmMJHj07+C/Z/rcog=="],
 
@@ -3950,7 +3950,7 @@
 
     "simple-plist/bplist-parser": ["bplist-parser@0.3.1", "", { "dependencies": { "big-integer": "1.6.x" } }, "sha512-PyJxiNtA5T2PlLIeBot4lbp7rj4OadzjnMZD/G5zuBNt8ei/yCU7+wW0h2bag9vr8c+/WuRWmSxbqAl9hL1rBA=="],
 
-    "smart-dicom-template/hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@./lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-45o7VV1RDxXNEN4ynjxGlLcWFSgkmKRskCrRogOq3GxtxIYbYenHtC4zWxiS/TxdVuR7LeZp5MHTL/v/JoFHwA=="],
+    "smart-dicom-template/hl7.fhir.uv.ips-generated": ["hl7.fhir.uv.ips-generated@./lib/hl7.fhir.uv.ips-generated.tgz", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-Kxz2MoY8d1K0MtlygqiQyleZ4Zj1jNUjRE68JvHNVPeTiJqeHk5OeEI0vhmN5GvZcRUGmQRGFostQDOgooEYjg=="],
 
     "stacktrace-parser/type-fest": ["type-fest@0.7.1", "", {}, "sha512-Ne2YiiGN8bmrmJJEuTWTLJR32nh/JdL1+PSicowtNb0WFpn59GK8/lfD61bVtzguz7b3PBt74nxpv/Pw5po5Rg=="],
 
