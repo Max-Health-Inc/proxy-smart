@@ -24,6 +24,7 @@ import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
+import { fhirSeedRoutes } from './fhir-seed'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -126,6 +127,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(appStoreAdminRoutes)
   // Keycloak Client Policies & CIMD management
   .use(clientPoliciesRoutes)
+  // FHIR resource seeding (admin direct-to-HAPI)
+  .use(fhirSeedRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 
