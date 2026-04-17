@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170510.0b6481f5] - 2026-04-17
+
+- ✨ Features: Add RecordEditModal component and related UI to edit multiple resource types; extend UI to support birth sex, gender identity, and pronouns via new FHIR extensions.
+- 🔧 Chores & Improvements: Wrap app and toaster with TooltipProvider; refresh Dashboard data on resource updates; implement updateResource in fhir-client for PUT with error handling.
+- 🐛 Bug Fixes: Update seed data and metrics mapping to reflect sleep-related metrics (replacing height/CM with hours of sleep) and align IDs/values accordingly.
+- 📚 Documentation: (None)
+- ⚠️ Breaking Changes: (None)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/417
+
+
 ## [0.0.5-alpha.202604170503.5151028d] - 2026-04-17
 
 - 🔧 Chores & Improvements: Internal updates and maintenance
