@@ -31,7 +31,7 @@ const METRIC_DEFS: MetricDef[] = [
   { label: "SpO₂",             loinc: ["2708-6", "59408-5"], unit: "%",      color: "#06b6d4" },
   { label: "Body Temperature", loinc: ["8310-5"],            unit: "°C",     color: "#f59e0b" },
   { label: "Respiratory Rate", loinc: ["9279-1"],            unit: "/min",   color: "#10b981" },
-  { label: "Body Height",      loinc: ["8302-2"],            unit: "cm",     color: "#64748b" },
+  { label: "Hours of Sleep",   loinc: ["93832-4"],           unit: "h",      color: "#64748b" },
 ]
 
 // ── Value extraction ────────────────────────────────────────────────────────

@@ -17,13 +17,17 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
   const birthDate = patient.birthDate ? new Date(patient.birthDate) : null
   const age = birthDate ? differenceInYears(new Date(), birthDate) : null
 
-  // IPS extensions: gender identity and pronouns
+  // IPS extensions: gender identity, pronouns, and birth sex
   const genderIdentity = patient.extension?.find(
     e => e.url === "http://hl7.org/fhir/StructureDefinition/individual-genderIdentity"
   )?.valueCodeableConcept?.coding?.[0]?.display
   const pronouns = patient.extension?.find(
     e => e.url === "http://hl7.org/fhir/StructureDefinition/individual-pronouns"
   )?.valueCodeableConcept?.coding?.[0]?.display
+  const birthSex = patient.extension?.find(
+    e => e.url === "http://hl7.org/fhir/StructureDefinition/patient-birthsex"
+      || e.url === "http://hl7.org/fhir/us/core/StructureDefinition/us-core-birthsex"
+  )?.valueCode
 
   return (
     <>
@@ -42,6 +46,7 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
             {genderIdentity && genderIdentity.toLowerCase() !== patient.gender?.toLowerCase() && (
               <Badge variant="outline">{genderIdentity}</Badge>
             )}
+            {birthSex && <Badge variant="secondary" title="Sex assigned at birth">SAAB: {birthSex}</Badge>}
             {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
             {patient.identifier?.[0]?.value && (
               <span className="font-mono text-xs">MRN: {patient.identifier[0].value}</span>
