@@ -11,7 +11,7 @@ i18n
     fallbackLng: "en",
     supportedLngs: ["en", "fr", "es", "it", "de"],
     interpolation: { escapeValue: false },
-    backend: { loadPath: "/locales/{{lng}}/translation.json" },
+    backend: { loadPath: "/apps/patient-portal/locales/{{lng}}/translation.json" },
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],
       caches: ["localStorage"],
