@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170307.f3dce54b] - 2026-04-17
+
+- 🔧 Chores & Improvements: Bump version fields across all apps to 0.0.5-alpha.202604170307.f3dce54b; update backend E2E tests to reference dynamic config.name in routes/constants.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/412
+
+
 ## [0.0.5-alpha.202604170209.6880bd72] - 2026-04-17
 
 - 🔧 Chores & Improvements: Version bumps across multiple packages to 0.0.5-alpha.202604170209.6880bd72; updated binary tarballs for key apps/libs (dtr-app, patient-portal, smart-dicom-template, HL7 tarballs).
