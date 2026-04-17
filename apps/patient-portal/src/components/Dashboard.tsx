@@ -703,6 +703,7 @@ export function Dashboard() {
         title={detailTitle}
         resource={detailResource}
         documents={documents}
+        onResourceUpdated={refreshData}
       />
     </div>
   )

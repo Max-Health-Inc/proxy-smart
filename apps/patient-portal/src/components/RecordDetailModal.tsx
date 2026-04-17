@@ -5,9 +5,11 @@ import {
   DialogTitle,
   DialogDescription,
   Badge,
+  Button,
 } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
-import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2 } from "lucide-react"
+import { useState } from "react"
+import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil } from "lucide-react"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
 import type { DocumentReference } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
@@ -16,6 +18,7 @@ import type { ReactionEventSeverityCode } from "hl7.fhir.uv.ips-generated/values
 import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
 import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
 import { criticalityStyles, type AllergyIntoleranceCriticalityCode } from "@/lib/ips-display-helpers"
+import { RecordEditModal } from "@/components/RecordEditModal"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +35,8 @@ export interface RecordDetailModalProps {
   resource: FhirResource | null
   /** All patient documents — used to find cross-references */
   documents?: DocumentReference[]
+  /** Called when the user edits and saves this resource */
+  onResourceUpdated?: (updated: FhirResource) => void
 }
 
 // ── Metadata extraction helpers ──────────────────────────────────────────────
@@ -151,7 +156,14 @@ const severityBadgeStyles: Record<ReactionEventSeverityCode, string> = {
   mild: "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20",
 }
 
-export function RecordDetailModal({ open, onOpenChange, title, resource, documents }: RecordDetailModalProps) {
+/** Resource types that support inline editing */
+const EDITABLE_TYPES = new Set([
+  "Condition", "AllergyIntolerance", "MedicationRequest",
+  "MedicationStatement", "Observation", "Immunization", "Procedure",
+])
+
+export function RecordDetailModal({ open, onOpenChange, title, resource, documents, onResourceUpdated }: RecordDetailModalProps) {
+  const [editOpen, setEditOpen] = useState(false)
   if (!resource) return null
 
   const recordedDate = extractRecordedDate(resource)
@@ -168,6 +180,7 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
   const linkedDocs = findLinkedDocuments(documents ?? [], resourceType, resourceId)
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -193,6 +206,12 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
             {resourceType && <span className="text-xs font-mono">{resourceType}</span>}
             {resourceId && <span className="text-xs font-mono text-muted-foreground"> / {resourceId}</span>}
           </DialogDescription>
+          {onResourceUpdated && resourceType && EDITABLE_TYPES.has(resourceType) && (
+            <Button variant="outline" size="sm" className="w-fit mt-1" onClick={() => setEditOpen(true)}>
+              <Pencil className="size-3.5 mr-1" />
+              Edit Record
+            </Button>
+          )}
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
@@ -376,6 +395,21 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
         </div>
       </DialogContent>
     </Dialog>
+
+    {onResourceUpdated && (
+      <RecordEditModal
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        resource={resource}
+        onSaved={(updated) => {
+          onResourceUpdated(updated)
+          // Close both edit and detail modals
+          setEditOpen(false)
+          onOpenChange(false)
+        }}
+      />
+    )}
+    </>
   )
 }
 

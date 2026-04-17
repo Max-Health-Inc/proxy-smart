@@ -386,6 +386,24 @@ export async function createResource<T extends { resourceType: string }>(resourc
   return res.json() as Promise<T>
 }
 
+/** Update a FHIR resource via PUT (requires patient/*.write scope) */
+export async function updateResource<T extends { resourceType: string; id?: string }>(resource: T): Promise<T> {
+  if (!resource.id) throw new Error('Cannot update a resource without an id')
+  const res = await authFetch(`${fhirBaseUrl}/${resource.resourceType}/${resource.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/fhir+json',
+      Accept: 'application/fhir+json',
+    },
+    body: JSON.stringify(resource),
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Failed to update ${resource.resourceType}/${resource.id} (${res.status}): ${text}`)
+  }
+  return res.json() as Promise<T>
+}
+
 // ── Document Import ──────────────────────────────────────────────────────────
 
 export interface ImportedResource {
