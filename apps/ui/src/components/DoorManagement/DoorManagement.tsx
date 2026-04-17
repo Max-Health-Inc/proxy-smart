@@ -110,13 +110,13 @@ export function DoorManagement() {
     <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* Header */}
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
               <DoorOpen className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-3xl font-medium text-foreground tracking-tight">{t('Door Management')}</h1>
+              <h1 className="text-2xl sm:text-3xl font-medium text-foreground tracking-tight">{t('Door Management')}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant={health.connected ? 'default' : 'destructive'}>
                   {health.connected ? (
@@ -142,7 +142,7 @@ export function DoorManagement() {
 
       {/* Sub-tabs */}
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 overflow-x-auto">
           <TabsTrigger value="overview">{t('Overview')}</TabsTrigger>
           <TabsTrigger value="doors">{t('Doors')}</TabsTrigger>
           {showGroups && <TabsTrigger value="groups">{t('Groups')}</TabsTrigger>}

@@ -35,15 +35,15 @@ export function SmartConfigManager() {
                     <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
                         <TabsTrigger value="scopes" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Target className="w-4 h-4" />
-                            <span>{t('Scopes')}</span>
+                            <span className="hidden sm:inline">{t('Scopes')}</span>
                         </TabsTrigger>
                         <TabsTrigger value="launch-context" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Play className="w-4 h-4" />
-                            <span>{t('Launch Context')}</span>
+                            <span className="hidden sm:inline">{t('Launch Context')}</span>
                         </TabsTrigger>
                         <TabsTrigger value="mappers" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Link className="w-4 h-4" />
-                            <span>{t('Protocol Mappers')}</span>
+                            <span className="hidden sm:inline">{t('Protocol Mappers')}</span>
                         </TabsTrigger>
                     </TabsList>
 

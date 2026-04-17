@@ -205,9 +205,9 @@ export function McpEndpointSettings() {
     <div className="space-y-6">
       {/* ── Endpoint Status Card ──────────────────────────────────────── */}
       <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center shadow-sm">
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center shadow-sm shrink-0">
               <Server className="w-7 h-7 text-primary" />
             </div>
             <div>
@@ -244,7 +244,7 @@ export function McpEndpointSettings() {
         {status.enabled && (
           <div className="mt-4 space-y-3">
             <div className="flex items-center gap-2 text-sm">
-              <Badge variant="outline" className="font-mono text-xs">
+              <Badge variant="outline" className="font-mono text-xs truncate max-w-[250px] sm:max-w-none">
                 {status.endpointUrl}
               </Badge>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copyUrl}>

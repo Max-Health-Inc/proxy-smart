@@ -153,7 +153,7 @@ export function AdminApp() {
             <main className="flex-1 pt-2 md:pt-4">
                 <div className="flex-1 px-4 sm:px-6 lg:px-8 py-8">
                     <div className="w-full lg:w-[90%] max-w-none mx-auto">
-                        <Panel className={cn("min-h-[600px] shadow-2xl border-0 bg-background backdrop-blur-sm rounded-3xl overflow-hidden border border-border/20 animate-fade-in w-full max-w-none", "max-w-none w-full")}>
+                        <Panel className={cn("min-h-[400px] sm:min-h-[600px] shadow-2xl border-0 bg-background backdrop-blur-sm rounded-3xl overflow-hidden border border-border/20 animate-fade-in w-full max-w-none", "max-w-none w-full")}>
                             {currentTab === 'dashboard' && <SmartProxyOverview onNavigate={handleTabChange} />}
                             {currentTab === 'smart-apps' && <SmartAppsManager />}
                             {currentTab === 'users' && <UsersAndFederationManager />}

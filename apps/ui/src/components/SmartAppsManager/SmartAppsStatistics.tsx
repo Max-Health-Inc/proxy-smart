@@ -10,7 +10,7 @@ interface SmartAppsStatisticsProps {
 export function SmartAppsStatistics({ apps }: SmartAppsStatisticsProps) {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
       <StatCard icon={Activity} label={t('Total Apps')} value={apps.length} color="blue" />
       <StatCard icon={Shield} label={t('EHR Launch')} value={apps.filter(app => app.appType === 'ehr-launch').length} color="emerald" />
       <StatCard icon={Activity} label={t('Standalone')} value={apps.filter(app => app.appType === 'standalone-app').length} color="blue" />

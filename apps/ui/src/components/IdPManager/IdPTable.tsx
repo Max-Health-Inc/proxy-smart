@@ -64,7 +64,7 @@ export function IdPTable({
   };
 
   return (
-    <div className="backdrop-blur-sm bg-card/70 rounded-2xl shadow-lg border border-border/50 p-8 transition-all duration-300 hover:shadow-xl">
+    <div className="backdrop-blur-sm bg-card/70 rounded-2xl shadow-lg border border-border/50 p-4 sm:p-8 transition-all duration-300 hover:shadow-xl">
       {/* Header */}
       <div className="mb-8">
         <h3 className="text-2xl font-medium text-foreground mb-2">
@@ -76,7 +76,7 @@ export function IdPTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-border/50 bg-card/70">
+      <div className="overflow-x-auto rounded-xl border border-border/50 bg-card/70">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/70 border-b border-border/50">

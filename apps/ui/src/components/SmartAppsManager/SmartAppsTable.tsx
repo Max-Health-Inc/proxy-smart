@@ -137,12 +137,11 @@ export function SmartAppsTable({
 
   return (
     <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-      <div className="p-8 pb-6">
+      <div className="p-4 sm:p-8 pb-6">
         <div className="flex items-center space-x-3 mb-6">
           <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center shadow-sm">
             <Settings className="w-6 h-6 text-primary" />
           </div>
-          <div>
             <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Registered Applications')}</h3>
             <p className="text-muted-foreground font-medium">{t('View and manage all SMART on FHIR applications')}</p>
           </div>

@@ -194,7 +194,7 @@ export function DynamicClientRegistrationSettings() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-6 ml-16">
+            <div className="flex items-center flex-wrap gap-3 sm:space-x-6 sm:ml-16">
               <Badge variant={settings.enabled ? "default" : "secondary"} className="px-3 py-1">
                 {settings.enabled ? 'Enabled' : 'Disabled'}
               </Badge>
@@ -244,7 +244,7 @@ export function DynamicClientRegistrationSettings() {
       )}
 
       {/* Statistics Cards matching app style */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -352,7 +352,7 @@ export function DynamicClientRegistrationSettings() {
                   checked={settings.adminApprovalRequired}
                   onCheckedChange={(checked) => setSettings(prev => ({ ...prev, adminApprovalRequired: checked }))}
                 />
-              </div>            <div className="grid grid-cols-2 gap-4">
+              </div>            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rateLimit">{t('Rate Limit (per minute)')}</Label>
                 <Input
