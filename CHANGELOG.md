@@ -22,6 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/438
 
 
+
+- 🔧 Chores & Improvements: Update dependency locks and generated tarballs for new pre-release (0.0.6-alpha.202604172031.e2101724)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/439
+
+
 ## [0.0.6-alpha.202604171955.f543cb6e] - 2026-04-17
 
 - 🔧 Chores & Improvements: Refined FHIR resource typing and dynamic portal resource handling
