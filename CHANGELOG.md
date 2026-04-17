@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.5-alpha.202604170157.133d8548] - 2026-04-17
+
+- 🔧 Chores & Improvements: Add GitHub Actions workflow "Copilot Auto-Fix (TDD)" with scheduling, inputs, permissions, concurrency, and auto-fix pipeline
+- 🔧 Chores & Improvements: Bump version strings from beta to alpha across apps/tests (0.0.5-beta... to 0.0.5-alpha...)
+- 🐛 Bug Fixes: Replace generated type import with a standard FHIR remittance-outcome code type alias in PaRequestList.tsx
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/410
+
+
 ## [0.0.5-alpha.202604162216.5f5379a7] - 2026-04-17
 
 - 🔧 Chores & Improvements: Version string updates across multiple apps (bun.lock) to 0.0.5-alpha.202604162200.7d5af0e2 (consent-app, dtr-app, patient-portal, smart-dicom-template, UI, and others)
