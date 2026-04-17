@@ -12,6 +12,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { Elysia } from 'elysia'
+import { config } from '../src/config'
 import { enforceScopeAccess, type AccessControlContext } from '../src/lib/smart-access-control'
 
 // ── Mock token validator ─────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ const FHIR_SERVER_NAME = 'test-fhir-server'
 
 function buildTestApp() {
   return new Elysia()
-    .all('/proxy-smart-backend/:server_name/:fhir_version/*', async ({ params, request, set }) => {
+    .all(`/${config.name}/:server_name/:fhir_version/*`, async ({ params, request, set }) => {
       // 1) Version check
       if (!['R4', 'R5'].includes(params.fhir_version)) {
         set.status = 400
@@ -127,7 +128,7 @@ function resetEnv() {
 // ── Request helpers ──────────────────────────────────────────────────────────
 
 const BASE = 'http://localhost'
-const PREFIX = `/proxy-smart-backend/${FHIR_SERVER_NAME}/R4`
+const PREFIX = `/${config.name}/${FHIR_SERVER_NAME}/R4`
 
 function fhirRequest(method: string, path: string, token?: string, body?: string) {
   const headers: Record<string, string> = { Accept: 'application/fhir+json' }
@@ -473,7 +474,7 @@ describe('Scope Enforcement E2E — FHIR Proxy Pipeline', () => {
     })
 
     it('should return 400 for unsupported FHIR version', async () => {
-      const req = new Request(`${BASE}/proxy-smart-backend/${FHIR_SERVER_NAME}/STU3/Patient`, {
+      const req = new Request(`${BASE}/${config.name}/${FHIR_SERVER_NAME}/STU3/Patient`, {
         headers: { Authorization: 'Bearer patient-read-all' },
       })
       const res = await app.handle(req)
@@ -481,7 +482,7 @@ describe('Scope Enforcement E2E — FHIR Proxy Pipeline', () => {
     })
 
     it('should return 404 for unknown FHIR server', async () => {
-      const req = new Request(`${BASE}/proxy-smart-backend/nonexistent-server/R4/Patient`, {
+      const req = new Request(`${BASE}/${config.name}/nonexistent-server/R4/Patient`, {
         headers: { Authorization: 'Bearer patient-read-all' },
       })
       const res = await app.handle(req)
