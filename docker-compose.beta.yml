@@ -97,7 +97,7 @@ services:
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com
-      DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
+      DICOMWEB_BASE_URL: http://${ORTHANC_USERNAME:-orthanc}:${ORTHANC_PASSWORD:?Set ORTHANC_PASSWORD}@orthanc:8042/dicom-web
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
     labels:
@@ -137,7 +137,7 @@ services:
       spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
       hapi.fhir.fhir_version: R4
       hapi.fhir.cors.allow_Credentials: "true"
-      hapi.fhir.cors.allowed_origin: "*"
+      hapi.fhir.cors.allowed_origin: "https://beta.proxy-smart.com"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null"]
       interval: 30s
@@ -157,7 +157,9 @@ services:
     environment:
       ORTHANC__NAME: "Proxy Smart PACS"
       ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
-      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      ORTHANC__AUTHENTICATION_ENABLED: "true"
+      ORTHANC__REGISTERED_USERS: |
+        {"${ORTHANC_USERNAME:-orthanc}": "${ORTHANC_PASSWORD:?Set ORTHANC_PASSWORD}"}
       ORTHANC__DICOM_WEB__ENABLE: "true"
       ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
       ORTHANC__POSTGRESQL__ENABLE_INDEX: "true"
@@ -170,7 +172,7 @@ services:
     volumes:
       - orthanc_data:/var/lib/orthanc/db
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8042/system > /dev/null"]
+      test: ["CMD-SHELL", "curl -sf -u ${ORTHANC_USERNAME:-orthanc}:${ORTHANC_PASSWORD} http://localhost:8042/system > /dev/null"]
       interval: 15s
       timeout: 5s
       retries: 3

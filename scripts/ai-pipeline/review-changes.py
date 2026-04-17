@@ -12,14 +12,14 @@ import requests
 from pathlib import Path
 from typing import Dict, List, Any
 
-from ai_proposal_schema import get_propose_payload_base, get_common_headers, create_system_message
+from ai_proposal_schema import get_propose_payload_base, get_common_headers, get_api_config, get_base_url, create_system_message
 
 
 class UnifiedChangeReviewer:
-    def __init__(self, openai_api_key: str, repo_root: str):
-        self.api_key = openai_api_key
+    def __init__(self, api_key: str, repo_root: str):
+        self.api_key = api_key
         self.repo_root = Path(repo_root)
-        self.base_url = "https://api.openai.com/v1/chat/completions"
+        self.base_url = get_base_url()
         
     def detect_component_type(self, changes_data: Dict) -> str:
         """Detect component type from changes data"""
@@ -292,13 +292,16 @@ def main():
     
     changes_json_file = sys.argv[1]
     error_log_file = sys.argv[2] if len(sys.argv) > 2 else ""
-    
-    api_key = os.environ.get("OPENAI_API_KEY")
     repo_root = os.environ.get("GITHUB_WORKSPACE", ".")
     
-    if not api_key:
-        print("❌ OPENAI_API_KEY environment variable is required", file=sys.stderr)
+    # Use GitHub Models API (GITHUB_TOKEN) or fallback to OpenAI
+    config = get_api_config()
+    if not config:
+        print("❌ GITHUB_TOKEN or OPENAI_API_KEY environment variable is required", file=sys.stderr)
         sys.exit(1)
+    
+    api_key = config["api_key"]
+    print(f"🔌 Using {config['provider']} API with model {config['model']}", file=sys.stderr)
     
     print("🧠 Senior AI starting unified review process...", file=sys.stderr)
     

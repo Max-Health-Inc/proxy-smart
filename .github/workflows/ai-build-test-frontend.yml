@@ -25,6 +25,150 @@ on:
         required: false
       APP_PRIVATE_KEY:
         required: false
+
+jobs:
+  frontend:
+    name: Frontend Build & Test
+    runs-on: ubuntu-latest
+    outputs:
+      build_success: ${{ steps.frontend-build.outcome == 'success' || steps.build-heal.outputs.fixed == 'true' }}
+      tests_success: ${{ steps.test-frontend.outcome == 'success' || steps.test-heal.outputs.fixed == 'true' || !inputs.run_tests }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Bun with version scripts
+        uses: ./.github/actions/setup-bun-version
+        with:
+          checkout: 'false'
+
+      # === CLIENT API GENERATION ===
+      - name: Pull Latest Backend Changes
+        run: |
+          echo "🔄 Ensuring we have the latest backend changes for API generation..."
+          git fetch origin --force
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/${{ github.ref_name }})" ]; then
+            echo "📥 New commits found, pulling latest..."
+            git reset --hard origin/${{ github.ref_name }}
+          fi
+
+      - name: Authenticate as GitHub App for API Generation
+        id: api-app-auth
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      - name: Generate Frontend API Client
+        env:
+          GITHUB_TOKEN: ${{ steps.api-app-auth.outputs.token || secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🔄 Generating frontend API client from backend OpenAPI spec..."
+          bun install
+          cd backend && bun install && cd ..
+          cd apps/ui && bun install && cd ../..
+          bun run generate:ui:normalized
+          
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          if ! git diff --staged --quiet; then
+            git commit -m "🤖 Update frontend API client from backend OpenAPI spec"
+            git push
+          fi
+
+      # === FRONTEND BUILD PHASE ===
+      - name: Build Frontend
+        id: frontend-build
+        continue-on-error: true
+        env:
+          TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+        run: |
+          echo "=== Building Frontend ==="
+          cd apps/ui
+          bun install
+          bun run build 2>&1 | tee ../../frontend-build.log
+
+      - name: 🤖 Copilot Self-Heal (Frontend Build)
+        id: build-heal
+        if: ${{ steps.frontend-build.outcome == 'failure' }}
+        uses: ./.github/actions/copilot-self-heal
+        with:
+          error-log: frontend-build.log
+          phase: build
+          component: frontend
+          app-id: ${{ secrets.APP_ID }}
+          app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          retry-command: 'cd apps/ui && bun run build'
+
+      - name: Fail if Frontend Build Unresolved
+        if: ${{ steps.frontend-build.outcome == 'failure' && steps.build-heal.outputs.fixed != 'true' }}
+        run: |
+          echo "❌ Frontend build failed and Copilot could not fix it"
+          cat frontend-build.log
+          exit 1
+
+      # === FRONTEND TEST PHASE ===
+      - name: Test Frontend
+        if: ${{ inputs.run_tests && (steps.frontend-build.outcome == 'success' || steps.build-heal.outputs.fixed == 'true') }}
+        id: test-frontend
+        continue-on-error: true
+        timeout-minutes: 5
+        env:
+          CI: true
+        run: |
+          echo "=== Running Frontend Tests ==="
+          cd apps/ui
+          bun run test 2>&1 | tee ../../frontend-test.log
+
+      - name: 🤖 Copilot Self-Heal (Frontend Tests)
+        id: test-heal
+        if: ${{ inputs.run_tests && steps.test-frontend.outcome == 'failure' }}
+        uses: ./.github/actions/copilot-self-heal
+        with:
+          error-log: frontend-test.log
+          phase: test
+          component: frontend
+          app-id: ${{ secrets.APP_ID }}
+          app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          retry-command: 'cd apps/ui && bun run test'
+
+      - name: Fail if Frontend Tests Unresolved
+        if: ${{ inputs.run_tests && steps.test-frontend.outcome == 'failure' && steps.test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}
+        run: |
+          echo "❌ Frontend tests failed and Copilot could not fix them"
+          cat frontend-test.log
+          exit 1
+name: Build & Test Frontend
+
+on:
+  workflow_call:
+    inputs:
+      run_tests:
+        description: "Whether to run tests"
+        required: false
+        type: boolean
+        default: true
+      fail_on_test_failure:
+        description: "Whether to fail the workflow if tests fail"
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      frontend_success:
+        description: "Whether frontend build was successful"
+        value: ${{ jobs.frontend.outputs.build_success }}
+      frontend_tests_success:
+        description: "Whether frontend tests were successful"
+        value: ${{ jobs.frontend.outputs.tests_success }}
+    secrets:
+      APP_ID:
+        required: false
+      APP_PRIVATE_KEY:
+        required: false
       OPENAI_API_KEY:
         required: false
 

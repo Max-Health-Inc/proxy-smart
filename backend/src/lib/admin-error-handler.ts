@@ -31,14 +31,28 @@ export function handleAdminError(error: unknown, set: Context['set']) {
     } else if (keycloakStatus === 403) {
       return { error: 'Forbidden - Insufficient permissions' }
     } else {
-      return { error: 'Keycloak error', details: error }
+      return { error: 'Keycloak error', details: sanitizeErrorForResponse(error) }
     }
   }
   
   // Fallback to 500 for unknown errors
   logger.admin.error('Unknown error, returning 500')
   set.status = 500
-  return { error: 'Internal server error', details: error }
+  return { error: 'Internal server error', details: sanitizeErrorForResponse(error) }
+}
+
+/**
+ * Sanitize error details before sending in HTTP response.
+ * Removes stack traces and internal file paths to prevent information disclosure.
+ */
+function sanitizeErrorForResponse(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  return 'An unexpected error occurred'
 }
 
 

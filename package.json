@@ -156,6 +156,7 @@
   },
   "homepage": "https://github.com/quotentiroler/proxy-smart#readme",
   "dependencies": {
-    "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz"
+    "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
+    "undici": "^8.1.0"
   }
 }

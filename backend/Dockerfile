@@ -38,6 +38,12 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/public ./public
 
+# Create non-root user for security
+RUN addgroup --system --gid 1001 app && \
+    adduser --system --uid 1001 --ingroup app app && \
+    chown -R app:app /app
+USER app
+
 # Expose the port
 EXPOSE 8445
 

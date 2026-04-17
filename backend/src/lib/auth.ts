@@ -110,3 +110,36 @@ export async function validateToken(token: string): Promise<JwtPayload> {
     }
   }
 }
+
+/**
+ * Validates a JWT token AND checks that the user has admin roles.
+ * Use this for sensitive operations that require elevated privileges.
+ *
+ * @param token JWT token to validate
+ * @returns Decoded token payload (guaranteed to have admin roles)
+ * @throws AuthenticationError for invalid tokens or missing admin roles
+ */
+export async function validateAdminToken(token: string): Promise<JwtPayload> {
+  const payload = await validateToken(token)
+
+  const realmRoles: string[] = (payload as any).realm_access?.roles || []
+  const clientRoles: string[] = (payload as any).resource_access?.['admin-ui']?.roles || []
+  const realmManagementRoles: string[] = (payload as any).resource_access?.['realm-management']?.roles || []
+
+  const hasAdminRole =
+    realmRoles.some((role: string) =>
+      role.includes('admin') || role.includes('manage') || role.includes('realm-management')
+    ) ||
+    clientRoles.some((role: string) =>
+      role.includes('admin') || role.includes('manage')
+    ) ||
+    realmManagementRoles.some((role: string) =>
+      role.includes('admin') || role.includes('manage')
+    )
+
+  if (!hasAdminRole) {
+    throw new AuthenticationError('User does not have admin permissions')
+  }
+
+  return payload
+}

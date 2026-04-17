@@ -17,6 +17,7 @@ import {
   type McpServerUpdateType,
 } from '../../schemas'
 import { validateToken } from '@/lib/auth'
+import { validateExternalUrl } from '@/lib/url-validation'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { Configuration, ServersApi } from '../../lib/mcp-registry-client'
@@ -448,6 +449,13 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       new URL(url)
     } catch {
       throw new Error('Invalid URL format')
+    }
+    
+    // SSRF protection: block private/internal network URLs in production
+    const isInternalNetworking = process.env.NODE_ENV === 'development'
+    const urlCheck = validateExternalUrl(url, isInternalNetworking)
+    if (!urlCheck.valid) {
+      throw new Error(`URL rejected: ${urlCheck.reason}`)
     }
     
     // Add to dynamic servers and persist

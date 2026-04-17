@@ -4,6 +4,7 @@ import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
+import { validateExternalUrl } from '../lib/url-validation'
 import { mtlsStore } from '../lib/mtls-store'
 import * as forge from 'node-forge'
 import * as crypto from 'crypto'
@@ -261,6 +262,14 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       } catch {
         set.status = 400
         return { error: 'Invalid URL format' }
+      }
+
+      // SSRF protection: block private/internal network URLs in production
+      const isInternalNetworking = process.env.NODE_ENV === 'development'
+      const urlCheck = validateExternalUrl(body.url, isInternalNetworking)
+      if (!urlCheck.valid) {
+        set.status = 400
+        return { error: `URL rejected: ${urlCheck.reason}` }
       }
 
       // Add the server to the store (this will test connectivity)
