@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604171955.f543cb6e] - 2026-04-17
+
+- 🔧 Chores & Improvements: Refined FHIR resource typing and dynamic portal resource handling
+  - Introduced PortalFhirResource union (IpsFhirResource | GenomicsFhirResource | Observation | DocumentReference) and updated AnyFhirResource to dynamic portal resource type.
+  - Updated FhirResource alias to DynamicFhirResource in RecordDetailModal.tsx and RecordEditModal.tsx with corresponding import changes.
+  - Ips-display-helpers.tsx now uses PortalFhirResource for AnyResource; loosened getInterpretationFlag type for observation data.
+  - Binary diffs for Genomics and IPS TGZs updated; Bun.lock hashes updated.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/437
+
+
 ## [0.0.6-alpha.202604171952.a7930959] - 2026-04-17
 
 - ✨ Features
