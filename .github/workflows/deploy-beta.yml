@@ -79,6 +79,7 @@ jobs:
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Build & push backend image
+        timeout-minutes: 20
         uses: docker/build-push-action@v7
         with:
           context: .
