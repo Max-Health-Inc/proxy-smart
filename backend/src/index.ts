@@ -11,6 +11,16 @@ import { authEventsLogger } from './lib/auth-events-logger'
 import { createApp } from './app-factory'
 import { existsSync, readFileSync } from 'fs'
 
+// Security guard: refuse to start with dev auth bypass in production
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true') {
+  console.error('FATAL: ALLOW_DEV_AUTH_BYPASS=true is set in production. This is a security risk. Refusing to start.')
+  process.exit(1)
+}
+if (process.env.NODE_ENV === 'production' && (process.env.AI_AUTH_OPTIONAL || '').toLowerCase() === 'true') {
+  console.error('FATAL: AI_AUTH_OPTIONAL=true is set in production. This is a security risk. Refusing to start.')
+  process.exit(1)
+}
+
 const app = createApp()
 
 // Export the app instance for type generation

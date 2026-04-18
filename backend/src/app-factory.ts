@@ -178,12 +178,20 @@ export function createApp() {
         })
         // Dynamic SPA fallback for all sub-apps under /apps/<name>/*
         .get('/apps/:app', async ({ params, set }) => {
+            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
+                set.status = 400
+                return { error: 'Invalid app name' }
+            }
             const index = Bun.file(`public/apps/${params.app}/index.html`)
             if (await index.exists()) return index
             set.status = 404
             return { error: 'Not Found' }
         })
         .get('/apps/:app/*', async ({ params, set }) => {
+            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
+                set.status = 400
+                return { error: 'Invalid app name' }
+            }
             const index = Bun.file(`public/apps/${params.app}/index.html`)
             if (await index.exists()) return index
             set.status = 404
@@ -194,6 +202,10 @@ export function createApp() {
         .get('/docs/', () => Bun.file('public/docs/index.html'))
         .get('/docs/*', async ({ params, set }) => {
             const path = (params as { '*': string })['*']
+            if (path.includes('..') || path.startsWith('/')) {
+                set.status = 400
+                return { error: 'Invalid path' }
+            }
             const file = Bun.file(`public/docs/${path}`)
             if (await file.exists()) return file
             // SPA fallback for clean URLs (VitePress client-side routing)

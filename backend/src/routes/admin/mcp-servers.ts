@@ -16,7 +16,7 @@ import {
   type McpServerCreateType,
   type McpServerUpdateType,
 } from '../../schemas'
-import { validateToken } from '@/lib/auth'
+import { validateToken, validateAdminToken } from '@/lib/auth'
 import { validateExternalUrl } from '@/lib/url-validation'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
@@ -368,7 +368,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const configuredServers = getConfiguredServers()
     const servers: McpServerInfoType[] = []
@@ -434,7 +434,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const { name, url, description } = body as McpServerCreateType
     
@@ -512,7 +512,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const { name } = params
     const { url, description } = body as McpServerUpdateType
@@ -593,7 +593,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const { name } = params
     

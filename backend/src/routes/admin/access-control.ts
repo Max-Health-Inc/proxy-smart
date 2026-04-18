@@ -13,7 +13,7 @@ import { accessControlPlugin, resetAccessControlPlugin } from '@/lib/access-cont
 import { detectProvider, createProvider } from '@/lib/access-control/factory'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, ConfigurationError } from '@/lib/admin-utils'
-import { validateToken } from '@/lib/auth'
+import { validateToken, validateAdminToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { config } from '@/config'
 import { ErrorResponse, PaginationQuery } from '@/schemas'
@@ -663,7 +663,10 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
 
   // ==================== Configuration ====================
 
-  .get('/config/status', async (): Promise<AccessControlConfigStatusType> => {
+  .get('/config/status', async ({ headers, set }): Promise<AccessControlConfigStatusType | any> => {
+    const token = extractBearerToken(headers)
+    if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+    await validateAdminToken(token)
     const providerType = detectProvider()
     return {
       configured: !!providerType,
@@ -687,8 +690,11 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     }
   })
 
-  .post('/config/test', async ({ body, set }): Promise<TestAccessControlConfigResponseType> => {
+  .post('/config/test', async ({ body, set, headers }): Promise<TestAccessControlConfigResponseType> => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } as any }
+      await validateAdminToken(token)
       // Temporarily set env vars to test the provider
       const originalEnv: Record<string, string | undefined> = {}
       const envKeys = ['ACCESS_CONTROL_PROVIDER', 'KISI_API_KEY', 'KISI_BASE_URL', 'UNIFI_ACCESS_HOST', 'UNIFI_ACCESS_USERNAME', 'UNIFI_ACCESS_PASSWORD']
@@ -746,8 +752,11 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     }
   })
 
-  .post('/config/configure', async ({ body, set }): Promise<SaveAccessControlConfigResponseType> => {
+  .post('/config/configure', async ({ body, set, headers }): Promise<SaveAccessControlConfigResponseType> => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } as any }
+      await validateAdminToken(token)
       // First test the connection with the provided credentials
       const originalEnv: Record<string, string | undefined> = {}
       const envKeys = ['ACCESS_CONTROL_PROVIDER', 'KISI_API_KEY', 'KISI_BASE_URL', 'UNIFI_ACCESS_HOST', 'UNIFI_ACCESS_USERNAME', 'UNIFI_ACCESS_PASSWORD']

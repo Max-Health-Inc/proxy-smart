@@ -144,14 +144,14 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         } else if (keycloakStatus === 403) {
           return { error: 'Forbidden - Insufficient permissions' }
         } else {
-          return { error: 'Keycloak error', details: error }
+          return { error: 'Keycloak error', details: error instanceof Error ? error.message : String(error) }
         }
       }
       
       // Fallback to 500 for unknown errors
       logger.admin.error('Unknown error, returning 500')
       set.status = 500
-      return { error: 'Failed to fetch healthcare users', details: error }
+      return { error: 'Failed to fetch healthcare users', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     query: PaginationQuery,
@@ -271,13 +271,13 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         } else if (keycloakStatus === 403) {
           return { error: 'Forbidden - Insufficient permissions' }
         } else {
-          return { error: 'Keycloak error', details: error }
+          return { error: 'Keycloak error', details: error instanceof Error ? error.message : String(error) }
         }
       }
       
       // For validation or other client errors
       set.status = 400
-      return { error: 'Failed to create healthcare user', details: error }
+      return { error: 'Failed to create healthcare user', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     body: CreateHealthcareUserRequest,
@@ -326,12 +326,12 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         } else if (keycloakStatus === 404) {
           return { error: 'Healthcare user not found' }
         } else {
-          return { error: 'Keycloak error', details: error }
+          return { error: 'Keycloak error', details: error instanceof Error ? error.message : String(error) }
         }
       }
       
       set.status = 500
-      return { error: 'Failed to fetch healthcare user', details: error }
+      return { error: 'Failed to fetch healthcare user', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     params: UserIdParam,
@@ -485,12 +485,12 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         } else if (keycloakStatus === 404) {
           return { error: 'Healthcare user not found' }
         } else {
-          return { error: 'Keycloak error', details: error }
+          return { error: 'Keycloak error', details: error instanceof Error ? error.message : String(error) }
         }
       }
       
       set.status = 400
-      return { error: 'Failed to update healthcare user', details: error }
+      return { error: 'Failed to update healthcare user', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     params: UserIdParam,
@@ -536,12 +536,12 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         } else if (keycloakStatus === 404) {
           return { error: 'Healthcare user not found or could not be deleted' }
         } else {
-          return { error: 'Keycloak error', details: error }
+          return { error: 'Keycloak error', details: error instanceof Error ? error.message : String(error) }
         }
       }
       
       set.status = 404
-      return { error: 'Healthcare user not found or could not be deleted', details: error }
+      return { error: 'Healthcare user not found or could not be deleted', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     params: UserIdParam,

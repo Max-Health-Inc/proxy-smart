@@ -15,7 +15,7 @@
 
 services:
   caddy:
-    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    image: lucaslorentz/caddy-docker-proxy:2.9-alpine
     container_name: caddy-proxy
     restart: unless-stopped
     ports:
@@ -24,6 +24,13 @@ services:
       - "443:443/udp"
     environment:
       - CADDY_INGRESS_NETWORKS=caddy
+    labels:
+      caddy.header.Strict-Transport-Security: '"max-age=63072000; includeSubDomains; preload"'
+      caddy.header.X-Content-Type-Options: '"nosniff"'
+      caddy.header.X-Frame-Options: '"DENY"'
+      caddy.header.Referrer-Policy: '"strict-origin-when-cross-origin"'
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=()"'
+      caddy.header.-Server: ""
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - caddy_data:/data

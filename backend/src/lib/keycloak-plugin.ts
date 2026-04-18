@@ -42,16 +42,14 @@ export async function createAdminClient(userToken: string) {
       const clientRoles = tokenPayload.resource_access?.['admin-ui']?.roles || []
       const realmManagementRoles = tokenPayload.resource_access?.['realm-management']?.roles || []
       
+      // Exact role matching — do NOT use .includes() which allows substring matches
+      const ADMIN_REALM_ROLES = new Set(['admin', 'realm-admin', 'manage-users', 'manage-realm', 'realm-management'])
+      const ADMIN_CLIENT_ROLES = new Set(['admin', 'manage-users', 'manage-clients', 'manage-realm'])
+
       const hasAdminRole = 
-        realmRoles.some((role: string) => 
-          role.includes('admin') || role.includes('manage') || role.includes('realm-management')
-        ) ||
-        clientRoles.some((role: string) => 
-          role.includes('admin') || role.includes('manage')
-        ) ||
-        realmManagementRoles.some((role: string) => 
-          role.includes('admin') || role.includes('manage')
-        )
+        realmRoles.some((role: string) => ADMIN_REALM_ROLES.has(role)) ||
+        clientRoles.some((role: string) => ADMIN_CLIENT_ROLES.has(role)) ||
+        realmManagementRoles.length > 0
       
       // Check if user has admin access to manage users
       // Only bypass in development when explicitly opted in

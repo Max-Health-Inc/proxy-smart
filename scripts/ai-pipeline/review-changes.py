@@ -232,7 +232,7 @@ Return the SAME JSON structure but with your improvements:
             
             for attempt in range(max_retries):
                 try:
-                    print(f"🔄 Attempt {attempt + 1}/{max_retries} - Sending request to OpenAI...", file=sys.stderr)
+                    print(f"🔄 Attempt {attempt + 1}/{max_retries} - Sending request to AI API...", file=sys.stderr)
                     response = requests.post(self.base_url, json=payload, headers=headers, timeout=timeout)
                     print(f"🌐 HTTP Status: {response.status_code}", file=sys.stderr)
                     

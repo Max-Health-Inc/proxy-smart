@@ -150,6 +150,23 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
         return { error: 'Authorization header required' }
       }
 
+      // Validate regex patterns before saving — reject dangerous patterns
+      if (body.allowedRedirectUriPatterns) {
+        for (const pattern of body.allowedRedirectUriPatterns) {
+          try {
+            new RegExp(pattern)
+          } catch {
+            set.status = 400
+            return { error: `Invalid regex pattern: ${pattern}` }
+          }
+          // Reject patterns with catastrophic backtracking indicators
+          if (/(\.\*){3,}|(\([^)]*\+\))\+|(\([^)]*\*\))\+|(\([^)]*\+\))\*/.test(pattern)) {
+            set.status = 400
+            return { error: `Potentially unsafe regex pattern rejected: ${pattern}` }
+          }
+        }
+      }
+
       const admin = await getAdmin(token)
       await saveClientRegistrationSettings(admin, body)
       

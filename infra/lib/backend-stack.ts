@@ -229,7 +229,7 @@ export class BackendStack extends cdk.Stack {
         },
         
         circuitBreaker: { rollback: true },
-        enableExecuteCommand: true,
+        enableExecuteCommand: this.node.tryGetContext('enableEcsExec') === 'true',
         minHealthyPercent: 100,
       }
     );

@@ -165,8 +165,8 @@ export class KeycloakStack extends cdk.Stack {
         // Circuit breaker for auto-rollback
         circuitBreaker: { rollback: true },
         
-        // Enable ECS Exec for debugging
-        enableExecuteCommand: true,
+        // Enable ECS Exec for debugging (opt-in via context flag)
+        enableExecuteCommand: this.node.tryGetContext('enableEcsExec') === 'true',
         
         minHealthyPercent: 100,
       }

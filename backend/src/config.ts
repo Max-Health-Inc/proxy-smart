@@ -280,8 +280,15 @@ export const config = {
       return process.env.DICOMWEB_QIDO_ROOT || this.baseUrl // QIDO-RS root, defaults to baseUrl
     },
     // Optional auth for upstream PACS (e.g. Basic auth for Orthanc)
+    // Supports explicit DICOMWEB_UPSTREAM_AUTH header, or auto-builds from DICOMWEB_USERNAME/PASSWORD
     get upstreamAuth() {
-      return process.env.DICOMWEB_UPSTREAM_AUTH || null // e.g. "Basic dGVzdDp0ZXN0"
+      if (process.env.DICOMWEB_UPSTREAM_AUTH) return process.env.DICOMWEB_UPSTREAM_AUTH
+      const username = process.env.DICOMWEB_USERNAME
+      const password = process.env.DICOMWEB_PASSWORD
+      if (username && password) {
+        return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`
+      }
+      return null
     },
     get timeoutMs() {
       return Number.parseInt(process.env.DICOMWEB_TIMEOUT_MS || '30000', 10)
