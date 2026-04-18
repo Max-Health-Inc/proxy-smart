@@ -9,7 +9,7 @@
  * 2. **Role-Based Data Isolation** — Practitioners see only their assigned patients;
  *    patients see only their own data (via `fhirUser` claim)
  *
- * All features default to `disabled` and don't affect existing consent-based access control.
+ * All features default to `enforce`. Set SCOPE_ENFORCEMENT_MODE / ROLE_BASED_FILTERING_MODE to `disabled` or `audit-only` to change.
  */
 
 import { config } from '../config'

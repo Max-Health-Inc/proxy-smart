@@ -69,7 +69,9 @@ function resetEnv() {
 describe('SMART Scope Enforcement', () => {
   afterEach(resetEnv)
 
-  describe('when disabled (default)', () => {
+  describe('when disabled', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'disabled' }))
+
     it('should allow any request regardless of scopes', () => {
       const ctx = makeCtx({ tokenPayload: { scope: '' } })
       const result = enforceScopeAccess(ctx)
@@ -627,7 +629,9 @@ describe('SMART Scope Enforcement', () => {
 describe('Role-Based Filtering', () => {
   afterEach(resetEnv)
 
-  describe('when disabled (default)', () => {
+  describe('when disabled', () => {
+    beforeEach(() => setEnv({ ROLE_BASED_FILTERING_MODE: 'disabled' }))
+
     it('should pass through without modification', async () => {
       const ctx = makeCtx()
       const result = await enforceRoleBasedFiltering(ctx, '?_count=10')
