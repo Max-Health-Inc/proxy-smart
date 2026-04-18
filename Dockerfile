@@ -131,8 +131,8 @@ COPY --from=backend-build /app/node_modules ./node_modules
 COPY prompts/ ./prompts/
 
 # Create non-root user for security
-RUN groupadd --system --gid 1001 app && \
-    useradd --system --uid 1001 --gid app --no-create-home app && \
+RUN groupadd --gid 1001 app && \
+    useradd --uid 1001 --gid app --no-create-home --shell /bin/false app && \
     chown -R app:app /app
 USER app
 
