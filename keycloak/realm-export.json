@@ -631,7 +631,7 @@
       "description": "Service account for backend administrative operations including dynamic client registration",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET:-CHANGE_ME_IN_PRODUCTION}",
+      "secret": "admin-service-secret",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,
