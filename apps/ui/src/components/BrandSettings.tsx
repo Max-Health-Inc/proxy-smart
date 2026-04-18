@@ -25,6 +25,7 @@ import {
   Image,
   MapPin,
   ExternalLink,
+  Paintbrush,
 } from 'lucide-react';
 import { config } from '@/config';
 import { adminApiCall } from '@/lib/admin-api';
@@ -51,6 +52,7 @@ interface BrandConfig {
   addressPostalCode: string | null;
   addressCountry: string | null;
   identifier: string;
+  loginTheme: string | null;
 }
 
 const DEFAULT_BRAND: BrandConfig = {
@@ -70,6 +72,7 @@ const DEFAULT_BRAND: BrandConfig = {
   addressPostalCode: null,
   addressCountry: null,
   identifier: '',
+  loginTheme: null,
 };
 
 const CATEGORY_OPTIONS = UserAccessCategoryValueSetConcepts.map(c => ({
@@ -332,6 +335,30 @@ export function BrandSettings() {
                 onChange={(e) => updateField('portalLogoLicenseUrl', e.target.value || null)}
                 placeholder="https://example.com/portal-logo-license"
               />
+            </div>
+
+            {/* Login Theme */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Paintbrush className="w-3.5 h-3.5" />
+                {t('Keycloak Login Theme')}
+              </Label>
+              <Select
+                value={brand.loginTheme || '__default__'}
+                onValueChange={(value) => updateField('loginTheme', value === '__default__' ? null : value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__default__">{t('— Keycloak Default —')}</SelectItem>
+                  <SelectItem value="keycloak">keycloak</SelectItem>
+                  <SelectItem value="keycloak.v2">keycloak.v2</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {t('Controls the theme used on the Keycloak login page. Requires the theme to be installed on the server.')}
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -65,7 +65,8 @@ export function extractPerformer(r: FhirResource): string | undefined {
   return ref.includes("/") && !ref.includes(" ") ? ref.replace("/", " #") : ref
 }
 
-function displayCodeableConcept(cc: { coding?: { display?: string; code?: string }[]; text?: string }): string | undefined {
+function displayCodeableConcept(cc: { coding?: { display?: string; code?: string }[]; text?: string } | null | undefined): string | undefined {
+  if (!cc) return undefined
   return cc.coding?.[0]?.display ?? cc.text ?? cc.coding?.[0]?.code
 }
 

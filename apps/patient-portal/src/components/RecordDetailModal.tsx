@@ -83,7 +83,7 @@ export function RecordDetailModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg max-h-[90dvh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
               {title}
@@ -127,7 +127,7 @@ export function RecordDetailModal({
             )}
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-2 overflow-y-auto">
             {fields.map(f => f.section ? (
               <div key={f.key} className="border-t pt-3 mt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{f.label}</p>

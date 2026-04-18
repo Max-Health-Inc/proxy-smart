@@ -329,8 +329,8 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
               {detailFields.length > 0 ? (
                 <div className="grid gap-2">
                   {detailFields.map((f, i) => (
-                    <div key={i} className="flex items-baseline gap-2 text-xs">
-                      <span className="font-medium text-muted-foreground whitespace-nowrap w-32 shrink-0">{f.label}:</span>
+                    <div key={i} className="flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-2 text-xs">
+                      <span className="font-medium text-muted-foreground sm:w-32 sm:shrink-0">{f.label}:</span>
                       <span className="text-foreground break-all">{f.value}</span>
                     </div>
                   ))}

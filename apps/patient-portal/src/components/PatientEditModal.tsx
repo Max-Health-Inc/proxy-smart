@@ -227,7 +227,7 @@ export function PatientEditModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="sm:max-w-xl max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("patientEdit.title")}</DialogTitle>
           <DialogDescription>
@@ -248,7 +248,7 @@ export function PatientEditModal({
               <User className="size-3.5" />
               {t("patientEdit.genderAndIdentity")}
             </legend>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="patient-gender" className="text-xs text-muted-foreground">{t("patientEdit.adminGender")}</Label>
                 <Input
@@ -315,7 +315,7 @@ export function PatientEditModal({
               value={address.line}
               onChange={(e) => setAddress((a) => ({ ...a, line: e.target.value }))}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 placeholder={t("patientEdit.city")}
                 value={address.city}
@@ -327,7 +327,7 @@ export function PatientEditModal({
                 onChange={(e) => setAddress((a) => ({ ...a, state: e.target.value }))}
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
                 placeholder={t("patientEdit.postalCode")}
                 value={address.postalCode}

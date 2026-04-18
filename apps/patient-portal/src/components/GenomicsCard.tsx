@@ -216,9 +216,9 @@ export function GenomicsCard({
                 </h4>
                 <ul className="space-y-1.5">
                   {reports.map((r, i) => (
-                    <li key={r.id || i} className="text-sm flex justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-medium">
+                    <li key={r.id || i} className="text-sm flex justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-medium truncate">
                           {r.code?.coding?.[0]?.display || t("genomics.genomicReport")}
                         </span>
                         {r.status && (r.status as DiagnosticReportStatusUvIpsCode) !== ("final" satisfies DiagnosticReportStatusUvIpsCode) && (
