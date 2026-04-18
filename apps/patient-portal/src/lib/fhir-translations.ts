@@ -15,8 +15,8 @@ import { useCallback } from "react"
 import { getDocSectionCodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DocSectionCodes"
 import { getDocumentClasscodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DocumentClasscodes"
 import { getFHIRDocumentTypeCodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-FHIRDocumentTypeCodes"
-import { getObservationCodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationCodes"
-import { getReportCodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ReportCodes"
+import { getLOINCCodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-LOINCCodes"
+import { getLOINCDiagnosticReportCodesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-LOINCDiagnosticReportCodes"
 import { getDiagnosticServiceSectionsDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-DiagnosticServiceSections"
 import { getLanguagesDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-Languages"
 import { getPatientContactRelationshipDisplay } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-PatientContactRelationship"
@@ -28,8 +28,8 @@ const LOINC_LOOKUPS: DisplayLookup[] = [
   getDocSectionCodesDisplay,
   getDocumentClasscodesDisplay,
   getFHIRDocumentTypeCodesDisplay,
-  getObservationCodesDisplay,
-  getReportCodesDisplay,
+  getLOINCCodesDisplay,
+  getLOINCDiagnosticReportCodesDisplay,
 ]
 
 const SYSTEM_LOOKUPS: Record<string, DisplayLookup[]> = {
