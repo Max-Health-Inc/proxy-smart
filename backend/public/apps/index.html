@@ -147,6 +147,33 @@
     /* ── Footer ──────────────────────────────────── */
     footer { padding: .5rem 1.25rem; text-align: center; font-size: .7rem; color: var(--muted); }
 
+    /* ── QR button & overlay ────────────────────── */
+    .qr-btn {
+      border: 1px solid var(--border); background: #fff; border-radius: 6px;
+      padding: 5px 8px; font-size: .7rem; color: var(--muted); display: flex;
+      align-items: center; gap: 4px; transition: all .15s; white-space: nowrap;
+    }
+    .qr-btn:hover { border-color: #ccc; color: var(--fg); }
+    .qr-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+    .qr-overlay {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.45); align-items: center; justify-content: center;
+    }
+    .qr-overlay.open { display: flex; }
+    .qr-card {
+      background: #fff; border-radius: 12px; padding: 1.5rem; text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,.15); max-width: 320px; width: 90%;
+    }
+    .qr-card h3 { font-size: .9rem; font-weight: 600; margin-bottom: .25rem; }
+    .qr-card p { font-size: .7rem; color: var(--muted); margin-bottom: 1rem; word-break: break-all; }
+    .qr-card canvas { display: block; margin: 0 auto; }
+    .qr-card .qr-close {
+      margin-top: 1rem; border: 1px solid var(--border); background: #fff;
+      border-radius: 6px; padding: 6px 20px; font-size: .75rem; color: var(--muted);
+      transition: all .15s;
+    }
+    .qr-card .qr-close:hover { border-color: #ccc; color: var(--fg); }
+
     @media (max-width: 480px) {
       main { padding: 1.25rem 1rem 2rem; }
       .store-frame { padding: 1rem; }
@@ -171,7 +198,13 @@
     <div class="toolbar">
       <div>
         <h1>Applications</h1>
-        <p class="subtitle">Apps available on this platform</p>
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <p class="subtitle">Apps available on this platform</p>
+          <button class="qr-btn" id="qrBtn" title="Show QR code">
+            <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14.01"/><line x1="21" y1="21" x2="21" y2="21.01"/><line x1="17" y1="21" x2="17" y2="21.01"/><line x1="21" y1="17" x2="21" y2="17.01"/></svg>
+            QR
+          </button>
+        </div>
       </div>
       <div class="size-toggle" id="sizeToggle">
         <button data-size="sm">S</button>
@@ -190,6 +223,19 @@
   </main>
 
   <footer>&copy; <script>document.write(new Date().getFullYear())</script> Max Health Inc.</footer>
+
+  <!-- QR overlay -->
+  <div class="qr-overlay" id="qrOverlay">
+    <div class="qr-card">
+      <h3>Scan to open</h3>
+      <p id="qrUrl"></p>
+      <canvas id="qrCanvas"></canvas>
+      <button class="qr-close" id="qrClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Lightweight QR code generator (MIT, ~3KB) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
 
   <script>
     const ICONS = {
@@ -284,6 +330,22 @@
       .catch(() => {
         g.innerHTML = '<div class="empty" style="grid-column:1/-1;color:#ef4444">Failed to load apps.</div>';
       });
+
+    /* ── QR code toggle ──────────────────────────── */
+    const qrOverlay = document.getElementById('qrOverlay');
+    const qrCanvas  = document.getElementById('qrCanvas');
+    const qrUrl     = document.getElementById('qrUrl');
+
+    document.getElementById('qrBtn').addEventListener('click', () => {
+      const url = window.location.href;
+      qrUrl.textContent = url;
+      if (typeof QRCode !== 'undefined') {
+        QRCode.toCanvas(qrCanvas, url, { width: 200, margin: 2, color: { dark: '#111', light: '#fff' } });
+      }
+      qrOverlay.classList.add('open');
+    });
+    document.getElementById('qrClose').addEventListener('click', () => qrOverlay.classList.remove('open'));
+    qrOverlay.addEventListener('click', e => { if (e.target === qrOverlay) qrOverlay.classList.remove('open'); });
   </script>
 </body>
 </html>

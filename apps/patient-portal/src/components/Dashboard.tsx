@@ -58,11 +58,12 @@ import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
 import { PrescriptionsCard, DevicesCard } from "@/components/PrescriptionsDevicesCards"
 import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
+import { ShareQRDialog } from "@/components/ShareQRDialog"
 import { checkPacsStatus } from "@/lib/dicomweb"
 import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
   Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle, Cigarette,
-  Wine, Scissors, Flag, Baby, Upload, FileImage, MessageSquare, Eye, EyeOff,
+  Wine, Scissors, Flag, Baby, Upload, FileImage, MessageSquare, Eye, EyeOff, QrCode,
 } from "lucide-react"
 import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
@@ -76,6 +77,7 @@ export function Dashboard() {
   const [refreshKey, setRefreshKey] = useState(0)
   const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null)
   const [showUnverified, setShowUnverified] = useState(true)
+  const [showQrDialog, setShowQrDialog] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailTitle, setDetailTitle] = useState(""); const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
 
@@ -220,15 +222,27 @@ export function Dashboard() {
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Button
-            variant={showUnverified ? "outline" : "secondary"}
-            size="sm"
-            onClick={() => setShowUnverified(v => !v)}
-            className="gap-1.5"
-          >
-            {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-            <span className="hidden sm:inline">{showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={showUnverified ? "outline" : "secondary"}
+              size="sm"
+              onClick={() => setShowUnverified(v => !v)}
+              className="gap-1.5"
+            >
+              {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+              <span className="hidden sm:inline">{showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setShowQrDialog(true)}
+              title={t("shareQr.title")}
+            >
+              <QrCode className="size-4" />
+              <span className="hidden sm:inline">{t("shareQr.share")}</span>
+            </Button>
+          </div>
 
           <div className="flex flex-wrap gap-2">
             <Button
@@ -674,6 +688,12 @@ export function Dashboard() {
         documents={documents}
         onResourceUpdated={refreshData}
         onResourceDeleted={refreshData}
+      />
+
+      <ShareQRDialog
+        open={showQrDialog}
+        onOpenChange={setShowQrDialog}
+        verifiedOnly={!showUnverified}
       />
     </div>
   )
