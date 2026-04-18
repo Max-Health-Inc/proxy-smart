@@ -11,15 +11,8 @@ import {
   User,
   Lock,
 } from 'lucide-react';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 import type {
   TestAccessControlConfigResponse,
 } from '../../lib/api-client';
@@ -204,7 +197,7 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
             <Label htmlFor="provider" className="text-sm font-semibold text-foreground">
               {t('Provider Type')}
             </Label>
-            <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderType); setTestResult(null); setError(null); }}>
+            <Select value={provider} onValueChange={(v: string) => { setProvider(v as ProviderType); setTestResult(null); setError(null); }}>
               <SelectTrigger id="provider" className="w-full">
                 <SelectValue />
               </SelectTrigger>

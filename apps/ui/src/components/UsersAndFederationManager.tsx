@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, FolderSync } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { HealthcareUsersManager } from './HealthcareUsersManager/HealthcareUsersManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 

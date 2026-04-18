@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe, Plus, RefreshCw, Sparkles } from 'lucide-react';
 import { McpEndpointSettings } from '../McpEndpointSettings';
 import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import type {
   GetAdminAiToolsSkillsRegistryBrowse200ResponseSkillsInner,
   SmartApp,

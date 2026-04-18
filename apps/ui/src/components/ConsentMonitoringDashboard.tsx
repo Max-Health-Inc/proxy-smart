@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Button, Input, CHART_COLORS } from '@proxy-smart/shared-ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Badge, Button, Input, CHART_COLORS, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { StatCard } from './ui/stat-card';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';

@@ -9,7 +9,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { Badge, Button, Spinner } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import type {
   AccessHealthResponse,
 } from '../../lib/api-client';

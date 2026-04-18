@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import {
     ExternalLink,
     RefreshCw,
@@ -274,7 +273,7 @@ export function ActionButton({ action, onComplete, compact = false, formOpen, on
                                 {field.type === 'select' && field.options ? (
                                     <Select
                                         value={formData[field.name] || undefined}
-                                        onValueChange={(value) => setFormData({ ...formData, [field.name]: value })}
+                                        onValueChange={(value: string) => setFormData({ ...formData, [field.name]: value })}
                                         required={field.required}
                                     >
                                         <SelectTrigger className="text-sm">

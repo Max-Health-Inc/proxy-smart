@@ -1,6 +1,4 @@
-import { Badge, Input } from '@proxy-smart/shared-ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import {
   Activity,
   CheckCircle,

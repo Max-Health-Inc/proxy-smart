@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
-import { Badge, Button, CHART_COLORS } from '@proxy-smart/shared-ui';
+import { Badge, Button, CHART_COLORS, Tabs, TabsContent, TabsList, TabsTrigger, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { SearchInput } from '@/components/ui/search-input';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
 import { RealTimeBanner } from './ui/realtime-banner';

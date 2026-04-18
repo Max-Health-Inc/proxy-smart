@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';
 import { ExportMenu } from '../ui/export-menu';
