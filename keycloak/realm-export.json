@@ -1031,7 +1031,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "${TEST_USER_PASSWORD:-DevT3st!Pass}",
+          "value": "DevT3st!Pass",
           "temporary": false
         }
       ],
@@ -1050,7 +1050,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "${ADMIN_PASSWORD:-DevAdm!n2024}",
+          "value": "DevAdm!n2024",
           "temporary": false
         }
       ],
@@ -1084,7 +1084,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "${DOCTOR_PASSWORD:-DevD0c!2024}",
+          "value": "DevD0c!2024",
           "temporary": false
         }
       ],
