@@ -1,18 +1,17 @@
-import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
+  Badge,
+  Button,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@proxy-smart/shared-ui';
 import { MoreHorizontal, Edit, Trash2, Users, Power, Globe } from 'lucide-react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';

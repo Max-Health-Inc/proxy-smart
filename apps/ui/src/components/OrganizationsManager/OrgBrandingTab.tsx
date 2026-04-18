@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Input, Label, Badge } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Save, RotateCcw, Loader2, Image, Globe, MapPin } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { useAuth } from '@/stores/authStore';

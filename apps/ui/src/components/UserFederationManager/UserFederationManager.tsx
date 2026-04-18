@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { StatCard } from '@/components/ui/stat-card';

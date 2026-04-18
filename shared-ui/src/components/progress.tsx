@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Progress as ProgressPrimitive } from "radix-ui"
 
-import { cn } from "@proxy-smart/shared-ui"
+import { cn } from "../lib/utils"
 
 function Progress({
   className,

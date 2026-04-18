@@ -1,4 +1,14 @@
-import { Badge, Button, Input } from '@proxy-smart/shared-ui';
+import {
+  Badge,
+  Button,
+  Input,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@proxy-smart/shared-ui';
 import {
   Dialog,
   DialogContent,
@@ -6,14 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Users, UserPlus, Trash2, Search, Loader2, X } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { useState, useEffect, useCallback, useRef } from 'react';

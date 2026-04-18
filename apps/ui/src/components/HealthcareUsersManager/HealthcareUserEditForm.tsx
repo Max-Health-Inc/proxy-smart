@@ -11,15 +11,13 @@ import {
   DialogFooter,
   UserProfileFormFields,
   type UserProfileData,
-} from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@proxy-smart/shared-ui';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, Server, Database, Trash2 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';

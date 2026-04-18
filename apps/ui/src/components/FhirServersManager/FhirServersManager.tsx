@@ -5,8 +5,7 @@ import {
   Plus,
   Info
 } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';

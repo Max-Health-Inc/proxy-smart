@@ -13,8 +13,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
 } from "@proxy-smart/shared-ui"
-import { Separator } from "@/components/ui/separator"
 import { formatHumanName } from "@/lib/fhir-client"
 import { type SelectedService } from "@/components/ServiceSelector"
 import { GENERIC_PA_ITEMS } from "@/lib/generic-questionnaire"
