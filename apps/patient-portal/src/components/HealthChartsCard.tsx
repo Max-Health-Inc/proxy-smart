@@ -135,7 +135,7 @@ export function HealthChartsCard({ vitals, labs }: HealthChartsCardProps) {
           </CardTitle>
           {availableMetrics.length > 0 && (
             <Select value={activeMetricKey} onValueChange={setSelectedMetric}>
-              <SelectTrigger className="w-52 h-8 text-sm">
+              <SelectTrigger className="w-40 sm:w-52 h-8 text-sm">
                 <SelectValue placeholder={t("healthCharts.chooseMetric")} />
               </SelectTrigger>
               <SelectContent>

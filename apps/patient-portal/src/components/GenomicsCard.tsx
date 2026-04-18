@@ -131,7 +131,7 @@ function VariantRow({ variant }: { variant: Variant }) {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <p className="text-xs">
+    <p className="text-xs truncate">
       <span className="text-muted-foreground">{label}: </span>
       <span className="font-mono">{value}</span>
     </p>

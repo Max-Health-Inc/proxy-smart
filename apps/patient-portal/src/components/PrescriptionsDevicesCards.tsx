@@ -28,18 +28,20 @@ export function PrescriptionsCard({ prescriptions, onOpenDetail }: Prescriptions
         ) : (
           <ul className="space-y-2">
             {prescriptions.map((rx, i) => (
-              <li key={rx.id || i} className="text-sm">
-                <RecordName resource={rx} onOpen={onOpenDetail}>
-                  {rx.medicationCodeableConcept?.coding?.[0]?.display ||
-                    rx.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
-                </RecordName>
+              <li key={rx.id || i} className="text-sm min-w-0">
+                <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                  <RecordName resource={rx} onOpen={onOpenDetail}>
+                    {rx.medicationCodeableConcept?.coding?.[0]?.display ||
+                      rx.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
+                  </RecordName>
+                  {rx.authoredOn && (
+                    <span className="text-muted-foreground text-xs">
+                      {format(new Date(rx.authoredOn), "MMM d, yyyy")}
+                    </span>
+                  )}
+                </div>
                 {rx.dosageInstruction?.[0]?.text && (
-                  <span className="text-muted-foreground ml-2">— {rx.dosageInstruction[0].text}</span>
-                )}
-                {rx.authoredOn && (
-                  <span className="text-muted-foreground ml-2 text-xs">
-                    {format(new Date(rx.authoredOn), "MMM d, yyyy")}
-                  </span>
+                  <p className="text-muted-foreground text-xs truncate">— {rx.dosageInstruction[0].text}</p>
                 )}
               </li>
             ))}
@@ -73,17 +75,17 @@ export function DevicesCard({ devices, onOpenDetail }: DevicesCardProps) {
         ) : (
           <ul className="space-y-2">
             {devices.map((du, i) => (
-              <li key={du.id || i} className="text-sm">
+              <li key={du.id || i} className="text-sm flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
                 <RecordName resource={du} onOpen={onOpenDetail}>
                   {du.device?.display || du.device?.reference || t("dashboard.unknownDevice")}
                 </RecordName>
                 {du.timingPeriod?.start && (
-                  <span className="text-muted-foreground ml-2">
+                  <span className="text-muted-foreground text-xs">
                     {t("common.since", { date: format(new Date(du.timingPeriod.start), "MMM d, yyyy") })}
                   </span>
                 )}
                 {du.status && (
-                  <Badge variant={getDeviceStatusStyle(du.status as DeviceStatementStatusCode)} className="ml-2 text-xs">{du.status}</Badge>
+                  <Badge variant={getDeviceStatusStyle(du.status as DeviceStatementStatusCode)} className="text-xs">{du.status}</Badge>
                 )}
               </li>
             ))}
