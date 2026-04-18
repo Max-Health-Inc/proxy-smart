@@ -161,7 +161,7 @@ jobs:
       run: |
         echo "🧪 Testing frontend..."
         cd apps/ui
-        bun run test 2>&1 | tee ../../frontend-test.log
+        bun run test --run 2>&1 | tee ../../frontend-test.log
 
     - name: 🤖 Copilot Self-Heal (Frontend Tests)
       id: frontend-test-heal
@@ -173,7 +173,7 @@ jobs:
         component: frontend
         app-id: ${{ secrets.APP_ID }}
         app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
-        retry-command: 'cd apps/ui && bun run test'
+        retry-command: 'cd apps/ui && bun run test --run'
 
     - name: Fail if Frontend Tests Unresolved
       if: ${{ (inputs.run_tests == true || inputs.run_tests == null) && steps.frontend-test.outcome == 'failure' && steps.frontend-test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}
