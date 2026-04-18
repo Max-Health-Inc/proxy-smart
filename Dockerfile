@@ -87,6 +87,13 @@ COPY apps/patient-portal/ ./apps/patient-portal/
 WORKDIR /app/apps/patient-portal
 RUN bun run build
 
+# SHL Viewer build stage
+FROM build-deps AS shl-viewer-build
+COPY shared-ui/ ./shared-ui/
+COPY apps/shl-viewer/ ./apps/shl-viewer/
+WORKDIR /app/apps/shl-viewer
+RUN bun run build
+
 # Docs build stage (VitePress)
 FROM build-deps AS docs-build
 COPY docs/ ./docs/
@@ -118,6 +125,7 @@ COPY --from=ui-build /app/apps/ui/dist ./backend/public/webapp
 COPY --from=consent-app-build /app/apps/consent-app/dist ./backend/public/apps/consent
 COPY --from=dtr-app-build /app/apps/dtr-app/dist ./backend/public/apps/dtr
 COPY --from=patient-portal-build /app/apps/patient-portal/dist ./backend/public/apps/patient-portal
+COPY --from=shl-viewer-build /app/apps/shl-viewer/dist ./backend/public/apps/shl-viewer
 
 # Verify no localhost URLs leaked into production bundles
 RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \

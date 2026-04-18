@@ -1,95 +1,82 @@
 /**
- * SMART Health Link client — parses SHL payloads, fetches manifests, and decrypts them.
- * Uses Web Crypto API for AES-256-GCM decryption (browser-native, no dependencies).
+ * SMART Health Link client — thin wrapper around kill-the-clipboard.
+ *
+ * KTC handles: SHL URI parsing, JWE decryption (alg:dir, enc:A256GCM).
+ * We handle:  application/smart-api-access content type (not yet in KTC).
+ *
+ * The flow: parse SHL URI → POST manifest endpoint → decrypt JWE → extract token
+ * Then the caller passes the token to the BabelFHIR-TS FhirClient.
  */
+
+import { SHL, decryptSHLFile } from "kill-the-clipboard"
+import type { SHLPayloadV1 } from "kill-the-clipboard"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-export interface ShlPayload {
-  url: string
-  key: string
-  exp: number
-  flag?: string
-  label?: string
-  /** 1 = verified only, 0 = all */
-  v?: number
-}
-
-export interface ShlManifestFile {
-  contentType: string
-  embedded?: string
-}
-
-export interface DecryptedAccess {
+/** Decrypted SMART API Access token response (per SHL spec §3.2) */
+export interface SmartApiAccess {
   access_token: string
   token_type: string
   expires_in: number
   scope: string
   patient: string
-  fhirBaseUrl: string
+  /** FHIR base URL to use with the token */
+  aud: string
 }
 
+/** SHL manifest file descriptor (embedded or location) */
+interface ManifestFile {
+  contentType: string
+  embedded?: string
+  location?: string
+}
+
+/** SHL manifest response from the server */
+interface SHLManifest {
+  files: ManifestFile[]
+}
+
+/** Resolved SHL — ready to hand off to FhirClient */
 export interface ShlResult {
-  access: DecryptedAccess
+  access: SmartApiAccess
   label?: string
   verifiedOnly: boolean
   expiresAt: Date
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Decode base64url to Uint8Array */
-function b64urlDecode(s: string): Uint8Array {
-  const padded = s.replace(/-/g, "+").replace(/_/g, "/")
-  const raw = atob(padded.padEnd(padded.length + (4 - (padded.length % 4)) % 4, "="))
-  return Uint8Array.from(raw, c => c.charCodeAt(0))
-}
-
-/** AES-256-GCM decrypt using Web Crypto */
-async function aesDecrypt(
-  ciphertext: string,
-  iv: string,
-  authTag: string,
-  keyBase64url: string,
-): Promise<string> {
-  const keyBytes = b64urlDecode(keyBase64url)
-  const ivBytes = b64urlDecode(iv)
-  const ctBytes = b64urlDecode(ciphertext)
-  const tagBytes = b64urlDecode(authTag)
-
-  // GCM expects ciphertext + tag concatenated
-  const combined = new Uint8Array(ctBytes.length + tagBytes.length)
-  combined.set(ctBytes, 0)
-  combined.set(tagBytes, ctBytes.length)
-
-  const cryptoKey = await crypto.subtle.importKey("raw", keyBytes.buffer as ArrayBuffer, { name: "AES-GCM" }, false, ["decrypt"])
-  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: ivBytes.buffer as ArrayBuffer }, cryptoKey, combined.buffer as ArrayBuffer)
-  return new TextDecoder().decode(decrypted)
-}
-
 // ── Public API ───────────────────────────────────────────────────────────────
 
-/** Parse a base64url-encoded SHL payload string */
-export function parseShlPayload(encoded: string): ShlPayload {
-  const json = new TextDecoder().decode(b64urlDecode(encoded))
-  return JSON.parse(json) as ShlPayload
+/**
+ * Parse a SHL from the URL hash.
+ * Supports both formats:
+ *   - Full shlink URI: shlink:/eyJ...
+ *   - Raw base64url payload: eyJ...
+ */
+export function parseShl(hash: string): { shl: SHL; payload: SHLPayloadV1 } {
+  // If it's a full shlink URI, parse directly
+  const uri = hash.startsWith("shlink:/") ? hash : `shlink:/${hash}`
+  const shl = SHL.parse(uri)
+  return { shl, payload: shl.payload }
 }
 
-/** Check if an SHL payload has expired */
-export function isShlExpired(payload: ShlPayload): boolean {
-  return Date.now() > payload.exp * 1000
+/** Check if an SHL has expired */
+export function isShlExpired(shl: SHL): boolean {
+  if (!shl.expirationDate) return false
+  return Date.now() > shl.expirationDate.getTime()
 }
 
 /**
- * Fetch the manifest from the SHL server and decrypt it.
- * Returns the FHIR access credentials and metadata.
+ * Resolve an SHL: fetch manifest, decrypt JWE, return token credentials.
+ *
+ * We do the manifest fetch ourselves (rather than using SHLViewer.resolveSHL)
+ * because SHLViewer doesn't support application/smart-api-access yet.
  */
 export async function resolveShl(
-  payload: ShlPayload,
+  shl: SHL,
   passcode?: string,
 ): Promise<ShlResult> {
-  // Fetch manifest
-  const resp = await fetch(payload.url, {
+  // POST to manifest URL per SHL spec
+  const resp = await fetch(shl.url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -103,26 +90,35 @@ export async function resolveShl(
   if (resp.status === 410) throw new Error("Share link has expired")
   if (!resp.ok) throw new Error(`Failed to fetch manifest (${resp.status})`)
 
-  const manifest: { files: ShlManifestFile[] } = await resp.json()
-  const file = manifest.files.find(f => f.contentType === "application/smart-api-access")
-  if (!file?.embedded) throw new Error("No access credentials in manifest")
+  const manifest: SHLManifest = await resp.json()
 
-  // The embedded field is a JSON string containing { ciphertext, iv, authTag, verifiedOnly }
-  const encrypted = JSON.parse(file.embedded) as {
-    ciphertext: string
-    iv: string
-    authTag: string
-    verifiedOnly: boolean
+  // Find the smart-api-access file descriptor
+  const file = manifest.files.find(
+    (f) => f.contentType === "application/smart-api-access",
+  )
+  if (!file) throw new Error("No access credentials in manifest")
+
+  // Get the JWE string (embedded directly, or fetch from location)
+  let jwe: string
+  if (file.embedded) {
+    jwe = file.embedded
+  } else if (file.location) {
+    const fileResp = await fetch(file.location)
+    if (!fileResp.ok) throw new Error("Failed to fetch encrypted file")
+    jwe = await fileResp.text()
+  } else {
+    throw new Error("Manifest file has neither embedded nor location")
   }
 
-  // Decrypt the access credentials
-  const decrypted = await aesDecrypt(encrypted.ciphertext, encrypted.iv, encrypted.authTag, payload.key)
-  const access: DecryptedAccess = JSON.parse(decrypted)
+  // Decrypt the JWE using kill-the-clipboard (spec-compliant A256GCM)
+  const { content } = await decryptSHLFile({ jwe, key: shl.key })
+  const access: SmartApiAccess = JSON.parse(content)
 
   return {
     access,
-    label: payload.label,
-    verifiedOnly: encrypted.verifiedOnly,
-    expiresAt: new Date(payload.exp * 1000),
+    label: shl.label,
+    // verifiedOnly is an app-level concern, not part of the SHL spec
+    verifiedOnly: false,
+    expiresAt: shl.expirationDate ?? new Date(Date.now() + 3600_000),
   }
 }

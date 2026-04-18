@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { AppHeader, Spinner, PatientBanner, Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { Heart, Shield, AlertTriangle, Activity, FlaskConical, Pill, ShieldAlert, Syringe, Clock } from "lucide-react"
 import {
-  parseShlPayload, isShlExpired, resolveShl,
+  parseShl, isShlExpired, resolveShl,
   type ShlResult,
 } from "@/lib/shl-client"
 import {
@@ -67,19 +67,19 @@ export default function App() {
           return
         }
 
-        const payload = parseShlPayload(hash)
+        const { shl: parsedShl } = parseShl(hash)
 
-        if (isShlExpired(payload)) {
+        if (isShlExpired(parsedShl)) {
           setState({ phase: "expired" })
           return
         }
 
-        // Fetch & decrypt manifest
-        const shl = await resolveShl(payload)
+        // Fetch manifest & decrypt JWE (via kill-the-clipboard)
+        const shl = await resolveShl(parsedShl)
 
         // Create typed FHIR client using the scoped token
         const client = createFhirClient({
-          baseUrl: shl.access.fhirBaseUrl,
+          baseUrl: shl.access.aud,
           accessToken: shl.access.access_token,
         })
         const patientId = shl.access.patient
