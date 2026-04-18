@@ -269,9 +269,9 @@ export function HealthChartsCard({ vitals, labs }: HealthChartsCardProps) {
 
               <Tooltip
                 contentStyle={{ borderRadius: 8, fontSize: 13 }}
-                formatter={(val: number, name: string) => {
+                formatter={(val, name) => {
                   const def = name === primaryDef?.label ? primaryDef : secondaryDef
-                  return [`${val} ${def?.unit ?? ""}`, name]
+                  return [`${val ?? ""} ${def?.unit ?? ""}`, name]
                 }}
               />
               <Legend />
