@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180259.058ad1c6] - 2026-04-18
+
+- ✨ Features: None
+- 🐛 Bug Fixes: 
+  - Deploy: capture HTTP response body during seed POST flow; log non-200 responses (with body trimmed to 500 chars)
+  - Keycloak: replace env-var password substitutions with fixed defaults in realm export (TEST_USER_PASSWORD, ADMIN_PASSWORD, DOCTOR_PASSWORD)
+- 📚 Documentation: None
+- 🔧 Chores & Improvements: Structural updates to seed data model (Person/Patient resources) in deploy/fhir-seed-bundle.json
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/461
+
+
 ## [0.0.6-alpha.202604180241.81e79f6a] - 2026-04-18
 
 - 🔧 Chores & Improvements: CI: add dynamic Inferno version resolution and caching; conditional Inferno setup based on cache; cache keys depend on resolved tag and Ruby 3.3
