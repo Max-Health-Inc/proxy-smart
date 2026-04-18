@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604181004.43ff3043] - 2026-04-18
+
+- ✨ Features: 
+  - AuditTimeline now supports ConsentEvent and AccessEvent; Audit UI passes patientId to AuditTimeline and PatientDetail supplies patientId.
+  - New REST route: GET /monitoring/consent/patients/:patientId/access-log
+
+- 🐛 Bug Fixes: 
+  - Propagate user identity (userId, username) through consent audit entries and metrics logging; ensure user identity is extracted from token in consent services and FHIR proxy routes.
+
+- 🔧 Chores & Improvements:
+  - FHIR proxy and consent components updated to include userId and username in proxied data and events.
+  - HealthChartsCard refactor removed large charting block and related imports/metrics (cleanup).
+
+- 📚 Documentation: 
+  - (No explicit documentation changes detected beyond structural/type changes)
+
+- ⚠️ Breaking Changes: 
+  - (None detected)
+
+Note: Skipped update/merge/metadata commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/479
+
+
 ## [0.0.6-alpha.202604180955.fdfc0a3f] - 2026-04-18
 
 - ✨ Features
