@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180422.93c8eed5] - 2026-04-18
+
+- ✨ Features: 
+  - New React components under patient-portal (CareTeamCard, CoverageCard, DiagnosticReportsCard, EncountersCard, PrescriptionsDevicesCards) for enhanced patient UI and data display
+  - fhir-client.ts extended exports to include Coverage and Encounter types; scaffolding for searchCoverage (base R4)
+  - Dashboard.tsx updated to integrate new cards and search types (Coverage, Encounters, Practitioners, Organizations)
+
+- 🔧 Chores & Improvements:
+  - UI and data-model integration updates across manifest and dashboard to support new cards and types
+
+Note: No breaking changes detected; no documentation or bug fixes in this set.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/467
+
+
 ## [0.0.6-alpha.202604180410.39488c8b] - 2026-04-18
 
 - ✨ Features
