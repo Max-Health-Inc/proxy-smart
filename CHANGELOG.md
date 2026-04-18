@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180155.3106a944] - 2026-04-18
+
+- ✨ Features: Enhanced observability for OAuth/token flows
+  - Improved error logging with per-message snippets and remote request details (headers/body) for failing requests; sensitive body content redacted while preserving parameter names.
+  - Expanded OAuth token endpoint logging to include content-type and granular body fields (grant_type, client_id, redirect_uri) with presence checks; groundwork for more detailed request tracing.
+  - Improved backend logger: support for LOG_LEVEL env override; base log level respects LOG_LEVEL if set, otherwise defaults to production/dev.
+
+- 🔧 Chores & Improvements: CI/CD and deployment refinements
+  - Deploy-beta workflow: added load: true for backend image build; retained localhost-bundle check, removed a docker pull step (relying on create/export for inspection).
+
+- 🧪 Tests & Diagnostics: Enhanced test instrumentation
+  - Smart compliance tests: added LOG_LEVEL-based debugging and a Dump Service Logs step to emit auth-related backend/Keycloak logs (conditional on target).
+
+- ⚠️ Breaking Changes: None detected
+
+- 📚 Documentation: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/455
+
+
 ## [0.0.6-alpha.202604180145.dac6c923] - 2026-04-18
 
 - 🔧 Chores & Improvements: CI/CD and maintenance
