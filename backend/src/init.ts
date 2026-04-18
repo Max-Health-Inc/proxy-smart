@@ -537,6 +537,48 @@ async function ensureUserProfileAttributes(): Promise<void> {
 }
 
 /**
+ * Sync brand name → Keycloak realm displayName + displayNameHtml.
+ * Keycloak renders displayName as the login page heading instead of
+ * the default Keycloak logo. Idempotent — skips update if already matching.
+ */
+async function ensureRealmDisplayName(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) return
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) return
+
+    const brandName = config.brand.name
+    const expectedHtml = `<div class="kc-logo-text"><span>${brandName}</span></div>`
+
+    if (realm.displayName === brandName && realm.displayNameHtml === expectedHtml) {
+      logger.keycloak.info('✅ Realm displayName already matches brand')
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      { displayName: brandName, displayNameHtml: expectedHtml }
+    )
+    logger.keycloak.info(`✅ Realm displayName synced to "${brandName}"`)
+  } catch (error) {
+    logger.keycloak.warn('Could not sync realm displayName', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Initialize all server components (Keycloak + FHIR servers)
  */
 export async function initializeServer(): Promise<void> {
@@ -567,6 +609,9 @@ export async function initializeServer(): Promise<void> {
 
       // Ensure User Profile has all custom SMART attributes declared (KC 26+ requirement)
       await ensureUserProfileAttributes()
+
+      // Sync brand name → Keycloak realm displayName (login page heading)
+      await ensureRealmDisplayName()
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')
