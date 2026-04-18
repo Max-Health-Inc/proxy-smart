@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart DTR App",
   "description": "Da Vinci DTR (Documentation Templates & Rules) — SMART on FHIR app for prior authorization documentation, questionnaire rendering, and CQL-based auto-population.",
   "private": true,
-  "version": "0.0.6-beta.202604181522.b29a464b",
+  "version": "0.0.6-alpha.202604181619.5f44b1d4",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5175",
