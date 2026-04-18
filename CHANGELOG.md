@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180840.844c7653] - 2026-04-18
+
+- ✨ Features: Add loginTheme support across frontend, backend, and branding schema; propagate loginTheme in runtime config to brand config and realm on save
+- 🔧 Chores & Improvements: Minor UI refinements and responsive tweaks across multiple components (layout overflow, text alignment, responsive grids, scrollable modals); minor type guard improvements
+- 📚 Documentation: (none)
+- 🐛 Bug Fixes: (none)
+- ⚠️ Breaking Changes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/476
+
+
 ## [0.0.6-alpha.202604180734.a1740e57] - 2026-04-18
 
 - 🔧 Chores & Improvements: Add shl-viewer as a new workspace entry in Docker build; update workspace configuration and bun install to include shl-viewer
