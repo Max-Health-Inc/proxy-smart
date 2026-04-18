@@ -9,8 +9,7 @@ import {
   Ban,
   RefreshCw,
 } from "lucide-react"
-import { Badge, Button, Spinner } from "@proxy-smart/shared-ui"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Badge, Button, Spinner, ScrollArea } from "@proxy-smart/shared-ui"
 import { config } from "@/config"
 import { smartAuth } from "@/lib/smart-auth"
 

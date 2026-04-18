@@ -21,6 +21,7 @@ import {
   Info,
   ShieldCheck,
   Database,
+  ChevronDown,
 } from 'lucide-react';
 import { Badge, Button } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
@@ -91,6 +92,8 @@ export function McpEndpointSettings() {
 
   // Local UI state for pending tool toggles (optimistic)
   const [pendingDisabled, setPendingDisabled] = useState<Set<string>>(new Set());
+  const [toolsExpanded, setToolsExpanded] = useState(false);
+  const [resourcesExpanded, setResourcesExpanded] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -302,8 +305,12 @@ export function McpEndpointSettings() {
       {/* ── Tool Selection ────────────────────────────────────────────── */}
       {status.enabled && (
         <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div>
+          <button
+            type="button"
+            onClick={() => setToolsExpanded(!toolsExpanded)}
+            className="w-full flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="text-left">
               <h4 className="text-lg font-semibold text-foreground">
                 {t('Exposed Tools')}
               </h4>
@@ -314,19 +321,24 @@ export function McpEndpointSettings() {
                 })}
               </p>
             </div>
-            {hasToolChanges && (
-              <LoadingButton size="sm" onClick={saveToolConfig} loading={saving}>
-                {t('Save Changes')}
-              </LoadingButton>
-            )}
-          </div>
+            <div className="flex items-center gap-2">
+              {hasToolChanges && (
+                <LoadingButton size="sm" onClick={(e) => { e.stopPropagation(); saveToolConfig(); }} loading={saving}>
+                  {t('Save Changes')}
+                </LoadingButton>
+              )}
+              <ChevronDown
+                className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${toolsExpanded ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </button>
 
-          {status.tools.length === 0 ? (
+          {toolsExpanded && (status.tools.length === 0 ? (
             <p className="text-sm text-muted-foreground py-8 text-center">
               {t('No tools available. The tool registry may not be initialized yet.')}
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
               {status.tools.map((tool) => {
                 const isDisabled = pendingDisabled.has(tool.name);
                 return (
@@ -358,15 +370,19 @@ export function McpEndpointSettings() {
                 );
               })}
             </div>
-          )}
+          ))}
         </div>
       )}
 
       {/* ── Resource Selection ─────────────────────────────────────────── */}
       {status.enabled && totalResourceCount > 0 && (
         <div className="bg-card p-6 rounded-2xl border border-border/50 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div>
+          <button
+            type="button"
+            onClick={() => setResourcesExpanded(!resourcesExpanded)}
+            className="w-full flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="text-left">
               <div className="flex items-center gap-2">
                 <Database className="w-5 h-5 text-primary" />
                 <h4 className="text-lg font-semibold text-foreground">
@@ -380,14 +396,19 @@ export function McpEndpointSettings() {
                 })}
               </p>
             </div>
-            {hasToolChanges && (
-              <LoadingButton size="sm" onClick={saveToolConfig} loading={saving}>
-                {t('Save Changes')}
-              </LoadingButton>
-            )}
-          </div>
+            <div className="flex items-center gap-2">
+              {hasToolChanges && (
+                <LoadingButton size="sm" onClick={(e) => { e.stopPropagation(); saveToolConfig(); }} loading={saving}>
+                  {t('Save Changes')}
+                </LoadingButton>
+              )}
+              <ChevronDown
+                className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${resourcesExpanded ? 'rotate-180' : ''}`}
+              />
+            </div>
+          </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {resourcesExpanded && <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
             {status.resources.map((resource) => {
               const isDisabled = pendingDisabled.has(resource.name);
               return (
@@ -419,7 +440,7 @@ export function McpEndpointSettings() {
                 </label>
               );
             })}
-          </div>
+          </div>}
         </div>
       )}
     </div>

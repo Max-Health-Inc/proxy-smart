@@ -1,4 +1,4 @@
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Edit, X, Palette, Settings } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { Organization } from '@/lib/api-client';

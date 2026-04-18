@@ -14,16 +14,14 @@ import {
   TabsTrigger,
   TabsContent,
   Badge,
-} from '@proxy-smart/shared-ui';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@proxy-smart/shared-ui';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Globe,
   Shield,

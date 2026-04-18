@@ -1,19 +1,18 @@
-import { Badge, Button } from '@proxy-smart/shared-ui';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
+  Badge,
+  Button,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@proxy-smart/shared-ui';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Users, Server, Plus, MoreHorizontal, Link } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer, HealthcareUser } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
