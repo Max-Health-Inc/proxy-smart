@@ -85,8 +85,10 @@ export async function validateToken(token: string): Promise<JwtPayload> {
       verifyOptions.issuer = expectedIssuer
     }
 
-    // Enforce audience when configured (prevents cross-client token reuse)
-    const expectedAudience = process.env.JWT_EXPECTED_AUDIENCE || config.keycloak.adminClientId
+    // Enforce audience only when explicitly configured via env var.
+    // Do NOT default to adminClientId — that would reject all non-admin tokens
+    // (patient-portal, SMART apps, etc. each have their own aud claim).
+    const expectedAudience = process.env.JWT_EXPECTED_AUDIENCE
     if (expectedAudience) {
       verifyOptions.audience = expectedAudience
     }
