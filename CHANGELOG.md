@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180230.a3897f94] - 2026-04-18
+
+- 🔧 Chores & Improvements: CI: dynamic Inferno version resolution and version-aware caching; conditional Inferno setup based on cache miss
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/458
+
+
 ## [0.0.6-beta.202604180218.57e2229a] - 2026-04-18
 
 - 🔧 Chores & Improvements: CI caching and version-aware setup for Inferno
