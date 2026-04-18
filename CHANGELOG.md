@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180328.85225af7] - 2026-04-18
+
+- ✨ Features: 
+  - Extend patient portal: blood type search and display in Dashboard; blood type badge in PatientBanner with Droplets icon
+  - FHIR client: add searchBloodType to query ABO/Rh observations (codes 882-1, 10331-7)
+  - Seed data: insert example ABO/Rh blood type Observations into seed bundle
+
+- 🔧 Chores & Improvements:
+  - CI/CD: enhance smart-compliance-tests workflow to auto-create/update failure issues, attach logs, and deduplicate by label
+  - Minor wiring: adjust dashboard results handling to include blood type observations
+
+- 📚 Documentation:
+  - Add Copilot Cloud Agent instructions doc with architecture and file map
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/464
+
+
 ## [0.0.6-alpha.202604180310.d6e29899] - 2026-04-18
 
 - 🔧 Chores & Improvements: Replace placeholder admin service secret with hard-coded backend admin service client secret in realm-export.json
