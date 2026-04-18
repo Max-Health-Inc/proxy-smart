@@ -424,7 +424,7 @@ export function Dashboard() {
                         {translateCoding(v.code?.coding?.[0]) || v.code?.text || t("common.unknown")}
                       </RecordName>
                     </span>
-                    <span className="text-muted-foreground shrink-0 whitespace-nowrap">
+                    <span className="text-muted-foreground shrink-0 text-right text-xs sm:text-sm">
                       {v.valueQuantity
                         ? `${v.valueQuantity.value} ${v.valueQuantity.unit || ""}`
                         : v.component?.length
@@ -459,7 +459,7 @@ export function Dashboard() {
                           {translateCoding(l.code?.coding?.[0]) || l.code?.text || t("common.unknown")}
                         </RecordName>
                       </span>
-                      <span className="flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                      <span className="flex items-center gap-1.5 shrink-0 text-right text-xs sm:text-sm">
                         {interp && (
                           <span className={`text-xs font-medium ${interp.className}`}>{t(interp.i18nKey)}</span>
                         )}

@@ -343,9 +343,9 @@ export function ImagingStudyCard({
                         {filteredRadiology.map((obs, i) => (
                           <li
                             key={obs.id || `rad-${i}`}
-                            className="text-sm flex justify-between"
+                            className="text-sm flex justify-between gap-2"
                           >
-                            <span className="font-medium truncate mr-2">
+                            <span className="font-medium truncate min-w-0">
                               {obs.code?.coding?.[0]?.display ||
                                 obs.code?.text ||
                                 "Radiology result"}
