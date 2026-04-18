@@ -76,7 +76,7 @@ export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplicat
 export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ObservationStatusCode, ImmunizationStatusCode }
 
 // Properly typed union covering all portal resource types (IPS + Genomics + base R4)
-export type PortalFhirResource = IpsFhirResource | GenomicsFhirResource | Observation | DocumentReference
+export type PortalFhirResource = IpsFhirResource | GenomicsFhirResource | Observation | DocumentReference | Coverage | Encounter
 // Escape hatch for components needing dynamic property access (RecordEditModal, RecordDetailModal)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type DynamicFhirResource = PortalFhirResource & Record<string, any>
