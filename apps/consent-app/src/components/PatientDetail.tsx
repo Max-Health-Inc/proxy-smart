@@ -246,7 +246,7 @@ export function PatientDetail({ patient, personReference, onBack, hideBack }: Pa
         </TabsContent>
 
         <TabsContent value="audit" className="mt-4">
-          <AuditTimeline consents={allConsents} />
+          <AuditTimeline consents={allConsents} patientId={patient.id} />
         </TabsContent>
       </Tabs>
 
