@@ -425,6 +425,19 @@ export async function updateResource<T extends { resourceType: string; id?: stri
 
 // ── Document Import ──────────────────────────────────────────────────────────
 
+/**
+ * Fetch a FHIR Binary resource through the authenticated proxy.
+ * Returns a blob URL for rendering or a base64 data URI for text content.
+ */
+export async function fetchBinaryUrl(relativeUrl: string): Promise<string> {
+  const res = await authFetch(`${fhirBaseUrl}/${relativeUrl}`, {
+    headers: { Accept: '*/*' },
+  })
+  if (!res.ok) throw new Error(`Failed to fetch ${relativeUrl} (${res.status})`)
+  const blob = await res.blob()
+  return URL.createObjectURL(blob)
+}
+
 export interface ImportedResource {
   resourceType: string
   resource: Record<string, unknown>
