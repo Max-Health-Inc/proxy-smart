@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner,
 } from "@proxy-smart/shared-ui"
@@ -62,17 +62,21 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
     }
   }, [verifiedOnly, t])
 
-  const handleOpenChange = useCallback((isOpen: boolean) => {
-    if (isOpen && !shlData && !loading) {
+  // Trigger SHL creation when dialog opens
+  useEffect(() => {
+    if (open && !shlData && !loading) {
       createShl()
     }
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) {
       setShlData(null)
       setError(null)
       setCopied(false)
     }
     onOpenChange(isOpen)
-  }, [shlData, loading, createShl, onOpenChange])
+  }, [onOpenChange])
 
   const copyLink = useCallback(async () => {
     if (!shlData) return
@@ -137,7 +141,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
 
               <div className="flex items-center gap-2 text-xs px-2">
                 <span className="text-muted-foreground">
-                  {verifiedOnly ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}
+                  {verifiedOnly ? t("dashboard.verifiedOnly") : t("dashboard.showingAll")}
                 </span>
               </div>
 
