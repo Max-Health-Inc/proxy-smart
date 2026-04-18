@@ -19,7 +19,11 @@ Schema naming strategy (mirrors Java openapi-generator):
   5. Fallback: OperationId + StatusCode + "Response"/"Request"
 
 Usage:
-  python scripts/generate-ts-fetch-client.py <spec-path> <output-dir>
+  python scripts/generate-ts-fetch-client.py <spec-path> <output-dir> [--tags tag1,tag2,...]
+
+The optional --tags flag filters which API tags to generate. Only the
+selected API classes and their transitively referenced models are emitted.
+Omit --tags to generate everything (original behaviour).
 """
 
 from __future__ import annotations
@@ -742,8 +746,31 @@ HEADER_TPL = '''/* tslint:disable */
 '''
 
 
-def generate(spec_path: str, output_dir: str):
-    """Main entry: read spec, walk operations, generate files."""
+def _collect_model_deps(name: str, registry: SchemaRegistry, visited: set[str] | None = None) -> set[str]:
+    """Transitively collect all model names referenced by *name*."""
+    if visited is None:
+        visited = set()
+    if name in visited or name not in registry.models:
+        return visited
+    visited.add(name)
+    schema = registry.models[name]
+    props = schema.get('properties', {})
+    if not isinstance(props, dict):
+        return visited
+    for pschema in props.values():
+        ts = registry.ts_type(pschema, '')
+        for dep in model_refs(ts, registry, name):
+            _collect_model_deps(dep, registry, visited)
+    return visited
+
+
+def generate(spec_path: str, output_dir: str, tag_filter: set[str] | None = None):
+    """Main entry: read spec, walk operations, generate files.
+
+    If *tag_filter* is provided, only API classes whose tag (case-insensitive)
+    is in the set are generated.  Models are pruned to those transitively
+    referenced by the selected APIs.
+    """
     with open(spec_path, 'r', encoding='utf-8') as f:
         if spec_path.endswith(('.yaml', '.yml')):
             import yaml
@@ -855,6 +882,18 @@ def generate(spec_path: str, output_dir: str):
             # duplicate request interface exports across API classes.
             tag_ops[tags[0]].append(op_data)
 
+    # ── Tag filtering ────────────────────────────────────────────────────────
+    if tag_filter:
+        normalized = {t.lower() for t in tag_filter}
+        filtered: dict[str, list[dict]] = {}
+        for tag, ops in tag_ops.items():
+            if tag.lower() in normalized:
+                filtered[tag] = ops
+        skipped = set(tag_ops) - set(filtered)
+        if skipped:
+            print(f'   [skip] tags not selected: {", ".join(sorted(skipped))}')
+        tag_ops = filtered
+
     # ── Phase 2: Generate files ──────────────────────────────────────────────
     out = Path(output_dir)
     models_dir = out / 'models'
@@ -862,10 +901,25 @@ def generate(spec_path: str, output_dir: str):
     models_dir.mkdir(parents=True, exist_ok=True)
     apis_dir.mkdir(parents=True, exist_ok=True)
 
+    # Determine which models are needed
+    if tag_filter:
+        needed_models: set[str] = set()
+        for ops in tag_ops.values():
+            for op in ops:
+                needed_models |= op.get('_refs', set())
+        # Transitively expand dependencies
+        all_needed: set[str] = set()
+        for m in needed_models:
+            _collect_model_deps(m, registry, all_needed)
+    else:
+        all_needed = set(registry.models.keys())
+
     # Models
     model_files: list[str] = []
     for name, schema in sorted(registry.models.items()):
         if not schema.get('properties'):
+            continue
+        if name not in all_needed:
             continue
         content = gen_model(name, schema, registry, header)
         (models_dir / f'{name}.ts').write_text(content, encoding='utf-8')
@@ -926,7 +980,20 @@ def generate(spec_path: str, output_dir: str):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print(f'Usage: {sys.argv[0]} <spec-path> <output-dir>')
+    args = sys.argv[1:]
+    tag_filter: set[str] | None = None
+
+    # Parse --tags flag
+    if '--tags' in args:
+        idx = args.index('--tags')
+        if idx + 1 >= len(args):
+            print('Error: --tags requires a comma-separated list of tag names')
+            sys.exit(1)
+        tag_filter = {t.strip() for t in args[idx + 1].split(',') if t.strip()}
+        args = args[:idx] + args[idx + 2:]
+
+    if len(args) < 2:
+        print(f'Usage: {sys.argv[0]} <spec-path> <output-dir> [--tags tag1,tag2,...]')
         sys.exit(1)
-    generate(sys.argv[1], sys.argv[2])
+
+    generate(args[0], args[1], tag_filter)

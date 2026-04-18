@@ -561,3 +561,6 @@ export async function scribeFromText(text: string, patientId: string): Promise<S
   }
   return res.json() as Promise<ScribeResponse>
 }
+
+// ── SMART Health Links ───────────────────────────────────────────────────────
+// Moved to @/lib/shl-client.ts — uses generated OpenAPI client (ShlApi)
