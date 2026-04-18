@@ -18,11 +18,20 @@ import { logger } from '@/lib/logger'
 import { config } from '@/config'
 import { ErrorResponse } from '@/schemas'
 import { importDocument } from '@/lib/document-import'
+import { extractBearerToken } from '@/lib/admin-utils'
+import { validateAdminToken } from '@/lib/auth'
 
 export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
   .post(
     '/',
-    async ({ body, set }) => {
+    async ({ body, set, headers }) => {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+      await validateAdminToken(token)
+
       if (!config.ai.openaiApiKey) {
         set.status = 503
         return { error: 'AI not configured', details: 'OPENAI_API_KEY is required for document import' }

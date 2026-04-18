@@ -631,7 +631,7 @@
       "description": "Service account for backend administrative operations including dynamic client registration",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "admin-service-secret",
+      "secret": "${KEYCLOAK_ADMIN_CLIENT_SECRET:-CHANGE_ME_IN_PRODUCTION}",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,
@@ -1031,7 +1031,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "testpass",
+          "value": "${TEST_USER_PASSWORD:-DevT3st!Pass}",
           "temporary": false
         }
       ],
@@ -1050,7 +1050,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "admin",
+          "value": "${ADMIN_PASSWORD:-DevAdm!n2024}",
           "temporary": false
         }
       ],
@@ -1084,7 +1084,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "doctor123",
+          "value": "${DOCTOR_PASSWORD:-DevD0c!2024}",
           "temporary": false
         }
       ],

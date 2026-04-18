@@ -35,6 +35,9 @@ on:
         description: "Whether frontend tests were successful"
         value: ${{ jobs.build-and-test.outputs.frontend_tests_success }}
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     name: Build & Test

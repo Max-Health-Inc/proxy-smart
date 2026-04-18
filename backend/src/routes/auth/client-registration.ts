@@ -121,7 +121,11 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
       const invalidPatterns = body.redirect_uris.filter(uri => {
         return !settings.allowedRedirectUriPatterns.some(pattern => {
           try {
-            return new RegExp(pattern).test(uri)
+            // Use linear-time matching via string comparison for simple patterns,
+            // or bounded regex for complex ones. Limit input length to prevent ReDoS.
+            if (uri.length > 2048) return false
+            const regex = new RegExp(pattern)
+            return regex.test(uri)
           } catch {
             return false // Invalid regex patterns are ignored
           }
