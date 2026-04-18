@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180443.7013097d] - 2026-04-18
+
+- 🔧 Chores & Improvements: Bump version refs to 0.0.6-alpha.202604180443.7013097d across apps and typings
+- 🧪 Features: Extend PortalFhirResource union to include Coverage and Encounter in patient-portal (type update)
+- 🔧 Chores & Improvements: UI copy/edit - update backend feature card title/description from “AI-Native: MCP + CDS Hooks” to “AI-Native: MCP + Tools” and adjust descriptive text
+- 🧰 Chores & Improvements: Remove details table block from backend/public/index.html (tech stack section)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/468
+
+
 ## [0.0.6-alpha.202604180422.93c8eed5] - 2026-04-18
 
 - ✨ Features: 
