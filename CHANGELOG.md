@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180410.39488c8b] - 2026-04-18
+
+- ✨ Features
+  - Extend patient portal frontend: add blood type search/display, bloodType state, and Blood Type badge in PatientBanner.
+  - FHIR client: add searchBloodType for ABO/Rh observations.
+
+- 🐛 Bug Fixes
+  - CI workflow: enable self-heal for test failures, attach logs, and deduplicate by label.
+
+- 🔧 Chores & Improvements
+  - Frontend: update homepage hero button to "View App Store" linking to /apps.
+  - Seed data: insert example ABO/Rh blood type Observations into seed bundle.
+  - Minor wiring: adjust dashboard results handling to include blood type observations.
+  - Documentation: add Copilot Cloud Agent instructions doc with architecture and file map.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/466
+
+
 ## [0.0.6-alpha.202604180328.85225af7] - 2026-04-18
 
 - ✨ Features: 
