@@ -247,9 +247,11 @@ describe('Scope Enforcement E2E — FHIR Proxy Pipeline', () => {
     })
   })
 
-  // ── Scope enforcement: disabled (default) ──────────────────────────────────
+  // ── Scope enforcement: disabled ─────────────────────────────────────────
 
-  describe('scope enforcement disabled (default)', () => {
+  describe('scope enforcement disabled', () => {
+    beforeEach(() => setEnv({ SCOPE_ENFORCEMENT_MODE: 'disabled' }))
+
     it('should allow any request regardless of scopes', async () => {
       const res = await app.handle(fhirRequest('GET', 'Patient', 'no-smart-scopes'))
       expect(res.status).toBe(200)
