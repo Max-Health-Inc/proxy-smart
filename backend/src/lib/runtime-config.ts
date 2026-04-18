@@ -364,9 +364,17 @@ export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfi
     ...brandToAttributes(settings),
   }
 
+  const realmUpdate: Record<string, unknown> = { attributes }
+
+  // Sync brand name → Keycloak login page heading (displayName + displayNameHtml)
+  if (settings.name) {
+    realmUpdate.displayName = settings.name
+    realmUpdate.displayNameHtml = `<div class="kc-logo-text"><span>${settings.name}</span></div>`
+  }
+
   await admin.realms.update(
     { realm: process.env.KEYCLOAK_REALM! },
-    { attributes }
+    realmUpdate
   )
 
   // Update in-memory cache
