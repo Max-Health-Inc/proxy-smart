@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180907.c75786d7] - 2026-04-18
+
+- 🔧 Chores & Improvements: Treat .tgz and .tar.gz as binary in .gitattributes (binary attribute added)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/477
+
+
 ## [0.0.6-alpha.202604180840.844c7653] - 2026-04-18
 
 - ✨ Features: Add loginTheme support across frontend, backend, and branding schema; propagate loginTheme in runtime config to brand config and realm on save
