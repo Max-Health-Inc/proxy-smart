@@ -125,6 +125,12 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     consentOverrides = parseConsentFromAttributes(attrs)
     ialOverrides = parseIalFromAttributes(attrs)
     brandOverrides = parseBrandFromAttributes(attrs)
+    // loginTheme is a top-level realm property, not an attribute
+    if (brandOverrides) {
+      brandOverrides.loginTheme = (realm as any)?.loginTheme || null
+    } else if ((realm as any)?.loginTheme) {
+      brandOverrides = { loginTheme: (realm as any).loginTheme }
+    }
     loaded = true
 
     // Load per-org brand overrides into cache
@@ -335,6 +341,7 @@ export function getRuntimeBrandConfig(): BrandConfigType {
     addressPostalCode: config.brand.addressPostalCode,
     addressCountry: config.brand.addressCountry,
     identifier: config.brand.identifier,
+    loginTheme: config.brand.loginTheme,
   }
 
   const merged = !brandOverrides ? envDefaults : { ...envDefaults, ...brandOverrides }
@@ -373,6 +380,11 @@ export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfi
       ? `<img src="${settings.logoUrl}" alt="${settings.name}" style="height:32px;margin-right:8px;vertical-align:middle" />`
       : ''
     realmUpdate.displayNameHtml = `<div class="kc-logo-text">${logoHtml}<span>${settings.name}</span></div>`
+  }
+
+  // Sync loginTheme → Keycloak realm login theme
+  if (settings.loginTheme !== undefined) {
+    realmUpdate.loginTheme = settings.loginTheme || ''
   }
 
   await admin.realms.update(

@@ -42,6 +42,7 @@ export const BrandConfig = t.Object({
   addressPostalCode: t.Union([t.String(), t.Null()], { description: 'Organization postal code' }),
   addressCountry: t.Union([t.String(), t.Null()], { description: 'Organization country' }),
   identifier: t.String({ description: 'Brand identifier URI (typically the brand website URL)' }),
+  loginTheme: t.Union([t.String(), t.Null()], { description: 'Keycloak login theme name (e.g. keycloak, keycloak.v2)' }),
 }, { title: 'BrandConfig' })
 
 export type BrandConfigType = Omit<Static<typeof BrandConfig>, 'category'> & { category: BrandCategoryType }
