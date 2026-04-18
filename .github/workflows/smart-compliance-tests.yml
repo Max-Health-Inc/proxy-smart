@@ -264,14 +264,17 @@ jobs:
           echo "✓ Keycloak image pulled and saved for caching"
 
       - name: Setup Bun
+        if: steps.config.outputs.target != 'deployed'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Install dependencies
+        if: steps.config.outputs.target != 'deployed'
         run: bun install
 
       - name: Build Backend
+        if: steps.config.outputs.target != 'deployed'
         run: |
           cd backend
           bun run build

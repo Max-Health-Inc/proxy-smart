@@ -136,6 +136,7 @@ export function createApp() {
                     { name: 'email-monitoring', description: 'Email event monitoring (password resets, verifications)' },
                     { name: 'auth-monitoring', description: 'Auth event monitoring (logins, logouts, registrations, token exchanges)' },
                     { name: 'dicomweb', description: 'DICOMweb proxy for WADO-RS and QIDO-RS imaging services' },
+                    { name: 'shl', description: 'SMART Health Links for QR-based patient data sharing' },
                 ],
                 servers: [
                     { url: config.baseUrl, description: 'Development server' }
