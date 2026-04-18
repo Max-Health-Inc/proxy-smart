@@ -202,15 +202,15 @@ export const config = {
   accessControl: {
     // SMART scope enforcement — validates token scopes against requested FHIR resources
     get scopeEnforcement(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.SCOPE_ENFORCEMENT_MODE || 'enforce'
+      const mode = process.env.SCOPE_ENFORCEMENT_MODE || 'disabled'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
-      return 'enforce'
+      return 'disabled'
     },
     // Role-based filtering using fhirUser claim (e.g. generalPractitioner-based isolation)
     get roleBasedFiltering(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'enforce'
+      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'disabled'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
-      return 'enforce'
+      return 'disabled'
     },
     // Clinical resource types subject to patient-scoped filtering
     get patientScopedResources(): string[] {
