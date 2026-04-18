@@ -11,9 +11,9 @@ export interface AppHeaderProps {
   /** Lucide icon component used as fallback when no branding logo is configured */
   icon: LucideIcon
   /** Whether the user is currently authenticated (controls Sign Out visibility) */
-  authenticated: boolean
+  authenticated?: boolean
   /** Called when the user clicks Sign Out */
-  onSignOut: () => void
+  onSignOut?: () => void
   /** Optional extra content rendered after the title (e.g. a launch-mode badge) */
   children?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */

@@ -144,6 +144,7 @@
     "apps/dtr-app",
     "apps/consent-app",
     "apps/patient-portal",
+    "apps/shl-viewer",
     "apps/smart-dicom-template"
   ],
   "main": "eslint.config.js",

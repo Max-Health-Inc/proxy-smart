@@ -78,6 +78,8 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     mcpAccessType: (app.mcpAccessType as UpdateSmartAppRequest['mcpAccessType']) ?? McpAccessEnum.None,
     allowedMcpServerNames: app.allowedMcpServerNames ?? [],
     allowedSkillNames: app.allowedSkillNames ?? [],
+    allowedFhirUserTypes: app.allowedFhirUserTypes ?? [],
+    requiredRoles: app.requiredRoles ?? [],
     // Auth fields — only sent when changed
     secret: undefined,
     publicKey: undefined,
@@ -329,6 +331,26 @@ export function SmartAppEditModal({
                 values={form.allowedSkillNames ?? []}
                 onChange={(v) => set('allowedSkillNames', v)}
                 placeholder="skill-name"
+              />
+            </div>
+
+            {/* User Restrictions */}
+            <div className="space-y-3 border-t pt-4">
+              <Label className="text-sm font-semibold">{t('User Restrictions')}</Label>
+              <p className="text-xs text-muted-foreground">
+                {t('Restrict which users can access this app based on their FHIR user type or assigned roles. Leave empty for no restrictions.')}
+              </p>
+              <StringListField
+                label={t('Allowed FHIR User Types')}
+                values={form.allowedFhirUserTypes ?? []}
+                onChange={(v) => set('allowedFhirUserTypes', v)}
+                placeholder="Practitioner"
+              />
+              <StringListField
+                label={t('Required Roles')}
+                values={form.requiredRoles ?? []}
+                onChange={(v) => set('requiredRoles', v)}
+                placeholder="role-name"
               />
             </div>
           </TabsContent>

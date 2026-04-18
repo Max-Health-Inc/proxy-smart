@@ -11,6 +11,7 @@ export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./comp
 export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./components/dialog"
 export { ErrorBoundary } from "./components/error-boundary"
 export { AppHeader, type AppHeaderProps } from "./components/app-header"
+export { PatientBanner, type PatientBannerProps, type BannerPatient } from "./components/patient-banner"
 export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfileData } from "./components/user-profile-fields"
 
 // Utilities

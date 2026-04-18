@@ -212,7 +212,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       if (body.verifiedOnly !== undefined) shlPayload.v = body.verifiedOnly ? 1 : 0
 
       const shlinkPayload = Buffer.from(JSON.stringify(shlPayload)).toString('base64url')
-      const viewerUrl = `${config.baseUrl}/apps/patient-portal/#/shl/${shlinkPayload}`
+      const viewerUrl = `${config.baseUrl}/apps/shl-viewer/#${shlinkPayload}`
 
       logger.auth.info('SHL created', {
         shlId,
