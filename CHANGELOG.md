@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180021.d4903bc7] - 2026-04-18
+
+- ✨ Features
+  - Add in-memory rate limiter for Elysia with per-key storage, sliding window, periodic cleanup, and configurable parameters
+  - Add URL validation utilities to block SSRF by disallowing private/internal IPv4 ranges and problematic hostnames
+
+- 🔧 Chores & Improvements
+  - Enforce admin token validation for admin routes and harden admin authentication flow
+  - Improve backend security: run services under non-root app user in Dockerfiles
+  - Input sanitization and error sanitization enhancements in backend error handling
+  - REST endpoints updated to require admin authentication for config/test/shutdown flows; improved error messaging
+  - Minor wiring tweaks to support health/healing logic
+
+- 🔒 Security (implicit under Chores & Improvements)
+  - SSRF/URL validation guards across MCP/server and FHIR server routes; block or sanitize internal URLs
+  - Remove OPENAI_API_KEY from workflows and env wiring across actions
+
+- 📚 Documentation
+  - (No explicit docs changes detected)
+
+- ⚠️ Breaking Changes
+  - (None detected)
+
+Note: Only meaningful changes are included; update/merge/metadata commits are excluded.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/446
+
+
 ## [0.0.6-alpha.202604172152.bd4ad527] - 2026-04-18
 
 - 🔧 Chores & Improvements: Remove OPENAI_API_KEY from GitHub Actions secrets and Env wiring; update package versions to new alpha tag and bump undici deps
