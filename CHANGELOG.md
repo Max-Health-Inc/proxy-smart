@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180145.dac6c923] - 2026-04-18
+
+- 🔧 Chores & Improvements: CI/CD and maintenance
+  - Create non-root app user in Dockerfile and adjust user/group creation; ensure /app ownership and non-root user remains app (uid/gid 1001)
+  - Bump versions across multiple package.jsons to reflect new alpha pre-release tag (0.0.6-alpha.202604180138.af208ce5 and related beta-to-alpha transitions)
+  - Ensure ORTHANC_PASSWORD secret is declared and passed into deployment workflow and container environment in beta deployment flow
+
+Note: Merges, updates, and metadata-only commits are omitted.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/454
+
+
 ## [0.0.6-beta.202604180108.f3484054] - 2026-04-18
 
 - 🔧 Chores & Improvements: Dockerfile: switch to groupadd/useradd, preserve /app ownership; non-root user remains app (uid/gid 1001). 
