@@ -19,7 +19,7 @@ Checking Inferno availability...
 ✓ Inferno is ready
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: kHnO969uXUW
+✓ Created test session: iUfMtbGtjiJ
 
 === Running Standalone Launch Tests ===
 
@@ -32,8 +32,8 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: bae5ee08-55ed-44e5-83a3-91934dd4dca5
-Waiting for test run bae5ee08-55ed-44e5-83a3-91934dd4dca5 to complete (timeout: 3 minutes)...
+✓ Started test run: fe4db2ed-e65a-4a41-9a0d-3839532a7a3e
+Waiting for test run fe4db2ed-e65a-4a41-9a0d-3839532a7a3e to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: waiting
   Test is waiting for user action (OAuth flow, attempt 1/3)...
@@ -41,22 +41,22 @@ Waiting for test run bae5ee08-55ed-44e5-83a3-91934dd4dca5 to complete (timeout: 
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=ddec060b-4679-4094-8b80-bf55585c150a&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=OHrqb-dXmYsqjnktmBf8Ql8PrmZX6JPYrxE9QE_vrCw&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=ddec060b-4679-4094-8b80-bf55585c150a&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=OHrqb-dXmYsqjnktmBf8Ql8PrmZX6JPYrxE9QE_vrCw&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=ddec060b-4679-4094-8b80-bf55585c150a&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=OHrqb-dXmYsqjnktmBf8Ql8PrmZX6JPYrxE9QE_vrCw&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=ddec060b-4679-4094-8b80-bf55585c150a&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=OHrqb-dXmYsqjnktmBf8Ql8PrmZX6JPYrxE9QE_vrCw&code_challenge_method=S256
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=ddec060b-4679-4094-8b80-bf55585c150a&code_challenge=OHrqb-dXmYsqjnktmBf8Ql8PrmZX6JPYrxE9QE_vrCw&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   On Keycloak login page, entering credentials...
   Filled username
   Filled password
   Clicked login button
-  Post-login URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=4dc9daa0-224f-4823-9648-8240aa272d5b&client_id=inferno-test-client&tab_id=NKrU7mHMDjE&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJkZGVjMDYwYi00Njc5LTQwOTQtOGI4MC1iZjU1NTg1YzE1MGEifQ
+  Post-login URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=46c67c99-25a5-4b97-91a3-ae8af3f9b1c1&client_id=inferno-test-client&tab_id=Obc4JSJvkfc&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJjYjA1NTJiNS1mMGVjLTRjZDEtOTYwOS1iM2E3YzYxNjlhNGYifQ
   Keycloak error detected: Invalid username or password.
   OAuth flow error: Keycloak login failed: Invalid username or password.
   Page title: Sign in to Proxy Smart
-  Page URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=4dc9daa0-224f-4823-9648-8240aa272d5b&client_id=inferno-test-client&tab_id=NKrU7mHMDjE&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJkZGVjMDYwYi00Njc5LTQwOTQtOGI4MC1iZjU1NTg1YzE1MGEifQ
+  Page URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=46c67c99-25a5-4b97-91a3-ae8af3f9b1c1&client_id=inferno-test-client&tab_id=Obc4JSJvkfc&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJjYjA1NTJiNS1mMGVjLTRjZDEtOTYwOS1iM2E3YzYxNjlhNGYifQ
   Page content (first 1000 chars): <!DOCTYPE html><html class="login-pf" lang="en"><head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -64,14 +64,14 @@ Handling OAuth flow...
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>Sign in to Proxy Smart</title>
-    <link rel="icon" href="/resources/9waci/login/keycloak.v2/img/favicon.ico">
-            <link href="/resources/9waci/common/keycloak/vendor/patternfly-v5/patternfly.min.css" rel="stylesheet">
-            <link href="/resources/9waci/common/keycloak/vendor/patternfly-v5/patternfly-addons.css" rel="stylesheet">
-            <link href="/resources/9waci/login/keycloak.v2/css/styles.css" rel="stylesheet">
+    <link rel="icon" href="/resources/re9t6/login/keycloak.v2/img/favicon.ico">
+            <link href="/resources/re9t6/common/keycloak/vendor/patternfly-v5/patternfly.min.css" rel="stylesheet">
+            <link href="/resources/re9t6/common/keycloak/vendor/patternfly-v5/patternfly-addons.css" rel="stylesheet">
+            <link href="/resources/re9t6/login/keycloak.v2/css/styles.css" rel="stylesheet">
     <script type="importmap">
         {
             "imports": {
-                "rfc4648": "/resources/9waci/common/keycloak/vendor/rfc4648/rfc4648.js"
+                "rfc4648": "/resources/re9t6/common/keycloak/vendor/rfc4648/rfc4648.js"
             }
         }
     </script>
@@ -85,3 +85,103 @@ Handling OAuth flow...
   Progress: 5 passed, 0 failed, 3 waiting, 9 total
   [Poll #3] Status: waiting
   Waiting 15s before OAuth retry (backoff)...
+  Test is waiting for user action (OAuth flow, attempt 2/3)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256
+  Navigation response status: 200
+  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  On Keycloak login page, entering credentials...
+  Filled username
+  Filled password
+  Clicked login button
+  Post-login URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=46c67c99-25a5-4b97-91a3-ae8af3f9b1c1&client_id=inferno-test-client&tab_id=MlRRqRHC9J4&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJjYjA1NTJiNS1mMGVjLTRjZDEtOTYwOS1iM2E3YzYxNjlhNGYifQ
+  Keycloak error detected: Invalid username or password.
+  OAuth flow error: Keycloak login failed: Invalid username or password.
+  Page title: Sign in to Proxy Smart
+  Page URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=46c67c99-25a5-4b97-91a3-ae8af3f9b1c1&client_id=inferno-test-client&tab_id=MlRRqRHC9J4&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJjYjA1NTJiNS1mMGVjLTRjZDEtOTYwOS1iM2E3YzYxNjlhNGYifQ
+  Page content (first 1000 chars): <!DOCTYPE html><html class="login-pf" lang="en"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="color-scheme" content="light dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Sign in to Proxy Smart</title>
+    <link rel="icon" href="/resources/re9t6/login/keycloak.v2/img/favicon.ico">
+            <link href="/resources/re9t6/common/keycloak/vendor/patternfly-v5/patternfly.min.css" rel="stylesheet">
+            <link href="/resources/re9t6/common/keycloak/vendor/patternfly-v5/patternfly-addons.css" rel="stylesheet">
+            <link href="/resources/re9t6/login/keycloak.v2/css/styles.css" rel="stylesheet">
+    <script type="importmap">
+        {
+            "imports": {
+                "rfc4648": "/resources/re9t6/common/keycloak/vendor/rfc4648/rfc4648.js"
+            }
+        }
+    </script>
+      <script type="module" async="" blocking="render">
+          const DARK_MO
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: Keycloak login failed: Invalid username or password.
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 0 failed, 3 waiting, 9 total
+  [Poll #4] Status: waiting
+  Waiting 30s before OAuth retry (backoff)...
+  Test is waiting for user action (OAuth flow, attempt 3/3)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256
+  Navigation response status: 200
+  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cb0552b5-f0ec-4cd1-9609-b3a7c6169a4f&code_challenge=_cESfceXQD8gHGlPUocLydPtymdMbmZzBksg7VWD5xI&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  On Keycloak login page, entering credentials...
+  Filled username
+  Filled password
+  Clicked login button
+  Post-login URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=46c67c99-25a5-4b97-91a3-ae8af3f9b1c1&client_id=inferno-test-client&tab_id=89Fa9t1SjfI&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJjYjA1NTJiNS1mMGVjLTRjZDEtOTYwOS1iM2E3YzYxNjlhNGYifQ
+  Keycloak error detected: Invalid username or password.
+  OAuth flow error: Keycloak login failed: Invalid username or password.
+  Page title: Sign in to Proxy Smart
+  Page URL: http://localhost:8080/realms/proxy-smart/login-actions/authenticate?execution=46c67c99-25a5-4b97-91a3-ae8af3f9b1c1&client_id=inferno-test-client&tab_id=89Fa9t1SjfI&client_data=eyJydSI6Imh0dHA6Ly9sb2NhbGhvc3Q6NDU2Ny9jdXN0b20vc21hcnRfc3R1Ml8yL3JlZGlyZWN0IiwicnQiOiJjb2RlIiwic3QiOiJjYjA1NTJiNS1mMGVjLTRjZDEtOTYwOS1iM2E3YzYxNjlhNGYifQ
+  Page content (first 1000 chars): <!DOCTYPE html><html class="login-pf" lang="en"><head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="color-scheme" content="light dark">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Sign in to Proxy Smart</title>
+    <link rel="icon" href="/resources/re9t6/login/keycloak.v2/img/favicon.ico">
+            <link href="/resources/re9t6/common/keycloak/vendor/patternfly-v5/patternfly.min.css" rel="stylesheet">
+            <link href="/resources/re9t6/common/keycloak/vendor/patternfly-v5/patternfly-addons.css" rel="stylesheet">
+            <link href="/resources/re9t6/login/keycloak.v2/css/styles.css" rel="stylesheet">
+    <script type="importmap">
+        {
+            "imports": {
+                "rfc4648": "/resources/re9t6/common/keycloak/vendor/rfc4648/rfc4648.js"
+            }
+        }
+    </script>
+      <script type="module" async="" blocking="render">
+          const DARK_MO
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: Keycloak login failed: Invalid username or password.
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
+  Progress: 5 passed, 0 failed, 3 waiting, 9 total
+  [Poll #5] Status: waiting
+  OAuth failed after 3 attempts — aborting wait
+Standalone Launch tests error: OAuth automation failed after 3 attempts
+Test execution failed: OAuth automation failed after 3 attempts
