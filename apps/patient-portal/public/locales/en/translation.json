@@ -314,7 +314,7 @@
     "description": "Scan this QR code to view a read-only copy of your health summary. The link expires automatically.",
     "label": "Patient Health Summary",
     "generating": "Creating secure share link...",
-    "retry": "Try Again",
+    "retry": "Try Again.",
     "expiresIn": "Expires in {{minutes}} minutes",
     "copyLink": "Copy Link",
     "copied": "Copied!",
