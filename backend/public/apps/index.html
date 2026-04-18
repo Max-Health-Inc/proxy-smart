@@ -34,7 +34,7 @@
     .links a:hover { color: var(--fg); }
 
     /* ── Main ────────────────────────────────────── */
-    main { flex: 1; max-width: 960px; width: 100%; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    main { flex: 1; max-width: 960px; width: 100%; margin: 0 auto; padding: 2rem 1.25rem 1.5rem; }
 
     /* ── Toolbar ─────────────────────────────────── */
     .toolbar {
@@ -57,7 +57,11 @@
     /* ── Store frame ─────────────────────────────── */
     .store-frame {
       background: #fff; border: 1px solid var(--border); border-radius: 12px;
-      padding: 1.5rem; min-height: 300px;
+      padding: 1.5rem; min-height: 420px;
+    }
+    .store-divider {
+      height: 1px; margin: 1.5rem auto 0;
+      background: radial-gradient(ellipse at center, #bbb 0%, var(--border) 50%, transparent 100%);
     }
 
     /* ── Grid ────────────────────────────────────── */
@@ -130,7 +134,7 @@
     @keyframes s { to { transform: rotate(360deg); } }
 
     /* ── Footer ──────────────────────────────────── */
-    footer { padding: 1rem 1.25rem; text-align: center; font-size: .7rem; color: var(--muted); }
+    footer { padding: .5rem 1.25rem; text-align: center; font-size: .7rem; color: var(--muted); }
 
     @media (max-width: 480px) {
       main { padding: 1.25rem 1rem 2rem; }
@@ -168,6 +172,7 @@
       </div>
       <div class="pagination hidden" id="pag"></div>
     </div>
+    <div class="store-divider"></div>
   </main>
 
   <footer>&copy; <script>document.write(new Date().getFullYear())</script> Max Health Inc.</footer>
