@@ -196,6 +196,19 @@ export async function searchLabs(patientId: string): Promise<ObservationResultsL
 
 // ── Diagnostic Reports (IPS-profiled) ────────────────────────────────────────
 
+/**
+ * Search for ABO + Rh blood type observations (LOINC 882-1, 10331-7).
+ * Returns the most recent result of each.
+ */
+export async function searchBloodType(patientId: string): Promise<ObservationResultsLaboratoryPathologyUvIps[]> {
+  return client.read().observationResultsLaboratoryPathologyUvIps().searchAll({
+    patient: `Patient/${patientId}`,
+    code: "882-1,10331-7",
+    _count: 2,
+    _sort: "-date",
+  })
+}
+
 export async function searchDiagnosticReports(patientId: string): Promise<DiagnosticReportUvIps[]> {
   return client.read().diagnosticReportUvIps().searchAll({
     patient: `Patient/${patientId}`,
