@@ -9,7 +9,7 @@ import {
 } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
 import { useState } from "react"
-import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil, Trash2 } from "lucide-react"
+import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil, Trash2, Phone, Mail, MapPin, GraduationCap } from "lucide-react"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
 import type { DocumentReference, DynamicFhirResource } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
@@ -389,6 +389,50 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
                   {resource.reaction[0].severity}
                 </Badge>
               )}
+            </DetailRow>
+          )}
+
+          {/* Telecom (Practitioner, Organization, etc.) */}
+          {resource.telecom?.length > 0 && (
+            <div className="border-t pt-3 mt-3 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("recordDetail.contact")}</p>
+              {resource.telecom.map((t: { system?: string; value?: string; use?: string }, i: number) => {
+                if (!t.value) return null
+                const icon = t.system === 'phone' || t.system === 'fax'
+                  ? <Phone className="size-4 text-green-500" />
+                  : <Mail className="size-4 text-blue-500" />
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="mt-0.5 shrink-0">{icon}</div>
+                    <div className="min-w-0">
+                      {t.use && <p className="text-xs text-muted-foreground capitalize">{t.use}</p>}
+                      {t.system === 'email' ? (
+                        <a href={`mailto:${t.value}`} className="text-sm text-primary hover:underline">{t.value}</a>
+                      ) : t.system === 'phone' ? (
+                        <a href={`tel:${t.value}`} className="text-sm text-primary hover:underline">{t.value}</a>
+                      ) : (
+                        <p className="text-sm">{t.value}</p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Address */}
+          {resource.address?.length > 0 && resource.address[0]?.text && (
+            <DetailRow icon={<MapPin className="size-4 text-rose-500" />} label={t("recordDetail.address")}>
+              {resource.address[0].text}
+            </DetailRow>
+          )}
+
+          {/* Qualification (Practitioner) */}
+          {resource.qualification?.length > 0 && (
+            <DetailRow icon={<GraduationCap className="size-4 text-violet-500" />} label={t("recordDetail.qualification")}>
+              {resource.qualification.map((q: { code?: { coding?: { display?: string }[]; text?: string } }, i: number) => (
+                <span key={i}>{q.code?.coding?.[0]?.display ?? q.code?.text ?? ''}{i < resource.qualification.length - 1 ? ', ' : ''}</span>
+              ))}
             </DetailRow>
           )}
 

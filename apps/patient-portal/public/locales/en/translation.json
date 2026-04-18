@@ -249,6 +249,9 @@
     "confirmDelete": "Yes, Delete",
     "deleting": "Deleting…",
     "cancel": "Cancel",
+    "contact": "Contact",
+    "address": "Address",
+    "qualification": "Qualification",
     "unknownReaction": "Unknown reaction"
   },
   "recordEdit": {
