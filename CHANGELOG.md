@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/459
 
 
+
+- 🔧 Chores & Improvements: Replace environment-variable passwords with fixed defaults in keycloak/realm-export.json for TEST_USER_PASSWORD, ADMIN_PASSWORD, and DOCTOR_PASSWORD (DevT3st!Pass, DevAdm!n2024, DevD0c!2024)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/460
+
+
 ## [0.0.6-alpha.202604180230.a3897f94] - 2026-04-18
 
 - 🔧 Chores & Improvements: CI: dynamic Inferno version resolution and version-aware caching; conditional Inferno setup based on cache miss
