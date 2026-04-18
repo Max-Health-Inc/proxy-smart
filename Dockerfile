@@ -26,10 +26,10 @@ COPY apps/consent-app/package.json ./apps/consent-app/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
 COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
 COPY apps/patient-portal/package.json ./apps/patient-portal/
-COPY apps/patient-portal/lib/ ./apps/patient-portal/lib/
+COPY apps/shl-viewer/package.json ./apps/shl-viewer/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal","apps/shl-viewer"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
