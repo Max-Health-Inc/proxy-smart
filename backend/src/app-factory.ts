@@ -151,6 +151,10 @@ export function createApp() {
         .get('/webapp', () => Bun.file('public/webapp/index.html'))
         .get('/webapp/', () => Bun.file('public/webapp/index.html'))
         .get('/', () => Bun.file('public/index.html'))
+        // Browsers request /favicon.ico by default — redirect to our SVG icon
+        .get('/favicon.ico', ({ set }) => {
+            set.redirect = '/proxy-smart.svg'
+        })
         // SMART apps directory
         .get('/apps', () => Bun.file('public/apps/index.html'))
         .get('/apps/', () => Bun.file('public/apps/index.html'))
