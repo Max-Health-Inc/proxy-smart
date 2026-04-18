@@ -363,7 +363,7 @@
     /* ── Features ─────────────────────────────────────────────────────── */
     .features {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
     }
     .feature-card {
@@ -683,10 +683,8 @@
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links" id="navLinks">
-        <li><a href="#features">Features</a></li>
         <li><a href="#appstore">App Store</a></li>
         <li><a href="#architecture">Architecture</a></li>
-        <li><a href="#quickstart">Quick Start</a></li>
         <li><a href="/docs" style="color: rgba(255,255,255,.6);">Docs</a></li>
         <li><a href="https://github.com/max-health-inc/proxy-smart">GitHub</a></li>
       </ul>
@@ -730,9 +728,8 @@
       </p>
 
       <div class="hero-actions fade-in-d4">
-        <a href="#quickstart" class="btn">Get Started &rarr;</a>
-        <a href="/docs" class="btn">Read the Docs</a>
-        <a href="https://github.com/max-health-inc/proxy-smart" class="btn">View on GitHub</a>
+        <a href="/docs" class="btn">Get Started &rarr;</a>
+        <a href="/apps" class="btn">View App Store</a>
       </div>
     </div>
 
@@ -751,83 +748,99 @@
         <div class="stat-card">
           <span class="stat-label">Spec</span>
           <span class="stat-value">2.2.0</span>
-          <span class="stat-detail">SMART App Launch</span>
+          <span class="stat-detail">SMART App Launch, Inferno tests passing</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Data Stored</span>
           <span class="stat-value">Zero</span>
-          <span class="stat-detail">Stateless proxy — no PHI</span>
+          <span class="stat-detail">Stateless proxy, no PHI touches us</span>
         </div>
         <div class="stat-card">
-          <span class="stat-label">License</span>
-          <span class="stat-value">AGPL-3</span>
-          <span class="stat-detail">Commercial license available</span>
+          <span class="stat-label">Apps Included</span>
+          <span class="stat-value">5+</span>
+          <span class="stat-detail">Patient Portal, Consent, DTR, Imaging...</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">Deploy</span>
           <span class="stat-value">1 cmd</span>
-          <span class="stat-detail">Docker Compose included</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features -->
-    <section id="features">
-      <div class="section-label">Features</div>
-      <div class="features">
-        <div class="feature-card">
-          <div class="feature-number">01</div>
-          <div class="feature-title">Stateless FHIR Proxy</div>
-          <div class="feature-desc">
-            No clinical data touches the proxy. Requests pass through to your FHIR server — smaller attack surface, simpler HIPAA/GDPR compliance.
-          </div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-number">02</div>
-          <div class="feature-title">SMART App Launch 2.2.0</div>
-          <div class="feature-desc">
-            Full spec implementation: OAuth 2.0 + PKCE, JWT validation, scope-based access control, refresh token rotation, enterprise SSO.
-          </div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-number">03</div>
-          <div class="feature-title">Admin Dashboard</div>
-          <div class="feature-desc">
-            Built-in React UI to manage SMART apps, FHIR server connections, users, and scopes. No manual config editing required.
-          </div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-number">04</div>
-          <div class="feature-title">BabelFHIR-TS Integration</div>
-          <div class="feature-desc">
-            Generate type-safe TypeScript from any FHIR Implementation Guide. Profile-aware interfaces, runtime validation, and a type-safe FHIR client.
-          </div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-number">05</div>
-          <div class="feature-title">AI Assistant &amp; MCP</div>
-          <div class="feature-desc">
-            Built-in AI assistant with RAG, plus a built-in MCP server for programmatic AI-tool integration.
-          </div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-number">06</div>
-          <div class="feature-title">Docker-Ready</div>
-          <div class="feature-desc">
-            One-command dev and prod deployments. Mono-container and multi-container Docker Compose setups included.
-          </div>
+          <span class="stat-detail">Docker Compose, mono or multi-container</span>
         </div>
       </div>
     </section>
 
     <!-- App Store -->
     <section id="appstore">
-      <div class="section-label">Proxy Smart App Store — by Max Health Inc.</div>
+      <div class="section-label">Proxy Smart App Store</div>
       <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; flex-wrap: wrap; margin-bottom: 2rem;">
         <p style="color: rgba(255,255,255,.45); font-size: .9rem; max-width: 640px; line-height: 1.7; margin: 0;">
           Register, manage, and launch SMART on FHIR apps through a single admin interface. Every app gets OAuth 2.0 + PKCE, scope-based access control, and FHIR server routing out of the box.
         </p>
         <a href="/apps" class="btn">Browse the App Store &rarr;</a>
+      </div>
+      <div class="features">
+        <div class="feature-card">
+          <div class="feature-number">01</div>
+          <div class="feature-title">Stateless FHIR Proxy</div>
+          <div class="feature-desc">
+            No clinical data touches the proxy. Requests pass through to your FHIR server with auth injected. Smaller attack surface, simpler HIPAA and GDPR compliance.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">02</div>
+          <div class="feature-title">SMART 2.2.0, Inferno Tested</div>
+          <div class="feature-desc">
+            Passes the ONC Inferno SMART STU2.2 test suite. OAuth 2.0 + PKCE, JWT validation, scope-based access control, refresh token rotation, and enterprise SSO.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">03</div>
+          <div class="feature-title">App Store</div>
+          <div class="feature-desc">
+            Built-in marketplace to publish, discover, and launch SMART on FHIR apps. Dynamic Client Registration (RFC 7591), one-click install, per-app scope control.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">04</div>
+          <div class="feature-title">Patient Portal</div>
+          <div class="feature-desc">
+            Patient-facing dashboard with International Patient Summary, lab results, documents, medications, blood type, and a built-in DICOM imaging viewer.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">05</div>
+          <div class="feature-title">Admin Dashboard</div>
+          <div class="feature-desc">
+            Manage SMART apps, users, roles, organizations, launch contexts, and runtime branding. User federation, identity brokering, and multi-tenant support built in.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">06</div>
+          <div class="feature-title">Consent Engine</div>
+          <div class="feature-desc">
+            Granular patient consent with configurable IAL levels, scope-level approval, and webhook notifications. Dedicated consent app included.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">07</div>
+          <div class="feature-title">AI-Native: MCP + CDS Hooks</div>
+          <div class="feature-desc">
+            Expose a Model Context Protocol server for AI agent integration. Built-in CDS Hooks engine, RAG-powered assistant, and a skills registry for tool discovery.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">08</div>
+          <div class="feature-title">BabelFHIR-TS</div>
+          <div class="feature-desc">
+            Generate type-safe TypeScript from any FHIR Implementation Guide. Profile-aware interfaces, runtime validation, and a type-safe FHIR client.
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-number">09</div>
+          <div class="feature-title">Deploy Anywhere</div>
+          <div class="feature-desc">
+            One-command dev and prod deployments. Docker Compose (mono or multi-container), Caddy reverse proxy, and AWS CDK infrastructure included.
+          </div>
+        </div>
       </div>
       <div class="app-store-footer" style="margin-top: 1.5rem;">
         Register your own SMART apps via the Admin Dashboard or SMART Dynamic Client Registration.
@@ -908,33 +921,6 @@
 
 <span class="c">// Validate against profile constraints at runtime</span>
 <span class="k">const</span> { errors, warnings } = <span class="k">await</span> patient.<span class="f">validate</span>();</pre>
-      </div>
-    </section>
-
-    <!-- Quick Start -->
-    <section id="quickstart">
-      <div class="section-label">Quick Start</div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">01</div>
-          <div class="step-title">Clone</div>
-          <div class="step-cmd">git clone https://github.com/max-health-inc/proxy-smart.git</div>
-        </div>
-        <div class="step">
-          <div class="step-number">02</div>
-          <div class="step-title">Start Services</div>
-          <div class="step-cmd">bun docker:dev</div>
-        </div>
-        <div class="step">
-          <div class="step-number">03</div>
-          <div class="step-title">Install &amp; Run</div>
-          <div class="step-cmd">bun install &amp;&amp; bun run dev</div>
-        </div>
-        <div class="step">
-          <div class="step-number">04</div>
-          <div class="step-title">Open Admin UI</div>
-          <div class="step-cmd">http://localhost:3000</div>
-        </div>
       </div>
     </section>
 

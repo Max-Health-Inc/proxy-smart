@@ -81,7 +81,6 @@ concurrency:
 
 permissions:
   contents: write  # Required to commit test reports
-  issues: write    # Required to create self-heal issues for Copilot
 
 env:
   # Determine test stage based on branch
