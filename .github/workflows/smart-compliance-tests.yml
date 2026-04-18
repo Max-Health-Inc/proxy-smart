@@ -428,6 +428,7 @@ jobs:
           FHIR_SERVER_BASE: http://localhost:8081/fhir
           # Allow Inferno test runner origin for CORS compliance tests
           CORS_ORIGINS: http://localhost:4567,http://localhost:8445,http://localhost:5173
+          LOG_LEVEL: debug
 
       # For deployed targets, verify the remote services are reachable
       - name: Verify Deployed Services
@@ -724,8 +725,7 @@ jobs:
 
       - name: Setup Inferno
         run: |
-          # Pin to stable release to avoid regressions from main branch
-          git clone --branch v1.0.0 --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
           cd inferno
           bundle install
           

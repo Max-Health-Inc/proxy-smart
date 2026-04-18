@@ -345,8 +345,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     const bodyObj = body as Record<string, string | undefined>
     const incomingContentType = headers['content-type'] || 'unknown'
 
-    // Log at info level so it's visible in production container logs
-    logger.auth.info('Token endpoint request', {
+    logger.auth.debug('Token endpoint request', {
       keycloakUrl: kcUrl,
       contentType: incomingContentType,
       bodyKeys: Object.keys(body as Record<string, unknown>),
@@ -393,7 +392,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       if (bodyObj.requested_token_type) formData.append('requested_token_type', bodyObj.requested_token_type)
 
       const rawBody = formData.toString()
-      logger.auth.info('Forwarding to Keycloak', {
+      logger.auth.debug('Forwarding to Keycloak', {
         formFields: Array.from(formData.keys()),
         redirect_uri: formData.get('redirect_uri') || undefined,
       })
@@ -407,9 +406,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       const responseTime = Date.now() - startTime;
       const data = await resp.json()
 
-      // Log at info level for non-200, debug for success
       if (resp.status !== 200) {
-        logger.auth.warn('Keycloak token error response', {
+        logger.auth.debug('Keycloak token error response', {
           status: resp.status,
           error: data.error,
           error_description: data.error_description,
@@ -421,7 +419,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           responseKeys: Object.keys(data),
         })
       } else {
-        logger.auth.info('Keycloak token success', {
+        logger.auth.debug('Keycloak token success', {
           status: resp.status,
           hasAccessToken: !!data.access_token,
           hasIdToken: !!data.id_token,
