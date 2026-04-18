@@ -245,6 +245,10 @@
     "notes": "Notes",
     "sourceDocuments": "Source Documents",
     "editRecord": "Edit Record",
+    "deleteRecord": "Delete",
+    "confirmDelete": "Yes, Delete",
+    "deleting": "Deleting…",
+    "cancel": "Cancel",
     "unknownReaction": "Unknown reaction"
   },
   "recordEdit": {

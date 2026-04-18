@@ -245,6 +245,10 @@
     "notes": "Notizen",
     "sourceDocuments": "Quelldokumente",
     "editRecord": "Datensatz bearbeiten",
+    "deleteRecord": "Löschen",
+    "confirmDelete": "Ja, löschen",
+    "deleting": "Wird gelöscht…",
+    "cancel": "Abbrechen",
     "unknownReaction": "Unbekannte Reaktion"
   },
   "recordEdit": {

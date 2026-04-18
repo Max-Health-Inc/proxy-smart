@@ -464,6 +464,18 @@ export async function updateResource<T extends { resourceType: string; id?: stri
   return res.json() as Promise<T>
 }
 
+/** Delete a FHIR resource via DELETE (requires patient/*.write scope) */
+export async function deleteResource(resourceType: string, id: string): Promise<void> {
+  const res = await authFetch(`${fhirBaseUrl}/${resourceType}/${id}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/fhir+json' },
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Failed to delete ${resourceType}/${id} (${res.status}): ${text}`)
+  }
+}
+
 // ── Document Import ──────────────────────────────────────────────────────────
 
 /**
