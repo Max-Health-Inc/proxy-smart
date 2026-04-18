@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-beta.202604180021.d4903bc7] - 2026-04-18
+
+- 🐛 Bug Fixes
+  - Security and input handling: added URL/SSRF validation to block internal/private endpoints and sanitize inputs; hardened error handling.
+
+- 🔧 Chores & Improvements
+  - Rate limiting: introduce in-memory rate limiter and rateLimit middleware for backend/frontend/admin routes; per-key sliding window with periodic cleanup.
+  - Security hardening: run services as non-root user in Dockerfiles; remove sensitive secrets from CI workflows.
+  - Admin/auth enhancements: enforce admin token validation on admin/config/test/shutdown paths; updated REST endpoints to require admin authentication; improved error messaging.
+  - URL validation: added SSRF/URL guards across MCP/server and FHIR server routes.
+  - Dependency and wiring tweaks: update package versions, adjust wiring for health/healing logic, and minor build outputs adjustments.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/447
+
+
 ## [0.0.6-alpha.202604180021.d4903bc7] - 2026-04-18
 
 - ✨ Features
