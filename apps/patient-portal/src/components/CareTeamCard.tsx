@@ -34,7 +34,7 @@ export function CareTeamCard({ practitioners, organizations, onOpenDetail }: Car
             {hasPractitioners && (
               <ul className="space-y-1.5">
                 {practitioners.map((pr, i) => {
-                  const name = pr.name?.[0] ? formatHumanName(pr.name[0]) : "Unknown Practitioner"
+                  const name = pr.name?.length ? formatHumanName(pr.name) : "Unknown Practitioner"
                   const qualification = pr.qualification?.[0]?.code?.coding?.[0]?.display
                   return (
                     <li key={pr.id || i} className="text-sm">
