@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180451.1176fee1] - 2026-04-18
+
+- 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604180451.1176fee1 across multiple packages/apps
+- 🐛 Bug Fixes: Improve practitioner name derivation in CareTeamCard.tsx (use pr.name length check with fallback to "Unknown Practitioner")
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/469
+
+
 ## [0.0.6-alpha.202604180443.7013097d] - 2026-04-18
 
 - 🔧 Chores & Improvements: Bump version refs to 0.0.6-alpha.202604180443.7013097d across apps and typings
