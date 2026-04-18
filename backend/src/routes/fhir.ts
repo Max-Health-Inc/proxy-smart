@@ -242,6 +242,8 @@ async function proxyFHIR({ params, request, set }: any) {
       statusCode: resp.status,
       responseTimeMs: fetchMs,
       clientId: tokenPayload?.azp || tokenPayload?.client_id,
+      userId: tokenPayload?.sub,
+      username: tokenPayload?.preferred_username,
       error: resp.status >= 400 ? `HTTP ${resp.status}` : undefined,
     })
 
