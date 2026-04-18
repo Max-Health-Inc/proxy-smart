@@ -101,6 +101,8 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
+      SHL_EXCHANGE_CLIENT_ID: shl-exchange
+      SHL_EXCHANGE_CLIENT_SECRET: shl-exchange-dev-secret
       FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly # Multiple FHIR servers can be specified, separated by commas
       # DICOMweb proxy — points to the Orthanc PACS DICOMweb endpoint
       DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web

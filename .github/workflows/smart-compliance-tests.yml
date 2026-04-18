@@ -424,6 +424,8 @@ jobs:
           KEYCLOAK_REALM: proxy-smart
           KEYCLOAK_ADMIN_CLIENT_ID: admin-service
           KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
+          SHL_EXCHANGE_CLIENT_ID: shl-exchange
+          SHL_EXCHANGE_CLIENT_SECRET: shl-exchange-dev-secret
           # Point to HAPI FHIR server running in GitHub Actions service container
           FHIR_SERVER_BASE: http://localhost:8081/fhir
           # Allow Inferno test runner origin for CORS compliance tests
