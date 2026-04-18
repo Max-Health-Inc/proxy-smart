@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180532.28cb6a09] - 2026-04-18
+
+- 🔧 Chores & Improvements: Version bumps across apps/libs to 0.0.6-alpha.202604180532.28cb6a09
+- ✨ Features: Add deleteResource capability in patient-portal lib/fhir-client.ts for DELETE operations
+- ✨ Features: UI Dashboard now refreshes on deletions via onResourceDeleted
+- ✨ Features: Patient portal RecordDetailModal header receives Trash/Delete icon (Trash2) and supports resource deletion
+- 📚 Documentation: i18n translations added for delete/cancel in German, English, Spanish, French, Italian (patient-portal locales)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/471
+
+
 ## [0.0.6-alpha.202604180503.f0670f25] - 2026-04-18
 
 - 🔧 Chores & Improvements: Remove 4-hour Copilot Auto-Fix cron; keep workflow_dispatch
