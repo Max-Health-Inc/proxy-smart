@@ -255,33 +255,38 @@ export function GenomicsCard({
               </div>
             )}
 
-            {/* Diagnostic Implications */}
-            {diagnosticImplications.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <AlertTriangle className="size-3" />
-                  {t("genomics.diagnosticImplications")}
-                </h4>
-                <ul className="grid gap-1.5 md:grid-cols-2">
-                  {diagnosticImplications.map((di, i) => (
-                    <DiagnosticImplicationRow key={di.id || i} impl={di} />
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* Diagnostic Implications + Pharmacogenomics side by side on desktop */}
+            {(diagnosticImplications.length > 0 || therapeuticImplications.length > 0) && (
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Diagnostic Implications */}
+                {diagnosticImplications.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <AlertTriangle className="size-3" />
+                      {t("genomics.diagnosticImplications")}
+                    </h4>
+                    <ul className="space-y-1.5">
+                      {diagnosticImplications.map((di, i) => (
+                        <DiagnosticImplicationRow key={di.id || i} impl={di} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-            {/* Therapeutic Implications (Pharmacogenomics) */}
-            {therapeuticImplications.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <Pill className="size-3" />
-                  {t("genomics.pharmacogenomics")}
-                </h4>
-                <ul className="grid gap-1.5 md:grid-cols-2">
-                  {therapeuticImplications.map((ti, i) => (
-                    <TherapeuticImplicationRow key={ti.id || i} impl={ti} />
-                  ))}
-                </ul>
+                {/* Therapeutic Implications (Pharmacogenomics) */}
+                {therapeuticImplications.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <Pill className="size-3" />
+                      {t("genomics.pharmacogenomics")}
+                    </h4>
+                    <ul className="space-y-1.5">
+                      {therapeuticImplications.map((ti, i) => (
+                        <TherapeuticImplicationRow key={ti.id || i} impl={ti} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </div>
