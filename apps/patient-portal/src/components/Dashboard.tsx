@@ -648,19 +648,21 @@ export function Dashboard() {
 
         <DocumentsCard documents={documents} onOpenDetail={openDetail} />
 
-        <GenomicsCard
-          reports={genomicReports}
-          variants={variants}
-          diagnosticImplications={diagnosticImplications}
-          therapeuticImplications={therapeuticImplications}
-        />
-
         <div className="md:col-span-2">
           <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
         </div>
 
         <div className="md:col-span-2">
           <HealthChartsCard vitals={vitals} labs={labs} />
+        </div>
+
+        <div className="md:col-span-2">
+          <GenomicsCard
+            reports={genomicReports}
+            variants={variants}
+            diagnosticImplications={diagnosticImplications}
+            therapeuticImplications={therapeuticImplications}
+          />
         </div>
       </div>
 
