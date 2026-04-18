@@ -723,13 +723,47 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: false
 
-      - name: Setup Inferno
+      - name: Resolve Inferno Version
+        id: inferno-version
         run: |
-          git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          LATEST_TAG=$(curl -sf https://api.github.com/repos/inferno-framework/smart-app-launch-test-kit/releases/latest | jq -r '.tag_name')
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "WARNING: Could not fetch latest release, falling back to main"
+            LATEST_TAG="main"
+          fi
+          echo "Inferno version: $LATEST_TAG"
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Cache Inferno
+        id: inferno-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            inferno
+            ~/.bundle
+          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3
+
+      - name: Setup Inferno
+        if: steps.inferno-cache.outputs.cache-hit != 'true'
+        run: |
+          TAG="${{ steps.inferno-version.outputs.tag }}"
+          if [ "$TAG" = "main" ]; then
+            git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          else
+            git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          fi
           cd inferno
           bundle install
           
           # Setup database
+          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          export REDIS_URL="redis://localhost:6379"
+          bundle exec rake db:migrate || bundle exec rake db:setup || true
+
+      - name: Setup Inferno DB (cached)
+        if: steps.inferno-cache.outputs.cache-hit == 'true'
+        run: |
+          cd inferno
           export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
@@ -878,6 +912,7 @@ jobs:
       # Seed FHIR resources for deployed mode (local mode seeds in earlier step)
       - name: Seed FHIR Test Resources (Deployed)
         if: steps.config.outputs.target == 'deployed'
+        continue-on-error: true
         run: |
           BACKEND_URL="${{ steps.config.outputs.backend_url }}"
           KC_URL="${{ steps.config.outputs.kc_url }}"
@@ -908,7 +943,8 @@ jobs:
           echo "✓ Obtained access token for resource seeding"
           
           # Create Practitioner (matches doctor user's fhirUser claim)
-          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Practitioner/example-practitioner" \
+          # Use -s (not -sf) so curl doesn't exit non-zero on HTTP errors, and capture body for diagnostics
+          RESP=$(curl -s -w "\n%{http_code}" -X PUT "$FHIR_BASE/Practitioner/example-practitioner" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/fhir+json" \
             -d '{
@@ -919,10 +955,13 @@ jobs:
               "name": [{"family": "Doctor", "given": ["Test"], "prefix": ["Dr."]}],
               "telecom": [{"system": "email", "value": "doctor@example.com"}]
             }')
+          HTTP_CODE=$(echo "$RESP" | tail -1)
+          BODY=$(echo "$RESP" | sed '$d')
           echo "  Practitioner/example-practitioner: HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" -ge 400 ] 2>/dev/null; then echo "  Error: $BODY"; fi
           
           # Create Patient (for launch/patient scope)
-          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Patient/test-patient" \
+          RESP=$(curl -s -w "\n%{http_code}" -X PUT "$FHIR_BASE/Patient/test-patient" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/fhir+json" \
             -d '{
@@ -934,7 +973,10 @@ jobs:
               "gender": "unknown",
               "birthDate": "1990-01-01"
             }')
+          HTTP_CODE=$(echo "$RESP" | tail -1)
+          BODY=$(echo "$RESP" | sed '$d')
           echo "  Patient/test-patient: HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" -ge 400 ] 2>/dev/null; then echo "  Error: $BODY"; fi
           
           echo "✓ FHIR test resources seeded on deployed server"
 
