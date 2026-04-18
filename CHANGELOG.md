@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180310.d6e29899] - 2026-04-18
+
+- 🔧 Chores & Improvements: Replace placeholder admin service secret with hard-coded backend admin service client secret in realm-export.json
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/463
+
+
 ## [0.0.6-alpha.202604180303.9b2a78b2] - 2026-04-18
 
 - 🔧 Chores & Improvements: Sync brand name with Keycloak realm displayName and displayNameHtml; extend runtime config save to push displayName updates when brand name exists.
