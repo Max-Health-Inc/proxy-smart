@@ -34,17 +34,23 @@ RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
 
-# Backend build stage
+# Backend build stage (just the JS bundle)
 FROM build-deps AS backend-build
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run build
+
+# OpenAPI spec generation (runs in parallel with backend-build)
+# export-openapi imports TypeScript source directly, doesn't need dist/
+FROM build-deps AS openapi-gen
+COPY backend/ ./backend/
+WORKDIR /app/backend
 RUN bun run export-openapi
 
 # API client generation stage
 FROM build-deps AS api-client-gen
 COPY scripts/generate-ts-fetch-client.py scripts/runtime-template.ts ./scripts/
-COPY --from=backend-build /app/backend/dist/openapi.json ./backend/dist/openapi.json
+COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p apps/ui/src/lib/api-client && \
     python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client
 
