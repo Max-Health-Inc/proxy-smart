@@ -34,3 +34,5 @@ apps/ui/src/lib/api-client/**/*.ts text eol=crlf
 *.woff2 binary
 *.ttf binary
 *.eot binary
+*.tgz binary
+*.tar.gz binary
