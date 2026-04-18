@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180503.f0670f25] - 2026-04-18
+
+- 🔧 Chores & Improvements: Remove 4-hour Copilot Auto-Fix cron; keep workflow_dispatch
+- 🔧 Chores & Improvements: Bump version seeds to alpha.202604180503.f0670f25 across multiple apps/packages
+- 🔧 Chores & Improvements: Add qrcode.react dependency to apps/patient-portal
+- 🔧 Chores & Improvements: Extend smart-apps API schema and CreateSmartAppRequest with tokenExchangeEnabled, accessTokenLifespan, and audienceClients; align backend routes/schemas
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/470
+
+
 ## [0.0.6-alpha.202604180451.1176fee1] - 2026-04-18
 
 - 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604180451.1176fee1 across multiple packages/apps
