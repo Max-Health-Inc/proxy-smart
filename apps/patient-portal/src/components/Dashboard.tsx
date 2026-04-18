@@ -24,6 +24,7 @@ import {
   searchDiagnosticImplications,
   searchTherapeuticImplications,
   searchDocuments,
+  searchBloodType,
   type Patient,
   type DocumentReference,
   type Condition,
@@ -112,6 +113,7 @@ export function Dashboard() {
   const [diagnosticImplications, setDiagnosticImplications] = useState<DiagnosticImplication[]>([])
   const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
   const [documents, setDocuments] = useState<DocumentReference[]>([])
+  const [bloodType, setBloodType] = useState<string | null>(null)
 
   // Filter helper
   const filterVerified = useCallback(<T extends AnyResource>(items: T[]): T[] => {
@@ -145,11 +147,12 @@ export function Dashboard() {
           searchGenomicReports(patientId), searchVariants(patientId),
           searchDiagnosticImplications(patientId), searchTherapeuticImplications(patientId),
           searchDocuments(patientId),
+          searchBloodType(patientId),
         ])
         const v = <T,>(r: PromiseSettledResult<T>): T | undefined => r.status === "fulfilled" ? r.value : undefined
         const [cond, allergy, meds, imm, vit, lab, tobacco, alcohol, proc, flag,
           pregStatus, pregEdd, medReqs, devices, imaging, radiology,
-          gReports, gVariants, gDiagImpl, gTheraImpl, docs] = results
+          gReports, gVariants, gDiagImpl, gTheraImpl, docs, btObs] = results
 
         // Apply results — each setter is a no-op if the search failed
         const apply = <T,>(r: PromiseSettledResult<T>, set: (v: T) => void) => { if (v(r)) set(v(r)!) }
@@ -164,6 +167,15 @@ export function Dashboard() {
         apply(gReports, setGenomicReports); apply(gVariants, setVariants)
         apply(gDiagImpl, setDiagnosticImplications); apply(gTheraImpl, setTherapeuticImplications)
         apply(docs, setDocuments)
+
+        // Derive blood type display string from ABO + Rh observations
+        if (btObs.status === 'fulfilled' && btObs.value?.length) {
+          const abo = btObs.value.find((o: LabResult) => o.code?.coding?.some(c => c.code === '882-1'))
+          const rh = btObs.value.find((o: LabResult) => o.code?.coding?.some(c => c.code === '10331-7'))
+          const aboText = abo?.valueCodeableConcept?.text || abo?.valueCodeableConcept?.coding?.[0]?.display || ''
+          const rhText = rh?.valueCodeableConcept?.text || rh?.valueCodeableConcept?.coding?.[0]?.display || ''
+          if (aboText || rhText) setBloodType([aboText, rhText].filter(Boolean).join(' '))
+        }
 
         checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
       } catch (err) {
@@ -195,7 +207,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {patient && <PatientBanner patient={patient} onPatientUpdated={setPatient} />}
+      {patient && <PatientBanner patient={patient} bloodType={bloodType} onPatientUpdated={setPatient} />}
 
       {showImport ? (
         <DocumentImport onClose={() => { setShowImport(false); refreshData() }} />

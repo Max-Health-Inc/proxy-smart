@@ -1,7 +1,7 @@
 import { Card, CardContent, Badge, Button } from "@proxy-smart/shared-ui"
 import { formatHumanName, type Patient } from "@/lib/fhir-client"
 import type { AdministrativeGenderCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AdministrativeGender"
-import { User, Pencil } from "lucide-react"
+import { User, Pencil, Droplets } from "lucide-react"
 import { format, differenceInYears } from "date-fns"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -9,10 +9,11 @@ import { PatientEditModal } from "@/components/PatientEditModal"
 
 interface PatientBannerProps {
   patient: Patient
+  bloodType?: string | null
   onPatientUpdated?: (patient: Patient) => void
 }
 
-export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps) {
+export function PatientBanner({ patient, bloodType, onPatientUpdated }: PatientBannerProps) {
   const [editOpen, setEditOpen] = useState(false)
   const { t } = useTranslation()
   const name = formatHumanName(patient.name)
@@ -50,10 +51,15 @@ export function PatientBanner({ patient, onPatientUpdated }: PatientBannerProps)
             )}
             {birthSex && <Badge variant="secondary" title="Sex assigned at birth">{t("patientBanner.saab", { value: birthSex })}</Badge>}
             {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
-            {patient.identifier?.[0]?.value && (
-              <span className="font-mono text-xs">{t("patientBanner.mrn", { value: patient.identifier[0].value })}</span>
+            {bloodType && (
+              <Badge variant="outline" className="gap-1"><Droplets className="size-3" />{bloodType}</Badge>
             )}
           </div>
+          {patient.identifier?.[0]?.value && (
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              <span className="font-mono">{t("patientBanner.mrn", { value: patient.identifier[0].value })}</span>
+            </div>
+          )}
         </div>
         <Button
           variant="ghost"
