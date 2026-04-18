@@ -114,6 +114,8 @@ function aesEncrypt(plaintext: string, key: Buffer): { ciphertext: string; iv: s
 
 // ── Route schemas ───────────────────────────────────────────────────────────
 
+const ErrorResponse = t.Object({ error: t.String() })
+
 const CreateShlBody = t.Object({
   label: t.Optional(t.String({ description: 'Label shown to recipient' })),
   passcode: t.Optional(t.String({ description: 'Optional passcode to protect the SHL' })),
@@ -232,7 +234,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
     }
   }, {
     body: CreateShlBody,
-    response: { 200: ShlResponse },
+    response: { 200: ShlResponse, 401: ErrorResponse, 500: ErrorResponse },
     detail: {
       summary: 'Create SMART Health Link',
       description: 'Create an SHL for QR-based patient data sharing. Exchanges user token for a scoped, short-lived token.',
@@ -296,7 +298,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
   }, {
     params: t.Object({ id: t.String() }),
     body: ManifestRequest,
-    response: { 200: ManifestResponse },
+    response: { 200: ManifestResponse, 401: ErrorResponse, 404: ErrorResponse, 410: ErrorResponse },
     detail: {
       summary: 'Fetch SHL Manifest',
       description: 'Recipient endpoint — returns encrypted manifest containing scoped access token.',
