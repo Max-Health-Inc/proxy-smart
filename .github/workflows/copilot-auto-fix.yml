@@ -1,9 +1,8 @@
 name: Copilot Auto-Fix (TDD)
 
 on:
-  schedule:
-    # Every 4 hours
-    - cron: "0 */4 * * *"
+  # schedule:
+  #   - cron: "0 */4 * * *"
   workflow_dispatch:
     inputs:
       target:
