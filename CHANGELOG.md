@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604180955.fdfc0a3f] - 2026-04-18
+
+- ✨ Features
+  - HealthChartsCard: groundwork for overhaul with new metrics rendering (BP, HR) and metric definitions
+  - SHL_EXCHANGE_CLIENT_SECRET added as optional in beta and deployment workflows; secret wiring to jobs and API calls
+
+- 🐛 Bug Fixes
+  - Favicon route fix; minor UI tweaks for consistency (min-width, text truncation, responsive metric select)
+
+- 🔧 Chores & Improvements
+  - GenomicsCard: major UI layout refactor; variants grid rework; two-column layout on desktop; combined rendering of Diagnostic Implications and Pharmacogenomics
+  - PatientBanner: UI polish (larger avatar, updated name/DOB row, age formatting, two-row metadata)
+  - Shared UI: Card overflow fix
+  - Version bumps: beta → alpha tag updates across multiple apps/packages
+  - Backend/DevOps: SHL client in docker-compose; Keycloak realm export updated; minor DTR/Consent UI layout tweak; favicon adjustments
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - Minor UI/content tweaks (no substantive docs changes)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/478
+
+
 ## [0.0.6-alpha.202604180907.c75786d7] - 2026-04-18
 
 - 🔧 Chores & Improvements: Treat .tgz and .tar.gz as binary in .gitattributes (binary attribute added)
