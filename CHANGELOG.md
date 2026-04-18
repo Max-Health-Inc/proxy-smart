@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-beta.202604180039.bfa7d5fd] - 2026-04-18
+
+- 🔧 Chores & Improvements: CI/testing updates
+  - use 'bun run test --run' for frontend tests in CI (vitest instead of bun test)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/450
+
+
 ## [0.0.6-beta.202604180021.d4903bc7] - 2026-04-18
 
 - 🐛 Bug Fixes
