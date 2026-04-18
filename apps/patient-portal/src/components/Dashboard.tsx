@@ -23,30 +23,15 @@ import {
   searchVariants,
   searchDiagnosticImplications,
   searchTherapeuticImplications,
-  searchDocuments,
-  searchBloodType,
-  type Patient,
-  type DocumentReference,
-  type Condition,
-  type AllergyIntolerance,
-  type MedicationStatement,
-  type MedicationRequest,
-  type Immunization,
-  type Observation,
-  type LabResult,
-  type RadiologyResult,
-  type TobaccoUseObservation,
-  type AlcoholUseObservation,
-  type PregnancyStatus,
-  type PregnancyEdd,
-  type Procedure,
-  type FlagAlert,
-  type DeviceUseStatement,
-  type ImagingStudy,
-  type GenomicReport,
-  type Variant,
-  type DiagnosticImplication,
-  type TherapeuticImplication,
+  searchDocuments, searchBloodType, searchCoverage, searchEncounters,
+  searchDiagnosticReports, searchPractitioners, searchOrganizations,
+  type Patient, type DocumentReference, type Condition, type Coverage, type Encounter,
+  type Organization, type Practitioner, type AllergyIntolerance, type MedicationStatement,
+  type MedicationRequest, type Immunization, type Observation, type LabResult,
+  type RadiologyResult, type TobaccoUseObservation, type AlcoholUseObservation,
+  type PregnancyStatus, type PregnancyEdd, type Procedure, type FlagAlert,
+  type DeviceUseStatement, type ImagingStudy, type GenomicReport, type Variant,
+  type DiagnosticImplication, type TherapeuticImplication, type DiagnosticReport,
 } from "@/lib/fhir-client"
 import { getCurrentSmokingStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-CurrentSmokingStatusUvIps"
 import { getVaccineTargetDiseasesUvIpsConcept } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-VaccineTargetDiseasesUvIps"
@@ -54,9 +39,9 @@ import { getPregnancyStatusUvIpsConcept } from "hl7.fhir.uv.ips-generated/values
 import type { FlagStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-FlagStatus"
 import {
   criticalityStyles, categoryEmoji, severityStyles,
-  getInterpretationFlag, getProcedureStatusStyle, getDeviceStatusStyle, conditionSeverityStyles, RecordName,
+  getInterpretationFlag, getProcedureStatusStyle, conditionSeverityStyles, RecordName,
   type AllergyIntoleranceCriticalityCode, type AllergyIntoleranceCategoryCode,
-  type ReactionEventSeverityCode, type EventStatusCode, type DeviceStatementStatusCode,
+  type ReactionEventSeverityCode, type EventStatusCode,
   type ConditionSeverityCode, type AnyResource,
 } from "@/lib/ips-display-helpers"
 import { PatientBanner } from "@/components/PatientBanner"
@@ -64,16 +49,20 @@ import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 import { HealthChartsCard } from "@/components/HealthChartsCard"
 import { GenomicsCard } from "@/components/GenomicsCard"
 import { DocumentsCard } from "@/components/DocumentsCard"
+import { CoverageCard } from "@/components/CoverageCard"
+import { EncountersCard } from "@/components/EncountersCard"
+import { DiagnosticReportsCard } from "@/components/DiagnosticReportsCard"
+import { CareTeamCard } from "@/components/CareTeamCard"
 import { DocumentImport } from "@/components/DocumentImport"
 import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
+import { PrescriptionsCard, DevicesCard } from "@/components/PrescriptionsDevicesCards"
 import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
 import { checkPacsStatus } from "@/lib/dicomweb"
 import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
-  Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle,
-  Cigarette, Wine, Scissors, Flag, Baby, Stethoscope, Laptop, Upload,
-  FileImage, MessageSquare, Eye, EyeOff,
+  Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle, Cigarette,
+  Wine, Scissors, Flag, Baby, Upload, FileImage, MessageSquare, Eye, EyeOff,
 } from "lucide-react"
 import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
@@ -114,6 +103,11 @@ export function Dashboard() {
   const [therapeuticImplications, setTherapeuticImplications] = useState<TherapeuticImplication[]>([])
   const [documents, setDocuments] = useState<DocumentReference[]>([])
   const [bloodType, setBloodType] = useState<string | null>(null)
+  const [coverages, setCoverages] = useState<Coverage[]>([])
+  const [encounters, setEncounters] = useState<Encounter[]>([])
+  const [diagnosticReports, setDiagnosticReports] = useState<DiagnosticReport[]>([])
+  const [practitioners, setPractitioners] = useState<Practitioner[]>([])
+  const [organizations, setOrganizations] = useState<Organization[]>([])
 
   // Filter helper
   const filterVerified = useCallback(<T extends AnyResource>(items: T[]): T[] => {
@@ -148,11 +142,17 @@ export function Dashboard() {
           searchDiagnosticImplications(patientId), searchTherapeuticImplications(patientId),
           searchDocuments(patientId),
           searchBloodType(patientId),
+          searchCoverage(patientId),
+          searchEncounters(patientId),
+          searchDiagnosticReports(patientId),
+          searchPractitioners(patientId),
+          searchOrganizations(),
         ])
         const v = <T,>(r: PromiseSettledResult<T>): T | undefined => r.status === "fulfilled" ? r.value : undefined
         const [cond, allergy, meds, imm, vit, lab, tobacco, alcohol, proc, flag,
           pregStatus, pregEdd, medReqs, devices, imaging, radiology,
-          gReports, gVariants, gDiagImpl, gTheraImpl, docs, btObs] = results
+          gReports, gVariants, gDiagImpl, gTheraImpl, docs, btObs,
+          cov, enc, diagReps, practs, orgs] = results
 
         // Apply results — each setter is a no-op if the search failed
         const apply = <T,>(r: PromiseSettledResult<T>, set: (v: T) => void) => { if (v(r)) set(v(r)!) }
@@ -167,6 +167,9 @@ export function Dashboard() {
         apply(gReports, setGenomicReports); apply(gVariants, setVariants)
         apply(gDiagImpl, setDiagnosticImplications); apply(gTheraImpl, setTherapeuticImplications)
         apply(docs, setDocuments)
+        apply(cov, setCoverages); apply(enc, setEncounters)
+        apply(diagReps, setDiagnosticReports)
+        apply(practs, setPractitioners); apply(orgs, setOrganizations)
 
         // Derive blood type display string from ABO + Rh observations
         if (btObs.status === 'fulfilled' && btObs.value?.length) {
@@ -634,70 +637,14 @@ export function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Stethoscope className="size-4 text-cyan-500" />
-              {t("dashboard.prescribedMedications")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {filterVerified(medicationRequests).length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("dashboard.noActivePrescriptions")}</p>
-            ) : (
-              <ul className="space-y-2">
-                {filterVerified(medicationRequests).map((rx, i) => (
-                  <li key={rx.id || i} className="text-sm">
-                    <RecordName resource={rx} onOpen={openDetail}>
-                      {rx.medicationCodeableConcept?.coding?.[0]?.display ||
-                        rx.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
-                    </RecordName>
-                    {rx.dosageInstruction?.[0]?.text && (
-                      <span className="text-muted-foreground ml-2">— {rx.dosageInstruction[0].text}</span>
-                    )}
-                    {rx.authoredOn && (
-                      <span className="text-muted-foreground ml-2 text-xs">
-                        {format(new Date(rx.authoredOn), "MMM d, yyyy")}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <PrescriptionsCard prescriptions={filterVerified(medicationRequests)} onOpenDetail={openDetail} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Laptop className="size-4 text-slate-500" />
-              {t("dashboard.medicalDevices")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {deviceUse.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("dashboard.noDeviceRecords")}</p>
-            ) : (
-              <ul className="space-y-2">
-                {deviceUse.map((du, i) => (
-                  <li key={du.id || i} className="text-sm">
-                    <RecordName resource={du} onOpen={openDetail}>
-                      {du.device?.display || du.device?.reference || t("dashboard.unknownDevice")}
-                    </RecordName>
-                    {du.timingPeriod?.start && (
-                      <span className="text-muted-foreground ml-2">
-                        {t("common.since", { date: format(new Date(du.timingPeriod.start), "MMM d, yyyy") })}
-                      </span>
-                    )}
-                    {du.status && (
-                      <Badge variant={getDeviceStatusStyle(du.status as DeviceStatementStatusCode)} className="ml-2 text-xs">{du.status}</Badge>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <DevicesCard devices={deviceUse} onOpenDetail={openDetail} />
+
+        <CoverageCard coverages={coverages} onOpenDetail={openDetail} />
+        <EncountersCard encounters={encounters} onOpenDetail={openDetail} />
+        <DiagnosticReportsCard reports={diagnosticReports} onOpenDetail={openDetail} />
+        <CareTeamCard practitioners={practitioners} organizations={organizations} onOpenDetail={openDetail} />
 
         <DocumentsCard documents={documents} onOpenDetail={openDetail} />
 

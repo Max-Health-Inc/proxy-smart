@@ -23,6 +23,9 @@ import type {
   DeviceUseStatementUvIps,
   ImagingStudyUvIps,
   BundleUvIps,
+  OrganizationUvIps,
+  PractitionerUvIps,
+  PractitionerRoleUvIps,
 } from "hl7.fhir.uv.ips-generated"
 import type {
   GenomicReport,
@@ -33,6 +36,8 @@ import type {
 import type {
   Observation,
   DocumentReference,
+  Coverage,
+  Encounter,
 } from "fhir/r4"
 import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
 import type { AllergyintoleranceClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceClinical"
@@ -65,7 +70,8 @@ export type {
   ImagingStudyUvIps as ImagingStudy,
   BundleUvIps as IpsBundle,
 }
-export type { Observation, DocumentReference }
+export type { Observation, DocumentReference, Coverage, Encounter }
+export type { OrganizationUvIps as Organization, PractitionerUvIps as Practitioner, PractitionerRoleUvIps as PractitionerRole }
 export type { GenomicReport, Variant, DiagnosticImplication, TherapeuticImplication }
 export type { DeviceStatementStatusCode, DiagnosticReportStatusUvIpsCode, ObservationStatusCode, ImmunizationStatusCode }
 
@@ -339,6 +345,41 @@ export async function searchRadiologyResults(patientId: string): Promise<Observa
     _count: 50,
     _sort: "-date",
   })
+}
+
+// ── Coverage (base R4) ───────────────────────────────────────────────────────
+
+export async function searchCoverage(patientId: string): Promise<Coverage[]> {
+  return client.read().coverage().searchAll({
+    beneficiary: `Patient/${patientId}`,
+    _count: 10,
+    _sort: "-period",
+  })
+}
+
+// ── Encounters (base R4) ─────────────────────────────────────────────────────
+
+export async function searchEncounters(patientId: string): Promise<Encounter[]> {
+  return client.read().encounter().searchAll({
+    patient: `Patient/${patientId}`,
+    _count: 20,
+    _sort: "-date",
+  })
+}
+
+// ── Care Team (IPS-profiled) ─────────────────────────────────────────────────
+
+export async function searchPractitioners(patientId: string): Promise<PractitionerUvIps[]> {
+  return client.read().practitionerUvIps().searchAll({
+    _has: "Encounter:participant:patient" as unknown as string,
+    _count: 20,
+  }).catch(() =>
+    client.read().practitionerUvIps().searchAll({ _count: 20 })
+  )
+}
+
+export async function searchOrganizations(): Promise<OrganizationUvIps[]> {
+  return client.read().organizationUvIps().searchAll({ _count: 20 })
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
