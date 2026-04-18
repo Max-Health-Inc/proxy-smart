@@ -35,7 +35,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
       if (!token?.access_token) throw new Error("Not authenticated")
 
       const proxyBase = config.proxyBase || window.location.origin
-      const resp = await fetch(`${proxyBase}/${config.proxyPrefix}/api/shl`, {
+      const resp = await fetch(`${proxyBase}/api/shl`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
