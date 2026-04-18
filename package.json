@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.6-beta.202604180532.28cb6a09",
+  "version": "0.0.6-alpha.202604180719.b66f4933",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quotentiroler/proxy-smart.git"
@@ -144,6 +144,7 @@
     "apps/dtr-app",
     "apps/consent-app",
     "apps/patient-portal",
+    "apps/shl-viewer",
     "apps/smart-dicom-template"
   ],
   "main": "eslint.config.js",

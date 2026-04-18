@@ -214,7 +214,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               audienceClients: (fullClient as any).protocolMappers
                 ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
                 ?.map((m: any) => m.config?.['included.client.audience'])
-                ?.filter(Boolean) || []
+                ?.filter(Boolean) || [],
+              
+              // User type & role restrictions
+              allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
+              requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
             } as SmartAppType
           } catch (error) {
             logger.admin.warn('Failed to enrich client with scope details', { clientId: client.clientId, error })
@@ -358,6 +362,14 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // Custom access token lifespan (overrides realm default)
           ...(body.accessTokenLifespan && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
 
+          // User type & role restrictions
+          ...(body.allowedFhirUserTypes && body.allowedFhirUserTypes.length > 0 && {
+            'allowed_fhir_user_types': body.allowedFhirUserTypes.join(',')
+          }),
+          ...(body.requiredRoles && body.requiredRoles.length > 0 && {
+            'required_roles': body.requiredRoles.join(',')
+          }),
+
           // Keycloak 25+ requires explicit post-logout redirect URI config
           'post.logout.redirect.uris': '+',
         },
@@ -495,6 +507,18 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       // Re-fetch client details to get updated scope assignments
       const clientAfterScopeAssignment = await admin.clients.findOne({ id: createdClient.id })
       const finalClientForResponse = clientAfterScopeAssignment || fullClient
+
+      // Sync required roles as Keycloak client roles
+      if (body.requiredRoles && body.requiredRoles.length > 0 && createdClient.id) {
+        for (const roleName of body.requiredRoles) {
+          try {
+            await admin.clients.createRole({ id: createdClient.id, name: roleName, description: `Required role for ${body.clientId}` })
+            logger.admin.debug('Created client role on new app', { clientId: body.clientId, role: roleName })
+          } catch (error) {
+            logger.admin.warn('Failed to create client role', { clientId: body.clientId, role: roleName, error })
+          }
+        }
+      }
 
       // If Backend Services with public key (PEM), convert and register JWKS
       if (isBackendService && body.publicKey && !body.jwksString && !body.jwksUri && createdClient.id) {
@@ -651,7 +675,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             audienceClients: (fullClient as any).protocolMappers
               ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
               ?.map((m: any) => m.config?.['included.client.audience'])
-              ?.filter(Boolean) || []
+                ?.filter(Boolean) || [],
+              
+              // User type & role restrictions
+              allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
+              requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
           } as SmartAppType
         }
       } catch (error) {
@@ -726,9 +754,42 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.tokenExchangeEnabled !== undefined && { 'token-exchange-standard.enabled': String(body.tokenExchangeEnabled) }),
           // Custom access token lifespan (overrides realm default)
           ...(body.accessTokenLifespan !== undefined && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
+          // User type & role restrictions
+          ...(body.allowedFhirUserTypes !== undefined && {
+            'allowed_fhir_user_types': body.allowedFhirUserTypes.length > 0 ? body.allowedFhirUserTypes.join(',') : ''
+          }),
+          ...(body.requiredRoles !== undefined && {
+            'required_roles': body.requiredRoles.length > 0 ? body.requiredRoles.join(',') : ''
+          }),
         }
       }
       await admin.clients.update({ id: clients[0].id! }, updateData)
+
+      // Sync required roles as Keycloak client roles
+      if (body.requiredRoles !== undefined) {
+        try {
+          const existingRoles = await admin.clients.listRoles({ id: clients[0].id! })
+          const existingNames = new Set(existingRoles.map((r: any) => r.name))
+          const desiredNames = new Set(body.requiredRoles)
+
+          // Create missing roles
+          for (const roleName of desiredNames) {
+            if (!existingNames.has(roleName)) {
+              await admin.clients.createRole({ id: clients[0].id!, name: roleName, description: `Required role for ${params.clientId}` })
+              logger.admin.debug('Created client role', { clientId: params.clientId, role: roleName })
+            }
+          }
+          // Delete roles no longer required
+          for (const role of existingRoles) {
+            if (role.name && !desiredNames.has(role.name)) {
+              await admin.clients.delRole({ id: clients[0].id!, roleName: role.name })
+              logger.admin.debug('Deleted client role', { clientId: params.clientId, role: role.name })
+            }
+          }
+        } catch (error) {
+          logger.admin.warn('Failed to sync client roles', { clientId: params.clientId, error })
+        }
+      }
 
       // Handle audience mapper updates if provided
       if (body.audienceClients !== undefined) {

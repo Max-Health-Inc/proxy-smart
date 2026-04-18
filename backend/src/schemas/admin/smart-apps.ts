@@ -59,7 +59,11 @@ export const SmartApp = t.Object({
   // Token exchange & audience mappers
   tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
   accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
-  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers on this client (oidc-audience-mapper)' }))
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers on this client (oidc-audience-mapper)' })),
+  
+  // User type & role restrictions
+  allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
+  requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' }))
 }, { title: 'SmartApp' })
 
 export const CreateSmartAppRequest = t.Object({
@@ -112,7 +116,11 @@ export const CreateSmartAppRequest = t.Object({
   // Token exchange & audience mappers
   tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
   accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
-  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' }))
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' })),
+  
+  // User type & role restrictions
+  allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
+  requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' }))
 }, { title: 'CreateSmartAppRequest' })
 
 export const UpdateSmartAppRequest = t.Object({
@@ -165,7 +173,11 @@ export const UpdateSmartAppRequest = t.Object({
   // Token exchange & audience mappers
   tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
   accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
-  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' }))
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' })),
+  
+  // User type & role restrictions
+  allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
+  requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' }))
 }, { title: 'UpdateSmartAppRequest' })
 
 export const ClientIdParam = t.Object({
