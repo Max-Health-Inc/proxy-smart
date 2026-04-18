@@ -67,33 +67,37 @@ export function PatientBanner({
 
   return (
     <Card>
-      <CardContent className="flex items-start sm:items-center gap-4 sm:gap-5 py-5 sm:py-6">
-        <div className="flex items-center justify-center size-12 sm:size-14 rounded-full bg-muted shrink-0">
-          <User className="size-6 sm:size-7 text-muted-foreground" />
+      <CardContent className="flex items-start gap-3 sm:gap-5 py-4 sm:py-6">
+        <div className="flex items-center justify-center size-10 sm:size-14 rounded-full bg-muted shrink-0 mt-0.5 sm:mt-0">
+          <User className="size-5 sm:size-7 text-muted-foreground" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg sm:text-xl font-semibold truncate">{name}</h2>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm text-muted-foreground">
+          {/* Row 1: Name + DOB/age */}
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h2 className="text-base sm:text-xl font-semibold truncate">{name}</h2>
             {birthDate && (
-              <span>{formatDate(birthDate)}{age !== null && ` (${formatAge(age)})`}</span>
-            )}
-            {patient.gender && <Badge variant="outline">{patient.gender}</Badge>}
-            {genderIdentity && genderIdentity.toLowerCase() !== patient.gender?.toLowerCase() && (
-              <Badge variant="outline">{genderIdentity}</Badge>
-            )}
-            {birthSex && <Badge variant="secondary" title="Sex assigned at birth">{formatBirthSex(birthSex)}</Badge>}
-            {pronouns && <Badge variant="secondary">{pronouns}</Badge>}
-            {bloodType && (
-              <Badge variant="outline" className="gap-1"><Droplets className="size-3" />{bloodType}</Badge>
+              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                {formatDate(birthDate)}{age !== null && ` (${formatAge(age)})`}
+              </span>
             )}
           </div>
-          {patient.identifier?.[0]?.value && (
-            <div className="mt-0.5 text-xs text-muted-foreground">
-              <span className="font-mono">{formatMrn(patient.identifier[0].value)}</span>
-            </div>
-          )}
+          {/* Row 2: Badges + MRN */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1.5">
+            {patient.gender && <Badge variant="outline" className="text-xs">{patient.gender}</Badge>}
+            {genderIdentity && genderIdentity.toLowerCase() !== patient.gender?.toLowerCase() && (
+              <Badge variant="outline" className="text-xs">{genderIdentity}</Badge>
+            )}
+            {birthSex && <Badge variant="secondary" className="text-xs" title="Sex assigned at birth">{formatBirthSex(birthSex)}</Badge>}
+            {pronouns && <Badge variant="secondary" className="text-xs">{pronouns}</Badge>}
+            {bloodType && (
+              <Badge variant="outline" className="text-xs gap-1"><Droplets className="size-3" />{bloodType}</Badge>
+            )}
+            {patient.identifier?.[0]?.value && (
+              <span className="text-xs text-muted-foreground font-mono">{formatMrn(patient.identifier[0].value)}</span>
+            )}
+          </div>
         </div>
-        {actions}
+        {actions && <div className="shrink-0 -mr-2 sm:mr-0">{actions}</div>}
       </CardContent>
     </Card>
   )
