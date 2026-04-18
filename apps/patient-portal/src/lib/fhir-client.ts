@@ -561,3 +561,34 @@ export async function scribeFromText(text: string, patientId: string): Promise<S
   }
   return res.json() as Promise<ScribeResponse>
 }
+
+// ── SMART Health Links ───────────────────────────────────────────────────────
+
+export interface ShlResponse {
+  shlinkPayload: string
+  viewerUrl: string
+  expiresAt: string
+}
+
+/** Create a SMART Health Link for sharing patient data */
+export async function createShl(opts: {
+  verifiedOnly: boolean
+  expiresInMinutes?: number
+  label?: string
+}): Promise<ShlResponse> {
+  const baseUrl = config.proxyBase
+  const res = await authFetch(`${baseUrl}/api/shl`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      verifiedOnly: opts.verifiedOnly,
+      expiresInMinutes: opts.expiresInMinutes ?? 60,
+      label: opts.label,
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error((err as { error?: string }).error || `Failed (${res.status})`)
+  }
+  return res.json() as Promise<ShlResponse>
+}

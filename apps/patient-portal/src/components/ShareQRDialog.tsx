@@ -3,8 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner,
 } from "@proxy-smart/shared-ui"
 import { QRCodeSVG } from "qrcode.react"
-import { smartAuth } from "@/lib/smart-auth"
-import { config } from "@/config"
+import { createShl as createShlRequest, type ShlResponse } from "@/lib/fhir-client"
 import { QrCode, Copy, Check, Clock } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -12,12 +11,6 @@ export interface ShareQRDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   verifiedOnly: boolean
-}
-
-interface ShlResponse {
-  shlinkPayload: string
-  viewerUrl: string
-  expiresAt: string
 }
 
 export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialogProps) {
@@ -31,29 +24,11 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
     setLoading(true)
     setError(null)
     try {
-      const token = smartAuth.getToken()
-      if (!token?.access_token) throw new Error("Not authenticated")
-
-      const proxyBase = config.proxyBase || window.location.origin
-      const resp = await fetch(`${proxyBase}/api/shl`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token.access_token}`,
-        },
-        body: JSON.stringify({
-          verifiedOnly: !verifiedOnly, // showUnverified=true means verifiedOnly=false
-          expiresInMinutes: 60,
-          label: t("shareQr.label"),
-        }),
+      const data = await createShlRequest({
+        verifiedOnly: !verifiedOnly,
+        expiresInMinutes: 60,
+        label: t("shareQr.label"),
       })
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: resp.statusText }))
-        throw new Error(err.error || `Failed (${resp.status})`)
-      }
-
-      const data: ShlResponse = await resp.json()
       setShlData(data)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create share link")
