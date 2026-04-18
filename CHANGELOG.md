@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604172152.bd4ad527] - 2026-04-18
+
+- 🔧 Chores & Improvements: Remove OPENAI_API_KEY from GitHub Actions secrets and Env wiring; update package versions to new alpha tag and bump undici deps
+- 🔧 Chores & Improvements: Introduce rate limiting and improve input/error sanitization across backend/frontend/admin routes
+- 🔧 Chores & Improvements: Enforce admin token validation for admin routes; add validateAdminToken helper
+- 🔧 Chores & Improvements: Add SSRF/URL validation guards in MCP/server and FHIR server routes
+- 🔧 Chores & Improvements: Run services under non-root app user in Dockerfiles
+- 🐛 Bug Fixes: Require admin authentication for config/test/shutdown REST endpoints; improve error messaging
+- 📚 Documentation: (No explicit docs changes)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/445
+
+
 ## [0.0.6-alpha.202604172135.de7d1b11] - 2026-04-17
 
 - 🔧 Chores & Improvements: Privacy and security enhancements
