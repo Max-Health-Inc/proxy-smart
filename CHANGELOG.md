@@ -21,6 +21,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/447
 
 
+
+- 🔧 Chores & Improvements: Add build-args to beta backend Docker build to inject VITE_ENCRYPTION_SECRET from GitHub Secrets; preserves two image tags and existing cache settings
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/448
+
+
 ## [0.0.6-alpha.202604180021.d4903bc7] - 2026-04-18
 
 - ✨ Features
