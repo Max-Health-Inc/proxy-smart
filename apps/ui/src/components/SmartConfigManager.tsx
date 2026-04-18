@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, Play, Shield, Link } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { ScopeManager } from './ScopeManager';
 import { LaunchContextManager } from './LaunchContextManager';
 import { ProtocolMappersManager } from './ProtocolMappersManager';

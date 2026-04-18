@@ -1,5 +1,5 @@
 import { Badge, Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import {
   AlertCircle,
   CheckCircle,

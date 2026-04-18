@@ -1,5 +1,4 @@
-import { Badge } from '@proxy-smart/shared-ui';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import { StatCard } from '../ui/stat-card';
 import {
   AlertCircle,
