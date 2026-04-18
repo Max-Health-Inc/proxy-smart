@@ -247,7 +247,7 @@ export function GenomicsCard({
                   <Dna className="size-3" />
                   {t("genomics.variants", { n: variants.length })}
                 </h4>
-                <ul className="space-y-1.5">
+                <ul className="grid gap-1.5 md:grid-cols-2">
                   {variants.map((v, i) => (
                     <VariantRow key={v.id || i} variant={v} />
                   ))}
@@ -262,7 +262,7 @@ export function GenomicsCard({
                   <AlertTriangle className="size-3" />
                   {t("genomics.diagnosticImplications")}
                 </h4>
-                <ul className="space-y-1.5">
+                <ul className="grid gap-1.5 md:grid-cols-2">
                   {diagnosticImplications.map((di, i) => (
                     <DiagnosticImplicationRow key={di.id || i} impl={di} />
                   ))}
@@ -277,7 +277,7 @@ export function GenomicsCard({
                   <Pill className="size-3" />
                   {t("genomics.pharmacogenomics")}
                 </h4>
-                <ul className="space-y-1.5">
+                <ul className="grid gap-1.5 md:grid-cols-2">
                   {therapeuticImplications.map((ti, i) => (
                     <TherapeuticImplicationRow key={ti.id || i} impl={ti} />
                   ))}
