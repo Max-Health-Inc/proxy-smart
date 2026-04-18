@@ -88,7 +88,6 @@ jobs:
           file: Dockerfile
           target: backend
           push: true
-          load: true
           tags: |
             ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/backend:beta-latest
@@ -109,21 +108,7 @@ jobs:
           cache-from: type=gha,scope=beta-keycloak
           cache-to: type=gha,mode=max,scope=beta-keycloak
 
-      - name: Verify no localhost in backend image
-        run: |
-          echo "🔍 Checking production bundles for hardcoded localhost references..."
-          CID=$(docker create ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }})
-          MATCHES=$(docker export "$CID" | tar -t 2>/dev/null | head -1 > /dev/null && \
-            docker cp "$CID":/app/backend/public/apps /tmp/apps 2>/dev/null && \
-            grep -rl 'localhost:8445' /tmp/apps/ 2>/dev/null || true)
-          docker rm "$CID" > /dev/null
-
-          if [ -n "$MATCHES" ]; then
-            echo "::error::Found hardcoded localhost:8445 in production bundles:"
-            echo "$MATCHES"
-            exit 1
-          fi
-          echo "✅ No localhost references found in production bundles"
+      # localhost check is handled in-Dockerfile (RUN grep -rl 'localhost:8445' ...)
 
   # ── Pull pre-built images on VPS and restart services ──
   deploy:
