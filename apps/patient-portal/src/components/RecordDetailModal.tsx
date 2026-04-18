@@ -9,7 +9,7 @@ import {
 } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
 import { useState } from "react"
-import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil } from "lucide-react"
+import { ShieldCheck, ShieldAlert, Calendar, User, Clock, Tag, FileText, Link2, Pencil, Trash2 } from "lucide-react"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
 import type { DocumentReference, DynamicFhirResource } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
@@ -19,6 +19,7 @@ import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/
 import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"
 import { criticalityStyles, type AllergyIntoleranceCriticalityCode } from "@/lib/ips-display-helpers"
 import { RecordEditModal } from "@/components/RecordEditModal"
+import { deleteResource } from "@/lib/fhir-client"
 import { useTranslation } from "react-i18next"
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -36,6 +37,8 @@ export interface RecordDetailModalProps {
   documents?: DocumentReference[]
   /** Called when the user edits and saves this resource */
   onResourceUpdated?: (updated: FhirResource) => void
+  /** Called when the user deletes this resource */
+  onResourceDeleted?: () => void
 }
 
 // ── Metadata extraction helpers ──────────────────────────────────────────────
@@ -161,8 +164,10 @@ const EDITABLE_TYPES = new Set([
   "MedicationStatement", "Observation", "Immunization", "Procedure",
 ])
 
-export function RecordDetailModal({ open, onOpenChange, title, resource, documents, onResourceUpdated }: RecordDetailModalProps) {
+export function RecordDetailModal({ open, onOpenChange, title, resource, documents, onResourceUpdated, onResourceDeleted }: RecordDetailModalProps) {
   const [editOpen, setEditOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const { t } = useTranslation()
   if (!resource) return null
 
@@ -178,6 +183,23 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
   const resourceId = resource.id as string | undefined
   const lastUpdated = resource.meta?.lastUpdated as string | undefined
   const linkedDocs = findLinkedDocuments(documents ?? [], resourceType, resourceId)
+
+  const canDelete = onResourceDeleted && resourceType && resourceId && EDITABLE_TYPES.has(resourceType) && (!verification || !verification.verified)
+
+  async function handleDelete() {
+    if (!resourceType || !resourceId) return
+    setDeleting(true)
+    try {
+      await deleteResource(resourceType, resourceId)
+      onResourceDeleted?.()
+      onOpenChange(false)
+    } catch {
+      // keep modal open on failure
+    } finally {
+      setDeleting(false)
+      setConfirmDelete(false)
+    }
+  }
 
   return (
     <>
@@ -207,10 +229,28 @@ export function RecordDetailModal({ open, onOpenChange, title, resource, documen
             {resourceId && <span className="text-xs font-mono text-muted-foreground"> / {resourceId}</span>}
           </DialogDescription>
           {onResourceUpdated && resourceType && EDITABLE_TYPES.has(resourceType) && (
-            <Button variant="outline" size="sm" className="w-fit mt-1" onClick={() => setEditOpen(true)}>
-              <Pencil className="size-3.5 mr-1" />
-              {t("recordDetail.editRecord")}
-            </Button>
+            <div className="flex items-center gap-2 mt-1">
+              <Button variant="outline" size="sm" className="w-fit" onClick={() => setEditOpen(true)}>
+                <Pencil className="size-3.5 mr-1" />
+                {t("recordDetail.editRecord")}
+              </Button>
+              {canDelete && !confirmDelete && (
+                <Button variant="outline" size="sm" className="w-fit text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(true)}>
+                  <Trash2 className="size-3.5 mr-1" />
+                  {t("recordDetail.deleteRecord")}
+                </Button>
+              )}
+              {canDelete && confirmDelete && (
+                <div className="flex items-center gap-2">
+                  <Button variant="destructive" size="sm" disabled={deleting} onClick={handleDelete}>
+                    {deleting ? t("recordDetail.deleting") : t("recordDetail.confirmDelete")}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
+                    {t("recordDetail.cancel")}
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </DialogHeader>
 

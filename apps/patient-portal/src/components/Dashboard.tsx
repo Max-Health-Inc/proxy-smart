@@ -671,6 +671,7 @@ export function Dashboard() {
         resource={detailResource}
         documents={documents}
         onResourceUpdated={refreshData}
+        onResourceDeleted={refreshData}
       />
     </div>
   )
