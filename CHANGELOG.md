@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-beta.202604181414.b7d82445] - 2026-04-18
+
+- 🔧 Chores & Improvements: Version bump to 0.0.6-beta.202604181414.b7d82445 across apps/packages
+- 🔧 Chores & Improvements: Minor type guard/formatter adjustment in HealthChartsCard.tsx to handle null values with inferred types and ?? ""
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/482
+
+
 ## [0.0.6-alpha.202604181019.5ab998ef] - 2026-04-18
 
 - 🔧 Chores & Improvements: Migrate UI components to shared-ui (Table, ScrollArea, Separator, DropdownMenu, Progress, Toaster, etc.) and update imports across apps; add shared-ui index exports and Toaster theming support; extend ThemedToasterProps type
