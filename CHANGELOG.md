@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-beta.202604180108.f3484054] - 2026-04-18
+
+- 🔧 Chores & Improvements: Dockerfile: switch to groupadd/useradd, preserve /app ownership; non-root user remains app (uid/gid 1001). 
+- 🔧 Chores & Improvements: Bump version strings across package.jsons to 0.0.6-beta.202604180108.f3484054.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/452
+
+
 ## [0.0.6-beta.202604180039.bfa7d5fd] - 2026-04-18
 
 - 🔧 Chores & Improvements: CI/testing updates
