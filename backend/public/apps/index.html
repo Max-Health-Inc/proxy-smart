@@ -42,6 +42,7 @@
       margin-bottom: 1.25rem;
     }
     .toolbar h1 { font-size: 1.15rem; font-weight: 500; }
+    .toolbar .subtitle { font-size: .78rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
     .size-toggle {
       display: flex; gap: 2px; background: #fff; border: 1px solid var(--border);
       border-radius: 6px; padding: 2px; overflow: hidden;
@@ -158,7 +159,10 @@
 
   <main>
     <div class="toolbar">
-      <h1>Applications</h1>
+      <div>
+        <h1>Applications</h1>
+        <p class="subtitle">Apps available on this platform</p>
+      </div>
       <div class="size-toggle" id="sizeToggle">
         <button data-size="sm">S</button>
         <button data-size="md" class="active">M</button>
