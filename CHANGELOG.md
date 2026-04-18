@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604181619.5f44b1d4] - 2026-04-18
+
+- ✨ Features
+  - SHL integration: introduce new SHL client and switch ShareQRDialog to use it; register and expose SHL API route in backend and OpenAPI; add createShl wrapper.
+
+- 🔧 Chores & Improvements
+  - CI workflow: optimize Bun setup and backend build by gating behind target; refactor to reduce rebuilds for deployed target.
+  - Script updates: enhance generate-ts-fetch-client.py to support optional tag filtering and collect model dependencies (improved generation logic).
+
+- ⚠️ Breaking Changes
+  - ShareQRDialog: updates to post SHL requests directly to /api/shl (base URL) replacing previous proxy path.
+
+- 📚 Documentation
+  - Translation: minor text change for translation.json "retry" label (adds trailing period).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/484
+
+
 ## [0.0.6-beta.202604181414.b7d82445] - 2026-04-18
 
 - 🔧 Chores & Improvements: Version bump to 0.0.6-beta.202604181414.b7d82445 across apps/packages
