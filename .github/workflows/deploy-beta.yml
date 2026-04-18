@@ -88,6 +88,7 @@ jobs:
           file: Dockerfile
           target: backend
           push: true
+          load: true
           tags: |
             ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/backend:beta-latest
@@ -111,7 +112,6 @@ jobs:
       - name: Verify no localhost in backend image
         run: |
           echo "🔍 Checking production bundles for hardcoded localhost references..."
-          docker pull ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
           CID=$(docker create ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }})
           MATCHES=$(docker export "$CID" | tar -t 2>/dev/null | head -1 > /dev/null && \
             docker cp "$CID":/app/backend/public/apps /tmp/apps 2>/dev/null && \
