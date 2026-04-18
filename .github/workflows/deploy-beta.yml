@@ -438,14 +438,17 @@ jobs:
             done
 
             # POST the seed bundle (transaction with PUT entries = idempotent)
-            HTTP_CODE=\$(curl -sf -o /dev/null -w '%{http_code}' -X POST \"\${HAPI_BASE}\" \
+            SEED_RESP=\$(curl -s -w '\n%{http_code}' -X POST \"\${HAPI_BASE}\" \
               -H 'Content-Type: application/fhir+json' \
               -d @fhir-seed-bundle.json)
+            HTTP_CODE=\$(echo \"\$SEED_RESP\" | tail -1)
+            SEED_BODY=\$(echo \"\$SEED_RESP\" | sed '\$d')
 
             if [ \"\$HTTP_CODE\" = '200' ]; then
               echo '  ✅ FHIR sample data seeded successfully'
             else
               echo \"  ⚠️ FHIR seed returned HTTP \${HTTP_CODE} (non-fatal)\"
+              echo \"  Response: \${SEED_BODY}\" | head -c 500
             fi
 
             # Seed Orthanc PACS with sample DICOM images
