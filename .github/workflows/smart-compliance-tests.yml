@@ -428,6 +428,7 @@ jobs:
           FHIR_SERVER_BASE: http://localhost:8081/fhir
           # Allow Inferno test runner origin for CORS compliance tests
           CORS_ORIGINS: http://localhost:4567,http://localhost:8445,http://localhost:5173
+          LOG_LEVEL: debug
 
       # For deployed targets, verify the remote services are reachable
       - name: Verify Deployed Services
@@ -1140,6 +1141,27 @@ jobs:
           CLIENT_ID: ${{ steps.config.outputs.client_id }}
           KC_USERNAME: ${{ steps.config.outputs.kc_username }}
           KC_PASSWORD: ${{ steps.config.outputs.kc_password }}
+
+      # Dump backend + keycloak logs for debugging auth failures
+      - name: Dump Service Logs
+        if: always()
+        run: |
+          echo "=== Backend Auth Logs (last 200 lines, filtered) ==="
+          if [ "${{ steps.config.outputs.target }}" = "deployed" ]; then
+            # For deployed targets, fetch logs via SSH if available, otherwise skip
+            echo "(Deployed mode — container logs not available from CI runner.)"
+            echo "Check VPS logs: docker logs proxy-smart-backend-beta --tail 200 2>&1 | grep -iE 'token|auth|error|warn'"
+          else
+            # Local CI: dump from Docker containers
+            echo "--- Backend logs (auth-related) ---"
+            docker logs backend 2>&1 | grep -iE 'token endpoint|keycloak token|forwarding to keycloak|error response|warn|400|401|422|500' | tail -100 || echo "(no backend container)"
+            echo ""
+            echo "--- Backend logs (last 50 lines) ---"
+            docker logs backend 2>&1 | tail -50 || echo "(no backend container)"
+            echo ""
+            echo "--- Keycloak logs (auth-related, last 50 lines) ---"
+            docker logs keycloak 2>&1 | grep -iE 'token|grant|client|error|warn' | tail -50 || echo "(no keycloak container)"
+          fi
 
       # Save test results
       - name: Save Test Results

@@ -931,6 +931,12 @@ async function printResults(results) {
         if (result.result_message) {
           console.log(`    Error: ${result.result_message}`);
         }
+        // Log additional context for errors (helps debug Inferno internal failures)
+        if (result.messages && result.messages.length > 0) {
+          result.messages.forEach((m, i) => {
+            console.log(`    Message[${i}]: ${(m.message || m).toString().substring(0, 200)}`);
+          });
+        }
         break;
       default:
         console.log(`? ${status.toUpperCase()}: ${title}`);
@@ -997,6 +1003,33 @@ async function printResults(results) {
           // Show all available keys for debugging
           const reqKeys = Object.keys(req).filter(k => req[k] != null);
           console.log(`    Available fields: ${reqKeys.join(', ')}`);
+
+          // Fetch full request detail from Inferno API (includes headers + body)
+          if (req.id && (req.status >= 400 || (req.url && req.url.includes('/token')))) {
+            try {
+              const detailResp = await fetch(`${INFERNO_URL}/api/requests/${req.id}`);
+              if (detailResp.ok) {
+                const detail = await detailResp.json();
+                if (detail.request_headers) {
+                  console.log(`    Request Headers: ${typeof detail.request_headers === 'string' ? detail.request_headers.substring(0, 300) : JSON.stringify(detail.request_headers).substring(0, 300)}`);
+                }
+                if (detail.request_body) {
+                  // Redact sensitive values but keep parameter names visible
+                  const body = typeof detail.request_body === 'string' ? detail.request_body : JSON.stringify(detail.request_body);
+                  const redacted = body.replace(/(code|code_verifier|client_secret|password|client_assertion)=([^&]+)/g, '$1=[REDACTED]');
+                  console.log(`    Request Body (redacted): ${redacted.substring(0, 500)}`);
+                }
+                if (detail.response_headers) {
+                  console.log(`    Response Headers: ${typeof detail.response_headers === 'string' ? detail.response_headers.substring(0, 300) : JSON.stringify(detail.response_headers).substring(0, 300)}`);
+                }
+                if (detail.response_body) {
+                  console.log(`    Response Body: ${typeof detail.response_body === 'string' ? detail.response_body.substring(0, 500) : JSON.stringify(detail.response_body).substring(0, 500)}`);
+                }
+              }
+            } catch (detailErr) {
+              console.log(`    (Could not fetch request detail: ${detailErr.message})`);
+            }
+          }
         }
       }
       

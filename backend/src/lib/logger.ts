@@ -34,7 +34,11 @@ export interface LoggerConfig {
 
 // Default configuration
 const getDefaultConfig = (): LoggerConfig => {
-  const baseLevel = process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
+  // LOG_LEVEL env override takes precedence (useful for CI diagnostics)
+  const envLevel = process.env.LOG_LEVEL?.toUpperCase() as keyof typeof LogLevel | undefined;
+  const baseLevel = envLevel && LogLevel[envLevel] !== undefined
+    ? LogLevel[envLevel] as number
+    : process.env.NODE_ENV === 'production' ? LogLevel.INFO : LogLevel.DEBUG;
   
   return {
     level: baseLevel,

@@ -342,15 +342,25 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   .post('/token', async ({ body, set, headers }) => {
     const startTime = Date.now();
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-    logger.auth.debug('Token endpoint request received', {
+    const bodyObj = body as Record<string, string | undefined>
+    const incomingContentType = headers['content-type'] || 'unknown'
+
+    logger.auth.debug('Token endpoint request', {
       keycloakUrl: kcUrl,
-      bodyKeys: Object.keys(body as Record<string, unknown>)
+      contentType: incomingContentType,
+      bodyKeys: Object.keys(body as Record<string, unknown>),
+      grant_type: bodyObj.grant_type || bodyObj.grantType || 'MISSING',
+      client_id: bodyObj.client_id || bodyObj.clientId || 'MISSING',
+      redirect_uri: bodyObj.redirect_uri || bodyObj.redirectUri || undefined,
+      has_code: !!bodyObj.code,
+      has_code_verifier: !!(bodyObj.code_verifier || bodyObj.codeVerifier),
+      has_refresh_token: !!(bodyObj.refresh_token || bodyObj.refreshToken),
+      has_client_assertion: !!bodyObj.client_assertion,
     })
 
     try {
       // Convert the parsed body back to form data with proper OAuth2 field names
       const formData = new URLSearchParams()
-      const bodyObj = body as Record<string, string | undefined>
 
       // Handle both camelCase and snake_case field names for OAuth2 standard field names
       if (bodyObj.grant_type || bodyObj.grantType) formData.append('grant_type', bodyObj.grant_type || bodyObj.grantType!)
@@ -382,8 +392,9 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       if (bodyObj.requested_token_type) formData.append('requested_token_type', bodyObj.requested_token_type)
 
       const rawBody = formData.toString()
-      logger.auth.debug('Sending form data to Keycloak', {
-        formFields: Array.from(formData.keys())
+      logger.auth.debug('Forwarding to Keycloak', {
+        formFields: Array.from(formData.keys()),
+        redirect_uri: formData.get('redirect_uri') || undefined,
       })
 
       const resp = await fetch(kcUrl, {
@@ -394,12 +405,29 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
       const responseTime = Date.now() - startTime;
       const data = await resp.json()
-      logger.auth.debug('Keycloak response received', {
-        status: resp.status,
-        hasAccessToken: !!data.access_token,
-        error: data.error,
-        error_description: data.error_description
-      })
+
+      if (resp.status !== 200) {
+        logger.auth.debug('Keycloak token error response', {
+          status: resp.status,
+          error: data.error,
+          error_description: data.error_description,
+          grant_type: formData.get('grant_type'),
+          client_id: formData.get('client_id'),
+          redirect_uri: formData.get('redirect_uri'),
+          responseTime,
+          // Include full response for debugging (excluding tokens)
+          responseKeys: Object.keys(data),
+        })
+      } else {
+        logger.auth.debug('Keycloak token success', {
+          status: resp.status,
+          hasAccessToken: !!data.access_token,
+          hasIdToken: !!data.id_token,
+          hasRefreshToken: !!data.refresh_token,
+          scope: data.scope,
+          responseTime,
+        })
+      }
 
       // Log OAuth event
       const clientId = bodyObj.client_id || bodyObj.clientId || 'unknown';
