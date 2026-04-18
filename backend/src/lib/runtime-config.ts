@@ -366,10 +366,13 @@ export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfi
 
   const realmUpdate: Record<string, unknown> = { attributes }
 
-  // Sync brand name → Keycloak login page heading (displayName + displayNameHtml)
+  // Sync brand name + logo → Keycloak login page heading (displayName + displayNameHtml)
   if (settings.name) {
     realmUpdate.displayName = settings.name
-    realmUpdate.displayNameHtml = `<div class="kc-logo-text"><span>${settings.name}</span></div>`
+    const logoHtml = settings.logoUrl
+      ? `<img src="${settings.logoUrl}" alt="${settings.name}" style="height:32px;margin-right:8px;vertical-align:middle" />`
+      : ''
+    realmUpdate.displayNameHtml = `<div class="kc-logo-text">${logoHtml}<span>${settings.name}</span></div>`
   }
 
   await admin.realms.update(
