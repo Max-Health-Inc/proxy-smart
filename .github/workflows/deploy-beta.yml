@@ -42,6 +42,8 @@ on:
         required: true
       VITE_ENCRYPTION_SECRET:
         required: true
+      BETA_ORTHANC_PASSWORD:
+        required: true
       OPENAI_API_KEY:
         required: false
       RESEND_API_KEY:
@@ -162,6 +164,7 @@ jobs:
           BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
           BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
           VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          BETA_ORTHANC_PASSWORD: ${{ secrets.BETA_ORTHANC_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -212,6 +215,7 @@ jobs:
             "KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}" \
             "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
             "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
+            "ORTHANC_PASSWORD=${BETA_ORTHANC_PASSWORD}" \
             "OPENAI_API_KEY=${OPENAI_API_KEY}" \
             "RESEND_API_KEY=${RESEND_API_KEY}" \
             "BACKEND_IMAGE=${{ env.IMAGE_PREFIX }}/backend:${IMAGE_TAG}" \
