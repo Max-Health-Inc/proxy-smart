@@ -54,7 +54,12 @@ export const SmartApp = t.Object({
   allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
-  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to. Empty/undefined means available to all organizations.' }))
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to. Empty/undefined means available to all organizations.' })),
+  
+  // Token exchange & audience mappers
+  tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
+  accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers on this client (oidc-audience-mapper)' }))
 }, { title: 'SmartApp' })
 
 export const CreateSmartAppRequest = t.Object({
@@ -102,7 +107,12 @@ export const CreateSmartAppRequest = t.Object({
   allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
-  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' }))
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' })),
+  
+  // Token exchange & audience mappers
+  tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
+  accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' }))
 }, { title: 'CreateSmartAppRequest' })
 
 export const UpdateSmartAppRequest = t.Object({
@@ -150,7 +160,12 @@ export const UpdateSmartAppRequest = t.Object({
   allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
-  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' }))
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' })),
+  
+  // Token exchange & audience mappers
+  tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
+  accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' }))
 }, { title: 'UpdateSmartAppRequest' })
 
 export const ClientIdParam = t.Object({

@@ -204,7 +204,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               
               // PKCE and offline access
               requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
-              allowOfflineAccess: hasOfflineAccess
+              allowOfflineAccess: hasOfflineAccess,
+              
+              // Token exchange & access token lifespan
+              tokenExchangeEnabled: getAttr(fullClient.attributes, 'token-exchange-standard.enabled') === 'true',
+              accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
+              
+              // Audience mappers
+              audienceClients: (fullClient as any).protocolMappers
+                ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+                ?.map((m: any) => m.config?.['included.client.audience'])
+                ?.filter(Boolean) || []
             } as SmartAppType
           } catch (error) {
             logger.admin.warn('Failed to enrich client with scope details', { clientId: client.clientId, error })
@@ -341,6 +351,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           
           // PKCE configuration
           ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' }),
+          
+          // Token exchange (RFC 8693) — Keycloak 26+ standard token exchange V2
+          ...(body.tokenExchangeEnabled !== undefined && { 'token-exchange-standard.enabled': String(body.tokenExchangeEnabled) }),
+          
+          // Custom access token lifespan (overrides realm default)
+          ...(body.accessTokenLifespan && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
 
           // Keycloak 25+ requires explicit post-logout redirect URI config
           'post.logout.redirect.uris': '+',
@@ -451,6 +467,28 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }
         } catch (error) {
           logger.admin.warn('Failed to enable offline access', { clientId: fullClient.clientId, error })
+        }
+      }
+
+      // Add audience mappers (oidc-audience-mapper) to the client
+      if (body.audienceClients && body.audienceClients.length > 0 && fullClient.id) {
+        for (const targetClientId of body.audienceClients) {
+          try {
+            await admin.clients.addProtocolMapper({ id: fullClient.id }, {
+              name: `audience-${targetClientId}`,
+              protocol: 'openid-connect',
+              protocolMapper: 'oidc-audience-mapper',
+              config: {
+                'included.client.audience': targetClientId,
+                'id.token.claim': 'false',
+                'access.token.claim': 'true',
+                'userinfo.token.claim': 'false'
+              }
+            })
+            logger.admin.debug('Audience mapper added', { clientId: fullClient.clientId, targetClientId })
+          } catch (error) {
+            logger.admin.warn('Failed to add audience mapper', { clientId: fullClient.clientId, targetClientId, error })
+          }
         }
       }
 
@@ -603,7 +641,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             
             // PKCE and offline access
             requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
-            allowOfflineAccess: hasOfflineAccess
+            allowOfflineAccess: hasOfflineAccess,
+            
+            // Token exchange & access token lifespan
+            tokenExchangeEnabled: getAttr(fullClient.attributes, 'token-exchange-standard.enabled') === 'true',
+            accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
+            
+            // Audience mappers
+            audienceClients: (fullClient as any).protocolMappers
+              ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+              ?.map((m: any) => m.config?.['included.client.audience'])
+              ?.filter(Boolean) || []
           } as SmartAppType
         }
       } catch (error) {
@@ -674,9 +722,44 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.organizationIds !== undefined && {
             'organization_ids': body.organizationIds.length > 0 ? body.organizationIds.join(',') : ''
           }),
+          // Token exchange (RFC 8693) — Keycloak 26+ standard token exchange V2
+          ...(body.tokenExchangeEnabled !== undefined && { 'token-exchange-standard.enabled': String(body.tokenExchangeEnabled) }),
+          // Custom access token lifespan (overrides realm default)
+          ...(body.accessTokenLifespan !== undefined && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
         }
       }
       await admin.clients.update({ id: clients[0].id! }, updateData)
+
+      // Handle audience mapper updates if provided
+      if (body.audienceClients !== undefined) {
+        try {
+          // Remove existing audience mappers
+          const existingMappers = await admin.clients.listProtocolMappers({ id: clients[0].id! })
+          const audienceMappers = existingMappers.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+          for (const mapper of audienceMappers) {
+            if (mapper.id) {
+              await admin.clients.delProtocolMapper({ id: clients[0].id!, mapperId: mapper.id })
+            }
+          }
+          // Add new audience mappers
+          for (const targetClientId of body.audienceClients) {
+            await admin.clients.addProtocolMapper({ id: clients[0].id! }, {
+              name: `audience-${targetClientId}`,
+              protocol: 'openid-connect',
+              protocolMapper: 'oidc-audience-mapper',
+              config: {
+                'included.client.audience': targetClientId,
+                'id.token.claim': 'false',
+                'access.token.claim': 'true',
+                'userinfo.token.claim': 'false'
+              }
+            })
+          }
+          logger.admin.debug('Audience mappers updated', { clientId: params.clientId, audienceClients: body.audienceClients })
+        } catch (error) {
+          logger.admin.warn('Failed to update audience mappers', { clientId: params.clientId, error })
+        }
+      }
 
       // Handle scope updates if provided
       if (body.defaultClientScopes || body.optionalClientScopes) {
