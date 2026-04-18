@@ -308,6 +308,20 @@
     "moderate": "Mäßig",
     "mild": "Leicht"
   },
+  "shareQr": {
+    "title": "Gesundheitszusammenfassung teilen",
+    "share": "QR teilen",
+    "description": "Scannen Sie diesen QR-Code, um eine schreibgeschützte Kopie Ihrer Gesundheitszusammenfassung anzuzeigen. Der Link läuft automatisch ab.",
+    "label": "Gesundheitszusammenfassung des Patienten",
+    "generating": "Sicherer Link wird erstellt…",
+    "retry": "Erneut versuchen",
+    "expiresIn": "Läuft in {{minutes}} Minuten ab",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert!",
+    "sharedSummary": "Geteilte Gesundheitszusammenfassung",
+    "expiresInBanner": "Läuft in {{minutes}} Min. ab",
+    "readOnly": "Schreibgeschützte Ansicht"
+  },
   "language": {
     "label": "Sprache",
     "en": "English",

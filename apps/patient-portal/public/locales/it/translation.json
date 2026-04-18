@@ -308,6 +308,20 @@
     "moderate": "Moderata",
     "mild": "Lieve"
   },
+  "shareQr": {
+    "title": "Condividi riepilogo sanitario",
+    "share": "Condividi QR",
+    "description": "Scansiona questo codice QR per visualizzare una copia in sola lettura del tuo riepilogo sanitario. Il link scade automaticamente.",
+    "label": "Riepilogo sanitario del paziente",
+    "generating": "Creazione del link sicuro…",
+    "retry": "Riprova",
+    "expiresIn": "Scade tra {{minutes}} minuti",
+    "copyLink": "Copia link",
+    "copied": "Copiato!",
+    "sharedSummary": "Riepilogo sanitario condiviso",
+    "expiresInBanner": "Scade tra {{minutes}} min",
+    "readOnly": "Vista in sola lettura"
+  },
   "language": {
     "label": "Lingua",
     "en": "English",

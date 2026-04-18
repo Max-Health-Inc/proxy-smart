@@ -353,7 +353,6 @@ export async function searchCoverage(patientId: string): Promise<Coverage[]> {
   return client.read().coverage().searchAll({
     beneficiary: `Patient/${patientId}`,
     _count: 10,
-    _sort: "-period",
   })
 }
 
@@ -370,12 +369,18 @@ export async function searchEncounters(patientId: string): Promise<Encounter[]> 
 // ── Care Team (IPS-profiled) ─────────────────────────────────────────────────
 
 export async function searchPractitioners(patientId: string): Promise<PractitionerUvIps[]> {
-  return client.read().practitionerUvIps().searchAll({
-    _has: "Encounter:participant:patient" as unknown as string,
-    _count: 20,
-  }).catch(() =>
-    client.read().practitionerUvIps().searchAll({ _count: 20 })
-  )
+  // _has reverse chaining requires special URL syntax the typed client can't express
+  try {
+    const res = await authFetch(
+      `${fhirBaseUrl}/Practitioner?_has:Encounter:participant:patient=Patient/${encodeURIComponent(patientId)}&_count=20`,
+      { headers: { Accept: "application/fhir+json" } },
+    )
+    if (!res.ok) throw new Error(`${res.status}`)
+    const bundle = await res.json()
+    return (bundle.entry?.map((e: { resource: PractitionerUvIps }) => e.resource) ?? []) as PractitionerUvIps[]
+  } catch {
+    return client.read().practitionerUvIps().searchAll({ _count: 20 })
+  }
 }
 
 export async function searchOrganizations(): Promise<OrganizationUvIps[]> {
