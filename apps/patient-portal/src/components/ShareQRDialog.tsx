@@ -3,7 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner,
 } from "@proxy-smart/shared-ui"
 import { QRCodeSVG } from "qrcode.react"
-import { createShl as createShlRequest, type ShlResponse } from "@/lib/fhir-client"
+import { createShl as createShlRequest, type ShlResponse } from "@/lib/shl-client"
 import { QrCode, Copy, Check, Clock } from "lucide-react"
 import { useTranslation } from "react-i18next"
 

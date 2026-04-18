@@ -10,7 +10,8 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "lint": "eslint .",
-    "preview": "vite preview --port 5176"
+    "preview": "vite preview --port 5176",
+    "generate": "python ../../scripts/generate-ts-fetch-client.py ../../backend/dist/openapi.json ./src/lib/api-client --tags shl"
   },
   "dependencies": {
     "@babelfhir-ts/dicomweb": "0.1.1",
