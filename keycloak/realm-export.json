@@ -1015,6 +1015,34 @@
         "token.endpoint.auth.signing.alg": "RS384",
         "access.token.lifespan": "300"
       }
+    },
+    {
+      "clientId": "shl-exchange",
+      "name": "SHL Token Exchange",
+      "description": "Service account for SMART Health Link token exchange (RFC 8693). Mints scoped, short-lived tokens for QR-based patient data sharing.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "shl-exchange-dev-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [],
+      "attributes": {
+        "access.token.lifespan": "3600"
+      }
     }
   ],
   "users": [

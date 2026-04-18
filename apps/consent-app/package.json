@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Consent App",
   "description": "SMART on FHIR consent management app — manage FHIR Consent resources for linked Patient records.",
   "private": true,
-  "version": "0.0.6-beta.202604180907.c75786d7",
+  "version": "0.0.6-alpha.202604180955.fdfc0a3f",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5174",

@@ -17,7 +17,8 @@
 #
 # Required env vars (set in .env.beta):
 #   KC_DB_PASSWORD, POSTGRES_PASSWORD, KEYCLOAK_ADMIN_PASSWORD,
-#   KEYCLOAK_ADMIN_CLIENT_SECRET, VITE_ENCRYPTION_SECRET
+#   KEYCLOAK_ADMIN_CLIENT_SECRET, VITE_ENCRYPTION_SECRET,
+#   SHL_EXCHANGE_CLIENT_SECRET (optional, defaults to shl-exchange-dev-secret)
 
 services:
   keycloak:
@@ -97,6 +98,8 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      SHL_EXCHANGE_CLIENT_ID: shl-exchange
+      SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:-shl-exchange-dev-secret}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com
       DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web

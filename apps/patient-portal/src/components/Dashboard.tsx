@@ -266,7 +266,7 @@ export function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 min-w-0">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -283,13 +283,13 @@ export function Dashboard() {
                   const sevCode = c.severity?.coding?.[0]?.code as ConditionSeverityCode | undefined
                   const sev = sevCode ? conditionSeverityStyles[sevCode] : undefined
                   return (
-                  <li key={c.id || i} className="text-sm">
+                  <li key={c.id || i} className="text-sm flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
                     <RecordName resource={c} onOpen={openDetail}>
                       {translateCoding(c.code?.coding?.[0]) || c.code?.text || t("dashboard.unknownCondition")}
                     </RecordName>
-                    {sev && <Badge variant={sev.variant} className="ml-1.5 text-xs">{t(sev.i18nKey)}</Badge>}
+                    {sev && <Badge variant={sev.variant} className="text-xs">{t(sev.i18nKey)}</Badge>}
                     {c.onsetDateTime && (
-                      <span className="text-muted-foreground ml-2">
+                      <span className="text-muted-foreground text-xs">
                         {t("common.since", { date: format(new Date(c.onsetDateTime), "MMM yyyy") })}
                       </span>
                     )}
@@ -318,7 +318,7 @@ export function Dashboard() {
                   const crit = a.criticality ? criticalityStyles[a.criticality as AllergyIntoleranceCriticalityCode] : undefined
                   const sev = a.reaction?.[0]?.severity ? severityStyles[a.reaction[0].severity as ReactionEventSeverityCode] : undefined
                   return (
-                    <li key={a.id || i} className="text-sm">
+                    <li key={a.id || i} className="text-sm min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {cat && categoryEmoji[cat] && <span title={cat}>{categoryEmoji[cat]}</span>}
                         <RecordName resource={a} onOpen={openDetail}>
@@ -327,10 +327,10 @@ export function Dashboard() {
                         {crit && <Badge variant={crit.variant} className="text-xs">{t(crit.i18nKey)}</Badge>}
                       </div>
                       {a.reaction?.[0]?.manifestation?.[0]?.coding?.[0]?.display && (
-                        <span className="text-muted-foreground ml-2">
+                        <p className="text-muted-foreground text-xs truncate">
                           — {a.reaction[0].manifestation[0].coding[0].display}
                           {sev && <Badge variant="outline" className={`ml-1 text-xs ${sev.className}`}>{t(sev.i18nKey)}</Badge>}
-                        </span>
+                        </p>
                       )}
                     </li>
                   )
@@ -353,13 +353,13 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {filterVerified(medications).map((m, i) => (
-                  <li key={m.id || i} className="text-sm">
+                  <li key={m.id || i} className="text-sm min-w-0">
                     <RecordName resource={m} onOpen={openDetail}>
                       {m.medicationCodeableConcept?.coding?.[0]?.display ||
                         m.medicationCodeableConcept?.text || t("dashboard.unknownMedication")}
                     </RecordName>
                     {m.dosage?.[0]?.text && (
-                      <span className="text-muted-foreground ml-2">— {m.dosage[0].text}</span>
+                      <p className="text-muted-foreground text-xs truncate">— {m.dosage[0].text}</p>
                     )}
                   </li>
                 ))}
@@ -385,17 +385,19 @@ export function Dashboard() {
                   const targetDisease = targetDiseaseCode
                     ? getVaccineTargetDiseasesUvIpsConcept(targetDiseaseCode)?.display : undefined
                   return (
-                    <li key={imm.id || i} className="text-sm">
-                      <RecordName resource={imm} onOpen={openDetail}>
-                        {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || t("dashboard.unknownVaccine")}
-                      </RecordName>
+                    <li key={imm.id || i} className="text-sm min-w-0">
+                      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                        <RecordName resource={imm} onOpen={openDetail}>
+                          {imm.vaccineCode?.coding?.[0]?.display || imm.vaccineCode?.text || t("dashboard.unknownVaccine")}
+                        </RecordName>
+                        {imm.occurrenceDateTime && (
+                          <span className="text-muted-foreground text-xs">
+                            {format(new Date(imm.occurrenceDateTime), "MMM d, yyyy")}
+                          </span>
+                        )}
+                      </div>
                       {targetDisease && (
-                        <span className="text-muted-foreground ml-1 text-xs">({targetDisease})</span>
-                      )}
-                      {imm.occurrenceDateTime && (
-                        <span className="text-muted-foreground ml-2">
-                          {format(new Date(imm.occurrenceDateTime), "MMM d, yyyy")}
-                        </span>
+                        <p className="text-muted-foreground text-xs truncate">({targetDisease})</p>
                       )}
                     </li>
                   )
@@ -557,17 +559,17 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {filterVerified(procedures).map((proc, i) => (
-                  <li key={proc.id || i} className="text-sm">
+                  <li key={proc.id || i} className="text-sm flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 min-w-0">
                     <RecordName resource={proc} onOpen={openDetail}>
                       {proc.code?.coding?.[0]?.display || proc.code?.text || t("dashboard.unknownProcedure")}
                     </RecordName>
                     {proc.performedDateTime && (
-                      <span className="text-muted-foreground ml-2">
+                      <span className="text-muted-foreground text-xs">
                         {format(new Date(proc.performedDateTime), "MMM d, yyyy")}
                       </span>
                     )}
                     {proc.status && (
-                      <Badge variant={getProcedureStatusStyle(proc.status as EventStatusCode)} className="ml-2 text-xs">
+                      <Badge variant={getProcedureStatusStyle(proc.status as EventStatusCode)} className="text-xs">
                         {proc.status}
                       </Badge>
                     )}

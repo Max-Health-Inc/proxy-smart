@@ -52,7 +52,7 @@ export function DiagnosticReportsCard({ reports, onOpenDetail }: DiagnosticRepor
               const performer = report.performer?.[0]?.display
               const date = report.effectiveDateTime ?? report.issued
               return (
-                <li key={report.id || i} className="text-sm">
+                <li key={report.id || i} className="text-sm min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <RecordName resource={report as AnyResource} onOpen={onOpenDetail}>
                       {title}
