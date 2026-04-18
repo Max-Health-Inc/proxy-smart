@@ -51,7 +51,8 @@ RUN mkdir -p apps/ui/src/lib/api-client && \
 # Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
 ARG VITE_ENCRYPTION_SECRET
-ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET:?VITE_ENCRYPTION_SECRET build arg is required}
+RUN test -n "$VITE_ENCRYPTION_SECRET" || (echo "ERROR: VITE_ENCRYPTION_SECRET build arg is required" && exit 1)
+ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 ENV VITE_BASE=/webapp/
 COPY shared-ui/ ./shared-ui/
 COPY apps/ui/ ./apps/ui/
