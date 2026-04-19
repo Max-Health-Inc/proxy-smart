@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191148.b00a1b9d] - 2026-04-19
+
+- 🔧 Chores & Improvements: Adjusted API client generation workflow
+  - Use uv tool from external image to install openapi-ts-fetch@0.2.0
+  - Continue copying openapi.json from openapi-gen
+  - Generate TypeScript API client into apps/ui/src/lib/api-client
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/495
+
+
 ## [0.0.6-alpha.202604191138.475af2a3] - 2026-04-19
 
 - ✨ Features: 
