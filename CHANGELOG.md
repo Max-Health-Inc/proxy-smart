@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191222.8f195a17] - 2026-04-19
+
+- 🔧 Chores & Improvements: Harden error handling and pre-checks for insecure/private origins in FhirServersManager; treat as secure for http/private/invalid origins
+- 🔧 Chores & Improvements: Propagate and store client secrets for confidential SMART apps clients during create/update paths
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/499
+
+
 ## [0.0.6-alpha.202604191155.f011c012] - 2026-04-19
 
 - 🔧 Chores & Improvements: Switch to uv tool install for openapi-ts-fetch==0.2.0 and update PATH; adjust API client generation to use backend/dist/openapi.json for UI API client generation.
