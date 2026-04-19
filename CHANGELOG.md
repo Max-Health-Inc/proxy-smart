@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191138.475af2a3] - 2026-04-19
+
+- ✨ Features: 
+  - UI overhaul: migrate Tabs to ResponsiveTabsList across multiple components for better responsiveness.
+  - Added shared UI components: FilterToolbar and FilterToolbarItem; new responsive-tabs-list.tsx; new page-header.tsx; export entries updated in shared-ui.
+
+- 🔧 Chores & Improvements:
+  - OpenAPI client generation switch to openapi-ts-fetch for both apps.
+  - Version bumps across multiple apps from beta to alpha.
+
+- ⚠️ Breaking Changes:
+  - None identified.
+
+Note: Update-only commits and merges were ignored per guidance.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/493
+
+
 ## [0.0.6-alpha.202604191042.7739f830] - 2026-04-19
 
 - ✨ Features: 
