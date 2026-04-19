@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191635.1ccdb876] - 2026-04-19
+
+- ✨ Features: Enable CIMD and token-exchange features by default in Keycloak Dockerfile; update docker-compose to run with features=cimd,token-exchange; production start retained with realm import.
+- 🔧 Chores & Improvements: Version bumps across multiple packages from beta to alpha pre-release.
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/504
+
+
 ## [0.0.6-alpha.202604191312.42324489] - 2026-04-19
 
 - 🔧 Chores & Improvements: Mask client secrets in smart-apps route responses (hide plaintext with **********; add masking note in comments) across multiple apps/tests
