@@ -785,7 +785,7 @@ def generate(spec_path: str, output_dir: str, tag_filter: set[str] | None = None
     base_path = ''
     servers = spec.get('servers', [])
     if servers:
-        base_path = servers[0].get('url', '').rstrip('/')
+        base_path = ""  # always empty — callers pass basePath via Configuration
 
     header = HEADER_TPL.format(title=title, description=description, version=version)
     registry = SchemaRegistry(spec)
