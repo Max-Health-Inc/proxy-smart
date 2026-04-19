@@ -219,6 +219,18 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               // User type & role restrictions
               allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
               requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
+              
+              // Consent & scope settings
+              consentRequired: fullClient.consentRequired ?? false,
+              fullScopeAllowed: fullClient.fullScopeAllowed ?? true,
+              
+              // Session timeout settings
+              clientSessionIdleTimeout: getAttr(fullClient.attributes, 'client.session.idle.timeout') ? Number(getAttr(fullClient.attributes, 'client.session.idle.timeout')) : undefined,
+              clientSessionMaxLifespan: getAttr(fullClient.attributes, 'client.session.max.lifespan') ? Number(getAttr(fullClient.attributes, 'client.session.max.lifespan')) : undefined,
+              
+              // Logout settings
+              backchannelLogoutUrl: getAttr(fullClient.attributes, 'backchannel.logout.url') || undefined,
+              frontChannelLogoutUrl: getAttr(fullClient.attributes, 'frontchannel.logout.url') || undefined,
             } as SmartAppType
           } catch (error) {
             logger.admin.warn('Failed to enrich client with scope details', { clientId: client.clientId, error })
@@ -370,11 +382,26 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             'required_roles': body.requiredRoles.join(',')
           }),
 
+          // Session timeout overrides
+          ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
+          ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),
+          
+          // Logout settings
+          ...(body.backchannelLogoutUrl && { 'backchannel.logout.url': body.backchannelLogoutUrl }),
+          ...(body.frontChannelLogoutUrl && { 'frontchannel.logout.url': body.frontChannelLogoutUrl }),
+
           // Keycloak 25+ requires explicit post-logout redirect URI config
           'post.logout.redirect.uris': '+',
         },
         // Configure client authentication method
         clientAuthenticatorType,
+
+        // Consent & scope settings
+        ...(body.consentRequired !== undefined && { consentRequired: body.consentRequired }),
+        ...(body.fullScopeAllowed !== undefined && { fullScopeAllowed: body.fullScopeAllowed }),
+        
+        // Front-channel logout top-level flag
+        ...(body.frontChannelLogoutUrl && { frontchannelLogout: true }),
 
         // Configure OAuth2 settings for Backend Services
         // Pass explicit client secret when provided (confidential clients only)
@@ -683,6 +710,18 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               // User type & role restrictions
               allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
               requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
+              
+              // Consent & scope settings
+              consentRequired: fullClient.consentRequired ?? false,
+              fullScopeAllowed: fullClient.fullScopeAllowed ?? true,
+              
+              // Session timeout settings
+              clientSessionIdleTimeout: getAttr(fullClient.attributes, 'client.session.idle.timeout') ? Number(getAttr(fullClient.attributes, 'client.session.idle.timeout')) : undefined,
+              clientSessionMaxLifespan: getAttr(fullClient.attributes, 'client.session.max.lifespan') ? Number(getAttr(fullClient.attributes, 'client.session.max.lifespan')) : undefined,
+              
+              // Logout settings
+              backchannelLogoutUrl: getAttr(fullClient.attributes, 'backchannel.logout.url') || undefined,
+              frontChannelLogoutUrl: getAttr(fullClient.attributes, 'frontchannel.logout.url') || undefined,
           } as SmartAppType
         }
       } catch (error) {
@@ -766,7 +805,18 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.requiredRoles !== undefined && {
             'required_roles': body.requiredRoles.length > 0 ? body.requiredRoles.join(',') : ''
           }),
-        }
+          // Session timeout overrides
+          ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
+          ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),
+          // Logout settings
+          ...(body.backchannelLogoutUrl !== undefined && { 'backchannel.logout.url': body.backchannelLogoutUrl || '' }),
+          ...(body.frontChannelLogoutUrl !== undefined && { 'frontchannel.logout.url': body.frontChannelLogoutUrl || '' }),
+        },
+        // Consent & scope settings (top-level Keycloak properties)
+        ...(body.consentRequired !== undefined && { consentRequired: body.consentRequired }),
+        ...(body.fullScopeAllowed !== undefined && { fullScopeAllowed: body.fullScopeAllowed }),
+        // Front-channel logout top-level flag
+        ...(body.frontChannelLogoutUrl !== undefined && { frontchannelLogout: !!body.frontChannelLogoutUrl }),
       }
       await admin.clients.update({ id: clients[0].id! }, updateData)
 
