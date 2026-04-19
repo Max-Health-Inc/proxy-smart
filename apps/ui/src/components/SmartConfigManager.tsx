@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, Play, Shield, Link } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { ScopeManager } from './ScopeManager';
 import { LaunchContextManager } from './LaunchContextManager';
 import { ProtocolMappersManager } from './ProtocolMappersManager';
@@ -32,7 +32,7 @@ export function SmartConfigManager() {
             {/* Tabs in card */}
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
+                    <ResponsiveTabsList columns={3}>
                         <TabsTrigger value="scopes" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Target className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('Scopes')}</span>
@@ -45,7 +45,7 @@ export function SmartConfigManager() {
                             <Link className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('Protocol Mappers')}</span>
                         </TabsTrigger>
-                    </TabsList>
+                    </ResponsiveTabsList>
 
                     <TabsContent value="scopes" className="p-6 space-y-6">
                         <ScopeManager embedded />

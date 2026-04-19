@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Patient Portal",
   "description": "International Patient Portal — SMART on FHIR app for patient access using IPS (International Patient Summary) and IPA (International Patient Access) standards.",
   "private": true,
-  "version": "0.0.6-beta.202604191007.71942d74",
+  "version": "0.0.6-alpha.202604191042.7739f830",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5176",
@@ -11,7 +11,7 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "preview": "vite preview --port 5176",
-    "generate": "python ../../scripts/generate-ts-fetch-client.py ../../backend/dist/openapi.json ./src/lib/api-client --tags shl"
+    "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/lib/api-client --tags shl"
   },
   "dependencies": {
     "@babelfhir-ts/dicomweb": "0.1.1",

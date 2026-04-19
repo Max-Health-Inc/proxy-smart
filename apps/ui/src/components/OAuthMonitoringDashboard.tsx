@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
 import { ExportMenu } from './ui/export-menu';
@@ -375,7 +375,7 @@ export function OAuthMonitoringDashboard() {
               {t('Real-time monitoring and analytics for OAuth 2.0 flows')}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant={isRealTimeActive ? 'default' : 'outline'} onClick={toggleRealTime}>
               {isRealTimeActive ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {isRealTimeActive ? t('Pause') : t('Resume')} {t('Real-time')}
@@ -419,7 +419,7 @@ export function OAuthMonitoringDashboard() {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8 bg-muted/50 rounded-t-2xl">
+            <ResponsiveTabsList columns={8}>
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Dashboard')}</TabsTrigger>
               <TabsTrigger value="fhir-proxy" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('FHIR Proxy')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth')}</TabsTrigger>
@@ -428,7 +428,7 @@ export function OAuthMonitoringDashboard() {
               <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
               <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
               <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
-            </TabsList>
+            </ResponsiveTabsList>
 
             <TabsContent value="overview">
               <SystemHealthTab
