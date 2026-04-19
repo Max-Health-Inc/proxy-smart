@@ -67,6 +67,7 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     fhirVersion: app.attributes?.fhir_version as string ?? '',
     requirePkce: app.requirePkce ?? false,
     allowOfflineAccess: app.allowOfflineAccess ?? false,
+    tokenExchangeEnabled: app.tokenExchangeEnabled ?? true,
     logoUri: app.logoUri ?? '',
     tosUri: app.tosUri ?? '',
     policyUri: app.policyUri ?? '',
@@ -245,6 +246,13 @@ export function SmartAppEditModal({
                 <p className="text-xs text-muted-foreground">{t('Enable refresh tokens for this application')}</p>
               </div>
               <Switch checked={form.allowOfflineAccess ?? false} onCheckedChange={(v) => set('allowOfflineAccess', v)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label>{t('Token Exchange')}</Label>
+                <p className="text-xs text-muted-foreground">{t('Allow RFC 8693 standard token exchange for this client')}</p>
+              </div>
+              <Switch checked={form.tokenExchangeEnabled ?? true} onCheckedChange={(v) => set('tokenExchangeEnabled', v)} />
             </div>
 
             {form.clientType === ClientTypeEnum.Confidential && (
