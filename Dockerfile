@@ -49,7 +49,7 @@ RUN bun run export-openapi
 
 # API client generation stage
 FROM build-deps AS api-client-gen
-RUN pip install --break-system-packages openapi-ts-fetch==0.1.0
+RUN pip install --break-system-packages openapi-ts-fetch==0.2.0
 COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p apps/ui/src/lib/api-client && \
     openapi-ts-fetch backend/dist/openapi.json apps/ui/src/lib/api-client && \
