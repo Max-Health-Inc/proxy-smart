@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191312.42324489] - 2026-04-19
+
+- 🔧 Chores & Improvements: Mask client secrets in smart-apps route responses (hide plaintext with **********; add masking note in comments) across multiple apps/tests
+- 🔧 Chores & Improvements: Miscellaneous minor comment tweaks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/502
+
+
 ## [0.0.6-alpha.202604191222.8f195a17] - 2026-04-19
 
 - 🔧 Chores & Improvements: Harden error handling and pre-checks for insecure/private origins in FhirServersManager; treat as secure for http/private/invalid origins
