@@ -175,8 +175,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               appType: (VALID_APP_TYPES.has(appType!) ? appType : undefined) || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
               clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
               
-              // Client secret (only included for confidential clients with client-secret auth)
-              ...(fullClient.secret && { secret: fullClient.secret }),
+              // Client secret — masked in list responses (Keycloak returns plaintext to admin callers)
+              ...(fullClient.secret && { secret: '**********' }),
               
               // Extract metadata fields from attributes
               launchUrl: getAttr(fullClient.attributes, 'launch_url'),
@@ -639,8 +639,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             appType: appType || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
             clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
             
-            // Client secret (only included for confidential clients with client-secret auth)
-            ...(fullClient.secret && { secret: fullClient.secret }),
+            // Client secret — masked in detail responses (Keycloak returns plaintext to admin callers)
+            ...(fullClient.secret && { secret: '**********' }),
             
             // Extract metadata fields from attributes
             launchUrl: getAttr(fullClient.attributes, 'launch_url'),
