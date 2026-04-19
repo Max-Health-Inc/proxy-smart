@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604192100.56d6dcbb] - 2026-04-19
+
+- ✨ Features: Add token exchange toggle to SMART app edit modal (admin-ui)
+- 🔧 Chores & Improvements: Sync package versions
+- 🔧 Chores & Improvements: Update beta/alpha version references (CI/CD)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/512
+
+
 ## [0.0.6-alpha.202604191731.193c395c] - 2026-04-19
 
 - 🔧 Chores & Improvements: Align alpha version across all packages/deps
