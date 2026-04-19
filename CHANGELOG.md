@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191007.71942d74] - 2026-04-19
+
+- 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604191007.71942d74 across apps and test package
+- 🔧 Chores & Improvements: Updated header comment in runtime-template.ts (Proxy Smart Backend -> OpenAPI TypeScript Fetch Client Runtime); license note adjusted to reflect openapi-ts-fetch generation
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/488
+
+
 ## [0.0.6-alpha.202604190956.a2d9d108] - 2026-04-19
 
 - 🔧 Chores & Improvements: Adjust base path handling and summary guard
