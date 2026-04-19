@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604181646.b547f57e] - 2026-04-19
+
+- 🔧 Chores & Improvements: CI/CD enhancements for patient portal build and API client generation
+  - GitHub Actions: add step to build the Patient Portal in frontend workflow; set TAILWIND_DISABLE_LIGHTNINGCSS and build from apps/patient-portal
+  - Docker: generate API clients for patient-portal in api-client-gen stage; mount generated client into patient-portal and run extra CLI generation with tag --tags shl
+  - Dockerfile: reuse generated patient-portal API client in build stage
+  - package.json: broaden generate commands to include UI and patient-portal clients for generate:clients and generate:ui commands
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/485
+
+
 ## [0.0.6-alpha.202604181619.5f44b1d4] - 2026-04-18
 
 - ✨ Features
