@@ -68,6 +68,8 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     requirePkce: app.requirePkce ?? false,
     allowOfflineAccess: app.allowOfflineAccess ?? false,
     tokenExchangeEnabled: app.tokenExchangeEnabled ?? false,
+    accessTokenLifespan: app.accessTokenLifespan ?? undefined,
+    audienceClients: app.audienceClients ?? [],
     logoUri: app.logoUri ?? '',
     tosUri: app.tosUri ?? '',
     policyUri: app.policyUri ?? '',
@@ -253,6 +255,28 @@ export function SmartAppEditModal({
                 <p className="text-xs text-muted-foreground">{t('Allow RFC 8693 standard token exchange for this client')}</p>
               </div>
               <Switch checked={form.tokenExchangeEnabled ?? false} onCheckedChange={(v) => set('tokenExchangeEnabled', v)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('Access Token Lifespan')}</Label>
+              <p className="text-xs text-muted-foreground">{t('Override realm default (in seconds). Leave empty for realm default.')}</p>
+              <Input
+                type="number"
+                min={0}
+                value={form.accessTokenLifespan ?? ''}
+                onChange={(e) => set('accessTokenLifespan', e.target.value ? Number(e.target.value) : undefined)}
+                placeholder={t('Realm default')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('Audience Clients')}</Label>
+              <p className="text-xs text-muted-foreground">{t('Client IDs included as audience in tokens (for token exchange)')}</p>
+              <StringListField
+                values={form.audienceClients ?? []}
+                onChange={(v) => set('audienceClients', v)}
+                placeholder={t('Add client ID...')}
+              />
             </div>
 
             {form.clientType === ClientTypeEnum.Confidential && (
