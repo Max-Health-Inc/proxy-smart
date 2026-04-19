@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
@@ -322,7 +322,7 @@ export function SmartAppsManager() {
           {/* Tabs for different sections */}
           <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={smartAppsManagerTab} onValueChange={setSmartAppsManagerTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
+              <ResponsiveTabsList columns={3}>
                 <TabsTrigger value="apps" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Shield className="w-4 h-4" />
                   <span className="hidden sm:inline">{t('Registered Apps')}</span>
@@ -335,7 +335,7 @@ export function SmartAppsManager() {
                   <UserPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">{t('Dynamic Registration')}</span>
                 </TabsTrigger>
-              </TabsList>
+              </ResponsiveTabsList>
 
               <TabsContent value="apps" className="p-6 space-y-6">
 

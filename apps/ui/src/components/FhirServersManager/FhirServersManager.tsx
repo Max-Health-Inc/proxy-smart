@@ -5,7 +5,7 @@ import {
   Plus,
   Info
 } from 'lucide-react';
-import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';
@@ -357,7 +357,7 @@ export function FhirServersManager() {
               {t('Manage and monitor FHIR server connections')}
             </div>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-wrap gap-2">
             <Button
               onClick={() => setShowAddDialog(true)}
             >
@@ -381,14 +381,14 @@ export function FhirServersManager() {
       {/* Main Content */}
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+          <ResponsiveTabsList columns={2}>
             <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
               {t('Server Overview')}
             </TabsTrigger>
             <TabsTrigger value="details" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
               {t('Server Details')}
             </TabsTrigger>
-          </TabsList>
+          </ResponsiveTabsList>
 
           <TabsContent value="overview">
             <ServerOverview

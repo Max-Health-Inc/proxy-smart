@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Button, Input, CHART_COLORS, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Badge, Button, Input, CHART_COLORS, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { StatCard } from './ui/stat-card';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
@@ -362,13 +362,13 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/50 rounded-t-2xl">
+            <ResponsiveTabsList columns={5}>
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="decisions" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Decisions')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
               <TabsTrigger value="denied" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Denied Access')}</TabsTrigger>
               <TabsTrigger value="settings" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Settings')}</TabsTrigger>
-            </TabsList>
+            </ResponsiveTabsList>
 
             {/* ─── Overview ──────────────────────────────────── */}
             <TabsContent value="overview" className="space-y-6">
@@ -478,11 +478,11 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                   </div>
                   <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter Consent Decisions')}</h4>
                 </div>
-                <div className="flex flex-wrap gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Decision:')}</label>
                     <Select value={filterDecision} onValueChange={setFilterDecision}>
-                      <SelectTrigger className="w-[140px]">
+                      <SelectTrigger className="w-full sm:w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -496,7 +496,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Resource:')}</label>
                     <Select value={filterResourceType} onValueChange={setFilterResourceType}>
-                      <SelectTrigger className="w-[160px]">
+                      <SelectTrigger className="w-full sm:w-[160px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -515,7 +515,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                       placeholder={t('Search by client, patient, path...')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="min-w-[220px]"
+                      className="w-full sm:min-w-[220px]"
                     />
                   </div>
                 </div>

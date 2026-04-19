@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
-import { Badge, Button, CHART_COLORS, Tabs, TabsContent, TabsList, TabsTrigger, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
+import { Badge, Button, CHART_COLORS, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { SearchInput } from '@/components/ui/search-input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageLoadingState } from './ui/page-loading-state';
@@ -250,11 +250,11 @@ export function MonitoringDashboard({ config, embedded, isRealTimeActive: parent
           )}
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
+            <ResponsiveTabsList columns={3}>
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Event Log')}</TabsTrigger>
               <TabsTrigger value="failures" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Failures')}</TabsTrigger>
-            </TabsList>
+            </ResponsiveTabsList>
 
             {/* ─── Overview ─────────────────────────────────────────── */}
             <TabsContent value="overview" className="space-y-6">
@@ -353,10 +353,10 @@ export function MonitoringDashboard({ config, embedded, isRealTimeActive: parent
 
             {/* ─── Event Log ────────────────────────────────────────── */}
             <TabsContent value="events" className="space-y-6">
-              <div className="flex flex-wrap items-center gap-3">
-                <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={t('Search events...')} className="min-w-[200px] max-w-none" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-3">
+                <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder={t('Search events...')} className="w-full sm:min-w-[200px] sm:max-w-none" />
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="w-[200px]"><SelectValue placeholder={t('Event Type')} /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[200px]"><SelectValue placeholder={t('Event Type')} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('All Types')}</SelectItem>
                     {uniqueTypes.map(type => (
@@ -365,7 +365,7 @@ export function MonitoringDashboard({ config, embedded, isRealTimeActive: parent
                   </SelectContent>
                 </Select>
                 <Select value={filterSuccess} onValueChange={setFilterSuccess}>
-                  <SelectTrigger className="w-[140px]"><SelectValue placeholder={t('Status')} /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[140px]"><SelectValue placeholder={t('Status')} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('All')}</SelectItem>
                     <SelectItem value="true">{t('Success')}</SelectItem>

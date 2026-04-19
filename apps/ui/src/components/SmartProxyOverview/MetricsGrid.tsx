@@ -21,7 +21,7 @@ export function MetricsGrid({ dashboardData, oauthAnalytics }: MetricsGridProps)
   const { t } = useTranslation();
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
       <StatCard
         icon={Zap}
         label={t('SMART Apps')}

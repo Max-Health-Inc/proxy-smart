@@ -90,3 +90,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Utility: hide scrollbar but keep scrolling */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

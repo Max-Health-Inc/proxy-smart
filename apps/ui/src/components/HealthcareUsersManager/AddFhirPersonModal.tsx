@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import {
   User,
   Database,
@@ -274,10 +274,10 @@ export function AddFhirPersonModal({
 
         {selectedServer && (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100/50">
+            <ResponsiveTabsList columns={2}>
               <TabsTrigger value="existing" className="rounded-xl">{t('Link Existing Person')}</TabsTrigger>
               <TabsTrigger value="create" className="rounded-xl">{t('Create New Person')}</TabsTrigger>
-            </TabsList>
+            </ResponsiveTabsList>
 
             <TabsContent value="existing" className="space-y-6 mt-6">
               <Card>

@@ -566,11 +566,11 @@ export function OAuthAnalyticsTab({
             {t('Filter OAuth Flows')}
           </h4>
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -587,7 +587,7 @@ export function OAuthAnalyticsTab({
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -607,7 +607,7 @@ export function OAuthAnalyticsTab({
               placeholder={t('Search by client or user...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="min-w-[200px]"
+              className="w-full sm:min-w-[200px]"
             />
           </div>
         </div>
