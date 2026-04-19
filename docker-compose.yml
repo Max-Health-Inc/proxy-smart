@@ -25,7 +25,7 @@ services:
     command:
       - start-dev
       - --import-realm
-      - --features=cimd
+      - --features=cimd,token-exchange
     depends_on:
       postgres:
         condition: service_healthy
