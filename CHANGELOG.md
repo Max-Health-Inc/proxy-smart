@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191155.f011c012] - 2026-04-19
+
+- 🔧 Chores & Improvements: Switch to uv tool install for openapi-ts-fetch==0.2.0 and update PATH; adjust API client generation to use backend/dist/openapi.json for UI API client generation.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/497
+
+
 ## [0.0.6-alpha.202604191148.b00a1b9d] - 2026-04-19
 
 - 🔧 Chores & Improvements: Adjusted API client generation workflow
