@@ -183,6 +183,11 @@ def main():
         print("ℹ️  No changes detected.", file=sys.stderr)
         return
 
+    commit_msg_len = len(commit_info.get("message", ""))
+    if len(diff) <= commit_msg_len:
+        print(f"ℹ️  Diff ({len(diff)} chars) is smaller than commit message ({commit_msg_len} chars) — skipping summary.", file=sys.stderr)
+        return
+
     original_size = len(diff)
     diff = truncate_diff(diff, args.max_chars)
     truncated_size = len(diff)
