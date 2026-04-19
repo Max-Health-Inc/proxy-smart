@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191042.7739f830] - 2026-04-19
+
+- ✨ Features: 
+  - UI refresh: migrate Tabs to ResponsiveTabsList across multiple components.
+  - Added shared UI components: FilterToolbar, FilterToolbarItem, responsive-tabs-list, and page-header; updated shared-ui exports.
+
+- 🔧 Chores & Improvements:
+  - OpenAPI client generation switched to openapi-ts-fetch; install and use it for both apps.
+  - Broad version bumps across apps from beta to alpha (0.0.6-alpha.202604191042.7739f830).
+  - UI layout tweaks: grid-to-responsive-flex adjustments in AdminAuditDashboard, EventLogTab, ConsentMonitoringDashboard, OAuthMonitoringDashboard, FhirServersManager, HealthcareUsersManager, SmartAppsManager, UsersAnd…
+
+- ⚠️ Breaking Changes: 
+  - (None detected)
+
+- 📚 Documentation:
+  - (None detected)
+
+Note: Merges, pure updates, and non-meaningful metadata commits skipped.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/491
+
+
 ## [0.0.6-alpha.202604191007.71942d74] - 2026-04-19
 
 - 🔧 Chores & Improvements: Version bump to 0.0.6-alpha.202604191007.71942d74 across apps and test package
