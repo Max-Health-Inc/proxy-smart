@@ -49,12 +49,12 @@ RUN bun run export-openapi
 
 # API client generation stage
 FROM build-deps AS api-client-gen
-COPY scripts/generate-ts-fetch-client.py scripts/runtime-template.ts ./scripts/
+RUN pip install --break-system-packages openapi-ts-fetch==0.1.0
 COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p apps/ui/src/lib/api-client && \
-    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client && \
+    openapi-ts-fetch backend/dist/openapi.json apps/ui/src/lib/api-client && \
     mkdir -p apps/patient-portal/src/lib/api-client && \
-    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/patient-portal/src/lib/api-client --tags shl
+    openapi-ts-fetch backend/dist/openapi.json apps/patient-portal/src/lib/api-client --tags shl
 
 # Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
