@@ -207,7 +207,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               allowOfflineAccess: hasOfflineAccess,
               
               // Token exchange & access token lifespan
-              tokenExchangeEnabled: getAttr(fullClient.attributes, 'token-exchange-standard.enabled') === 'true',
+              tokenExchangeEnabled: getAttr(fullClient.attributes, 'standard.token.exchange.enabled') === 'true',
               accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
               
               // Audience mappers
@@ -357,7 +357,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' }),
           
           // Token exchange (RFC 8693) — Keycloak 26+ standard token exchange V2
-          ...(body.tokenExchangeEnabled !== undefined && { 'token-exchange-standard.enabled': String(body.tokenExchangeEnabled) }),
+          ...(body.tokenExchangeEnabled !== undefined && { 'standard.token.exchange.enabled': String(body.tokenExchangeEnabled) }),
           
           // Custom access token lifespan (overrides realm default)
           ...(body.accessTokenLifespan && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
@@ -671,7 +671,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             allowOfflineAccess: hasOfflineAccess,
             
             // Token exchange & access token lifespan
-            tokenExchangeEnabled: getAttr(fullClient.attributes, 'token-exchange-standard.enabled') === 'true',
+            tokenExchangeEnabled: getAttr(fullClient.attributes, 'standard.token.exchange.enabled') === 'true',
             accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
             
             // Audience mappers
@@ -756,7 +756,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             'organization_ids': body.organizationIds.length > 0 ? body.organizationIds.join(',') : ''
           }),
           // Token exchange (RFC 8693) — Keycloak 26+ standard token exchange V2
-          ...(body.tokenExchangeEnabled !== undefined && { 'token-exchange-standard.enabled': String(body.tokenExchangeEnabled) }),
+          ...(body.tokenExchangeEnabled !== undefined && { 'standard.token.exchange.enabled': String(body.tokenExchangeEnabled) }),
           // Custom access token lifespan (overrides realm default)
           ...(body.accessTokenLifespan !== undefined && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
           // User type & role restrictions
