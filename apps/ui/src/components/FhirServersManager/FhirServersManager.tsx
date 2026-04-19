@@ -55,6 +55,24 @@ export function FhirServersManager() {
   const [uploadingCerts, setUploadingCerts] = useState(false);
 
   const checkServerSecurity = useCallback(async (server: FhirServerWithState) => {
+    // Skip check for URLs unreachable from the browser:
+    // - http:// origins on an https:// page (mixed content blocked)
+    // - Private/internal hostnames (not resolvable from public internet)
+    try {
+      const origin = new URL(server.url);
+      const isPageSecure = window.location.protocol === 'https:';
+      const isOriginInsecure = origin.protocol === 'http:';
+      const isPrivateHost = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|.*\.internal$|.*\.local$)/i.test(origin.hostname)
+        || !origin.hostname.includes('.');  // single-label hostnames like "hapi-fhir"
+      if ((isPageSecure && isOriginInsecure) || isPrivateHost) {
+        setSecurityChecks(prev => ({ ...prev, [server.id]: 'secure' }));
+        return;
+      }
+    } catch {
+      setSecurityChecks(prev => ({ ...prev, [server.id]: 'secure' }));
+      return;
+    }
+
     setSecurityChecks(prev => {
       if (prev[server.id]) {
         return prev;
@@ -77,8 +95,7 @@ export function FhirServersManager() {
           } else {
             setSecurityChecks(prevChecks => ({ ...prevChecks, [server.id]: 'secure' }));
           }
-        } catch (error) {
-          console.error(`Security check failed for ${server.serverName || server.name}:`, error);
+        } catch {
           setSecurityChecks(prevChecks => ({ ...prevChecks, [server.id]: 'secure' }));
         }
       }, 0);

@@ -377,6 +377,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         clientAuthenticatorType,
 
         // Configure OAuth2 settings for Backend Services
+        // Pass explicit client secret when provided (confidential clients only)
+        ...(body.secret && clientAuthenticatorType === 'client-secret' && { secret: body.secret }),
+
         standardFlowEnabled: !isBackendService, // Authorization code flow
         implicitFlowEnabled: false, // Not recommended for SMART
         directAccessGrantsEnabled: false, // Not used in SMART
@@ -724,6 +727,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         name: body.name,
         description: body.description,
         enabled: body.enabled,
+        // Update client secret when provided (confidential clients only)
+        ...(body.secret && !clients[0].publicClient && { secret: body.secret }),
         redirectUris: body.redirectUris,
         webOrigins: body.webOrigins,
         attributes: {
