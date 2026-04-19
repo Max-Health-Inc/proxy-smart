@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191731.193c395c] - 2026-04-19
+
+- 🔧 Chores & Improvements: Align alpha version across all packages/deps
+  - Bump version strings from 0.0.6-beta... to 0.0.6-alpha.202604191731.193c395c
+  - Minor backend change: added audience: shlClientId to exchangeForShlToken request (shl.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/510
+
+
 ## [0.0.6-alpha.202604191644.c881cf1e] - 2026-04-19
 
 - 🔧 Chores & Improvements: Rename admin backend attribute keys for token exchange settings and align with standard.token.exchange.enabled; update emitted flag naming. Minor consistency fixes across UI/backend and version bumps across projects.
