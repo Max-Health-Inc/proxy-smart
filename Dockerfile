@@ -52,7 +52,9 @@ FROM build-deps AS api-client-gen
 COPY scripts/generate-ts-fetch-client.py scripts/runtime-template.ts ./scripts/
 COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p apps/ui/src/lib/api-client && \
-    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client
+    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client && \
+    mkdir -p apps/patient-portal/src/lib/api-client && \
+    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/patient-portal/src/lib/api-client --tags shl
 
 # Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
@@ -84,6 +86,7 @@ RUN bun run build
 FROM build-deps AS patient-portal-build
 COPY shared-ui/ ./shared-ui/
 COPY apps/patient-portal/ ./apps/patient-portal/
+COPY --from=api-client-gen /app/apps/patient-portal/src/lib/api-client ./apps/patient-portal/src/lib/api-client/
 WORKDIR /app/apps/patient-portal
 RUN bun run build
 

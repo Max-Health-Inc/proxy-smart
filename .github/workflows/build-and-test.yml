@@ -73,6 +73,14 @@ jobs:
         echo "🔨 Generating client APIs..."
         bun run generate:ui
 
+    - name: Build Patient Portal
+      env:
+        TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+      run: |
+        echo "🔨 Building patient portal..."
+        cd apps/patient-portal
+        bun run build
+
     # === FRONTEND BUILD ===
     - name: Build Frontend
       env:
