@@ -50,7 +50,8 @@ RUN bun run export-openapi
 # API client generation stage
 FROM build-deps AS api-client-gen
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-RUN uv pip install --system openapi-ts-fetch==0.2.0
+RUN uv tool install openapi-ts-fetch==0.2.0
+ENV PATH="/root/.local/bin:$PATH"
 COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p apps/ui/src/lib/api-client && \
     openapi-ts-fetch backend/dist/openapi.json apps/ui/src/lib/api-client && \
