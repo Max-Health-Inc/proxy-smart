@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604190956.a2d9d108] - 2026-04-19
+
+- 🔧 Chores & Improvements: Adjust base path handling and summary guard
+  - base_path default set to "" in generate-ts-fetch-client.py and runtime-template.ts; supports override via Configuration.basePath
+  - summarize_diff.py adds guard to skip summary if diff length <= commit message length, with logging
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/486
+
+
 ## [0.0.6-alpha.202604181646.b547f57e] - 2026-04-19
 
 - 🔧 Chores & Improvements: CI/CD enhancements for patient portal build and API client generation
