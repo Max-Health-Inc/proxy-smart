@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604191644.c881cf1e] - 2026-04-19
+
+- 🔧 Chores & Improvements: Rename admin backend attribute keys for token exchange settings and align with standard.token.exchange.enabled; update emitted flag naming. Minor consistency fixes across UI/backend and version bumps across projects.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/507
+
+
 ## [0.0.6-alpha.202604191635.1ccdb876] - 2026-04-19
 
 - ✨ Features: Enable CIMD and token-exchange features by default in Keycloak Dockerfile; update docker-compose to run with features=cimd,token-exchange; production start retained with realm import.
