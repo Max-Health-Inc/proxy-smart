@@ -84,21 +84,24 @@ export default function App() {
         })
         const patientId = shl.access.patient
 
-        const [patient, conditions, allergies, medications, immunizations, vitals, labs] =
-          await Promise.all([
-            getPatient(client, patientId),
-            searchConditions(client, patientId),
-            searchAllergies(client, patientId),
-            searchMedications(client, patientId),
-            searchImmunizations(client, patientId),
-            searchVitals(client, patientId),
-            searchLabs(client, patientId),
-          ])
+        // Patient is required — fail if it can't be loaded
+        const patient = await getPatient(client, patientId)
+
+        // Use allSettled so partial failures don't crash the whole page
+        const [cond, allergy, meds, imm, vit, lab] = await Promise.allSettled([
+          searchConditions(client, patientId),
+          searchAllergies(client, patientId),
+          searchMedications(client, patientId),
+          searchImmunizations(client, patientId),
+          searchVitals(client, patientId),
+          searchLabs(client, patientId),
+        ])
+        const v = <T,>(r: PromiseSettledResult<T>): T => r.status === "fulfilled" ? r.value : [] as unknown as T
 
         setState({
           phase: "ready",
           shl,
-          data: { patient, conditions, allergies, medications, immunizations, vitals, labs },
+          data: { patient, conditions: v(cond), allergies: v(allergy), medications: v(meds), immunizations: v(imm), vitals: v(vit), labs: v(lab) },
         })
       } catch (err) {
         setState({ phase: "error", message: err instanceof Error ? err.message : "Failed to load shared data" })
