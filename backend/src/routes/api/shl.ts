@@ -166,10 +166,17 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       const ttlSeconds = expiresInMinutes * 60
       const expiresAt = Date.now() + ttlSeconds * 1000
 
-      const patientId = tokenPayload.smart_patient || tokenPayload.patient
+      // Resolve patient ID from token claims:
+      // 1. Explicit smart_patient / patient claim (clinician with patient context)
+      // 2. Fallback: derive from fhirUser if it's a Patient reference (patient portal user IS the patient)
+      let patientId = tokenPayload.smart_patient || tokenPayload.patient
+      if (!patientId && tokenPayload.fhirUser) {
+        const match = String(tokenPayload.fhirUser).match(/Patient\/([^/]+)$/)
+        if (match) patientId = match[1]
+      }
       if (!patientId) {
         set.status = 400
-        return { error: 'No patient context in token (smart_patient or patient claim required)' }
+        return { error: 'No patient context in token (smart_patient, patient, or fhirUser Patient reference required)' }
       }
 
       // Generate opaque session token (256-bit, base64url-encoded)
