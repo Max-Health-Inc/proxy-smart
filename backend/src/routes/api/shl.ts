@@ -435,7 +435,14 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         status: resp.status,
       })
 
-      return resp.text()
+      // Rewrite internal FHIR server URLs in the response body to point
+      // through the SHL proxy. HAPI FHIR returns pagination links like
+      // http://hapi-fhir:8080/fhir?_getpages=... which cause mixed-content
+      // errors when the viewer is served over HTTPS.
+      const text = await resp.text()
+      const proxyBase = `${config.baseUrl}/api/shl/fhir`
+      const body = text.replaceAll(session.fhirServerUrl, proxyBase)
+      return body
     } catch (error) {
       logger.auth.error('SHL FHIR proxy error', { error })
       set.status = 500
