@@ -72,7 +72,6 @@ async function exchangeForShlToken(
     subject_token: userAccessToken,
     subject_token_type: 'urn:ietf:params:oauth:token-type:access_token',
     requested_token_type: 'urn:ietf:params:oauth:token-type:access_token',
-    audience: shlClientId,
     scope: 'openid patient/*.read',
   })
 
