@@ -422,5 +422,6 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       summary: 'SHL FHIR Proxy',
       description: 'Proxies FHIR requests from SHL viewers using opaque session tokens. No real tokens leave the server.',
       tags: ['shl'],
+      hide: true, // Wildcard catch-all generates duplicate operationIds in OpenAPI codegen
     },
   })
