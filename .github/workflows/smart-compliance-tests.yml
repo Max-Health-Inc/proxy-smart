@@ -97,7 +97,7 @@ env:
 
 jobs:
   smart-compliance-test:
-    name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ inputs.test_stage || 'alpha' }})
+    name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ env.TEST_STAGE }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # Skip bot/releaser version-bump commits to avoid duplicate runs
@@ -167,7 +167,7 @@ jobs:
         continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout repository

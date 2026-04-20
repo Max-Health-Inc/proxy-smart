@@ -13,6 +13,12 @@ function Tabs({
     <TabsPrimitive.Root
       data-slot="tabs"
       data-orientation={orientation}
+      // Radix sets data-orientation="horizontal" but the Tailwind v4 shorthand
+      // variants (data-horizontal:, group-data-horizontal/tabs:) need the boolean
+      // attribute to be present explicitly.
+      {...(orientation === "horizontal"
+        ? { "data-horizontal": "" }
+        : { "data-vertical": "" })}
       className={cn(
         "group/tabs flex gap-2 data-horizontal:flex-col",
         className
