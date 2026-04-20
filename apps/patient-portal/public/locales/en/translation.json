@@ -320,7 +320,13 @@
     "copied": "Copied!",
     "sharedSummary": "Shared Health Summary",
     "expiresInBanner": "Expires in {{minutes}} min",
-    "readOnly": "Read-only view"
+    "readOnly": "Read-only view",
+    "expiryLabel": "Link expires after",
+    "expiry1h": "1 hour",
+    "expiry4h": "4 hours",
+    "expiry24h": "24 hours",
+    "expiry72h": "72 hours",
+    "createLink": "Create Share Link"
   },
   "language": {
     "label": "Language",
