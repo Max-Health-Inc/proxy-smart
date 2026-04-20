@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604200101.06f68dac] - 2026-04-20
+
+- ✨ Features: Add expiry options for share links (labels and UI) with predefined durations (1h/4h/24h/72h)
+- 🔧 Chores & Improvements: UI cleanup (remove unused React import) and state tracking for expiryMinutes; updated localization for expiry labels
+- 🔧 Chores & Improvements: Backend docs note about proxy architecture and token handling (no behavior changes)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/520
+
+
 ## [0.0.6-alpha.202604200037.e0f1ab7f] - 2026-04-20
 
 - 🧪 ✨ Features: UI for Smart App form extended with new Access Token Lifespan section and related fields; defaults adjusted for tokenExchangeEnabled (now false)
