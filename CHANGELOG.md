@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604200037.e0f1ab7f] - 2026-04-20
+
+- 🧪 ✨ Features: UI for Smart App form extended with new Access Token Lifespan section and related fields; defaults adjusted for tokenExchangeEnabled (now false)
+- 🔧 🗂️ Chores & Improvements: Backend exposure/initialization of new SmartApp fields (consentRequired, fullScopeAllowed, clientSessionIdleTimeout, clientSessionMaxLifespan, backchannelLogoutUrl, frontChannelLogoutUrl)
+- 🔧 🗂️ Chores & Improvements: Token Exchange API removed from SHL backend
+- ⚠️ Breaking Changes: (none detected)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/517
+
+
 ## [0.0.6-alpha.202604192104.9250dba6] - 2026-04-20
 
 - ✨ Features: Add Access Token Lifespan section and related fields to Smart App form; expose new fields in admin smart apps route/types (consentRequired, fullScopeAllowed, clientSessionIdleTimeout, clientSessionMaxLifespan, backchannelLogoutUrl, frontChannelLogoutUrl)
