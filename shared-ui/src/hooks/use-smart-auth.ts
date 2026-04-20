@@ -29,6 +29,8 @@ export interface UseSmartAuthOptions {
   startAuth?: () => Promise<void>
   /** Handle EHR launch params (launch + iss). Defaults to true. */
   ehrLaunch?: boolean
+  /** Skip auth entirely (e.g. SHL viewer mode). State stays "unauthenticated". */
+  skip?: boolean
 }
 
 export function useSmartAuth({
@@ -36,12 +38,18 @@ export function useSmartAuth({
   onAuthenticated,
   startAuth,
   ehrLaunch = true,
+  skip = false,
 }: UseSmartAuthOptions) {
   const [state, setState] = useState<SmartAppState>("loading")
   const [error, setError] = useState<string | null>(null)
   const callbackHandled = useRef(false)
 
   useEffect(() => {
+    if (skip) {
+      setState("unauthenticated")
+      return
+    }
+
     onAuthError((msg) => {
       setError(msg)
       setState("session-expired")
