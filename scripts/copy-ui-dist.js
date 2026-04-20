@@ -17,7 +17,6 @@ const apps = [
   { name: 'DTR App',         src: path.join(projectRoot, 'apps', 'dtr-app', 'dist'),                  dest: path.join(backendPublicPath, 'apps', 'dtr') },
   { name: 'Consent App',     src: path.join(projectRoot, 'apps', 'consent-app', 'dist'),               dest: path.join(backendPublicPath, 'apps', 'consent') },
   { name: 'Patient Portal',  src: path.join(projectRoot, 'apps', 'patient-portal', 'dist'),            dest: path.join(backendPublicPath, 'apps', 'patient-portal') },
-  { name: 'SHL Viewer',      src: path.join(projectRoot, 'apps', 'shl-viewer', 'dist'),               dest: path.join(backendPublicPath, 'apps', 'shl-viewer') },
   { name: 'Docs',            src: path.join(projectRoot, 'docs', '.vitepress', 'dist'),        dest: path.join(backendPublicPath, 'docs') },
 ];
 

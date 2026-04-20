@@ -25,7 +25,7 @@ export function PatientBanner({ patient, bloodType, onPatientUpdated }: PatientB
         formatDate={(date) => format(date, "MMM d, yyyy")}
         formatMrn={(value) => t("patientBanner.mrn", { value })}
         formatBirthSex={(value) => t("patientBanner.saab", { value })}
-        actions={
+        actions={onPatientUpdated ? (
           <Button
             variant="ghost"
             size="icon-sm"
@@ -34,7 +34,7 @@ export function PatientBanner({ patient, bloodType, onPatientUpdated }: PatientB
           >
             <Pencil className="size-4" />
           </Button>
-        }
+        ) : undefined}
       />
 
       {editOpen && (
