@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604201505.7ad141e9] - 2026-04-20
+
+- ✨ Features
+  - SHL FHIR Proxy: add hide: true to route metadata to avoid OpenAPI duplicate operationIds
+
+- 🔧 Chores & Improvements
+  - Job context fix: derive test_stage from branch context with complex default mapping (no longer from env.TEST_STAGE)
+  - UI/UX refactor: overhaul Tabs components to ResponsiveTabsList; adjust styling and container padding across UI sections
+  - FHIR UI: improve overview tab padding/spacing for consistency
+  - ServerOverview: remove outer padding for cleaner layout
+  - shared-ui: improve data attribute handling for orientation in Tabs
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - Backend SHL API route comment updated to reflect proxy architecture and token handling
+
+Notes:
+- Update commits were skipped per guidelines; only meaningful user/developer-facing changes included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/530
+
+
 ## [0.0.6-alpha.202604201435.54b6d9dc] - 2026-04-20
 
 - ✨ Features
