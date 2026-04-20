@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604201916.8352fc45] - 2026-04-20
+
+- ✨ Features: Extend SHL viewer and API capabilities
+  - SHL viewer: add MedicationRequest and Procedure support; expose MedicationRequest in fhir-client exports; include prescriptions and procedures fields.
+  - SHL viewer: include MedicationRequests in search flow with updated imports and types.
+  - SHL API: broaden token scope to include patient/*.read (not just openid).
+
+Note: No breaking changes detected; no docs or CI/CD updates present.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/537
+
+
 ## [0.0.6-alpha.202604201606.827800ce] - 2026-04-20
 
 - ⚠️ Breaking Changes: None detected
