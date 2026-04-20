@@ -235,7 +235,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       // Build the SHL URI and viewer URL
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
-      const viewerUrl = `${config.baseUrl}/apps/shl-viewer/#${shlinkURI}`
+      const viewerUrl = `${config.baseUrl}/apps/patient-portal/#${shlinkURI}`
 
       logger.auth.info('SHL created', {
         shlId,

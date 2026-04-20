@@ -67,7 +67,13 @@ import {
 } from "lucide-react"
 import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
-export function Dashboard() {
+interface DashboardProps {
+  /** Hide all write actions (import, scribe, upload, share QR, edit) */
+  readOnly?: boolean
+  /** Override patient ID (e.g. from SHL token) instead of SMART auth token */
+  patientId?: string
+}
+export function Dashboard({ readOnly = false, patientId: overridePatientId }: DashboardProps) {
   const { t } = useTranslation()
   const { translateCoding } = useFhirTranslation()
   const [loading, setLoading] = useState(true)
@@ -120,7 +126,7 @@ export function Dashboard() {
   useEffect(() => {
     async function loadData() {
       try {
-        const patientId = smartAuth.getToken()?.patient
+        const patientId = overridePatientId || smartAuth.getToken()?.patient
         if (!patientId) {
           setError(t("dashboard.noPatientContext"))
           setLoading(false)
@@ -182,7 +188,9 @@ export function Dashboard() {
           if (aboText || rhText) setBloodType([aboText, rhText].filter(Boolean).join(' '))
         }
 
-        checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
+        if (!readOnly) {
+          checkPacsStatus().then(s => setPacsAvailable(s.configured && s.reachable === true)).catch(() => setPacsAvailable(false))
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load patient data")
       } finally {
@@ -190,7 +198,7 @@ export function Dashboard() {
       }
     }
     loadData()
-  }, [refreshKey])
+  }, [refreshKey, overridePatientId])
 
   if (loading) {
     return (
@@ -212,9 +220,21 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {patient && <PatientBanner patient={patient} bloodType={bloodType} onPatientUpdated={setPatient} />}
+      {patient && <PatientBanner patient={patient} bloodType={bloodType} onPatientUpdated={readOnly ? undefined : setPatient} />}
 
-      {showImport ? (
+      {readOnly ? (
+        <div className="flex items-center gap-2">
+          <Button
+            variant={showUnverified ? "outline" : "secondary"}
+            size="sm"
+            onClick={() => setShowUnverified(v => !v)}
+            className="gap-1.5"
+          >
+            {showUnverified ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+            <span className="hidden sm:inline">{showUnverified ? t("dashboard.showingAll") : t("dashboard.verifiedOnly")}</span>
+          </Button>
+        </div>
+      ) : showImport ? (
         <DocumentImport onClose={() => { setShowImport(false); refreshData() }} />
       ) : showScribe ? (
         <PatientScribe onClose={() => { setShowScribe(false); refreshData() }} />
@@ -688,15 +708,17 @@ export function Dashboard() {
         title={detailTitle}
         resource={detailResource}
         documents={documents}
-        onResourceUpdated={refreshData}
-        onResourceDeleted={refreshData}
+        onResourceUpdated={readOnly ? undefined : refreshData}
+        onResourceDeleted={readOnly ? undefined : refreshData}
       />
 
-      <ShareQRDialog
-        open={showQrDialog}
-        onOpenChange={setShowQrDialog}
-        verifiedOnly={!showUnverified}
-      />
+      {!readOnly && (
+        <ShareQRDialog
+          open={showQrDialog}
+          onOpenChange={setShowQrDialog}
+          verifiedOnly={!showUnverified}
+        />
+      )}
     </div>
   )
 }
