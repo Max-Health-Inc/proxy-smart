@@ -387,20 +387,36 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       }
 
       // Get service account token for upstream FHIR request
-      const serviceToken = await getServiceAccountToken()
+      let serviceToken: string
+      try {
+        serviceToken = await getServiceAccountToken()
+      } catch (tokenError) {
+        const msg = tokenError instanceof Error ? tokenError.message : 'Unknown auth error'
+        logger.auth.error('SHL service account token failed', { shlId, error: msg })
+        set.status = 503
+        return { error: `Service account auth unavailable: ${msg}` }
+      }
 
       // Build upstream URL
       const queryString = url.search
       const targetUrl = `${session.fhirServerUrl}/${fhirPath}${queryString}`
 
       // Proxy the request
-      const resp = await fetch(targetUrl, {
-        method: request.method,
-        headers: {
-          'Accept': 'application/fhir+json',
-          'Authorization': `Bearer ${serviceToken}`,
-        },
-      })
+      let resp: Response
+      try {
+        resp = await fetch(targetUrl, {
+          method: request.method,
+          headers: {
+            'Accept': 'application/fhir+json',
+            'Authorization': `Bearer ${serviceToken}`,
+          },
+        })
+      } catch (fetchError) {
+        const msg = fetchError instanceof Error ? fetchError.message : 'Unknown network error'
+        logger.auth.error('SHL FHIR upstream unreachable', { shlId, targetUrl, error: msg })
+        set.status = 502
+        return { error: `Upstream FHIR server unreachable: ${msg}` }
+      }
 
       // Copy response status and headers
       set.status = resp.status
@@ -415,14 +431,15 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         shlId,
         method: request.method,
         fhirPath,
+        targetUrl,
         status: resp.status,
       })
 
       return resp.text()
     } catch (error) {
       logger.auth.error('SHL FHIR proxy error', { error })
-      set.status = 502
-      return { error: 'Failed to proxy FHIR request' }
+      set.status = 500
+      return { error: 'Internal SHL proxy error' }
     }
   }, {
     detail: {

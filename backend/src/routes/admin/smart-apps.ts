@@ -765,6 +765,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       // Build update data with existing values as fallbacks — Keycloak PUT expects
       // a complete representation; sending undefined fields can cause silent failures
       const existing = clients[0]
+
+      // Map UI appType → effectiveClientType (same logic as create handler)
+      let effectiveClientType = body.clientType
+      if (body.appType && !effectiveClientType) {
+        if (body.appType === 'agent' || body.appType === 'backend-service') {
+          effectiveClientType = 'backend-service'
+        } else if (body.appType === 'standalone-app' || body.appType === 'ehr-launch') {
+          effectiveClientType = existing.publicClient ? 'public' : 'confidential'
+        }
+      }
+
       const updateData = {
         clientId: existing.clientId,
         name: body.name ?? existing.name,
@@ -781,6 +792,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         webOrigins: body.webOrigins ?? existing.webOrigins,
         attributes: {
           ...existing.attributes,
+          // Store appType as client_type attribute
+          ...(body.appType && { 'client_type': body.appType }),
           // Keycloak 25+ requires explicit post-logout redirect URI config
           'post.logout.redirect.uris': existing.attributes?.['post.logout.redirect.uris'] || '+',
           smart_version: body.smartVersion ? [body.smartVersion] : existing.attributes?.smart_version,
@@ -827,10 +840,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         // Front-channel logout top-level flag
         ...(body.frontChannelLogoutUrl !== undefined && { frontchannelLogout: !!body.frontChannelLogoutUrl }),
         // Client type changes affect serviceAccountsEnabled + standardFlowEnabled + publicClient
-        ...(body.clientType !== undefined && {
-          publicClient: body.clientType === 'public',
-          serviceAccountsEnabled: body.clientType === 'backend-service',
-          standardFlowEnabled: body.clientType !== 'backend-service',
+        ...(effectiveClientType !== undefined && {
+          publicClient: effectiveClientType === 'public',
+          serviceAccountsEnabled: effectiveClientType === 'backend-service',
+          standardFlowEnabled: effectiveClientType !== 'backend-service',
         }),
       }
       await admin.clients.update({ id: existing.id! }, updateData)
