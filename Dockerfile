@@ -26,10 +26,9 @@ COPY apps/consent-app/package.json ./apps/consent-app/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
 COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
 COPY apps/patient-portal/package.json ./apps/patient-portal/
-COPY apps/shl-viewer/package.json ./apps/shl-viewer/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal","apps/shl-viewer"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -92,13 +91,6 @@ COPY --from=api-client-gen /app/apps/patient-portal/src/lib/api-client ./apps/pa
 WORKDIR /app/apps/patient-portal
 RUN bun run build
 
-# SHL Viewer build stage
-FROM build-deps AS shl-viewer-build
-COPY shared-ui/ ./shared-ui/
-COPY apps/shl-viewer/ ./apps/shl-viewer/
-WORKDIR /app/apps/shl-viewer
-RUN bun run build
-
 # Docs build stage (VitePress)
 FROM build-deps AS docs-build
 COPY docs/ ./docs/
@@ -130,7 +122,6 @@ COPY --from=ui-build /app/apps/ui/dist ./backend/public/webapp
 COPY --from=consent-app-build /app/apps/consent-app/dist ./backend/public/apps/consent
 COPY --from=dtr-app-build /app/apps/dtr-app/dist ./backend/public/apps/dtr
 COPY --from=patient-portal-build /app/apps/patient-portal/dist ./backend/public/apps/patient-portal
-COPY --from=shl-viewer-build /app/apps/shl-viewer/dist ./backend/public/apps/shl-viewer
 
 # Verify no localhost URLs leaked into production bundles
 RUN if grep -rl 'localhost:8445' /app/backend/public/apps/ 2>/dev/null; then \
