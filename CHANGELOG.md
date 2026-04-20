@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-beta.202604202126.e4fc0fec] - 2026-04-20
+
+- ✨ Features: SHL viewing path added
+  - New ShlView component and SHL viewer client (SHL parse/decrypt flow) in patient-portal
+  - UI adaptations for SHL mode (header title/icon, skip SMART auth in SHL)
+  - Dashboard support for readOnly mode and overridden patientId in SHL mode
+  - Introduced shl-viewer-client.ts library
+
+- 🔧 Chores & Improvements: Version bump across apps and tooling to 0.0.6-beta.202604202126.e4fc0fec
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/543
+
+
 ## [0.0.6-alpha.202604201916.8352fc45] - 2026-04-20
 
 - ✨ Features: Extend SHL viewer and API capabilities
