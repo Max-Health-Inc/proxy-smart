@@ -97,7 +97,7 @@ env:
 
 jobs:
   smart-compliance-test:
-    name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ env.TEST_STAGE }})
+    name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ inputs.test_stage || (startsWith(github.ref, 'refs/heads/dev/') || startsWith(github.ref, 'refs/heads/develop/')) && 'dev' || github.ref == 'refs/heads/develop' && 'alpha' || github.ref == 'refs/heads/test' && 'beta' || github.ref == 'refs/heads/main' && 'production' || 'dev' }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # Skip bot/releaser version-bump commits to avoid duplicate runs
