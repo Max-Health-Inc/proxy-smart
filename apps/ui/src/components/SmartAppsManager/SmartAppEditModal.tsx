@@ -67,7 +67,15 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     fhirVersion: app.attributes?.fhir_version as string ?? '',
     requirePkce: app.requirePkce ?? false,
     allowOfflineAccess: app.allowOfflineAccess ?? false,
-    tokenExchangeEnabled: app.tokenExchangeEnabled ?? true,
+    tokenExchangeEnabled: app.tokenExchangeEnabled ?? false,
+    accessTokenLifespan: app.accessTokenLifespan ?? undefined,
+    audienceClients: app.audienceClients ?? [],
+    consentRequired: app.consentRequired ?? false,
+    fullScopeAllowed: app.fullScopeAllowed ?? true,
+    clientSessionIdleTimeout: app.clientSessionIdleTimeout ?? undefined,
+    clientSessionMaxLifespan: app.clientSessionMaxLifespan ?? undefined,
+    backchannelLogoutUrl: app.backchannelLogoutUrl ?? '',
+    frontChannelLogoutUrl: app.frontChannelLogoutUrl ?? '',
     logoUri: app.logoUri ?? '',
     tosUri: app.tosUri ?? '',
     policyUri: app.policyUri ?? '',
@@ -252,7 +260,99 @@ export function SmartAppEditModal({
                 <Label>{t('Token Exchange')}</Label>
                 <p className="text-xs text-muted-foreground">{t('Allow RFC 8693 standard token exchange for this client')}</p>
               </div>
-              <Switch checked={form.tokenExchangeEnabled ?? true} onCheckedChange={(v) => set('tokenExchangeEnabled', v)} />
+              <Switch checked={form.tokenExchangeEnabled ?? false} onCheckedChange={(v) => set('tokenExchangeEnabled', v)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('Access Token Lifespan')}</Label>
+              <p className="text-xs text-muted-foreground">{t('Override realm default (in seconds). Leave empty for realm default.')}</p>
+              <Input
+                type="number"
+                min={0}
+                value={form.accessTokenLifespan ?? ''}
+                onChange={(e) => set('accessTokenLifespan', e.target.value ? Number(e.target.value) : undefined)}
+                placeholder={t('Realm default')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('Audience Clients')}</Label>
+              <p className="text-xs text-muted-foreground">{t('Client IDs included as audience in tokens (for token exchange)')}</p>
+              <StringListField
+                values={form.audienceClients ?? []}
+                onChange={(v) => set('audienceClients', v)}
+                placeholder={t('Add client ID...')}
+              />
+            </div>
+
+            {/* Consent & Scope */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label>{t('Consent Required')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('User must explicitly consent to scopes at login')}</p>
+                </div>
+                <Switch checked={form.consentRequired ?? false} onCheckedChange={(v) => set('consentRequired', v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label>{t('Full Scope Allowed')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('Include all realm/client roles in tokens (disable to restrict)')}</p>
+                </div>
+                <Switch checked={form.fullScopeAllowed ?? true} onCheckedChange={(v) => set('fullScopeAllowed', v)} />
+              </div>
+            </div>
+
+            {/* Session Timeouts */}
+            <div className="border-t pt-4 space-y-4">
+              <Label className="text-sm font-semibold">{t('Session Timeouts')}</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('Session Idle Timeout')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.clientSessionIdleTimeout ?? ''}
+                    onChange={(e) => set('clientSessionIdleTimeout', e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder={t('Realm default')}
+                  />
+                  <p className="text-xs text-muted-foreground">{t('Seconds before idle session expires')}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('Session Max Lifespan')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.clientSessionMaxLifespan ?? ''}
+                    onChange={(e) => set('clientSessionMaxLifespan', e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder={t('Realm default')}
+                  />
+                  <p className="text-xs text-muted-foreground">{t('Max session duration in seconds')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout Settings */}
+            <div className="border-t pt-4 space-y-4">
+              <Label className="text-sm font-semibold">{t('Logout')}</Label>
+              <div className="space-y-2">
+                <Label>{t('Backchannel Logout URL')}</Label>
+                <Input
+                  value={form.backchannelLogoutUrl ?? ''}
+                  onChange={(e) => set('backchannelLogoutUrl', e.target.value || undefined)}
+                  placeholder="https://app.example.com/logout/backchannel"
+                />
+                <p className="text-xs text-muted-foreground">{t('Server receives a logout token when the session ends')}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('Front-Channel Logout URL')}</Label>
+                <Input
+                  value={form.frontChannelLogoutUrl ?? ''}
+                  onChange={(e) => set('frontChannelLogoutUrl', e.target.value || undefined)}
+                  placeholder="https://app.example.com/logout"
+                />
+                <p className="text-xs text-muted-foreground">{t('Browser redirected here on logout (visible to user)')}</p>
+              </div>
             </div>
 
             {form.clientType === ClientTypeEnum.Confidential && (
