@@ -4,11 +4,58 @@
  * Tests the registerFhirTools function and the proxyFhirRequest internal logic.
  * Mocks upstream FHIR server responses to test the full tool flow without
  * needing a real FHIR server.
+ *
+ * IMPORTANT: Uses spyOn instead of mock.module for modules that other test
+ * files also import (consent, fhir-capabilities, mcp-endpoint-config).
+ * mock.module permanently replaces modules in bun's shared ESM cache and
+ * cannot be restored via mock.restore(), breaking concurrent test files.
  */
 
-import { describe, it, expect, beforeEach, mock, afterAll } from 'bun:test'
+import { describe, it, expect, beforeEach, mock, afterAll, spyOn } from 'bun:test'
 
-// ── Mock modules before importing ────────────────────────────────────────────
+// Import modules that other test files also test — use spyOn (restorable)
+import * as consentModule from '../src/lib/consent'
+import * as fhirCapModule from '../src/lib/fhir-capabilities'
+import * as mcpConfigModule from '../src/lib/mcp-endpoint-config'
+
+// ── spyOn for shared modules (restorable via mock.restore()) ─────────────────
+
+spyOn(consentModule, 'checkConsentWithIal').mockImplementation(async () => ({ decision: 'permit' }) as Awaited<ReturnType<typeof consentModule.checkConsentWithIal>>)
+spyOn(consentModule, 'getConsentConfig').mockImplementation(() => ({ mode: 'disabled' as const }) as ReturnType<typeof consentModule.getConsentConfig>)
+
+spyOn(fhirCapModule, 'getServerCapabilities').mockImplementation(async () => null)
+spyOn(fhirCapModule, 'normalizeSearchParams').mockImplementation(() => ({
+  originalParams: new URLSearchParams(),
+  normalizedParams: new URLSearchParams(),
+  strippedParams: [] as string[],
+  strippedIncludes: [] as string[],
+  resourceType: '',
+  supported: true,
+}))
+spyOn(fhirCapModule, 'parseFhirPath').mockImplementation((path: string, method: string) => ({
+  resourceType: path.split('/')[0],
+  compartmentType: null,
+  hasSearchSemantics: method === 'GET' && !path.includes('/'),
+  isSearchEndpoint: method === 'GET' && !path.includes('/'),
+  isOperation: false,
+  operationName: null,
+  isHistory: false,
+  isInstance: path.includes('/'),
+}))
+spyOn(fhirCapModule, 'isInteractionSupported').mockImplementation(() => true)
+
+spyOn(mcpConfigModule, 'isToolExposed').mockImplementation(() => true)
+spyOn(mcpConfigModule, 'isResourceExposed').mockImplementation(() => true)
+spyOn(mcpConfigModule, 'loadMcpEndpointConfig').mockImplementation(() => ({
+  enabled: true, exposeResourcesAsTools: true, disabledTools: [],
+  enabledTools: null, updatedAt: new Date().toISOString(),
+} as ReturnType<typeof mcpConfigModule.loadMcpEndpointConfig>))
+
+// Restore all spies after this file's tests complete, so other test files
+// get the real implementations via ESM live bindings.
+afterAll(() => { mock.restore() })
+
+// ── mock.module for modules NO other test file imports ───────────────────────
 
 const mockValidateToken = mock(async (_token: string) => ({
   sub: 'test-user',
@@ -53,28 +100,10 @@ mock.module('../src/lib/fhir-server-store', () => ({
   fhirServerStore: { getAllServers: () => [] },
 }))
 
-mock.module('../src/lib/consent', () => ({
-  checkConsentWithIal: async () => ({ decision: 'permit' }),
-  getConsentConfig: () => ({ mode: 'disabled' }),
-}))
-
-mock.module('../src/lib/smart-access-control', () => ({
-  enforceScopeAccess: () => ({ allowed: true }),
-  enforceRoleBasedFiltering: async (_ctx: unknown, qs: string) => ({ allowed: true, modifiedQueryString: qs }),
-}))
-
-mock.module('../src/lib/fhir-capabilities', () => ({
-  getServerCapabilities: async () => null,
-  normalizeSearchParams: () => ({ normalizedParams: new URLSearchParams(), strippedParams: [], strippedIncludes: [] }),
-  parseFhirPath: (path: string, method: string) => ({
-    resourceType: path.split('/')[0],
-    hasSearchSemantics: method === 'GET' && !path.includes('/'),
-    isOperation: false,
-    isHistory: false,
-    isInstance: path.includes('/'),
-  }),
-  isInteractionSupported: () => true,
-}))
+// smart-access-control: disable via env vars (not mock.module) to avoid
+// polluting concurrent test files that test real scope enforcement.
+process.env.SCOPE_ENFORCEMENT_MODE = 'disabled'
+process.env.ROLE_BASED_FILTERING_MODE = 'disabled'
 
 mock.module('../../routes/fhir-servers', () => ({
   fetchWithMtls: async () => new Response('{}', { status: 200 }),
@@ -91,11 +120,6 @@ mock.module('../src/lib/fhir-proxy-metrics-logger', () => ({
   fhirProxyMetricsLogger: {
     logRequest: () => {},
   },
-}))
-
-mock.module('../src/lib/mcp-endpoint-config', () => ({
-  isToolExposed: () => true,
-  loadMcpEndpointConfig: () => ({ enabled: true, exposeResourcesAsTools: true, disabledTools: [], disabledResources: [] }),
 }))
 
 process.env.MCP_ENDPOINT_ENABLED = 'true'
@@ -139,6 +163,11 @@ describe('FHIR MCP Tools', () => {
   const tokenRef = { current: 'valid-test-token' }
 
   beforeEach(() => {
+    // Disable access-control via env vars (re-set per test to avoid races
+    // with concurrent test files that set these to 'enforce').
+    process.env.SCOPE_ENFORCEMENT_MODE = 'disabled'
+    process.env.ROLE_BASED_FILTERING_MODE = 'disabled'
+
     server = createMockMcpServer()
     mockValidateToken.mockClear()
     mockFetch.mockClear()

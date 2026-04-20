@@ -114,11 +114,11 @@ async function proxyFhirRequest(opts: FhirProxyOptions): Promise<{ status: numbe
   }
   const scopeResult = enforceScopeAccess(acCtx)
   if (!scopeResult.allowed) {
-    return { status: scopeResult.status, data: scopeResult.body }
+    return { status: scopeResult.status ?? 403, data: scopeResult.body }
   }
   const roleResult = await enforceRoleBasedFiltering(acCtx, qs)
   if (!roleResult.allowed) {
-    return { status: roleResult.status, data: roleResult.body }
+    return { status: roleResult.status ?? 403, data: roleResult.body }
   }
   qs = roleResult.modifiedQueryString ?? qs
 
@@ -276,7 +276,7 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
           'Returns the created resource with server-assigned ID.',
         inputSchema: z.object({
           resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
-          resource: z.record(z.unknown()).describe('The full FHIR resource JSON to create'),
+          resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON to create'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
         }),
@@ -314,7 +314,7 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
         inputSchema: z.object({
           resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
           id: z.string().describe('Logical ID of the resource to update'),
-          resource: z.record(z.unknown()).describe('The full FHIR resource JSON (must include id)'),
+          resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON (must include id)'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
         }),
