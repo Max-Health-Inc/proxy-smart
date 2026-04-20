@@ -817,6 +817,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         ...(body.fullScopeAllowed !== undefined && { fullScopeAllowed: body.fullScopeAllowed }),
         // Front-channel logout top-level flag
         ...(body.frontChannelLogoutUrl !== undefined && { frontchannelLogout: !!body.frontChannelLogoutUrl }),
+        // Client type changes affect serviceAccountsEnabled + standardFlowEnabled
+        ...(body.clientType !== undefined && {
+          serviceAccountsEnabled: body.clientType === 'backend-service',
+          ...(!clients[0].serviceAccountsEnabled && body.clientType === 'backend-service' && { standardFlowEnabled: false }),
+          ...(clients[0].serviceAccountsEnabled && body.clientType !== 'backend-service' && { standardFlowEnabled: true }),
+        }),
       }
       await admin.clients.update({ id: clients[0].id! }, updateData)
 

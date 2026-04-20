@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart SHL Viewer",
   "description": "Read-only SMART Health Link viewer — displays shared patient summaries via QR code.",
   "private": true,
-  "version": "0.0.6-alpha.202604200101.06f68dac",
+  "version": "0.0.6-alpha.202604200231.7ea48bc5",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5178",
