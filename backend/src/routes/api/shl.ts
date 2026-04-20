@@ -92,7 +92,7 @@ async function getServiceAccountToken(): Promise<string> {
       grant_type: 'client_credentials',
       client_id: clientId,
       client_secret: clientSecret,
-      scope: 'openid',
+      scope: 'openid patient/*.read',
     }).toString(),
   })
 

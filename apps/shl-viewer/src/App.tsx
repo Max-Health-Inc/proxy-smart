@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { AppHeader, Spinner, PatientBanner, Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
-import { Heart, Shield, AlertTriangle, Activity, FlaskConical, Pill, ShieldAlert, Syringe, Clock } from "lucide-react"
+import { Heart, Shield, AlertTriangle, Activity, FlaskConical, Pill, ShieldAlert, Syringe, Clock, Stethoscope, ClipboardList } from "lucide-react"
 import {
   parseShl, isShlExpired, resolveShl,
   type ShlResult,
@@ -8,10 +8,11 @@ import {
 import {
   createFhirClient,
   getPatient, searchConditions, searchAllergies, searchMedications,
-  searchImmunizations, searchVitals, searchLabs,
+  searchMedicationRequests, searchImmunizations, searchVitals, searchLabs,
+  searchProcedures,
   type Patient, type Condition, type AllergyIntolerance,
-  type MedicationStatement, type Immunization, type Observation,
-  type LabResult,
+  type MedicationStatement, type MedicationRequest, type Immunization,
+  type Observation, type LabResult, type Procedure,
 } from "@/lib/fhir-client"
 import "@/index.css"
 
@@ -28,9 +29,11 @@ interface PatientData {
   conditions: Condition[]
   allergies: AllergyIntolerance[]
   medications: MedicationStatement[]
+  prescriptions: MedicationRequest[]
   immunizations: Immunization[]
   vitals: Observation[]
   labs: LabResult[]
+  procedures: Procedure[]
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -88,20 +91,27 @@ export default function App() {
         const patient = await getPatient(client, patientId)
 
         // Use allSettled so partial failures don't crash the whole page
-        const [cond, allergy, meds, imm, vit, lab] = await Promise.allSettled([
+        const [cond, allergy, meds, rxs, imm, vit, lab, proc] = await Promise.allSettled([
           searchConditions(client, patientId),
           searchAllergies(client, patientId),
           searchMedications(client, patientId),
+          searchMedicationRequests(client, patientId),
           searchImmunizations(client, patientId),
           searchVitals(client, patientId),
           searchLabs(client, patientId),
+          searchProcedures(client, patientId),
         ])
         const v = <T,>(r: PromiseSettledResult<T>): T => r.status === "fulfilled" ? r.value : [] as unknown as T
 
         setState({
           phase: "ready",
           shl,
-          data: { patient, conditions: v(cond), allergies: v(allergy), medications: v(meds), immunizations: v(imm), vitals: v(vit), labs: v(lab) },
+          data: {
+            patient, conditions: v(cond), allergies: v(allergy),
+            medications: v(meds), prescriptions: v(rxs),
+            immunizations: v(imm), vitals: v(vit), labs: v(lab),
+            procedures: v(proc),
+          },
         })
       } catch (err) {
         setState({ phase: "error", message: err instanceof Error ? err.message : "Failed to load shared data" })
@@ -218,6 +228,20 @@ function ReadOnlyDashboard({ shl, data }: { shl: ShlResult; data: PatientData })
         />
 
         <SectionCard
+          title="Prescribed Medications"
+          icon={<Stethoscope className="size-4 text-cyan-500" />}
+          items={data.prescriptions}
+          verifiedOnly={false}
+          renderItem={(rx) => (
+            <div key={rx.id}>
+              <span className="text-sm">{getResourceName(rx)}</span>
+              {rx.dosageInstruction?.[0]?.text && <p className="text-xs text-muted-foreground">{rx.dosageInstruction[0].text}</p>}
+              {rx.authoredOn && <p className="text-xs text-muted-foreground">{formatDate(rx.authoredOn)}</p>}
+            </div>
+          )}
+        />
+
+        <SectionCard
           title="Immunizations"
           icon={<Syringe className="size-4 text-green-500" />}
           items={data.immunizations}
@@ -261,6 +285,22 @@ function ReadOnlyDashboard({ shl, data }: { shl: ShlResult; data: PatientData })
               </div>
             )
           }}
+        />
+
+        <SectionCard
+          title="Procedures"
+          icon={<ClipboardList className="size-4 text-teal-500" />}
+          items={data.procedures}
+          verifiedOnly={false}
+          renderItem={(p) => (
+            <div key={p.id} className="flex items-center justify-between gap-2">
+              <span className="text-sm">{getResourceName(p)}</span>
+              <div className="flex items-center gap-2">
+                {p.status && <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>}
+                {p.performedDateTime && <span className="text-xs text-muted-foreground">{formatDate(p.performedDateTime)}</span>}
+              </div>
+            </div>
+          )}
         />
       </div>
     </div>

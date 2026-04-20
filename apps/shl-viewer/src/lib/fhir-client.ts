@@ -10,6 +10,7 @@ import type {
   ConditionUvIps,
   AllergyIntoleranceUvIps,
   MedicationStatementIPS,
+  MedicationRequestIPS,
   ImmunizationUvIps,
   ObservationResultsLaboratoryPathologyUvIps,
   ProcedureUvIps,
@@ -18,6 +19,7 @@ import type { Observation } from "fhir/r4"
 import type { ConditionClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionClinical"
 import type { AllergyintoleranceClinicalCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceClinical"
 import type { MedicationStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationStatus"
+import type { MedicationrequestStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-MedicationrequestStatus"
 import type { ObservationCategoryCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ObservationCategory"
 
 // Re-export types for consumers
@@ -25,6 +27,7 @@ export type { PatientUvIps as Patient } from "hl7.fhir.uv.ips-generated"
 export type { ConditionUvIps as Condition } from "hl7.fhir.uv.ips-generated"
 export type { AllergyIntoleranceUvIps as AllergyIntolerance } from "hl7.fhir.uv.ips-generated"
 export type { MedicationStatementIPS as MedicationStatement } from "hl7.fhir.uv.ips-generated"
+export type { MedicationRequestIPS as MedicationRequest } from "hl7.fhir.uv.ips-generated"
 export type { ImmunizationUvIps as Immunization } from "hl7.fhir.uv.ips-generated"
 export type { ObservationResultsLaboratoryPathologyUvIps as LabResult } from "hl7.fhir.uv.ips-generated"
 export type { ProcedureUvIps as Procedure } from "hl7.fhir.uv.ips-generated"
@@ -84,6 +87,15 @@ export async function searchMedications(client: FhirClient, patientId: string): 
     status: "active" satisfies MedicationStatusCode,
     _count: 50,
     _sort: "-effective",
+  })
+}
+
+export async function searchMedicationRequests(client: FhirClient, patientId: string): Promise<MedicationRequestIPS[]> {
+  return client.read().medicationRequestIPS().searchAll({
+    patient: `Patient/${patientId}`,
+    status: "active" satisfies MedicationrequestStatusCode,
+    _count: 50,
+    _sort: "-authoredon",
   })
 }
 
