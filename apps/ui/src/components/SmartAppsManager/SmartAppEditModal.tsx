@@ -276,9 +276,9 @@ export function SmartAppEditModal({
             </div>
 
             <div className="space-y-2">
-              <Label>{t('Audience Clients')}</Label>
               <p className="text-xs text-muted-foreground">{t('Client IDs included as audience in tokens (for token exchange)')}</p>
               <StringListField
+                label={t('Audience Clients')}
                 values={form.audienceClients ?? []}
                 onChange={(v) => set('audienceClients', v)}
                 placeholder={t('Add client ID...')}
