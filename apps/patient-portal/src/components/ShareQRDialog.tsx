@@ -114,12 +114,6 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
                 <span>{t("shareQr.expiresIn", { minutes: expiresIn })}</span>
               </div>
 
-              <div className="flex items-center gap-2 text-xs px-2">
-                <span className="text-muted-foreground">
-                  {verifiedOnly ? t("dashboard.verifiedOnly") : t("dashboard.showingAll")}
-                </span>
-              </div>
-
               <Button
                 variant="outline"
                 size="sm"
