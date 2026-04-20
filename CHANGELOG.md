@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604201435.54b6d9dc] - 2026-04-20
+
+- ✨ Features
+  - Share/expires functionality: add expiry-related labels and UI to create share links with expiry options (1h/4h/24h/72h). (Localization, UI, and partial backend notes)
+
+- 🔧 Chores & Improvements
+  - UI/UX refinements: update tab components to responsive tabs, adjust padding/margins and container styling across UI sections, and improve data attribute handling for orientation.
+  - Token naming and environment usage updates in workflows: rename input from app-id to client-id; switch tests to read test stage from env.TEST_STAGE.
+  - Documentation tweaks: notes on proxy architecture and token handling.
+
+- ⚠️ Breaking Changes
+  - None detected in user-facing behavior.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/528
+
+
 ## [0.0.6-alpha.202604201217.57a94fb9] - 2026-04-20
 
 - ✨ Features: Introduce expiry options for shared links (labels include “Link expires after” with 1h/4h/24h/72h) and add expiry select UI to ShareQRDialog
