@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604201606.827800ce] - 2026-04-20
+
+- ⚠️ Breaking Changes: None detected
+
+- ✨ Features (new functionality)
+  - SHL viewer: load patient first and fetch related lookups with allSettled; coerce missing relations to empty arrays
+
+- 🧰 Chores & Improvements
+  - SHL API route: improve resilience by handling token/upstream fetch errors and returning appropriate 503/502 statuses with logs
+  - Admin backend: map appType to effectiveClientType and store appType in client_type during update
+  - Minor JSON structure: adapt to versioning and enhanced error handling
+
+- 🔧 CI/CD & Misc
+  - Version bump from 0.0.6-beta... to 0.0.6-alpha... across apps and testing package
+
+Note: No merge or purely update-only commits included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/535
+
+
 ## [0.0.6-alpha.202604201519.35972f5c] - 2026-04-20
 
 - 🔧 Chores & Improvements: Improve patient ID extraction from token with fallback to fhirUser Patient reference; updated error message accordingly. Preserve ttl/expiresAt and session token logic.
