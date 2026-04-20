@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604201519.35972f5c] - 2026-04-20
+
+- 🔧 Chores & Improvements: Improve patient ID extraction from token with fallback to fhirUser Patient reference; updated error message accordingly. Preserve ttl/expiresAt and session token logic.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/533
+
+
 ## [0.0.6-alpha.202604201505.7ad141e9] - 2026-04-20
 
 - ✨ Features
