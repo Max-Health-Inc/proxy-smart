@@ -9,7 +9,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { Badge, Button, Spinner } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import type {
   AccessHealthResponse,
 } from '../../lib/api-client';
@@ -141,41 +141,43 @@ export function DoorManagement() {
       </div>
 
       {/* Sub-tabs */}
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
       <Tabs value={activeSubTab} onValueChange={setActiveSubTab}>
-        <TabsList className="mb-6 overflow-x-auto">
+        <ResponsiveTabsList columns={5}>
           <TabsTrigger value="overview">{t('Overview')}</TabsTrigger>
           <TabsTrigger value="doors">{t('Doors')}</TabsTrigger>
           {showGroups && <TabsTrigger value="groups">{t('Groups')}</TabsTrigger>}
           {showMembers && <TabsTrigger value="members">{t('Members')}</TabsTrigger>}
           {showEvents && <TabsTrigger value="events">{t('Events')}</TabsTrigger>}
-        </TabsList>
+        </ResponsiveTabsList>
 
-        <TabsContent value="overview">
+        <TabsContent value="overview" className="p-6 space-y-6">
           <OverviewPanel />
         </TabsContent>
 
-        <TabsContent value="doors">
+        <TabsContent value="doors" className="p-6 space-y-6">
           <DoorsPanel />
         </TabsContent>
 
         {showGroups && (
-          <TabsContent value="groups">
+          <TabsContent value="groups" className="p-6 space-y-6">
             <GroupsPanel />
           </TabsContent>
         )}
 
         {showMembers && (
-          <TabsContent value="members">
+          <TabsContent value="members" className="p-6 space-y-6">
             <MembersPanel capabilities={capabilities} />
           </TabsContent>
         )}
 
         {showEvents && (
-          <TabsContent value="events">
+          <TabsContent value="events" className="p-6 space-y-6">
             <EventsPanel />
           </TabsContent>
         )}
       </Tabs>
+      </div>
     </div>
   );
 }

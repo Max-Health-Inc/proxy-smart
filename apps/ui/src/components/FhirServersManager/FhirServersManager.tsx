@@ -407,7 +407,7 @@ export function FhirServersManager() {
             </TabsTrigger>
           </ResponsiveTabsList>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="p-6 space-y-6">
             <ServerOverview
               servers={servers}
               securityChecks={securityChecks}
