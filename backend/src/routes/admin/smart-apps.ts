@@ -762,20 +762,29 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         return { error: 'SMART application not found' }
       }
 
+      // Build update data with existing values as fallbacks — Keycloak PUT expects
+      // a complete representation; sending undefined fields can cause silent failures
+      const existing = clients[0]
       const updateData = {
-        name: body.name,
-        description: body.description,
-        enabled: body.enabled,
+        clientId: existing.clientId,
+        name: body.name ?? existing.name,
+        description: body.description ?? existing.description,
+        enabled: body.enabled ?? existing.enabled,
+        publicClient: existing.publicClient,
+        standardFlowEnabled: existing.standardFlowEnabled,
+        serviceAccountsEnabled: existing.serviceAccountsEnabled,
+        directAccessGrantsEnabled: existing.directAccessGrantsEnabled,
+        implicitFlowEnabled: existing.implicitFlowEnabled,
         // Update client secret when provided (confidential clients only)
-        ...(body.secret && !clients[0].publicClient && { secret: body.secret }),
-        redirectUris: body.redirectUris,
-        webOrigins: body.webOrigins,
+        ...(body.secret && !existing.publicClient && { secret: body.secret }),
+        redirectUris: body.redirectUris ?? existing.redirectUris,
+        webOrigins: body.webOrigins ?? existing.webOrigins,
         attributes: {
-          ...clients[0].attributes,
+          ...existing.attributes,
           // Keycloak 25+ requires explicit post-logout redirect URI config
-          'post.logout.redirect.uris': clients[0].attributes?.['post.logout.redirect.uris'] || '+',
-          smart_version: body.smartVersion ? [body.smartVersion] : clients[0].attributes?.smart_version,
-          fhir_version: body.fhirVersion ? [body.fhirVersion] : clients[0].attributes?.fhir_version,
+          'post.logout.redirect.uris': existing.attributes?.['post.logout.redirect.uris'] || '+',
+          smart_version: body.smartVersion ? [body.smartVersion] : existing.attributes?.smart_version,
+          fhir_version: body.fhirVersion ? [body.fhirVersion] : existing.attributes?.fhir_version,
           // MCP server access control
           ...(body.mcpAccessType !== undefined && { 'mcp_access_type': body.mcpAccessType }),
           ...(body.allowedMcpServerNames !== undefined && {
@@ -817,33 +826,33 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         ...(body.fullScopeAllowed !== undefined && { fullScopeAllowed: body.fullScopeAllowed }),
         // Front-channel logout top-level flag
         ...(body.frontChannelLogoutUrl !== undefined && { frontchannelLogout: !!body.frontChannelLogoutUrl }),
-        // Client type changes affect serviceAccountsEnabled + standardFlowEnabled
+        // Client type changes affect serviceAccountsEnabled + standardFlowEnabled + publicClient
         ...(body.clientType !== undefined && {
+          publicClient: body.clientType === 'public',
           serviceAccountsEnabled: body.clientType === 'backend-service',
-          ...(!clients[0].serviceAccountsEnabled && body.clientType === 'backend-service' && { standardFlowEnabled: false }),
-          ...(clients[0].serviceAccountsEnabled && body.clientType !== 'backend-service' && { standardFlowEnabled: true }),
+          standardFlowEnabled: body.clientType !== 'backend-service',
         }),
       }
-      await admin.clients.update({ id: clients[0].id! }, updateData)
+      await admin.clients.update({ id: existing.id! }, updateData)
 
       // Sync required roles as Keycloak client roles
       if (body.requiredRoles !== undefined) {
         try {
-          const existingRoles = await admin.clients.listRoles({ id: clients[0].id! })
+          const existingRoles = await admin.clients.listRoles({ id: existing.id! })
           const existingNames = new Set(existingRoles.map((r: any) => r.name))
           const desiredNames = new Set(body.requiredRoles)
 
           // Create missing roles
           for (const roleName of desiredNames) {
             if (!existingNames.has(roleName)) {
-              await admin.clients.createRole({ id: clients[0].id!, name: roleName, description: `Required role for ${params.clientId}` })
+              await admin.clients.createRole({ id: existing.id!, name: roleName, description: `Required role for ${params.clientId}` })
               logger.admin.debug('Created client role', { clientId: params.clientId, role: roleName })
             }
           }
           // Delete roles no longer required
           for (const role of existingRoles) {
             if (role.name && !desiredNames.has(role.name)) {
-              await admin.clients.delRole({ id: clients[0].id!, roleName: role.name })
+              await admin.clients.delRole({ id: existing.id!, roleName: role.name })
               logger.admin.debug('Deleted client role', { clientId: params.clientId, role: role.name })
             }
           }
@@ -856,16 +865,16 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       if (body.audienceClients !== undefined) {
         try {
           // Remove existing audience mappers
-          const existingMappers = await admin.clients.listProtocolMappers({ id: clients[0].id! })
+          const existingMappers = await admin.clients.listProtocolMappers({ id: existing.id! })
           const audienceMappers = existingMappers.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
           for (const mapper of audienceMappers) {
             if (mapper.id) {
-              await admin.clients.delProtocolMapper({ id: clients[0].id!, mapperId: mapper.id })
+              await admin.clients.delProtocolMapper({ id: existing.id!, mapperId: mapper.id })
             }
           }
           // Add new audience mappers
           for (const targetClientId of body.audienceClients) {
-            await admin.clients.addProtocolMapper({ id: clients[0].id! }, {
+            await admin.clients.addProtocolMapper({ id: existing.id! }, {
               name: `audience-${targetClientId}`,
               protocol: 'openid-connect',
               protocolMapper: 'oidc-audience-mapper',
@@ -891,13 +900,13 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
           if (body.defaultClientScopes) {
             // Remove all existing default client scopes
-            const existingClient = await admin.clients.findOne({ id: clients[0].id! })
+            const existingClient = await admin.clients.findOne({ id: existing.id! })
             if (existingClient?.defaultClientScopes) {
               for (const scopeId of existingClient.defaultClientScopes) {
                 try {
-                  await admin.clients.delDefaultClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                  await admin.clients.delDefaultClientScope({ id: existing.id!, clientScopeId: scopeId })
                 } catch (error) {
-                  logger.admin.warn('Failed to remove existing default scope', { clientId: clients[0].clientId, scopeId, error })
+                  logger.admin.warn('Failed to remove existing default scope', { clientId: existing.clientId, scopeId, error })
                 }
               }
             }
@@ -909,22 +918,22 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
             for (const scopeId of defaultScopeIds) {
               try {
-                await admin.clients.addDefaultClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                await admin.clients.addDefaultClientScope({ id: existing.id!, clientScopeId: scopeId })
               } catch (error) {
-                logger.admin.warn('Failed to add new default scope', { clientId: clients[0].clientId, scopeId, error })
+                logger.admin.warn('Failed to add new default scope', { clientId: existing.clientId, scopeId, error })
               }
             }
           }
 
           if (body.optionalClientScopes) {
             // Remove all existing optional client scopes
-            const existingClient = await admin.clients.findOne({ id: clients[0].id! })
+            const existingClient = await admin.clients.findOne({ id: existing.id! })
             if (existingClient?.optionalClientScopes) {
               for (const scopeId of existingClient.optionalClientScopes) {
                 try {
-                  await admin.clients.delOptionalClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                  await admin.clients.delOptionalClientScope({ id: existing.id!, clientScopeId: scopeId })
                 } catch (error) {
-                  logger.admin.warn('Failed to remove existing optional scope', { clientId: clients[0].clientId, scopeId, error })
+                  logger.admin.warn('Failed to remove existing optional scope', { clientId: existing.clientId, scopeId, error })
                 }
               }
             }
@@ -936,9 +945,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
             for (const scopeId of optionalScopeIds) {
               try {
-                await admin.clients.addOptionalClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                await admin.clients.addOptionalClientScope({ id: existing.id!, clientScopeId: scopeId })
               } catch (error) {
-                logger.admin.warn('Failed to add new optional scope', { clientId: clients[0].clientId, scopeId, error })
+                logger.admin.warn('Failed to add new optional scope', { clientId: existing.clientId, scopeId, error })
               }
             }
           }
@@ -955,12 +964,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }
 
           logger.admin.debug('Scopes updated for client', {
-            clientId: clients[0].clientId,
+            clientId: existing.clientId,
             defaultScopes: body.defaultClientScopes,
             optionalScopes: body.optionalClientScopes
           })
         } catch (error) {
-          logger.admin.warn('Failed to update scopes for client', { clientId: clients[0].clientId, error })
+          logger.admin.warn('Failed to update scopes for client', { clientId: existing.clientId, error })
         }
       }
 
