@@ -1,11 +1,19 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@proxy-smart/shared-ui"
 import { QRCodeSVG } from "qrcode.react"
 import { createShl as createShlRequest, type ShlResponse } from "@/lib/shl-client"
 import { QrCode, Copy, Check, Clock } from "lucide-react"
 import { useTranslation } from "react-i18next"
+
+const EXPIRY_OPTIONS = [
+  { value: "60", labelKey: "shareQr.expiry1h" },
+  { value: "240", labelKey: "shareQr.expiry4h" },
+  { value: "1440", labelKey: "shareQr.expiry24h" },
+  { value: "4320", labelKey: "shareQr.expiry72h" },
+] as const
 
 export interface ShareQRDialogProps {
   open: boolean
@@ -19,6 +27,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
   const [error, setError] = useState<string | null>(null)
   const [shlData, setShlData] = useState<ShlResponse | null>(null)
   const [copied, setCopied] = useState(false)
+  const [expiryMinutes, setExpiryMinutes] = useState("60")
 
   const createShl = useCallback(async () => {
     setLoading(true)
@@ -26,7 +35,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
     try {
       const data = await createShlRequest({
         verifiedOnly: !verifiedOnly,
-        expiresInMinutes: 60,
+        expiresInMinutes: parseInt(expiryMinutes),
         label: t("shareQr.label"),
       })
       setShlData(data)
@@ -35,20 +44,14 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
     } finally {
       setLoading(false)
     }
-  }, [verifiedOnly, t])
-
-  // Trigger SHL creation when dialog opens
-  useEffect(() => {
-    if (open && !shlData && !loading) {
-      createShl()
-    }
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [verifiedOnly, expiryMinutes, t])
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) {
       setShlData(null)
       setError(null)
       setCopied(false)
+      setExpiryMinutes("60")
     }
     onOpenChange(isOpen)
   }, [onOpenChange])
@@ -82,6 +85,29 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-4">
+          {!shlData && !loading && !error && (
+            <div className="flex flex-col gap-4 w-full">
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium">{t("shareQr.expiryLabel")}</label>
+                <Select value={expiryMinutes} onValueChange={setExpiryMinutes}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXPIRY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {t(opt.labelKey)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={createShl} className="w-full">
+                {t("shareQr.createLink")}
+              </Button>
+            </div>
+          )}
+
           {loading && (
             <div className="flex flex-col items-center gap-2 py-8">
               <Spinner size="lg" />
@@ -112,12 +138,6 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="size-3.5" />
                 <span>{t("shareQr.expiresIn", { minutes: expiresIn })}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs px-2">
-                <span className="text-muted-foreground">
-                  {verifiedOnly ? t("dashboard.verifiedOnly") : t("dashboard.showingAll")}
-                </span>
               </div>
 
               <Button
