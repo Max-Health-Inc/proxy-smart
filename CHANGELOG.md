@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604200231.7ea48bc5] - 2026-04-20
+
+- ✨ Features: Add expiry options for share links (UI and translations) with predefined durations (1h/4h/24h/72h)
+- 🔧 Chores & Improvements: UI cleanup in ShareQRDialog.tsx (remove unused React import, integrate expiry Select)
+- 🔧 Chores & Improvements: Documentation notes and backend route comment adjustments related to proxy architecture and token handling
+- ⚠️ Breaking Changes: None
+- 🐛 Bug Fixes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/522
+
+
 ## [0.0.6-alpha.202604200101.06f68dac] - 2026-04-20
 
 - ✨ Features: Add expiry options for share links (labels and UI) with predefined durations (1h/4h/24h/72h)
