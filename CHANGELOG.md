@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604201217.57a94fb9] - 2026-04-20
+
+- ✨ Features: Introduce expiry options for shared links (labels include “Link expires after” with 1h/4h/24h/72h) and add expiry select UI to ShareQRDialog
+- 🔧 Chores & Improvements: UI refactor of tab components (ResponsiveTabsList usage and styling tweaks across DoorManagement and FHIR UI), adjust TabsContent padding, and data attribute handling for orientation
+- 🔧 Chores & Improvements: Update environment and workflow references (token input rename: app-id -> client-id; read test stage from env.TEST_STAGE)
+- 🔧 Chores & Improvements: Minor backend/documentation notes about proxy architecture and token handling
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/526
+
+
 ## [0.0.6-alpha.202604200357.a4a5d108] - 2026-04-20
 
 - 🔧 Chores & Improvements: UI/UX refinements to Tabs rendering and spacing across DoorManagement and FhirServersManager; updated Tabs components for responsive behavior and adjusted padding/spacing
