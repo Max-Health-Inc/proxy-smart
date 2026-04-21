@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
 import { ExportMenu } from './ui/export-menu';
-import { Activity, BarChart3, Play, Pause, RefreshCw } from 'lucide-react';
+import { Activity, Play, Pause, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { oauthWebSocketService } from '../service/oauth-websocket-service';
 import type { OAuthAnalyticsResponse, OAuthEvent } from '../lib/types/api';
@@ -404,82 +404,68 @@ export function OAuthMonitoringDashboard() {
       />
 
       {/* Tab Navigation */}
-      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg overflow-hidden">
-        <div className="p-8 pb-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
-              <BarChart3 className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Monitoring')}</h3>
-              <p className="text-muted-foreground font-medium">
-                {t('OAuth flows, tokens, consent, access, and system performance')}
-              </p>
-            </div>
-          </div>
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
+        <Tabs defaultValue="overview" className="w-full">
+          <ResponsiveTabsList columns={8}>
+            <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Dashboard')}</TabsTrigger>
+            <TabsTrigger value="fhir-proxy" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('FHIR Proxy')}</TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth')}</TabsTrigger>
+            <TabsTrigger value="auth-events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Auth')}</TabsTrigger>
+            <TabsTrigger value="email-events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Email')}</TabsTrigger>
+            <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
+            <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
+            <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
+          </ResponsiveTabsList>
 
-          <Tabs defaultValue="overview" className="space-y-6">
-            <ResponsiveTabsList columns={8}>
-              <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Dashboard')}</TabsTrigger>
-              <TabsTrigger value="fhir-proxy" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('FHIR Proxy')}</TabsTrigger>
-              <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('OAuth')}</TabsTrigger>
-              <TabsTrigger value="auth-events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Auth')}</TabsTrigger>
-              <TabsTrigger value="email-events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Email')}</TabsTrigger>
-              <TabsTrigger value="door-access" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Door Access')}</TabsTrigger>
-              <TabsTrigger value="consent" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Consent')}</TabsTrigger>
-              <TabsTrigger value="audit-log" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Audit Log')}</TabsTrigger>
-            </ResponsiveTabsList>
+          <TabsContent value="overview" className="p-6 space-y-6">
+            <SystemHealthTab
+              systemStatus={systemStatus}
+              doorHealth={doorHealth}
+              doorEvents={doorEvents}
+              fhirUptime={fhirUptime}
+              analytics={analytics}
+              fetchSystemStatus={fetchSystemStatus}
+            />
+          </TabsContent>
 
-            <TabsContent value="overview">
-              <SystemHealthTab
-                systemStatus={systemStatus}
-                doorHealth={doorHealth}
-                doorEvents={doorEvents}
-                fhirUptime={fhirUptime}
-                analytics={analytics}
-                fetchSystemStatus={fetchSystemStatus}
-              />
-            </TabsContent>
+          <TabsContent value="analytics" className="p-6 space-y-6">
+            <OAuthAnalyticsTab
+              analytics={analytics}
+              events={events}
+              filteredEvents={filteredEvents}
+              filterType={filterType}
+              setFilterType={setFilterType}
+              filterStatus={filterStatus}
+              setFilterStatus={setFilterStatus}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+            />
+          </TabsContent>
 
-            <TabsContent value="analytics">
-              <OAuthAnalyticsTab
-                analytics={analytics}
-                events={events}
-                filteredEvents={filteredEvents}
-                filterType={filterType}
-                setFilterType={setFilterType}
-                filterStatus={filterStatus}
-                setFilterStatus={setFilterStatus}
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-              />
-            </TabsContent>
+          <TabsContent value="fhir-proxy" className="p-6 space-y-6">
+            <FhirProxyTab fhirProxyAnalytics={fhirProxyAnalytics} />
+          </TabsContent>
 
-            <TabsContent value="fhir-proxy">
-              <FhirProxyTab fhirProxyAnalytics={fhirProxyAnalytics} />
-            </TabsContent>
+          <TabsContent value="auth-events" className="p-6 space-y-6">
+            <AuthMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
+          </TabsContent>
 
-            <TabsContent value="auth-events" className="space-y-6">
-              <AuthMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
-            </TabsContent>
+          <TabsContent value="email-events" className="p-6 space-y-6">
+            <EmailMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
+          </TabsContent>
 
-            <TabsContent value="email-events" className="space-y-6">
-              <EmailMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
-            </TabsContent>
+          <TabsContent value="door-access" className="p-6 space-y-6">
+            <EventsPanel />
+          </TabsContent>
 
-            <TabsContent value="door-access" className="space-y-6">
-              <EventsPanel />
-            </TabsContent>
+          <TabsContent value="consent" className="p-6 space-y-6">
+            <ConsentMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
+          </TabsContent>
 
-            <TabsContent value="consent" className="space-y-6">
-              <ConsentMonitoringDashboard embedded isRealTimeActive={isRealTimeActive} />
-            </TabsContent>
-
-            <TabsContent value="audit-log" className="space-y-6">
-              <AdminAuditDashboard embedded isRealTimeActive={isRealTimeActive} />
-            </TabsContent>
-          </Tabs>
-        </div>
+          <TabsContent value="audit-log" className="p-6 space-y-6">
+            <AdminAuditDashboard embedded isRealTimeActive={isRealTimeActive} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
