@@ -15,6 +15,7 @@ import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
 import type { BrandConfigType, BrandCategoryType } from '@/schemas'
+import type { SmartAccessControlConfigType } from '@/schemas'
 import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
 import { loadAllOrgBrands } from './org-branding'
 
@@ -22,6 +23,7 @@ import { loadAllOrgBrands } from './org-branding'
 let consentOverrides: Partial<ConsentConfig> | null = null
 let ialOverrides: Partial<IalConfig> | null = null
 let brandOverrides: Partial<BrandConfigType> | null = null
+let accessControlOverrides: Partial<SmartAccessControlConfigType> | null = null
 let loaded = false
 
 // ─── Consent ─────────────────────────────────────────────────────────
@@ -111,10 +113,45 @@ function ialToAttributes(settings: IalConfig): Record<string, string> {
   }
 }
 
+// ─── Access Control ──────────────────────────────────────────────────
+
+const AC_PREFIX = 'access_control.'
+
+function parseAccessControlFromAttributes(attrs: Record<string, string>): Partial<SmartAccessControlConfigType> | null {
+  const hasAny = Object.keys(attrs).some(k => k.startsWith(AC_PREFIX))
+  if (!hasAny) return null
+
+  const get = (key: string) => attrs[`${AC_PREFIX}${key}`]
+  const validModes = ['enforce', 'audit-only', 'disabled'] as const
+  const result: Partial<SmartAccessControlConfigType> = {}
+
+  if (get('scope_enforcement') !== undefined) {
+    const m = get('scope_enforcement')
+    if ((validModes as readonly string[]).includes(m)) result.scopeEnforcement = m as SmartAccessControlConfigType['scopeEnforcement']
+  }
+  if (get('role_based_filtering') !== undefined) {
+    const m = get('role_based_filtering')
+    if ((validModes as readonly string[]).includes(m)) result.roleBasedFiltering = m as SmartAccessControlConfigType['roleBasedFiltering']
+  }
+  if (get('patient_scoped_resources') !== undefined) {
+    result.patientScopedResources = get('patient_scoped_resources').split(',').map(s => s.trim()).filter(Boolean)
+  }
+
+  return result
+}
+
+function accessControlToAttributes(settings: SmartAccessControlConfigType): Record<string, string> {
+  return {
+    [`${AC_PREFIX}scope_enforcement`]: settings.scopeEnforcement,
+    [`${AC_PREFIX}role_based_filtering`]: settings.roleBasedFiltering,
+    [`${AC_PREFIX}patient_scoped_resources`]: settings.patientScopedResources.join(','),
+  }
+}
+
 // ─── Public API ──────────────────────────────────────────────────────
 
 /**
- * Load consent + IAL settings from Keycloak realm attributes into memory.
+ * Load consent + IAL + access control settings from Keycloak realm attributes into memory.
  * Called at startup and after saves.
  */
 export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
@@ -125,6 +162,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     consentOverrides = parseConsentFromAttributes(attrs)
     ialOverrides = parseIalFromAttributes(attrs)
     brandOverrides = parseBrandFromAttributes(attrs)
+    accessControlOverrides = parseAccessControlFromAttributes(attrs)
     // loginTheme is a top-level realm property, not an attribute
     if (brandOverrides) {
       brandOverrides.loginTheme = (realm as any)?.loginTheme || null
@@ -140,6 +178,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
       consentOverrides: !!consentOverrides,
       ialOverrides: !!ialOverrides,
       brandOverrides: !!brandOverrides,
+      accessControlOverrides: !!accessControlOverrides,
     })
   } catch (error) {
     logger.admin.warn('Failed to load runtime config from Keycloak, using env var defaults', { error })
@@ -225,6 +264,43 @@ export async function saveIalConfig(admin: KcAdminClient, settings: IalConfig): 
   // Update in-memory cache
   ialOverrides = { ...settings }
   logger.admin.info('IAL config saved to Keycloak realm attributes', { settings })
+}
+
+/**
+ * Get effective SMART access control config: realm attribute overrides merged over env vars.
+ */
+export function getRuntimeAccessControlConfig(): SmartAccessControlConfigType {
+  const envDefaults: SmartAccessControlConfigType = {
+    scopeEnforcement: config.accessControl.scopeEnforcement,
+    roleBasedFiltering: config.accessControl.roleBasedFiltering,
+    patientScopedResources: config.accessControl.patientScopedResources,
+  }
+
+  if (!accessControlOverrides) return envDefaults
+
+  return { ...envDefaults, ...accessControlOverrides }
+}
+
+/**
+ * Save SMART access control config to Keycloak realm attributes and update in-memory cache.
+ */
+export async function saveAccessControlConfig(admin: KcAdminClient, settings: SmartAccessControlConfigType): Promise<void> {
+  const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
+  const existingAttrs = (realm?.attributes || {}) as Record<string, string>
+
+  const attributes = {
+    ...existingAttrs,
+    ...accessControlToAttributes(settings),
+  }
+
+  await admin.realms.update(
+    { realm: process.env.KEYCLOAK_REALM! },
+    { attributes }
+  )
+
+  // Update in-memory cache
+  accessControlOverrides = { ...settings }
+  logger.admin.info('Access control config saved to Keycloak realm attributes', { settings })
 }
 
 /** Whether runtime config has been loaded from Keycloak at least once */

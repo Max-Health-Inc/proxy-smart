@@ -16,6 +16,7 @@ import { mcpServersRoutes } from './mcp-servers'
 import { mcpEndpointAdminRoutes } from './mcp-endpoint'
 import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
+import { smartAccessControlAdminRoutes } from './smart-access-control'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
 import { brandingAdminRoutes } from './branding'
@@ -112,6 +113,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(aiToolsSkillsRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
+  // SMART access control (scope enforcement, role-based filtering)
+  .use(smartAccessControlAdminRoutes)
   // Physical access control (Kisi / UniFi Access)
   .use(accessControlRoutes)
   // LDAP User Federation management

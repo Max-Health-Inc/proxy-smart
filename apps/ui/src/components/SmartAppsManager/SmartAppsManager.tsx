@@ -629,56 +629,6 @@ export function SmartAppsManager() {
                 </CardContent>
               </Card>
 
-              {/* MCP Access Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">{t('MCP Server Access (AI Capabilities)')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div>
-                      <div className="text-xs font-medium mb-1">{t('Access Type:')}</div>
-                      <Badge variant="outline" className="text-xs">
-                        {(editingApp as SmartApp & { mcpAccessType?: string }).mcpAccessType || 'none'}
-                      </Badge>
-                    </div>
-                    {(editingApp as SmartApp & { mcpAccessType?: string; allowedMcpServerNames?: string[] }).mcpAccessType === 'selected-mcp-servers' && (
-                      <div>
-                        <div className="text-xs font-medium mb-1">{t('Allowed MCP Servers:')}</div>
-                        <div className="flex flex-wrap gap-1">
-                          {(editingApp as SmartApp & { allowedMcpServerNames?: string[] }).allowedMcpServerNames?.map((name, i) => (
-                            <Badge key={i} variant="outline" className="text-xs bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20">{name}</Badge>
-                          )) || <span className="text-sm text-muted-foreground">{t('None')}</span>}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Skills Access Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">{t('Skills (AI Knowledge Packages)')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {(editingApp.allowedSkillNames && editingApp.allowedSkillNames.length > 0) ? (
-                      <div>
-                        <div className="text-xs font-medium mb-1">{t('Assigned Skills:')}</div>
-                        <div className="flex flex-wrap gap-1">
-                          {editingApp.allowedSkillNames.map((name, i) => (
-                            <Badge key={i} variant="outline" className="text-xs bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">{name}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">{t('No skills assigned')}</span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
               <div className="flex justify-end pt-4">
                 <Button onClick={() => setShowConfigDialog(false)}>{t('Close')}</Button>
               </div>
