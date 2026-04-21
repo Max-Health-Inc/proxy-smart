@@ -33,6 +33,7 @@ import {
 import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
 import type { ToolMetadata, ResourceMetadata as ResourceMeta } from '../lib/ai/tool-registry'
 import { searchDocumentation } from '../lib/ai/rag-tools'
+import { registerFhirTools } from '../lib/ai/fhir-tools'
 import { Value } from '@sinclair/typebox/value'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
@@ -44,9 +45,30 @@ interface McpSession {
   server: McpServer
   /** Mutable token ref — updated on every authenticated request so tool/resource handlers always use the freshest token. */
   tokenRef: { current?: string }
+  /** Timestamp of last activity (for TTL eviction) */
+  lastActivity: number
+  /** Subject (user ID) bound at creation — prevents session hijacking */
+  boundSub?: string
 }
 
 const sessions = new Map<string, McpSession>()
+
+// Maximum number of concurrent sessions to prevent memory exhaustion
+const MAX_SESSIONS = 100
+// Session TTL: 30 minutes of inactivity
+const SESSION_TTL_MS = 30 * 60_000
+
+// Periodic cleanup of expired sessions (every 5 minutes)
+const sessionCleanupInterval = setInterval(() => {
+  const now = Date.now()
+  for (const [sid, session] of sessions) {
+    if (now - session.lastActivity > SESSION_TTL_MS) {
+      sessions.delete(sid)
+      logger.server.info('MCP session expired (TTL)', { sessionId: sid })
+    }
+  }
+}, 5 * 60_000)
+if (sessionCleanupInterval.unref) sessionCleanupInterval.unref()
 
 // ── Tool bridging ────────────────────────────────────────────────────────────
 
@@ -137,6 +159,9 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
     },
   )
   }
+
+  // Register FHIR data tools (fhir_read, fhir_search, fhir_create, fhir_update, fhir_delete, fhir_capabilities)
+  registerFhirTools(server, tokenRef)
 }
 
 // ── Resource bridging ────────────────────────────────────────────────────────
@@ -461,8 +486,21 @@ async function handleMcpRequest(request: Request): Promise<Response> {
   // ── Existing session ───────────────────────────────────────────────────
   if (sessionId && sessions.has(sessionId)) {
     const session = sessions.get(sessionId)!
+    // Verify the session belongs to the same user (prevent session hijacking)
+    if (session.boundSub && auth.sub && session.boundSub !== auth.sub) {
+      return new Response(
+        JSON.stringify({
+          jsonrpc: '2.0',
+          error: { code: -32001, message: 'Session belongs to a different user' },
+          id: null,
+        }),
+        { status: 403, headers: { 'Content-Type': 'application/json' } },
+      )
+    }
     // Update the token ref so tool/resource handlers use the freshest token
     if (auth.token) session.tokenRef.current = auth.token
+    // Refresh TTL on activity
+    session.lastActivity = Date.now()
     return session.transport.handleRequest(request)
   }
 
@@ -486,7 +524,20 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       const transport = new WebStandardStreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
         onsessioninitialized: (sid) => {
-          sessions.set(sid, { transport, server, tokenRef })
+          // Enforce max session limit to prevent memory exhaustion
+          if (sessions.size >= MAX_SESSIONS) {
+            // Evict the oldest session
+            let oldestSid: string | null = null
+            let oldestTime = Infinity
+            for (const [s, sess] of sessions) {
+              if (sess.lastActivity < oldestTime) {
+                oldestTime = sess.lastActivity
+                oldestSid = s
+              }
+            }
+            if (oldestSid) sessions.delete(oldestSid)
+          }
+          sessions.set(sid, { transport, server, tokenRef, lastActivity: Date.now(), boundSub: auth.sub })
           logger.server.info('MCP session initialized', { sessionId: sid, sub: auth.sub })
         },
         onsessionclosed: (sid) => {

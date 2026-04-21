@@ -16,7 +16,8 @@ import {
   type McpServerCreateType,
   type McpServerUpdateType,
 } from '../../schemas'
-import { validateToken } from '@/lib/auth'
+import { validateToken, validateAdminToken } from '@/lib/auth'
+import { validateExternalUrl } from '@/lib/url-validation'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { Configuration, ServersApi } from '../../lib/mcp-registry-client'
@@ -367,7 +368,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const configuredServers = getConfiguredServers()
     const servers: McpServerInfoType[] = []
@@ -433,7 +434,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const { name, url, description } = body as McpServerCreateType
     
@@ -448,6 +449,13 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
       new URL(url)
     } catch {
       throw new Error('Invalid URL format')
+    }
+    
+    // SSRF protection: block private/internal network URLs in production
+    const isInternalNetworking = process.env.NODE_ENV === 'development'
+    const urlCheck = validateExternalUrl(url, isInternalNetworking)
+    if (!urlCheck.valid) {
+      throw new Error(`URL rejected: ${urlCheck.reason}`)
     }
     
     // Add to dynamic servers and persist
@@ -504,7 +512,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const { name } = params
     const { url, description } = body as McpServerUpdateType
@@ -585,7 +593,7 @@ export const mcpServersRoutes = new Elysia({ prefix: '/mcp-servers', tags: ['mcp
     }
     
     const token = authHeader.substring(7)
-    await validateToken(token)
+    await validateAdminToken(token)
     
     const { name } = params
     

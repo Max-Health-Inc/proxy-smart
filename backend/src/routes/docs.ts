@@ -108,7 +108,9 @@ async function keywordSearch(query: string): Promise<KeywordSearchResultType[]> 
     
     lines.forEach((line, index) => {
       const normalizedLine = line.toLowerCase()
-      const count = (normalizedLine.match(new RegExp(normalizedQuery, 'g')) || []).length
+      // Escape user input to prevent ReDoS attacks
+      const escapedQuery = normalizedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const count = (normalizedLine.match(new RegExp(escapedQuery, 'g')) || []).length
       
       if (count > 0) {
         hitCount += count

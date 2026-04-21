@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';
 import { ExportMenu } from '../ui/export-menu';
@@ -214,12 +214,12 @@ export function AdminAuditDashboard({ embedded, isRealTimeActive: parentRealTime
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 bg-muted/50 rounded-t-2xl">
+            <ResponsiveTabsList columns={4}>
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="events" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Event Log')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
               <TabsTrigger value="failures" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Failures')}</TabsTrigger>
-            </TabsList>
+            </ResponsiveTabsList>
 
             <TabsContent value="overview" className="space-y-6">
               <OverviewTab analytics={analytics} />

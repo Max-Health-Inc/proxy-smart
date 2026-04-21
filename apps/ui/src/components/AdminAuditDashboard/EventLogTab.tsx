@@ -1,6 +1,4 @@
-import { Badge, Input } from '@proxy-smart/shared-ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import {
   Activity,
   CheckCircle,
@@ -12,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { ACTION_ICONS, actionColor, statusColor } from './helpers';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminAuditEvent } from '../../service/admin-audit-service';
 
 interface EventLogTabProps {
@@ -53,11 +52,11 @@ export function EventLogTab({
           </div>
           <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter Audit Events')}</h4>
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-foreground">{t('Action:')}</label>
             <Select value={filterAction} onValueChange={setFilterAction}>
-              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[140px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('All')}</SelectItem>
                 <SelectItem value="create">{t('Create')}</SelectItem>
@@ -71,7 +70,7 @@ export function EventLogTab({
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-foreground">{t('Resource:')}</label>
             <Select value={filterResource} onValueChange={setFilterResource}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('All Resources')}</SelectItem>
                 {uniqueResources.map(r => (
@@ -100,7 +99,7 @@ export function EventLogTab({
               placeholder={t('Search by actor, path, resource...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="min-w-[220px]"
+              className="w-full sm:min-w-[220px]"
             />
           </div>
         </div>
@@ -184,11 +183,7 @@ export function EventLogTab({
             )}
           </div>
         ) : (
-          <div className="text-center text-muted-foreground py-8">
-            <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="font-medium">{t('No audit events match your filters')}</p>
-            <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-          </div>
+          <EmptyState icon={Shield} title={t('No audit events match your filters')} description={t('Try adjusting your filter criteria')} />
         )}
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
-import { validateToken } from '@/lib/auth'
+import { validateToken, validateAdminToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { getConsentCacheStats, consentCache } from '@/lib/consent'
 import {
@@ -57,7 +57,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to get consent config', { error })
       set.status = 500
-      return { error: 'Failed to get consent configuration', details: error }
+      return { error: 'Failed to get consent configuration', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     response: {
@@ -95,7 +95,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to update consent config', { error })
       set.status = 500
-      return { error: 'Failed to update consent configuration', details: error }
+      return { error: 'Failed to update consent configuration', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     body: ConsentConfig,
@@ -144,7 +144,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to get IAL config', { error })
       set.status = 500
-      return { error: 'Failed to get IAL configuration', details: error }
+      return { error: 'Failed to get IAL configuration', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     response: {
@@ -182,7 +182,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to update IAL config', { error })
       set.status = 500
-      return { error: 'Failed to update IAL configuration', details: error }
+      return { error: 'Failed to update IAL configuration', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     body: IalConfigSchema,
@@ -211,14 +211,14 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
       const stats = getConsentCacheStats()
       
       return stats
     } catch (error) {
       logger.consent.error('Failed to get cache stats', { error })
       set.status = 500
-      return { error: 'Failed to get consent cache statistics', details: error }
+      return { error: 'Failed to get consent cache statistics', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     response: {
@@ -245,7 +245,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
       
       let entriesInvalidated = 0
       
@@ -283,7 +283,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to invalidate consent cache', { error })
       set.status = 500
-      return { error: 'Failed to invalidate consent cache', details: error }
+      return { error: 'Failed to invalidate consent cache', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     body: ConsentCacheInvalidateRequest,
@@ -311,7 +311,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
       
       const entriesCleaned = consentCache.cleanup()
       logger.consent.info('Consent cache cleanup via admin API', { entriesCleaned })
@@ -324,7 +324,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to cleanup consent cache', { error })
       set.status = 500
-      return { error: 'Failed to cleanup consent cache', details: error }
+      return { error: 'Failed to cleanup consent cache', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     response: {
@@ -355,7 +355,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
       
       // Extract patient ID from webhook payload
       // Supports FHIR subscription notification format
@@ -385,7 +385,7 @@ export const consentAdminRoutes = new Elysia({ prefix: '/consent', tags: ['admin
     } catch (error) {
       logger.consent.error('Failed to process consent webhook', { error })
       set.status = 500
-      return { error: 'Failed to process consent webhook', details: error }
+      return { error: 'Failed to process consent webhook', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     body: t.Object({

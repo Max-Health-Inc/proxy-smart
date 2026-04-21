@@ -23,6 +23,8 @@ export interface FhirProxyEvent {
   statusCode: number
   responseTimeMs: number
   clientId?: string
+  userId?: string
+  username?: string
   error?: string
 }
 

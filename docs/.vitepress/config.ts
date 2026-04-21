@@ -16,6 +16,7 @@ export default defineConfig({
 
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Core', link: '/fhir-proxy' },
       { text: 'Admin UI', link: '/admin-ui/dashboard' },
       { text: 'AI & MCP', link: '/MCP_HTTP_SERVER' },
       { text: 'Imaging', link: '/dicomweb-proxy' },
@@ -27,6 +28,17 @@ export default defineConfig({
         text: 'Getting Started',
         items: [
           { text: 'Overview', link: '/' },
+          { text: 'Deployment', link: '/deployment' },
+          { text: 'Environment Variables', link: '/environment-variables' },
+        ],
+      },
+      {
+        text: 'Core',
+        collapsed: false,
+        items: [
+          { text: 'FHIR Proxy', link: '/fhir-proxy' },
+          { text: 'OAuth & Authentication', link: '/oauth-authentication' },
+          { text: 'Patient API', link: '/patient-api' },
         ],
       },
       {
@@ -35,9 +47,14 @@ export default defineConfig({
         items: [
           { text: 'Dashboard', link: '/admin-ui/dashboard' },
           { text: 'User Management', link: '/admin-ui/user-management' },
+          { text: 'User Federation', link: '/admin-ui/user-federation' },
           { text: 'SMART Apps', link: '/admin-ui/smart-apps' },
           { text: 'FHIR Servers', link: '/admin-ui/fhir-servers' },
+          { text: 'Organizations', link: '/admin-ui/organizations' },
+          { text: 'Identity Providers', link: '/admin-ui/identity-providers' },
+          { text: 'AI Tools', link: '/admin-ui/ai-tools' },
           { text: 'Scope Management', link: '/admin-ui/scope-management' },
+          { text: 'Launch Context', link: '/admin-ui/launch-context' },
           { text: 'Brand Management', link: '/admin-ui/branding' },
           { text: 'Access Control', link: '/admin-ui/access-control' },
           { text: 'Monitoring', link: '/admin-ui/monitoring' },

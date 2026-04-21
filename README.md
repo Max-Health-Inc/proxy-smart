@@ -164,6 +164,32 @@ graph TB
 
 > PostgreSQL only stores user/config data. Clinical data stays on your FHIR servers.
 
+## Access Control Pipeline
+
+Every FHIR proxy request runs through a layered security pipeline:
+
+```
+Request → JWT Validation → Consent + IAL → SMART Scopes → Role-Based Filtering → FHIR Server
+```
+
+| Step | What it does | Default |
+|---|---|---|
+| **JWT Validation** | Verifies token signature, expiry, and issuer | Always active |
+| **Consent + IAL** | Enforces patient consent policies and identity assurance level | Configurable |
+| **SMART Scope Enforcement** | Checks the token's `scope` claim permits the requested resource type and operation (e.g., `patient/Observation.read` → allow GET on Observation). Supports SMART v1 and v2 scope syntax. | **Enforced** |
+| **Role-Based Filtering** | Narrows which data is returned based on `fhirUser` identity — Patients only see their own data, Practitioners only see assigned patients. | **Enforced** |
+
+Each step can be configured independently via environment variables:
+
+| Environment Variable | Options | Default |
+|---|---|---|
+| `SCOPE_ENFORCEMENT_MODE` | `enforce`, `audit-only`, `disabled` | `enforce` |
+| `ROLE_BASED_FILTERING_MODE` | `enforce`, `audit-only`, `disabled` | `enforce` |
+
+- **`enforce`** — blocks unauthorized requests with HTTP 403
+- **`audit-only`** — logs violations but allows the request through
+- **`disabled`** — skips the check entirely
+
 ## Scalability
 
 Proxy Smart inherits Keycloak's proven horizontal scalability. The proxy layer is stateless — it adds no bottleneck on top of Keycloak's auth flows.

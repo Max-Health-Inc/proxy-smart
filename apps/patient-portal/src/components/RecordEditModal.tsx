@@ -12,12 +12,12 @@ import {
   Badge,
 } from "@proxy-smart/shared-ui"
 import { Loader2, Pencil, Save, X, AlertTriangle } from "lucide-react"
-import { updateResource, type AnyFhirResource } from "@/lib/fhir-client"
+import { updateResource, type DynamicFhirResource } from "@/lib/fhir-client"
 import { useTranslation } from "react-i18next"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type FhirResource = AnyFhirResource
+type FhirResource = DynamicFhirResource
 
 export interface RecordEditModalProps {
   open: boolean

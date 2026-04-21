@@ -35,15 +35,18 @@ on:
         description: "Whether frontend tests were successful"
         value: ${{ jobs.build-and-test.outputs.frontend_tests_success }}
 
+permissions:
+  contents: read
+
 jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
     outputs:
-      backend_success: ${{ steps.backend-build.outcome == 'success' }}
-      frontend_success: ${{ steps.frontend-build.outcome == 'success' }}
-      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
-      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      backend_success: ${{ steps.backend-build.outcome == 'success' || steps.backend-build-heal.outputs.fixed == 'true' }}
+      frontend_success: ${{ steps.frontend-build.outcome == 'success' || steps.frontend-build-heal.outputs.fixed == 'true' }}
+      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || steps.backend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || steps.frontend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
     
     steps:
     - name: Checkout repository
@@ -58,9 +61,8 @@ jobs:
         echo "📦 Installing all dependencies via workspace..."
         bun install
 
-    # Backend Build
+    # === BACKEND BUILD ===
     - name: Build Backend
-      id: backend-build
       run: |
         echo "🔨 Building backend..."
         cd backend
@@ -69,11 +71,19 @@ jobs:
     - name: Generate Client APIs
       run: |
         echo "🔨 Generating client APIs..."
+        pip install --break-system-packages openapi-ts-fetch==0.2.0
         bun run generate:ui
 
-    # Frontend Build  
-    - name: Build Frontend  
-      id: frontend-build
+    - name: Build Patient Portal
+      env:
+        TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+      run: |
+        echo "🔨 Building patient portal..."
+        cd apps/patient-portal
+        bun run build
+
+    # === FRONTEND BUILD ===
+    - name: Build Frontend
       env:
         TAILWIND_DISABLE_LIGHTNINGCSS: "1"
         VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
@@ -82,27 +92,23 @@ jobs:
         cd apps/ui
         bun run build
 
-    # Backend Tests
+    # === BACKEND TESTS ===
     - name: Test Backend
       if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
-      id: backend-test
-      continue-on-error: ${{ !inputs.fail_on_test_failure }}
       run: |
         echo "🧪 Testing backend..."
         cd backend
         bun run test
 
-    # Frontend Tests
+    # === FRONTEND TESTS ===
     - name: Test Frontend
       if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
-      id: frontend-test
-      continue-on-error: ${{ !inputs.fail_on_test_failure }}
       env:
         TAILWIND_DISABLE_LIGHTNINGCSS: "1"
       run: |
         echo "🧪 Testing frontend..."
         cd apps/ui
-        bun run test
+        bun run test --run
 
     - name: Upload Build Artifacts
       if: ${{ !startsWith(github.ref, 'refs/heads/dev/') }}

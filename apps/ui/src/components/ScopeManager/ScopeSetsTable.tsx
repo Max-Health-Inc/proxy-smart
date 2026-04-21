@@ -1,18 +1,17 @@
-import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
+  Badge,
+  Button,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@proxy-smart/shared-ui';
 import { Copy, Database, Edit, Settings, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ScopeSet } from './types';

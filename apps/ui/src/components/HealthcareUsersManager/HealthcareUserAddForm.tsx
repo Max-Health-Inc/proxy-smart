@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Plus, Shield, Loader2, Server, Database, Trash2 } from 'lucide-react';
+import { Plus, Shield, Server, Database, Trash2 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type { 
   FhirServer,
   HealthcareUserFormData
@@ -424,19 +418,13 @@ export function HealthcareUserAddForm({
         </div>
         
         <div className="flex gap-4 pt-4">
-          <Button 
+          <LoadingButton 
             type="submit"
-            disabled={submitting}
+            loading={submitting}
+            loadingText={t('Creating...')}
           >
-            {submitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('Creating...')}
-              </>
-            ) : (
-              'Add User'
-            )}
-          </Button>
+            Add User
+          </LoadingButton>
           <Button 
             type="button" 
             variant="outline" 

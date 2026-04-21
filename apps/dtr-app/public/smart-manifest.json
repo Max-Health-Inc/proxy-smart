@@ -1,5 +1,5 @@
 {
-  "client_name": "DTR App",
+  "client_name": "Prior Authorization",
   "client_id": "dtr-app",
   "description": "Documentation, Templates & Rules — Prior Authorization workflow with questionnaire rendering",
   "client_uri": "http://localhost:5175",

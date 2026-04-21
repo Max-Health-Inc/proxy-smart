@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Edit, Loader2 } from 'lucide-react';
+import { Edit } from 'lucide-react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
   Dialog,
   DialogContent,
@@ -128,24 +129,17 @@ export function EditServerDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             onClick={handleSubmit}
-            disabled={loading || !editServerUrl.trim()}
+            loading={loading}
+            loadingText={t('Updating...')}
+            disabled={!editServerUrl.trim()}
             className="bg-orange-600 hover:bg-orange-700"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('Updating...')}
-              </>
-            ) : (
-              <>
-                <Edit className="w-4 h-4 mr-2" />
-                {t('Update Server')}
-              </>
-            )}
-          </Button>
+            <Edit className="w-4 h-4 mr-2" />
+            {t('Update Server')}
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

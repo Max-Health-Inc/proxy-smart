@@ -1,18 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Alert,
   AlertDescription,
 } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Fingerprint,
   ShieldCheck,
@@ -112,7 +105,7 @@ export function IALSettings() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-card/80 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
+      <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-violet-500/10 dark:bg-violet-400/20 rounded-xl flex items-center justify-center shadow-sm">

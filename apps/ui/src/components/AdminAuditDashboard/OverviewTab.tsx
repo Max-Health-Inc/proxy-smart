@@ -1,5 +1,6 @@
 import { Badge } from '@proxy-smart/shared-ui';
 import { StatCard } from '../ui/stat-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   BarChart3,
   CheckCircle,
@@ -78,11 +79,8 @@ export function OverviewTab({ analytics }: OverviewTabProps) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="font-medium">{t('No activity data available')}</p>
-                </div>
+              <div className="h-full flex items-center justify-center">
+                <EmptyState icon={BarChart3} title={t('No activity data available')} className="py-8" />
               </div>
             )}
           </div>
@@ -118,10 +116,7 @@ export function OverviewTab({ analytics }: OverviewTabProps) {
                 </div>
               ))
             ) : (
-              <div className="text-center text-muted-foreground py-8">
-                <UserCheck className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="font-medium">{t('No actor data available')}</p>
-              </div>
+              <EmptyState icon={UserCheck} title={t('No actor data available')} />
             )}
           </div>
         </div>

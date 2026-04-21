@@ -131,7 +131,7 @@ function VariantRow({ variant }: { variant: Variant }) {
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <p className="text-xs">
+    <p className="text-xs truncate">
       <span className="text-muted-foreground">{label}: </span>
       <span className="font-mono">{value}</span>
     </p>
@@ -216,9 +216,9 @@ export function GenomicsCard({
                 </h4>
                 <ul className="space-y-1.5">
                   {reports.map((r, i) => (
-                    <li key={r.id || i} className="text-sm flex justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-medium">
+                    <li key={r.id || i} className="text-sm flex justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-medium truncate">
                           {r.code?.coding?.[0]?.display || t("genomics.genomicReport")}
                         </span>
                         {r.status && (r.status as DiagnosticReportStatusUvIpsCode) !== ("final" satisfies DiagnosticReportStatusUvIpsCode) && (
@@ -247,7 +247,7 @@ export function GenomicsCard({
                   <Dna className="size-3" />
                   {t("genomics.variants", { n: variants.length })}
                 </h4>
-                <ul className="space-y-1.5">
+                <ul className="grid gap-1.5 md:grid-cols-2">
                   {variants.map((v, i) => (
                     <VariantRow key={v.id || i} variant={v} />
                   ))}
@@ -255,33 +255,38 @@ export function GenomicsCard({
               </div>
             )}
 
-            {/* Diagnostic Implications */}
-            {diagnosticImplications.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <AlertTriangle className="size-3" />
-                  {t("genomics.diagnosticImplications")}
-                </h4>
-                <ul className="space-y-1.5">
-                  {diagnosticImplications.map((di, i) => (
-                    <DiagnosticImplicationRow key={di.id || i} impl={di} />
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* Diagnostic Implications + Pharmacogenomics side by side on desktop */}
+            {(diagnosticImplications.length > 0 || therapeuticImplications.length > 0) && (
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Diagnostic Implications */}
+                {diagnosticImplications.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <AlertTriangle className="size-3" />
+                      {t("genomics.diagnosticImplications")}
+                    </h4>
+                    <ul className="space-y-1.5">
+                      {diagnosticImplications.map((di, i) => (
+                        <DiagnosticImplicationRow key={di.id || i} impl={di} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
-            {/* Therapeutic Implications (Pharmacogenomics) */}
-            {therapeuticImplications.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                  <Pill className="size-3" />
-                  {t("genomics.pharmacogenomics")}
-                </h4>
-                <ul className="space-y-1.5">
-                  {therapeuticImplications.map((ti, i) => (
-                    <TherapeuticImplicationRow key={ti.id || i} impl={ti} />
-                  ))}
-                </ul>
+                {/* Therapeutic Implications (Pharmacogenomics) */}
+                {therapeuticImplications.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <Pill className="size-3" />
+                      {t("genomics.pharmacogenomics")}
+                    </h4>
+                    <ul className="space-y-1.5">
+                      {therapeuticImplications.map((ti, i) => (
+                        <TherapeuticImplicationRow key={ti.id || i} impl={ti} />
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
           </div>

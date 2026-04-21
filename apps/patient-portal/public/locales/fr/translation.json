@@ -245,6 +245,13 @@
     "notes": "Notes",
     "sourceDocuments": "Documents sources",
     "editRecord": "Modifier le dossier",
+    "deleteRecord": "Supprimer",
+    "confirmDelete": "Oui, supprimer",
+    "deleting": "Suppression…",
+    "cancel": "Annuler",
+    "contact": "Contact",
+    "address": "Adresse",
+    "qualification": "Qualification",
     "unknownReaction": "Réaction inconnue"
   },
   "recordEdit": {
@@ -300,6 +307,20 @@
     "severe": "Sévère",
     "moderate": "Modérée",
     "mild": "Légère"
+  },
+  "shareQr": {
+    "title": "Partager le résumé de santé",
+    "share": "Partager QR",
+    "description": "Scannez ce code QR pour consulter une copie en lecture seule de votre résumé de santé. Le lien expire automatiquement.",
+    "label": "Résumé de santé du patient",
+    "generating": "Création du lien sécurisé…",
+    "retry": "Réessayer",
+    "expiresIn": "Expire dans {{minutes}} minutes",
+    "copyLink": "Copier le lien",
+    "copied": "Copié !",
+    "sharedSummary": "Résumé de santé partagé",
+    "expiresInBanner": "Expire dans {{minutes}} min",
+    "readOnly": "Vue en lecture seule"
   },
   "language": {
     "label": "Langue",

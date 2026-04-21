@@ -1,13 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Badge, Button, Input, CHART_COLORS } from '@proxy-smart/shared-ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Badge, Button, Input, CHART_COLORS, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { StatCard } from './ui/stat-card';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
 import { ExportMenu } from './ui/export-menu';
 import { RealTimeBanner } from './ui/realtime-banner';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Activity,
   CheckCircle,
@@ -364,13 +362,13 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 bg-muted/50 rounded-t-2xl">
+            <ResponsiveTabsList columns={5}>
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="decisions" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Decisions')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
               <TabsTrigger value="denied" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Denied Access')}</TabsTrigger>
               <TabsTrigger value="settings" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Settings')}</TabsTrigger>
-            </TabsList>
+            </ResponsiveTabsList>
 
             {/* ─── Overview ──────────────────────────────────── */}
             <TabsContent value="overview" className="space-y-6">
@@ -423,11 +421,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                          <p className="font-medium">{t('No consent activity data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={BarChart3} title={t('No consent activity data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -464,11 +459,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        <div className="text-center">
-                          <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                          <p className="font-medium">{t('No resource type data available')}</p>
-                        </div>
+                      <div className="h-full flex items-center justify-center">
+                        <EmptyState icon={Shield} title={t('No resource type data available')} className="py-8" />
                       </div>
                     )}
                   </div>
@@ -486,11 +478,11 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                   </div>
                   <h4 className="text-lg font-bold text-foreground tracking-tight">{t('Filter Consent Decisions')}</h4>
                 </div>
-                <div className="flex flex-wrap gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-4">
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Decision:')}</label>
                     <Select value={filterDecision} onValueChange={setFilterDecision}>
-                      <SelectTrigger className="w-[140px]">
+                      <SelectTrigger className="w-full sm:w-[140px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -504,7 +496,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                   <div className="flex items-center gap-2">
                     <label className="text-sm font-medium text-foreground">{t('Resource:')}</label>
                     <Select value={filterResourceType} onValueChange={setFilterResourceType}>
-                      <SelectTrigger className="w-[160px]">
+                      <SelectTrigger className="w-full sm:w-[160px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -523,7 +515,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                       placeholder={t('Search by client, patient, path...')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="min-w-[220px]"
+                      className="w-full sm:min-w-[220px]"
                     />
                   </div>
                 </div>
@@ -612,11 +604,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                     )}
                   </div>
                 ) : (
-                  <div className="text-center text-muted-foreground py-8">
-                    <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <p className="font-medium">{t('No events match your filters')}</p>
-                    <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-                  </div>
+                  <EmptyState icon={Activity} title={t('No events match your filters')} description={t('Try adjusting your filter criteria')} />
                 )}
               </div>
             </TabsContent>
@@ -751,11 +739,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </div>
                       ))
                     ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                        <p className="font-medium">{t('No denied client requests')}</p>
-                        <p className="text-sm mt-2">{t('All clients are accessing resources within their consent scope')}</p>
-                      </div>
+                      <EmptyState icon={ShieldCheck} title={t('No denied client requests')} description={t('All clients are accessing resources within their consent scope')} />
                     )}
                   </div>
                 </div>
@@ -792,11 +776,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                         </div>
                       ))
                     ) : (
-                      <div className="text-center text-muted-foreground py-8">
-                        <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-                        <p className="font-medium">{t('No denied patient requests')}</p>
-                        <p className="text-sm mt-2">{t('All patient data access has been within consent scope')}</p>
-                      </div>
+                      <EmptyState icon={CheckCircle} title={t('No denied patient requests')} description={t('All patient data access has been within consent scope')} />
                     )}
                   </div>
                 </div>

@@ -262,3 +262,32 @@ Track application performance and usage:
 4. **👥 User Feedback**: Collect and act on user input
 
 The SMART Apps management system provides comprehensive tools for healthcare application lifecycle management, ensuring secure, compliant, and efficient integration within the healthcare ecosystem.
+
+## Sub-Tabs
+
+The SMART Apps page contains three sub-tabs:
+
+### Registered Apps
+The main view for managing manually registered SMART client applications (documented above).
+
+### App Store
+Controls the visibility and publication of SMART apps:
+
+| Action | Description |
+|---|---|
+| **Publish** | Make an app available in the app store catalog |
+| **Unpublish** | Remove an app from the catalog |
+| **Hide** | Hide an app from the catalog without removing it |
+| **Show** | Restore visibility of a hidden app |
+
+API endpoints: `GET /admin/app-store/`, `POST /admin/app-store/publish`, `POST /admin/app-store/:appId/hide`, `POST /admin/app-store/:appId/show`, `POST /admin/app-store/:appId/unpublish`.
+
+### Dynamic Client Registration
+Manages RFC 7591 Dynamic Client Registration settings:
+
+- **View settings** — current DCR policy configuration
+- **Update settings** — modify registration requirements and defaults
+- **Reset to defaults** — restore factory DCR settings
+
+API endpoints: `GET /admin/client-registration/settings`, `PUT /admin/client-registration/settings`, `POST /admin/client-registration/reset-defaults`.
+

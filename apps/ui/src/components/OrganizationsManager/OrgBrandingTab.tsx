@@ -1,14 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Input, Label, Badge } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Save, RotateCcw, Loader2, Image, Globe, MapPin } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import type { OrgBrandConfig } from '@/lib/api-client';
@@ -276,10 +270,10 @@ export function OrgBrandingTab({ orgId, orgName }: OrgBrandingTabProps) {
           <RotateCcw className="h-4 w-4 mr-2" />
           {t('Clear All Overrides')}
         </Button>
-        <Button size="sm" onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          {saving ? t('Saving...') : t('Save Overrides')}
-        </Button>
+        <LoadingButton size="sm" onClick={handleSave} loading={saving} loadingText={t('Saving...')}>
+          <Save className="h-4 w-4 mr-2" />
+          {t('Save Overrides')}
+        </LoadingButton>
       </div>
     </div>
   );

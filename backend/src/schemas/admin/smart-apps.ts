@@ -54,7 +54,28 @@ export const SmartApp = t.Object({
   allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
-  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to. Empty/undefined means available to all organizations.' }))
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to. Empty/undefined means available to all organizations.' })),
+  
+  // Token exchange & audience mappers
+  tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
+  accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers on this client (oidc-audience-mapper)' })),
+  
+  // User type & role restrictions
+  allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
+  requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
+  
+  // Consent & scope settings
+  consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
+  fullScopeAllowed: t.Optional(t.Boolean({ description: 'If true, all realm and client roles are added to the token. If false, only assigned roles.' })),
+  
+  // Session timeout settings
+  clientSessionIdleTimeout: t.Optional(t.Number({ description: 'Client session idle timeout in seconds (overrides realm default)' })),
+  clientSessionMaxLifespan: t.Optional(t.Number({ description: 'Client session max lifespan in seconds (overrides realm default)' })),
+  
+  // Logout settings
+  backchannelLogoutUrl: t.Optional(t.String({ description: 'Backchannel logout URL — server receives logout token on session end' })),
+  frontChannelLogoutUrl: t.Optional(t.String({ description: 'Front-channel logout URL — browser redirected here on logout' }))
 }, { title: 'SmartApp' })
 
 export const CreateSmartAppRequest = t.Object({
@@ -102,7 +123,28 @@ export const CreateSmartAppRequest = t.Object({
   allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
-  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' }))
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' })),
+  
+  // Token exchange & audience mappers
+  tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
+  accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' })),
+  
+  // User type & role restrictions
+  allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
+  requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
+  
+  // Consent & scope settings
+  consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
+  fullScopeAllowed: t.Optional(t.Boolean({ description: 'If true, all realm and client roles are added to the token. If false, only assigned roles.' })),
+  
+  // Session timeout settings
+  clientSessionIdleTimeout: t.Optional(t.Number({ description: 'Client session idle timeout in seconds (overrides realm default)' })),
+  clientSessionMaxLifespan: t.Optional(t.Number({ description: 'Client session max lifespan in seconds (overrides realm default)' })),
+  
+  // Logout settings
+  backchannelLogoutUrl: t.Optional(t.String({ description: 'Backchannel logout URL — server receives logout token on session end' })),
+  frontChannelLogoutUrl: t.Optional(t.String({ description: 'Front-channel logout URL — browser redirected here on logout' }))
 }, { title: 'CreateSmartAppRequest' })
 
 export const UpdateSmartAppRequest = t.Object({
@@ -150,7 +192,28 @@ export const UpdateSmartAppRequest = t.Object({
   allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
-  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' }))
+  organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' })),
+  
+  // Token exchange & audience mappers
+  tokenExchangeEnabled: t.Optional(t.Boolean({ description: 'Enable Standard Token Exchange (RFC 8693) for this client' })),
+  accessTokenLifespan: t.Optional(t.Number({ description: 'Access token lifespan in seconds (overrides realm default)' })),
+  audienceClients: t.Optional(t.Array(t.String(), { description: 'Client IDs to add as audience mappers (oidc-audience-mapper)' })),
+  
+  // User type & role restrictions
+  allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
+  requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
+  
+  // Consent & scope settings
+  consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
+  fullScopeAllowed: t.Optional(t.Boolean({ description: 'If true, all realm and client roles are added to the token. If false, only assigned roles.' })),
+  
+  // Session timeout settings
+  clientSessionIdleTimeout: t.Optional(t.Number({ description: 'Client session idle timeout in seconds (overrides realm default)' })),
+  clientSessionMaxLifespan: t.Optional(t.Number({ description: 'Client session max lifespan in seconds (overrides realm default)' })),
+  
+  // Logout settings
+  backchannelLogoutUrl: t.Optional(t.String({ description: 'Backchannel logout URL — server receives logout token on session end' })),
+  frontChannelLogoutUrl: t.Optional(t.String({ description: 'Front-channel logout URL — browser redirected here on logout' }))
 }, { title: 'UpdateSmartAppRequest' })
 
 export const ClientIdParam = t.Object({

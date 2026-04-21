@@ -14,18 +14,15 @@ import {
   TabsTrigger,
   TabsContent,
   Badge,
-} from '@proxy-smart/shared-ui';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@proxy-smart/shared-ui';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
-  Loader2,
   Globe,
   Shield,
   Key,
@@ -35,6 +32,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type { SmartApp } from '@/lib/types/api';
 import type { UpdateSmartAppRequest } from '@/lib/api-client/models';
 import {
@@ -69,6 +67,15 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     fhirVersion: app.attributes?.fhir_version as string ?? '',
     requirePkce: app.requirePkce ?? false,
     allowOfflineAccess: app.allowOfflineAccess ?? false,
+    tokenExchangeEnabled: app.tokenExchangeEnabled ?? false,
+    accessTokenLifespan: app.accessTokenLifespan ?? undefined,
+    audienceClients: app.audienceClients ?? [],
+    consentRequired: app.consentRequired ?? false,
+    fullScopeAllowed: app.fullScopeAllowed ?? true,
+    clientSessionIdleTimeout: app.clientSessionIdleTimeout ?? undefined,
+    clientSessionMaxLifespan: app.clientSessionMaxLifespan ?? undefined,
+    backchannelLogoutUrl: app.backchannelLogoutUrl ?? '',
+    frontChannelLogoutUrl: app.frontChannelLogoutUrl ?? '',
     logoUri: app.logoUri ?? '',
     tosUri: app.tosUri ?? '',
     policyUri: app.policyUri ?? '',
@@ -78,6 +85,8 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     mcpAccessType: (app.mcpAccessType as UpdateSmartAppRequest['mcpAccessType']) ?? McpAccessEnum.None,
     allowedMcpServerNames: app.allowedMcpServerNames ?? [],
     allowedSkillNames: app.allowedSkillNames ?? [],
+    allowedFhirUserTypes: app.allowedFhirUserTypes ?? [],
+    requiredRoles: app.requiredRoles ?? [],
     // Auth fields — only sent when changed
     secret: undefined,
     publicKey: undefined,
@@ -146,17 +155,17 @@ export function SmartAppEditModal({
         </DialogHeader>
 
         <Tabs defaultValue="general" className="mt-2">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="general"><Info className="size-3.5 mr-1.5" />{t('General')}</TabsTrigger>
-            <TabsTrigger value="uris"><Globe className="size-3.5 mr-1.5" />{t('URIs')}</TabsTrigger>
-            <TabsTrigger value="auth"><Key className="size-3.5 mr-1.5" />{t('Auth')}</TabsTrigger>
-            <TabsTrigger value="access"><Server className="size-3.5 mr-1.5" />{t('Access')}</TabsTrigger>
-            <TabsTrigger value="metadata"><Bot className="size-3.5 mr-1.5" />{t('Metadata')}</TabsTrigger>
+          <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsTrigger value="general"><Info className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('General')}</span></TabsTrigger>
+            <TabsTrigger value="uris"><Globe className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('URIs')}</span></TabsTrigger>
+            <TabsTrigger value="auth"><Key className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('Auth')}</span></TabsTrigger>
+            <TabsTrigger value="access"><Server className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('Access')}</span></TabsTrigger>
+            <TabsTrigger value="metadata"><Bot className="size-3.5 mr-1.5" /><span className="hidden sm:inline">{t('Metadata')}</span></TabsTrigger>
           </TabsList>
 
           {/* ── General Tab ─────────────────────────────────────────── */}
           <TabsContent value="general" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('Application Name')}</Label>
                 <Input value={form.name ?? ''} onChange={(e) => set('name', e.target.value)} />
@@ -173,7 +182,7 @@ export function SmartAppEditModal({
               <Label>{t('Description')}</Label>
               <Textarea value={form.description ?? ''} onChange={(e) => set('description', e.target.value)} rows={3} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('App Type')}</Label>
                 <Select value={form.appType ?? ''} onValueChange={(v) => set('appType', v as UpdateSmartAppRequest['appType'])}>
@@ -198,7 +207,7 @@ export function SmartAppEditModal({
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('SMART Version')}</Label>
                 <Input value={form.smartVersion ?? ''} onChange={(e) => set('smartVersion', e.target.value)} placeholder="e.g., 2.0.0" />
@@ -245,6 +254,105 @@ export function SmartAppEditModal({
                 <p className="text-xs text-muted-foreground">{t('Enable refresh tokens for this application')}</p>
               </div>
               <Switch checked={form.allowOfflineAccess ?? false} onCheckedChange={(v) => set('allowOfflineAccess', v)} />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label>{t('Token Exchange')}</Label>
+                <p className="text-xs text-muted-foreground">{t('Allow RFC 8693 standard token exchange for this client')}</p>
+              </div>
+              <Switch checked={form.tokenExchangeEnabled ?? false} onCheckedChange={(v) => set('tokenExchangeEnabled', v)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>{t('Access Token Lifespan')}</Label>
+              <p className="text-xs text-muted-foreground">{t('Override realm default (in seconds). Leave empty for realm default.')}</p>
+              <Input
+                type="number"
+                min={0}
+                value={form.accessTokenLifespan ?? ''}
+                onChange={(e) => set('accessTokenLifespan', e.target.value ? Number(e.target.value) : undefined)}
+                placeholder={t('Realm default')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">{t('Client IDs included as audience in tokens (for token exchange)')}</p>
+              <StringListField
+                label={t('Audience Clients')}
+                values={form.audienceClients ?? []}
+                onChange={(v) => set('audienceClients', v)}
+                placeholder={t('Add client ID...')}
+              />
+            </div>
+
+            {/* Consent & Scope */}
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label>{t('Consent Required')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('User must explicitly consent to scopes at login')}</p>
+                </div>
+                <Switch checked={form.consentRequired ?? false} onCheckedChange={(v) => set('consentRequired', v)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label>{t('Full Scope Allowed')}</Label>
+                  <p className="text-xs text-muted-foreground">{t('Include all realm/client roles in tokens (disable to restrict)')}</p>
+                </div>
+                <Switch checked={form.fullScopeAllowed ?? true} onCheckedChange={(v) => set('fullScopeAllowed', v)} />
+              </div>
+            </div>
+
+            {/* Session Timeouts */}
+            <div className="border-t pt-4 space-y-4">
+              <Label className="text-sm font-semibold">{t('Session Timeouts')}</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>{t('Session Idle Timeout')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.clientSessionIdleTimeout ?? ''}
+                    onChange={(e) => set('clientSessionIdleTimeout', e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder={t('Realm default')}
+                  />
+                  <p className="text-xs text-muted-foreground">{t('Seconds before idle session expires')}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('Session Max Lifespan')}</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.clientSessionMaxLifespan ?? ''}
+                    onChange={(e) => set('clientSessionMaxLifespan', e.target.value ? Number(e.target.value) : undefined)}
+                    placeholder={t('Realm default')}
+                  />
+                  <p className="text-xs text-muted-foreground">{t('Max session duration in seconds')}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout Settings */}
+            <div className="border-t pt-4 space-y-4">
+              <Label className="text-sm font-semibold">{t('Logout')}</Label>
+              <div className="space-y-2">
+                <Label>{t('Backchannel Logout URL')}</Label>
+                <Input
+                  value={form.backchannelLogoutUrl ?? ''}
+                  onChange={(e) => set('backchannelLogoutUrl', e.target.value || undefined)}
+                  placeholder="https://app.example.com/logout/backchannel"
+                />
+                <p className="text-xs text-muted-foreground">{t('Server receives a logout token when the session ends')}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('Front-Channel Logout URL')}</Label>
+                <Input
+                  value={form.frontChannelLogoutUrl ?? ''}
+                  onChange={(e) => set('frontChannelLogoutUrl', e.target.value || undefined)}
+                  placeholder="https://app.example.com/logout"
+                />
+                <p className="text-xs text-muted-foreground">{t('Browser redirected here on logout (visible to user)')}</p>
+              </div>
             </div>
 
             {form.clientType === ClientTypeEnum.Confidential && (
@@ -331,6 +439,26 @@ export function SmartAppEditModal({
                 placeholder="skill-name"
               />
             </div>
+
+            {/* User Restrictions */}
+            <div className="space-y-3 border-t pt-4">
+              <Label className="text-sm font-semibold">{t('User Restrictions')}</Label>
+              <p className="text-xs text-muted-foreground">
+                {t('Restrict which users can access this app based on their FHIR user type or assigned roles. Leave empty for no restrictions.')}
+              </p>
+              <StringListField
+                label={t('Allowed FHIR User Types')}
+                values={form.allowedFhirUserTypes ?? []}
+                onChange={(v) => set('allowedFhirUserTypes', v)}
+                placeholder="Practitioner"
+              />
+              <StringListField
+                label={t('Required Roles')}
+                values={form.requiredRoles ?? []}
+                onChange={(v) => set('requiredRoles', v)}
+                placeholder="role-name"
+              />
+            </div>
           </TabsContent>
 
           {/* ── Metadata Tab ────────────────────────────────────────── */}
@@ -342,7 +470,7 @@ export function SmartAppEditModal({
                 <img src={form.logoUri} alt="App logo" className="size-12 rounded object-contain border" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('Terms of Service URI')}</Label>
                 <Input value={form.tosUri ?? ''} onChange={(e) => set('tosUri', e.target.value)} placeholder="https://..." />
@@ -367,9 +495,9 @@ export function SmartAppEditModal({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             {t('Cancel')}
           </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? <><Loader2 className="size-4 animate-spin" />{t('Saving…')}</> : t('Save Changes')}
-          </Button>
+          <LoadingButton onClick={handleSave} loading={saving} loadingText={t('Saving…')}>
+            {t('Save Changes')}
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

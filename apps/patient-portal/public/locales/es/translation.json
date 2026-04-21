@@ -245,6 +245,13 @@
     "notes": "Notas",
     "sourceDocuments": "Documentos fuente",
     "editRecord": "Editar registro",
+    "deleteRecord": "Eliminar",
+    "confirmDelete": "Sí, eliminar",
+    "deleting": "Eliminando…",
+    "cancel": "Cancelar",
+    "contact": "Contacto",
+    "address": "Dirección",
+    "qualification": "Cualificación",
     "unknownReaction": "Reacción desconocida"
   },
   "recordEdit": {
@@ -300,6 +307,20 @@
     "severe": "Grave",
     "moderate": "Moderada",
     "mild": "Leve"
+  },
+  "shareQr": {
+    "title": "Compartir resumen de salud",
+    "share": "Compartir QR",
+    "description": "Escanee este código QR para ver una copia de solo lectura de su resumen de salud. El enlace caduca automáticamente.",
+    "label": "Resumen de salud del paciente",
+    "generating": "Creando enlace seguro…",
+    "retry": "Reintentar",
+    "expiresIn": "Caduca en {{minutes}} minutos",
+    "copyLink": "Copiar enlace",
+    "copied": "¡Copiado!",
+    "sharedSummary": "Resumen de salud compartido",
+    "expiresInBanner": "Caduca en {{minutes}} min",
+    "readOnly": "Vista de solo lectura"
   },
   "language": {
     "label": "Idioma",

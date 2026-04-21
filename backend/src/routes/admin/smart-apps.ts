@@ -175,8 +175,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               appType: (VALID_APP_TYPES.has(appType!) ? appType : undefined) || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
               clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
               
-              // Client secret (only included for confidential clients with client-secret auth)
-              ...(fullClient.secret && { secret: fullClient.secret }),
+              // Client secret — masked in list responses (Keycloak returns plaintext to admin callers)
+              ...(fullClient.secret && { secret: '**********' }),
               
               // Extract metadata fields from attributes
               launchUrl: getAttr(fullClient.attributes, 'launch_url'),
@@ -204,7 +204,33 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               
               // PKCE and offline access
               requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
-              allowOfflineAccess: hasOfflineAccess
+              allowOfflineAccess: hasOfflineAccess,
+              
+              // Token exchange & access token lifespan
+              tokenExchangeEnabled: getAttr(fullClient.attributes, 'standard.token.exchange.enabled') === 'true',
+              accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
+              
+              // Audience mappers
+              audienceClients: (fullClient as any).protocolMappers
+                ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+                ?.map((m: any) => m.config?.['included.client.audience'])
+                ?.filter(Boolean) || [],
+              
+              // User type & role restrictions
+              allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
+              requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
+              
+              // Consent & scope settings
+              consentRequired: fullClient.consentRequired ?? false,
+              fullScopeAllowed: fullClient.fullScopeAllowed ?? true,
+              
+              // Session timeout settings
+              clientSessionIdleTimeout: getAttr(fullClient.attributes, 'client.session.idle.timeout') ? Number(getAttr(fullClient.attributes, 'client.session.idle.timeout')) : undefined,
+              clientSessionMaxLifespan: getAttr(fullClient.attributes, 'client.session.max.lifespan') ? Number(getAttr(fullClient.attributes, 'client.session.max.lifespan')) : undefined,
+              
+              // Logout settings
+              backchannelLogoutUrl: getAttr(fullClient.attributes, 'backchannel.logout.url') || undefined,
+              frontChannelLogoutUrl: getAttr(fullClient.attributes, 'frontchannel.logout.url') || undefined,
             } as SmartAppType
           } catch (error) {
             logger.admin.warn('Failed to enrich client with scope details', { clientId: client.clientId, error })
@@ -341,6 +367,28 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           
           // PKCE configuration
           ...(body.requirePkce && { 'pkce.code.challenge.method': 'S256' }),
+          
+          // Token exchange (RFC 8693) — Keycloak 26+ standard token exchange V2
+          ...(body.tokenExchangeEnabled !== undefined && { 'standard.token.exchange.enabled': String(body.tokenExchangeEnabled) }),
+          
+          // Custom access token lifespan (overrides realm default)
+          ...(body.accessTokenLifespan && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
+
+          // User type & role restrictions
+          ...(body.allowedFhirUserTypes && body.allowedFhirUserTypes.length > 0 && {
+            'allowed_fhir_user_types': body.allowedFhirUserTypes.join(',')
+          }),
+          ...(body.requiredRoles && body.requiredRoles.length > 0 && {
+            'required_roles': body.requiredRoles.join(',')
+          }),
+
+          // Session timeout overrides
+          ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
+          ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),
+          
+          // Logout settings
+          ...(body.backchannelLogoutUrl && { 'backchannel.logout.url': body.backchannelLogoutUrl }),
+          ...(body.frontChannelLogoutUrl && { 'frontchannel.logout.url': body.frontChannelLogoutUrl }),
 
           // Keycloak 25+ requires explicit post-logout redirect URI config
           'post.logout.redirect.uris': '+',
@@ -348,7 +396,17 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         // Configure client authentication method
         clientAuthenticatorType,
 
+        // Consent & scope settings
+        ...(body.consentRequired !== undefined && { consentRequired: body.consentRequired }),
+        ...(body.fullScopeAllowed !== undefined && { fullScopeAllowed: body.fullScopeAllowed }),
+        
+        // Front-channel logout top-level flag
+        ...(body.frontChannelLogoutUrl && { frontchannelLogout: true }),
+
         // Configure OAuth2 settings for Backend Services
+        // Pass explicit client secret when provided (confidential clients only)
+        ...(body.secret && clientAuthenticatorType === 'client-secret' && { secret: body.secret }),
+
         standardFlowEnabled: !isBackendService, // Authorization code flow
         implicitFlowEnabled: false, // Not recommended for SMART
         directAccessGrantsEnabled: false, // Not used in SMART
@@ -454,9 +512,43 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
+      // Add audience mappers (oidc-audience-mapper) to the client
+      if (body.audienceClients && body.audienceClients.length > 0 && fullClient.id) {
+        for (const targetClientId of body.audienceClients) {
+          try {
+            await admin.clients.addProtocolMapper({ id: fullClient.id }, {
+              name: `audience-${targetClientId}`,
+              protocol: 'openid-connect',
+              protocolMapper: 'oidc-audience-mapper',
+              config: {
+                'included.client.audience': targetClientId,
+                'id.token.claim': 'false',
+                'access.token.claim': 'true',
+                'userinfo.token.claim': 'false'
+              }
+            })
+            logger.admin.debug('Audience mapper added', { clientId: fullClient.clientId, targetClientId })
+          } catch (error) {
+            logger.admin.warn('Failed to add audience mapper', { clientId: fullClient.clientId, targetClientId, error })
+          }
+        }
+      }
+
       // Re-fetch client details to get updated scope assignments
       const clientAfterScopeAssignment = await admin.clients.findOne({ id: createdClient.id })
       const finalClientForResponse = clientAfterScopeAssignment || fullClient
+
+      // Sync required roles as Keycloak client roles
+      if (body.requiredRoles && body.requiredRoles.length > 0 && createdClient.id) {
+        for (const roleName of body.requiredRoles) {
+          try {
+            await admin.clients.createRole({ id: createdClient.id, name: roleName, description: `Required role for ${body.clientId}` })
+            logger.admin.debug('Created client role on new app', { clientId: body.clientId, role: roleName })
+          } catch (error) {
+            logger.admin.warn('Failed to create client role', { clientId: body.clientId, role: roleName, error })
+          }
+        }
+      }
 
       // If Backend Services with public key (PEM), convert and register JWKS
       if (isBackendService && body.publicKey && !body.jwksString && !body.jwksUri && createdClient.id) {
@@ -574,8 +666,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             appType: appType || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
             clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
             
-            // Client secret (only included for confidential clients with client-secret auth)
-            ...(fullClient.secret && { secret: fullClient.secret }),
+            // Client secret — masked in detail responses (Keycloak returns plaintext to admin callers)
+            ...(fullClient.secret && { secret: '**********' }),
             
             // Extract metadata fields from attributes
             launchUrl: getAttr(fullClient.attributes, 'launch_url'),
@@ -603,7 +695,33 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             
             // PKCE and offline access
             requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
-            allowOfflineAccess: hasOfflineAccess
+            allowOfflineAccess: hasOfflineAccess,
+            
+            // Token exchange & access token lifespan
+            tokenExchangeEnabled: getAttr(fullClient.attributes, 'standard.token.exchange.enabled') === 'true',
+            accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
+            
+            // Audience mappers
+            audienceClients: (fullClient as any).protocolMappers
+              ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+              ?.map((m: any) => m.config?.['included.client.audience'])
+                ?.filter(Boolean) || [],
+              
+              // User type & role restrictions
+              allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
+              requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
+              
+              // Consent & scope settings
+              consentRequired: fullClient.consentRequired ?? false,
+              fullScopeAllowed: fullClient.fullScopeAllowed ?? true,
+              
+              // Session timeout settings
+              clientSessionIdleTimeout: getAttr(fullClient.attributes, 'client.session.idle.timeout') ? Number(getAttr(fullClient.attributes, 'client.session.idle.timeout')) : undefined,
+              clientSessionMaxLifespan: getAttr(fullClient.attributes, 'client.session.max.lifespan') ? Number(getAttr(fullClient.attributes, 'client.session.max.lifespan')) : undefined,
+              
+              // Logout settings
+              backchannelLogoutUrl: getAttr(fullClient.attributes, 'backchannel.logout.url') || undefined,
+              frontChannelLogoutUrl: getAttr(fullClient.attributes, 'frontchannel.logout.url') || undefined,
           } as SmartAppType
         }
       } catch (error) {
@@ -644,18 +762,42 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         return { error: 'SMART application not found' }
       }
 
+      // Build update data with existing values as fallbacks — Keycloak PUT expects
+      // a complete representation; sending undefined fields can cause silent failures
+      const existing = clients[0]
+
+      // Map UI appType → effectiveClientType (same logic as create handler)
+      let effectiveClientType = body.clientType
+      if (body.appType && !effectiveClientType) {
+        if (body.appType === 'agent' || body.appType === 'backend-service') {
+          effectiveClientType = 'backend-service'
+        } else if (body.appType === 'standalone-app' || body.appType === 'ehr-launch') {
+          effectiveClientType = existing.publicClient ? 'public' : 'confidential'
+        }
+      }
+
       const updateData = {
-        name: body.name,
-        description: body.description,
-        enabled: body.enabled,
-        redirectUris: body.redirectUris,
-        webOrigins: body.webOrigins,
+        clientId: existing.clientId,
+        name: body.name ?? existing.name,
+        description: body.description ?? existing.description,
+        enabled: body.enabled ?? existing.enabled,
+        publicClient: existing.publicClient,
+        standardFlowEnabled: existing.standardFlowEnabled,
+        serviceAccountsEnabled: existing.serviceAccountsEnabled,
+        directAccessGrantsEnabled: existing.directAccessGrantsEnabled,
+        implicitFlowEnabled: existing.implicitFlowEnabled,
+        // Update client secret when provided (confidential clients only)
+        ...(body.secret && !existing.publicClient && { secret: body.secret }),
+        redirectUris: body.redirectUris ?? existing.redirectUris,
+        webOrigins: body.webOrigins ?? existing.webOrigins,
         attributes: {
-          ...clients[0].attributes,
+          ...existing.attributes,
+          // Store appType as client_type attribute
+          ...(body.appType && { 'client_type': body.appType }),
           // Keycloak 25+ requires explicit post-logout redirect URI config
-          'post.logout.redirect.uris': clients[0].attributes?.['post.logout.redirect.uris'] || '+',
-          smart_version: body.smartVersion ? [body.smartVersion] : clients[0].attributes?.smart_version,
-          fhir_version: body.fhirVersion ? [body.fhirVersion] : clients[0].attributes?.fhir_version,
+          'post.logout.redirect.uris': existing.attributes?.['post.logout.redirect.uris'] || '+',
+          smart_version: body.smartVersion ? [body.smartVersion] : existing.attributes?.smart_version,
+          fhir_version: body.fhirVersion ? [body.fhirVersion] : existing.attributes?.fhir_version,
           // MCP server access control
           ...(body.mcpAccessType !== undefined && { 'mcp_access_type': body.mcpAccessType }),
           ...(body.allowedMcpServerNames !== undefined && {
@@ -674,9 +816,94 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.organizationIds !== undefined && {
             'organization_ids': body.organizationIds.length > 0 ? body.organizationIds.join(',') : ''
           }),
+          // Token exchange (RFC 8693) — Keycloak 26+ standard token exchange V2
+          ...(body.tokenExchangeEnabled !== undefined && { 'standard.token.exchange.enabled': String(body.tokenExchangeEnabled) }),
+          // Custom access token lifespan (overrides realm default)
+          ...(body.accessTokenLifespan !== undefined && { 'access.token.lifespan': String(body.accessTokenLifespan) }),
+          // User type & role restrictions
+          ...(body.allowedFhirUserTypes !== undefined && {
+            'allowed_fhir_user_types': body.allowedFhirUserTypes.length > 0 ? body.allowedFhirUserTypes.join(',') : ''
+          }),
+          ...(body.requiredRoles !== undefined && {
+            'required_roles': body.requiredRoles.length > 0 ? body.requiredRoles.join(',') : ''
+          }),
+          // Session timeout overrides
+          ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
+          ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),
+          // Logout settings
+          ...(body.backchannelLogoutUrl !== undefined && { 'backchannel.logout.url': body.backchannelLogoutUrl || '' }),
+          ...(body.frontChannelLogoutUrl !== undefined && { 'frontchannel.logout.url': body.frontChannelLogoutUrl || '' }),
+        },
+        // Consent & scope settings (top-level Keycloak properties)
+        ...(body.consentRequired !== undefined && { consentRequired: body.consentRequired }),
+        ...(body.fullScopeAllowed !== undefined && { fullScopeAllowed: body.fullScopeAllowed }),
+        // Front-channel logout top-level flag
+        ...(body.frontChannelLogoutUrl !== undefined && { frontchannelLogout: !!body.frontChannelLogoutUrl }),
+        // Client type changes affect serviceAccountsEnabled + standardFlowEnabled + publicClient
+        ...(effectiveClientType !== undefined && {
+          publicClient: effectiveClientType === 'public',
+          serviceAccountsEnabled: effectiveClientType === 'backend-service',
+          standardFlowEnabled: effectiveClientType !== 'backend-service',
+        }),
+      }
+      await admin.clients.update({ id: existing.id! }, updateData)
+
+      // Sync required roles as Keycloak client roles
+      if (body.requiredRoles !== undefined) {
+        try {
+          const existingRoles = await admin.clients.listRoles({ id: existing.id! })
+          const existingNames = new Set(existingRoles.map((r: any) => r.name))
+          const desiredNames = new Set(body.requiredRoles)
+
+          // Create missing roles
+          for (const roleName of desiredNames) {
+            if (!existingNames.has(roleName)) {
+              await admin.clients.createRole({ id: existing.id!, name: roleName, description: `Required role for ${params.clientId}` })
+              logger.admin.debug('Created client role', { clientId: params.clientId, role: roleName })
+            }
+          }
+          // Delete roles no longer required
+          for (const role of existingRoles) {
+            if (role.name && !desiredNames.has(role.name)) {
+              await admin.clients.delRole({ id: existing.id!, roleName: role.name })
+              logger.admin.debug('Deleted client role', { clientId: params.clientId, role: role.name })
+            }
+          }
+        } catch (error) {
+          logger.admin.warn('Failed to sync client roles', { clientId: params.clientId, error })
         }
       }
-      await admin.clients.update({ id: clients[0].id! }, updateData)
+
+      // Handle audience mapper updates if provided
+      if (body.audienceClients !== undefined) {
+        try {
+          // Remove existing audience mappers
+          const existingMappers = await admin.clients.listProtocolMappers({ id: existing.id! })
+          const audienceMappers = existingMappers.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+          for (const mapper of audienceMappers) {
+            if (mapper.id) {
+              await admin.clients.delProtocolMapper({ id: existing.id!, mapperId: mapper.id })
+            }
+          }
+          // Add new audience mappers
+          for (const targetClientId of body.audienceClients) {
+            await admin.clients.addProtocolMapper({ id: existing.id! }, {
+              name: `audience-${targetClientId}`,
+              protocol: 'openid-connect',
+              protocolMapper: 'oidc-audience-mapper',
+              config: {
+                'included.client.audience': targetClientId,
+                'id.token.claim': 'false',
+                'access.token.claim': 'true',
+                'userinfo.token.claim': 'false'
+              }
+            })
+          }
+          logger.admin.debug('Audience mappers updated', { clientId: params.clientId, audienceClients: body.audienceClients })
+        } catch (error) {
+          logger.admin.warn('Failed to update audience mappers', { clientId: params.clientId, error })
+        }
+      }
 
       // Handle scope updates if provided
       if (body.defaultClientScopes || body.optionalClientScopes) {
@@ -686,13 +913,13 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
           if (body.defaultClientScopes) {
             // Remove all existing default client scopes
-            const existingClient = await admin.clients.findOne({ id: clients[0].id! })
+            const existingClient = await admin.clients.findOne({ id: existing.id! })
             if (existingClient?.defaultClientScopes) {
               for (const scopeId of existingClient.defaultClientScopes) {
                 try {
-                  await admin.clients.delDefaultClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                  await admin.clients.delDefaultClientScope({ id: existing.id!, clientScopeId: scopeId })
                 } catch (error) {
-                  logger.admin.warn('Failed to remove existing default scope', { clientId: clients[0].clientId, scopeId, error })
+                  logger.admin.warn('Failed to remove existing default scope', { clientId: existing.clientId, scopeId, error })
                 }
               }
             }
@@ -704,22 +931,22 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
             for (const scopeId of defaultScopeIds) {
               try {
-                await admin.clients.addDefaultClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                await admin.clients.addDefaultClientScope({ id: existing.id!, clientScopeId: scopeId })
               } catch (error) {
-                logger.admin.warn('Failed to add new default scope', { clientId: clients[0].clientId, scopeId, error })
+                logger.admin.warn('Failed to add new default scope', { clientId: existing.clientId, scopeId, error })
               }
             }
           }
 
           if (body.optionalClientScopes) {
             // Remove all existing optional client scopes
-            const existingClient = await admin.clients.findOne({ id: clients[0].id! })
+            const existingClient = await admin.clients.findOne({ id: existing.id! })
             if (existingClient?.optionalClientScopes) {
               for (const scopeId of existingClient.optionalClientScopes) {
                 try {
-                  await admin.clients.delOptionalClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                  await admin.clients.delOptionalClientScope({ id: existing.id!, clientScopeId: scopeId })
                 } catch (error) {
-                  logger.admin.warn('Failed to remove existing optional scope', { clientId: clients[0].clientId, scopeId, error })
+                  logger.admin.warn('Failed to remove existing optional scope', { clientId: existing.clientId, scopeId, error })
                 }
               }
             }
@@ -731,9 +958,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
             for (const scopeId of optionalScopeIds) {
               try {
-                await admin.clients.addOptionalClientScope({ id: clients[0].id!, clientScopeId: scopeId })
+                await admin.clients.addOptionalClientScope({ id: existing.id!, clientScopeId: scopeId })
               } catch (error) {
-                logger.admin.warn('Failed to add new optional scope', { clientId: clients[0].clientId, scopeId, error })
+                logger.admin.warn('Failed to add new optional scope', { clientId: existing.clientId, scopeId, error })
               }
             }
           }
@@ -750,12 +977,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }
 
           logger.admin.debug('Scopes updated for client', {
-            clientId: clients[0].clientId,
+            clientId: existing.clientId,
             defaultScopes: body.defaultClientScopes,
             optionalScopes: body.optionalClientScopes
           })
         } catch (error) {
-          logger.admin.warn('Failed to update scopes for client', { clientId: clients[0].clientId, error })
+          logger.admin.warn('Failed to update scopes for client', { clientId: existing.clientId, error })
         }
       }
 

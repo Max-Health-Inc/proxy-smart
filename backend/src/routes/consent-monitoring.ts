@@ -233,3 +233,35 @@ export const consentMonitoringRoutes = new Elysia({ prefix: '/monitoring/consent
       security: [{ BearerAuth: [] }]
     }
   })
+
+  // ─── REST: patient-scoped access log ───────────────────────────
+
+  .get('/patients/:patientId/access-log', async ({ params, query, headers, set }) => {
+    if (!headers.authorization) { set.status = 401; throw new Error('Unauthorized') }
+    try { await validateToken(headers.authorization.replace('Bearer ', '')) } catch { set.status = 401; throw new Error('Unauthorized') }
+
+    const events = consentMetricsLogger.getRecentEvents({
+      patientId: params.patientId,
+      limit: query.limit ? parseInt(query.limit) : 200,
+      decision: query.decision !== 'all' ? query.decision : undefined,
+      resourceType: query.resourceType !== 'all' ? query.resourceType : undefined,
+      since: query.since ? new Date(query.since) : undefined,
+    })
+
+    return { events, total: events.length, patientId: params.patientId, timestamp: new Date().toISOString() }
+  }, {
+    params: t.Object({ patientId: t.String() }),
+    query: t.Object({
+      limit: t.Optional(t.String()),
+      decision: t.Optional(t.String()),
+      resourceType: t.Optional(t.String()),
+      since: t.Optional(t.String()),
+    }),
+    headers: t.Object({ authorization: t.Optional(t.String()) }),
+    detail: {
+      summary: 'Patient Access Log',
+      description: 'Retrieve data access events for a specific patient (who accessed what, when)',
+      tags: ['consent-monitoring'],
+      security: [{ BearerAuth: [] }]
+    }
+  })

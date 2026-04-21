@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
+@source "../../../shared-ui/src";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -486,5 +487,14 @@ code, pre, kbd, samp {
   .dark textarea,
   .dark select {
     color: oklch(0.985 0 0) !important; /* Force light text in dark mode */
+  }
+}
+
+/* Utility: hide scrollbar but keep scrolling */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

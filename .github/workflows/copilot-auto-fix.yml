@@ -1,9 +1,8 @@
 name: Copilot Auto-Fix (TDD)
 
 on:
-  schedule:
-    # Every 4 hours
-    - cron: "0 */4 * * *"
+  # schedule:
+  #   - cron: "0 */4 * * *"
   workflow_dispatch:
     inputs:
       target:
@@ -94,7 +93,7 @@ jobs:
         continue-on-error: true
         run: |
           cd apps/ui
-          bun test 2>&1 | tee /tmp/frontend-test-output.log
+          bun run test --run 2>&1 | tee /tmp/frontend-test-output.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
       - name: Check if fixes needed
@@ -224,7 +223,7 @@ jobs:
 
             PROMPT="You are in a CI environment fixing failing frontend tests.
           Working directory: $(pwd)
-          Test command: cd apps/ui && bun test
+          Test command: cd apps/ui && bun run test --run
 
           The following test failures occurred:
           \`\`\`
@@ -236,7 +235,7 @@ jobs:
           Rules:
           - Read the failing test files and the source files they test
           - Fix the SOURCE code to make tests pass, do NOT modify test files unless the test itself is wrong
-          - Run 'cd apps/ui && bun test' to verify your fix
+          - Run 'cd apps/ui && bun run test --run' to verify your fix
           - If tests pass, stop. If not, try another approach.
           - Do not add new dependencies
           - Keep changes minimal and focused"
@@ -265,7 +264,7 @@ jobs:
 
             echo "::group::Frontend test retry $ATTEMPT"
             cd apps/ui
-            if bun test 2>&1 | tee /tmp/frontend-test-output.log; then
+            if bun run test --run 2>&1 | tee /tmp/frontend-test-output.log; then
               FIXED="true"
               cd ../..
               echo "::endgroup::"

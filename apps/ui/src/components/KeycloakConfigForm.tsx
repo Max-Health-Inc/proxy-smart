@@ -3,11 +3,11 @@ import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Check,
   AlertCircle,
-  Loader2,
   Server,
   Shield,
   Info
 } from 'lucide-react';
+import { LoadingButton } from '@/components/ui/loading-button';
 import { createClientApis } from '@/lib/apiClient';
 import { useTranslation } from 'react-i18next';
 
@@ -299,42 +299,28 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 pt-6">
-        <Button
+        <LoadingButton
           variant="outline"
           onClick={handleTest}
-          disabled={testing || saving || !baseUrl.trim() || !realm.trim()}
+          loading={testing}
+          loadingText={t('Testing Connection...')}
+          disabled={saving || !baseUrl.trim() || !realm.trim()}
           className="flex-1 h-14 rounded-xl text-base font-semibold border-border/50 bg-background/50 hover:bg-accent/50 transition-all duration-200"
         >
-          {testing ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-              {t('Testing Connection...')}
-            </>
-          ) : (
-            <>
-              <Server className="w-5 h-5 mr-3" />
-              {t('Test Connection')}
-            </>
-          )}
-        </Button>
+          <Server className="w-5 h-5 mr-3" />
+          {t('Test Connection')}
+        </LoadingButton>
 
-        <Button
+        <LoadingButton
           onClick={handleSave}
-          disabled={saving || testing || !baseUrl.trim() || !realm.trim()}
+          loading={saving}
+          loadingText={t('Saving Configuration...')}
+          disabled={testing || !baseUrl.trim() || !realm.trim()}
           className="flex-1 h-14 rounded-xl text-base font-semibold transition-all duration-200"
         >
-          {saving ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-              {t('Saving Configuration...')}
-            </>
-          ) : (
-            <>
-              <Shield className="w-5 h-5 mr-3" />
-              {t('Save & Connect')}
-            </>
-          )}
-        </Button>
+          <Shield className="w-5 h-5 mr-3" />
+          {t('Save & Connect')}
+        </LoadingButton>
 
         <Button
           variant="ghost"

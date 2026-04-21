@@ -1,18 +1,17 @@
-import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
+  Badge,
+  Button,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@proxy-smart/shared-ui';
 import { MoreHorizontal, Edit, Trash2, Users, Power, Globe } from 'lucide-react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
@@ -29,7 +28,7 @@ export function OrgTable({ orgs, onEdit, onDelete, onToggleStatus, onManageMembe
   const { t } = useTranslation();
 
   return (
-    <div className="backdrop-blur-sm bg-card/70 rounded-2xl shadow-lg border border-border/50 p-8 transition-all duration-300 hover:shadow-xl">
+    <div className="backdrop-blur-sm bg-card/70 rounded-2xl shadow-lg border border-border/50 p-4 sm:p-8 transition-all duration-300 hover:shadow-xl">
       <div className="mb-8">
         <h3 className="text-2xl font-medium text-foreground mb-2">
           {t('Organizations')}
@@ -39,7 +38,7 @@ export function OrgTable({ orgs, onEdit, onDelete, onToggleStatus, onManageMembe
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border/50 bg-card/70">
+      <div className="overflow-x-auto rounded-xl border border-border/50 bg-card/70">
         <Table>
           <TableHeader>
             <TableRow className="border-border/50 hover:bg-transparent">

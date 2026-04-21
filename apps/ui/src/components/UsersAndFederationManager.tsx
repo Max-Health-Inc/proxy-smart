@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, FolderSync } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { HealthcareUsersManager } from './HealthcareUsersManager/HealthcareUsersManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 
@@ -31,7 +31,7 @@ export function UsersAndFederationManager() {
             {/* Tabs in card */}
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+                    <ResponsiveTabsList columns={2}>
                         <TabsTrigger value="users" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Users className="w-4 h-4" />
                             <span>{t('Users')}</span>
@@ -40,7 +40,7 @@ export function UsersAndFederationManager() {
                             <FolderSync className="w-4 h-4" />
                             <span>{t('User Federation')}</span>
                         </TabsTrigger>
-                    </TabsList>
+                    </ResponsiveTabsList>
 
                     <TabsContent value="users" className="p-6 space-y-6">
                         <HealthcareUsersManager embedded />

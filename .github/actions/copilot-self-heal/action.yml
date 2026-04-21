@@ -1,0 +1,164 @@
+name: 'Copilot Self-Heal Guard'
+description: |
+  Uses GitHub Copilot (Models API) to automatically fix build/test failures and commit the fix.
+  Requires: GitHub App with `models:read` and `contents:write` permissions.
+  Falls back to OPENAI_API_KEY if GITHUB_TOKEN lacks models:read scope.
+
+inputs:
+  error-log:
+    description: 'Path to the error log file'
+    required: true
+  phase:
+    description: 'Phase name (build or test)'
+    required: true
+    default: 'build'
+  component:
+    description: 'Component name (backend or frontend)'
+    required: true
+    default: 'backend'
+  app-id:
+    description: 'GitHub App ID for authentication'
+    required: true
+  app-private-key:
+    description: 'GitHub App private key'
+    required: true
+  retry-command:
+    description: 'Command to retry after applying fixes (e.g. "cd backend && bun run build")'
+    required: true
+  working-directory:
+    description: 'Working directory for retry command'
+    required: false
+    default: '.'
+
+outputs:
+  fixed:
+    description: 'Whether the fix was successfully applied'
+    value: ${{ steps.apply-and-retry.outputs.FIXED }}
+  provider:
+    description: 'Which AI provider was used'
+    value: ${{ steps.detect-provider.outputs.PROVIDER }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Detect AI Provider
+      id: detect-provider
+      shell: bash
+      run: |
+        echo "🔍 Detecting available AI provider..."
+        if [ -n "$GITHUB_TOKEN" ] || [ -n "$GH_TOKEN" ]; then
+          echo "PROVIDER=github-models" >> $GITHUB_OUTPUT
+          echo "✅ Using GitHub Models API (Copilot)"
+        elif [ -n "$OPENAI_API_KEY" ]; then
+          echo "PROVIDER=openai" >> $GITHUB_OUTPUT
+          echo "✅ Using OpenAI API (fallback)"
+        else
+          echo "PROVIDER=none" >> $GITHUB_OUTPUT
+          echo "❌ No AI provider available"
+        fi
+
+    - name: Authenticate as GitHub App
+      id: app-auth
+      if: ${{ inputs.app-id != '' }}
+      uses: actions/create-github-app-token@v3
+      with:
+        app-id: ${{ inputs.app-id }}
+        private-key: ${{ inputs.app-private-key }}
+        owner: ${{ github.repository_owner }}
+        repositories: ${{ github.event.repository.name }}
+
+    - name: Setup Python with uv
+      if: ${{ steps.app-auth.outputs.token != '' }}
+      uses: ./.github/actions/setup-python-ai
+
+    - name: Propose Fixes (Junior AI)
+      id: propose
+      if: ${{ steps.app-auth.outputs.token != '' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ steps.app-auth.outputs.token }}
+      run: |
+        echo "🤖 Copilot proposing ${{ inputs.component }} ${{ inputs.phase }} fixes..."
+        echo "📋 Error log: ${{ inputs.error-log }}"
+        if [ ! -f "${{ inputs.error-log }}" ]; then
+          echo "❌ Error log file not found: ${{ inputs.error-log }}"
+          exit 1
+        fi
+        
+        echo "🔍 First 500 chars of error log:"
+        head -c 500 "${{ inputs.error-log }}"
+        echo ""
+        
+        if python scripts/ai-pipeline/propose-changes.py "${{ inputs.error-log }}" > /tmp/proposed-fixes.json; then
+          echo "✅ Fixes proposed successfully"
+          cat /tmp/proposed-fixes.json
+        else
+          echo "❌ Failed to propose fixes"
+          exit 1
+        fi
+
+    - name: Review Fixes (Senior AI)
+      id: review
+      if: ${{ steps.propose.outcome == 'success' && steps.app-auth.outputs.token != '' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ steps.app-auth.outputs.token }}
+      run: |
+        echo "🎓 Copilot reviewing proposed ${{ inputs.component }} ${{ inputs.phase }} fixes..."
+        if python scripts/ai-pipeline/review-changes.py /tmp/proposed-fixes.json "${{ inputs.error-log }}" > /tmp/reviewed-fixes.json; then
+          echo "✅ Fixes reviewed successfully"
+          cat /tmp/reviewed-fixes.json
+        else
+          echo "❌ Failed to review fixes"
+          exit 1
+        fi
+
+    - name: Apply Fixes and Retry
+      id: apply-and-retry
+      if: ${{ steps.review.outcome == 'success' && steps.app-auth.outputs.token != '' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ steps.app-auth.outputs.token }}
+      run: |
+        echo "🔧 Applying reviewed ${{ inputs.component }} ${{ inputs.phase }} fixes..."
+        python scripts/ai-pipeline/apply-changes.py /tmp/reviewed-fixes.json
+        
+        echo "🔄 Retrying: ${{ inputs.retry-command }}"
+        cd "${{ inputs.working-directory }}"
+        
+        if eval "${{ inputs.retry-command }}" 2>&1 | tee /tmp/retry.log; then
+          echo "✅ ${{ inputs.component }} ${{ inputs.phase }} successful after Copilot fix!"
+          echo "FIXED=true" >> $GITHUB_OUTPUT
+        else
+          echo "❌ ${{ inputs.component }} ${{ inputs.phase }} still failing after Copilot fix"
+          echo "FIXED=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit Fix
+      if: ${{ steps.apply-and-retry.outputs.FIXED == 'true' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ steps.app-auth.outputs.token }}
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        if ! git diff --quiet; then
+          git add -A
+          git commit -m "🤖 copilot: auto-fix ${{ inputs.component }} ${{ inputs.phase }} failure"
+          git push
+          echo "✅ Fix committed and pushed"
+        else
+          echo "ℹ️ No changes to commit"
+        fi
+
+    - name: Summary
+      if: always()
+      shell: bash
+      run: |
+        if [ "${{ steps.apply-and-retry.outputs.FIXED }}" == "true" ]; then
+          echo "🎉 SUCCESS: Copilot self-heal resolved the ${{ inputs.component }} ${{ inputs.phase }} failure!"
+        else
+          echo "❌ Copilot self-heal could not resolve the ${{ inputs.component }} ${{ inputs.phase }} failure"
+          echo "Manual intervention required."
+        fi

@@ -25,16 +25,14 @@ on:
         required: false
       APP_PRIVATE_KEY:
         required: false
-      OPENAI_API_KEY:
-        required: false
 
 jobs:
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
     outputs:
-      build_success: ${{ steps.backend-fix-retry.outputs.BACKEND_BUILD_FIXED == 'true' || (steps.build-status.outputs.BUILD_FAILED != 'true' && steps.backend-build.outcome == 'success') }}
-      tests_success: ${{ steps.backend-test-fix-retry.outputs.BACKEND_TEST_FIXED == 'true' || steps.test-backend.outcome == 'success' || !inputs.run_tests }}
+      build_success: ${{ steps.backend-build.outcome == 'success' || steps.build-heal.outputs.fixed == 'true' }}
+      tests_success: ${{ steps.test-backend.outcome == 'success' || steps.test-heal.outputs.fixed == 'true' || !inputs.run_tests }}
 
     steps:
       - name: Checkout code
@@ -43,346 +41,62 @@ jobs:
       - name: Setup Bun with version scripts
         uses: ./.github/actions/setup-bun-version
         with:
-          checkout: 'false'  # Skip checkout since we already did it
+          checkout: 'false'
 
       # === BACKEND BUILD PHASE ===
       - name: Build Backend
         id: backend-build
+        continue-on-error: true
         run: |
           echo "=== Building Backend ==="
           cd backend
           bun install
           bun run build 2>&1 | tee ../backend-build.log
 
-      - name: Check Build Status
-        id: build-status
-        if: always()
-        run: |
-          echo "Checking build outcome: ${{ steps.backend-build.outcome }}"
-          
-          # Check if build log exists and contains errors
-          if [ -f "backend-build.log" ]; then
-            echo "Build log found, checking for errors..."
-            if grep -q "error TS\|Error:" backend-build.log; then
-              echo "❌ Backend build failed - TypeScript errors found in log"
-              echo "BUILD_FAILED=true" >> $GITHUB_OUTPUT
-              echo "=== BUILD ERROR DETAILS ==="
-              cat backend-build.log
-              echo "=========================="
-            elif [ "${{ steps.backend-build.outcome }}" == "success" ]; then
-              echo "✅ Backend build successful"
-              echo "BUILD_FAILED=false" >> $GITHUB_OUTPUT
-            else
-              echo "❌ Backend build failed - step outcome: ${{ steps.backend-build.outcome }}"
-              echo "BUILD_FAILED=true" >> $GITHUB_OUTPUT
-              echo "=== BUILD ERROR DETAILS ==="
-              cat backend-build.log
-              echo "=========================="
-            fi
-          else
-            echo "❌ No build log found - assuming build failed"
-            echo "BUILD_FAILED=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Debug Build Failure and Secrets
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') }}
-        run: |
-          echo "🐛 Backend build failed, checking AI fix prerequisites..."
-          echo "Build outcome: ${{ steps.backend-build.outcome }}"
-          echo "Build logs:"
-          cat backend-build.log || echo "No build log found"
-          echo "APP_ID available: ${{ secrets.APP_ID != '' }}"
-          echo "APP_PRIVATE_KEY available: ${{ secrets.APP_PRIVATE_KEY != '' }}"
-          echo "OPENAI_API_KEY available: ${{ secrets.OPENAI_API_KEY != '' }}"
-          echo "Repository: ${{ github.repository }}"
-          echo "Event name: ${{ github.event_name }}"
-          echo "Actor: ${{ github.actor }}"
-
-      - name: Authenticate as GitHub App (Backend Build)
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') }}
-        id: backend-app-auth
-        continue-on-error: true
-        uses: actions/create-github-app-token@v3
+      - name: 🤖 Copilot Self-Heal (Backend Build)
+        id: build-heal
+        if: ${{ steps.backend-build.outcome == 'failure' }}
+        uses: ./.github/actions/copilot-self-heal
         with:
+          error-log: backend-build.log
+          phase: build
+          component: backend
           app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
+          app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          retry-command: 'cd backend && rm -rf dist/ && bun run build'
 
-      - name: Check GitHub App Authentication
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') }}
+      - name: Fail if Backend Build Unresolved
+        if: ${{ steps.backend-build.outcome == 'failure' && steps.build-heal.outputs.fixed != 'true' }}
         run: |
-          if [ "${{ steps.backend-app-auth.outputs.token }}" != "" ]; then
-            echo "✅ GitHub App authentication successful"
-          else
-            echo "❌ GitHub App authentication failed - AI fixes will be skipped"
-            echo "This could be due to:"
-            echo "  - Missing APP_ID or APP_PRIVATE_KEY secrets"
-            echo "  - Insufficient app permissions"
-            echo "  - Running on a fork without access to secrets"
-            echo "  - GitHub App not installed on this repository"
-          fi
-
-      - name: Setup Python for Backend AI fixes
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') && steps.backend-app-auth.outputs.token }}
-        uses: ./.github/actions/setup-python-ai
-
-      - name: Propose Backend Fixes with Junior AI
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') && steps.backend-app-auth.outputs.token }}
-        id: backend-propose
-        continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          echo "🤖 Junior AI proposing initial backend fixes..."
-          if python scripts/propose-changes.py backend-build.log > scripts/proposed-backend-fixes.json; then
-            echo "✅ Fixes proposed successfully"
-            echo "Proposed fixes:"
-            cat scripts/proposed-backend-fixes.json
-          else
-            echo "❌ Failed to propose fixes"
-            exit 1
-          fi
-
-      - name: Review Proposed Backend Fixes with Senior AI
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') && steps.backend-app-auth.outputs.token }}
-        id: backend-review
-        continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          echo "🎓 Senior AI reviewing proposed backend fixes..."
-          echo "📋 Debug info before review:"
-          echo "  - Proposed fixes file exists: $(test -f scripts/proposed-backend-fixes.json && echo 'YES' || echo 'NO')"
-          echo "  - Build log file exists: $(test -f backend-build.log && echo 'YES' || echo 'NO')"
-          echo "  - OpenAI API key length: ${#OPENAI_API_KEY}"
-          
-          if test -f scripts/proposed-backend-fixes.json; then
-            echo "  - Proposed fixes file size: $(wc -c < scripts/proposed-backend-fixes.json) bytes"
-            echo "  - Proposed fixes preview:"
-            head -n 10 scripts/proposed-backend-fixes.json
-          fi
-          
-          echo "🚀 Starting review process..."
-          
-          # Run with explicit error handling and debugging
-          if python scripts/review-changes.py scripts/proposed-backend-fixes.json backend-build.log > scripts/reviewed-backend-fixes.json; then
-            echo "✅ Fixes reviewed successfully"
-            echo "📄 Reviewed fixes file size: $(wc -c < scripts/reviewed-backend-fixes.json) bytes"
-            echo "Reviewed fixes:"
-            cat scripts/reviewed-backend-fixes.json
-          else
-            echo "❌ Failed to review fixes"
-            echo "📊 Exit code: $?"
-            echo "📋 Debug: Checking what was written to output file..."
-            if test -f scripts/reviewed-backend-fixes.json; then
-              echo "Output file exists, size: $(wc -c < scripts/reviewed-backend-fixes.json) bytes"
-              echo "Content:"
-              cat scripts/reviewed-backend-fixes.json
-            else
-              echo "No output file was created"
-            fi
-            
-            echo "📋 Checking if script ran at all..."
-            python --version
-            python -c "import requests; print('requests version:', requests.__version__)"
-            python -c "import json; print('json module OK')"
-            
-            echo "📋 Re-running with direct output to see errors..."
-            python scripts/review-changes.py scripts/proposed-backend-fixes.json backend-build.log || true
-            
-            exit 1
-          fi
-
-      - name: Apply Reviewed Backend Fixes and retry build
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') && steps.backend-app-auth.outputs.token }}
-        id: backend-fix-retry
-        continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ steps.backend-app-auth.outputs.token }}
-        run: |
-          echo "🔧 Applying reviewed backend fixes..."
-          python scripts/apply-changes.py scripts/reviewed-backend-fixes.json
-          
-          echo "🔄 Retrying backend build after applying fixes..."
-          cd backend
-          
-          # Clear any previous build artifacts
-          rm -rf dist/
-          
-          # Retry the build
-          if bun run build 2>&1 | tee ../backend-build-retry.log; then
-            echo "✅ Backend build successful after AI fixes!"
-            echo "backend_build_success=true" >> $GITHUB_OUTPUT
-            echo "BACKEND_BUILD_FIXED=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Backend build still failing after AI fixes"
-            echo "backend_build_success=false" >> $GITHUB_OUTPUT
-            echo "BACKEND_BUILD_FIXED=false" >> $GITHUB_OUTPUT
-            echo "=== RETRY BUILD ERRORS ==="
-            cat ../backend-build-retry.log
-            echo "=========================="
-          fi
-
-      - name: Success Message - AI Fixed the Build
-        if: ${{ always() && steps.backend-fix-retry.outputs.BACKEND_BUILD_FIXED == 'true' }}
-        run: |
-          echo "🎉 SUCCESS: AI fixes resolved the backend build issues!"
-          echo "✅ Backend build is now working after AI intervention"
-          echo "🤖 Junior AI proposed fixes, Senior AI reviewed them, and they were successfully applied"
-
-      - name: Fail if backend build failed and AI couldn't fix it
-        if: ${{ always() && (steps.build-status.outputs.BUILD_FAILED == 'true' || steps.backend-build.outcome == 'failure') && steps.backend-fix-retry.outputs.BACKEND_BUILD_FIXED != 'true' }}
-        run: |
-          echo "❌ Backend build failed and AI fixes did not resolve the issues"
-          echo "Build status: ${{ steps.build-status.outputs.BUILD_FAILED }}"
-          echo "Fix retry success: ${{ steps.backend-fix-retry.outputs.BACKEND_BUILD_FIXED }}"
-          echo "=== FINAL BUILD ERRORS ==="
-          if [ -f "backend-build-retry.log" ]; then
-            echo "Showing retry build errors:"
-            cat backend-build-retry.log
-          else
-            echo "Showing original build errors:"
-            cat backend-build.log
-          fi
+          echo "❌ Backend build failed and Copilot could not fix it"
+          cat backend-build.log
           exit 1
 
       # === BACKEND TEST PHASE ===
       - name: Test Backend
         if: ${{ inputs.run_tests }}
         id: test-backend
+        continue-on-error: true
         run: |
-          echo "Running backend tests..."
+          echo "=== Running Backend Tests ==="
           cd backend
           bun test 2>&1 | tee ../backend-test.log
 
-      - name: Check Test Results
-        if: ${{ inputs.run_tests }}
-        run: |
-          echo "📊 Backend Test Results Summary:"
-          echo "  - Tests enabled: ${{ inputs.run_tests }}"
-          echo "  - Test step outcome: ${{ steps.test-backend.outcome }}"
-          if [[ "${{ steps.test-backend.outcome }}" == "success" ]]; then
-            echo "  ✅ Backend tests passed - skipping AI fixes"
-          elif [[ "${{ steps.test-backend.outcome }}" == "failure" ]]; then
-            echo "  ❌ Backend tests failed - will attempt AI fixes if authentication succeeds"
-          else
-            echo "  ⚠️  Test outcome unclear: ${{ steps.test-backend.outcome }}"
-          fi
-
-      - name: Authenticate as GitHub App (Backend Tests)
+      - name: 🤖 Copilot Self-Heal (Backend Tests)
+        id: test-heal
         if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' }}
-        id: backend-test-app-auth
-        uses: actions/create-github-app-token@v3
+        uses: ./.github/actions/copilot-self-heal
         with:
+          error-log: backend-test.log
+          phase: test
+          component: backend
           app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
+          app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          retry-command: 'cd backend && bun test'
 
-      - name: Debug Test Failure
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' }}
+      - name: Fail if Backend Tests Unresolved
+        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}
         run: |
-          echo "🐛 Backend tests failed, checking details..."
-          echo "Test outcome: ${{ steps.test-backend.outcome }}"
-          echo "Test logs:"
-          cat backend-test.log || echo "No test log found"
-
-      - name: Skip AI Fixes Info
-        if: ${{ inputs.run_tests && steps.test-backend.outcome != 'failure' }}
-        run: |
-          echo "ℹ️  Skipping AI fixes for backend tests because:"
-          echo "  - Tests enabled: ${{ inputs.run_tests }}"
-          echo "  - Test outcome: ${{ steps.test-backend.outcome }}"
-          echo "  - AI fixes only run when test outcome is 'failure'"
-          echo "  ✅ No fixes needed - continuing with workflow"
-
-      - name: Setup Python for Backend Test AI fixes
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.backend-test-app-auth.outputs.token }}
-        uses: ./.github/actions/setup-python-ai
-
-      - name: Propose Backend Test Fixes with Junior AI
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.backend-test-app-auth.outputs.token }}
-        id: backend-test-propose
-        continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          echo "🤖 Junior AI proposing initial backend test fixes..."
-          if python scripts/propose-changes.py backend-test.log > scripts/proposed-backend-test-fixes.json; then
-            echo "✅ Test fixes proposed successfully"
-            echo "Proposed test fixes:"
-            cat scripts/proposed-backend-test-fixes.json
-          else
-            echo "❌ Failed to propose test fixes"
-            exit 1
-          fi
-
-      - name: Review Proposed Backend Test Fixes with Senior AI
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.backend-test-app-auth.outputs.token }}
-        id: backend-test-review
-        continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          echo "🎓 Senior AI reviewing proposed backend test fixes..."
-          if python scripts/review-changes.py scripts/proposed-backend-test-fixes.json backend-test.log > scripts/reviewed-backend-test-fixes.json; then
-            echo "✅ Test fixes reviewed successfully"
-            echo "Reviewed test fixes:"
-            cat scripts/reviewed-backend-test-fixes.json
-          else
-            echo "❌ Failed to review test fixes"
-            exit 1
-          fi
-
-      - name: Apply Reviewed Backend Test Fixes and retry tests
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.backend-test-app-auth.outputs.token }}
-        id: backend-test-fix-retry
-        continue-on-error: true
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GITHUB_TOKEN: ${{ steps.backend-test-app-auth.outputs.token }}
-        run: |
-          echo "🔧 Applying reviewed backend test fixes..."
-          python scripts/apply-changes.py scripts/reviewed-backend-test-fixes.json
-          
-          echo "🔄 Retrying backend tests after applying fixes..."
-          cd backend
-          
-          # Retry the tests
-          if bun test 2>&1 | tee ../backend-test-retry.log; then
-            echo "✅ Backend tests successful after AI fixes!"
-            echo "backend_test_success=true" >> $GITHUB_OUTPUT
-            echo "BACKEND_TEST_FIXED=true" >> $GITHUB_OUTPUT
-          else
-            echo "❌ Backend tests still failing after AI fixes"
-            echo "backend_test_success=false" >> $GITHUB_OUTPUT
-            echo "BACKEND_TEST_FIXED=false" >> $GITHUB_OUTPUT
-            echo "=== RETRY TEST ERRORS ==="
-            cat ../backend-test-retry.log
-            echo "=========================="
-          fi
-
-      - name: Fail if backend tests failed and AI couldn't fix it
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.backend-test-fix-retry.outputs.BACKEND_TEST_FIXED != 'true' && inputs.fail_on_test_failure }}
-        run: |
-          echo "❌ Backend tests failed and AI fixes did not resolve the issues. Failing workflow as requested."
-          echo "Test outcome: ${{ steps.test-backend.outcome }}"
-          echo "Fix retry success: ${{ steps.backend-test-fix-retry.outputs.BACKEND_TEST_FIXED }}"
-          echo "=== FINAL TEST ERRORS ==="
-          if [ -f "backend-test-retry.log" ]; then
-            echo "Showing retry test errors:"
-            cat backend-test-retry.log
-          else
-            echo "Showing original test errors:"
-            cat backend-test.log
-          fi
+          echo "❌ Backend tests failed and Copilot could not fix them"
+          cat backend-test.log
           exit 1
-
-      - name: Success Message - AI Fixed the Tests
-        if: ${{ always() && steps.backend-test-fix-retry.outputs.BACKEND_TEST_FIXED == 'true' }}
-        run: |
-          echo "🎉 SUCCESS: AI fixes resolved the backend test issues!"
-          echo "✅ Backend tests are now passing after AI intervention"
-          echo "🤖 Junior AI proposed fixes, Senior AI reviewed them, and they were successfully applied"

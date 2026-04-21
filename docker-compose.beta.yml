@@ -17,7 +17,8 @@
 #
 # Required env vars (set in .env.beta):
 #   KC_DB_PASSWORD, POSTGRES_PASSWORD, KEYCLOAK_ADMIN_PASSWORD,
-#   KEYCLOAK_ADMIN_CLIENT_SECRET, VITE_ENCRYPTION_SECRET
+#   KEYCLOAK_ADMIN_CLIENT_SECRET, VITE_ENCRYPTION_SECRET,
+#   SHL_EXCHANGE_CLIENT_SECRET (optional, defaults to shl-exchange-dev-secret)
 
 services:
   keycloak:
@@ -65,6 +66,7 @@ services:
     image: postgres:16-alpine
     container_name: proxy-smart-postgres-beta
     restart: unless-stopped
+    mem_limit: 512m
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: postgres
@@ -84,6 +86,7 @@ services:
     image: ${BACKEND_IMAGE:-ghcr.io/max-health-inc/proxy-smart/backend:beta-latest}
     container_name: proxy-smart-backend-beta
     restart: unless-stopped
+    mem_limit: 1024m
     environment:
       NODE_ENV: production
       PORT: 8445
@@ -95,9 +98,13 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      SHL_EXCHANGE_CLIENT_ID: shl-exchange
+      SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:-shl-exchange-dev-secret}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com
       DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
+      DICOMWEB_USERNAME: ${ORTHANC_USERNAME:-orthanc}
+      DICOMWEB_PASSWORD: ${ORTHANC_PASSWORD:?Set ORTHANC_PASSWORD}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
     labels:
@@ -137,7 +144,7 @@ services:
       spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
       hapi.fhir.fhir_version: R4
       hapi.fhir.cors.allow_Credentials: "true"
-      hapi.fhir.cors.allowed_origin: "*"
+      hapi.fhir.cors.allowed_origin: "https://beta.proxy-smart.com"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null"]
       interval: 30s
@@ -154,10 +161,13 @@ services:
     image: orthancteam/orthanc:26.1.0
     container_name: proxy-smart-orthanc-beta
     restart: unless-stopped
+    mem_limit: 512m
     environment:
       ORTHANC__NAME: "Proxy Smart PACS"
       ORTHANC__REMOTE_ACCESS_ALLOWED: "true"
-      ORTHANC__AUTHENTICATION_ENABLED: "false"
+      ORTHANC__AUTHENTICATION_ENABLED: "true"
+      ORTHANC__REGISTERED_USERS: |
+        {"${ORTHANC_USERNAME:-orthanc}": "${ORTHANC_PASSWORD:?Set ORTHANC_PASSWORD}"}
       ORTHANC__DICOM_WEB__ENABLE: "true"
       ORTHANC__DICOM_WEB__ROOT: "/dicom-web/"
       ORTHANC__POSTGRESQL__ENABLE_INDEX: "true"
@@ -170,7 +180,7 @@ services:
     volumes:
       - orthanc_data:/var/lib/orthanc/db
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8042/system > /dev/null"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8042/system > /dev/null || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 3

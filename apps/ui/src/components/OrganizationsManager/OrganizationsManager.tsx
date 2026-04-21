@@ -3,8 +3,7 @@ import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Landmark } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
-
-import { NotificationToast } from '../ui/NotificationToast';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { OrgStatisticsCards } from './OrgStatisticsCards';
 import { OrgAddForm } from './OrgAddForm';
 import { OrgTable } from './OrgTable';
@@ -23,7 +22,7 @@ export function OrganizationsManager() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [membersOrg, setMembersOrg] = useState<Organization | null>(null);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { notify } = useNotificationStore();
 
   const refreshOrgs = useCallback(async () => {
     if (!isAuthenticated || !clientApis.organizations) {
@@ -36,7 +35,7 @@ export function OrganizationsManager() {
     } catch (error) {
       console.error('Failed to load organizations:', error);
       setOrgs([]);
-      setNotification({ type: 'error', message: t('Failed to load organizations.') });
+      notify({ type: 'error', message: t('Failed to load organizations.') });
     }
   }, [isAuthenticated, clientApis.organizations, t]);
 
@@ -60,10 +59,10 @@ export function OrganizationsManager() {
       });
       await refreshOrgs();
       setShowAddForm(false);
-      setNotification({ type: 'success', message: t('Organization created successfully!') });
+      notify({ type: 'success', message: t('Organization created successfully!') });
     } catch (error) {
       console.error('Failed to create organization:', error);
-      setNotification({ type: 'error', message: t('Failed to create organization.') });
+      notify({ type: 'error', message: t('Failed to create organization.') });
     }
   };
 
@@ -82,10 +81,10 @@ export function OrganizationsManager() {
       });
       await refreshOrgs();
       setEditingOrg(null);
-      setNotification({ type: 'success', message: t('Organization updated successfully!') });
+      notify({ type: 'success', message: t('Organization updated successfully!') });
     } catch (error) {
       console.error('Failed to update organization:', error);
-      setNotification({ type: 'error', message: t('Failed to update organization.') });
+      notify({ type: 'error', message: t('Failed to update organization.') });
     }
   };
 
@@ -94,10 +93,10 @@ export function OrganizationsManager() {
     try {
       await clientApis.organizations.deleteAdminOrganizationsByOrgId({ orgId });
       await refreshOrgs();
-      setNotification({ type: 'success', message: t('Organization deleted successfully!') });
+      notify({ type: 'success', message: t('Organization deleted successfully!') });
     } catch (error) {
       console.error('Failed to delete organization:', error);
-      setNotification({ type: 'error', message: t('Failed to delete organization.') });
+      notify({ type: 'error', message: t('Failed to delete organization.') });
     }
   };
 
@@ -113,7 +112,7 @@ export function OrganizationsManager() {
       await refreshOrgs();
     } catch (error) {
       console.error('Failed to toggle organization status:', error);
-      setNotification({ type: 'error', message: t('Failed to update organization status.') });
+      notify({ type: 'error', message: t('Failed to update organization status.') });
     }
   };
 
@@ -123,7 +122,6 @@ export function OrganizationsManager() {
 
   return (
     <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
-      <NotificationToast notification={notification} onClose={() => setNotification(null)} />
 
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">

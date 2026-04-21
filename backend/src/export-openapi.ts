@@ -16,6 +16,7 @@ import { emailMonitoringRoutes } from './routes/email-monitoring'
 import { authMonitoringRoutes } from './routes/auth-monitoring'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
+import { apiRoutes } from './routes/api'
 import { aiRoutes, aiPublicRoutes } from './routes/admin/ai'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
@@ -94,6 +95,7 @@ const app = new Elysia({
         { name: 'admin-audit-monitoring', description: 'Admin action audit trail and analytics' },
         { name: 'email-monitoring', description: 'Email event monitoring (password resets, verifications)' },
         { name: 'auth-monitoring', description: 'Auth event monitoring (logins, logouts, registrations, token exchanges)' },
+        { name: 'shl', description: 'SMART Health Links for QR-based patient data sharing' },
       ],
       components: {
         securitySchemes: {
@@ -175,6 +177,7 @@ const app = new Elysia({
   .use(adminAuditMonitoringRoutes)
   .use(emailMonitoringRoutes)
   .use(authMonitoringRoutes)
+  .use(apiRoutes)
   .use(aiPublicRoutes) // Public AI health checks (no auth)
   .use(aiRoutes) // Protected AI routes (with auth)
   .use(fhirRoutes)

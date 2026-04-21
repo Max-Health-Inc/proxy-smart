@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { extractBearerToken } from '@/lib/admin-utils'
-import { validateToken } from '@/lib/auth'
+import { validateToken, validateAdminToken } from '@/lib/auth'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
@@ -23,6 +23,7 @@ import { scopeMappersRoutes } from './scope-mappers'
 import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
+import { clientPoliciesRoutes } from './client-policies'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -45,7 +46,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     try {
       const token = extractBearerToken(headers)
       if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
-      await validateToken(token)
+      await validateAdminToken(token)
       logger.server.info('🛑 Shutdown requested via admin API')
       setTimeout(() => {
         logger.server.info('🛑 Shutting down server...')
@@ -54,7 +55,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
       return { success: true, message: 'Server shutdown initiated', timestamp: new Date().toISOString() }
     } catch (error) {
       set.status = 500
-      return { error: 'Failed to shutdown server', details: error }
+      return { error: 'Failed to shutdown server', details: error instanceof Error ? error.message : 'An unexpected error occurred' }
     }
   }, {
     response: {
@@ -72,7 +73,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     try {
       const token = extractBearerToken(headers)
       if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
-      await validateToken(token)
+      await validateAdminToken(token)
       logger.server.info('🔄 Restart requested via admin API')
       setTimeout(() => {
         logger.server.info('🔄 Restarting server...')
@@ -81,7 +82,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
       return { success: true, message: 'Server restart initiated', timestamp: new Date().toISOString() }
     } catch (error) {
       set.status = 500
-      return { error: 'Failed to restart server', details: error }
+      return { error: 'Failed to restart server', details: error instanceof Error ? error.message : 'An unexpected error occurred' }
     }
   }, {
     response: {
@@ -123,6 +124,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(organizationsRoutes)
   // App Store visibility management
   .use(appStoreAdminRoutes)
+  // Keycloak Client Policies & CIMD management
+  .use(clientPoliciesRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

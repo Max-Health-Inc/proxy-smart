@@ -5,21 +5,14 @@ import {
   DoorOpen,
   Check,
   AlertCircle,
-  Loader2,
   Server,
   Key,
   Globe,
   User,
   Lock,
 } from 'lucide-react';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import type {
   TestAccessControlConfigResponse,
 } from '../../lib/api-client';
@@ -204,7 +197,7 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
             <Label htmlFor="provider" className="text-sm font-semibold text-foreground">
               {t('Provider Type')}
             </Label>
-            <Select value={provider} onValueChange={(v) => { setProvider(v as ProviderType); setTestResult(null); setError(null); }}>
+            <Select value={provider} onValueChange={(v: string) => { setProvider(v as ProviderType); setTestResult(null); setError(null); }}>
               <SelectTrigger id="provider" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -322,28 +315,24 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
 
         {/* Actions */}
         <div className="flex items-center justify-end space-x-3 pt-4 border-t border-border/50">
-          <Button
+          <LoadingButton
             variant="outline"
             onClick={handleTest}
-            disabled={!isValid || testing || saving}
-          >
-            {testing ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Testing...')}</>
-            ) : (
-              <><Server className="w-4 h-4 mr-2" />{t('Test Connection')}</>
-            )}
-          </Button>
-
-          <Button
-            onClick={handleSave}
             disabled={!isValid || saving}
+            loading={testing}
+            loadingText={t('Testing...')}
           >
-            {saving ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('Saving...')}</>
-            ) : (
-              <><Check className="w-4 h-4 mr-2" />{t('Save & Connect')}</>
-            )}
-          </Button>
+            <Server className="w-4 h-4 mr-2" />{t('Test Connection')}
+          </LoadingButton>
+
+          <LoadingButton
+            onClick={handleSave}
+            disabled={!isValid}
+            loading={saving}
+            loadingText={t('Saving...')}
+          >
+            <Check className="w-4 h-4 mr-2" />{t('Save & Connect')}
+          </LoadingButton>
         </div>
       </div>
     </div>

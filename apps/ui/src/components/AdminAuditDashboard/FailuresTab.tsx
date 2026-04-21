@@ -1,5 +1,4 @@
-import { Badge } from '@proxy-smart/shared-ui';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import {
   AlertTriangle,
   CheckCircle,
@@ -8,6 +7,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { actionColor } from './helpers';
+import { EmptyState } from '@/components/ui/empty-state';
 import type { AdminAuditAnalytics } from '../../service/admin-audit-service';
 
 interface FailuresTabProps {
@@ -73,11 +73,7 @@ export function FailuresTab({ analytics }: FailuresTabProps) {
           </Table>
         </div>
       ) : (
-        <div className="text-center text-muted-foreground py-8">
-          <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
-          <p className="font-medium">{t('No recent failures')}</p>
-          <p className="text-sm mt-2">{t('All admin actions completed successfully')}</p>
-        </div>
+        <EmptyState icon={CheckCircle} title={t('No recent failures')} description={t('All admin actions completed successfully')} />
       )}
     </div>
   );

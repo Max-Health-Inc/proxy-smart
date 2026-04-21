@@ -11,9 +11,9 @@ export interface AppHeaderProps {
   /** Lucide icon component used as fallback when no branding logo is configured */
   icon: LucideIcon
   /** Whether the user is currently authenticated (controls Sign Out visibility) */
-  authenticated: boolean
+  authenticated?: boolean
   /** Called when the user clicks Sign Out */
-  onSignOut: () => void
+  onSignOut?: () => void
   /** Optional extra content rendered after the title (e.g. a launch-mode badge) */
   children?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
@@ -32,27 +32,27 @@ export function AppHeader({
 
   return (
     <header className="border-b bg-card">
-      <div className={cn(maxWidth, "mx-auto px-4 py-3 flex items-center justify-between")}>
-        <div className="flex items-center gap-2">
+      <div className={cn(maxWidth, "mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2")}>
+        <div className="flex items-center gap-2 min-w-0">
           {brand?.logoUrl ? (
-            <img src={brand.logoUrl} alt={brand.name} className="h-6 w-auto" />
+            <img src={brand.logoUrl} alt={brand.name} className="h-5 sm:h-6 w-auto shrink-0" />
           ) : (
-            <Icon className="size-5 text-maxhealth" />
+            <Icon className="size-5 text-maxhealth shrink-0" />
           )}
-          <h1 className="font-semibold">{title}</h1>
+          <h1 className="font-semibold truncate text-sm sm:text-base">{title}</h1>
           {children}
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           {authenticated ? (
             <Button variant="ghost" size="sm" onClick={onSignOut}>
               <LogOut className="size-4" />
-              Sign Out
+              <span className="hidden sm:inline">Sign Out</span>
             </Button>
           ) : (
             <Button variant="ghost" size="sm" asChild>
               <a href="/apps">
                 <LayoutGrid className="size-4" />
-                App Store
+                <span className="hidden sm:inline">App Store</span>
               </a>
             </Button>
           )}

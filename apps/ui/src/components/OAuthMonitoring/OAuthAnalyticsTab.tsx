@@ -1,6 +1,4 @@
-import { Badge, Button, Input } from '@proxy-smart/shared-ui';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Badge, Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import { StatCard } from '../ui/stat-card';
 import {
   Activity,
@@ -30,6 +28,7 @@ import {
 import type { OAuthAnalyticsResponse, OAuthEvent, OAuthWeekdayInsight } from '../../lib/types/api';
 import type { OAuthAnalyticsTopClient } from '../../lib/api-client/models/OAuthAnalyticsTopClient';
 import { useMemo } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 type PieClientDatum = OAuthAnalyticsTopClient & Record<string, unknown>;
 
@@ -346,11 +345,8 @@ export function OAuthAnalyticsTab({
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">
-                <div className="text-center">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="font-medium">{t('No flow activity data available')}</p>
-                </div>
+              <div className="h-full flex items-center justify-center">
+                <EmptyState icon={BarChart3} title={t('No flow activity data available')} className="py-8" />
               </div>
             )}
           </div>
@@ -401,13 +397,7 @@ export function OAuthAnalyticsTab({
                 </div>
               ))
             ) : (
-              <div className="text-center text-muted-foreground py-8">
-                <Shield className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p>{t('No client activity data available')}</p>
-                <p className="text-sm mt-2">
-                  {t('OAuth client statistics will appear here once data is collected')}
-                </p>
-              </div>
+              <EmptyState icon={Shield} title={t('No client activity data available')} description={t('OAuth client statistics will appear here once data is collected')} />
             )}
           </div>
         </div>
@@ -576,11 +566,11 @@ export function OAuthAnalyticsTab({
             {t('Filter OAuth Flows')}
           </h4>
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-4">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-foreground">{t('Type:')}</label>
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -597,7 +587,7 @@ export function OAuthAnalyticsTab({
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium text-foreground">{t('Status:')}</label>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -617,7 +607,7 @@ export function OAuthAnalyticsTab({
               placeholder={t('Search by client or user...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="min-w-[200px]"
+              className="w-full sm:min-w-[200px]"
             />
           </div>
         </div>
@@ -696,11 +686,7 @@ export function OAuthAnalyticsTab({
             )}
           </div>
         ) : (
-          <div className="text-center text-muted-foreground py-8">
-            <Activity className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="font-medium">{t('No events match your filters')}</p>
-            <p className="text-sm mt-2">{t('Try adjusting your filter criteria')}</p>
-          </div>
+          <EmptyState icon={Activity} title={t('No events match your filters')} description={t('Try adjusting your filter criteria')} />
         )}
       </div>
     </div>

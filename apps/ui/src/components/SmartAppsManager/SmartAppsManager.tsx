@@ -1,7 +1,6 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -9,12 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { useState, useEffect } from 'react';
 import { 
   Plus, 
@@ -33,8 +26,8 @@ import { SmartAppsTable } from './SmartAppsTable';
 import { SmartAppsStatistics } from './SmartAppsStatistics';
 import { AppStoreManagement } from './AppStoreManagement';
 import { DynamicClientRegistrationSettings } from '../DynamicClientRegistrationSettings';
-import { NotificationToast } from '../ui/NotificationToast';
 import { useAuth } from '@/stores/authStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
 import { getItem } from '@/lib/storage';
 import { createAuthenticatedClientApis } from '@/lib/apiClient';
@@ -56,10 +49,7 @@ export function SmartAppsManager() {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editingApp, setEditingApp] = useState<SmartApp | null>(null);
-  const [notification, setNotification] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
+  const { notify } = useNotificationStore();
 
   // Load scope sets from ScopeManager
   useEffect(() => {
@@ -233,9 +223,9 @@ export function SmartAppsManager() {
         setIsAIAssistantEnabled(newEnabled);
       }
 
-      setNotification({
+      notify({
         type: 'success',
-        message: `Application "${app.name}" ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully`
+        message: t('Application "{{name}}" {{action}} successfully', { name: app.name, action: newStatus === 'active' ? t('activated') : t('deactivated') })
       });
     } catch (error) {
       console.error('Failed to toggle app status:', error);
@@ -247,9 +237,9 @@ export function SmartAppsManager() {
           : a
       ));
 
-      setNotification({
+      notify({
         type: 'error',
-        message: `Failed to ${newStatus === 'active' ? 'activate' : 'deactivate'} application: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: t('Failed to {{action}} application: {{error}}', { action: newStatus === 'active' ? t('activate') : t('deactivate'), error: error instanceof Error ? error.message : 'Unknown error' })
       });
     }
   };
@@ -275,18 +265,18 @@ export function SmartAppsManager() {
       setApps(apps.filter(app => app.clientId !== editingApp.clientId));
       setBackendApps(backendApps.filter(app => app.clientId !== editingApp.clientId));
 
-      setNotification({
+      notify({
         type: 'success',
-        message: `Successfully deleted application "${editingApp.name}"`
+        message: t('Successfully deleted application "{{name}}"', { name: editingApp.name })
       });
       
       setShowDeleteDialog(false);
       setEditingApp(null);
     } catch (error) {
       console.error('Failed to delete app:', error);
-      setNotification({
+      notify({
         type: 'error',
-        message: `Failed to delete application: ${error instanceof Error ? error.message : 'Unknown error'}`
+        message: t('Failed to delete application: {{error}}', { error: error instanceof Error ? error.message : 'Unknown error' })
       });
     }
   };
@@ -294,7 +284,7 @@ export function SmartAppsManager() {
   return (
     <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {loading ? (
-        <PageLoadingState message="Loading SMART applications..." />
+        <PageLoadingState message={t('Loading SMART applications...')} />
       ) : (
         <>
           {/* Enhanced Header Section */}
@@ -332,20 +322,20 @@ export function SmartAppsManager() {
           {/* Tabs for different sections */}
           <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
             <Tabs value={smartAppsManagerTab} onValueChange={setSmartAppsManagerTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-muted/50 rounded-t-2xl">
+              <ResponsiveTabsList columns={3}>
                 <TabsTrigger value="apps" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Shield className="w-4 h-4" />
-                  <span>{t('Registered Apps')}</span>
+                  <span className="hidden sm:inline">{t('Registered Apps')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="app-store" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <Store className="w-4 h-4" />
-                  <span>{t('App Store')}</span>
+                  <span className="hidden sm:inline">{t('App Store')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="registration" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                   <UserPlus className="w-4 h-4" />
-                  <span>{t('Dynamic Registration')}</span>
+                  <span className="hidden sm:inline">{t('Dynamic Registration')}</span>
                 </TabsTrigger>
-              </TabsList>
+              </ResponsiveTabsList>
 
               <TabsContent value="apps" className="p-6 space-y-6">
 
@@ -566,7 +556,7 @@ export function SmartAppsManager() {
                 serverAccessType: 'all-servers',
               })));
             }
-            setNotification({ type: 'success', message: 'Application updated successfully' });
+            notify({ type: 'success', message: t('Application updated successfully') });
           }}
         />
       )}
@@ -804,14 +794,6 @@ export function SmartAppsManager() {
           )}
         </DialogContent>
       </Dialog>
-
-      {/* Notification Toast */}
-      {notification && (
-        <NotificationToast
-          notification={notification}
-          onClose={() => setNotification(null)}
-        />
-      )}
               </TabsContent>
 
               <TabsContent value="registration" className="p-6 space-y-6">

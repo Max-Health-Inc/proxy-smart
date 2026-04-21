@@ -1,6 +1,8 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { config } from '@/config'
+import { extractBearerToken } from '@/lib/admin-utils'
+import { validateAdminToken } from '@/lib/auth'
 import fs from 'fs'
 import path from 'path'
 import {
@@ -137,7 +139,10 @@ async function testKeycloakConnection(baseUrl: string, realm: string): Promise<b
 export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tags: ['admin'] })
   
   // Get current Keycloak configuration status
-  .get('/status', async () => {
+  .get('/status', async ({ headers, set }) => {
+    const token = extractBearerToken(headers)
+    if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } as any }
+    await validateAdminToken(token)
     return {
       baseUrl: config.keycloak.baseUrl,
       realm: config.keycloak.realm,
@@ -156,8 +161,11 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
   })
   
   // Test Keycloak connection without saving
-  .post('/test', async ({ body, set }) => {
+  .post('/test', async ({ body, set, headers }) => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } }
+      await validateAdminToken(token)
       const isConnected = await testKeycloakConnection(body.baseUrl, body.realm)
       
       if (!isConnected) {
@@ -193,8 +201,11 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
   })
   
   // Configure Keycloak connection
-  .post('/configure', async ({ body, set }) => {
+  .post('/configure', async ({ body, set, headers }) => {
     try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } }
+      await validateAdminToken(token)
       // First test the connection
       const isConnected = await testKeycloakConnection(body.baseUrl, body.realm)
       

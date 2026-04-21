@@ -315,6 +315,8 @@ function logAuditEntry(entry: ConsentAuditEntry, extra?: { cached?: boolean; che
     consentId: entry.consentId,
     patientId: entry.patientId,
     clientId: entry.clientId,
+    userId: entry.userId,
+    username: entry.username,
     resourceType: entry.resourceType,
     resourcePath: entry.resourcePath,
     serverName: entry.serverName,
@@ -388,6 +390,11 @@ export async function checkConsent(
     method
   )
 
+  // Extract user identity from token
+  const tp = tokenPayload as Record<string, unknown>
+  const userId = (tp.sub as string) || null
+  const username = (tp.preferred_username as string) || null
+
   // Check if we should skip consent checking
   const skipReason = shouldSkipConsentCheck(context, consentConfig)
   if (skipReason) {
@@ -408,6 +415,8 @@ export async function checkConsent(
         consentId: result.consentId,
         patientId: context.patientId,
         clientId: context.clientId,
+        userId,
+        username,
         resourceType: context.resourceType,
         resourcePath: context.resourcePath,
         serverName: context.serverName,
@@ -485,6 +494,8 @@ export async function checkConsent(
     consentId: result.consentId,
     patientId: context.patientId,
     clientId: context.clientId,
+    userId,
+    username,
     resourceType: context.resourceType,
     resourcePath: context.resourcePath,
     serverName: context.serverName,
@@ -579,6 +590,11 @@ export async function checkConsentWithIal(
     method
   )
 
+  // Extract user identity from token
+  const tp = tokenPayload as Record<string, unknown>
+  const userId = (tp.sub as string) || null
+  const username = (tp.preferred_username as string) || null
+
   // Step 1: IAL check (if enabled)
   let ialCheckResult = null
   if (ialConfig.enabled) {
@@ -609,6 +625,8 @@ export async function checkConsentWithIal(
         consentId: null,
         patientId: context.patientId,
         clientId: context.clientId,
+        userId,
+        username,
         resourceType: context.resourceType,
         resourcePath: context.resourcePath,
         serverName: context.serverName,
@@ -684,6 +702,8 @@ function logAuditEntryWithIal(entry: ConsentAuditEntry & { ialCheck?: { allowed:
     consentId: entry.consentId,
     patientId: entry.patientId,
     clientId: entry.clientId,
+    userId: entry.userId,
+    username: entry.username,
     resourceType: entry.resourceType,
     resourcePath: entry.resourcePath,
     serverName: entry.serverName,

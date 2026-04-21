@@ -245,6 +245,13 @@
     "notes": "Notizen",
     "sourceDocuments": "Quelldokumente",
     "editRecord": "Datensatz bearbeiten",
+    "deleteRecord": "Löschen",
+    "confirmDelete": "Ja, löschen",
+    "deleting": "Wird gelöscht…",
+    "cancel": "Abbrechen",
+    "contact": "Kontakt",
+    "address": "Adresse",
+    "qualification": "Qualifikation",
     "unknownReaction": "Unbekannte Reaktion"
   },
   "recordEdit": {
@@ -300,6 +307,20 @@
     "severe": "Schwer",
     "moderate": "Mäßig",
     "mild": "Leicht"
+  },
+  "shareQr": {
+    "title": "Gesundheitszusammenfassung teilen",
+    "share": "QR teilen",
+    "description": "Scannen Sie diesen QR-Code, um eine schreibgeschützte Kopie Ihrer Gesundheitszusammenfassung anzuzeigen. Der Link läuft automatisch ab.",
+    "label": "Gesundheitszusammenfassung des Patienten",
+    "generating": "Sicherer Link wird erstellt…",
+    "retry": "Erneut versuchen",
+    "expiresIn": "Läuft in {{minutes}} Minuten ab",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert!",
+    "sharedSummary": "Geteilte Gesundheitszusammenfassung",
+    "expiresInBanner": "Läuft in {{minutes}} Min. ab",
+    "readOnly": "Schreibgeschützte Ansicht"
   },
   "language": {
     "label": "Sprache",

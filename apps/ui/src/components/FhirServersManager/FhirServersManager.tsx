@@ -5,8 +5,7 @@ import {
   Plus,
   Info
 } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';
@@ -16,6 +15,7 @@ import { getStoredToken } from '@/lib/apiClient';
 import type { 
   FhirServerWithState
 } from '@/lib/types/api';
+import type { MtlsConfig } from './types';
 
 // Imported extracted components
 import { StatsCards } from './StatsCards';
@@ -25,21 +25,6 @@ import { AddServerDialog } from './AddServerDialog';
 import { EditServerDialog } from './EditServerDialog';
 import { MtlsConfigDialog } from './MtlsConfigDialog';
 import { useTranslation } from 'react-i18next';
-
-// mTLS Configuration type
-interface MtlsConfig {
-  enabled: boolean;
-  clientCert?: File;
-  clientKey?: File;
-  caCert?: File;
-  certDetails?: {
-    subject: string;
-    issuer: string;
-    validFrom: string;
-    validTo: string;
-    fingerprint: string;
-  };
-}
 
 export function FhirServersManager() {
   const { t } = useTranslation();
@@ -70,6 +55,24 @@ export function FhirServersManager() {
   const [uploadingCerts, setUploadingCerts] = useState(false);
 
   const checkServerSecurity = useCallback(async (server: FhirServerWithState) => {
+    // Skip check for URLs unreachable from the browser:
+    // - http:// origins on an https:// page (mixed content blocked)
+    // - Private/internal hostnames (not resolvable from public internet)
+    try {
+      const origin = new URL(server.url);
+      const isPageSecure = window.location.protocol === 'https:';
+      const isOriginInsecure = origin.protocol === 'http:';
+      const isPrivateHost = /^(localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|.*\.internal$|.*\.local$)/i.test(origin.hostname)
+        || !origin.hostname.includes('.');  // single-label hostnames like "hapi-fhir"
+      if ((isPageSecure && isOriginInsecure) || isPrivateHost) {
+        setSecurityChecks(prev => ({ ...prev, [server.id]: 'secure' }));
+        return;
+      }
+    } catch {
+      setSecurityChecks(prev => ({ ...prev, [server.id]: 'secure' }));
+      return;
+    }
+
     setSecurityChecks(prev => {
       if (prev[server.id]) {
         return prev;
@@ -92,8 +95,7 @@ export function FhirServersManager() {
           } else {
             setSecurityChecks(prevChecks => ({ ...prevChecks, [server.id]: 'secure' }));
           }
-        } catch (error) {
-          console.error(`Security check failed for ${server.serverName || server.name}:`, error);
+        } catch {
           setSecurityChecks(prevChecks => ({ ...prevChecks, [server.id]: 'secure' }));
         }
       }, 0);
@@ -342,7 +344,7 @@ export function FhirServersManager() {
   }, [fetchServers]);
 
   if (loading) {
-    return <PageLoadingState message="Loading FHIR Servers..." />;
+    return <PageLoadingState message={t('Loading FHIR Servers...')} />;
   }
 
   if (error) {
@@ -372,7 +374,7 @@ export function FhirServersManager() {
               {t('Manage and monitor FHIR server connections')}
             </div>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-wrap gap-2">
             <Button
               onClick={() => setShowAddDialog(true)}
             >
@@ -396,16 +398,16 @@ export function FhirServersManager() {
       {/* Main Content */}
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50 rounded-t-2xl">
+          <ResponsiveTabsList columns={2}>
             <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
               {t('Server Overview')}
             </TabsTrigger>
             <TabsTrigger value="details" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
               {t('Server Details')}
             </TabsTrigger>
-          </TabsList>
+          </ResponsiveTabsList>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="p-6 space-y-6">
             <ServerOverview
               servers={servers}
               securityChecks={securityChecks}

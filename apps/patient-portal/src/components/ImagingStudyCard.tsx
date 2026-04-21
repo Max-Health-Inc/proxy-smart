@@ -65,9 +65,11 @@ function DicomThumbnail({
 function StudyRow({
   study,
   onViewSeries,
+  readOnly = false,
 }: {
   study: ImagingStudy
   onViewSeries: (target: ViewerTarget) => void
+  readOnly?: boolean
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
@@ -96,7 +98,7 @@ function StudyRow({
         onClick={() => hasSeries && setExpanded(!expanded)}
         className="flex w-full items-start gap-3 p-3 text-left hover:bg-muted/30 transition-colors"
       >
-        {studyUID ? (
+        {studyUID && !readOnly ? (
           <DicomThumbnail
             src={getStudyThumbnailUrl(studyUID)}
             alt={title}
@@ -133,7 +135,7 @@ function StudyRow({
         </div>
 
         <div className="flex items-center gap-1 shrink-0 mt-1">
-          {studyUID && hasSeries && (
+          {studyUID && hasSeries && !readOnly && (
             <button
               type="button"
               onClick={handleQuickView}
@@ -162,11 +164,13 @@ function StudyRow({
               const seriesInfo = seriesModality ? getModalityInfo(seriesModality) : null
               return (
                 <li key={series.uid || `s-${si}`} className="flex items-start gap-2">
-                  <DicomThumbnail
-                    src={getSeriesThumbnailUrl(studyUID, series.uid)}
-                    alt={series.description || `Series ${si + 1}`}
-                    className="size-10 shrink-0 rounded"
-                  />
+                  {!readOnly && (
+                    <DicomThumbnail
+                      src={getSeriesThumbnailUrl(studyUID, series.uid)}
+                      alt={series.description || `Series ${si + 1}`}
+                      className="size-10 shrink-0 rounded"
+                    />
+                  )}
                   <div className="min-w-0 flex-1 text-xs">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-medium">
@@ -187,22 +191,24 @@ function StudyRow({
                       )}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onViewSeries({
-                        studyUID,
-                        seriesUID: series.uid,
-                        seriesDescription:
-                          series.description || `Series ${(series.number ?? si) + 1}`,
-                        modality: seriesModality || modality || undefined,
-                      })
-                    }
-                    className="shrink-0 mt-0.5 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                    title={t("imagingStudy.viewSeries")}
-                  >
-                    <Eye className="size-3.5" />
-                  </button>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onViewSeries({
+                          studyUID,
+                          seriesUID: series.uid,
+                          seriesDescription:
+                            series.description || `Series ${(series.number ?? si) + 1}`,
+                          modality: seriesModality || modality || undefined,
+                        })
+                      }
+                      className="shrink-0 mt-0.5 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                      title={t("imagingStudy.viewSeries")}
+                    >
+                      <Eye className="size-3.5" />
+                    </button>
+                  )}
                 </li>
               )
             })}
@@ -218,9 +224,11 @@ function StudyRow({
 export function ImagingStudyCard({
   imagingStudies,
   radiologyResults,
+  readOnly = false,
 }: {
   imagingStudies: ImagingStudy[]
   radiologyResults: RadiologyResult[]
+  readOnly?: boolean
 }) {
   const { t } = useTranslation()
   const [viewerTarget, setViewerTarget] = useState<ViewerTarget | null>(null)
@@ -326,6 +334,7 @@ export function ImagingStudyCard({
                           key={study.id || `img-${i}`}
                           study={study}
                           onViewSeries={handleViewSeries}
+                          readOnly={readOnly}
                         />
                       ))}
                     </ul>
@@ -343,9 +352,9 @@ export function ImagingStudyCard({
                         {filteredRadiology.map((obs, i) => (
                           <li
                             key={obs.id || `rad-${i}`}
-                            className="text-sm flex justify-between"
+                            className="text-sm flex justify-between gap-2"
                           >
-                            <span className="font-medium truncate mr-2">
+                            <span className="font-medium truncate min-w-0">
                               {obs.code?.coding?.[0]?.display ||
                                 obs.code?.text ||
                                 "Radiology result"}
@@ -367,11 +376,13 @@ export function ImagingStudyCard({
         </CardContent>
       </Card>
 
-      <DicomViewerDialog
-        target={viewerTarget}
-        open={viewerOpen}
-        onOpenChange={setViewerOpen}
-      />
+      {!readOnly && (
+        <DicomViewerDialog
+          target={viewerTarget}
+          open={viewerOpen}
+          onOpenChange={setViewerOpen}
+        />
+      )}
     </>
   )
 }

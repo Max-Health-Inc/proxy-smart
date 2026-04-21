@@ -6,9 +6,9 @@ import {
   FileText,
   Calendar,
   Info,
-  Loader2
 } from 'lucide-react';
 import { Button } from '@proxy-smart/shared-ui';
+import { LoadingButton } from '@/components/ui/loading-button';
 import {
   Dialog,
   DialogContent,
@@ -18,21 +18,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import type { FhirServerWithState } from '@/lib/types/api';
+import type { MtlsConfig } from './types';
 import { useTranslation } from 'react-i18next';
-
-interface MtlsConfig {
-  enabled: boolean;
-  clientCert?: File;
-  clientKey?: File;
-  caCert?: File;
-  certDetails?: {
-    subject: string;
-    issuer: string;
-    validFrom: string;
-    validTo: string;
-    fingerprint: string;
-  };
-}
 
 interface MtlsConfigDialogProps {
   open: boolean;
@@ -278,24 +265,16 @@ export function MtlsConfigDialog({
           >
             {t('Cancel')}
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             onClick={handleSave}
-            disabled={uploadingCerts}
+            loading={uploadingCerts}
+            loadingText={t('Saving...')}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
-            {uploadingCerts ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                {t('Saving...')}
-              </>
-            ) : (
-              <>
-                <Shield className="w-4 h-4 mr-2" />
-                {t('Save Configuration')}
-              </>
-            )}
-          </Button>
+            <Shield className="w-4 h-4 mr-2" />
+            {t('Save Configuration')}
+          </LoadingButton>
         </DialogFooter>
       </DialogContent>
     </Dialog>

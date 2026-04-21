@@ -28,16 +28,15 @@ import { docsRoutes } from './routes/docs'
 import { apiRoutes } from './routes/api'
 import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
-import { getHiddenAppIds } from './lib/app-store-config'
+import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
 
-/** Scan public/apps/ for sub-apps with smart-manifest.json and return discovery list */
+/** Scan public/apps/ for sub-apps with smart-manifest.json, merge published registered apps, and return discovery list */
 function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
-    if (!existsSync(appsDir)) return []
-
     const hiddenIds = includeHidden ? [] : getHiddenAppIds()
 
-    return readdirSync(appsDir, { withFileTypes: true })
+    // 1. Filesystem-discovered apps
+    const fsApps = !existsSync(appsDir) ? [] : readdirSync(appsDir, { withFileTypes: true })
         .filter(d => d.isDirectory())
         .map(d => {
             const manifestPath = join(appsDir, d.name, 'smart-manifest.json')
@@ -56,11 +55,34 @@ function discoverApps({ includeHidden = false } = {}) {
                     grant_types: manifest.grant_types ?? ['authorization_code'],
                     token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
                     hidden: hiddenIds.includes(d.name),
+                    source: 'filesystem' as const,
                 }
             } catch { return null }
         })
         .filter(Boolean)
-        .filter(app => includeHidden || !app!.hidden)
+        .filter(app => includeHidden || !app!.hidden) as any[]
+
+    // 2. Published registered apps (from config)
+    const publishedApps = getPublishedApps()
+        .filter(pa => !hiddenIds.includes(pa.clientId))
+        .map(pa => ({
+            id: pa.clientId,
+            launch_url: pa.launchUrl,
+            client_id: pa.clientId,
+            client_name: pa.name,
+            description: pa.description,
+            scope: '',
+            category: pa.category,
+            icon: pa.logoUri || 'app-window',
+            grant_types: ['authorization_code'],
+            token_endpoint_auth_method: 'none',
+            hidden: false,
+            source: 'registered' as const,
+        }))
+
+    // Merge, dedup by client_id (filesystem wins if both exist)
+    const fsClientIds = new Set(fsApps.map((a: any) => a.client_id))
+    return [...fsApps, ...publishedApps.filter(pa => !fsClientIds.has(pa.client_id))]
 }
 
 export function createApp() {
@@ -114,6 +136,7 @@ export function createApp() {
                     { name: 'email-monitoring', description: 'Email event monitoring (password resets, verifications)' },
                     { name: 'auth-monitoring', description: 'Auth event monitoring (logins, logouts, registrations, token exchanges)' },
                     { name: 'dicomweb', description: 'DICOMweb proxy for WADO-RS and QIDO-RS imaging services' },
+                    { name: 'shl', description: 'SMART Health Links for QR-based patient data sharing' },
                 ],
                 servers: [
                     { url: config.baseUrl, description: 'Development server' }
@@ -129,6 +152,10 @@ export function createApp() {
         .get('/webapp', () => Bun.file('public/webapp/index.html'))
         .get('/webapp/', () => Bun.file('public/webapp/index.html'))
         .get('/', () => Bun.file('public/index.html'))
+        // Browsers request /favicon.ico by default — redirect to our SVG icon
+        .get('/favicon.ico', ({ set }) => {
+            set.redirect = '/proxy-smart.svg'
+        })
         // SMART apps directory
         .get('/apps', () => Bun.file('public/apps/index.html'))
         .get('/apps/', () => Bun.file('public/apps/index.html'))
@@ -156,12 +183,20 @@ export function createApp() {
         })
         // Dynamic SPA fallback for all sub-apps under /apps/<name>/*
         .get('/apps/:app', async ({ params, set }) => {
+            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
+                set.status = 400
+                return { error: 'Invalid app name' }
+            }
             const index = Bun.file(`public/apps/${params.app}/index.html`)
             if (await index.exists()) return index
             set.status = 404
             return { error: 'Not Found' }
         })
         .get('/apps/:app/*', async ({ params, set }) => {
+            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
+                set.status = 400
+                return { error: 'Invalid app name' }
+            }
             const index = Bun.file(`public/apps/${params.app}/index.html`)
             if (await index.exists()) return index
             set.status = 404
@@ -172,6 +207,10 @@ export function createApp() {
         .get('/docs/', () => Bun.file('public/docs/index.html'))
         .get('/docs/*', async ({ params, set }) => {
             const path = (params as { '*': string })['*']
+            if (path.includes('..') || path.startsWith('/')) {
+                set.status = 400
+                return { error: 'Invalid path' }
+            }
             const file = Bun.file(`public/docs/${path}`)
             if (await file.exists()) return file
             // SPA fallback for clean URLs (VitePress client-side routing)

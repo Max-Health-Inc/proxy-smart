@@ -28,6 +28,7 @@ import { config } from '@/config'
 import { getConfiguredServers } from './mcp-servers'
 import { getInstalledSkills } from './ai-tools-skills'
 import { searchDocumentation } from '@/lib/ai/rag-tools'
+import { rateLimit } from '@/lib/rate-limit'
 
 // Keycloak-flavored OIDC JWT payload shape (subset)
 type KeycloakJwtPayload = JwtPayload & {
@@ -410,6 +411,8 @@ export const aiPublicRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
 
 // Protected AI routes (authentication required)
 export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
+  // Rate limit AI endpoints: 20 requests per minute per IP (cost protection)
+  .use(rateLimit({ windowMs: 60_000, max: 20, message: 'AI rate limit exceeded, please try again later' }))
   .post('/chat/stream', async ({ body, set, headers }) => {
     // Check OpenAI configuration
     if (!process.env.OPENAI_API_KEY) {

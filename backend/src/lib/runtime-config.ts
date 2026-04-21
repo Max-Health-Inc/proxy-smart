@@ -9,6 +9,8 @@
 
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { join } from 'path'
+import { existsSync, readFileSync } from 'fs'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
@@ -123,6 +125,12 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     consentOverrides = parseConsentFromAttributes(attrs)
     ialOverrides = parseIalFromAttributes(attrs)
     brandOverrides = parseBrandFromAttributes(attrs)
+    // loginTheme is a top-level realm property, not an attribute
+    if (brandOverrides) {
+      brandOverrides.loginTheme = (realm as any)?.loginTheme || null
+    } else if ((realm as any)?.loginTheme) {
+      brandOverrides = { loginTheme: (realm as any).loginTheme }
+    }
     loaded = true
 
     // Load per-org brand overrides into cache
@@ -287,7 +295,33 @@ function brandToAttributes(settings: BrandConfigType): Record<string, string> {
 }
 
 /**
+ * Auto-detect patient portal metadata from the deployed patient-portal app.
+ * Reads public/apps/patient-portal/smart-manifest.json if present and derives
+ * portalName, portalUrl, and portalDescription for brand configuration.
+ */
+let patientPortalCache: { portalName: string; portalUrl: string; portalDescription: string } | null | undefined
+
+function detectPatientPortal() {
+  if (patientPortalCache !== undefined) return patientPortalCache
+  try {
+    const manifestPath = join(process.cwd(), 'public', 'apps', 'patient-portal', 'smart-manifest.json')
+    if (!existsSync(manifestPath)) { patientPortalCache = null; return null }
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+    patientPortalCache = {
+      portalName: manifest.client_name || 'Patient Portal',
+      portalUrl: `${config.baseUrl}/apps/patient-portal/`,
+      portalDescription: manifest.description || null,
+    }
+    return patientPortalCache
+  } catch {
+    patientPortalCache = null
+    return null
+  }
+}
+
+/**
  * Get effective brand config: realm attribute overrides merged over env vars.
+ * Portal fields auto-populate from the deployed patient-portal app when unset.
  */
 export function getRuntimeBrandConfig(): BrandConfigType {
   const envDefaults: BrandConfigType = {
@@ -307,11 +341,22 @@ export function getRuntimeBrandConfig(): BrandConfigType {
     addressPostalCode: config.brand.addressPostalCode,
     addressCountry: config.brand.addressCountry,
     identifier: config.brand.identifier,
+    loginTheme: config.brand.loginTheme,
   }
 
-  if (!brandOverrides) return envDefaults
+  const merged = !brandOverrides ? envDefaults : { ...envDefaults, ...brandOverrides }
 
-  return { ...envDefaults, ...brandOverrides }
+  // Auto-fill portal fields from deployed patient-portal app when unset
+  if (!merged.portalName && !merged.portalUrl) {
+    const portal = detectPatientPortal()
+    if (portal) {
+      merged.portalName = merged.portalName || portal.portalName
+      merged.portalUrl = merged.portalUrl || portal.portalUrl
+      merged.portalDescription = merged.portalDescription || portal.portalDescription
+    }
+  }
+
+  return merged
 }
 
 /**
@@ -326,9 +371,25 @@ export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfi
     ...brandToAttributes(settings),
   }
 
+  const realmUpdate: Record<string, unknown> = { attributes }
+
+  // Sync brand name + logo → Keycloak login page heading (displayName + displayNameHtml)
+  if (settings.name) {
+    realmUpdate.displayName = settings.name
+    const logoHtml = settings.logoUrl
+      ? `<img src="${settings.logoUrl}" alt="${settings.name}" style="height:32px;margin-right:8px;vertical-align:middle" />`
+      : ''
+    realmUpdate.displayNameHtml = `<div class="kc-logo-text">${logoHtml}<span>${settings.name}</span></div>`
+  }
+
+  // Sync loginTheme → Keycloak realm login theme
+  if (settings.loginTheme !== undefined) {
+    realmUpdate.loginTheme = settings.loginTheme || ''
+  }
+
   await admin.realms.update(
     { realm: process.env.KEYCLOAK_REALM! },
-    { attributes }
+    realmUpdate
   )
 
   // Update in-memory cache

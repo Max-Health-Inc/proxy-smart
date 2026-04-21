@@ -77,13 +77,23 @@ export async function validateToken(token: string): Promise<JwtPayload> {
     const key = await getKey(decoded.header)
     
     // Build verify options — enforce issuer when configured
-    const verifyOptions: jwt.VerifyOptions = {}
+    const verifyOptions: jwt.VerifyOptions = {
+      algorithms: ['RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'],
+    }
     const expectedIssuer = config.keycloak.expectedIssuer
     if (expectedIssuer) {
       verifyOptions.issuer = expectedIssuer
     }
 
-    // Verify the token (signature + expiry + issuer)
+    // Enforce audience only when explicitly configured via env var.
+    // Do NOT default to adminClientId — that would reject all non-admin tokens
+    // (patient-portal, SMART apps, etc. each have their own aud claim).
+    const expectedAudience = process.env.JWT_EXPECTED_AUDIENCE
+    if (expectedAudience) {
+      verifyOptions.audience = expectedAudience
+    }
+
+    // Verify the token (signature + expiry + issuer + audience)
     const verified = jwt.verify(token, key, verifyOptions) as JwtPayload
     logger.auth.debug('Token verified successfully')
     
@@ -109,4 +119,35 @@ export async function validateToken(token: string): Promise<JwtPayload> {
       throw new AuthenticationError(`Token validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
+}
+
+/**
+ * Validates a JWT token AND checks that the user has admin roles.
+ * Use this for sensitive operations that require elevated privileges.
+ *
+ * @param token JWT token to validate
+ * @returns Decoded token payload (guaranteed to have admin roles)
+ * @throws AuthenticationError for invalid tokens or missing admin roles
+ */
+export async function validateAdminToken(token: string): Promise<JwtPayload> {
+  const payload = await validateToken(token)
+
+  const realmRoles: string[] = (payload as any).realm_access?.roles || []
+  const clientRoles: string[] = (payload as any).resource_access?.['admin-ui']?.roles || []
+  const realmManagementRoles: string[] = (payload as any).resource_access?.['realm-management']?.roles || []
+
+  // Exact role matching — do NOT use .includes() which allows substring matches
+  const ADMIN_REALM_ROLES = new Set(['admin', 'realm-admin', 'manage-users', 'manage-realm', 'realm-management'])
+  const ADMIN_CLIENT_ROLES = new Set(['admin', 'manage-users', 'manage-clients', 'manage-realm'])
+
+  const hasAdminRole =
+    realmRoles.some((role: string) => ADMIN_REALM_ROLES.has(role)) ||
+    clientRoles.some((role: string) => ADMIN_CLIENT_ROLES.has(role)) ||
+    realmManagementRoles.length > 0 // Any realm-management role implies admin access
+
+  if (!hasAdminRole) {
+    throw new AuthenticationError('User does not have admin permissions')
+  }
+
+  return payload
 }

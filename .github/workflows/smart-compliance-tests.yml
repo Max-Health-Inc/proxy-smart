@@ -97,7 +97,7 @@ env:
 
 jobs:
   smart-compliance-test:
-    name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ inputs.test_stage || 'alpha' }})
+    name: SMART ${{ inputs.test_suite || 'STU2.2' }} Compliance (${{ inputs.test_stage || (startsWith(github.ref, 'refs/heads/dev/') || startsWith(github.ref, 'refs/heads/develop/')) && 'dev' || github.ref == 'refs/heads/develop' && 'alpha' || github.ref == 'refs/heads/test' && 'beta' || github.ref == 'refs/heads/main' && 'production' || 'dev' }})
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # Skip bot/releaser version-bump commits to avoid duplicate runs
@@ -167,7 +167,7 @@ jobs:
         continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout repository
@@ -264,14 +264,17 @@ jobs:
           echo "✓ Keycloak image pulled and saved for caching"
 
       - name: Setup Bun
+        if: steps.config.outputs.target != 'deployed'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Install dependencies
+        if: steps.config.outputs.target != 'deployed'
         run: bun install
 
       - name: Build Backend
+        if: steps.config.outputs.target != 'deployed'
         run: |
           cd backend
           bun run build
@@ -424,10 +427,13 @@ jobs:
           KEYCLOAK_REALM: proxy-smart
           KEYCLOAK_ADMIN_CLIENT_ID: admin-service
           KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
+          SHL_EXCHANGE_CLIENT_ID: shl-exchange
+          SHL_EXCHANGE_CLIENT_SECRET: shl-exchange-dev-secret
           # Point to HAPI FHIR server running in GitHub Actions service container
           FHIR_SERVER_BASE: http://localhost:8081/fhir
           # Allow Inferno test runner origin for CORS compliance tests
           CORS_ORIGINS: http://localhost:4567,http://localhost:8445,http://localhost:5173
+          LOG_LEVEL: debug
 
       # For deployed targets, verify the remote services are reachable
       - name: Verify Deployed Services
@@ -722,13 +728,47 @@ jobs:
           ruby-version: '3.3'
           bundler-cache: false
 
-      - name: Setup Inferno
+      - name: Resolve Inferno Version
+        id: inferno-version
         run: |
-          git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          LATEST_TAG=$(curl -sf https://api.github.com/repos/inferno-framework/smart-app-launch-test-kit/releases/latest | jq -r '.tag_name')
+          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
+            echo "WARNING: Could not fetch latest release, falling back to main"
+            LATEST_TAG="main"
+          fi
+          echo "Inferno version: $LATEST_TAG"
+          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Cache Inferno
+        id: inferno-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            inferno
+            ~/.bundle
+          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3
+
+      - name: Setup Inferno
+        if: steps.inferno-cache.outputs.cache-hit != 'true'
+        run: |
+          TAG="${{ steps.inferno-version.outputs.tag }}"
+          if [ "$TAG" = "main" ]; then
+            git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          else
+            git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
+          fi
           cd inferno
           bundle install
           
           # Setup database
+          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          export REDIS_URL="redis://localhost:6379"
+          bundle exec rake db:migrate || bundle exec rake db:setup || true
+
+      - name: Setup Inferno DB (cached)
+        if: steps.inferno-cache.outputs.cache-hit == 'true'
+        run: |
+          cd inferno
           export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
@@ -877,6 +917,7 @@ jobs:
       # Seed FHIR resources for deployed mode (local mode seeds in earlier step)
       - name: Seed FHIR Test Resources (Deployed)
         if: steps.config.outputs.target == 'deployed'
+        continue-on-error: true
         run: |
           BACKEND_URL="${{ steps.config.outputs.backend_url }}"
           KC_URL="${{ steps.config.outputs.kc_url }}"
@@ -907,7 +948,8 @@ jobs:
           echo "✓ Obtained access token for resource seeding"
           
           # Create Practitioner (matches doctor user's fhirUser claim)
-          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Practitioner/example-practitioner" \
+          # Use -s (not -sf) so curl doesn't exit non-zero on HTTP errors, and capture body for diagnostics
+          RESP=$(curl -s -w "\n%{http_code}" -X PUT "$FHIR_BASE/Practitioner/example-practitioner" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/fhir+json" \
             -d '{
@@ -918,10 +960,13 @@ jobs:
               "name": [{"family": "Doctor", "given": ["Test"], "prefix": ["Dr."]}],
               "telecom": [{"system": "email", "value": "doctor@example.com"}]
             }')
+          HTTP_CODE=$(echo "$RESP" | tail -1)
+          BODY=$(echo "$RESP" | sed '$d')
           echo "  Practitioner/example-practitioner: HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" -ge 400 ] 2>/dev/null; then echo "  Error: $BODY"; fi
           
           # Create Patient (for launch/patient scope)
-          HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X PUT "$FHIR_BASE/Patient/test-patient" \
+          RESP=$(curl -s -w "\n%{http_code}" -X PUT "$FHIR_BASE/Patient/test-patient" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/fhir+json" \
             -d '{
@@ -933,7 +978,10 @@ jobs:
               "gender": "unknown",
               "birthDate": "1990-01-01"
             }')
+          HTTP_CODE=$(echo "$RESP" | tail -1)
+          BODY=$(echo "$RESP" | sed '$d')
           echo "  Patient/test-patient: HTTP $HTTP_CODE"
+          if [ "$HTTP_CODE" -ge 400 ] 2>/dev/null; then echo "  Error: $BODY"; fi
           
           echo "✓ FHIR test resources seeded on deployed server"
 
@@ -1141,6 +1189,27 @@ jobs:
           KC_USERNAME: ${{ steps.config.outputs.kc_username }}
           KC_PASSWORD: ${{ steps.config.outputs.kc_password }}
 
+      # Dump backend + keycloak logs for debugging auth failures
+      - name: Dump Service Logs
+        if: always()
+        run: |
+          echo "=== Backend Auth Logs (last 200 lines, filtered) ==="
+          if [ "${{ steps.config.outputs.target }}" = "deployed" ]; then
+            # For deployed targets, fetch logs via SSH if available, otherwise skip
+            echo "(Deployed mode — container logs not available from CI runner.)"
+            echo "Check VPS logs: docker logs proxy-smart-backend-beta --tail 200 2>&1 | grep -iE 'token|auth|error|warn'"
+          else
+            # Local CI: dump from Docker containers
+            echo "--- Backend logs (auth-related) ---"
+            docker logs backend 2>&1 | grep -iE 'token endpoint|keycloak token|forwarding to keycloak|error response|warn|400|401|422|500' | tail -100 || echo "(no backend container)"
+            echo ""
+            echo "--- Backend logs (last 50 lines) ---"
+            docker logs backend 2>&1 | tail -50 || echo "(no backend container)"
+            echo ""
+            echo "--- Keycloak logs (auth-related, last 50 lines) ---"
+            docker logs keycloak 2>&1 | grep -iE 'token|grant|client|error|warn' | tail -50 || echo "(no keycloak container)"
+          fi
+
       # Save test results
       - name: Save Test Results
         if: always()
@@ -1268,6 +1337,85 @@ jobs:
           TEST_STAGE: ${{ env.TEST_STAGE }}
           TEST_SUITE: ${{ env.TEST_SUITE }}
           APP_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+
+      # Auto-create issue and assign Copilot Cloud Agent on failure
+      - name: Copilot Self-Heal (Create Issue)
+        if: failure() && steps.inferno-tests.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+        run: |
+          echo "🤖 Creating self-heal issue for Copilot Cloud Agent..."
+
+          # Extract failure analysis from inferno output (last 200 lines covers the analysis)
+          FAILURE_LOG=""
+          if [ -f "$GITHUB_WORKSPACE/inferno-output.log" ]; then
+            FAILURE_LOG=$(tail -200 "$GITHUB_WORKSPACE/inferno-output.log")
+          fi
+
+          PASSED=${{ steps.inferno-tests.outputs.passed || 0 }}
+          FAILED=${{ steps.inferno-tests.outputs.failed || 0 }}
+
+          # Check if a self-heal issue already exists for this branch
+          EXISTING=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "copilot-self-heal,inferno" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty' 2>/dev/null || true)
+
+          if [ -n "$EXISTING" ]; then
+            echo "Updating existing issue #$EXISTING with latest failure..."
+            gh issue comment "$EXISTING" \
+              --repo "${{ github.repository }}" \
+              --body "## Updated Failure (Run #${{ github.run_number }})
+
+          **Branch:** \`${{ github.ref_name }}\`
+          **Commit:** \`${{ github.sha }}\`
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Results:** $PASSED passed, $FAILED failed
+
+          <details><summary>Failure Analysis</summary>
+
+          \`\`\`
+          ${FAILURE_LOG}
+          \`\`\`
+          </details>"
+            echo "✓ Updated issue #$EXISTING"
+          else
+            echo "Creating new self-heal issue..."
+
+            # Ensure labels exist
+            gh label create "copilot-self-heal" --description "Auto-created for Copilot Cloud Agent" --color "7057ff" --repo "${{ github.repository }}" 2>/dev/null || true
+            gh label create "inferno" --description "SMART Inferno compliance tests" --color "d73a4a" --repo "${{ github.repository }}" 2>/dev/null || true
+
+            ISSUE_URL=$(gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "🤖 Fix Inferno SMART compliance test failures (${{ github.ref_name }})" \
+              --label "copilot-self-heal,inferno" \
+              --assignee "copilot" \
+              --body "## Inferno SMART STU2.2 Compliance Test Failure
+
+          **Branch:** \`${{ github.ref_name }}\`
+          **Commit:** \`${{ github.sha }}\`
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          **Results:** $PASSED passed, $FAILED failed
+
+          ### Failure Analysis
+
+          \`\`\`
+          ${FAILURE_LOG}
+          \`\`\`
+
+          ### Instructions
+
+          1. Read \`.github/copilot-instructions.md\` for architecture context and common failure patterns.
+          2. Diagnose the root cause by matching error signatures to the failure patterns table.
+          3. Fix the relevant config files (see Key Files table in instructions).
+          4. Ensure config consistency rules are satisfied across all affected files.
+          5. Create a PR targeting \`develop\` with the fix.")
+
+            echo "✓ Created issue: $ISSUE_URL"
+          fi
 
       # Cleanup
       - name: Cleanup

@@ -245,6 +245,13 @@
     "notes": "Notes",
     "sourceDocuments": "Source Documents",
     "editRecord": "Edit Record",
+    "deleteRecord": "Delete",
+    "confirmDelete": "Yes, Delete",
+    "deleting": "Deleting…",
+    "cancel": "Cancel",
+    "contact": "Contact",
+    "address": "Address",
+    "qualification": "Qualification",
     "unknownReaction": "Unknown reaction"
   },
   "recordEdit": {
@@ -300,6 +307,26 @@
     "severe": "Severe",
     "moderate": "Moderate",
     "mild": "Mild"
+  },
+  "shareQr": {
+    "title": "Share Health Summary",
+    "share": "Share QR",
+    "description": "Scan this QR code to view a read-only copy of your health summary. The link expires automatically.",
+    "label": "Patient Health Summary",
+    "generating": "Creating secure share link...",
+    "retry": "Try Again.",
+    "expiresIn": "Expires in {{minutes}} minutes",
+    "copyLink": "Copy Link",
+    "copied": "Copied!",
+    "sharedSummary": "Shared Health Summary",
+    "expiresInBanner": "Expires in {{minutes}} min",
+    "readOnly": "Read-only view",
+    "expiryLabel": "Link expires after",
+    "expiry1h": "1 hour",
+    "expiry4h": "4 hours",
+    "expiry24h": "24 hours",
+    "expiry72h": "72 hours",
+    "createLink": "Create Share Link"
   },
   "language": {
     "label": "Language",

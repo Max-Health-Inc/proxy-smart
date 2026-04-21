@@ -1,30 +1,41 @@
 import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
 import { useTranslation } from "react-i18next"
 import { smartAuth } from "@/lib/smart-auth"
-import { Heart, LogIn, AlertTriangle } from "lucide-react"
+import { Heart, LogIn, AlertTriangle, Link2 } from "lucide-react"
 import { Dashboard } from "@/components/Dashboard"
+import { ShlView } from "@/components/ShlView"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import "./index.css"
 
+/** Detect SHL mode from URL hash */
+function isShlMode(): boolean {
+  const hash = window.location.hash.slice(1)
+  return hash.startsWith("shlink:/") || hash.startsWith("shlink%3A/")
+}
+
 export default function App() {
-  const { state, error, handleLogin, handleLogout } = useSmartAuth({ smartAuth })
+  const shlMode = isShlMode()
+  const { state, error, handleLogin, handleLogout } = useSmartAuth({ smartAuth, skip: shlMode })
   const brand = useBranding()
   const { t } = useTranslation()
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader
-        title={t("app.title")}
-        icon={Heart}
+        title={shlMode ? t("shl.viewerTitle", "Shared Health Records") : t("app.title")}
+        icon={shlMode ? Link2 : Heart}
         authenticated={state === "authenticated"}
-        onSignOut={handleLogout}
+        onSignOut={shlMode ? undefined : handleLogout}
+        maxWidth="max-w-6xl"
       >
         <LanguageSwitcher />
       </AppHeader>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto px-4 py-6">
-        {state === "loading" || state === "callback" ? (
+      <main className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
+        {shlMode ? (
+          <ShlView />
+        ) : state === "loading" || state === "callback" ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <Spinner size="lg" />
             <p className="text-muted-foreground">

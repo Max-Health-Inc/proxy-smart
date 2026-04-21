@@ -242,6 +242,8 @@ async function proxyFHIR({ params, request, set }: any) {
       statusCode: resp.status,
       responseTimeMs: fetchMs,
       clientId: tokenPayload?.azp || tokenPayload?.client_id,
+      userId: tokenPayload?.sub,
+      username: tokenPayload?.preferred_username,
       error: resp.status >= 400 ? `HTTP ${resp.status}` : undefined,
     })
 
@@ -276,7 +278,7 @@ async function proxyFHIR({ params, request, set }: any) {
     }
     logger.fhir.error('FHIR proxy error', { server: params.server_name, error })
     set.status = 500
-    return { error: 'Failed to proxy FHIR request', details: error instanceof Error ? { message: error.message } : error }
+    return { error: 'Failed to proxy FHIR request', details: { message: error instanceof Error ? error.message : 'Internal error' } }
   }
 }
 
@@ -381,7 +383,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
       return body
     } catch (error) {
       set.status = 500
-      return { error: 'Failed to serve FHIR server base URL', details: error }
+      return { error: 'Failed to serve FHIR server base URL', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     params: t.Object({
@@ -436,7 +438,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
       }
     } catch (error) {
       set.status = 500
-      return { error: 'Failed to refresh FHIR server cache', details: error }
+      return { error: 'Failed to refresh FHIR server cache', details: error instanceof Error ? error.message : String(error) }
     }
   }, {
     params: t.Object({

@@ -117,6 +117,7 @@ export const config = {
     get addressPostalCode() { return process.env.BRAND_ADDRESS_POSTAL_CODE || null },
     get addressCountry() { return process.env.BRAND_ADDRESS_COUNTRY || null },
     get identifier() { return process.env.BRAND_IDENTIFIER || process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
+    get loginTheme(): string | null { return process.env.BRAND_LOGIN_THEME || null },
   },
 
   ai: {
@@ -202,15 +203,15 @@ export const config = {
   accessControl: {
     // SMART scope enforcement — validates token scopes against requested FHIR resources
     get scopeEnforcement(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.SCOPE_ENFORCEMENT_MODE || 'disabled'
+      const mode = process.env.SCOPE_ENFORCEMENT_MODE || 'enforce'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
-      return 'disabled'
+      return 'enforce'
     },
     // Role-based filtering using fhirUser claim (e.g. generalPractitioner-based isolation)
     get roleBasedFiltering(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'disabled'
+      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'enforce'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
-      return 'disabled'
+      return 'enforce'
     },
     // Clinical resource types subject to patient-scoped filtering
     get patientScopedResources(): string[] {
@@ -254,11 +255,11 @@ export const config = {
 
   mcp: {
     // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server
-    // Defaults to enabled in MONO_MODE, disabled otherwise. Override with MCP_ENDPOINT_ENABLED.
+    // Enabled by default. Override with MCP_ENDPOINT_ENABLED=false to disable.
     get enabled(): boolean {
       const explicit = process.env.MCP_ENDPOINT_ENABLED
       if (explicit !== undefined) return explicit === 'true'
-      return process.env.MONO_MODE === 'true'
+      return true
     },
     get path() {
       return process.env.MCP_ENDPOINT_PATH || '/mcp'
@@ -280,8 +281,15 @@ export const config = {
       return process.env.DICOMWEB_QIDO_ROOT || this.baseUrl // QIDO-RS root, defaults to baseUrl
     },
     // Optional auth for upstream PACS (e.g. Basic auth for Orthanc)
+    // Supports explicit DICOMWEB_UPSTREAM_AUTH header, or auto-builds from DICOMWEB_USERNAME/PASSWORD
     get upstreamAuth() {
-      return process.env.DICOMWEB_UPSTREAM_AUTH || null // e.g. "Basic dGVzdDp0ZXN0"
+      if (process.env.DICOMWEB_UPSTREAM_AUTH) return process.env.DICOMWEB_UPSTREAM_AUTH
+      const username = process.env.DICOMWEB_USERNAME
+      const password = process.env.DICOMWEB_PASSWORD
+      if (username && password) {
+        return `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`
+      }
+      return null
     },
     get timeoutMs() {
       return Number.parseInt(process.env.DICOMWEB_TIMEOUT_MS || '30000', 10)

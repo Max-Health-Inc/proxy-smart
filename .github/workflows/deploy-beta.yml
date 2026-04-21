@@ -40,7 +40,11 @@ on:
         required: true
       BETA_KEYCLOAK_ADMIN_CLIENT_SECRET:
         required: true
+      BETA_SHL_EXCHANGE_CLIENT_SECRET:
+        required: false
       VITE_ENCRYPTION_SECRET:
+        required: true
+      BETA_ORTHANC_PASSWORD:
         required: true
       OPENAI_API_KEY:
         required: false
@@ -55,6 +59,7 @@ jobs:
   build-images:
     name: Build & Push Images
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       packages: write
@@ -78,6 +83,7 @@ jobs:
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Build & push backend image
+        timeout-minutes: 20
         uses: docker/build-push-action@v7
         with:
           context: .
@@ -87,6 +93,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/backend:beta-latest
+          build-args: |
+            VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
           cache-from: type=gha,scope=beta-backend-v2
           cache-to: type=gha,mode=max,scope=beta-backend-v2
 
@@ -102,22 +110,7 @@ jobs:
           cache-from: type=gha,scope=beta-keycloak
           cache-to: type=gha,mode=max,scope=beta-keycloak
 
-      - name: Verify no localhost in backend image
-        run: |
-          echo "🔍 Checking production bundles for hardcoded localhost references..."
-          docker pull ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }}
-          CID=$(docker create ${{ env.IMAGE_PREFIX }}/backend:beta-${{ inputs.app_version }})
-          MATCHES=$(docker export "$CID" | tar -t 2>/dev/null | head -1 > /dev/null && \
-            docker cp "$CID":/app/backend/public/apps /tmp/apps 2>/dev/null && \
-            grep -rl 'localhost:8445' /tmp/apps/ 2>/dev/null || true)
-          docker rm "$CID" > /dev/null
-
-          if [ -n "$MATCHES" ]; then
-            echo "::error::Found hardcoded localhost:8445 in production bundles:"
-            echo "$MATCHES"
-            exit 1
-          fi
-          echo "✅ No localhost references found in production bundles"
+      # localhost check is handled in-Dockerfile (RUN grep -rl 'localhost:8445' ...)
 
   # ── Pull pre-built images on VPS and restart services ──
   deploy:
@@ -157,7 +150,9 @@ jobs:
           BETA_POSTGRES_PASSWORD: ${{ secrets.BETA_POSTGRES_PASSWORD }}
           BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
           BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
+          BETA_SHL_EXCHANGE_CLIENT_SECRET: ${{ secrets.BETA_SHL_EXCHANGE_CLIENT_SECRET }}
           VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          BETA_ORTHANC_PASSWORD: ${{ secrets.BETA_ORTHANC_PASSWORD }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -207,7 +202,9 @@ jobs:
             "KC_DB_PASSWORD=${BETA_POSTGRES_PASSWORD}" \
             "KEYCLOAK_ADMIN_PASSWORD=${BETA_KEYCLOAK_ADMIN_PASSWORD}" \
             "KEYCLOAK_ADMIN_CLIENT_SECRET=${BETA_KEYCLOAK_ADMIN_CLIENT_SECRET}" \
+            "SHL_EXCHANGE_CLIENT_SECRET=${BETA_SHL_EXCHANGE_CLIENT_SECRET}" \
             "VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}" \
+            "ORTHANC_PASSWORD=${BETA_ORTHANC_PASSWORD}" \
             "OPENAI_API_KEY=${OPENAI_API_KEY}" \
             "RESEND_API_KEY=${RESEND_API_KEY}" \
             "BACKEND_IMAGE=${{ env.IMAGE_PREFIX }}/backend:${IMAGE_TAG}" \
@@ -445,14 +442,17 @@ jobs:
             done
 
             # POST the seed bundle (transaction with PUT entries = idempotent)
-            HTTP_CODE=\$(curl -sf -o /dev/null -w '%{http_code}' -X POST \"\${HAPI_BASE}\" \
+            SEED_RESP=\$(curl -s -w '\n%{http_code}' -X POST \"\${HAPI_BASE}\" \
               -H 'Content-Type: application/fhir+json' \
               -d @fhir-seed-bundle.json)
+            HTTP_CODE=\$(echo \"\$SEED_RESP\" | tail -1)
+            SEED_BODY=\$(echo \"\$SEED_RESP\" | sed '\$d')
 
             if [ \"\$HTTP_CODE\" = '200' ]; then
               echo '  ✅ FHIR sample data seeded successfully'
             else
               echo \"  ⚠️ FHIR seed returned HTTP \${HTTP_CODE} (non-fatal)\"
+              echo \"  Response: \${SEED_BODY}\" | head -c 500
             fi
 
             # Seed Orthanc PACS with sample DICOM images

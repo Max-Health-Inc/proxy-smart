@@ -26,7 +26,6 @@ COPY apps/consent-app/package.json ./apps/consent-app/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
 COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
 COPY apps/patient-portal/package.json ./apps/patient-portal/
-COPY apps/patient-portal/lib/ ./apps/patient-portal/lib/
 
 # Strip workspaces not included in Docker build to avoid install failures
 RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
@@ -34,23 +33,34 @@ RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
 
-# Backend build stage
+# Backend build stage (just the JS bundle)
 FROM build-deps AS backend-build
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run build
+
+# OpenAPI spec generation (runs in parallel with backend-build)
+# export-openapi imports TypeScript source directly, doesn't need dist/
+FROM build-deps AS openapi-gen
+COPY backend/ ./backend/
+WORKDIR /app/backend
 RUN bun run export-openapi
 
 # API client generation stage
 FROM build-deps AS api-client-gen
-COPY scripts/generate-ts-fetch-client.py scripts/runtime-template.ts ./scripts/
-COPY --from=backend-build /app/backend/dist/openapi.json ./backend/dist/openapi.json
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+RUN uv tool install openapi-ts-fetch==0.2.0
+ENV PATH="/root/.local/bin:$PATH"
+COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
 RUN mkdir -p apps/ui/src/lib/api-client && \
-    python scripts/generate-ts-fetch-client.py backend/dist/openapi.json apps/ui/src/lib/api-client
+    openapi-ts-fetch backend/dist/openapi.json apps/ui/src/lib/api-client && \
+    mkdir -p apps/patient-portal/src/lib/api-client && \
+    openapi-ts-fetch backend/dist/openapi.json apps/patient-portal/src/lib/api-client --tags shl
 
 # Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
-ARG VITE_ENCRYPTION_SECRET=proxy-smart-default-encryption-key
+ARG VITE_ENCRYPTION_SECRET
+RUN test -n "$VITE_ENCRYPTION_SECRET" || (echo "ERROR: VITE_ENCRYPTION_SECRET build arg is required" && exit 1)
 ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 ENV VITE_BASE=/webapp/
 COPY shared-ui/ ./shared-ui/
@@ -77,6 +87,7 @@ RUN bun run build
 FROM build-deps AS patient-portal-build
 COPY shared-ui/ ./shared-ui/
 COPY apps/patient-portal/ ./apps/patient-portal/
+COPY --from=api-client-gen /app/apps/patient-portal/src/lib/api-client ./apps/patient-portal/src/lib/api-client/
 WORKDIR /app/apps/patient-portal
 RUN bun run build
 
@@ -128,6 +139,12 @@ COPY --from=backend-build /app/node_modules ./node_modules
 
 # Copy system prompt for AI assistant
 COPY prompts/ ./prompts/
+
+# Create non-root user for security
+RUN groupadd --gid 1001 app && \
+    useradd --uid 1001 --gid app --no-create-home --shell /bin/false app && \
+    chown -R app:app /app
+USER app
 
 # Expose backend port
 EXPOSE 8445
