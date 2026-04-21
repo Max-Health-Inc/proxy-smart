@@ -33,6 +33,12 @@ import { format } from "date-fns"
 import type { ImportedResource } from "@/lib/fhir-client"
 import { useTranslation } from "react-i18next"
 
+/** Filter out FHIR validation warnings that are not useful to patients (e.g. missing narrative) */
+const SUPPRESSED_WARNING_PATTERNS = [/narrative/i, /text\.div/i, /text\.status/i, /dom-6/i]
+function filterWarnings(warnings: string[]): string[] {
+  return warnings.filter(w => !SUPPRESSED_WARNING_PATTERNS.some(p => p.test(w)))
+}
+
 // ── Resource type display config ─────────────────────────────────────────────
 
 const RESOURCE_ICONS: Record<string, typeof Heart> = {
@@ -235,6 +241,7 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
   const color = RESOURCE_COLORS[r.resourceType] || "text-gray-500"
   const detailFields = useMemo(() => getDetailFields(res), [res])
   const editableFields = EDITABLE_FIELDS[r.resourceType] || []
+  const filteredWarnings = useMemo(() => filterWarnings(r.warnings), [r.warnings])
   const { t } = useTranslation()
 
   const openEditDialog = useCallback((e: React.MouseEvent) => {
@@ -301,11 +308,11 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
                   {getResourceDetail(res)}
                 </p>
               )}
-              {r.warnings.length > 0 && (
+              {filteredWarnings.length > 0 && (
                 <div className="flex items-center gap-1 mt-1">
                   <AlertTriangle className="size-3 text-amber-500" />
                   <span className="text-xs text-amber-600">
-                    {r.warnings.length} warning{r.warnings.length !== 1 ? "s" : ""}
+                    {filteredWarnings.length} warning{filteredWarnings.length !== 1 ? "s" : ""}
                   </span>
                 </div>
               )}
@@ -338,10 +345,10 @@ export function ResourceReviewCard({ resource, selected, onToggleSelect, onResou
               ) : (
                 <p className="text-xs text-muted-foreground italic">No structured details available</p>
               )}
-              {r.warnings.length > 0 && (
+              {filteredWarnings.length > 0 && (
                 <div className="mt-2 space-y-1">
                   <p className="text-xs font-medium text-amber-600">Warnings:</p>
-                  {r.warnings.map((w, i) => (
+                  {filteredWarnings.map((w, i) => (
                     <p key={i} className="text-xs text-amber-600 pl-2">• {w}</p>
                   ))}
                 </div>

@@ -112,7 +112,7 @@ export function AuditTimeline({ consents, patientId }: AuditTimelineProps) {
     try {
       const authFetch = smartAuth.createAuthenticatedFetch()
       const base = config.proxyBase || window.location.origin
-      const url = `${base}/${config.proxyPrefix}/monitoring/consent/patients/${encodeURIComponent(patientId)}/access-log?limit=200`
+      const url = `${base}/monitoring/consent/patients/${encodeURIComponent(patientId)}/access-log?limit=200`
       const resp = await authFetch(url)
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data = await resp.json()

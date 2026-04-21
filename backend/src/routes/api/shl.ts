@@ -144,6 +144,114 @@ const ManifestRequest = t.Object({
   embeddedLengthMax: t.Optional(t.Number({ description: 'Max embedded payload size in bytes' })),
 })
 
+// ── SHL FHIR proxy handler ──────────────────────────────────────────────────
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function shlFhirProxyHandler({ request, params, headers, set }: any) {
+  try {
+    const bearerToken = extractBearerToken(headers)
+    if (!bearerToken) {
+      set.status = 401
+      return { error: 'Bearer token required' }
+    }
+
+    const shlId = tokenIndex.get(bearerToken)
+    if (!shlId) {
+      set.status = 401
+      return { error: 'Invalid or expired session token' }
+    }
+
+    const session = shlStore.get(shlId)
+    if (!session) {
+      tokenIndex.delete(bearerToken)
+      set.status = 401
+      return { error: 'Session not found' }
+    }
+
+    if (Date.now() > session.expiresAt) {
+      tokenIndex.delete(bearerToken)
+      shlStore.delete(shlId)
+      set.status = 410
+      return { error: 'Share link has expired' }
+    }
+
+    // Extract the FHIR path after /fhir/ (empty string for base /fhir route)
+    const fhirPath = (params as Record<string, string>)?.['*'] || ''
+
+    // Scope enforcement: only allow requests scoped to the session's patient
+    const url = new URL(request.url)
+    const patientParam = url.searchParams.get('patient')
+    const pathSegments = fhirPath.split('/')
+
+    if (pathSegments[0] === 'Patient') {
+      if (pathSegments[1] && pathSegments[1] !== session.patientId) {
+        set.status = 403
+        return { error: 'Access denied: patient scope mismatch' }
+      }
+    } else if (patientParam && patientParam !== `Patient/${session.patientId}` && patientParam !== session.patientId) {
+      set.status = 403
+      return { error: 'Access denied: patient scope mismatch' }
+    }
+
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      set.status = 405
+      return { error: 'Only read operations are allowed on shared links' }
+    }
+
+    let serviceToken: string
+    try {
+      serviceToken = await getServiceAccountToken()
+    } catch (tokenError) {
+      const msg = tokenError instanceof Error ? tokenError.message : 'Unknown auth error'
+      logger.auth.error('SHL service account token failed', { shlId, error: msg })
+      set.status = 503
+      return { error: `Service account auth unavailable: ${msg}` }
+    }
+
+    const queryString = url.search
+    const targetUrl = `${session.fhirServerUrl}/${fhirPath}${queryString}`
+
+    let resp: Response
+    try {
+      resp = await fetch(targetUrl, {
+        method: request.method,
+        headers: {
+          'Accept': 'application/fhir+json',
+          'Authorization': `Bearer ${serviceToken}`,
+        },
+      })
+    } catch (fetchError) {
+      const msg = fetchError instanceof Error ? fetchError.message : 'Unknown network error'
+      logger.auth.error('SHL FHIR upstream unreachable', { shlId, targetUrl, error: msg })
+      set.status = 502
+      return { error: `Upstream FHIR server unreachable: ${msg}` }
+    }
+
+    set.status = resp.status
+    const contentType = resp.headers.get('content-type')
+    if (contentType) set.headers['content-type'] = contentType
+    set.headers['access-control-allow-origin'] = '*'
+    set.headers['access-control-allow-headers'] = 'Authorization, Content-Type'
+
+    logger.auth.debug('SHL FHIR proxy request', {
+      shlId,
+      method: request.method,
+      fhirPath,
+      targetUrl,
+      status: resp.status,
+    })
+
+    // Rewrite upstream FHIR URLs to point through the SHL proxy
+    const text = await resp.text()
+    const proxyBase = `${config.baseUrl}/api/shl/fhir`
+    return text.replaceAll(session.fhirServerUrl, proxyBase)
+  } catch (error) {
+    logger.auth.error('SHL FHIR proxy error', { error })
+    set.status = 500
+    return { error: 'Internal SHL proxy error' }
+  }
+}
+
 // ── Routes ──────────────────────────────────────────────────────────────────
 
 export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
@@ -328,131 +436,22 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
    * FHIR Proxy for SHL viewers.
    * Validates the opaque session token, then proxies to the real FHIR server
    * using a Keycloak service account. No user tokens ever reach the viewer.
+   *
+   * Two routes: `/fhir` (for _getpages pagination) and `/fhir/*` (for resource paths).
    */
-  .all('/fhir/*', async ({ request, params, headers, set }) => {
-    try {
-      const bearerToken = extractBearerToken(headers)
-      if (!bearerToken) {
-        set.status = 401
-        return { error: 'Bearer token required' }
-      }
-
-      // Look up session from opaque token
-      const shlId = tokenIndex.get(bearerToken)
-      if (!shlId) {
-        set.status = 401
-        return { error: 'Invalid or expired session token' }
-      }
-
-      const session = shlStore.get(shlId)
-      if (!session) {
-        tokenIndex.delete(bearerToken)
-        set.status = 401
-        return { error: 'Session not found' }
-      }
-
-      // Check expiry
-      if (Date.now() > session.expiresAt) {
-        tokenIndex.delete(bearerToken)
-        shlStore.delete(shlId)
-        set.status = 410
-        return { error: 'Share link has expired' }
-      }
-
-      // Extract the FHIR path after /fhir/
-      const fhirPath = (params as Record<string, string>)['*'] || ''
-
-      // Scope enforcement: only allow requests scoped to the session's patient
-      // Block requests that don't target the correct patient
-      const url = new URL(request.url)
-      const patientParam = url.searchParams.get('patient')
-      const pathSegments = fhirPath.split('/')
-
-      // Allow: Patient/{id} read, or searches with ?patient={id}
-      if (pathSegments[0] === 'Patient') {
-        // Only allow reading the session's own patient
-        if (pathSegments[1] && pathSegments[1] !== session.patientId) {
-          set.status = 403
-          return { error: 'Access denied: patient scope mismatch' }
-        }
-      } else if (patientParam && patientParam !== `Patient/${session.patientId}` && patientParam !== session.patientId) {
-        set.status = 403
-        return { error: 'Access denied: patient scope mismatch' }
-      }
-
-      // Only allow read operations (GET, HEAD)
-      if (request.method !== 'GET' && request.method !== 'HEAD') {
-        set.status = 405
-        return { error: 'Only read operations are allowed on shared links' }
-      }
-
-      // Get service account token for upstream FHIR request
-      let serviceToken: string
-      try {
-        serviceToken = await getServiceAccountToken()
-      } catch (tokenError) {
-        const msg = tokenError instanceof Error ? tokenError.message : 'Unknown auth error'
-        logger.auth.error('SHL service account token failed', { shlId, error: msg })
-        set.status = 503
-        return { error: `Service account auth unavailable: ${msg}` }
-      }
-
-      // Build upstream URL
-      const queryString = url.search
-      const targetUrl = `${session.fhirServerUrl}/${fhirPath}${queryString}`
-
-      // Proxy the request
-      let resp: Response
-      try {
-        resp = await fetch(targetUrl, {
-          method: request.method,
-          headers: {
-            'Accept': 'application/fhir+json',
-            'Authorization': `Bearer ${serviceToken}`,
-          },
-        })
-      } catch (fetchError) {
-        const msg = fetchError instanceof Error ? fetchError.message : 'Unknown network error'
-        logger.auth.error('SHL FHIR upstream unreachable', { shlId, targetUrl, error: msg })
-        set.status = 502
-        return { error: `Upstream FHIR server unreachable: ${msg}` }
-      }
-
-      // Copy response status and headers
-      set.status = resp.status
-      const contentType = resp.headers.get('content-type')
-      if (contentType) set.headers['content-type'] = contentType
-
-      // Set CORS headers for the viewer (cross-origin access)
-      set.headers['access-control-allow-origin'] = '*'
-      set.headers['access-control-allow-headers'] = 'Authorization, Content-Type'
-
-      logger.auth.debug('SHL FHIR proxy request', {
-        shlId,
-        method: request.method,
-        fhirPath,
-        targetUrl,
-        status: resp.status,
-      })
-
-      // Rewrite internal FHIR server URLs in the response body to point
-      // through the SHL proxy. HAPI FHIR returns pagination links like
-      // http://hapi-fhir:8080/fhir?_getpages=... which cause mixed-content
-      // errors when the viewer is served over HTTPS.
-      const text = await resp.text()
-      const proxyBase = `${config.baseUrl}/api/shl/fhir`
-      const body = text.replaceAll(session.fhirServerUrl, proxyBase)
-      return body
-    } catch (error) {
-      logger.auth.error('SHL FHIR proxy error', { error })
-      set.status = 500
-      return { error: 'Internal SHL proxy error' }
-    }
-  }, {
+  .all('/fhir', shlFhirProxyHandler, {
+    detail: {
+      summary: 'SHL FHIR Proxy (base)',
+      description: 'Handles _getpages pagination requests via the SHL FHIR proxy.',
+      tags: ['shl'],
+      hide: true,
+    },
+  })
+  .all('/fhir/*', shlFhirProxyHandler, {
     detail: {
       summary: 'SHL FHIR Proxy',
       description: 'Proxies FHIR requests from SHL viewers using opaque session tokens. No real tokens leave the server.',
       tags: ['shl'],
-      hide: true, // Wildcard catch-all generates duplicate operationIds in OpenAPI codegen
+      hide: true,
     },
   })

@@ -2,12 +2,13 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Badge, Button,
 } from "@proxy-smart/shared-ui"
 import { useState } from "react"
-import { ShieldCheck, ShieldAlert, Pencil, Trash2 } from "lucide-react"
+import { ShieldCheck, ShieldAlert, Pencil, Trash2, Undo2 } from "lucide-react"
 import type { DocumentReference, DynamicFhirResource } from "@/lib/fhir-client"
-import { deleteResource } from "@/lib/fhir-client"
+import { deleteResource, updateResource } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
 import { isValidAllergyintoleranceVerificationCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-AllergyintoleranceVerification"
 import { RecordEditModal } from "@/components/RecordEditModal"
+import { ORIGINAL_SNAPSHOT_EXT } from "@/components/RecordEditModal"
 import { useTranslation } from "react-i18next"
 import { buildDetailFields, extractPerformer } from "@/components/record-detail-fields"
 
@@ -67,13 +68,22 @@ export function RecordDetailModal({
   const canEdit = onResourceUpdated && resourceType && EDITABLE_TYPES.has(resourceType)
   const canDelete = onResourceDeleted && resourceType && resourceId
     && EDITABLE_TYPES.has(resourceType) && (!verification || !verification.verified)
+  const hasSnapshot = ((resource.extension as Array<{ url: string }>) ?? []).some(e => e.url === ORIGINAL_SNAPSHOT_EXT)
   const fields = buildDetailFields(resource, t, documents)
 
   async function handleDelete() {
     if (!resourceType || !resourceId) return
     setDeleting(true)
     try {
-      await deleteResource(resourceType, resourceId)
+      // Check for original snapshot extension — revert instead of delete
+      const exts = (resource.extension as Array<{ url: string; valueString?: string }>) ?? []
+      const snapshot = exts.find(e => e.url === ORIGINAL_SNAPSHOT_EXT)
+      if (snapshot?.valueString) {
+        const original = JSON.parse(snapshot.valueString) as FhirResource
+        await updateResource(original)
+      } else {
+        await deleteResource(resourceType, resourceId)
+      }
       onResourceDeleted?.()
       onOpenChange(false)
     } catch { /* keep modal open */ }
@@ -110,7 +120,9 @@ export function RecordDetailModal({
                 </Button>
                 {canDelete && !confirmDelete && (
                   <Button variant="outline" size="sm" className="w-fit text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(true)}>
-                    <Trash2 className="size-3.5 mr-1" />{t("recordDetail.deleteRecord")}
+                    {hasSnapshot
+                      ? <><Undo2 className="size-3.5 mr-1" />{t("recordDetail.discardChanges", "Discard Changes")}</>
+                      : <><Trash2 className="size-3.5 mr-1" />{t("recordDetail.deleteRecord")}</>}
                   </Button>
                 )}
                 {canDelete && confirmDelete && (
