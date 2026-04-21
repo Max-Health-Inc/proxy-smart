@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.7-alpha.202604212241.3c476a12] - 2026-04-21
+
+- 🔧 Chores & Improvements: AuditTimeline now uses base/monitoring paths without config.proxyPrefix
+- 🔧 Chores & Improvements: Backend SHL updated with a FHIR proxy handler including session token validation, expiration handling, and per-session patient scope
+- 📚 Documentation: DTR app manifest and config broadened OAuth scopes to include user/Claim.cud and user/QuestionnaireResponse.cud
+- 🔧 Chores & Improvements: Patient portal - propagate onSaved callbacks to DocumentImport and PatientScribe; add onSaved handler plumbing
+- 🔧 Chores & Improvements: Patient portal - RecordDetailModal extended with ORIGINAL_SNAPSHOT_EXT and logic to store original snapshot when pending review
+- 🔧 Chores & Improvements: Patient portal - ResourceReviewCard now filters out non-useful FHIR validation warnings (narrative, text.div, etc.)
+- 🔧 Chores & Improvements: Patient portal - RecordEditModal adds ORIGINAL_SNAPSHOT_EXT export and snapshot handling comments/logic for discard/revert
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/558
+
+
 ## [0.0.7-alpha.202604210210.f96ec187] - 2026-04-21
 
 - ✨ Features
