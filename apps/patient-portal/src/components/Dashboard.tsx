@@ -685,7 +685,7 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
         <DocumentsCard documents={documents} onOpenDetail={openDetail} />
 
         <div className="md:col-span-2">
-          <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} />
+          <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} readOnly={readOnly} />
         </div>
 
         <div className="md:col-span-2">
