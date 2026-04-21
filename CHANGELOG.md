@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-beta.202604202357.6b2a26b6] - 2026-04-21
+
+- 🔧 Chores & Improvements: UI cleanup in OAuthMonitoringDashboard (switch header from BarChart icon to Tabs-based layout; remove BarChart icon import and usage; retain Activity, Play, Pause, Refresh icons)  
+- 🔧 Chores & Improvements: Import shared UI styles in index.css
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/550
+
+
 ## [0.0.6-alpha.202604202357.6b2a26b6] - 2026-04-21
 
 - 🔧 Chores & Improvements: sync package versions
