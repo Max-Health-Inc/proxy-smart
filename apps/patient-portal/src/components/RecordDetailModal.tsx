@@ -72,7 +72,7 @@ export function RecordDetailModal({
   const fields = buildDetailFields(resource, t, documents)
 
   async function handleDelete() {
-    if (!resourceType || !resourceId) return
+    if (!resource || !resourceType || !resourceId) return
     setDeleting(true)
     try {
       // Check for original snapshot extension — revert instead of delete
