@@ -235,9 +235,9 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
           </Button>
         </div>
       ) : showImport ? (
-        <DocumentImport onClose={() => { setShowImport(false); refreshData() }} />
+        <DocumentImport onClose={() => { setShowImport(false); refreshData() }} onSaved={refreshData} />
       ) : showScribe ? (
-        <PatientScribe onClose={() => { setShowScribe(false); refreshData() }} />
+        <PatientScribe onClose={() => { setShowScribe(false); refreshData() }} onSaved={refreshData} />
       ) : showDicomUpload ? (
         <DicomUpload onClose={() => setShowDicomUpload(false)} />
       ) : (
