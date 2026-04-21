@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604210100.3c8bee72] - 2026-04-21
+
+- ✨ Features: 
+  - AccessControlSettings component added (new UI feature)
+  - UI: Tabs-focused layout enhancements including ConsentSettings and AccessControlSettings integration
+
+- 🔧 Chores & Improvements:
+  - UI/UX refactors: simplify headers and tabs, remove Settings tab from ConsentMonitoringDashboard, and extend layouts to accommodate new settings
+  - HealthcareUsersManager: support external add-user control via props and internal state fallback
+  - SmartAppsManager and SmartConfigManager updated to import and integrate new settings components
+  - index.css updated with shared UI styles import
+
+- ⚠️ Breaking Changes: 
+  - None detected
+
+- 🐛 Bug Fixes:
+  - None detected
+
+- 📚 Documentation:
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/552
+
+
 ## [0.0.6-beta.202604202357.6b2a26b6] - 2026-04-21
 
 - 🔧 Chores & Improvements: UI cleanup in OAuthMonitoringDashboard (switch header from BarChart icon to Tabs-based layout; remove BarChart icon import and usage; retain Activity, Play, Pause, Refresh icons)  
