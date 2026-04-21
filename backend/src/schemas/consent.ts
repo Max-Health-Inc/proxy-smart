@@ -151,3 +151,27 @@ export const ConsentCacheInvalidateResponse = t.Object({
   entriesInvalidated: t.Number(),
   timestamp: t.String()
 })
+
+// ── SMART Access Control schemas ────────────────────────────────────────────
+
+const AccessControlMode = t.Union([
+  t.Literal('enforce'),
+  t.Literal('audit-only'),
+  t.Literal('disabled')
+], { description: 'Access control enforcement mode' })
+
+/** SMART access control configuration (scope enforcement + role-based filtering) */
+export const SmartAccessControlConfig = t.Object({
+  scopeEnforcement: AccessControlMode,
+  roleBasedFiltering: AccessControlMode,
+  patientScopedResources: t.Array(t.String(), { description: 'Resource types subject to patient-scoped filtering' }),
+}, { title: 'SmartAccessControlConfig' })
+
+export type SmartAccessControlConfigType = Static<typeof SmartAccessControlConfig>
+
+/** SMART access control config update response */
+export const SmartAccessControlConfigUpdateResponse = t.Object({
+  message: t.String(),
+  config: SmartAccessControlConfig,
+  timestamp: t.String()
+})

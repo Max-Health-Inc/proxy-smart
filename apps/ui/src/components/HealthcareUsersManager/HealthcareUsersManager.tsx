@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@proxy-smart/shared-ui';
-import { Plus } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';
@@ -97,7 +96,7 @@ function transformApiUser(apiUser: HealthcareUser): HealthcareUserWithPersons {
   }
 }
 
-export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}) {
+export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenChange }: { embedded?: boolean; addUserOpen?: boolean; onAddUserOpenChange?: (open: boolean) => void } = {}) {
   const { t } = useTranslation();
   const { isAuthenticated, clientApis } = useAuth();
   
@@ -108,7 +107,9 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
   const [users, setUsers] = useState<HealthcareUserWithPersons[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddFormInternal, setShowAddFormInternal] = useState(false);
+  const showAddForm = addUserOpen ?? showAddFormInternal;
+  const setShowAddForm = onAddUserOpenChange ?? setShowAddFormInternal;
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState<HealthcareUserWithPersons | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -311,14 +312,7 @@ export function HealthcareUsersManager({ embedded }: { embedded?: boolean } = {}
       )}
 
       {/* Header Section */}
-      {embedded ? (
-        <div className="flex justify-end">
-          <Button onClick={() => setShowAddForm(true)}>
-            <Plus className="h-5 w-5 mr-2" />
-            {t('Add New User')}
-          </Button>
-        </div>
-      ) : (
+      {!embedded && (
         <HealthcareUsersHeader onAddUser={() => setShowAddForm(true)} />
       )}
 

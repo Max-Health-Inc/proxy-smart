@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, FolderSync } from 'lucide-react';
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Users, FolderSync, Plus } from 'lucide-react';
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { HealthcareUsersManager } from './HealthcareUsersManager/HealthcareUsersManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 
 export function UsersAndFederationManager() {
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('users');
+    const [showAddUser, setShowAddUser] = useState(false);
 
     return (
         <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
@@ -25,6 +26,12 @@ export function UsersAndFederationManager() {
                             {t('Manage healthcare professionals, administrative users, and identity federation')}
                         </div>
                     </div>
+                    {activeTab === 'users' && (
+                        <Button onClick={() => setShowAddUser(true)}>
+                            <Plus className="h-4 w-4" />
+                            {t('Add New User')}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -43,7 +50,7 @@ export function UsersAndFederationManager() {
                     </ResponsiveTabsList>
 
                     <TabsContent value="users" className="p-6 space-y-6">
-                        <HealthcareUsersManager embedded />
+                        <HealthcareUsersManager embedded addUserOpen={showAddUser} onAddUserOpenChange={setShowAddUser} />
                     </TabsContent>
 
                     <TabsContent value="federation" className="p-6 space-y-6">
