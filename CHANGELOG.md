@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.6-alpha.202604202357.6b2a26b6] - 2026-04-21
+
+- 🔧 Chores & Improvements: sync package versions
+- 🐛 Bug Fixes: disable DICOM viewer in SHL read-only mode (patient-portal)
+- 🔧 Chores & Improvements: update beta/alpha version metadata (internal CI)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/547
+
+
 ## [0.0.6-alpha.202604202302.cb01af88] - 2026-04-20
 
 - 🔧 Chores & Improvements: Remove SHL Viewer; prune related assets and build stages. Update dist copy logic to exclude SHL viewer outputs.
