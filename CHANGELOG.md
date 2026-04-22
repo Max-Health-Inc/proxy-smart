@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.7-alpha.202604220949.46abe258] - 2026-04-22
+
+- ⚠️ Breaking Changes: ModalStackProvider integration and dynamic z-index handling require updates to app root usage and UI layering
+- 🔧 Chores & Improvements: Introduce ModalStackProvider and useModalLayer with shared-ui exports; wire modal layer into apps
+- ✨ Features: Dynamic z-index support for dialogs via useModalLayer on Dialog/Overlay/Content
+- 📚 Documentation: N/A
+- 🐛 Bug Fixes: N/A
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/565
+
+
 ## [0.0.7-alpha.202604220939.1e50f6cf] - 2026-04-22
 
 - ✨ Features: 
