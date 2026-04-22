@@ -16,6 +16,7 @@ import { mcpServersRoutes } from './mcp-servers'
 import { mcpEndpointAdminRoutes } from './mcp-endpoint'
 import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
+import { smartAccessControlAdminRoutes } from './smart-access-control'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
 import { brandingAdminRoutes } from './branding'
@@ -24,6 +25,7 @@ import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
+import { dicomServersAdminRoutes } from './dicom-servers'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -112,6 +114,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(aiToolsSkillsRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
+  // SMART access control (scope enforcement, role-based filtering)
+  .use(smartAccessControlAdminRoutes)
   // Physical access control (Kisi / UniFi Access)
   .use(accessControlRoutes)
   // LDAP User Federation management
@@ -126,6 +130,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(appStoreAdminRoutes)
   // Keycloak Client Policies & CIMD management
   .use(clientPoliciesRoutes)
+  // DICOM/PACS server management
+  .use(dicomServersAdminRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

@@ -1,4 +1,4 @@
-import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth, ModalStackProvider } from "@proxy-smart/shared-ui"
 import { useTranslation } from "react-i18next"
 import { smartAuth } from "@/lib/smart-auth"
 import { Heart, LogIn, AlertTriangle, Link2 } from "lucide-react"
@@ -20,14 +20,15 @@ export default function App() {
   const { t } = useTranslation()
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader
-        title={shlMode ? t("shl.viewerTitle", "Shared Health Records") : t("app.title")}
-        icon={shlMode ? Link2 : Heart}
-        authenticated={state === "authenticated"}
-        onSignOut={shlMode ? undefined : handleLogout}
-        maxWidth="max-w-6xl"
-      >
+    <ModalStackProvider>
+      <div className="min-h-screen bg-background">
+        <AppHeader
+          title={shlMode ? t("shl.viewerTitle", "Shared Health Records") : t("app.title")}
+          icon={shlMode ? Link2 : Heart}
+          authenticated={state === "authenticated"}
+          onSignOut={shlMode ? undefined : handleLogout}
+          maxWidth="max-w-6xl"
+        >
         <LanguageSwitcher />
       </AppHeader>
 
@@ -84,6 +85,7 @@ export default function App() {
           <Dashboard />
         )}
       </main>
-    </div>
+      </div>
+    </ModalStackProvider>
   )
 }

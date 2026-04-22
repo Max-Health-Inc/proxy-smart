@@ -14,6 +14,7 @@
 
 import { config } from '../config'
 import { logger } from './logger'
+import { getRuntimeAccessControlConfig } from './runtime-config'
 import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -142,7 +143,8 @@ function checkSmartScopes(
 }
 
 export function enforceScopeAccess(ctx: AccessControlContext): AccessControlResult {
-  if (config.accessControl.scopeEnforcement === 'disabled') {
+  const ac = getRuntimeAccessControlConfig()
+  if (ac.scopeEnforcement === 'disabled') {
     return { allowed: true }
   }
 
@@ -163,10 +165,10 @@ export function enforceScopeAccess(ctx: AccessControlContext): AccessControlResu
       scopes: tokenScopes.join(' '),
       fhirUser: ctx.tokenPayload.fhirUser,
       server: ctx.serverName,
-      mode: config.accessControl.scopeEnforcement,
+      mode: ac.scopeEnforcement,
     })
 
-    if (config.accessControl.scopeEnforcement === 'enforce') {
+    if (ac.scopeEnforcement === 'enforce') {
       return {
         allowed: false,
         status: 403,
@@ -225,7 +227,8 @@ export async function enforceRoleBasedFiltering(
   ctx: AccessControlContext,
   queryString: string,
 ): Promise<AccessControlResult> {
-  if (config.accessControl.roleBasedFiltering === 'disabled') {
+  const ac = getRuntimeAccessControlConfig()
+  if (ac.roleBasedFiltering === 'disabled') {
     return { allowed: true, modifiedQueryString: queryString }
   }
 
@@ -236,8 +239,8 @@ export async function enforceRoleBasedFiltering(
 
   const fhirUser = normalizeFhirUser(rawFhirUser)
   const resourceType = ctx.resourcePath.split(/[/?]/)[0]
-  const patientScopedResources = config.accessControl.patientScopedResources
-  const isEnforce = config.accessControl.roleBasedFiltering === 'enforce'
+  const patientScopedResources = ac.patientScopedResources
+  const isEnforce = ac.roleBasedFiltering === 'enforce'
 
   if (fhirUser.startsWith('Practitioner/')) {
     return enforcePractitionerFiltering(ctx, queryString, fhirUser, resourceType, patientScopedResources, isEnforce)

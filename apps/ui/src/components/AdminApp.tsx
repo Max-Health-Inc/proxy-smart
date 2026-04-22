@@ -1,5 +1,5 @@
 import { SmartAppsManager } from './SmartAppsManager/SmartAppsManager';
-import { FhirServersManager } from './FhirServersManager/FhirServersManager';
+import { ServersManager } from './ServersManager';
 import { SmartConfigManager } from './SmartConfigManager';
 import { SmartProxyOverview } from './SmartProxyOverview';
 import { McpServersManager } from './McpServersManager';
@@ -158,7 +158,7 @@ export function AdminApp() {
                             {currentTab === 'dashboard' && <SmartProxyOverview onNavigate={handleTabChange} />}
                             {currentTab === 'smart-apps' && <SmartAppsManager />}
                             {currentTab === 'users' && <UsersAndFederationManager />}
-                            {currentTab === 'fhir-servers' && <FhirServersManager />}
+                            {currentTab === 'servers' && <ServersManager />}
                             {currentTab === 'ai-tools' && <McpServersManager />}
                             {currentTab === 'idp' && <IdPManager />}
                             {currentTab === 'smart-config' && <SmartConfigManager />}

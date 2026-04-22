@@ -5,7 +5,7 @@
   "client_uri": "http://localhost:5175",
   "logo_uri": "http://localhost:5175/proxy-smart.svg",
   "redirect_uris": ["http://localhost:5175/callback"],
-  "scope": "openid fhirUser launch user/*.read patient/*.read",
+  "scope": "openid fhirUser launch user/*.read patient/*.read user/Claim.cud user/QuestionnaireResponse.cud",
   "grant_types": ["authorization_code"],
   "response_types": ["code"],
   "token_endpoint_auth_method": "none",

@@ -38,7 +38,7 @@ interface ResourceSelection {
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function DocumentImport({ onClose }: { onClose: () => void }) {
+export function DocumentImport({ onClose, onSaved }: { onClose: () => void; onSaved?: () => void }) {
   const [step, setStep] = useState<ImportStep>("upload")
   const [dragOver, setDragOver] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -190,6 +190,7 @@ export function DocumentImport({ onClose }: { onClose: () => void }) {
 
     setSaveErrors(errors)
     setStep("done")
+    onSaved?.()
   }, [selections, result, patientId])
 
   const selectedCount = selections.filter(s => s.selected).length

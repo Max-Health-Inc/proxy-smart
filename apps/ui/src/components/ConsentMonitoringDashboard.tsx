@@ -41,7 +41,7 @@ import {
 } from 'recharts';
 import { config } from '@/config';
 import { getAdminToken } from '@/lib/admin-api';
-import { ConsentSettings } from './ConsentSettings';
+
 import {
   consentWebSocketService,
   type ConsentDecisionEvent,
@@ -362,12 +362,11 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <ResponsiveTabsList columns={5}>
+            <ResponsiveTabsList columns={4}>
               <TabsTrigger value="overview" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Overview')}</TabsTrigger>
               <TabsTrigger value="decisions" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Decisions')}</TabsTrigger>
               <TabsTrigger value="analytics" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Analytics')}</TabsTrigger>
               <TabsTrigger value="denied" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Denied Access')}</TabsTrigger>
-              <TabsTrigger value="settings" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">{t('Settings')}</TabsTrigger>
             </ResponsiveTabsList>
 
             {/* ─── Overview ──────────────────────────────────── */}
@@ -783,10 +782,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
               </div>
             </TabsContent>
 
-            {/* ─── Settings ──────────────────────────────────── */}
-            <TabsContent value="settings" className="space-y-6">
-              <ConsentSettings />
-            </TabsContent>
+
           </Tabs>
         </div>
       </div>

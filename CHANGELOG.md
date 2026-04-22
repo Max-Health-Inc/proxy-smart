@@ -6,6 +6,104 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.7-alpha.202604220949.46abe258] - 2026-04-22
+
+- ⚠️ Breaking Changes: ModalStackProvider integration and dynamic z-index handling require updates to app root usage and UI layering
+- 🔧 Chores & Improvements: Introduce ModalStackProvider and useModalLayer with shared-ui exports; wire modal layer into apps
+- ✨ Features: Dynamic z-index support for dialogs via useModalLayer on Dialog/Overlay/Content
+- 📚 Documentation: N/A
+- 🐛 Bug Fixes: N/A
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/565
+
+
+## [0.0.7-alpha.202604220939.1e50f6cf] - 2026-04-22
+
+- ✨ Features: 
+  - Introduced MedicalTimeline component and view mode switch (cards/timeline) in patient portal.
+  - SHL DICOMweb mode support: add and route SHL DICOMweb handling and token support.
+
+- 🔧 Chores & Improvements:
+  - Refined ImagingStudyCard rendering to show thumbnails/series more aggressively.
+  - SHL backend scaffolding for DICOMweb proxy (buildDicomAuthHeader, SHL DICOMweb proxy handler scaffolding).
+  - Backend/frontend build-test workflows: disable Copilot Self-Heal steps.
+
+- 🐛 Bug Fixes:
+  - SHL DICOMweb mode integration updates and routing adjustments.
+  - Updated DICOM proxy target in backend/shl.ts to use dicomServer.baseUrl.
+
+Notes:
+- This release focuses on new SHL integration groundwork, UI enhancements for patient portal timeline, and workflow adjustments. No breaking changes reported.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/564
+
+
+## [0.0.7-alpha.202604212352.98581bd0] - 2026-04-22
+
+- ✨ Features: Introduce ServersManager with unified FHIR and DICOM sub-managers, including new DicomServersManager, full CRUD dialogs (AddDicomServerDialog, EditDicomServerDialog), and DicomServerCard; consolidate navigation to reflect new Servers tab.
+- 🔧 Chores & Improvements: Backend support for DICOM servers via new admin routes, runtime config integration, and dicom-servers schema with auth/header handling; update dicomweb proxy utilities to align with new structure; wire server admin routes into runtime config loading.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/561
+
+
+## [0.0.7-alpha.202604212241.3c476a12] - 2026-04-21
+
+- 🔧 Chores & Improvements: AuditTimeline now uses base/monitoring paths without config.proxyPrefix
+- 🔧 Chores & Improvements: Backend SHL updated with a FHIR proxy handler including session token validation, expiration handling, and per-session patient scope
+- 📚 Documentation: DTR app manifest and config broadened OAuth scopes to include user/Claim.cud and user/QuestionnaireResponse.cud
+- 🔧 Chores & Improvements: Patient portal - propagate onSaved callbacks to DocumentImport and PatientScribe; add onSaved handler plumbing
+- 🔧 Chores & Improvements: Patient portal - RecordDetailModal extended with ORIGINAL_SNAPSHOT_EXT and logic to store original snapshot when pending review
+- 🔧 Chores & Improvements: Patient portal - ResourceReviewCard now filters out non-useful FHIR validation warnings (narrative, text.div, etc.)
+- 🔧 Chores & Improvements: Patient portal - RecordEditModal adds ORIGINAL_SNAPSHOT_EXT export and snapshot handling comments/logic for discard/revert
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/558
+
+
+## [0.0.7-alpha.202604210210.f96ec187] - 2026-04-21
+
+- ✨ Features
+  - Backend SHL: introduce SHL FHIR proxy handler with session token validation, expiration handling, and per-session patient scope
+
+- 🐛 Bug Fixes
+  - AuditTimeline: remove proxyPrefix from proxy URL construction; now base/monitoring/... without config.proxyPrefix
+  - Patient portal: ResourceReviewCard adds warning filtering to suppress non-useful FHIR validation warnings (narrative, text.div, etc.) for patients
+  - Patient portal: propagate onSaved callbacks to DocumentImport and PatientScribe components; add onSaved handler plumbing
+  - Patient portal: RecordDetailModal extended with ORIGINAL_SNAPSHOT_EXT constant and logic to store original snapshot when marking as pending review
+  - Patient portal: RecordEditModal new ORIGINAL_SNAPSHOT_EXT export and snapshot handling comments/logic (prepares for discard/revert)
+
+- 📚 Documentation
+  - DTR app manifest and config: broaden OAuth scopes to include user/Claim.cud and user/QuestionnaireResponse.cud
+
+- 🔧 Chores & Improvements
+  - (Internal maintenance related to diff/structure and scaffolding)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/556
+
+
+## [0.0.6-alpha.202604210100.3c8bee72] - 2026-04-21
+
+- ✨ Features: 
+  - AccessControlSettings component added (new UI feature)
+  - UI: Tabs-focused layout enhancements including ConsentSettings and AccessControlSettings integration
+
+- 🔧 Chores & Improvements:
+  - UI/UX refactors: simplify headers and tabs, remove Settings tab from ConsentMonitoringDashboard, and extend layouts to accommodate new settings
+  - HealthcareUsersManager: support external add-user control via props and internal state fallback
+  - SmartAppsManager and SmartConfigManager updated to import and integrate new settings components
+  - index.css updated with shared UI styles import
+
+- ⚠️ Breaking Changes: 
+  - None detected
+
+- 🐛 Bug Fixes:
+  - None detected
+
+- 📚 Documentation:
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/552
+
+
 ## [0.0.6-beta.202604202357.6b2a26b6] - 2026-04-21
 
 - 🔧 Chores & Improvements: UI cleanup in OAuthMonitoringDashboard (switch header from BarChart icon to Tabs-based layout; remove BarChart icon import and usage; retain Activity, Play, Pause, Refresh icons)  

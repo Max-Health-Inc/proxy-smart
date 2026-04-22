@@ -3,7 +3,7 @@ export const ADMIN_TABS = [
   'dashboard',
   'smart-apps',
   'users',
-  'fhir-servers',
+  'servers',
   'ai-tools',
   'idp',
   'smart-config',

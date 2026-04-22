@@ -1340,7 +1340,7 @@ jobs:
 
       # Auto-create issue and assign Copilot Cloud Agent on failure
       - name: Copilot Self-Heal (Create Issue)
-        if: failure() && steps.inferno-tests.outcome == 'failure'
+        if: false # disabled — failure() && steps.inferno-tests.outcome == 'failure'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |

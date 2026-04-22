@@ -111,14 +111,27 @@ function isVerified(resource: FhirResource): boolean {
   return code === "confirmed"
 }
 
+/** Extension URL for storing the original resource snapshot before patient edits */
+export const ORIGINAL_SNAPSHOT_EXT = "http://proxy-smart.com/fhir/StructureDefinition/original-snapshot"
+
 /**
  * When editing a verified resource, set verificationStatus to "provisional"
  * so it appears as "pending review" until re-confirmed by a practitioner.
+ * Also stores the original resource as a snapshot extension for discard/revert.
  */
-function markAsPendingReview(resource: FhirResource): FhirResource {
+function markAsPendingReview(resource: FhirResource, originalResource: FhirResource): FhirResource {
   if (!resource.verificationStatus) return resource
+
+  // Only store snapshot if not already present (first edit)
+  const existingExts = (resource.extension as Array<{ url: string; valueString?: string }>) ?? []
+  const hasSnapshot = existingExts.some(e => e.url === ORIGINAL_SNAPSHOT_EXT)
+  const snapshotExt = hasSnapshot
+    ? existingExts
+    : [...existingExts, { url: ORIGINAL_SNAPSHOT_EXT, valueString: JSON.stringify(originalResource) }]
+
   return {
     ...resource,
+    extension: snapshotExt,
     verificationStatus: {
       coding: [{
         system: resource.verificationStatus.coding?.[0]?.system
@@ -173,7 +186,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
 
       // If the resource was verified, mark as provisional (pending review)
       if (wasVerified) {
-        updated = markAsPendingReview(updated)
+        updated = markAsPendingReview(updated, resource)
       }
 
       const result = await updateResource(updated)
