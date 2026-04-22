@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia'
 import { validateToken } from '../lib/auth'
 import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
 import { config } from '../config'
+import { getDefaultDicomServer } from '../lib/runtime-config'
 import { logger } from '../lib/logger'
 
 /**
@@ -38,11 +39,27 @@ import { logger } from '../lib/logger'
 // UID format: DICOM UIDs are dot-separated numeric strings (1.2.840.10008...)
 const UidParam = t.String({ pattern: '^[0-9.]+$', description: 'DICOM UID (dot-separated numeric)' })
 
+/** Build auth header for a runtime DICOM server config */
+function buildServerAuthHeader(server: { authType?: string; authHeader?: string; username?: string; password?: string }): string | null {
+  switch (server.authType) {
+    case 'basic':
+      if (server.username && server.password) {
+        return `Basic ${Buffer.from(`${server.username}:${server.password}`).toString('base64')}`
+      }
+      return null
+    case 'bearer':
+    case 'header':
+      return server.authHeader || null
+    default:
+      return null
+  }
+}
+
 /** Build upstream URL from the DICOMweb base and the incoming sub-path + query string */
 function buildUpstreamUrl(subPath: string, queryString: string): string {
-  const base = config.dicomweb.baseUrl
-  if (!base) throw new ConfigurationError('DICOMweb is not configured (DICOMWEB_BASE_URL not set)')
-  // Normalize: strip trailing slash from base, prepend "/" to subPath if needed
+  const server = getDefaultDicomServer()
+  const base = server?.baseUrl ?? config.dicomweb.baseUrl
+  if (!base) throw new ConfigurationError('DICOMweb is not configured (no DICOM server or DICOMWEB_BASE_URL)')
   const normalizedBase = base.replace(/\/+$/, '')
   const path = subPath.startsWith('/') ? subPath : `/${subPath}`
   return `${normalizedBase}${path}${queryString}`
@@ -50,9 +67,10 @@ function buildUpstreamUrl(subPath: string, queryString: string): string {
 
 /** Forward a request to the upstream PACS and stream the response back */
 async function proxyDicomWeb(request: Request, subPath: string, set: Record<string, any>): Promise<Response | string | object> {
-  if (!config.dicomweb.enabled) {
+  const server = getDefaultDicomServer()
+  if (!server && !config.dicomweb.enabled) {
     set.status = 501
-    return { error: 'DICOMweb proxy is not configured', message: 'Set DICOMWEB_BASE_URL to enable DICOM imaging' }
+    return { error: 'DICOMweb proxy is not configured', message: 'Add a DICOM server or set DICOMWEB_BASE_URL to enable DICOM imaging' }
   }
 
   // 1) Validate caller token
@@ -83,14 +101,16 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
   const accept = request.headers.get('accept')
   if (accept) headers.set('accept', accept)
 
-  // Attach upstream PACS auth if configured
-  if (config.dicomweb.upstreamAuth) {
-    headers.set('authorization', config.dicomweb.upstreamAuth)
+  // Attach upstream PACS auth (runtime server config takes precedence)
+  const upstreamAuth = server ? buildServerAuthHeader(server) : config.dicomweb.upstreamAuth
+  if (upstreamAuth) {
+    headers.set('authorization', upstreamAuth)
   }
 
   // 4) Fetch from upstream PACS
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), config.dicomweb.timeoutMs)
+  const timeoutMs = server?.timeoutMs ?? config.dicomweb.timeoutMs
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     logger.fhir.debug('DICOMweb proxy →', { target, method: 'GET' })
@@ -117,7 +137,7 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
     })
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
-      logger.fhir.error('DICOMweb upstream timeout', { target, timeoutMs: config.dicomweb.timeoutMs })
+      logger.fhir.error('DICOMweb upstream timeout', { target, timeoutMs })
       set.status = 504
       return { error: 'DICOMweb upstream timeout' }
     }
@@ -137,9 +157,10 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
 
 /** Forward a POST (STOW-RS) request to the upstream PACS, streaming the body through */
 async function proxyDicomWebPost(request: Request, subPath: string, set: Record<string, any>): Promise<Response | string | object> {
-  if (!config.dicomweb.enabled) {
+  const server = getDefaultDicomServer()
+  if (!server && !config.dicomweb.enabled) {
     set.status = 501
-    return { error: 'DICOMweb proxy is not configured', message: 'Set DICOMWEB_BASE_URL to enable DICOM imaging' }
+    return { error: 'DICOMweb proxy is not configured', message: 'Add a DICOM server or set DICOMWEB_BASE_URL to enable DICOM imaging' }
   }
 
   const authHeader = request.headers.get('authorization') || ''
@@ -168,13 +189,15 @@ async function proxyDicomWebPost(request: Request, subPath: string, set: Record<
   if (contentType) headers.set('content-type', contentType)
   const accept = request.headers.get('accept')
   if (accept) headers.set('accept', accept)
-  if (config.dicomweb.upstreamAuth) {
-    headers.set('authorization', config.dicomweb.upstreamAuth)
+  const stowAuth = server ? buildServerAuthHeader(server) : config.dicomweb.upstreamAuth
+  if (stowAuth) {
+    headers.set('authorization', stowAuth)
   }
 
   const controller = new AbortController()
   // STOW-RS uploads can be large — use 5× the normal timeout
-  const timeout = setTimeout(() => controller.abort(), config.dicomweb.timeoutMs * 5)
+  const stowTimeoutMs = (server?.timeoutMs ?? config.dicomweb.timeoutMs) * 5
+  const timeout = setTimeout(() => controller.abort(), stowTimeoutMs)
 
   try {
     logger.fhir.info('DICOMweb STOW-RS →', { target })
@@ -238,13 +261,15 @@ export interface PacsStatus {
 
 /** Lightweight probe: is PACS configured + can we reach it? */
 async function probePacs(): Promise<PacsStatus> {
-  if (!config.dicomweb.enabled || !config.dicomweb.baseUrl) {
+  const server = getDefaultDicomServer()
+  if (!server && (!config.dicomweb.enabled || !config.dicomweb.baseUrl)) {
     return { configured: false, reachable: null, message: 'DICOMweb is not configured. No PACS connection available.' }
   }
 
-  const base = config.dicomweb.baseUrl.replace(/\/+$/, '')
+  const base = (server?.baseUrl ?? config.dicomweb.baseUrl!).replace(/\/+$/, '')
   const headers = new Headers()
-  if (config.dicomweb.upstreamAuth) headers.set('authorization', config.dicomweb.upstreamAuth)
+  const auth = server ? buildServerAuthHeader(server) : config.dicomweb.upstreamAuth
+  if (auth) headers.set('authorization', auth)
 
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 5_000) // 5 s ceiling for health probe

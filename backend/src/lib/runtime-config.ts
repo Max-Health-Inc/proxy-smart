@@ -16,6 +16,7 @@ import type { ConsentConfig } from '@/lib/consent/types'
 import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
 import type { BrandConfigType, BrandCategoryType } from '@/schemas'
 import type { SmartAccessControlConfigType } from '@/schemas'
+import type { DicomServerConfigType } from '@/schemas'
 import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
 import { loadAllOrgBrands } from './org-branding'
 
@@ -24,6 +25,7 @@ let consentOverrides: Partial<ConsentConfig> | null = null
 let ialOverrides: Partial<IalConfig> | null = null
 let brandOverrides: Partial<BrandConfigType> | null = null
 let accessControlOverrides: Partial<SmartAccessControlConfigType> | null = null
+let dicomServersCache: DicomServerConfigType[] | null = null
 let loaded = false
 
 // ─── Consent ─────────────────────────────────────────────────────────
@@ -163,6 +165,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     ialOverrides = parseIalFromAttributes(attrs)
     brandOverrides = parseBrandFromAttributes(attrs)
     accessControlOverrides = parseAccessControlFromAttributes(attrs)
+    dicomServersCache = parseDicomServersFromAttributes(attrs)
     // loginTheme is a top-level realm property, not an attribute
     if (brandOverrides) {
       brandOverrides.loginTheme = (realm as any)?.loginTheme || null
@@ -179,6 +182,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
       ialOverrides: !!ialOverrides,
       brandOverrides: !!brandOverrides,
       accessControlOverrides: !!accessControlOverrides,
+      dicomServers: dicomServersCache?.length ?? 0,
     })
   } catch (error) {
     logger.admin.warn('Failed to load runtime config from Keycloak, using env var defaults', { error })
@@ -301,6 +305,72 @@ export async function saveAccessControlConfig(admin: KcAdminClient, settings: Sm
   // Update in-memory cache
   accessControlOverrides = { ...settings }
   logger.admin.info('Access control config saved to Keycloak realm attributes', { settings })
+}
+
+// ─── DICOM Servers ───────────────────────────────────────────────────
+
+const DICOM_SERVERS_KEY = 'dicom_servers'
+
+function parseDicomServersFromAttributes(attrs: Record<string, string>): DicomServerConfigType[] | null {
+  const raw = attrs[DICOM_SERVERS_KEY]
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : null
+  } catch {
+    logger.warn('runtime-config', 'Failed to parse dicom_servers realm attribute')
+    return null
+  }
+}
+
+/**
+ * Build effective DICOM servers list: runtime overrides + env var fallback.
+ * If servers were configured via admin UI, those are returned.
+ * Otherwise, if DICOMWEB_BASE_URL env var is set, a single server is synthesized.
+ */
+export function getRuntimeDicomServers(): DicomServerConfigType[] {
+  if (dicomServersCache && dicomServersCache.length > 0) return dicomServersCache
+
+  // Fallback: synthesize a server from env vars
+  if (config.dicomweb.enabled && config.dicomweb.baseUrl) {
+    return [{
+      id: 'env-default',
+      name: 'Default PACS',
+      baseUrl: config.dicomweb.baseUrl,
+      wadoRoot: config.dicomweb.wadoRoot || undefined,
+      qidoRoot: config.dicomweb.qidoRoot || undefined,
+      authType: config.dicomweb.upstreamAuth ? 'header' : 'none',
+      authHeader: config.dicomweb.upstreamAuth || undefined,
+      timeoutMs: config.dicomweb.timeoutMs,
+      isDefault: true,
+    }]
+  }
+  return []
+}
+
+/** Get the default (or first) DICOM server config, used by the DICOMweb proxy */
+export function getDefaultDicomServer(): DicomServerConfigType | null {
+  const servers = getRuntimeDicomServers()
+  return servers.find(s => s.isDefault) ?? servers[0] ?? null
+}
+
+/** Save DICOM servers list to Keycloak realm attributes */
+export async function saveDicomServers(admin: KcAdminClient, servers: DicomServerConfigType[]): Promise<void> {
+  const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
+  const existingAttrs = (realm?.attributes || {}) as Record<string, string>
+
+  const attributes = {
+    ...existingAttrs,
+    [DICOM_SERVERS_KEY]: JSON.stringify(servers),
+  }
+
+  await admin.realms.update(
+    { realm: process.env.KEYCLOAK_REALM! },
+    { attributes }
+  )
+
+  dicomServersCache = [...servers]
+  logger.admin.info('DICOM servers config saved to Keycloak realm attributes', { count: servers.length })
 }
 
 /** Whether runtime config has been loaded from Keycloak at least once */

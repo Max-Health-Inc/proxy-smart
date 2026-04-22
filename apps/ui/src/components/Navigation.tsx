@@ -129,9 +129,9 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       icon: Users
     },
     { 
-      id: 'fhir-servers', 
-      label: t('FHIR Servers'), 
-      description: t('Server Management'),
+      id: 'servers', 
+      label: t('Servers'), 
+      description: t('FHIR & DICOM Server Management'),
       icon: Server
     },
     { 

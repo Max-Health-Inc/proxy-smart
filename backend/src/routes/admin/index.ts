@@ -25,6 +25,7 @@ import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
+import { dicomServersAdminRoutes } from './dicom-servers'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -129,6 +130,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(appStoreAdminRoutes)
   // Keycloak Client Policies & CIMD management
   .use(clientPoliciesRoutes)
+  // DICOM/PACS server management
+  .use(dicomServersAdminRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 
