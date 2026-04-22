@@ -10,6 +10,7 @@ import { useEffect, useState } from "react"
 import { Spinner, Badge } from "@proxy-smart/shared-ui"
 import { parseShl, isShlExpired, resolveShl, createShlFhirClient, type ShlResult } from "@/lib/shl-viewer-client"
 import { setActiveFhirClient, resetFhirClient } from "@/lib/fhir-client"
+import { setShlDicomwebMode, resetShlDicomwebMode } from "@/lib/dicomweb"
 import { Dashboard } from "@/components/Dashboard"
 import { AlertCircle, Link2, Clock, Lock } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -29,7 +30,10 @@ export function ShlView() {
   // Resolve the SHL on mount
   useEffect(() => {
     resolve()
-    return () => { resetFhirClient() }
+    return () => {
+      resetFhirClient()
+      resetShlDicomwebMode()
+    }
   }, [])
 
   async function resolve(passcodeInput?: string) {
@@ -56,6 +60,9 @@ export function ShlView() {
       // Create a bearer-token FHIR client and inject it
       const { client, fetchFn } = createShlFhirClient(result.access)
       setActiveFhirClient(client, fetchFn, result.access.aud)
+
+      // Route DICOMweb requests through the SHL proxy with the session token
+      setShlDicomwebMode(result.access.access_token, result.access.aud)
 
       setState({
         phase: "ready",

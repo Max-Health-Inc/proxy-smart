@@ -20,6 +20,7 @@ import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
 import { getAllServers } from '@/lib/fhir-server-store'
+import { getDefaultDicomServer } from '@/lib/runtime-config'
 import * as crypto from 'crypto'
 
 // KTC doesn't support smart-api-access yet (in their Future Work).
@@ -252,6 +253,120 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
   }
 }
 
+// ── SHL DICOMweb proxy handler ──────────────────────────────────────────────
+
+/** Build auth header for a DICOM server config */
+function buildDicomAuthHeader(server: { authType?: string; authHeader?: string; username?: string; password?: string }): string | null {
+  switch (server.authType) {
+    case 'basic':
+      if (server.username && server.password) {
+        return `Basic ${Buffer.from(`${server.username}:${server.password}`).toString('base64')}`
+      }
+      return null
+    case 'bearer':
+    case 'header':
+      return server.authHeader || null
+    default:
+      return null
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
+  try {
+    const bearerToken = extractBearerToken(headers)
+    if (!bearerToken) {
+      set.status = 401
+      return { error: 'Bearer token required' }
+    }
+
+    const shlId = tokenIndex.get(bearerToken)
+    if (!shlId) {
+      set.status = 401
+      return { error: 'Invalid or expired session token' }
+    }
+
+    const session = shlStore.get(shlId)
+    if (!session) {
+      tokenIndex.delete(bearerToken)
+      set.status = 401
+      return { error: 'Session not found' }
+    }
+
+    if (Date.now() > session.expiresAt) {
+      tokenIndex.delete(bearerToken)
+      shlStore.delete(shlId)
+      set.status = 410
+      return { error: 'Share link has expired' }
+    }
+
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      set.status = 405
+      return { error: 'Only read operations are allowed on shared links' }
+    }
+
+    // Resolve the configured DICOM server
+    const dicomServer = getDefaultDicomServer()
+    if (!dicomServer) {
+      set.status = 501
+      return { error: 'DICOMweb proxy is not configured' }
+    }
+
+    const dicomPath = (params as Record<string, string>)?.['*'] || ''
+    const url = new URL(request.url)
+    const targetUrl = `${dicomServer.url.replace(/\/+$/, '')}/${dicomPath}${url.search}`
+
+    // Build upstream headers
+    const upstreamHeaders = new Headers()
+    const accept = request.headers.get('accept')
+    if (accept) upstreamHeaders.set('accept', accept)
+    const upstreamAuth = buildDicomAuthHeader(dicomServer)
+    if (upstreamAuth) upstreamHeaders.set('authorization', upstreamAuth)
+
+    let resp: Response
+    try {
+      resp = await fetch(targetUrl, {
+        method: request.method,
+        headers: upstreamHeaders,
+      })
+    } catch (fetchError) {
+      const msg = fetchError instanceof Error ? fetchError.message : 'Unknown network error'
+      logger.auth.error('SHL DICOMweb upstream unreachable', { shlId, targetUrl, error: msg })
+      set.status = 502
+      return { error: `Upstream DICOMweb server unreachable: ${msg}` }
+    }
+
+    set.status = resp.status
+    // Forward content-type faithfully (DICOM uses multipart/related, application/dicom+json, etc.)
+    const contentType = resp.headers.get('content-type')
+    if (contentType) set.headers['content-type'] = contentType
+    set.headers['access-control-allow-origin'] = '*'
+    set.headers['access-control-allow-headers'] = 'Authorization, Content-Type, Accept'
+
+    logger.auth.debug('SHL DICOMweb proxy request', {
+      shlId,
+      method: request.method,
+      dicomPath,
+      targetUrl,
+      status: resp.status,
+    })
+
+    // Return raw binary/multipart body — no URL rewriting needed for DICOMweb
+    return new Response(resp.body, {
+      status: resp.status,
+      headers: {
+        ...(contentType ? { 'content-type': contentType } : {}),
+        'access-control-allow-origin': '*',
+        'access-control-allow-headers': 'Authorization, Content-Type, Accept',
+      },
+    })
+  } catch (error) {
+    logger.auth.error('SHL DICOMweb proxy error', { error })
+    set.status = 500
+    return { error: 'Internal SHL DICOMweb proxy error' }
+  }
+}
+
 // ── Routes ──────────────────────────────────────────────────────────────────
 
 export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
@@ -451,6 +566,17 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
     detail: {
       summary: 'SHL FHIR Proxy',
       description: 'Proxies FHIR requests from SHL viewers using opaque session tokens. No real tokens leave the server.',
+      tags: ['shl'],
+      hide: true,
+    },
+  })
+
+  // ── SHL DICOMweb proxy ──────────────────────────────────────────────────
+
+  .all('/dicomweb/*', shlDicomwebProxyHandler, {
+    detail: {
+      summary: 'SHL DICOMweb Proxy',
+      description: 'Proxies DICOMweb requests from SHL viewers using opaque session tokens.',
       tags: ['shl'],
       hide: true,
     },
