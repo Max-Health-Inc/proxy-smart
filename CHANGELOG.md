@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.7-alpha.202604212352.98581bd0] - 2026-04-22
+
+- ✨ Features: Introduce ServersManager with unified FHIR and DICOM sub-managers, including new DicomServersManager, full CRUD dialogs (AddDicomServerDialog, EditDicomServerDialog), and DicomServerCard; consolidate navigation to reflect new Servers tab.
+- 🔧 Chores & Improvements: Backend support for DICOM servers via new admin routes, runtime config integration, and dicom-servers schema with auth/header handling; update dicomweb proxy utilities to align with new structure; wire server admin routes into runtime config loading.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/561
+
+
 ## [0.0.7-alpha.202604212241.3c476a12] - 2026-04-21
 
 - 🔧 Chores & Improvements: AuditTimeline now uses base/monitoring paths without config.proxyPrefix
