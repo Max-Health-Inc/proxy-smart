@@ -4,7 +4,7 @@ import { RecordName, type AnyResource } from "@/lib/ips-display-helpers"
 import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
   Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, Scissors,
-  Flag, Baby, CalendarDays, ScanLine, FileText, Stethoscope, Search, X,
+  Flag, Baby, CalendarDays, ScanLine, FileText, Stethoscope,
 } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
 import { useTranslation } from "react-i18next"
@@ -352,6 +352,8 @@ export interface MedicalTimelineProps {
   diagnosticReports: DiagnosticReport[]
   documents: DocumentReference[]
   devices: DeviceUseStatement[]
+  /** Search query from the Dashboard (filters events by title/subtitle/date) */
+  search?: string
   onOpenDetail: (title: string, resource: AnyResource) => void
 }
 
@@ -363,13 +365,32 @@ const ALL_CATEGORIES: TimelineCategory[] = [
   "flag", "pregnancy", "device",
 ]
 
+// ── Category side assignment (desktop alternating) ──────────────────────────
+
+const CATEGORY_SIDE: Record<TimelineCategory, "left" | "right"> = {
+  encounter:    "left",
+  condition:    "left",
+  procedure:    "left",
+  medication:   "left",
+  immunization: "left",
+  flag:         "left",
+  pregnancy:    "left",
+  lab:          "right",
+  vital:        "right",
+  imaging:      "right",
+  diagnostic:   "right",
+  document:     "right",
+  allergy:      "right",
+  device:       "right",
+}
+
 // ── Component ───────────────────────────────────────────────────────────────
 
 export function MedicalTimeline(props: MedicalTimelineProps) {
   const { t } = useTranslation()
   const { translateCoding } = useFhirTranslation()
   const [activeCategories, setActiveCategories] = useState<Set<TimelineCategory> | null>(null) // null = all
-  const [search, setSearch] = useState("")
+  const search = props.search ?? ""
 
   const allEvents = useMemo(() => extractEvents(props), [
     props.conditions, props.allergies, props.medications, props.medicationRequests,
@@ -433,24 +454,6 @@ export function MedicalTimeline(props: MedicalTimelineProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder={t("timeline.searchPlaceholder", "Search timeline...")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        />
-        {search && (
-          <button type="button" onClick={() => setSearch("")}
-            className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground">
-            <X className="size-3.5" />
-          </button>
-        )}
-      </div>
-
       {/* Category filter pills */}
       <div className="flex flex-wrap gap-1.5">
         {ALL_CATEGORIES.filter(c => categoryCounts.has(c)).map(cat => {
@@ -484,69 +487,46 @@ export function MedicalTimeline(props: MedicalTimelineProps) {
       ) : (
         <div className="relative">
           {monthGroups.map((group, gi) => (
-            <div key={group.key} className={gi > 0 ? "mt-6" : ""}>
-              {/* Month header */}
-              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-2 mb-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div key={group.key} className={gi > 0 ? "mt-8" : ""}>
+              {/* Month header — centered on desktop */}
+              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm pb-2 mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground md:text-center">
                   {group.label}
                 </h3>
               </div>
 
-              {/* Events in this month */}
-              <div className="relative ml-3 border-l-2 border-border pl-6 space-y-4">
-                {group.events.map((event) => {
-                  const cfg = CATEGORY_CONFIG[event.category]
-                  const Icon = cfg.icon
-                  return (
-                    <div key={event.id} className="relative group">
-                      {/* Timeline dot */}
-                      <div
-                        className={`absolute -left-[31px] top-1 size-4 rounded-full border-2 border-background ${cfg.dotColor} flex items-center justify-center`}
-                      >
-                        <div className="size-1.5 rounded-full bg-white/80" />
-                      </div>
+              {/* Mobile: left-aligned single column */}
+              <div className="relative md:hidden ml-3 border-l-2 border-border pl-6 space-y-4">
+                {group.events.map((event) => (
+                  <TimelineEventCard
+                    key={event.id}
+                    event={event}
+                    translateCoding={translateCoding}
+                    onOpenDetail={props.onOpenDetail}
+                    layout="mobile"
+                  />
+                ))}
+              </div>
 
-                      {/* Card */}
-                      <div className="rounded-lg border border-border/60 bg-card p-3 hover:border-border hover:shadow-sm transition-all">
-                        <div className="flex items-start gap-2.5">
-                          <div className={`mt-0.5 ${cfg.color}`}>
-                            <Icon className="size-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <RecordName resource={event.resource} onOpen={props.onOpenDetail}>
-                                <span className="font-medium text-sm">
-                                  {translateCoding(
-                                    (event.resource as { code?: { coding?: { display?: string; code?: string; system?: string }[] } }).code?.coding?.[0]
-                                  ) || event.title}
-                                </span>
-                              </RecordName>
-                              <span className={`text-[10px] font-medium uppercase tracking-wide ${cfg.color}`}>
-                                {cfg.label}
-                              </span>
-                              {event.badge && (
-                                <Badge variant={event.badge.variant} className="text-[10px] px-1.5 py-0">
-                                  {event.badge.label}
-                                </Badge>
-                              )}
-                            </div>
-                            {event.subtitle && (
-                              <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                {event.subtitle}
-                              </p>
-                            )}
-                            <p className="text-[11px] text-muted-foreground/70 mt-1">
-                              {format(event.date, "MMM d, yyyy")}
-                              <span className="ml-1.5 opacity-70">
-                                ({formatDistanceToNow(event.date, { addSuffix: true })})
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+              {/* Desktop: centered line, alternating left/right by category */}
+              <div className="relative hidden md:block">
+                {/* Center line */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-px bg-border" />
+
+                <div className="space-y-4">
+                  {group.events.map((event) => {
+                    const side = CATEGORY_SIDE[event.category]
+                    return (
+                      <TimelineEventCard
+                        key={event.id}
+                        event={event}
+                        translateCoding={translateCoding}
+                        onOpenDetail={props.onOpenDetail}
+                        layout={side}
+                      />
+                    )
+                  })}
+                </div>
               </div>
             </div>
           ))}
@@ -560,6 +540,119 @@ export function MedicalTimeline(props: MedicalTimelineProps) {
           months: monthGroups.length,
         })}
       </p>
+    </div>
+  )
+}
+
+// ── Timeline event card ─────────────────────────────────────────────────────
+
+function TimelineEventCard({
+  event,
+  translateCoding,
+  onOpenDetail,
+  layout,
+}: {
+  event: TimelineEvent
+  translateCoding: (coding: { display?: string; code?: string; system?: string } | undefined) => string | undefined
+  onOpenDetail: (title: string, resource: AnyResource) => void
+  layout: "mobile" | "left" | "right"
+}) {
+  const cfg = CATEGORY_CONFIG[event.category]
+  const Icon = cfg.icon
+
+  // Mobile layout — simple left-aligned
+  if (layout === "mobile") {
+    return (
+      <div className="relative">
+        <div className={`absolute -left-[31px] top-1 size-4 rounded-full border-2 border-background ${cfg.dotColor} flex items-center justify-center`}>
+          <div className="size-1.5 rounded-full bg-white/80" />
+        </div>
+        <EventCardContent event={event} cfg={cfg} Icon={Icon} translateCoding={translateCoding} onOpenDetail={onOpenDetail} />
+      </div>
+    )
+  }
+
+  // Desktop layout — left or right of center line
+  const isLeft = layout === "left"
+
+  return (
+    <div className="relative flex items-start">
+      {/* Left content area */}
+      <div className={`w-[calc(50%-20px)] ${isLeft ? "" : "order-1"}`}>
+        {isLeft && (
+          <EventCardContent event={event} cfg={cfg} Icon={Icon} translateCoding={translateCoding} onOpenDetail={onOpenDetail} />
+        )}
+      </div>
+
+      {/* Center dot */}
+      <div className="relative z-10 flex items-center justify-center w-10 shrink-0">
+        <div className={`size-4 rounded-full border-2 border-background ${cfg.dotColor} flex items-center justify-center`}>
+          <div className="size-1.5 rounded-full bg-white/80" />
+        </div>
+      </div>
+
+      {/* Right content area */}
+      <div className={`w-[calc(50%-20px)] ${isLeft ? "order-1" : ""}`}>
+        {!isLeft && (
+          <EventCardContent event={event} cfg={cfg} Icon={Icon} translateCoding={translateCoding} onOpenDetail={onOpenDetail} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Shared event card content ───────────────────────────────────────────────
+
+function EventCardContent({
+  event,
+  cfg,
+  Icon,
+  translateCoding,
+  onOpenDetail,
+}: {
+  event: TimelineEvent
+  cfg: typeof CATEGORY_CONFIG[TimelineCategory]
+  Icon: typeof Heart
+  translateCoding: (coding: { display?: string; code?: string; system?: string } | undefined) => string | undefined
+  onOpenDetail: (title: string, resource: AnyResource) => void
+}) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-card p-3 hover:border-border hover:shadow-sm transition-all">
+      <div className="flex items-start gap-2.5">
+        <div className={`mt-0.5 ${cfg.color}`}>
+          <Icon className="size-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <RecordName resource={event.resource} onOpen={onOpenDetail}>
+              <span className="font-medium text-sm">
+                {translateCoding(
+                  (event.resource as { code?: { coding?: { display?: string; code?: string; system?: string }[] } }).code?.coding?.[0]
+                ) || event.title}
+              </span>
+            </RecordName>
+            <span className={`text-[10px] font-medium uppercase tracking-wide ${cfg.color}`}>
+              {cfg.label}
+            </span>
+            {event.badge && (
+              <Badge variant={event.badge.variant} className="text-[10px] px-1.5 py-0">
+                {event.badge.label}
+              </Badge>
+            )}
+          </div>
+          {event.subtitle && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">
+              {event.subtitle}
+            </p>
+          )}
+          <p className="text-[11px] text-muted-foreground/70 mt-1">
+            {format(event.date, "MMM d, yyyy")}
+            <span className="ml-1.5 opacity-70">
+              ({formatDistanceToNow(event.date, { addSuffix: true })})
+            </span>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

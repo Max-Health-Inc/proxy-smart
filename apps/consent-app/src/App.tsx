@@ -1,5 +1,5 @@
 import { Dashboard } from "@/components/Dashboard"
-import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth, ModalStackProvider } from "@proxy-smart/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"
@@ -11,14 +11,15 @@ export default function App() {
   const brand = useBranding()
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader
-        title="Consent Manager"
-        icon={ShieldCheck}
-        authenticated={state === "authenticated"}
-        onSignOut={handleLogout}
-        maxWidth="max-w-4xl"
-      />
+    <ModalStackProvider>
+      <div className="min-h-screen bg-background">
+        <AppHeader
+          title="Consent Manager"
+          icon={ShieldCheck}
+          authenticated={state === "authenticated"}
+          onSignOut={handleLogout}
+          maxWidth="max-w-4xl"
+        />
 
       {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
@@ -71,6 +72,7 @@ export default function App() {
           <Dashboard />
         )}
       </main>
-    </div>
+      </div>
+    </ModalStackProvider>
   )
 }
