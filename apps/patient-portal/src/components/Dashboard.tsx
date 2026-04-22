@@ -65,7 +65,7 @@ import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
   Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle, Cigarette,
   Wine, Scissors, Flag, Baby, Upload, FileImage, MessageSquare, Eye, EyeOff, QrCode,
-  LayoutGrid, Clock,
+  LayoutGrid, Clock, Search, X,
 } from "lucide-react"
 import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
@@ -87,6 +87,7 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
   const [showUnverified, setShowUnverified] = useState(true)
   const [showQrDialog, setShowQrDialog] = useState(false)
   const [viewMode, setViewMode] = useState<"cards" | "timeline">("cards")
+  const [searchQuery, setSearchQuery] = useState("")
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailTitle, setDetailTitle] = useState(""); const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
 
@@ -309,6 +310,24 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
         </div>
       )}
 
+      {/* Search bar — shared across both views */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder={t("dashboard.searchRecords", "Search records...")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-8 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+        {searchQuery && (
+          <button type="button" onClick={() => setSearchQuery("")}
+            className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground">
+            <X className="size-3.5" />
+          </button>
+        )}
+      </div>
+
       {viewMode === "timeline" ? (
         <MedicalTimeline
           conditions={filterVerified(conditions)}
@@ -327,6 +346,7 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
           diagnosticReports={diagnosticReports}
           documents={documents}
           devices={deviceUse}
+          search={searchQuery}
           onOpenDetail={openDetail}
         />
       ) : (
