@@ -95,7 +95,7 @@ jobs:
 
       - name: 🤖 Copilot Self-Heal (Frontend Build)
         id: build-heal
-        if: ${{ steps.frontend-build.outcome == 'failure' }}
+        if: false # disabled — ${{ steps.frontend-build.outcome == 'failure' }}
         uses: ./.github/actions/copilot-self-heal
         with:
           error-log: frontend-build.log
@@ -127,7 +127,7 @@ jobs:
 
       - name: 🤖 Copilot Self-Heal (Frontend Tests)
         id: test-heal
-        if: ${{ inputs.run_tests && steps.test-frontend.outcome == 'failure' }}
+        if: false # disabled — ${{ inputs.run_tests && steps.test-frontend.outcome == 'failure' }}
         uses: ./.github/actions/copilot-self-heal
         with:
           error-log: frontend-test.log

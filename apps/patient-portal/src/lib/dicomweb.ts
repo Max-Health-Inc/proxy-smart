@@ -13,30 +13,64 @@ import { createCornerstoneDicomweb, type CornerstoneDicomweb } from "@babelfhir-
 
 const dicomwebBase = `${config.proxyBase || window.location.origin}/dicomweb`
 
-const dw = createDicomwebClient({
+// ── SHL mode override ─────────────────────────────────────────────────────
+// When active, DICOM requests are routed through the SHL DICOMweb proxy
+// with the opaque SHL session token instead of the SMART access token.
+
+let shlOverride: { baseUrl: string; token: string } | null = null
+
+/** Activate SHL mode — routes DICOMweb through /api/shl/dicomweb with the given token */
+export function setShlDicomwebMode(token: string, apiBase: string) {
+  const base = apiBase.replace(/\/fhir\/?$/, '')
+  shlOverride = { baseUrl: `${base}/dicomweb`, token }
+  // Rebuild clients with the SHL base
+  activeDw = createDicomwebClient({
+    baseUrl: shlOverride.baseUrl,
+    getAccessToken: () => shlOverride?.token ?? null,
+  })
+  activeCsDw = null // force re-init on next use
+}
+
+/** Deactivate SHL mode — restores normal SMART-authenticated DICOMweb */
+export function resetShlDicomwebMode() {
+  shlOverride = null
+  activeDw = defaultDw
+  activeCsDw = null
+}
+
+/** Resolve the current access token (SHL-aware) */
+function getEffectiveToken(): string | null {
+  return shlOverride?.token ?? smartAuth.getToken()?.access_token ?? null
+}
+
+const defaultDw = createDicomwebClient({
   baseUrl: dicomwebBase,
-  getAccessToken: () => smartAuth.getToken()?.access_token ?? null,
+  getAccessToken: () => getEffectiveToken(),
 })
+
+// Swappable active client — SHL mode replaces this with an SHL-scoped client
+let activeDw = defaultDw
 
 // -- Cornerstone-integrated client (lazy) --
 
-let csDw: CornerstoneDicomweb | null = null
+let activeCsDw: CornerstoneDicomweb | null = null
 
 export function initCornerstoneDicomweb(
   dicomImageLoader: import("@babelfhir-ts/dicomweb/cornerstone").DicomImageLoaderLike,
 ) {
-  if (csDw) return csDw
-  csDw = createCornerstoneDicomweb({
-    baseUrl: dicomwebBase,
-    getAccessToken: () => smartAuth.getToken()?.access_token ?? null,
+  if (activeCsDw) return activeCsDw
+  const base = shlOverride?.baseUrl ?? dicomwebBase
+  activeCsDw = createCornerstoneDicomweb({
+    baseUrl: base,
+    getAccessToken: () => getEffectiveToken(),
     cornerstone: { dicomImageLoader },
   })
-  return csDw
+  return activeCsDw
 }
 
 export function getCornerstoneDicomweb(): CornerstoneDicomweb {
-  if (!csDw) throw new Error("Cornerstone DICOMweb client not initialized")
-  return csDw
+  if (!activeCsDw) throw new Error("Cornerstone DICOMweb client not initialized")
+  return activeCsDw
 }
 
 // -- Re-exports --
@@ -46,19 +80,19 @@ export { getStudyInstanceUID, getPrimaryModality, getStudyTitle, getModalityInfo
 // -- URL builder wrappers --
 
 export function getStudyThumbnailUrl(studyUID: string): string {
-  return dw.studyThumbnailUrl(studyUID)
+  return activeDw.studyThumbnailUrl(studyUID)
 }
 
 export function getSeriesThumbnailUrl(studyUID: string, seriesUID: string): string {
-  return dw.seriesThumbnailUrl(studyUID, seriesUID)
+  return activeDw.seriesThumbnailUrl(studyUID, seriesUID)
 }
 
 export function getDicomwebAuthHeaders(): HeadersInit {
-  return dw.authHeaders()
+  return activeDw.authHeaders()
 }
 
 export function getAccessToken(): string | null {
-  return smartAuth.getToken()?.access_token ?? null
+  return getEffectiveToken()
 }
 
 // -- PACS Status --
