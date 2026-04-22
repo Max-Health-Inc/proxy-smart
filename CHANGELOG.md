@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.7-alpha.202604220939.1e50f6cf] - 2026-04-22
+
+- ✨ Features: 
+  - Introduced MedicalTimeline component and view mode switch (cards/timeline) in patient portal.
+  - SHL DICOMweb mode support: add and route SHL DICOMweb handling and token support.
+
+- 🔧 Chores & Improvements:
+  - Refined ImagingStudyCard rendering to show thumbnails/series more aggressively.
+  - SHL backend scaffolding for DICOMweb proxy (buildDicomAuthHeader, SHL DICOMweb proxy handler scaffolding).
+  - Backend/frontend build-test workflows: disable Copilot Self-Heal steps.
+
+- 🐛 Bug Fixes:
+  - SHL DICOMweb mode integration updates and routing adjustments.
+  - Updated DICOM proxy target in backend/shl.ts to use dicomServer.baseUrl.
+
+Notes:
+- This release focuses on new SHL integration groundwork, UI enhancements for patient portal timeline, and workflow adjustments. No breaking changes reported.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/564
+
+
 ## [0.0.7-alpha.202604212352.98581bd0] - 2026-04-22
 
 - ✨ Features: Introduce ServersManager with unified FHIR and DICOM sub-managers, including new DicomServersManager, full CRUD dialogs (AddDicomServerDialog, EditDicomServerDialog), and DicomServerCard; consolidate navigation to reflect new Servers tab.
