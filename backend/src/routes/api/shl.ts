@@ -314,7 +314,7 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
 
     const dicomPath = (params as Record<string, string>)?.['*'] || ''
     const url = new URL(request.url)
-    const targetUrl = `${dicomServer.url.replace(/\/+$/, '')}/${dicomPath}${url.search}`
+    const targetUrl = `${dicomServer.baseUrl.replace(/\/+$/, '')}/${dicomPath}${url.search}`
 
     // Build upstream headers
     const upstreamHeaders = new Headers()
