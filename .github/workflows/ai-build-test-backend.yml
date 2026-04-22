@@ -55,7 +55,7 @@ jobs:
 
       - name: 🤖 Copilot Self-Heal (Backend Build)
         id: build-heal
-        if: ${{ steps.backend-build.outcome == 'failure' }}
+        if: false # disabled — ${{ steps.backend-build.outcome == 'failure' }}
         uses: ./.github/actions/copilot-self-heal
         with:
           error-log: backend-build.log
@@ -84,7 +84,7 @@ jobs:
 
       - name: 🤖 Copilot Self-Heal (Backend Tests)
         id: test-heal
-        if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' }}
+        if: false # disabled — ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' }}
         uses: ./.github/actions/copilot-self-heal
         with:
           error-log: backend-test.log

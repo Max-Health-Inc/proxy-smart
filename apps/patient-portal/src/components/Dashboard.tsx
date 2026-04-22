@@ -59,11 +59,13 @@ import { DicomUpload } from "@/components/DicomUpload"
 import { PrescriptionsCard, DevicesCard } from "@/components/PrescriptionsDevicesCards"
 import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
 import { ShareQRDialog } from "@/components/ShareQRDialog"
+import { MedicalTimeline } from "@/components/MedicalTimeline"
 import { checkPacsStatus } from "@/lib/dicomweb"
 import { useFhirTranslation } from "@/lib/fhir-translations"
 import {
   Heart, Pill, ShieldAlert, Syringe, Activity, FlaskConical, AlertCircle, Cigarette,
   Wine, Scissors, Flag, Baby, Upload, FileImage, MessageSquare, Eye, EyeOff, QrCode,
+  LayoutGrid, Clock,
 } from "lucide-react"
 import { format } from "date-fns"
 import { useTranslation } from "react-i18next"
@@ -84,6 +86,7 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
   const [pacsAvailable, setPacsAvailable] = useState<boolean | null>(null)
   const [showUnverified, setShowUnverified] = useState(true)
   const [showQrDialog, setShowQrDialog] = useState(false)
+  const [viewMode, setViewMode] = useState<"cards" | "timeline">("cards")
   const [detailOpen, setDetailOpen] = useState(false)
   const [detailTitle, setDetailTitle] = useState(""); const [detailResource, setDetailResource] = useState<AnyResource | null>(null)
 
@@ -225,6 +228,16 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
       {readOnly ? (
         <div className="flex items-center gap-2">
           <Button
+            variant={viewMode === "timeline" ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setViewMode(v => v === "cards" ? "timeline" : "cards")}
+            className="gap-1.5"
+            title={viewMode === "cards" ? t("dashboard.timelineView", "Timeline view") : t("dashboard.cardView", "Card view")}
+          >
+            {viewMode === "cards" ? <Clock className="size-4" /> : <LayoutGrid className="size-4" />}
+            <span className="hidden sm:inline">{viewMode === "cards" ? t("dashboard.timeline", "Timeline") : t("dashboard.cards", "Cards")}</span>
+          </Button>
+          <Button
             variant={showUnverified ? "outline" : "secondary"}
             size="sm"
             onClick={() => setShowUnverified(v => !v)}
@@ -243,6 +256,16 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === "timeline" ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setViewMode(v => v === "cards" ? "timeline" : "cards")}
+              className="gap-1.5"
+              title={viewMode === "cards" ? t("dashboard.timelineView", "Timeline view") : t("dashboard.cardView", "Card view")}
+            >
+              {viewMode === "cards" ? <Clock className="size-4" /> : <LayoutGrid className="size-4" />}
+              <span className="hidden sm:inline">{viewMode === "cards" ? t("dashboard.timeline", "Timeline") : t("dashboard.cards", "Cards")}</span>
+            </Button>
             <Button
               variant={showUnverified ? "outline" : "secondary"}
               size="sm"
@@ -286,6 +309,27 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
         </div>
       )}
 
+      {viewMode === "timeline" ? (
+        <MedicalTimeline
+          conditions={filterVerified(conditions)}
+          allergies={filterVerified(allergies)}
+          medications={filterVerified(medications)}
+          medicationRequests={filterVerified(medicationRequests)}
+          immunizations={filterVerified(immunizations)}
+          vitals={vitals}
+          labs={labs}
+          procedures={filterVerified(procedures)}
+          flags={flags}
+          pregnancyStatus={pregnancyStatus}
+          pregnancyEdd={pregnancyEdd}
+          encounters={encounters}
+          imagingStudies={imagingStudies}
+          diagnosticReports={diagnosticReports}
+          documents={documents}
+          devices={deviceUse}
+          onOpenDetail={openDetail}
+        />
+      ) : (
       <div className="grid gap-4 md:grid-cols-2 min-w-0">
         <Card>
           <CardHeader>
@@ -701,6 +745,7 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
           />
         </div>
       </div>
+      )}
 
       <RecordDetailModal
         open={detailOpen}
