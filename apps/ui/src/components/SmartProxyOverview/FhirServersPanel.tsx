@@ -27,7 +27,7 @@ export function FhirServersPanel({ fhirServersHealth, onNavigate }: FhirServersP
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onNavigate('fhir-servers')}
+                    onClick={() => onNavigate('servers')}
                     className="bg-orange-500/10 hover:bg-orange-500/20 border-orange-500/30 text-orange-700 dark:text-orange-300 px-3 py-1.5 transition-all duration-200"
                 >
                     <Database className="w-4 h-4 mr-2" />
