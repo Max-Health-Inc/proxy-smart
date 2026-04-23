@@ -499,6 +499,7 @@ function buildBackendServicesSmartAuthInfo() {
 
   return JSON.stringify({
     auth_type: 'backend_services',
+    use_discovery: 'true',
     client_id: BACKEND_SERVICES_CLIENT_ID,
     requested_scopes: 'system/*.read',
     encryption_algorithm: 'RS384',
