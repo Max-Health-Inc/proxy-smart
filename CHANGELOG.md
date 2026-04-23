@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604230400.3110b99a] - 2026-04-23
+
+- 🔧 Chores & Improvements: Contracted shared UI/config setup and refactors
+  - Consolidated TS config and Vite settings to shared smart-ui presets; apps extend via shared presets
+  - Refactored smart-auth/config to use shared createSmartAuth and derive fhirBaseUrl; centralized exports for apps
+  - FHIR client/common updated to use createAuthFetch wrapper; removed custom auth error handling; centralized backend notification stubs
+  - Backend: added email backend with Resend (conditional), new consent-notify API route and admin/email wiring; updated token utilities
+  - Monitoring services: scaffolded generic create-monitoring-service.ts for standardized SSE implementations
+  - Consent app: add fire-and-forget email notification on access request creation via notifyAccessRequest; ignore failures
+
+Note: Skipped non-substantive/metadata updates and merges per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/568
+
+
 ## [0.0.7-alpha.202604221318.ab938c2d] - 2026-04-23
 
 - ✨ Features: 
