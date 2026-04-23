@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604231226.b0a9083d] - 2026-04-23
+
+- ✨ Features
+  - Consent app: add fire-and-forget email notification on access request creation via notifyAccessRequest; ignore failures.
+
+- 🔧 Chores & Improvements
+  - Shared UI: export change to StatCard to expose colorMap.
+  - FHIR client/common: introduce createAuthFetch wrapper; refactor to use shared UI createSmartAuth; centralize backend notification API stubs.
+  - Smart-auth/config: per-app refactor to use shared createSmartAuth; derive fhirBaseUrl; export smartAuth and fhirBaseUrl for apps.
+  - TS config & Vite: consolidate to shared smart-ui config; apps extend via shared presets (smart-app/tsconfig, smart-node/tsconfig, shared Vite config).
+  - Monitoring: scaffold generic create-monitoring-service.ts to standardize SSE.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/569
+
+
 ## [0.0.8-alpha.202604230400.3110b99a] - 2026-04-23
 
 - 🔧 Chores & Improvements: Contracted shared UI/config setup and refactors
