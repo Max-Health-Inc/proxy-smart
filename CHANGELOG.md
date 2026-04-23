@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604231527.b066b983] - 2026-04-23
+
+- ⚠️ Breaking Changes: No user-facing breaking changes detected.
+
+- 🔧 Chores & Improvements: Version bumps across UI, consent-app, dtr-app, patient-portal, smart-dicom-template, and testing/e2e to 0.0.8-alpha.202604231527.b066b983.
+
+- 🔧 Chores & Improvements: Inferno OAuth script updated to enable use_discovery: true in backend_services auth info.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/571
+
+
 ## [0.0.8-alpha.202604231310.dd1cc2cd] - 2026-04-23
 
 - 🔧 Chores & Improvements: Bump version to 0.0.8-alpha.202604231310.dd1cc2cd
