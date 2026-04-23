@@ -1,6 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 export { fhirBaseUrl }
-import { createAuthFetch } from \"@proxy-smart/shared-ui\"
+import { createAuthFetch } from "@proxy-smart/shared-ui"
 import { FhirClient as DTRFhirClient } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { FhirClient as PASFhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
