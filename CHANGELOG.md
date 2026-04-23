@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604231310.dd1cc2cd] - 2026-04-23
+
+- 🔧 Chores & Improvements: Bump version to 0.0.8-alpha.202604231310.dd1cc2cd
+- 🔧 Chores & Improvements: Update CORS origins in beta environments to include http://localhost:4567 across workflows, docker compose, testing setup, and multiple apps (consent-app, dtr-app, patient-portal, smart-dicom-template, ui)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/570
+
+
 ## [0.0.8-alpha.202604231226.b0a9083d] - 2026-04-23
 
 - ✨ Features
