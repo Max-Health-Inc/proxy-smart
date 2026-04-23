@@ -5,6 +5,7 @@ import { validateToken } from '@/lib/auth'
 import { getAllServers, ensureServersInitialized } from '@/lib/fhir-server-store'
 import { logger } from '@/lib/logger'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
+import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
 import {
   TokenRequest,
   IntrospectRequest,
@@ -359,6 +360,45 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     })
 
     try {
+      // ── Backend Services (private_key_jwt) ────────────────────────────
+      // Our proxy is the advertised token endpoint. We validate the JWT
+      // assertion ourselves, then use Keycloak client_secret for token issuance.
+      if (isBackendServicesRequest(bodyObj)) {
+        logger.auth.debug('Backend Services request detected — handling JWT assertion at proxy layer')
+        const result = await handleBackendServicesToken(bodyObj)
+        set.status = result.status
+
+        // Standard cache headers for token responses
+        set.headers['Cache-Control'] = 'no-store'
+        set.headers['Pragma'] = 'no-cache'
+
+        // Log the OAuth event
+        const bsClientId = bodyObj.client_id || bodyObj.clientId || 'unknown'
+        const responseTime = Date.now() - startTime
+        try {
+          await oauthMetricsLogger.logEvent({
+            type: 'token',
+            status: result.status === 200 ? 'success' : 'error',
+            clientId: bsClientId,
+            clientName: bsClientId,
+            scopes: bodyObj.scope ? bodyObj.scope.split(' ') : [],
+            grantType: 'client_credentials',
+            responseTime,
+            ipAddress: headers['x-forwarded-for'] || headers['x-real-ip'] || 'unknown',
+            userAgent: headers['user-agent'] || 'unknown',
+            errorMessage: (result.body as any).error_description,
+            errorCode: (result.body as any).error,
+            tokenType: (result.body as any).token_type,
+            expiresIn: (result.body as any).expires_in,
+            refreshToken: false,
+            requestDetails: { path: '/auth/token', method: 'POST', headers: { 'content-type': headers['content-type'] || '', 'user-agent': headers['user-agent'] || '' } }
+          })
+        } catch (logErr) { logger.auth.error('Failed to log Backend Services OAuth event', { logErr }) }
+
+        return result.body
+      }
+
+      // ── Standard OAuth flows (forwarded to Keycloak) ──────────────────
       // Convert the parsed body back to form data with proper OAuth2 field names
       const formData = new URLSearchParams()
 
