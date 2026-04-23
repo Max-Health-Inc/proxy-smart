@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604231532.b15a39b6] - 2026-04-23
+
+- ✨ Features
+  - Backend: add new backend-services.ts for private_key_jwt handling and integrate into OAuth flow; detect and process Backend Services token requests at proxy layer
+  - Keycloak realm export: configure inferno-backend-services client to use client-secret authentication with internal proxy secret
+
+- 🔧 Chores & Improvements
+  - Backend: adjust FHIR proxy headers to drop origin and CORS-related headers; preserve others and set accept header
+  - Minor: ensure token responses are cache-controlled (no-store) and log metrics for backend services flow
+
+Note: No breaking changes detected; no documentation, bug fixes, or updates beyond these groups.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/572
+
+
 ## [0.0.8-alpha.202604231527.b066b983] - 2026-04-23
 
 - ⚠️ Breaking Changes: No user-facing breaking changes detected.
