@@ -984,9 +984,10 @@
     {
       "clientId": "inferno-backend-services",
       "name": "Inferno Backend Services Client",
-      "description": "Confidential SMART Backend Services client for Inferno compliance testing. Uses asymmetric JWT (RS384) for client authentication with client_credentials grant.",
+      "description": "Confidential SMART Backend Services client for Inferno compliance testing. Uses asymmetric JWT (RS384) for client authentication via the proxy (private_key_jwt validated at proxy layer), with client_secret used internally for Keycloak token issuance.",
       "enabled": true,
-      "clientAuthenticatorType": "client-jwt",
+      "clientAuthenticatorType": "client-secret",
+      "secret": "inferno-backend-services-proxy-secret",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,

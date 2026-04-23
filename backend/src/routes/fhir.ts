@@ -212,7 +212,12 @@ async function proxyFHIR({ params, request, set }: any) {
     const target = `${serverUrl}${resourcePath ? `/${resourcePath}` : ''}${queryString}`
 
     const headers = new Headers()
-    request.headers.forEach((v: string, k: string) => k !== 'host' && k !== 'connection' && headers.set(k, v!))
+    request.headers.forEach((v: string, k: string) => {
+      // Strip hop-by-hop headers and CORS headers — CORS is handled at the proxy layer,
+      // forwarding Origin to upstream FHIR servers triggers their own CORS rejection (e.g. HAPI/Spring 403)
+      if (k === 'host' || k === 'connection' || k === 'origin' || k.startsWith('access-control-')) return
+      headers.set(k, v!)
+    })
     headers.set('accept', 'application/fhir+json')
 
     const fetchOptions = {
