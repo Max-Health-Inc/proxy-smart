@@ -10,7 +10,7 @@ export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants } from "./co
 export { ResponsiveTabsList, type ResponsiveTabsListProps } from "./components/responsive-tabs-list"
 export { PageHeader, type PageHeaderProps } from "./components/page-header"
 export { FilterToolbar, FilterToolbarItem, type FilterToolbarProps, type FilterToolbarItemProps } from "./components/filter-toolbar"
-export { StatCard, type StatCardProps, type StatCardColor } from "./components/stat-card"
+export { StatCard, colorMap, type StatCardProps, type StatCardColor } from "./components/stat-card"
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip"
 export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./components/dialog"
 export { Separator } from "./components/separator"

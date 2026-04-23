@@ -59,7 +59,7 @@ export function createMonitoringService<
   TAnalytics = unknown,
 >(
   cfg: MonitoringServiceConfig<TAnalytics>,
-): MonitoringServiceInstance<TEvent, TAnalytics> & Record<string, (...args: unknown[]) => unknown> {
+): MonitoringServiceInstance<TEvent, TAnalytics> & Record<string, unknown> {
   let sseEvents: EventSource | null = null;
   let sseAnalytics: EventSource | null = null;
   let connected = false;
