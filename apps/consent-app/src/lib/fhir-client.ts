@@ -1,5 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
-import { reportAuthError } from "@/lib/auth-error"
+import { config } from "@/config"
+import { createAuthFetch } from "@proxy-smart/shared-ui"
 import {
   FhirResourceReader,
   FhirResourceWriter,
@@ -16,20 +17,7 @@ export type { Patient, Person, Consent, Practitioner, Task }
 
 // ── Generated FHIR client with authenticated fetch ───────────────────────────
 
-const baseFetch = smartAuth.createAuthenticatedFetch()
-
-/** Wraps the SMART authenticated fetch to detect permanent auth failures */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const authFetch: any = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  try {
-    return await baseFetch(input, init)
-  } catch (err) {
-    if (err instanceof Error && /no valid smart token/i.test(err.message)) {
-      reportAuthError("Your session has expired. Please sign in again.")
-    }
-    throw err
-  }
-}
+const authFetch = createAuthFetch(smartAuth)
 
 const persons = new FhirResourceReader<Person>(fhirBaseUrl, "Person", authFetch)
 const patients = new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", authFetch)
@@ -127,3 +115,34 @@ export function extractPatientLinks(person: Person): Array<{ reference: string; 
 
 // Re-export from shared-ui to avoid duplication
 export { formatHumanName } from "@proxy-smart/shared-ui"
+
+// ── Backend API notifications ────────────────────────────────────────────────
+
+const backendBase = `${config.proxyBase}/${config.proxyPrefix}`
+
+export interface NotifyAccessRequestParams {
+  patientReference: string
+  patientName?: string
+  practitionerName: string
+  reason?: string
+  resourceTypes?: string[]
+}
+
+/**
+ * Notify a patient via email that a practitioner has requested access.
+ * Fire-and-forget — failures are logged but don't block the UI flow.
+ */
+export async function notifyAccessRequest(params: NotifyAccessRequestParams): Promise<boolean> {
+  try {
+    const res = await authFetch(`${backendBase}/api/consent/notify-access-request`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    })
+    if (!res.ok) return false
+    const data = await res.json() as { sent?: boolean }
+    return data.sent === true
+  } catch {
+    return false
+  }
+}

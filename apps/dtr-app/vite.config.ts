@@ -1,22 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc'
-import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
+import { createSmartViteConfig } from '../../shared-ui/vite-config'
 
-export default defineConfig({
-  base: '/apps/dtr/',
-  plugins: [react(), tailwindcss()],
-  server: {
-    port: 5175,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@proxy-smart/shared-ui': path.resolve(__dirname, '../../shared-ui/src'),
-    },
-  },
-  build: {
-    sourcemap: false,
-    reportCompressedSize: false,
-  },
-})
+export default createSmartViteConfig(
+  { base: '/apps/dtr/', port: 5175 },
+  __dirname,
+)

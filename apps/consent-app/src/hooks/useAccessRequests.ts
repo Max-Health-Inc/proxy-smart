@@ -6,6 +6,7 @@ import {
   createTask as apiCreateTask,
   updateTask as apiUpdateTask,
   createConsent as apiCreateConsent,
+  notifyAccessRequest,
   type Task,
 } from "@/lib/fhir-client"
 import type { TaskStatusCode } from "hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-TaskStatus"
@@ -61,6 +62,19 @@ export function useAccessRequests(mode: SearchMode | null) {
       const created = await apiCreateTask(task)
       setRequests((prev) => [created, ...prev])
       toast.success("Access request sent", { description: "The patient will be notified." })
+
+      // Fire-and-forget email notification — don't block UI on failure
+      const patientRef = task.for?.reference
+      if (patientRef) {
+        notifyAccessRequest({
+          patientReference: patientRef,
+          patientName: task.for?.display,
+          practitionerName: task.requester?.display || "A practitioner",
+          reason: task.description,
+          resourceTypes: getRequestResourceTypes(task),
+        }).catch(() => { /* notification failure is non-critical */ })
+      }
+
       return created
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to send request"

@@ -1,6 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 export { fhirBaseUrl }
-import { reportAuthError } from "@/lib/auth-error"
+import { createAuthFetch } from \"@proxy-smart/shared-ui\"
 import { FhirClient as DTRFhirClient } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { FhirClient as PASFhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
@@ -79,20 +79,7 @@ export type {
 // DTR client — typed DTR profile accessors + base R4 (Patient, Condition, etc.)
 // PAS client — typed PAS profile accessors (PASClaim, PASCoverage, etc.)
 
-const baseFetch = smartAuth.createAuthenticatedFetch()
-
-/** Wraps the SMART authenticated fetch to detect permanent auth failures */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const authFetch: any = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  try {
-    return await baseFetch(input, init)
-  } catch (err) {
-    if (err instanceof Error && /no valid smart token/i.test(err.message)) {
-      reportAuthError("Your session has expired. Please sign in again.")
-    }
-    throw err
-  }
-}
+export const authFetch = createAuthFetch(smartAuth)
 
 const dtrClient = new DTRFhirClient(fhirBaseUrl, authFetch)
 const pasClient = new PASFhirClient(fhirBaseUrl, authFetch)

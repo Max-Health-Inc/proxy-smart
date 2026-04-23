@@ -1,13 +1,9 @@
 import { config } from "@/config"
 import { SmartAuth } from "hl7.fhir.uv.ips-generated/fhir-client"
+import { createSmartAuth } from "@proxy-smart/shared-ui"
 
-export const fhirBaseUrl = `${config.proxyBase}/${config.proxyPrefix}/${config.fhirServerId}/${config.fhirVersion}`
-
-export const smartAuth = new SmartAuth({
-  clientId: config.clientId,
-  redirectUri: config.redirectUri,
-  postLogoutRedirectUri: window.location.origin + import.meta.env.BASE_URL,
-  fhirBaseUrl,
-  scopes: config.scopes,
+export const { smartAuth, fhirBaseUrl } = createSmartAuth({
+  config,
+  SmartAuth,
   storagePrefix: "patient_portal_",
 })

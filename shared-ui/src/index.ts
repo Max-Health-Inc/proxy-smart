@@ -26,14 +26,14 @@ export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfil
 
 // Utilities
 export { cn } from "./lib/utils"
-export { createSmartAppConfig, type SmartAppConfig } from "./lib/smart-app-config"
+export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, type SmartAppConfig } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
 export { formatHumanName } from "./lib/fhir-helpers"
 
 // Auth utilities
-export { onAuthError, reportAuthError } from "./lib/auth-error"
+export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"

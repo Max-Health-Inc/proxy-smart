@@ -1,17 +1,11 @@
 import { config } from '@/config';
-import { getItem } from '@/lib/storage';
+import { getStoredToken } from '@/lib/apiClient';
 
-export async function getAdminToken(): Promise<string | null> {
-  try {
-    const tokens = await getItem<{ access_token: string }>('openid_tokens');
-    return tokens?.access_token || null;
-  } catch {
-    return null;
-  }
-}
+/** @deprecated Use `getStoredToken` from `@/lib/apiClient` directly. */
+export const getAdminToken = getStoredToken;
 
 export async function adminApiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: unknown): Promise<T> {
-  const token = await getAdminToken();
+  const token = await getStoredToken();
   const res = await fetch(`${config.api.baseUrl}${path}`, {
     method,
     headers: {
