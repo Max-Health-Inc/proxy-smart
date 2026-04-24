@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Input, Label } from '@proxy-smart/shared-ui'
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui'
 import { LoadingButton } from '@/components/ui/loading-button'
 import {
   Dialog,
@@ -101,15 +101,17 @@ export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-dicom-auth">{t('Authentication')}</Label>
-            <select
-              id="edit-dicom-auth"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={authType}
-              onChange={e => setAuthType(e.target.value)}
-            >
-              {AUTH_TYPES.map(at => <option key={at.value} value={at.value}>{t(at.label)}</option>)}
-            </select>
+            <Label>{t('Authentication')}</Label>
+            <Select value={authType} onValueChange={setAuthType}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AUTH_TYPES.map(at => (
+                  <SelectItem key={at.value} value={at.value}>{t(at.label)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {authType === 'basic' && (
