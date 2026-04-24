@@ -37,7 +37,7 @@ export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"
-export { ModalStackProvider, useModalLayer, type ModalStackProviderProps } from "./hooks/use-modal-stack"
+export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type ModalStackProviderProps } from "./hooks/use-modal-stack"
 export {
   useSmartAuth,
   type SmartAppState,
