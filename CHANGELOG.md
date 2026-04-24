@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604241234.d7c3bcdc] - 2026-04-24
+
+- 🔧 Chores & Improvements: Update version strings to 0.0.8-alpha.202604241234.d7c3bcdc across apps/tests; UI enhancements introducing Select components for DICOM authentication in Add/Edit dialogs; added DicomStatsCards component and its usage in DicomServersManager; minor import adjustments and icon set changes.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/576
+
+
 ## [0.0.8-alpha.202604240023.ea1d899c] - 2026-04-24
 
 - 🔧 Chores & Improvements: Remove automatic migration of client JWT auth to client-secret; simplify clientSecret fetch to directly retrieve internal clientId/id without migration logic; update header comment accordingly
