@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604240004.e4134a02] - 2026-04-24
+
+- ✨ Features: Version bump to 0.0.8-alpha.202604240004.e4134a02 across multiple packages
+- 🔧 Chores & Improvements: Backend migration logic to move Keycloak client from client-jwt to client-secret during secret fetch (preserves JWKS attributes and logs migration)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/574
+
+
 ## [0.0.8-alpha.202604232317.25238204] - 2026-04-24
 
 - ✨ Features: Introduced LayerContext and useLayerZIndex for dynamic z-index management across UI: Dialog, DropdownMenu, Select, and Tooltip now render above the current modal layer; portaled children wrapped with LayerContext.Provider to apply correct z-index
