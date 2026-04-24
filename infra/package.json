@@ -2,7 +2,7 @@
   "name": "proxy-smart-infra",
   "displayName": "Proxy Smart Infrastructure",
   "description": "AWS CDK infrastructure for Proxy Smart production deployment",
-  "version": "0.0.8-alpha.202604232317.25238204",
+  "version": "0.0.8-alpha.202604240004.e4134a02",
   "private": true,
   "type": "module",
   "scripts": {
