@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604240023.ea1d899c] - 2026-04-24
+
+- 🔧 Chores & Improvements: Remove automatic migration of client JWT auth to client-secret; simplify clientSecret fetch to directly retrieve internal clientId/id without migration logic; update header comment accordingly
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/575
+
+
 ## [0.0.8-alpha.202604240004.e4134a02] - 2026-04-24
 
 - ✨ Features: Version bump to 0.0.8-alpha.202604240004.e4134a02 across multiple packages
