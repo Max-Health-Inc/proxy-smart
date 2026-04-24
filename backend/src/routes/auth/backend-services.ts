@@ -210,12 +210,13 @@ async function getClientJwks(clientId: string): Promise<{ keys: Array<Record<str
 
 /**
  * Fetch the client secret from Keycloak admin API.
- * GET /admin/realms/{realm}/clients/{id}/client-secret
+ * If the client is still configured for client-jwt auth (e.g. deployed Keycloak
+ * that predates the realm-export change), automatically migrate it to client-secret.
  */
 async function getClientSecret(clientId: string): Promise<string> {
   const adminToken = await getAdminToken()
 
-  // First get the internal UUID for this clientId
+  // First get the internal UUID and current auth config for this clientId
   const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
   const resp = await fetch(searchUrl, {
     headers: { Authorization: `Bearer ${adminToken}` }
@@ -225,9 +226,34 @@ async function getClientSecret(clientId: string): Promise<string> {
   const clients = await resp.json()
   if (!clients.length) throw new Error(`Client '${clientId}' not found`)
 
-  const internalId = clients[0].id
+  const client = clients[0]
+  const internalId = client.id
 
-  // Fetch the secret
+  // If the client is still configured for JWT auth, migrate to client-secret
+  // so our proxy can authenticate internally. JWKS attributes are preserved
+  // for our proxy-layer JWT verification.
+  if (client.clientAuthenticatorType === 'client-jwt') {
+    logger.auth.info('Migrating client to client-secret auth for proxy Backend Services', { clientId })
+    const updateResp = await fetch(
+      `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients/${internalId}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...client,
+          clientAuthenticatorType: 'client-secret'
+        })
+      }
+    )
+    if (!updateResp.ok) {
+      logger.auth.warn('Failed to migrate client auth type', { clientId, status: updateResp.status })
+    }
+  }
+
+  // Fetch the secret (Keycloak auto-generates one when switching to client-secret)
   const secretResp = await fetch(
     `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients/${internalId}/client-secret`,
     { headers: { Authorization: `Bearer ${adminToken}` } }
