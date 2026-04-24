@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604232317.25238204] - 2026-04-24
+
+- ✨ Features: Introduced LayerContext and useLayerZIndex for dynamic z-index management across UI: Dialog, DropdownMenu, Select, and Tooltip now render above the current modal layer; portaled children wrapped with LayerContext.Provider to apply correct z-index
+- 🔧 Chores & Improvements: Updated exports and propagated z-index handling; applied dynamic z-index across UI components
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/573
+
+
 ## [0.0.8-alpha.202604231532.b15a39b6] - 2026-04-23
 
 - ✨ Features
