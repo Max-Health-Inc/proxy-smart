@@ -45,25 +45,8 @@ export function usePerson() {
   }, [])
 
   useEffect(() => {
-    Promise.resolve()
-      .then(() => {
-        setLoading(true)
-        setError(null)
-        const token = smartAuth.getToken()
-        if (!token?.fhirUser) throw new Error("No fhirUser claim in token")
-        const [resourceType, id] = token.fhirUser.split("/")
-        if (!resourceType || !id) throw new Error(`Invalid fhirUser reference: ${token.fhirUser}`)
-        if (resourceType === "Patient") {
-          return getPatient(id).then((resource) => ({ resourceType: "Patient" as const, resource }))
-        } else if (resourceType === "Practitioner") {
-          return getPractitioner(id).then((resource) => ({ resourceType: "Practitioner" as const, resource }))
-        }
-        return getPerson(id).then((resource) => ({ resourceType: "Person" as const, resource }))
-      })
-      .then((res) => setResult(res as FhirUserResult))
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load user"))
-      .finally(() => setLoading(false))
-  }, [])
+    fetchPerson()
+  }, [fetchPerson])
 
   return { result, loading, error, refetch: fetchPerson }
 }
