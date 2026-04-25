@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604251656.4c9a01c0] - 2026-04-25
+
+- 🔧 Chores & Improvements: Add onOpenDetail callbacks to Dashboard, ImagingStudyCard, and GenomicsCard to enable opening detailed views (passed through from Dashboard to card components).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/583
+
+
 ## [0.0.8-alpha.202604251649.1dd04e7c] - 2026-04-25
 
 - ⚠️ Breaking Changes: None detected
