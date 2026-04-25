@@ -66,7 +66,7 @@ function buildUpstreamUrl(subPath: string, queryString: string): string {
 }
 
 /** Forward a request to the upstream PACS and stream the response back */
-async function proxyDicomWeb(request: Request, subPath: string, set: Record<string, any>): Promise<Response | string | object> {
+async function proxyDicomWeb(request: Request, subPath: string, set: { status?: number | string; headers: Record<string, string | number | undefined> }): Promise<Response | string | object> {
   const server = getDefaultDicomServer()
   if (!server && !config.dicomweb.enabled) {
     set.status = 501
@@ -156,7 +156,7 @@ async function proxyDicomWeb(request: Request, subPath: string, set: Record<stri
 }
 
 /** Forward a POST (STOW-RS) request to the upstream PACS, streaming the body through */
-async function proxyDicomWebPost(request: Request, subPath: string, set: Record<string, any>): Promise<Response | string | object> {
+async function proxyDicomWebPost(request: Request, subPath: string, set: { status?: number | string; headers: Record<string, string | number | undefined> }): Promise<Response | string | object> {
   const server = getDefaultDicomServer()
   if (!server && !config.dicomweb.enabled) {
     set.status = 501
@@ -455,7 +455,7 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
 
   // Bulkdata
   .get('/studies/:studyUID/series/:seriesUID/instances/:sopUID/bulkdata/*', async ({ request, params, set }) => {
-    const wildcard = (params as any)['*'] || ''
+    const wildcard = (params as Record<string, string>)['*'] || ''
     return proxyDicomWeb(request, `/studies/${params.studyUID}/series/${params.seriesUID}/instances/${params.sopUID}/bulkdata/${wildcard}`, set)
   }, {
     params: t.Object({ studyUID: UidParam, seriesUID: UidParam, sopUID: UidParam }),

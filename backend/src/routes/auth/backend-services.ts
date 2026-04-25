@@ -259,7 +259,7 @@ async function verifyJwtSignature(
   // Use jwks-rsa to convert the JWK to a PEM public key
   const client = jwksClient({
     jwksUri: 'https://unused', // not used — we provide keys directly
-    getKeysInterceptor: () => jwksJson.keys as any
+    getKeysInterceptor: async () => jwksJson.keys as unknown as import('jwks-rsa').JSONWebKey[]
   })
   const signingKey = await client.getSigningKey(matchingKey.kid as string)
   const publicKey = signingKey.getPublicKey()

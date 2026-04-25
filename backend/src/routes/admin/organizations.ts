@@ -21,6 +21,7 @@ import { handleAdminError } from '@/lib/admin-error-handler'
 import { logger } from '@/lib/logger'
 import { getOrgBranding, saveOrgBranding } from '@/lib/org-branding'
 import { brandBundleService } from '@/lib/brand-bundle'
+import type OrganizationRepresentation from '@keycloak/keycloak-admin-client/lib/defs/organizationRepresentation'
 
 /**
  * Keycloak Organizations management routes
@@ -110,7 +111,7 @@ export const organizationsRoutes = new Elysia({ prefix: '/organizations' })
       const admin = await getValidatedAdmin(getAdmin, token)
 
       logger.admin.info('Creating organization', { name: body.name, alias: body.alias })
-      const result = await admin.organizations.create(body as any)
+      const result = await admin.organizations.create(body as unknown as OrganizationRepresentation)
       const created = await admin.organizations.findOne({ id: result.id })
       set.status = 201
       return created as OrganizationType
@@ -139,7 +140,7 @@ export const organizationsRoutes = new Elysia({ prefix: '/organizations' })
       if (!existing) { set.status = 404; return { error: 'Organization not found' } }
 
       logger.admin.info('Updating organization', { id: params.orgId, name: body.name })
-      await admin.organizations.updateById({ id: params.orgId }, { ...existing, ...body } as any)
+      await admin.organizations.updateById({ id: params.orgId }, { ...existing, ...body } as unknown as OrganizationRepresentation)
       const updated = await admin.organizations.findOne({ id: params.orgId })
       return updated as OrganizationType
     } catch (error) {

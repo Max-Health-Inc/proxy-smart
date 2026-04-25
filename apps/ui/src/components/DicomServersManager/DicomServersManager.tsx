@@ -8,7 +8,7 @@ import { useAlertStore } from '@/stores/alertStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { getStoredToken } from '@/lib/apiClient'
 import { config } from '@/config'
-import type { DicomServerConfig, DicomServerStatusResponse } from '@/lib/api-client'
+import type { DicomServerConfig, DicomServerStatusResponse, AddDicomServerRequest, UpdateDicomServerRequest } from '@/lib/api-client'
 import { DicomServerCard } from './DicomServerCard'
 import { DicomStatsCards } from './DicomStatsCards'
 import { AddDicomServerDialog } from './AddDicomServerDialog'
@@ -52,15 +52,15 @@ export function DicomServersManager() {
       .finally(() => setLoading(false))
   }, [clientApis])
 
-  const handleAdd = async (body: { name: string; baseUrl: string; authType?: string; username?: string; password?: string; authHeader?: string; wadoRoot?: string; qidoRoot?: string; timeoutMs?: number; isDefault?: boolean }) => {
-    await clientApis.admin.postAdminDicomServers({ addDicomServerRequest: body as any })
+  const handleAdd = async (body: AddDicomServerRequest) => {
+    await clientApis.admin.postAdminDicomServers({ addDicomServerRequest: body })
     notify({ type: 'success', message: t('DICOM server added') })
     setShowAddDialog(false)
     await fetchServers()
   }
 
-  const handleUpdate = async (serverId: string, body: Record<string, unknown>) => {
-    await clientApis.admin.putAdminDicomServersByServerId({ serverId, updateDicomServerRequest: body as any })
+  const handleUpdate = async (serverId: string, body: UpdateDicomServerRequest) => {
+    await clientApis.admin.putAdminDicomServersByServerId({ serverId, updateDicomServerRequest: body })
     notify({ type: 'success', message: t('DICOM server updated') })
     setEditingServer(null)
     await fetchServers()
@@ -99,7 +99,7 @@ export function DicomServersManager() {
   }
 
   const handleSetDefault = async (serverId: string) => {
-    await clientApis.admin.putAdminDicomServersByServerId({ serverId, updateDicomServerRequest: { isDefault: true } as any })
+    await clientApis.admin.putAdminDicomServersByServerId({ serverId, updateDicomServerRequest: { isDefault: true } })
     notify({ type: 'success', message: t('Default DICOM server updated') })
     await fetchServers()
   }

@@ -1,4 +1,5 @@
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
+import type ProtocolMapperRepresentation from '@keycloak/keycloak-admin-client/lib/defs/protocolMapperRepresentation'
 import { logger } from './logger'
 
 /**
@@ -198,14 +199,14 @@ export async function getSmartMapperStatus(
   for (const scope of allScopes) {
     if (!scope.name || !SMART_SCOPE_MAPPERS[scope.name]) continue
 
-    let mappers: any[] = []
+    let mappers: ProtocolMapperRepresentation[] = []
     try {
       mappers = await admin.clientScopes.listProtocolMappers({ id: scope.id! })
     } catch {
       // No mappers
     }
 
-    const existingMapperNames = new Set(mappers.map((m: any) => m.name))
+    const existingMapperNames = new Set(mappers.map((m) => m.name))
     const requiredMappers = SMART_SCOPE_MAPPERS[scope.name] || []
     const missingMappers = requiredMappers
       .filter((def) => !existingMapperNames.has(def.name))
@@ -215,10 +216,10 @@ export async function getSmartMapperStatus(
       scopeId: scope.id!,
       scopeName: scope.name,
       mappers: mappers
-        .filter((m: any) => m.protocolMapper === 'oidc-usermodel-attribute-mapper')
-        .map((m: any) => ({
+        .filter((m) => m.protocolMapper === 'oidc-usermodel-attribute-mapper')
+        .map((m) => ({
           id: m.id,
-          name: m.name,
+          name: m.name ?? '',
           claimName: m.config?.['claim.name'] ?? '',
           userAttribute: m.config?.['user.attribute'] ?? '',
           accessTokenClaim: m.config?.['access.token.claim'] === 'true',

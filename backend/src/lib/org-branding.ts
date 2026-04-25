@@ -124,7 +124,7 @@ export async function saveOrgBranding(
   const org = await admin.organizations.findOne({ id: orgId })
   if (!org) throw new Error(`Organization ${orgId} not found`)
 
-  const existingAttrs = (org.attributes as Record<string, string[]>) ?? {}
+  const existingAttrs = org.attributes ?? {}
 
   // Remove old brand_settings.* keys, then merge new ones
   const cleaned: Record<string, string[]> = {}
@@ -137,7 +137,7 @@ export async function saveOrgBranding(
 
   await admin.organizations.updateById(
     { id: orgId },
-    { ...org, attributes: merged } as any,
+    { ...org, attributes: merged },
   )
 
   // Update cache

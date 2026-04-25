@@ -14,7 +14,7 @@ export const sharedRules = {
     'error',
     { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
   ],
-  '@typescript-eslint/no-explicit-any': 'warn',
+  '@typescript-eslint/no-explicit-any': 'error',
 }
 
 /**

@@ -662,7 +662,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
 
   // ==================== Configuration ====================
 
-  .get('/config/status', async ({ headers, set }): Promise<AccessControlConfigStatusType | any> => {
+  .get('/config/status', async ({ headers, set }) => {
     const token = extractBearerToken(headers)
     if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
     await validateAdminToken(token)
@@ -681,7 +681,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       },
     }
   }, {
-    response: { 200: AccessControlConfigStatus },
+    response: { 200: AccessControlConfigStatus, 401: ErrorResponse },
     detail: {
       summary: 'Get Door Management Config Status',
       description: 'Get current door management provider configuration status (credentials are redacted)',
@@ -692,7 +692,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   .post('/config/test', async ({ body, set, headers }): Promise<TestAccessControlConfigResponseType> => {
     try {
       const token = extractBearerToken(headers)
-      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } as any }
+      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } }
       await validateAdminToken(token)
       // Temporarily set env vars to test the provider
       const originalEnv: Record<string, string | undefined> = {}
@@ -754,7 +754,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
   .post('/config/configure', async ({ body, set, headers }): Promise<SaveAccessControlConfigResponseType> => {
     try {
       const token = extractBearerToken(headers)
-      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } as any }
+      if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } }
       await validateAdminToken(token)
       // First test the connection with the provided credentials
       const originalEnv: Record<string, string | undefined> = {}
