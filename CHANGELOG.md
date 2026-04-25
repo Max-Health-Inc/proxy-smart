@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604251649.1dd04e7c] - 2026-04-25
+
+- ⚠️ Breaking Changes: None detected
+
+- 🔧 Chores & Improvements:
+  - Dependency and version bumps across multiple apps (consent-app, dtr-app, ui, etc.).
+  - Refactor: usePerson hook now uses fetchPerson with updated dependency handling.
+
+- 🔧 Chores & Improvements (CI/CD/config):
+  - Dockerfile: removed copying mcp-server-templates.json from backend build stage.
+
+- 🐛 Bug Fixes:
+  - Minor hook refactor to streamline token fetch flow (fetchPerson exposed for refetch).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/582
+
+
 ## [0.0.8-beta.202604251600.c1abef92] - 2026-04-25
 
 - 🔧 Chores & Improvements: Refactor usePerson hook to fetch via fetchPerson and expose refetch; update dependency references to reflect new fetchPerson usage
