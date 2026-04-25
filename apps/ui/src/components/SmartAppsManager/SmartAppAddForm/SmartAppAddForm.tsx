@@ -6,8 +6,6 @@ import { useSmartAppForm } from './useSmartAppForm';
 import { BasicInfoSection } from './BasicInfoSection';
 import { AuthCredentialsSection } from './AuthCredentialsSection';
 import { ServerAccessSection } from './ServerAccessSection';
-import { McpAccessSection } from './McpAccessSection';
-import { SkillsAccessSection } from './SkillsAccessSection';
 import { ScopeConfigSection } from './ScopeConfigSection';
 
 interface SmartAppAddFormProps {
@@ -24,13 +22,8 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
         updateApp,
         updateAppType,
         updateServerAccessType,
-        updateMcpAccessType,
         servers,
         serversLoading,
-        mcpServers,
-        mcpServersLoading,
-        skills,
-        skillsLoading,
         getScopeSetName,
         handleSubmit,
         handleCancel,
@@ -61,19 +54,6 @@ export function SmartAppAddForm({ open, onClose, onAddApp, scopeSets }: SmartApp
                     updateApp={updateApp}
                     servers={servers}
                     serversLoading={serversLoading}
-                />
-                <McpAccessSection
-                    newApp={newApp}
-                    updateMcpAccessType={updateMcpAccessType}
-                    updateApp={updateApp}
-                    mcpServers={mcpServers}
-                    mcpServersLoading={mcpServersLoading}
-                />
-                <SkillsAccessSection
-                    newApp={newApp}
-                    updateApp={updateApp}
-                    skills={skills}
-                    skillsLoading={skillsLoading}
                 />
                 <ScopeConfigSection
                     newApp={newApp}

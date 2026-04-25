@@ -2,7 +2,7 @@ import { SmartAppsManager } from './SmartAppsManager/SmartAppsManager';
 import { ServersManager } from './ServersManager';
 import { SmartConfigManager } from './SmartConfigManager';
 import { SmartProxyOverview } from './SmartProxyOverview';
-import { McpServersManager } from './McpServersManager';
+import { McpEndpointSettings } from './McpEndpointSettings';
 import { useState, useEffect } from 'react';
 import { Navigation } from './Navigation';
 import { UsersAndFederationManager } from './UsersAndFederationManager';
@@ -159,7 +159,7 @@ export function AdminApp() {
                             {currentTab === 'smart-apps' && <SmartAppsManager />}
                             {currentTab === 'users' && <UsersAndFederationManager />}
                             {currentTab === 'servers' && <ServersManager />}
-                            {currentTab === 'ai-tools' && <McpServersManager />}
+                            {currentTab === 'ai-tools' && <McpEndpointSettings />}
                             {currentTab === 'idp' && <IdPManager />}
                             {currentTab === 'smart-config' && <SmartConfigManager />}
                             {currentTab === 'oauth-monitoring' && <OAuthMonitoringDashboard />}

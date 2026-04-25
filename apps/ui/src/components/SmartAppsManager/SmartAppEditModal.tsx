@@ -39,7 +39,6 @@ import {
   UpdateSmartAppRequestAppTypeEnum as AppTypeEnum,
   UpdateSmartAppRequestClientTypeEnum as ClientTypeEnum,
   UpdateSmartAppRequestServerAccessTypeEnum as ServerAccessEnum,
-  UpdateSmartAppRequestMcpAccessTypeEnum as McpAccessEnum,
 } from '@/lib/api-client/models';
 import { useTranslation } from 'react-i18next';
 
@@ -82,9 +81,6 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
     contacts: app.contacts ?? [],
     serverAccessType: (app.serverAccessType as UpdateSmartAppRequest['serverAccessType']) ?? ServerAccessEnum.AllServers,
     allowedServerIds: app.allowedServerIds ?? [],
-    mcpAccessType: (app.mcpAccessType as UpdateSmartAppRequest['mcpAccessType']) ?? McpAccessEnum.None,
-    allowedMcpServerNames: app.allowedMcpServerNames ?? [],
-    allowedSkillNames: app.allowedSkillNames ?? [],
     allowedFhirUserTypes: app.allowedFhirUserTypes ?? [],
     requiredRoles: app.requiredRoles ?? [],
     // Auth fields — only sent when changed
@@ -404,40 +400,6 @@ export function SmartAppEditModal({
                   placeholder="server-id"
                 />
               )}
-            </div>
-
-            {/* MCP Access */}
-            <div className="space-y-3 border-t pt-4">
-              <Label className="text-sm font-semibold">{t('MCP Server Access (AI)')}</Label>
-              <Select
-                value={form.mcpAccessType ?? McpAccessEnum.None}
-                onValueChange={(v) => set('mcpAccessType', v as UpdateSmartAppRequest['mcpAccessType'])}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={McpAccessEnum.None}>{t('No MCP Access')}</SelectItem>
-                  <SelectItem value={McpAccessEnum.AllMcpServers}>{t('All MCP Servers')}</SelectItem>
-                  <SelectItem value={McpAccessEnum.SelectedMcpServers}>{t('Selected MCP Servers')}</SelectItem>
-                </SelectContent>
-              </Select>
-              {form.mcpAccessType === McpAccessEnum.SelectedMcpServers && (
-                <StringListField
-                  label={t('Allowed MCP Server Names')}
-                  values={form.allowedMcpServerNames ?? []}
-                  onChange={(v) => set('allowedMcpServerNames', v)}
-                  placeholder="mcp-server-name"
-                />
-              )}
-            </div>
-
-            {/* AI Skills */}
-            <div className="space-y-3 border-t pt-4">
-              <StringListField
-                label={t('Allowed AI Skills')}
-                values={form.allowedSkillNames ?? []}
-                onChange={(v) => set('allowedSkillNames', v)}
-                placeholder="skill-name"
-              />
             </div>
 
             {/* User Restrictions */}

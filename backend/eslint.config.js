@@ -8,7 +8,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(
-  { ignores: ["dist/**", "node_modules/**", "**/lib/api-client/**", "**/lib/mcp-registry-client/**", "public/**"] },
+  { ignores: ["dist/**", "node_modules/**", "**/lib/api-client/**", "public/**"] },
   {
     files: ["**/*.{js,ts}"],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

@@ -18,15 +18,12 @@ import {
 } from '@/schemas/ai-assistant'
 import { getToolRegistry, createToolExecutor } from '@/lib/ai/tool-registry'
 import { type AIContext } from '@/lib/ai/assistant'
-import { McpClient, McpConnectionManager } from '@/lib/ai/mcp-client'
 import { streamText, generateText, jsonSchema, stepCountIs, type Tool as AiSdkTool, type LanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { validateToken } from '@/lib/auth'
 import type { JwtPayload } from 'jsonwebtoken'
 import { config } from '@/config'
-import { getConfiguredServers } from './mcp-servers'
-import { getInstalledSkills } from './ai-tools-skills'
 import { searchDocumentation } from '@/lib/ai/rag-tools'
 import { rateLimit } from '@/lib/rate-limit'
 
@@ -105,52 +102,21 @@ async function loadSystemPrompt(reqId?: string): Promise<string> {
 }
 
 /**
- * Append dynamic context (installed skills, MCP servers) to the system prompt.
+ * Append dynamic context to the system prompt.
  */
 function enrichSystemPrompt(basePrompt: string): string {
-  const sections: string[] = [basePrompt]
-
-  // Installed skills
-  const skills = getInstalledSkills().filter(s => s.enabled)
-  if (skills.length > 0) {
-    const skillLines = skills.map(s => {
-      const parts = [`- **${s.name}** (${s.type}): ${s.description}`]
-      if (s.sourceUrl) parts.push(`  Source: ${s.sourceUrl}`)
-      return parts.join('\n')
-    })
-    sections.push(
-      `\n\n## INSTALLED SKILLS\n\nThe platform has the following AI skills installed. You should know about these and be able to answer questions about them:\n\n${skillLines.join('\n')}`
-    )
-  }
-
-  // Configured MCP servers
-  const mcpServers = getConfiguredMcpServers()
-  if (mcpServers.length > 0) {
-    const serverLines = mcpServers.map(s => `- **${s.name}**: ${s.url}`)
-    sections.push(
-      `\n\n## CONNECTED MCP SERVERS\n\n${serverLines.join('\n')}`
-    )
-  }
-
-  return sections.join('')
+  return basePrompt
 }
 
 /**
- * Get all configured MCP servers (env + dynamically added via UI)
- */
-function getConfiguredMcpServers(): Array<{ name: string; url: string }> {
-  return getConfiguredServers().map(s => ({ name: s.name, url: s.url }))
-}
-
-/**
- * Setup tool registry with both internal and external MCP tools
+ * Setup tool registry with internal tools
  */
 async function setupTools(token: string | undefined, aiContext: AIContext, reqId: string): Promise<{
   sdkTools: Record<string, AiSdkTool>
-  toolSources: { internal: number; external: number }
+  toolSources: { internal: number }
 }> {
   const sdkTools: Record<string, AiSdkTool> = {}
-  const toolSources = { internal: 0, external: 0 }
+  const toolSources = { internal: 0 }
 
   // 1. Add internal tools from Elysia routes (primary, fast)
   const internalTools = getToolRegistry()
@@ -197,84 +163,7 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
     toolSources.internal++
   }
 
-  // 2. Add external MCP server tools (secondary, distributed)
-  const mcpServers = getConfiguredMcpServers()
-  if (mcpServers.length > 0 && token) {
-    logger.server.info('Loading external MCP server tools', {
-      reqId,
-      serverCount: mcpServers.length,
-      servers: mcpServers.map(s => s.name)
-    })
-
-    const mcpManager = new McpConnectionManager()
-    
-    for (const server of mcpServers) {
-      try {
-        const mcpClient = McpClient.createExternalClient(server.url, server.name, { token: token! })
-        mcpManager.addServer(server.name, mcpClient)
-      } catch (error) {
-        logger.server.warn('Failed to add MCP server', {
-          reqId,
-          server: server.name,
-          error: error instanceof Error ? error.message : String(error)
-        })
-      }
-    }
-
-    try {
-      const mcpTools = await mcpManager.getAllTools()
-      logger.server.info('MCP tools loaded', {
-        reqId,
-        count: mcpTools.length,
-        toolNames: mcpTools.map(t => t.function.name).slice(0, 10)
-      })
-
-      for (const mcpTool of mcpTools) {
-        // Use short prefix "m_" to stay within OpenAI's 64-char tool name limit
-        const toolName = `m_${mcpTool.function.name}`
-        // Pass the real JSON Schema from the MCP server so the model knows what parameters to send
-        const mcpInputSchema = mcpTool.function.parameters && Object.keys(mcpTool.function.parameters).length > 0
-          ? jsonSchema(mcpTool.function.parameters as Parameters<typeof jsonSchema>[0])
-          : z.object({})
-        sdkTools[toolName] = {
-          description: `[MCP] ${mcpTool.function.description}`,
-          inputSchema: mcpInputSchema,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          execute: async (args: any) => {
-            logger.server.debug('Executing MCP tool', { reqId, tool: mcpTool.function.name, args })
-            const start = Date.now()
-            try {
-              const result = await mcpManager.callTool(mcpTool.function.name, args || {})
-              logger.server.debug('MCP tool completed', {
-                reqId,
-                tool: mcpTool.function.name,
-                duration: Date.now() - start,
-                contentCount: result.content.length,
-              })
-              // Concatenate all text content from the MCP response
-              return result.content.map(c => c.text).join('\n\n') || ''
-            } catch (error) {
-              logger.server.error('MCP tool failed', {
-                reqId,
-                tool: mcpTool.function.name,
-                duration: Date.now() - start,
-                error: error instanceof Error ? error.message : String(error)
-              })
-              throw error
-            }
-          }
-        }
-        toolSources.external++
-      }
-    } catch (error) {
-      logger.server.warn('Failed to load MCP tools', {
-        reqId,
-        error: error instanceof Error ? error.message : String(error)
-      })
-    }
-  }
-
-  // 3. Add RAG documentation search tool
+  // 2. Add RAG documentation search tool
   sdkTools['search_documentation'] = {
     description: 'Search the platform documentation knowledge base using semantic similarity. Use this tool when the user asks about platform features, configuration, SMART on FHIR concepts, admin UI usage, OAuth flows, or any question that could be answered by the documentation.',
     inputSchema: z.object({
@@ -315,7 +204,6 @@ async function setupTools(token: string | undefined, aiContext: AIContext, reqId
     reqId,
     total: Object.keys(sdkTools).length,
     internal: toolSources.internal,
-    external: toolSources.external
   })
 
   return { sdkTools, toolSources }
@@ -331,9 +219,6 @@ export const aiPublicRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
 
       // Get internal tool count
       const internalTools = getToolRegistry()
-      
-      // Get external MCP server count
-      const mcpServers = getConfiguredMcpServers()
 
       return {
         status: openaiConfigured ? 'healthy' : 'unhealthy',
@@ -346,11 +231,9 @@ export const aiPublicRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
           totalAvailable: internalTools.size,
           byPrefix: {
             internal: internalTools.size,
-            mcp: mcpServers.length
           },
           examples: Array.from(internalTools.keys()).slice(0, 5),
         },
-        mcpServers: mcpServers.map(s => ({ name: s.name, url: s.url })),
         version: '3.0.0-unified',
         timestamp: new Date().toISOString(),
       }
@@ -503,7 +386,6 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
         model: body.model || process.env.OPENAI_MODEL || 'gpt-4o-mini', 
         totalTools: Object.keys(sdkTools).length,
         internalTools: toolSources.internal,
-        externalTools: toolSources.external
       })
 
       // Load system prompt
@@ -668,7 +550,6 @@ export const aiRoutes = new Elysia({ prefix: '/ai', tags: ['ai'] })
         model: body.model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
         totalTools: Object.keys(sdkTools).length,
         internalTools: toolSources.internal,
-        externalTools: toolSources.external
       })
 
       // Load system prompt
