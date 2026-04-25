@@ -19,7 +19,7 @@ import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
 /** Safely read a Keycloak client attribute (handles both string and string[] formats) */
-function getAttr(attrs: Record<string, any> | undefined, key: string): string | undefined {
+function getAttr(attrs: Record<string, string | string[]> | undefined, key: string): string | undefined {
   const val = attrs?.[key]
   if (Array.isArray(val)) return val[0]
   return typeof val === 'string' ? val : undefined
@@ -203,9 +203,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
               
               // Audience mappers
-              audienceClients: (fullClient as any).protocolMappers
-                ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
-                ?.map((m: any) => m.config?.['included.client.audience'])
+              audienceClients: fullClient.protocolMappers
+                ?.filter((m) => m.protocolMapper === 'oidc-audience-mapper')
+                ?.map((m) => m.config?.['included.client.audience'])
                 ?.filter(Boolean) || [],
               
               // User type & role restrictions
@@ -676,9 +676,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
             
             // Audience mappers
-            audienceClients: (fullClient as any).protocolMappers
-              ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
-              ?.map((m: any) => m.config?.['included.client.audience'])
+            audienceClients: fullClient.protocolMappers
+              ?.filter((m) => m.protocolMapper === 'oidc-audience-mapper')
+              ?.map((m) => m.config?.['included.client.audience'])
                 ?.filter(Boolean) || [],
               
               // User type & role restrictions
@@ -817,7 +817,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       if (body.requiredRoles !== undefined) {
         try {
           const existingRoles = await admin.clients.listRoles({ id: existing.id! })
-          const existingNames = new Set(existingRoles.map((r: any) => r.name))
+          const existingNames = new Set(existingRoles.map((r) => r.name))
           const desiredNames = new Set(body.requiredRoles)
 
           // Create missing roles
@@ -844,7 +844,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         try {
           // Remove existing audience mappers
           const existingMappers = await admin.clients.listProtocolMappers({ id: existing.id! })
-          const audienceMappers = existingMappers.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+          const audienceMappers = existingMappers.filter((m) => m.protocolMapper === 'oidc-audience-mapper')
           for (const mapper of audienceMappers) {
             if (mapper.id) {
               await admin.clients.delProtocolMapper({ id: existing.id!, mapperId: mapper.id })

@@ -434,14 +434,14 @@ async function ensureOrganizationsEnabled(): Promise<void> {
       return
     }
 
-    if ((realm as any).organizationsEnabled) {
+    if (realm.organizationsEnabled) {
       logger.keycloak.info('✅ Keycloak Organizations already enabled')
       return
     }
 
     await admin.realms.update(
       { realm: config.keycloak.realm! },
-      { organizationsEnabled: true } as any,
+      { organizationsEnabled: true },
     )
 
     logger.keycloak.info('✅ Keycloak Organizations enabled on realm')

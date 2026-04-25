@@ -168,9 +168,9 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     dicomServersCache = parseDicomServersFromAttributes(attrs)
     // loginTheme is a top-level realm property, not an attribute
     if (brandOverrides) {
-      brandOverrides.loginTheme = (realm as any)?.loginTheme || null
-    } else if ((realm as any)?.loginTheme) {
-      brandOverrides = { loginTheme: (realm as any).loginTheme }
+      brandOverrides.loginTheme = realm?.loginTheme || null
+    } else if (realm?.loginTheme) {
+      brandOverrides = { loginTheme: realm.loginTheme }
     }
     loaded = true
 

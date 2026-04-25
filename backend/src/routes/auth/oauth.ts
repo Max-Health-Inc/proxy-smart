@@ -375,6 +375,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         // Log the OAuth event
         const bsClientId = bodyObj.client_id || bodyObj.clientId || 'unknown'
         const responseTime = Date.now() - startTime
+        const resultBody = result.body as Record<string, string | number | undefined>
         try {
           await oauthMetricsLogger.logEvent({
             type: 'token',
@@ -386,10 +387,10 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
             responseTime,
             ipAddress: headers['x-forwarded-for'] || headers['x-real-ip'] || 'unknown',
             userAgent: headers['user-agent'] || 'unknown',
-            errorMessage: (result.body as any).error_description,
-            errorCode: (result.body as any).error,
-            tokenType: (result.body as any).token_type,
-            expiresIn: (result.body as any).expires_in,
+            errorMessage: resultBody.error_description as string | undefined,
+            errorCode: resultBody.error as string | undefined,
+            tokenType: resultBody.token_type as string | undefined,
+            expiresIn: resultBody.expires_in as number | undefined,
             refreshToken: false,
             requestDetails: { path: '/auth/token', method: 'POST', headers: { 'content-type': headers['content-type'] || '', 'user-agent': headers['user-agent'] || '' } }
           })

@@ -13,6 +13,7 @@ import {
   KeycloakConfigResponse,
   type SaveKeycloakConfigRequestType
 } from '@/schemas/admin/keycloak'
+import { ErrorResponse } from '@/schemas'
 
 /**
  * Keycloak Configuration Management
@@ -141,7 +142,7 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
   // Get current Keycloak configuration status
   .get('/status', async ({ headers, set }) => {
     const token = extractBearerToken(headers)
-    if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } as any }
+    if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
     await validateAdminToken(token)
     return {
       baseUrl: config.keycloak.baseUrl,
@@ -156,7 +157,8 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
       tags: ['admin']
     },
     response: {
-      200: KeycloakConfigResponse
+      200: KeycloakConfigResponse,
+      401: ErrorResponse
     }
   })
   

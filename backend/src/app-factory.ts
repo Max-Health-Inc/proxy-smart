@@ -30,6 +30,21 @@ import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
 
+interface DiscoveredApp {
+    id: string
+    launch_url: string
+    client_id: string
+    client_name: string
+    description: string
+    scope: string
+    category: string
+    icon: string
+    grant_types: string[]
+    token_endpoint_auth_method: string
+    hidden: boolean
+    source: 'filesystem' | 'registered'
+}
+
 /** Scan public/apps/ for sub-apps with smart-manifest.json, merge published registered apps, and return discovery list */
 function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
@@ -60,7 +75,7 @@ function discoverApps({ includeHidden = false } = {}) {
             } catch { return null }
         })
         .filter(Boolean)
-        .filter(app => includeHidden || !app!.hidden) as any[]
+        .filter(app => includeHidden || !app!.hidden) as DiscoveredApp[]
 
     // 2. Published registered apps (from config)
     const publishedApps = getPublishedApps()
@@ -81,7 +96,7 @@ function discoverApps({ includeHidden = false } = {}) {
         }))
 
     // Merge, dedup by client_id (filesystem wins if both exist)
-    const fsClientIds = new Set(fsApps.map((a: any) => a.client_id))
+    const fsClientIds = new Set(fsApps.map((a) => a.client_id))
     return [...fsApps, ...publishedApps.filter(pa => !fsClientIds.has(pa.client_id))]
 }
 
