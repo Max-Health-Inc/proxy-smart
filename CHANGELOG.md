@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604241730.a780750b] - 2026-04-25
+
+- 🔧 Chores & Improvements: UI refactor of MCP configuration (MCP ServersManager replaced with MCP Endpoint Settings under AI Tools; navigation label updated to "MCP Endpoint")
+- 🔧 Chores & Improvements: Large UI removals impacting MCP-related components (McpServersManager, McpServersTab, SkillsTab, and associated dialogs/components) and cascading form changes
+- 🔧 Chores & Improvements: Backend/admin/API cleanup removing MCP servers management routes, admin schemas, and MCP registry client components
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/577
+
+
 ## [0.0.8-alpha.202604241234.d7c3bcdc] - 2026-04-24
 
 - 🔧 Chores & Improvements: Update version strings to 0.0.8-alpha.202604241234.d7c3bcdc across apps/tests; UI enhancements introducing Select components for DICOM authentication in Add/Edit dialogs; added DicomStatsCards component and its usage in DicomServersManager; minor import adjustments and icon set changes.
