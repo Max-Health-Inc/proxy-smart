@@ -12,7 +12,6 @@
  * All features default to `enforce`. Set SCOPE_ENFORCEMENT_MODE / ROLE_BASED_FILTERING_MODE to `disabled` or `audit-only` to change.
  */
 
-import { config } from '../config'
 import { logger } from './logger'
 import { getRuntimeAccessControlConfig } from './runtime-config'
 import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'

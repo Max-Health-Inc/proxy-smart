@@ -32,8 +32,30 @@ export function usePatients(person: Person | null) {
   }, [person])
 
   useEffect(() => {
-    fetchPatients()
-  }, [fetchPatients])
+    if (!person) return
+    Promise.resolve()
+      .then(() => {
+        setLoading(true)
+        setError(null)
+        const links = extractPatientLinks(person)
+        return Promise.allSettled(
+          links.map((l) => {
+            const id = l.reference.replace("Patient/", "")
+            return getPatient(id)
+          })
+        )
+      })
+      .then((results) => {
+        const loaded = results
+          .filter((r): r is PromiseFulfilledResult<Patient> => r.status === "fulfilled")
+          .map((r) => r.value)
+        setPatients(loaded)
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load patients")
+      })
+      .finally(() => setLoading(false))
+  }, [person])
 
   return { patients, loading, error, refetch: fetchPatients }
 }

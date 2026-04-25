@@ -6,6 +6,177 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604251649.1dd04e7c] - 2026-04-25
+
+- ⚠️ Breaking Changes: None detected
+
+- 🔧 Chores & Improvements:
+  - Dependency and version bumps across multiple apps (consent-app, dtr-app, ui, etc.).
+  - Refactor: usePerson hook now uses fetchPerson with updated dependency handling.
+
+- 🔧 Chores & Improvements (CI/CD/config):
+  - Dockerfile: removed copying mcp-server-templates.json from backend build stage.
+
+- 🐛 Bug Fixes:
+  - Minor hook refactor to streamline token fetch flow (fetchPerson exposed for refetch).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/582
+
+
+## [0.0.8-beta.202604251600.c1abef92] - 2026-04-25
+
+- 🔧 Chores & Improvements: Refactor usePerson hook to fetch via fetchPerson and expose refetch; update dependency references to reflect new fetchPerson usage
+- 🔧 Chores & Improvements: Downgrade Vue devDependencies from 3.5.33 to 3.5.32 in bun.lock and package.json
+- 🔧 Chores & Improvements: Bump consent-app and dtr-app versions to 202604251600
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/581
+
+
+## [0.0.8-alpha.202604251600.c1abef92] - 2026-04-25
+
+- 🔧 Chores & Improvements: Version bump to 0.0.8-alpha.202604251600.c1abef92 across multiple packages (consent-app, dtr-app, patient-portal, patient-portal/package, smart-dicom-template, ui, eslint-config, testing/e2e)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/580
+
+
+## [0.0.8-alpha.202604251402.0ddf9508] - 2026-04-25
+
+- 🔧 Chores & Improvements: Major ESLint configuration refactor with shared base and React/UI-specific configs; update root config to delegate to base with ignores; add eslint-config scaffolding and shared UI lint config
+- 🔧 Chores & Improvements: Dependency and version bumps to 0.0.8-alpha.202604251402.0ddf9508 across app packages (tailwind, lucide-react, shadcn, etc.)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/579
+
+
+## [0.0.8-alpha.202604251357.feaf2389] - 2026-04-25
+
+- 🔧 Chores & Improvements: Version bump to 0.0.8-alpha.202604251357.feaf2389 across packages
+- 🔧 Chores & Improvements: Remove unused imports (UI: SmartAppType in useSmartAppForm.ts; Backend: LanguageModel in ai.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/578
+
+
+## [0.0.8-alpha.202604241730.a780750b] - 2026-04-25
+
+- 🔧 Chores & Improvements: UI refactor of MCP configuration (MCP ServersManager replaced with MCP Endpoint Settings under AI Tools; navigation label updated to "MCP Endpoint")
+- 🔧 Chores & Improvements: Large UI removals impacting MCP-related components (McpServersManager, McpServersTab, SkillsTab, and associated dialogs/components) and cascading form changes
+- 🔧 Chores & Improvements: Backend/admin/API cleanup removing MCP servers management routes, admin schemas, and MCP registry client components
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/577
+
+
+## [0.0.8-alpha.202604241234.d7c3bcdc] - 2026-04-24
+
+- 🔧 Chores & Improvements: Update version strings to 0.0.8-alpha.202604241234.d7c3bcdc across apps/tests; UI enhancements introducing Select components for DICOM authentication in Add/Edit dialogs; added DicomStatsCards component and its usage in DicomServersManager; minor import adjustments and icon set changes.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/576
+
+
+## [0.0.8-alpha.202604240023.ea1d899c] - 2026-04-24
+
+- 🔧 Chores & Improvements: Remove automatic migration of client JWT auth to client-secret; simplify clientSecret fetch to directly retrieve internal clientId/id without migration logic; update header comment accordingly
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/575
+
+
+## [0.0.8-alpha.202604240004.e4134a02] - 2026-04-24
+
+- ✨ Features: Version bump to 0.0.8-alpha.202604240004.e4134a02 across multiple packages
+- 🔧 Chores & Improvements: Backend migration logic to move Keycloak client from client-jwt to client-secret during secret fetch (preserves JWKS attributes and logs migration)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/574
+
+
+## [0.0.8-alpha.202604232317.25238204] - 2026-04-24
+
+- ✨ Features: Introduced LayerContext and useLayerZIndex for dynamic z-index management across UI: Dialog, DropdownMenu, Select, and Tooltip now render above the current modal layer; portaled children wrapped with LayerContext.Provider to apply correct z-index
+- 🔧 Chores & Improvements: Updated exports and propagated z-index handling; applied dynamic z-index across UI components
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/573
+
+
+## [0.0.8-alpha.202604231532.b15a39b6] - 2026-04-23
+
+- ✨ Features
+  - Backend: add new backend-services.ts for private_key_jwt handling and integrate into OAuth flow; detect and process Backend Services token requests at proxy layer
+  - Keycloak realm export: configure inferno-backend-services client to use client-secret authentication with internal proxy secret
+
+- 🔧 Chores & Improvements
+  - Backend: adjust FHIR proxy headers to drop origin and CORS-related headers; preserve others and set accept header
+  - Minor: ensure token responses are cache-controlled (no-store) and log metrics for backend services flow
+
+Note: No breaking changes detected; no documentation, bug fixes, or updates beyond these groups.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/572
+
+
+## [0.0.8-alpha.202604231527.b066b983] - 2026-04-23
+
+- ⚠️ Breaking Changes: No user-facing breaking changes detected.
+
+- 🔧 Chores & Improvements: Version bumps across UI, consent-app, dtr-app, patient-portal, smart-dicom-template, and testing/e2e to 0.0.8-alpha.202604231527.b066b983.
+
+- 🔧 Chores & Improvements: Inferno OAuth script updated to enable use_discovery: true in backend_services auth info.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/571
+
+
+## [0.0.8-alpha.202604231310.dd1cc2cd] - 2026-04-23
+
+- 🔧 Chores & Improvements: Bump version to 0.0.8-alpha.202604231310.dd1cc2cd
+- 🔧 Chores & Improvements: Update CORS origins in beta environments to include http://localhost:4567 across workflows, docker compose, testing setup, and multiple apps (consent-app, dtr-app, patient-portal, smart-dicom-template, ui)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/570
+
+
+## [0.0.8-alpha.202604231226.b0a9083d] - 2026-04-23
+
+- ✨ Features
+  - Consent app: add fire-and-forget email notification on access request creation via notifyAccessRequest; ignore failures.
+
+- 🔧 Chores & Improvements
+  - Shared UI: export change to StatCard to expose colorMap.
+  - FHIR client/common: introduce createAuthFetch wrapper; refactor to use shared UI createSmartAuth; centralize backend notification API stubs.
+  - Smart-auth/config: per-app refactor to use shared createSmartAuth; derive fhirBaseUrl; export smartAuth and fhirBaseUrl for apps.
+  - TS config & Vite: consolidate to shared smart-ui config; apps extend via shared presets (smart-app/tsconfig, smart-node/tsconfig, shared Vite config).
+  - Monitoring: scaffold generic create-monitoring-service.ts to standardize SSE.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/569
+
+
+## [0.0.8-alpha.202604230400.3110b99a] - 2026-04-23
+
+- 🔧 Chores & Improvements: Contracted shared UI/config setup and refactors
+  - Consolidated TS config and Vite settings to shared smart-ui presets; apps extend via shared presets
+  - Refactored smart-auth/config to use shared createSmartAuth and derive fhirBaseUrl; centralized exports for apps
+  - FHIR client/common updated to use createAuthFetch wrapper; removed custom auth error handling; centralized backend notification stubs
+  - Backend: added email backend with Resend (conditional), new consent-notify API route and admin/email wiring; updated token utilities
+  - Monitoring services: scaffolded generic create-monitoring-service.ts for standardized SSE implementations
+  - Consent app: add fire-and-forget email notification on access request creation via notifyAccessRequest; ignore failures
+
+Note: Skipped non-substantive/metadata updates and merges per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/568
+
+
+## [0.0.7-alpha.202604221318.ab938c2d] - 2026-04-23
+
+- ✨ Features: 
+  - Consent app: fire-and-forget email notification on access request creation via notifyAccessRequest (ignore failures)
+  - Backend: email backend with Resend (conditional on API key); new consent-notify API route and admin/email wiring
+
+- 🔧 Chores & Improvements:
+  - FHIR client/common: introduce createAuthFetch wrapper; refactor to use shared UI createSmartAuth; centralize backend notification API stubs; remove custom auth error handling
+  - Smart-auth/config: per-app refactor to use shared createSmartAuth and derive fhirBaseUrl; export smartAuth and fhirBaseUrl
+  - TS config and Vite: consolidate to shared smart-ui config; apps extend via shared presets (smart-app tsconfig, smart-node tsconfig, shared Vite config)
+  - Monitoring services: scaffold generic create-monitoring-service.ts to standardize SSE
+
+- ⚠️ Breaking Changes: None detected
+
+Note: No update/merge/metadata commits included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/566
+
+
 ## [0.0.7-alpha.202604220949.46abe258] - 2026-04-22
 
 - ⚠️ Breaking Changes: ModalStackProvider integration and dynamic z-index handling require updates to app root usage and UI layering

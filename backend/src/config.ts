@@ -121,8 +121,6 @@ export const config = {
   },
 
   ai: {
-    // Always use internal AI (unified ai.ts with direct Elysia tool execution)
-    // Can connect to external MCP servers via EXTERNAL_MCP_SERVERS env variable
     get enabled() {
       return !!this.openaiApiKey;
     },

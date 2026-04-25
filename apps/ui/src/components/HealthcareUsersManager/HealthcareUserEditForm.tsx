@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   Input,
@@ -78,11 +78,7 @@ export function HealthcareUserEditForm({
   getAllAvailableRoles,
 }: HealthcareUserEditFormProps) {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState<EditUserFormData>(initialFormData);
-
-  useEffect(() => {
-    if (user) setFormData(user);
-  }, [user]);
+  const [formData, setFormData] = useState<EditUserFormData>(user ?? initialFormData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

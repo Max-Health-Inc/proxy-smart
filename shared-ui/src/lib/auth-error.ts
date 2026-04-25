@@ -16,3 +16,33 @@ export function onAuthError(fn: AuthErrorHandler) {
 export function reportAuthError(message: string) {
   handler?.(message)
 }
+
+// ─── Shared auth-fetch wrapper ───────────────────────────────────────────────
+
+interface SmartAuthWithFetch {
+  createAuthenticatedFetch(): typeof fetch
+}
+
+/**
+ * Wraps the SMART authenticated fetch to detect permanent auth failures
+ * and route them through the auth-error bus.
+ *
+ * Usage:
+ * ```ts
+ * const authFetch = createAuthFetch(smartAuth)
+ * const client = new FhirClient(fhirBaseUrl, authFetch)
+ * ```
+ */
+export function createAuthFetch(smartAuth: SmartAuthWithFetch): typeof fetch {
+  const baseFetch = smartAuth.createAuthenticatedFetch()
+  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    try {
+      return await baseFetch(input, init)
+    } catch (err) {
+      if (err instanceof Error && /no valid smart token/i.test(err.message)) {
+        reportAuthError("Your session has expired. Please sign in again.")
+      }
+      throw err
+    }
+  }
+}

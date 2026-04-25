@@ -1,4 +1,4 @@
-import { Badge, Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
+import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import { StatCard } from '../ui/stat-card';
 import {
   Activity,
@@ -61,7 +61,7 @@ export function OAuthAnalyticsTab({
   const clientDistributionData = useMemo<PieClientDatum[]>(() => {
     if (!analytics?.topClients?.length) return [];
     return analytics.topClients.map((client) => ({ ...client, name: client.clientName }));
-  }, [analytics?.topClients]);
+  }, [analytics]);
 
   const hasClientDistribution = clientDistributionData.length > 0;
   const predictiveInsights = analytics?.predictiveInsights;

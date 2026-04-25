@@ -1,7 +1,6 @@
 export type SmartAppType = 'backend-service' | 'standalone-app' | 'ehr-launch' | 'agent';
 export type AuthenticationType = 'asymmetric' | 'symmetric' | 'none';
 export type ServerAccessType = 'all-servers' | 'selected-servers' | 'user-person-servers';
-export type McpAccessType = 'none' | 'all-mcp-servers' | 'selected-mcp-servers';
 
 export function isInteractive(appType: SmartAppType | undefined): boolean {
     if (!appType) return false;
@@ -56,19 +55,6 @@ export function getServerAccessTypeDescription(serverAccessType: ServerAccessTyp
             return 'App is restricted to specific FHIR servers only';
         case 'user-person-servers':
             return 'App can only access servers where the user has associated Person records (not available for backend services)';
-        default:
-            return '';
-    }
-}
-
-export function getMcpAccessTypeDescription(mcpAccessType: McpAccessType): string {
-    switch (mcpAccessType) {
-        case 'none':
-            return 'App has no access to MCP servers (AI capabilities disabled)';
-        case 'all-mcp-servers':
-            return 'App can access all configured MCP servers';
-        case 'selected-mcp-servers':
-            return 'App is restricted to specific MCP servers only';
         default:
             return '';
     }

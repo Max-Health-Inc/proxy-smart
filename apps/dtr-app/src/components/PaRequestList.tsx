@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardAction, Badge, Button, Sp
 import { searchClaims, searchClaimResponses, searchTasks, type PASClaim, type PASClaimResponse, type PASTask } from "@/lib/fhir-client"
 import type { ReviewAction } from "hl7.fhir.us.davinci-pas-generated"
 import { getX12278DiagnosisTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-X12278DiagnosisType"
-import { getPASTaskCodesConcept, type PASTaskCodesCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes"
+import { getPASTaskCodesConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASTaskCodes"
 import { getPASSupportingInfoTypeConcept } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-PASSupportingInfoType"
 import { type RemittanceOutcomeCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-RemittanceOutcome"
 import { type HrexTaskStatusCode } from "hl7.fhir.us.davinci-pas-generated/valuesets/ValueSet-HrexTaskStatus"
@@ -73,8 +73,6 @@ export function PaRequestList({ patientId }: PaRequestListProps) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
 
     Promise.all([searchClaims(patientId), searchClaimResponses(patientId), searchTasks(patientId)])
       .then(([claims, responses, tasks]) => {

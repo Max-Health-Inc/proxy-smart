@@ -85,7 +85,7 @@ export async function getValidatedAdmin(
     
     // For any other errors, throw as server error
     logger.warn('admin', 'Detected non-authentication error, throwing generic Error')
-    throw new Error(`Failed to get admin client: ${errorMessage}`);
+    throw new Error(`Failed to get admin client: ${errorMessage}`, { cause: error });
   }
 }
 

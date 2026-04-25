@@ -28,38 +28,32 @@ export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
   const [newScopeSet, setNewScopeSet] = useState({ name: '', description: '', scopes: [] as string[] });
   const [builderState, setBuilderState] = useState<BuilderState>(INITIAL_BUILDER_STATE);
 
-  useEffect(() => {
-    loadScopeSets();
-  }, []);
-
   /* ─── Data ─────────────────────────────────────────────────────── */
 
-  const loadScopeSets = async () => {
-    setLoading(true);
-    try {
-      const savedSets = (await getItem<ScopeSet[]>('smart-scope-sets')) || [];
-      const templatesWithIds = SCOPE_TEMPLATES.map((template) => ({
-        ...template,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isTemplate: true,
-      }));
-      const existingTemplateIds = savedSets.filter((s: ScopeSet) => s.isTemplate).map((s: ScopeSet) => s.id);
-      const newTemplates = templatesWithIds.filter((t) => !existingTemplateIds.includes(t.id));
-      const allSets = [...savedSets, ...newTemplates];
-      setScopeSets(allSets);
-      await storeItem('smart-scope-sets', allSets);
-    } catch (error) {
-      console.error('Failed to load scope sets:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    getItem<ScopeSet[]>('smart-scope-sets')
+      .then(async savedSets => {
+        const sets = savedSets || [];
+        const templatesWithIds = SCOPE_TEMPLATES.map((template) => ({
+          ...template,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isTemplate: true,
+        }));
+        const existingTemplateIds = sets.filter((s: ScopeSet) => s.isTemplate).map((s: ScopeSet) => s.id);
+        const newTemplates = templatesWithIds.filter((t) => !existingTemplateIds.includes(t.id));
+        const allSets = [...sets, ...newTemplates];
+        setScopeSets(allSets);
+        await storeItem('smart-scope-sets', allSets);
+      })
+      .catch(error => console.error('Failed to load scope sets:', error))
+      .finally(() => setLoading(false));
+  }, []);
 
   const saveScopeSet = async (scopeSet: Omit<ScopeSet, 'id' | 'createdAt' | 'updatedAt' | 'isTemplate'>) => {
     const newSet: ScopeSet = {
       ...scopeSet,
-      id: editingScope?.id || `scope-${Date.now()}`,
+      id: editingScope?.id || `scope-${crypto.randomUUID()}`,
       createdAt: editingScope?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       isTemplate: false,

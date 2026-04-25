@@ -7,7 +7,6 @@ import {
     isInteractive,
     requiresRedirectUri,
     hasFixedAuthType,
-    getFixedAuthType,
     getAuthTypeDescription,
     getRedirectUriHelperText,
     isAgent,

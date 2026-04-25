@@ -80,8 +80,19 @@ export function MembersPanel({ capabilities }: MembersPanelProps) {
   }, [clientApis, t]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!clientApis) return;
+    clientApis.admin.getAdminAccessControlMembers({ limit: 100 })
+      .then(response => {
+        setMembers(response.data);
+        setTotalCount(response.pagination.count);
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to fetch members:', err);
+        setError(t('Failed to load members'));
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, t]);
 
   const handleCreateMember = useCallback(async () => {
     if (!clientApis || !newMemberEmail.trim()) return;

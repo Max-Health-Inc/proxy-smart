@@ -21,8 +21,6 @@ export function usePatientContext(ehrPatientId: string | null) {
     // If we already have this patient cached, skip the fetch
     if (patient?.id === ehrPatientId) return
 
-    setLoading(true)
-    setError(null)
     getPatient(ehrPatientId)
       .then((p) => {
         setPatientState(p)
@@ -30,7 +28,7 @@ export function usePatientContext(ehrPatientId: string | null) {
       })
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load patient"))
       .finally(() => setLoading(false))
-  }, [ehrPatientId])
+  }, [ehrPatientId, patient?.id])
 
   const setPatient = useCallback((p: Patient | null) => {
     setPatientState(p)

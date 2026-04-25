@@ -37,7 +37,18 @@ export function AppStoreManagement() {
     }
   }, [clientApis.appStore, clientApis.smartApps]);
 
-  useEffect(() => { loadApps(); }, [loadApps]);
+  useEffect(() => {
+    Promise.all([
+      clientApis.appStore.getAdminAppStore(),
+      clientApis.smartApps.getAdminSmartApps(),
+    ])
+      .then(([storeData, registered]) => {
+        setApps(storeData.apps);
+        setRegisteredApps(registered);
+      })
+      .catch(error => console.error('Failed to load app store apps:', error))
+      .finally(() => setLoading(false));
+  }, [clientApis.appStore, clientApis.smartApps]);
 
   const handleToggle = async (app: AppStoreApp) => {
     setTogglingId(app.id);

@@ -254,7 +254,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
 // ---------------------------------------------------------------------------
 
 const AUTH_HEADER = { authorization: 'Bearer test-token-123' }
-const JSON_HEADERS = { 'content-type': 'application/json', ...AUTH_HEADER }
+const _JSON_HEADERS = { 'content-type': 'application/json', ...AUTH_HEADER }
 
 function req(method: string, path: string, body?: unknown, headers?: HeadersInit) {
   const url = `http://localhost/admin/user-federation${path}`

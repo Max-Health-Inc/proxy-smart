@@ -79,8 +79,24 @@ export function GroupsPanel() {
   }, [clientApis, t]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!clientApis) return;
+    Promise.all([
+      clientApis.admin.getAdminAccessControlGroups({ limit: 100 }),
+      clientApis.admin.getAdminAccessControlDoors({ limit: 100 }),
+      clientApis.admin.getAdminAccessControlGroupDoors({ limit: 500 }),
+    ])
+      .then(([groupsResponse, doorsResponse, groupDoorsResponse]) => {
+        setGroups(groupsResponse.data);
+        setAllDoors(doorsResponse.data);
+        setGroupDoors(groupDoorsResponse.data);
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to fetch groups:', err);
+        setError(t('Failed to load groups'));
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, t]);
 
   const handleCreateGroup = useCallback(async () => {
     if (!clientApis || !newGroupName.trim()) return;

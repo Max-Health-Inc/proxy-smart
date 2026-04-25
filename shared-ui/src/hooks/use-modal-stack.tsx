@@ -9,6 +9,14 @@ type NextZIndexFn = () => number
 
 const ModalStackContext = React.createContext<NextZIndexFn | null>(null)
 
+/**
+ * Context that propagates the current modal layer's z-index to child components.
+ *
+ * Dialogs provide this so portaled children (dropdowns, selects, tooltips) can
+ * render above the dialog overlay instead of at the default z-50.
+ */
+const LayerContext = React.createContext<number | undefined>(undefined)
+
 interface ModalStackProviderProps {
   children: React.ReactNode
   /** Base z-index for the first modal. Defaults to 50. */
@@ -50,18 +58,27 @@ function ModalStackProvider({ children, baseZIndex = DEFAULT_Z_INDEX }: ModalSta
  */
 function useModalLayer(): number | undefined {
   const nextZIndex = React.useContext(ModalStackContext)
-  const zIndexRef = React.useRef<number | undefined>(undefined)
+  const [zIndex] = React.useState(() => nextZIndex !== null ? nextZIndex() : undefined)
+  return zIndex
+}
 
-  if (nextZIndex !== null && zIndexRef.current === undefined) {
-    zIndexRef.current = nextZIndex()
-  }
-
-  return zIndexRef.current
+/**
+ * Hook for portaled popover-like components (dropdown, select, tooltip) to
+ * render above the current modal layer.
+ *
+ * Returns a z-index 1 higher than the enclosing dialog's layer, or
+ * `undefined` when not inside a dialog (so the CSS z-50 class applies).
+ */
+function useLayerZIndex(): number | undefined {
+  const parentZ = React.useContext(LayerContext)
+  return parentZ !== undefined ? parentZ + 1 : undefined
 }
 
 export {
   ModalStackProvider,
   useModalLayer,
+  useLayerZIndex,
+  LayerContext,
   ModalStackContext,
   DEFAULT_Z_INDEX,
   Z_INDEX_INCREMENT,

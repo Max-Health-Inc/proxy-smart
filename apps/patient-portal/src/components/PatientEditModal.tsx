@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -200,15 +200,6 @@ export function PatientEditModal({
   const [demographics, setDemographics] = useState(() => extractDemographics(patient))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Reset form when patient changes
-  useEffect(() => {
-    setProfile(extractProfileData(patient))
-    setPhone(extractPhone(patient))
-    setAddress(extractAddress(patient))
-    setDemographics(extractDemographics(patient))
-    setError(null)
-  }, [patient])
 
   const handleSave = async () => {
     setSaving(true)

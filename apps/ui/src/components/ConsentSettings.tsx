@@ -46,10 +46,9 @@ export function ConsentSettings() {
 
   const loadSettings = useCallback(async () => {
     try {
-      setLoading(true);
-      setMessage(null);
       const res = await adminApiCall<{ config: ConsentConfig }>('/admin/consent/config');
       setConsent(res.config);
+      setMessage(null);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -61,8 +60,19 @@ export function ConsentSettings() {
   }, []);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    adminApiCall<{ config: ConsentConfig }>('/admin/consent/config')
+      .then(res => {
+        setConsent(res.config);
+        setMessage(null);
+      })
+      .catch(error => {
+        setMessage({
+          type: 'error',
+          text: error instanceof Error ? error.message : 'Failed to load consent settings',
+        });
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const saveSettings = async () => {
     try {
@@ -115,7 +125,7 @@ export function ConsentSettings() {
             </Badge>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="sm" onClick={loadSettings} disabled={saving}>
+            <Button variant="outline" size="sm" onClick={() => { setLoading(true); setMessage(null); loadSettings(); }} disabled={saving}>
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Reload')}
             </Button>

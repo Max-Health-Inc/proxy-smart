@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { extractBearerToken } from '@/lib/admin-utils'
-import { validateToken, validateAdminToken } from '@/lib/auth'
+import { validateAdminToken } from '@/lib/auth'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
@@ -12,9 +12,7 @@ import { smartConfigAdminRoutes } from './smart-config'
 import { clientRegistrationSettingsRoutes } from './client-registration-settings'
 import { keycloakConfigRoutes } from './keycloak-config'
 import { aiRoutes, aiPublicRoutes } from './ai'
-import { mcpServersRoutes } from './mcp-servers'
 import { mcpEndpointAdminRoutes } from './mcp-endpoint'
-import { aiToolsSkillsRoutes } from './ai-tools-skills'
 import { consentAdminRoutes } from './consent'
 import { smartAccessControlAdminRoutes } from './smart-access-control'
 import { accessControlRoutes } from './access-control'
@@ -106,12 +104,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(brandingAdminRoutes)
   .use(clientRegistrationSettingsRoutes)
   .use(keycloakConfigRoutes)
-  // MCP servers management
-  .use(mcpServersRoutes)
   // MCP endpoint (built-in Streamable HTTP MCP server) management
   .use(mcpEndpointAdminRoutes)
-  // AI Tools — Skills management
-  .use(aiToolsSkillsRoutes)
   // Consent enforcement management
   .use(consentAdminRoutes)
   // SMART access control (scope enforcement, role-based filtering)

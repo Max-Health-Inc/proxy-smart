@@ -37,8 +37,15 @@ export function OverviewPanel() {
   }, [clientApis, t]);
 
   useEffect(() => {
-    fetchOverview();
-  }, [fetchOverview]);
+    if (!clientApis) return;
+    clientApis.admin.getAdminAccessControlOverview()
+      .then(result => { setOverview(result); setError(null); })
+      .catch(err => {
+        console.error('Failed to fetch door management overview:', err);
+        setError(t('Failed to load overview data'));
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, t]);
 
   if (loading) {
     return <PageLoadingState message={t('Loading overview...')} />;

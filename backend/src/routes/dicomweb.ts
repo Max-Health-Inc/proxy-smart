@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { validateToken } from '../lib/auth'
-import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
+import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
 import { config } from '../config'
 import { getDefaultDicomServer } from '../lib/runtime-config'
 import { logger } from '../lib/logger'
@@ -300,12 +300,6 @@ async function probePacs(): Promise<PacsStatus> {
 }
 
 // ----- Elysia route plugin -----
-
-const DicomWebErrorResponse = t.Object({
-  error: t.String(),
-  message: t.Optional(t.String()),
-  details: t.Optional(t.Object({ message: t.Optional(t.String()) })),
-})
 
 const PacsStatusResponse = t.Object({
   configured: t.Boolean(),

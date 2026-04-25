@@ -5,7 +5,7 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { XIcon } from "lucide-react"
 
 import { cn } from "../lib/utils"
-import { useModalLayer } from "../hooks/use-modal-stack"
+import { useModalLayer, LayerContext } from "../hooks/use-modal-stack"
 
 function Dialog({
   ...props
@@ -73,7 +73,9 @@ function DialogContent({
         style={layerStyle}
         {...props}
       >
-        {children}
+        <LayerContext.Provider value={zIndex}>
+          {children}
+        </LayerContext.Provider>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"

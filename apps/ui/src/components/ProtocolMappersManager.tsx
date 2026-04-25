@@ -35,7 +35,16 @@ export function ProtocolMappersManager({ embedded }: ProtocolMappersManagerProps
     }
   }, [clientApis, t]);
 
-  useEffect(() => { fetchStatus(); }, [fetchStatus]);
+  useEffect(() => {
+    if (!clientApis) return;
+    clientApis.admin.getAdminScopeMappers()
+      .then(result => {
+        setScopes(result.status);
+        setError(null);
+      })
+      .catch(() => setError(t('Failed to load scope mapper status')))
+      .finally(() => setLoading(false));
+  }, [clientApis, t]);
 
   const handleFixAll = async () => {
     if (!clientApis) return;

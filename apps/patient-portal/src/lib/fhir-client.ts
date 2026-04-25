@@ -1,6 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { config } from "@/config"
-import { reportAuthError } from "@/lib/auth-error"
+import { createAuthFetch } from "@proxy-smart/shared-ui"
 import { FhirClient, type FhirResource as IpsFhirResource } from "hl7.fhir.uv.ips-generated/fhir-client"
 import { FhirClient as GenomicsFhirClient, type FhirResource as GenomicsFhirResource } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
 import type {
@@ -83,19 +83,7 @@ export type DynamicFhirResource = PortalFhirResource & Record<string, any>
 
 // ── FHIR client with authenticated fetch ────────────────────────────────────
 
-const baseFetch = smartAuth.createAuthenticatedFetch()
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const authFetch: any = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  try {
-    return await baseFetch(input, init)
-  } catch (err) {
-    if (err instanceof Error && /no valid smart token/i.test(err.message)) {
-      reportAuthError("Your session has expired. Please sign in again.")
-    }
-    throw err
-  }
-}
+const authFetch = createAuthFetch(smartAuth)
 
 const defaultClient = new FhirClient(fhirBaseUrl, authFetch)
 

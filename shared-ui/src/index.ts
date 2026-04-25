@@ -10,7 +10,7 @@ export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants } from "./co
 export { ResponsiveTabsList, type ResponsiveTabsListProps } from "./components/responsive-tabs-list"
 export { PageHeader, type PageHeaderProps } from "./components/page-header"
 export { FilterToolbar, FilterToolbarItem, type FilterToolbarProps, type FilterToolbarItemProps } from "./components/filter-toolbar"
-export { StatCard, type StatCardProps, type StatCardColor } from "./components/stat-card"
+export { StatCard, colorMap, type StatCardProps, type StatCardColor } from "./components/stat-card"
 export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/tooltip"
 export { Dialog, DialogPortal, DialogOverlay, DialogClose, DialogTrigger, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from "./components/dialog"
 export { Separator } from "./components/separator"
@@ -26,18 +26,18 @@ export { UserProfileFormFields, type UserProfileFormFieldsProps, type UserProfil
 
 // Utilities
 export { cn } from "./lib/utils"
-export { createSmartAppConfig, type SmartAppConfig } from "./lib/smart-app-config"
+export { createSmartAppConfig, createSmartAuth, buildFhirBaseUrl, type SmartAppConfig } from "./lib/smart-app-config"
 export { CHART_COLORS } from "./lib/chart-colors"
 
 // FHIR helpers
 export { formatHumanName } from "./lib/fhir-helpers"
 
 // Auth utilities
-export { onAuthError, reportAuthError } from "./lib/auth-error"
+export { onAuthError, reportAuthError, createAuthFetch } from "./lib/auth-error"
 
 // Hooks
 export { useBranding, type BrandInfo } from "./hooks/use-branding"
-export { ModalStackProvider, useModalLayer, type ModalStackProviderProps } from "./hooks/use-modal-stack"
+export { ModalStackProvider, useModalLayer, useLayerZIndex, LayerContext, type ModalStackProviderProps } from "./hooks/use-modal-stack"
 export {
   useSmartAuth,
   type SmartAppState,

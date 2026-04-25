@@ -37,8 +37,21 @@ export function useConsents(patientId: string | null) {
   }, [patientId])
 
   useEffect(() => {
-    fetchConsents()
-  }, [fetchConsents])
+    if (!patientId) return
+    Promise.resolve()
+      .then(() => {
+        setLoading(true)
+        setError(null)
+        return searchConsents(patientId)
+      })
+      .then((results) => setConsents(results))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Failed to load consents"
+        setError(msg)
+        toast.error("Failed to load consents", { description: msg })
+      })
+      .finally(() => setLoading(false))
+  }, [patientId])
 
   // Derived: filtered and sorted consents
   const filtered = useMemo(() => {
