@@ -79,86 +79,79 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
 
   // ─── Fetch initial data via REST ────────────────────────────────
 
-  const fetchData = useCallback(async () => {
+  const fetchConsentData = useCallback(async () => {
+    const token = await getAdminToken();
+    if (!token) throw new Error('No authentication token available. Please log in.');
+
+    const headers = { Authorization: `Bearer ${token}` };
+    const [eventsRes, analyticsRes] = await Promise.all([
+      fetch(`${config.api.baseUrl}/monitoring/consent/events?limit=200`, { headers }),
+      fetch(`${config.api.baseUrl}/monitoring/consent/analytics`, { headers }),
+    ]);
+
+    if (!eventsRes.ok || !analyticsRes.ok) {
+      throw new Error('Failed to fetch consent monitoring data');
+    }
+
+    const eventsData = await eventsRes.json();
+    const analyticsData = await analyticsRes.json();
+    return { events: eventsData.events || [], analytics: analyticsData };
+  }, []);
+
+  const refreshData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-
     try {
-      const token = await getAdminToken();
-      if (!token) {
-        setError('No authentication token available. Please log in.');
-        return;
-      }
-
-      const headers = { Authorization: `Bearer ${token}` };
-
-      const [eventsRes, analyticsRes] = await Promise.all([
-        fetch(`${config.api.baseUrl}/monitoring/consent/events?limit=200`, { headers }),
-        fetch(`${config.api.baseUrl}/monitoring/consent/analytics`, { headers }),
-      ]);
-
-      if (!eventsRes.ok || !analyticsRes.ok) {
-        throw new Error('Failed to fetch consent monitoring data');
-      }
-
-      const eventsData = await eventsRes.json();
-      const analyticsData = await analyticsRes.json();
-
-      setEvents(eventsData.events || []);
-      setAnalytics(analyticsData);
+      const data = await fetchConsentData();
+      setEvents(data.events as ConsentDecisionEvent[]);
+      setAnalytics(data.analytics as ConsentAnalytics);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load consent monitoring data');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchConsentData]);
 
   // ─── WebSocket / SSE real-time connection ────────────────────────
 
-  const connectRealTime = useCallback(async () => {
-    try {
-      const targetMode = connectionMode;
-      
-      if (consentWebSocketService.isConnected) {
-        consentWebSocketService.disconnect();
-      }
+  const performRealTimeConnect = useCallback(async () => {
+    const targetMode = connectionMode;
 
-      await consentWebSocketService.connectWithMode(targetMode === 'websocket' ? 'websocket' : 'sse');
+    if (consentWebSocketService.isConnected) {
+      consentWebSocketService.disconnect();
+    }
 
-      if (!consentWebSocketService.isUsingSSE) {
-        await consentWebSocketService.authenticate();
-      }
+    await consentWebSocketService.connectWithMode(targetMode === 'websocket' ? 'websocket' : 'sse');
 
-      if (consentWebSocketService.isUsingSSE) {
-        setConnectionMode('sse');
-      }
+    if (!consentWebSocketService.isUsingSSE) {
+      await consentWebSocketService.authenticate();
+    }
 
-      // Set up initial data handlers (only on first connect)
-      if (isInitialLoadRef.current) {
-        isInitialLoadRef.current = false;
+    // Set up initial data handlers (only on first connect)
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
 
-        consentWebSocketService.onEventsData((eventList) => {
-          if (isRealTimeActiveRef.current) {
-            setEvents(eventList);
-          }
-        });
-
-        consentWebSocketService.onAnalyticsData((analyticsData) => {
-          if (isRealTimeActiveRef.current) {
-            setAnalytics(analyticsData);
-          }
-        });
-      }
-
-      consentWebSocketService.onError((errorMsg) => {
-        console.error('Consent WebSocket error:', errorMsg);
+      consentWebSocketService.onEventsData((eventList) => {
+        if (isRealTimeActiveRef.current) {
+          setEvents(eventList);
+        }
       });
 
-      await consentWebSocketService.subscribe('events');
-      await consentWebSocketService.subscribe('analytics');
-    } catch (err) {
-      console.error('Failed to connect consent real-time:', err);
+      consentWebSocketService.onAnalyticsData((analyticsData) => {
+        if (isRealTimeActiveRef.current) {
+          setAnalytics(analyticsData);
+        }
+      });
     }
+
+    consentWebSocketService.onError((errorMsg) => {
+      console.error('Consent WebSocket error:', errorMsg);
+    });
+
+    await consentWebSocketService.subscribe('events');
+    await consentWebSocketService.subscribe('analytics');
+
+    return consentWebSocketService.isUsingSSE;
   }, [connectionMode]);
 
   // ─── Lifecycle ─────────────────────────────────────────────────
@@ -167,39 +160,47 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
     let eventsUnsubscribe: (() => void) | undefined;
     let analyticsUnsubscribe: (() => void) | undefined;
 
-    const init = async () => {
-      await fetchData();
-      await connectRealTime();
+    fetchConsentData()
+      .then(data => {
+        setEvents(data.events as ConsentDecisionEvent[]);
+        setAnalytics(data.analytics as ConsentAnalytics);
+      })
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load consent monitoring data'))
+      .finally(() => setIsLoading(false))
+      .then(() => performRealTimeConnect())
+      .then(isSSE => {
+        if (isSSE) setConnectionMode('sse');
 
-      eventsUnsubscribe = consentWebSocketService.onEventsUpdate((event: ConsentDecisionEvent) => {
-        if (isRealTimeActiveRef.current) {
-          setEvents(prev => [event, ...prev.slice(0, 999)]);
-        }
-      });
-      analyticsUnsubscribe = consentWebSocketService.onAnalyticsUpdate((newAnalytics: ConsentAnalytics) => {
-        if (isRealTimeActiveRef.current) {
-          setAnalytics(newAnalytics);
-        }
-      });
-    };
-
-    init();
+        eventsUnsubscribe = consentWebSocketService.onEventsUpdate((event: ConsentDecisionEvent) => {
+          if (isRealTimeActiveRef.current) {
+            setEvents(prev => [event, ...prev.slice(0, 999)]);
+          }
+        });
+        analyticsUnsubscribe = consentWebSocketService.onAnalyticsUpdate((newAnalytics: ConsentAnalytics) => {
+          if (isRealTimeActiveRef.current) {
+            setAnalytics(newAnalytics);
+          }
+        });
+      })
+      .catch(err => console.error('Failed to connect consent real-time:', err));
 
     return () => {
       eventsUnsubscribe?.();
       analyticsUnsubscribe?.();
       consentWebSocketService.disconnect();
     };
-  }, [fetchData, connectRealTime]);
+  }, [fetchConsentData, performRealTimeConnect]);
 
   // Pause / resume real-time
   useEffect(() => {
     if (!isRealTimeActive) {
       consentWebSocketService.disconnect();
     } else {
-      connectRealTime();
+      performRealTimeConnect()
+        .then(isSSE => { if (isSSE) setConnectionMode('sse'); })
+        .catch(err => console.error('Failed to reconnect consent real-time:', err));
     }
-  }, [isRealTimeActive, connectRealTime]);
+  }, [isRealTimeActive, performRealTimeConnect]);
 
   // ─── Export helpers ────────────────────────────────────────────
 
@@ -292,7 +293,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
       <PageErrorState
         title={t('Failed to Load Consent Monitoring')}
         message={error}
-        onRetry={fetchData}
+        onRetry={refreshData}
         retryLabel={t('Try Again')}
       />
     );
@@ -320,7 +321,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
               {isRealTimeActive ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
               {isRealTimeActive ? t('Pause') : t('Resume')} {t('Real-time')}
             </Button>
-            <Button variant="outline" onClick={fetchData}>
+            <Button variant="outline" onClick={refreshData}>
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Refresh')}
             </Button>

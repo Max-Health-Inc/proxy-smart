@@ -85,10 +85,9 @@ export function BrandSettings() {
 
   const loadSettings = useCallback(async () => {
     try {
-      setLoading(true);
-      setMessage(null);
       const res = await adminApiCall<{ config: BrandConfig }>('/admin/branding');
       setBrand(res.config);
+      setMessage(null);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -100,8 +99,19 @@ export function BrandSettings() {
   }, []);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    adminApiCall<{ config: BrandConfig }>('/admin/branding')
+      .then(res => {
+        setBrand(res.config);
+        setMessage(null);
+      })
+      .catch(error => {
+        setMessage({
+          type: 'error',
+          text: error instanceof Error ? error.message : 'Failed to load brand settings',
+        });
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const saveSettings = async () => {
     try {
@@ -158,7 +168,7 @@ export function BrandSettings() {
             )}
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="sm" onClick={loadSettings} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={() => { setLoading(true); setMessage(null); loadSettings(); }} disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
               {t('Reload')}
             </Button>

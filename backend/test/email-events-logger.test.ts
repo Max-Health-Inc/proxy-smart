@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach, afterEach, mock } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 import { join } from 'path'
-import { rmSync, mkdirSync, existsSync, writeFileSync } from 'fs'
+import { rmSync, existsSync } from 'fs'
 
 /**
  * Email Events Logger — Unit Tests
@@ -14,7 +14,7 @@ import { rmSync, mkdirSync, existsSync, writeFileSync } from 'fs'
 
 const TEST_LOG_DIR = join(import.meta.dir, '..', 'logs', 'test-email-events')
 
-function cleanTestDir() {
+function _cleanTestDir() {
   if (existsSync(TEST_LOG_DIR)) rmSync(TEST_LOG_DIR, { recursive: true })
 }
 

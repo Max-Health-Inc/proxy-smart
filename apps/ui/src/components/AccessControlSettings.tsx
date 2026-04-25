@@ -37,10 +37,9 @@ export function AccessControlSettings() {
 
   const loadSettings = useCallback(async () => {
     try {
-      setLoading(true);
-      setMessage(null);
       const res = await adminApiCall<{ config: SmartAccessControlConfig }>('/admin/smart-access-control/config');
       setConfig(res.config);
+      setMessage(null);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -52,8 +51,19 @@ export function AccessControlSettings() {
   }, []);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    adminApiCall<{ config: SmartAccessControlConfig }>('/admin/smart-access-control/config')
+      .then(res => {
+        setConfig(res.config);
+        setMessage(null);
+      })
+      .catch(error => {
+        setMessage({
+          type: 'error',
+          text: error instanceof Error ? error.message : 'Failed to load access control settings',
+        });
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const saveSettings = async () => {
     try {

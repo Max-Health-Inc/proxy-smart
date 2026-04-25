@@ -175,7 +175,7 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
   const templatesInitialized = useRef(false);
 
   const [launchContextUsers, setLaunchContextUsers] = useState<LaunchContextUser[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [launchContextsLoading, setLaunchContextsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showBuilder, setShowBuilder] = useState(false);
@@ -207,89 +207,66 @@ export function LaunchContextManager({ embedded }: { embedded?: boolean } = {}) 
       return;
     }
 
-    setLoading(true);
-    try {
-      // Check if templates are already in the store
-      const existingTemplateIds = contextSets.filter(s => s.isTemplate).map(s => s.id);
+    // Check if templates are already in the store
+    const existingTemplateIds = contextSets.filter(s => s.isTemplate).map(s => s.id);
 
-      // Add templates if not already present
-      const templatesWithDates = LAUNCH_CONTEXT_TEMPLATES.map(template => ({
-        ...template,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }));
+    // Add templates if not already present
+    const templatesWithDates = LAUNCH_CONTEXT_TEMPLATES.map(template => ({
+      ...template,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }));
 
-      const newTemplates = templatesWithDates.filter(t => !existingTemplateIds.includes(t.id));
+    const newTemplates = templatesWithDates.filter(t => !existingTemplateIds.includes(t.id));
 
-      // Only add templates if there are new ones to avoid infinite loops
-      if (newTemplates.length > 0) {
-        newTemplates.forEach(template => {
-          addContextSet(template);
-        });
+    // Only add templates if there are new ones to avoid infinite loops
+    if (newTemplates.length > 0) {
+      newTemplates.forEach(template => {
+        addContextSet(template);
+      });
 
-        console.debug('🎯 Launch context templates initialized:', {
-          existing: existingTemplateIds.length,
-          added: newTemplates.length
-        });
-      }
-
-      // Mark as initialized
-      templatesInitialized.current = true;
-    } catch (e) {
-      console.error('Failed to initialize launch context templates', e);
-      setError('Failed to initialize context templates');
-    } finally {
-      setLoading(false);
+      console.debug('🎯 Launch context templates initialized:', {
+        existing: existingTemplateIds.length,
+        added: newTemplates.length
+      });
     }
+
+    // Mark as initialized
+    templatesInitialized.current = true;
   }, [addContextSet, contextSets]); // Include contextSets but use ref to prevent infinite loop
 
   // Load launch contexts on component mount and when switching to users tab
   useEffect(() => {
     // Only load launch contexts when explicitly switching to users tab, not on component mount
-    if (activeTab === 'users' && !launchContextsLoadedRef.current) {
-      launchContextsLoadedRef.current = true;
-      // Call loadLaunchContexts immediately inside useEffect to avoid dependency issues
-      const loadLaunchContextsImmediate = async () => {
-        // Prevent infinite loading
-        if (launchContextsLoadingRef.current) {
-          console.debug('Launch contexts already loading, skipping...');
-          return;
-        }
+    if (activeTab !== 'users' || launchContextsLoadedRef.current) return;
+    launchContextsLoadedRef.current = true;
 
-        // Check if user is authenticated before making API call
-        if (!isAuthenticated) {
-          console.warn('User not authenticated, cannot load admin launch contexts');
-          setError('You must be authenticated to view user launch contexts.');
-          return;
-        }
-
-        // Check if user has admin role
-        if (!profile?.roles?.includes('admin')) {
-          console.warn('User does not have admin role, cannot access admin endpoints');
-          setError('Admin privileges required. You need admin role to view user launch contexts.');
-          return;
-        }
-
-        launchContextsLoadingRef.current = true;
-        setLaunchContextsLoading(true);
-        setError(null);
-        try {
-          // Use auth store's client APIs with automatic error handling
-          const response = await clientApis.launchContexts.getAdminLaunchContexts();
-          setLaunchContextUsers(response);
-          console.log('Successfully loaded launch contexts:', response.length);
-        } catch (err) {
-          console.error('Failed to load launch contexts:', err);
-          // Set generic error for non-auth errors
-          setError('Failed to load launch contexts. Please try again.');
-        } finally {
-          setLaunchContextsLoading(false);
-          launchContextsLoadingRef.current = false;
-        }
-      };
-
-      loadLaunchContextsImmediate();
+    // Prevent infinite loading
+    if (launchContextsLoadingRef.current) {
+      console.debug('Launch contexts already loading, skipping...');
+      return;
     }
+
+    // Check auth and roles — skip silently, computed state can show messages
+    if (!isAuthenticated || !profile?.roles?.includes('admin')) {
+      return;
+    }
+
+    launchContextsLoadingRef.current = true;
+    clientApis.launchContexts.getAdminLaunchContexts()
+      .then(response => {
+        setLaunchContextUsers(response);
+        setError(null);
+        console.log('Successfully loaded launch contexts:', response.length);
+      })
+      .catch(err => {
+        console.error('Failed to load launch contexts:', err);
+        setError('Failed to load launch contexts. Please try again.');
+      })
+      .finally(() => {
+        setLaunchContextsLoading(false);
+        launchContextsLoadingRef.current = false;
+      });
   }, [activeTab, isAuthenticated, profile, clientApis.launchContexts]);
 
   // Handle saving a context set from the builder

@@ -84,7 +84,6 @@ function mockFetchWith(body: any, init?: ResponseInit) {
 
 import {
   fetchSeriesMetadataEntries,
-  type MetadataEntry,
 } from '../src/lib/dicomweb-metadata'
 
 describe('fetchSeriesMetadataEntries', () => {

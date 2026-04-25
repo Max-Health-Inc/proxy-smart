@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { Elysia, t } from 'elysia'
 import * as z from 'zod'
-import { extractRouteTools, getMergedInputSchema, type ToolMetadata } from '../src/lib/ai/tool-registry'
+import { extractRouteTools, getMergedInputSchema } from '../src/lib/ai/tool-registry'
 
 /**
  * Tests for MCP tool-registry schema extraction and tool bridging.

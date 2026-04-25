@@ -39,6 +39,7 @@ export function PatientBanner({ patient, bloodType, onPatientUpdated }: PatientB
 
       {editOpen && (
         <PatientEditModal
+          key={patient.id}
           open={editOpen}
           onOpenChange={setEditOpen}
           patient={patient}

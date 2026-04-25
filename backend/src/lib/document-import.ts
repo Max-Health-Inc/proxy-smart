@@ -21,7 +21,6 @@ import { openai } from '@ai-sdk/openai'
 import { extractTextFromPdf as opendataloaderExtract } from '@/lib/pdf-extract-opendataloader'
 import type { PdfExtractResult, PdfEngine } from '@/lib/pdf-extract-types'
 import { logger } from '@/lib/logger'
-import { config } from '@/config'
 import {
   PatientUvIpsClass,
   ConditionUvIpsClass,
@@ -128,7 +127,7 @@ Rules:
 /** Step 1: Extract text from a PDF using the chosen engine */
 export async function extractTextFromPdf(
   filePath: string,
-  engine: PdfEngine = 'opendataloader',
+  _engine: PdfEngine = 'opendataloader',
 ): Promise<PdfExtractResult> {
   return opendataloaderExtract(filePath)
 }

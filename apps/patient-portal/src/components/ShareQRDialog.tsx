@@ -28,6 +28,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
   const [shlData, setShlData] = useState<ShlResponse | null>(null)
   const [copied, setCopied] = useState(false)
   const [expiryMinutes, setExpiryMinutes] = useState("60")
+  const [expiresIn, setExpiresIn] = useState(0)
 
   const createShl = useCallback(async () => {
     setLoading(true)
@@ -39,6 +40,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
         label: t("shareQr.label"),
       })
       setShlData(data)
+      setExpiresIn(Math.max(0, Math.round((new Date(data.expiresAt).getTime() - Date.now()) / 60000)))
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to create share link")
     } finally {
@@ -52,6 +54,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
       setError(null)
       setCopied(false)
       setExpiryMinutes("60")
+      setExpiresIn(0)
     }
     onOpenChange(isOpen)
   }, [onOpenChange])
@@ -66,10 +69,6 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
       // Fallback: select the URL text
     }
   }, [shlData])
-
-  const expiresIn = shlData
-    ? Math.max(0, Math.round((new Date(shlData.expiresAt).getTime() - Date.now()) / 60000))
-    : 0
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>

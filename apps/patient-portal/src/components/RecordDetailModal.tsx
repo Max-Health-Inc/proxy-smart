@@ -154,6 +154,7 @@ export function RecordDetailModal({
 
       {onResourceUpdated && (
         <RecordEditModal
+          key={resource?.id}
           open={editOpen}
           onOpenChange={setEditOpen}
           resource={resource}

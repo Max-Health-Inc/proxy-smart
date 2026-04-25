@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { X, ZoomIn, ZoomOut, RotateCcw, Loader2 } from "lucide-react"
+import { X, Loader2 } from "lucide-react"
 import { Badge } from "@proxy-smart/shared-ui"
 import {
   initCornerstoneDicomweb,
@@ -246,15 +246,15 @@ export function DicomViewerDialog({
     setImageInfo({ current, total })
   }, [])
 
-  // Reset state when dialog closes
-  useEffect(() => {
-    if (!open) setImageInfo(null)
-  }, [open])
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    if (!isOpen) setImageInfo(null)
+    onOpenChange(isOpen)
+  }, [onOpenChange])
 
   const modalityInfo = target?.modality ? getModalityInfo(target.modality) : null
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+    <DialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/90 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content

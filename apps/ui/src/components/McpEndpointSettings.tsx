@@ -96,12 +96,11 @@ export function McpEndpointSettings() {
   const [resourcesExpanded, setResourcesExpanded] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const data = await fetchEndpointStatus();
       setStatus(data);
       setPendingDisabled(new Set(data.disabledTools));
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -110,8 +109,15 @@ export function McpEndpointSettings() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    fetchEndpointStatus()
+      .then(data => {
+        setStatus(data);
+        setPendingDisabled(new Set(data.disabledTools));
+        setError(null);
+      })
+      .catch(err => setError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setLoading(false));
+  }, []);
 
   const toggleEnabled = async () => {
     if (!status) return;
@@ -192,7 +198,7 @@ export function McpEndpointSettings() {
     return (
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center">
         <p className="text-destructive font-medium">{error}</p>
-        <Button variant="outline" size="sm" className="mt-4" onClick={load}>
+        <Button variant="outline" size="sm" className="mt-4" onClick={() => { setLoading(true); setError(null); load(); }}>
           <RefreshCw className="w-4 h-4 mr-2" /> {t('Retry')}
         </Button>
       </div>

@@ -423,7 +423,7 @@ function ScopePreview({
 
 function ScopeItem({
   scope,
-  index,
+  index: _index,
   validation,
   onTest,
   onRemove,

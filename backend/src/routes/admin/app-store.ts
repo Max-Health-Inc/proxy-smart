@@ -2,8 +2,7 @@ import { Elysia, t } from 'elysia'
 import { join } from 'path'
 import { readdirSync, readFileSync, existsSync } from 'fs'
 import { logger } from '@/lib/logger'
-import { ErrorResponse } from '@/schemas'
-import { getAppStoreConfig, hideApp, showApp, publishApp, unpublishApp, type PublishedApp } from '@/lib/app-store-config'
+import { getAppStoreConfig, hideApp, showApp, publishApp, unpublishApp } from '@/lib/app-store-config'
 
 /**
  * Admin App Store management routes.

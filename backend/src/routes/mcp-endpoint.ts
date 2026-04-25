@@ -24,7 +24,6 @@ import { logger } from '../lib/logger'
 import {
   getToolRegistry,
   isToolRegistryInitialized,
-  generateToolDefinitions,
   getMergedInputSchema,
   getResourceRegistry,
   isResourceRegistryInitialized,

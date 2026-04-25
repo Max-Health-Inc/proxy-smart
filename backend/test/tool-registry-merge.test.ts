@@ -88,7 +88,7 @@ describe('getMergedInputSchema', () => {
 
     const props = (merged as Record<string, unknown>).properties as Record<string, Record<symbol | string, unknown>>
     // Every property must retain its [Kind] symbol
-    for (const [key, schema] of Object.entries(props)) {
+    for (const [_key, schema] of Object.entries(props)) {
       expect(schema[Kind]).toBeDefined()
     }
   })

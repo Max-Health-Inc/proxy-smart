@@ -136,7 +136,7 @@ export async function checkKeycloakConnection(retries?: number, interval?: numbe
         
         // Only fail if critical endpoints are not working
         if (errorMessage.includes('JWKS') || errorMessage.includes('Realm info')) {
-          throw new Error('Keycloak connection verification failed after all retry attempts')
+          throw new Error('Keycloak connection verification failed after all retry attempts', { cause: error })
         }
         
         logger.keycloak.warn('Some Keycloak endpoints are not accessible, but critical authentication components are working')

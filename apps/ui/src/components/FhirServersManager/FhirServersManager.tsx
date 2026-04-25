@@ -340,8 +340,33 @@ export function FhirServersManager() {
   }, [clientApis]);
 
   useEffect(() => {
-    fetchServers();
-  }, [fetchServers]);
+    clientApis.servers.getFhirServers()
+      .then(response => {
+        const mappedServers: FhirServerWithState[] = response.servers.map((server) => ({
+          ...server,
+          connectionStatus: server.fhirVersion === 'Unknown' ? 'disconnected' : 'connected',
+          loading: false,
+          error: undefined
+        }));
+        setServers(mappedServers);
+        setSecurityChecks(prevChecks => {
+          const updatedChecks = { ...prevChecks };
+          mappedServers.forEach((server) => {
+            if (server.connectionStatus === 'disconnected') {
+              delete updatedChecks[server.id];
+            } else {
+              checkServerSecurity(server);
+            }
+          });
+          return updatedChecks;
+        });
+      })
+      .catch(err => {
+        setError('Failed to load FHIR servers');
+        console.error('Error fetching servers:', err);
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, checkServerSecurity]);
 
   if (loading) {
     return <PageLoadingState message={t('Loading FHIR Servers...')} />;

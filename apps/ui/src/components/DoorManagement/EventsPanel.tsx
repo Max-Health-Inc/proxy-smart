@@ -60,8 +60,29 @@ export function EventsPanel() {
   }, [clientApis, t, offset]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!clientApis) return;
+    clientApis.admin.getAdminAccessControlHealth()
+      .then(health => {
+        if (!health.configured) {
+          setNotConfigured(true);
+          return;
+        }
+        return clientApis.admin.getAdminAccessControlEvents({ limit: PAGE_SIZE, offset });
+      })
+      .then(response => {
+        if (response) {
+          setEvents(response.data);
+          setTotalCount(response.pagination.count);
+        }
+        setError(null);
+        setNotConfigured(prev => prev);
+      })
+      .catch(err => {
+        console.error('Failed to fetch events:', err);
+        setError(t('Failed to load events'));
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, t, offset]);
 
   const formatTimestamp = (ts?: string) => {
     if (!ts) return '—';

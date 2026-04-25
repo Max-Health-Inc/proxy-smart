@@ -4,11 +4,11 @@
  * Tests provider detection and factory creation logic.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { describe, it, expect, afterEach } from 'bun:test'
 import { detectProvider, createProvider } from '../src/lib/access-control/factory'
 
 describe('detectProvider', () => {
-  const originalEnv = { ...process.env }
+  const _originalEnv = { ...process.env }
 
   afterEach(() => {
     // Restore environment

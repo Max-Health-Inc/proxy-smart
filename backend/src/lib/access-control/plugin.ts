@@ -7,7 +7,6 @@
  */
 
 import { Elysia } from 'elysia'
-import { config } from '../../config'
 import { logger } from '../logger'
 import { ConfigurationError } from '../admin-utils'
 import { createProvider, detectProvider } from './factory'

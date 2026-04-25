@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { extractBearerToken } from '@/lib/admin-utils'
-import { validateToken, validateAdminToken } from '@/lib/auth'
+import { validateAdminToken } from '@/lib/auth'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'

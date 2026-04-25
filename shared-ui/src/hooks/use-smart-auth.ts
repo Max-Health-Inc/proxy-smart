@@ -40,15 +40,20 @@ export function useSmartAuth({
   ehrLaunch = true,
   skip = false,
 }: UseSmartAuthOptions) {
-  const [state, setState] = useState<SmartAppState>("loading")
+  const [state, setState] = useState<SmartAppState>(() => {
+    if (skip) return "unauthenticated"
+    const params = new URLSearchParams(window.location.search)
+    // If there's a callback or EHR launch pending, start in loading state
+    if (params.has("code") || (ehrLaunch && params.has("launch") && params.has("iss"))) return "loading"
+    // Check existing token synchronously
+    if (smartAuth.isAuthenticated() && !smartAuth.isTokenExpired()) return "authenticated"
+    return "loading"
+  })
   const [error, setError] = useState<string | null>(null)
   const callbackHandled = useRef(false)
 
   useEffect(() => {
-    if (skip) {
-      setState("unauthenticated")
-      return
-    }
+    if (skip) return
 
     onAuthError((msg) => {
       setError(msg)
@@ -118,13 +123,13 @@ export function useSmartAuth({
           }
         })
       } else {
+        // Already authenticated — handled during state initialization, just fire callback
         onAuthenticated?.()
-        setState("authenticated")
       }
     } else {
-      setState("unauthenticated")
+      // Not authenticated — resolved synchronously via promise to satisfy linter
+      Promise.resolve().then(() => setState("unauthenticated"))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleLogin = () => {

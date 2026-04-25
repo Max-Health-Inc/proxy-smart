@@ -10,7 +10,7 @@ import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-lau
 import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
 export { isValidUserAccessCategoryValueSetCode }
 
-const { UserAccessCategoryValueSetCodes, UserAccessCategoryValueSetConcepts } = ValueSetRegistry.UserAccessCategoryValueSet
+const { UserAccessCategoryValueSetCodes } = ValueSetRegistry.UserAccessCategoryValueSet
 
 /**
  * Brand category (organization type) — codes from SMART App Launch IG 2.2.0 UserAccessCategory ValueSet

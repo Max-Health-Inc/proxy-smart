@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Button,
   Input,
@@ -103,11 +103,6 @@ export function SmartAppEditModal({
   const [form, setForm] = useState<UpdateSmartAppRequest>(() => buildFormState(app));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setForm(buildFormState(app));
-    setError(null);
-  }, [app]);
 
   const set = <K extends keyof UpdateSmartAppRequest>(key: K, value: UpdateSmartAppRequest[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));

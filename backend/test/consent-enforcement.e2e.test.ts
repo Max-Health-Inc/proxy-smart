@@ -21,7 +21,6 @@ import { consentCache } from '../src/lib/consent/consent-cache'
 import type {
   FhirConsent,
   SmartTokenPayload,
-  ConsentCheckResult,
 } from '../src/lib/consent/types'
 
 // =============================================================================

@@ -53,8 +53,22 @@ export function DoorsPanel() {
   }, [clientApis, t]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (!clientApis) return;
+    Promise.all([
+      clientApis.admin.getAdminAccessControlDoors({ limit: 100 }),
+      clientApis.admin.getAdminAccessControlLocations({ limit: 100 }),
+    ])
+      .then(([doorsResponse, locationsResponse]) => {
+        setDoors(doorsResponse.data);
+        setLocations(locationsResponse.data);
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to fetch doors:', err);
+        setError(t('Failed to load doors'));
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, t]);
 
   const handleUnlock = useCallback(async (doorId: string) => {
     if (!clientApis) return;

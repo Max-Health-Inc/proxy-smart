@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, RotateCcw, Loader2, Image, Globe, MapPin } from 'lucide-react';
@@ -31,22 +31,19 @@ export function OrgBrandingTab({ orgId, orgName }: OrgBrandingTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const loadBranding = useCallback(async () => {
+  useEffect(() => {
     if (!clientApis.organizations) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const resp = await clientApis.organizations.getAdminOrganizationsByOrgIdBranding({ orgId });
-      setConfig(resp.config ?? {});
-    } catch (err) {
-      console.error('Failed to load org branding:', err);
-      setError(t('Failed to load branding overrides'));
-    } finally {
-      setLoading(false);
-    }
+    clientApis.organizations.getAdminOrganizationsByOrgIdBranding({ orgId })
+      .then(resp => {
+        setConfig(resp.config ?? {});
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to load org branding:', err);
+        setError(t('Failed to load branding overrides'));
+      })
+      .finally(() => setLoading(false));
   }, [orgId, clientApis.organizations, t]);
-
-  useEffect(() => { loadBranding(); }, [loadBranding]);
 
   const handleSave = async () => {
     if (!clientApis.organizations) return;

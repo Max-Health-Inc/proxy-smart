@@ -37,12 +37,18 @@ export function OrganizationsManager() {
       setOrgs([]);
       notify({ type: 'error', message: t('Failed to load organizations.') });
     }
-  }, [isAuthenticated, clientApis.organizations, t]);
+  }, [isAuthenticated, clientApis.organizations, t, notify]);
 
   useEffect(() => {
-    setLoading(true);
-    refreshOrgs().finally(() => setLoading(false));
-  }, [refreshOrgs]);
+    if (!isAuthenticated || !clientApis.organizations) return;
+    clientApis.organizations.getAdminOrganizations({ limit: 100 })
+      .then(result => setOrgs(result))
+      .catch(error => {
+        console.error('Failed to load organizations:', error);
+        setOrgs([]);
+      })
+      .finally(() => setLoading(false));
+  }, [isAuthenticated, clientApis.organizations]);
 
   const handleCreate = async (form: OrgFormData) => {
     if (!clientApis.organizations) return;
@@ -160,6 +166,7 @@ export function OrganizationsManager() {
       />
 
       <OrgEditDialog
+        key={editingOrg?.id ?? 'new'}
         isOpen={!!editingOrg}
         onClose={() => setEditingOrg(null)}
         onUpdate={handleUpdate}

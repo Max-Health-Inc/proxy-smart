@@ -71,9 +71,6 @@ export function DynamicClientRegistrationSettings() {
 
   const loadSettings = useCallback(async () => {
     try {
-      setLoading(true);
-      setMessage(null);
-      
       const settingsData = await clientApis.admin.getAdminClientRegistrationSettings();
       
       setSettings(settingsData);
@@ -90,8 +87,20 @@ export function DynamicClientRegistrationSettings() {
   }, [clientApis]);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    clientApis.admin.getAdminClientRegistrationSettings()
+      .then(settingsData => {
+        setSettings(settingsData);
+        setMessage({ type: 'success', text: 'Settings loaded successfully' });
+      })
+      .catch(error => {
+        console.error('Failed to load settings:', error);
+        setMessage({
+          type: 'error',
+          text: error instanceof Error ? error.message : 'Failed to load settings'
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis]);
 
   const saveSettings = async () => {
     try {

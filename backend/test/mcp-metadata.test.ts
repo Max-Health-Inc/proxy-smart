@@ -12,7 +12,7 @@
  *  - registration_endpoint points to proxy, not Keycloak
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
 
 // ── Mock config ──────────────────────────────────────────────────────────────
 

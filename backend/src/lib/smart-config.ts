@@ -85,7 +85,7 @@ class SmartConfigService {
 
         } catch (error) {
             logger.keycloak.error('Failed to fetch Keycloak OpenID configuration', { error })
-            throw new Error(`SMART configuration unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`)
+            throw new Error(`SMART configuration unavailable: ${error instanceof Error ? error.message : 'Unknown error'}`, { cause: error })
         }
     }
 

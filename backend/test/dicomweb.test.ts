@@ -29,7 +29,7 @@ function mockFetchWith(body: any, init?: ResponseInit) {
 }
 
 // Stub env vars for DICOMweb config
-const ORIGINAL_ENV = { ...process.env }
+const _ORIGINAL_ENV = { ...process.env }
 
 function setDicomwebEnv(baseUrl = 'http://orthanc:8042/dicom-web') {
   process.env.DICOMWEB_BASE_URL = baseUrl
@@ -95,7 +95,7 @@ describe('DICOMweb proxy routes', () => {
 
   it('GET /dicomweb/studies proxies to upstream PACS', async () => {
     const studies = [{ '0020000D': { Value: ['1.2.3.4'], vr: 'UI' } }]
-    const mockFn = mockFetchWith(studies)
+    const _mockFn = mockFetchWith(studies)
 
     const res = await dicomwebRoutes.handle(
       new Request('http://localhost/dicomweb/studies?PatientName=Smith', {

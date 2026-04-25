@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback } from "react"
 import {
   Dialog,
   DialogContent,
@@ -147,7 +147,18 @@ function markAsPendingReview(resource: FhirResource, originalResource: FhirResou
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function RecordEditModal({ open, onOpenChange, resource, onSaved }: RecordEditModalProps) {
-  const [editValues, setEditValues] = useState<Record<string, string>>({})
+  const [editValues, setEditValues] = useState<Record<string, string>>(() => {
+    if (!resource) return {}
+    const rt = resource.resourceType as string | undefined
+    const flds = rt ? (EDITABLE_FIELDS[rt] ?? []) : []
+    if (!flds.length) return {}
+    const vals: Record<string, string> = {}
+    for (const f of flds) {
+      const current = getByPath(resource, f.path)
+      vals[f.path] = current != null ? String(current) : ""
+    }
+    return vals
+  })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -155,18 +166,6 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
   const fields = resourceType ? (EDITABLE_FIELDS[resourceType] ?? []) : []
   const wasVerified = resource ? isVerified(resource) : false
   const { t } = useTranslation()
-
-  // Populate form values when resource changes
-  useEffect(() => {
-    if (!resource || !fields.length) return
-    const vals: Record<string, string> = {}
-    for (const f of fields) {
-      const current = getByPath(resource, f.path)
-      vals[f.path] = current != null ? String(current) : ""
-    }
-    setEditValues(vals)
-    setError(null)
-  }, [resource]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = useCallback(async () => {
     if (!resource) return

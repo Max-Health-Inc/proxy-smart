@@ -6,7 +6,6 @@ import {
   DatabaseStack, 
   KeycloakStack, 
   BackendStack,
-  BackupStack,
 } from '../lib/index.js';
 
 const app = new cdk.App();

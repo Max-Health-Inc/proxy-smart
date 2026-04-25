@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button, Input } from '@proxy-smart/shared-ui';
 import { useTranslation } from 'react-i18next';
 
@@ -50,15 +50,12 @@ function isValidScope(scope: string) {
 
 export const PermissionMatrix: React.FC<Props> = ({ appId, initialScopes = [], onSave }) => {
   const { t } = useTranslation();
-  const [scopes, setScopes] = useState<string[]>(initialScopes.length ? initialScopes : DEFAULT_SCOPES);
+  const [scopes, setScopes] = useState<string[]>(() =>
+    initialScopes.length ? Array.from(new Set(initialScopes.map(normalizeScope))) : DEFAULT_SCOPES
+  );
   const [customScope, setCustomScope] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (initialScopes.length) setScopes(Array.from(new Set(initialScopes.map(normalizeScope))));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialScopes.join('|')]);
 
   const invalidScopes = useMemo(() => scopes.filter((s) => !isValidScope(s)), [scopes]);
 

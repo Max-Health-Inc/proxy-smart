@@ -29,7 +29,6 @@ import {
   AccessMembersResponse,
   AccessEventsResponse,
   AccessGroupDoorSchema,
-  AccessEventSchema,
   CreateGroupRequest,
   CreateMemberRequest,
   AssignDoorRequest,

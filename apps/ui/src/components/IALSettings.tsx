@@ -53,10 +53,9 @@ export function IALSettings() {
 
   const loadSettings = useCallback(async () => {
     try {
-      setLoading(true);
-      setMessage(null);
       const res = await adminApiCall<{ config: IalConfig }>('/admin/consent/ial');
       setIal(res.config);
+      setMessage(null);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -68,8 +67,19 @@ export function IALSettings() {
   }, [t]);
 
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    adminApiCall<{ config: IalConfig }>('/admin/consent/ial')
+      .then(res => {
+        setIal(res.config);
+        setMessage(null);
+      })
+      .catch(error => {
+        setMessage({
+          type: 'error',
+          text: error instanceof Error ? error.message : t('Failed to load IAL settings'),
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [t]);
 
   const saveSettings = async () => {
     try {
@@ -124,7 +134,7 @@ export function IALSettings() {
             </Badge>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="sm" onClick={loadSettings} disabled={saving}>
+            <Button variant="outline" size="sm" onClick={() => { setLoading(true); setMessage(null); loadSettings(); }} disabled={saving}>
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Reload')}
             </Button>

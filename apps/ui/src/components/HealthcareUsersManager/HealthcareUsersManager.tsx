@@ -131,49 +131,36 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
     return [...new Set(allRoles)];
   }, [availableRealmRoles, availableClientRoles]);
 
-  // Fetch available roles from Keycloak
-  const loadRoles = useCallback(async () => {
-    try {
-      const [realmRoles, adminUiRoles] = await Promise.all([
-        clientApis.roles.getAdminRoles().catch(() => []),
-        fetchClientRoles('admin-ui'),
-      ]);
-      const realmRoleNames = realmRoles
-        .map(r => r.name)
-        .filter((n): n is string => !!n)
-        .filter(n => !n.startsWith('default-roles-'));
-      setAvailableRealmRoles(realmRoleNames);
-      setAvailableClientRoles({ 'admin-ui': adminUiRoles });
-    } catch {
-      // Fallback: leave empty — user sees no checkboxes, but nothing crashes
-    }
-  }, [clientApis.roles]);
-
-  // Load users from API
-  const loadUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const apiUsers = await clientApis.healthcareUsers.getAdminHealthcareUsers();
-      
-      const transformedUsers = apiUsers.map(transformApiUser);
-      setUsers(transformedUsers);
-    } catch (err) {
-      console.error('Failed to load users:', err);
-      // Set generic error for non-auth errors
-      setError('Failed to load healthcare users. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [clientApis.healthcareUsers]);
-
   useEffect(() => {
-    if (isAuthenticated) {
-      loadUsers();
-      loadRoles();
-    }
-  }, [isAuthenticated, loadUsers, loadRoles]);
+    if (!isAuthenticated) return;
+
+    // Load users
+    clientApis.healthcareUsers.getAdminHealthcareUsers()
+      .then(apiUsers => {
+        setUsers(apiUsers.map(transformApiUser));
+        setError(null);
+      })
+      .catch(err => {
+        console.error('Failed to load users:', err);
+        setError('Failed to load healthcare users. Please try again.');
+      })
+      .finally(() => setLoading(false));
+
+    // Load roles
+    Promise.all([
+      clientApis.roles.getAdminRoles().catch(() => []),
+      fetchClientRoles('admin-ui'),
+    ])
+      .then(([realmRoles, adminUiRoles]) => {
+        const realmRoleNames = realmRoles
+          .map(r => r.name)
+          .filter((n): n is string => !!n)
+          .filter(n => !n.startsWith('default-roles-'));
+        setAvailableRealmRoles(realmRoleNames);
+        setAvailableClientRoles({ 'admin-ui': adminUiRoles });
+      })
+      .catch(() => { /* Fallback: leave empty */ });
+  }, [isAuthenticated, clientApis.healthcareUsers, clientApis.roles]);
 
   const handleEditUser = (user: HealthcareUserWithPersons) => {
     setEditingUser(user);
@@ -368,6 +355,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
 
       {/* Edit User Form */}
       <HealthcareUserEditForm
+        key={editingUser?.id ?? 'new'}
         isOpen={showEditForm}
         onClose={() => {
           setShowEditForm(false);

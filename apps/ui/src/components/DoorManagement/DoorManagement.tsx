@@ -44,8 +44,16 @@ export function DoorManagement() {
   }, [clientApis, t]);
 
   useEffect(() => {
-    fetchHealth();
-  }, [fetchHealth]);
+    if (!clientApis) return;
+    clientApis.admin.getAdminAccessControlHealth()
+      .then(result => { setHealth(result); setError(null); })
+      .catch(err => {
+        console.error('Failed to fetch door management health:', err);
+        setError(t('Failed to check door management status'));
+        setHealth(null);
+      })
+      .finally(() => setLoading(false));
+  }, [clientApis, t]);
 
   const handleRefresh = useCallback(() => {
     setLoading(true);

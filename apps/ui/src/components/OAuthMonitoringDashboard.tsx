@@ -67,9 +67,6 @@ export function OAuthMonitoringDashboard() {
   // ── Data loading ──────────────────────────────────────────────────
 
   const loadInitialData = useCallback(async (forceMode?: 'websocket' | 'sse') => {
-    setIsLoading(true);
-    setError(null);
-
     try {
       if (oauthWebSocketService.isConnected) {
         oauthWebSocketService.disconnect();
@@ -188,7 +185,7 @@ export function OAuthMonitoringDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchSystemStatus();
+    Promise.resolve().then(fetchSystemStatus);
     const interval = setInterval(fetchSystemStatus, 30_000);
     return () => clearInterval(interval);
   }, [fetchSystemStatus]);
@@ -246,6 +243,8 @@ export function OAuthMonitoringDashboard() {
   // ── Actions ───────────────────────────────────────────────────────
 
   const refreshData = async () => {
+    setIsLoading(true);
+    setError(null);
     isInitialLoadRef.current = true;
     await loadInitialData();
   };
@@ -254,6 +253,8 @@ export function OAuthMonitoringDashboard() {
 
   const switchConnectionMode = async (newMode: 'websocket' | 'sse') => {
     if (newMode === connectionMode) return;
+    setIsLoading(true);
+    setError(null);
     setConnectionMode(newMode);
     isInitialLoadRef.current = true;
     await loadInitialData(newMode);

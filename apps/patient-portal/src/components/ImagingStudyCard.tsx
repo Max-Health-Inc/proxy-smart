@@ -65,7 +65,7 @@ function DicomThumbnail({
 function StudyRow({
   study,
   onViewSeries,
-  readOnly = false,
+  readOnly: _readOnly = false,
 }: {
   study: ImagingStudy
   onViewSeries: (target: ViewerTarget) => void

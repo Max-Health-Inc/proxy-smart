@@ -199,7 +199,7 @@ export function MonitoringDashboard({ config, embedded, isRealTimeActive: parent
       .map(([name, value]) => ({ name: t(eventTypeLabels[name] || name), value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [analytics?.eventsByType, eventTypeLabels, t]);
+  }, [analytics, eventTypeLabels, t]);
 
   const uniqueTypes = useMemo(() => {
     const set = new Set(events.map(e => e.type));

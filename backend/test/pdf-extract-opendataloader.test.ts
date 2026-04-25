@@ -44,7 +44,7 @@ const { extractTextFromPdf } = await import('@/lib/pdf-extract-opendataloader')
 // ---------------------------------------------------------------------------
 
 /** Create a real temp dir and write a fake markdown file into it */
-function setupOutputDir(baseName: string, content: string): string {
+function _setupOutputDir(baseName: string, content: string): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'odl-test-'))
   fs.writeFileSync(path.join(dir, `${baseName}.md`), content, 'utf-8')
   return dir
@@ -56,7 +56,7 @@ function setupOutputDir(baseName: string, content: string): string {
 
 describe('pdf-extract-opendataloader', () => {
   // Track temp dirs created by mkdtempSync so we can clean up
-  const originalMkdtempSync = fs.mkdtempSync
+  const _originalMkdtempSync = fs.mkdtempSync
   let capturedOutputDir: string | null = null
 
   beforeEach(() => {
