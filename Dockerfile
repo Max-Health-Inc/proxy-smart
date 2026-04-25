@@ -110,7 +110,6 @@ RUN apt-get update -qq && \
 # Copy built backend
 COPY --from=backend-build /app/backend/dist ./backend/dist
 COPY --from=backend-build /app/backend/package.json ./backend/package.json
-COPY --from=backend-build /app/backend/mcp-server-templates.json ./backend/mcp-server-templates.json
 
 # Copy backend's public directory (landing page, static assets)
 COPY --from=backend-build /app/backend/public ./backend/public
