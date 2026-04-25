@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Edit, X, Palette, Settings } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 import { OrgBrandingTab } from './OrgBrandingTab';
@@ -29,23 +29,15 @@ interface OrgEditDialogProps {
 
 export function OrgEditDialog({ isOpen, onClose, onUpdate, org }: OrgEditDialogProps) {
   const { t } = useTranslation();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [enabled, setEnabled] = useState(true);
-  const [redirectUrl, setRedirectUrl] = useState('');
-  const [domains, setDomains] = useState<Array<{ name: string; verified?: boolean }>>([]);
+  const [name, setName] = useState(org?.name ?? '');
+  const [description, setDescription] = useState(org?.description ?? '');
+  const [enabled, setEnabled] = useState(org?.enabled !== false);
+  const [redirectUrl, setRedirectUrl] = useState(org?.redirectUrl ?? '');
+  const [domains, setDomains] = useState<Array<{ name: string; verified?: boolean }>>(
+    (org?.domains ?? []).map((d) => ({ name: d.name ?? '', verified: d.verified }))
+  );
   const [domainInput, setDomainInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (org) {
-      setName(org.name ?? '');
-      setDescription(org.description ?? '');
-      setEnabled(org.enabled !== false);
-      setRedirectUrl(org.redirectUrl ?? '');
-      setDomains((org.domains ?? []).map((d) => ({ name: d.name ?? '', verified: d.verified })));
-    }
-  }, [org]);
 
   if (!org) return null;
 

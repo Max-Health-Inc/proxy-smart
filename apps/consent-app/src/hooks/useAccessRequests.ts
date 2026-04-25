@@ -52,8 +52,23 @@ export function useAccessRequests(mode: SearchMode | null) {
   }, [modeBy, modeKey])
 
   useEffect(() => {
-    fetchRequests()
-  }, [fetchRequests])
+    if (!modeBy || !modeKey) return
+    Promise.resolve()
+      .then(() => {
+        setLoading(true)
+        setError(null)
+        return modeBy === "patient"
+          ? searchTasksByPatient(modeKey)
+          : searchTasksByRequester(modeKey)
+      })
+      .then((results) => setRequests(results))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : "Failed to load access requests"
+        setError(msg)
+        toast.error("Failed to load access requests", { description: msg })
+      })
+      .finally(() => setLoading(false))
+  }, [modeBy, modeKey])
 
   // ── Create (practitioner) ──────────────────────────────────────────────────
 

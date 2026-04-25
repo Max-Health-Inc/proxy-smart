@@ -10,7 +10,7 @@ interface RealTimeStatusBannerProps {
   onSwitchMode: (mode: 'websocket' | 'sse') => void;
 }
 
-export function RealTimeStatusBanner({ isActive, connectionMode, onToggle, onSwitchMode }: RealTimeStatusBannerProps) {
+export function RealTimeStatusBanner({ isActive, connectionMode, onToggle: _onToggle, onSwitchMode }: RealTimeStatusBannerProps) {
   const { t } = useTranslation();
   const isFallback = oauthWebSocketService.isUsingSSE && connectionMode === 'websocket';
   const actualMode = oauthWebSocketService.connectionMode;

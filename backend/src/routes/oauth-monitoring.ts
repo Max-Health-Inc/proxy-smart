@@ -526,7 +526,7 @@ export const oauthMonitoringRoutes = new Elysia({ prefix: '/monitoring/oauth', t
     } catch (error) {
       logger.auth.error('Failed to export OAuth analytics', { error });
       set.status = 500;
-      throw new Error('Failed to export analytics data');
+      throw new Error('Failed to export analytics data', { cause: error });
     }
   }, {
     headers: t.Object({
@@ -588,7 +588,7 @@ export const oauthMonitoringRoutes = new Elysia({ prefix: '/monitoring/oauth', t
     } catch (error) {
       logger.auth.error('Failed to export OAuth events', { error });
       set.status = 500;
-      throw new Error('Failed to export events data');
+      throw new Error('Failed to export events data', { cause: error });
     }
   }, {
     headers: t.Object({

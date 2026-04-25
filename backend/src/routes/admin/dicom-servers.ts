@@ -15,9 +15,8 @@ import {
   AddDicomServerRequest,
   UpdateDicomServerRequest,
   type DicomServerConfigType,
-  type AddDicomServerRequestType,
 } from '@/schemas'
-import { ErrorResponse, ServerOperationResponse } from '@/schemas'
+import { ErrorResponse } from '@/schemas'
 
 /** Generate a URL-safe slug ID from a name */
 function slugify(name: string): string {

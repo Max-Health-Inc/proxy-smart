@@ -58,13 +58,8 @@ function ModalStackProvider({ children, baseZIndex = DEFAULT_Z_INDEX }: ModalSta
  */
 function useModalLayer(): number | undefined {
   const nextZIndex = React.useContext(ModalStackContext)
-  const zIndexRef = React.useRef<number | undefined>(undefined)
-
-  if (nextZIndex !== null && zIndexRef.current === undefined) {
-    zIndexRef.current = nextZIndex()
-  }
-
-  return zIndexRef.current
+  const [zIndex] = React.useState(() => nextZIndex !== null ? nextZIndex() : undefined)
+  return zIndex
 }
 
 /**

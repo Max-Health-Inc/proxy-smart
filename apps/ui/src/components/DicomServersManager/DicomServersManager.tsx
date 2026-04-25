@@ -45,7 +45,12 @@ export function DicomServersManager() {
     }
   }, [clientApis])
 
-  useEffect(() => { fetchServers() }, [fetchServers])
+  useEffect(() => {
+    clientApis.admin.getAdminDicomServers()
+      .then(resp => setServers((resp.servers ?? []).map(s => ({ ...s }))))
+      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load DICOM servers'))
+      .finally(() => setLoading(false))
+  }, [clientApis])
 
   const handleAdd = async (body: { name: string; baseUrl: string; authType?: string; username?: string; password?: string; authHeader?: string; wadoRoot?: string; qidoRoot?: string; timeoutMs?: number; isDefault?: boolean }) => {
     await clientApis.admin.postAdminDicomServers({ addDicomServerRequest: body as any })
@@ -173,6 +178,7 @@ export function DicomServersManager() {
         onAdd={handleAdd}
       />
       <EditDicomServerDialog
+        key={editingServer?.id ?? 'new'}
         open={!!editingServer}
         onOpenChange={(open) => { if (!open) setEditingServer(null) }}
         server={editingServer}

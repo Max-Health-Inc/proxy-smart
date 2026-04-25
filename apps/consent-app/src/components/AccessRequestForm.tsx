@@ -52,8 +52,8 @@ export function AccessRequestForm({
     "MedicationRequest",
   ])
   const [action, setAction] = useState<"access" | "disclose">("access")
-  const [periodStart, setPeriodStart] = useState(format(new Date(), "yyyy-MM-dd"))
-  const [periodEnd, setPeriodEnd] = useState(
+  const [periodStart, setPeriodStart] = useState(() => format(new Date(), "yyyy-MM-dd"))
+  const [periodEnd, setPeriodEnd] = useState(() =>
     format(new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
   )
   const [reason, setReason] = useState("")

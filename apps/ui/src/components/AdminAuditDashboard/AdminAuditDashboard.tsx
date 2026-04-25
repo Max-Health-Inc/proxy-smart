@@ -130,14 +130,14 @@ export function AdminAuditDashboard({ embedded, isRealTimeActive: parentRealTime
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [analytics?.actionsByResource]);
+  }, [analytics]);
 
   const actionPieData = useMemo(() => {
     if (!analytics?.actionsByType) return [];
     return Object.entries(analytics.actionsByType)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [analytics?.actionsByType]);
+  }, [analytics]);
 
   // ─── Export handlers ──────────────────────────────────────────
 

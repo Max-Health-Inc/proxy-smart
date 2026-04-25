@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui'
 import { LoadingButton } from '@/components/ui/loading-button'
 import {
@@ -28,28 +28,15 @@ const AUTH_TYPES = [
 
 export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: EditDicomServerDialogProps) {
   const { t } = useTranslation()
-  const [name, setName] = useState('')
-  const [baseUrl, setBaseUrl] = useState('')
-  const [authType, setAuthType] = useState<string>('none')
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [authHeader, setAuthHeader] = useState('')
-  const [timeoutMs, setTimeoutMs] = useState<string>('30000')
+  const [name, setName] = useState(server?.name ?? '')
+  const [baseUrl, setBaseUrl] = useState(server?.baseUrl ?? '')
+  const [authType, setAuthType] = useState<string>(server?.authType ?? 'none')
+  const [username, setUsername] = useState(server?.username ?? '')
+  const [password, setPassword] = useState(server?.password ?? '')
+  const [authHeader, setAuthHeader] = useState(server?.authHeader ?? '')
+  const [timeoutMs, setTimeoutMs] = useState<string>(String(server?.timeoutMs ?? 30000))
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (server && open) {
-      setName(server.name)
-      setBaseUrl(server.baseUrl)
-      setAuthType(server.authType ?? 'none')
-      setUsername(server.username ?? '')
-      setPassword(server.password ?? '')
-      setAuthHeader(server.authHeader ?? '')
-      setTimeoutMs(String(server.timeoutMs ?? 30000))
-      setError(null)
-    }
-  }, [server, open])
 
   const handleClose = (val: boolean) => {
     if (!val) setError(null)

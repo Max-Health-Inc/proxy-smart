@@ -166,7 +166,7 @@ export async function storeInstances(files: File[]): Promise<StowResult> {
       if (parseErr instanceof Error && parseErr.message !== `PACS returned status ${resp.status}`) {
         throw parseErr
       }
-      throw new Error(`Upload failed with status ${resp.status}`)
+      throw new Error(`Upload failed with status ${resp.status}`, { cause: parseErr })
     }
   }
 

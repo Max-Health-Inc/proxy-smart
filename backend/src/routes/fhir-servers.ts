@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { config } from '../config'
-import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities, setServerOrganizations } from '../lib/fhir-server-store'
+import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
@@ -71,7 +71,7 @@ function parseCertificate(certContent: string): MtlsConfig['certDetails'] {
     }
   } catch (error) {
     logger.error('Failed to parse certificate', error instanceof Error ? error.message : 'Unknown error')
-    throw new Error(`Invalid certificate format: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(`Invalid certificate format: ${error instanceof Error ? error.message : 'Unknown error'}`, { cause: error })
   }
 }
 

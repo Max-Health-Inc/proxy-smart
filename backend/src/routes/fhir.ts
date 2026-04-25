@@ -8,7 +8,7 @@ import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigu
 import { smartConfigService } from '../lib/smart-config'
 import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
-import { checkConsentWithIal, getConsentConfig, getIalConfig } from '../lib/consent'
+import { checkConsentWithIal, getConsentConfig } from '../lib/consent'
 import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
 import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
 import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, isHistorySupported, isOperationSupported, isPatchFormatSupported, parseFhirPath } from '../lib/fhir-capabilities'

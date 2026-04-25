@@ -6,7 +6,7 @@
  *  - PATCH /admin/mcp-endpoint         → update enabled / tool lists
  */
 
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { validateToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { ErrorResponse, McpEndpointStatusResponse, McpEndpointUpdateBody } from '@/schemas'

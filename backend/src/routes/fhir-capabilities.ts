@@ -3,7 +3,7 @@ import { getServerInfoByName, ensureServersInitialized, getAllServers } from '..
 import { getServerCapabilities, serializeCapabilities, clearCapabilitiesCache, getCapabilitiesCacheStats } from '../lib/fhir-capabilities'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
-import { CommonErrorResponses, ErrorResponse } from '../schemas'
+import { CommonErrorResponses } from '../schemas'
 import { logger } from '../lib/logger'
 
 /**

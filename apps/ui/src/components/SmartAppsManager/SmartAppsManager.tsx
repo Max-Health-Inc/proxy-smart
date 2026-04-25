@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
@@ -537,6 +537,7 @@ export function SmartAppsManager() {
       {/* Edit App Details Modal */}
       {editingApp && (
         <SmartAppEditModal
+          key={editingApp.clientId}
           open={showEditDialog}
           onOpenChange={(open) => setShowEditDialog(open)}
           app={editingApp}

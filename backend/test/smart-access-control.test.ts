@@ -47,7 +47,7 @@ function mockFetchError() {
 
 // ── Environment helpers ──────────────────────────────────────────────────────
 
-const originalEnv = { ...process.env }
+const _originalEnv = { ...process.env }
 
 function setEnv(vars: Record<string, string>) {
   for (const [key, val] of Object.entries(vars)) {

@@ -4,7 +4,7 @@
  * Unit tests for the Kisi API client (fetch-based).
  */
 
-import { describe, it, expect, beforeEach, mock, spyOn } from 'bun:test'
+import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { KisiClient, KisiApiError } from '../src/lib/kisi/client'
 
 // ==================== Helpers ====================

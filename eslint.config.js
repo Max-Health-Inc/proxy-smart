@@ -1,40 +1,24 @@
-import js from '@eslint/js'
+/**
+ * Root-level ESLint config — only applies to root scripts/config files.
+ */
 import { defineConfig } from 'eslint/config'
-import globals from 'globals'
-import tseslint from 'typescript-eslint'
+import { baseConfig } from './eslint-config/base.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig(
-  // Global ignores
-  { 
+  ...baseConfig({
+    tsconfigRootDir: __dirname,
+    files: ['*.{js,ts,mjs}'],
     ignores: [
-      'dist/**',
-      'node_modules/**',
-      'backend/dist/**',
-      'apps/ui/dist/**',
-      '**/lib/api-client/**',
+      'backend/**',
+      'apps/**',
+      'infra/**',
+      'shared-ui/**',
+      'coverage/**',
       '**/*.generated.*',
-      'coverage/**'
-    ] 
-  },
-  
-  // Root level config for shared files
-  {
-    files: ['*.{js,ts,mjs}'], // Root level config files
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    languageOptions: {
-      ecmaVersion: 2022,
-      globals: globals.node,
-      parserOptions: {
-        tsconfigRootDir: __dirname
-      }
-    },
-    rules: {
-      "no-console": "warn",
-      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    },
-  }
+    ],
+  }),
 )

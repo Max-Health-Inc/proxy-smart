@@ -3,7 +3,6 @@ import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import {
   CommonErrorResponses,
   PaginationQuery,
-  ErrorResponse,
   SuccessResponse,
   CountResponse,
   Organization,
@@ -17,7 +16,7 @@ import {
 } from '@/schemas'
 import type { ErrorResponseType, SuccessResponseType } from '@/schemas'
 import type { OrganizationType, OrganizationMemberType, OrgBrandConfigType, OrgBrandConfigResponseType } from '@/schemas'
-import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, AuthenticationError } from '@/lib/admin-utils'
+import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin } from '@/lib/admin-utils'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { logger } from '@/lib/logger'
 import { getOrgBranding, saveOrgBranding } from '@/lib/org-branding'

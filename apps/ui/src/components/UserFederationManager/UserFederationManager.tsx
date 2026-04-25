@@ -359,12 +359,23 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
       setFederations([]);
       notify({ type: 'error', message: t('Failed to load user federations') });
     }
-  }, [isAuthenticated, clientApis, t]);
+  }, [isAuthenticated, clientApis, t, notify]);
 
   useEffect(() => {
-    setLoading(true);
-    refresh().finally(() => setLoading(false));
-  }, [refresh]);
+    if (!isAuthenticated || !clientApis?.userFederation) return;
+    clientApis.userFederation.getAdminUserFederation()
+      .then(providers => {
+        setFederations(providers.map(p => ({
+          ...p,
+          status: (p.config as Record<string, string>)?.enabled === 'false' ? 'inactive' as const : 'active' as const,
+        })));
+      })
+      .catch(error => {
+        console.error('Failed to load user federations:', error);
+        setFederations([]);
+      })
+      .finally(() => setLoading(false));
+  }, [isAuthenticated, clientApis]);
 
   const formToRequest = (f: FormData): CreateUserFederationRequest => ({
     name: f.name,

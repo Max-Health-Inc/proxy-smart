@@ -66,25 +66,36 @@ export function OrgMembersDialog({ isOpen, onClose, org }: OrgMembersDialogProps
     } finally {
       setLoading(false);
     }
-  }, [org?.id, clientApis.organizations, t]);
-
-  const loadUsers = useCallback(async () => {
-    if (!clientApis.healthcareUsers || usersLoaded) return;
-    try {
-      const users = await clientApis.healthcareUsers.getAdminHealthcareUsers({ limit: 500 });
-      setAllUsers(users);
-      setUsersLoaded(true);
-    } catch (err) {
-      console.error('Failed to load healthcare users:', err);
-    }
-  }, [clientApis.healthcareUsers, usersLoaded]);
+  }, [org, clientApis, t]);
 
   useEffect(() => {
-    if (isOpen && org?.id) {
-      loadMembers();
-      loadUsers();
+    if (!isOpen || !org?.id) return;
+
+    if (clientApis.organizations) {
+      clientApis.organizations.getAdminOrganizationsByOrgIdMembers({
+        orgId: org.id,
+        limit: 100,
+      })
+        .then(result => {
+          setMembers(result);
+          setError(null);
+        })
+        .catch(err => {
+          console.error('Failed to load members:', err);
+          setError(t('Failed to load members'));
+        })
+        .finally(() => setLoading(false));
     }
-  }, [isOpen, org?.id, loadMembers, loadUsers]);
+
+    if (clientApis.healthcareUsers && !usersLoaded) {
+      clientApis.healthcareUsers.getAdminHealthcareUsers({ limit: 500 })
+        .then(users => {
+          setAllUsers(users);
+          setUsersLoaded(true);
+        })
+        .catch(err => console.error('Failed to load healthcare users:', err));
+    }
+  }, [isOpen, org?.id, clientApis.organizations, clientApis.healthcareUsers, usersLoaded, t]);
 
   // Close dropdown on outside click
   useEffect(() => {

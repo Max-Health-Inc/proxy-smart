@@ -318,7 +318,7 @@ export async function addServer(serverUrl: string, name?: string, organizationId
     return serverInfo
   } catch (error) {
     logger.fhir.error(`Failed to add FHIR server: ${serverUrl}`, { error })
-    throw new Error(`Failed to add FHIR server: ${error}`)
+    throw new Error(`Failed to add FHIR server: ${error}`, { cause: error })
   }
 }
 
@@ -368,7 +368,7 @@ export async function updateServer(serverIdentifier: string, newServerUrl: strin
     return serverInfo
   } catch (error) {
     logger.fhir.error(`Failed to update FHIR server: ${newServerUrl}`, { error })
-    throw new Error(`Failed to update FHIR server: ${error}`)
+    throw new Error(`Failed to update FHIR server: ${error}`, { cause: error })
   }
 }
 

@@ -1,4 +1,4 @@
-import { Badge, CHART_COLORS } from '@proxy-smart/shared-ui';
+import { CHART_COLORS } from '@proxy-smart/shared-ui';
 import {
   TrendingUp,
   Zap,

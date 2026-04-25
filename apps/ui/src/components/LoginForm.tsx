@@ -28,15 +28,54 @@ import { useTranslation } from 'react-i18next';
 
 export function LoginForm() {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  // Parse OAuth callback params + validate PKCE synchronously (runs exactly once)
+  const [oauthCallback] = useState<{ error: string } | { code: string; codeVerifier: string } | null>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    const urlError = urlParams.get('error');
+    const errorDescription = urlParams.get('error_description');
+
+    if (code || urlError) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    if (urlError) {
+      logger.error('LoginForm: OAuth error present in URL', { error: urlError, errorDescription });
+      return { error: `Authentication failed: ${errorDescription || urlError}. Please try again or use the troubleshooting panel below.` };
+    }
+
+    if (code && state) {
+      const codeVerifier = getSessionItem('pkce_code_verifier');
+      const storedState = getSessionItem('oauth_state');
+
+      if (!codeVerifier) {
+        removeSessionItem('oauth_state');
+        return { error: 'Missing PKCE code verifier - please try logging in again' };
+      }
+      if (state !== storedState) {
+        removeSessionItem('pkce_code_verifier');
+        removeSessionItem('oauth_state');
+        return { error: 'Invalid state parameter - please try logging in again' };
+      }
+
+      return { code, codeVerifier };
+    }
+
+    return null;
+  });
+
+  const pendingCodeExchange = oauthCallback && 'code' in oauthCallback ? oauthCallback : null;
+
+  const [loading, setLoading] = useState(!!pendingCodeExchange);
+  const [error, setError] = useState<string | null>(oauthCallback && 'error' in oauthCallback ? oauthCallback.error : null);
   const [availableIdps, setAvailableIdps] = useState<PublicIdentityProvider[]>([]);
   const [loadingIdps, setLoadingIdps] = useState(true);
   const [authAvailable, setAuthAvailable] = useState<boolean | null>(null);
   const [showConfigForm, setShowConfigForm] = useState(false);
   const [showDebugPanel, setShowDebugPanel] = useState(false);
   const isProcessingCodeExchange = useRef(false);
-  const processedUrl = useRef<string | null>(null);
   const { initiateLogin, exchangeCodeForToken, clientApis } = useAuthStore();
 
   // Fetch available identity providers
@@ -106,89 +145,60 @@ export function LoginForm() {
   useEffect(() => {
     const signal = { aborted: false };
     logger.info('LoginForm mounted');
-    checkAuthAvailability(signal);
+
+    openidService.isAuthenticationAvailable()
+      .then(available => {
+        if (signal.aborted) return;
+        setAuthAvailable(available);
+        logger.info('LoginForm: auth availability', { available });
+        if (!available) {
+          setError('Keycloak is not configured. Please contact your administrator.');
+          setLoadingIdps(false);
+          return;
+        }
+        setError(null);
+        return clientApis.auth.getAuthIdentityProviders();
+      })
+      .then(idps => {
+        if (signal.aborted || !idps) return;
+        const enabledIdps = idps.filter((idp: PublicIdentityProvider) => idp.enabled !== false);
+        logger.info('LoginForm: identity providers fetched', { count: enabledIdps.length });
+        setAvailableIdps(enabledIdps);
+      })
+      .catch(error => {
+        if (signal.aborted) return;
+        console.error('Failed to check auth availability:', error);
+        logger.error('LoginForm: auth availability check failed', error);
+        setAuthAvailable(false);
+        setError('Unable to verify authentication configuration. Please try again later.');
+      })
+      .finally(() => {
+        if (!signal.aborted) setLoadingIdps(false);
+      });
+
     return () => { signal.aborted = true; };
-  }, [checkAuthAvailability]);
+  }, [clientApis.auth]);
 
-  const handleCodeExchange = useCallback(async (code: string, state: string) => {
-    // Prevent multiple simultaneous token exchange attempts
-    if (isProcessingCodeExchange.current) {
-      return;
-    }
-
+  // Execute OAuth code exchange (all validation already done during init)
+  useEffect(() => {
+    if (!pendingCodeExchange) return;
+    if (isProcessingCodeExchange.current) return;
     isProcessingCodeExchange.current = true;
-    setLoading(true);
-    setError(null);
 
-    try {
-      logger.info('LoginForm: starting code exchange');
-      // Get stored PKCE parameters
-      const codeVerifier = getSessionItem('pkce_code_verifier');
-      const storedState = getSessionItem('oauth_state');
-
-      if (!codeVerifier) {
-        // Clean up stale session data
-        removeSessionItem('oauth_state');
-        throw new Error('Missing PKCE code verifier - please try logging in again');
-      }
-
-      // Verify state for CSRF protection
-      if (state !== storedState) {
-        // Clean up stale session data
+    logger.info('LoginForm: found code/state in URL – exchanging');
+    exchangeCodeForToken(pendingCodeExchange.code, pendingCodeExchange.codeVerifier)
+      .then(() => logger.info('LoginForm: code exchange successful'))
+      .catch(err => {
         removeSessionItem('pkce_code_verifier');
         removeSessionItem('oauth_state');
-        throw new Error('Invalid state parameter - please try logging in again');
-      }
-
-      await exchangeCodeForToken(code, codeVerifier);
-      logger.info('LoginForm: code exchange successful');
-    } catch (err) {
-      // Ensure session data is cleaned up on any error
-      removeSessionItem('pkce_code_verifier');
-      removeSessionItem('oauth_state');
-      logger.error('LoginForm: code exchange failed', err);
-      setError(err instanceof Error ? err.message : 'Authentication failed');
-    } finally {
-      setLoading(false);
-      isProcessingCodeExchange.current = false;
-    }
-  }, [exchangeCodeForToken]);
-
-  // Handle OAuth callback on component mount
-  useEffect(() => {
-    const currentUrl = window.location.href;
-    logger.debug('LoginForm: processing OAuth callback params');
-    
-    // Prevent processing the same URL multiple times
-    if (processedUrl.current === currentUrl) {
-      return;
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-    const error = urlParams.get('error');
-    const errorDescription = urlParams.get('error_description');
-    
-    // Clear URL parameters immediately after extraction to prevent reuse
-    if (code || error) {
-      window.history.replaceState({}, document.title, window.location.pathname);
-      processedUrl.current = currentUrl;
-    }
-    
-    if (error) {
-      console.error('OAuth error:', error, errorDescription);
-      logger.error('LoginForm: OAuth error present in URL', { error, errorDescription });
-      setError(`Authentication failed: ${errorDescription || error}. Please try again or use the troubleshooting panel below.`);
-      return;
-    }
-
-    if (code && state) {
-      // Exchange code for token
-      logger.info('LoginForm: found code/state in URL – exchanging');
-      handleCodeExchange(code, state);
-    }
-  }, [handleCodeExchange]);
+        logger.error('LoginForm: code exchange failed', err);
+        setError(err instanceof Error ? err.message : 'Authentication failed');
+      })
+      .finally(() => {
+        setLoading(false);
+        isProcessingCodeExchange.current = false;
+      });
+  }, [exchangeCodeForToken, pendingCodeExchange]);
 
   const handleLogin = async (idpAlias?: string) => {
     // Check if authentication is available before proceeding

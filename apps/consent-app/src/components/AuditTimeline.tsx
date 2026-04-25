@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react"
 import type { Consent } from "fhir/r4"
 import { format } from "date-fns"
 import {
-  ShieldCheck,
   ShieldOff,
   PlusCircle,
   Eye,
@@ -140,13 +139,50 @@ export function AuditTimeline({ consents, patientId }: AuditTimelineProps) {
   }, [patientId])
 
   useEffect(() => {
-    fetchAccessLog()
-  }, [fetchAccessLog])
+    if (!patientId) return
+    Promise.resolve()
+      .then(() => {
+        setAccessLoading(true)
+        setAccessError(null)
+        const authFetch = smartAuth.createAuthenticatedFetch()
+        const base = config.proxyBase || window.location.origin
+        const url = `${base}/monitoring/consent/patients/${encodeURIComponent(patientId)}/access-log?limit=200`
+        return authFetch(url)
+      })
+      .then((resp) => {
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+        return resp.json()
+      })
+      .then((data: { events?: Array<Record<string, unknown>> }) => {
+        const mapped: AccessEvent[] = (data.events ?? []).map(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (e: any) => ({
+            id: e.id,
+            source: "access" as const,
+            type: e.decision as "permit" | "deny",
+            date: new Date(e.timestamp),
+            clientId: e.clientId,
+            userId: e.userId ?? null,
+            username: e.username ?? null,
+            resourceType: e.resourceType ?? null,
+            method: e.method,
+            reason: e.reason,
+          }),
+        )
+        setAccessEvents(mapped)
+      })
+      .catch((err) => {
+        setAccessError(err instanceof Error ? err.message : "Failed to load access log")
+      })
+      .finally(() => {
+        setAccessLoading(false)
+      })
+  }, [patientId])
 
   // ── Merge & filter ───────────────────────────────────────────
 
   const filteredEvents: TimelineEvent[] = (() => {
-    let events: TimelineEvent[] = []
+    const events: TimelineEvent[] = []
     if (tab === "all" || tab === "consent") events.push(...consentEvents)
     if (tab === "all" || tab === "access") events.push(...accessEvents)
     return events.sort((a, b) => b.date.getTime() - a.date.getTime())

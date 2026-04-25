@@ -222,7 +222,7 @@ export const consentMonitoringRoutes = new Elysia({ prefix: '/monitoring/consent
     } catch (error) {
       logger.consent.error('Failed to export consent events', { error })
       set.status = 500
-      throw new Error('Failed to export consent events')
+      throw new Error('Failed to export consent events', { cause: error })
     }
   }, {
     headers: t.Object({ authorization: t.String() }),
