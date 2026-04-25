@@ -46,13 +46,6 @@ export const SmartApp = t.Object({
   requirePkce: t.Optional(t.Boolean({ description: 'Require PKCE for public clients' })),
   allowOfflineAccess: t.Optional(t.Boolean({ description: 'Allow offline access (refresh tokens)' })),
   
-  // MCP server access control
-  mcpAccessType: t.Optional(t.UnionEnum(['none', 'all-mcp-servers', 'selected-mcp-servers'], { description: 'MCP server access control type' })),
-  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
-  
-  // Skills access control
-  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
-  
   // Organization assignment
   organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to. Empty/undefined means available to all organizations.' })),
   
@@ -115,13 +108,6 @@ export const CreateSmartAppRequest = t.Object({
   requirePkce: t.Optional(t.Boolean({ description: 'Require Proof Key for Code Exchange (PKCE) for public clients' })),
   allowOfflineAccess: t.Optional(t.Boolean({ description: 'Allow offline access (refresh tokens)' })),
   
-  // MCP server access control
-  mcpAccessType: t.Optional(t.UnionEnum(['none', 'all-mcp-servers', 'selected-mcp-servers'], { description: 'MCP server access control type (none = no MCP access, all-mcp-servers = access all, selected-mcp-servers = specific servers only)' })),
-  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names (when mcpAccessType is selected-mcp-servers)' })),
-  
-  // Skills access control
-  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
-  
   // Organization assignment
   organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' })),
   
@@ -183,13 +169,6 @@ export const UpdateSmartAppRequest = t.Object({
   // PKCE and offline access
   requirePkce: t.Optional(t.Boolean({ description: 'Require PKCE for public clients' })),
   allowOfflineAccess: t.Optional(t.Boolean({ description: 'Allow offline access (refresh tokens)' })),
-  
-  // MCP server access control
-  mcpAccessType: t.Optional(t.UnionEnum(['none', 'all-mcp-servers', 'selected-mcp-servers'], { description: 'MCP server access control type' })),
-  allowedMcpServerNames: t.Optional(t.Array(t.String(), { description: 'List of allowed MCP server names' })),
-  
-  // Skills access control
-  allowedSkillNames: t.Optional(t.Array(t.String(), { description: 'List of allowed skill names assigned to this app' })),
   
   // Organization assignment
   organizationIds: t.Optional(t.Array(t.String(), { description: 'Keycloak Organization IDs this app is assigned to' })),

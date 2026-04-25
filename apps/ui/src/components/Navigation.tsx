@@ -161,7 +161,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
     { 
       id: 'ai-tools', 
       label: t('AI Tools'), 
-      description: t('MCP Configuration'),
+      description: t('MCP Endpoint'),
       icon: Sparkles
     },
     { 

@@ -3,14 +3,12 @@ import { getItem } from './storage';
 import { attemptTokenRefresh } from './tokenRefresh';
 import {
   AdminApi,
-  AiToolsApi,
   AppStoreApi,
   AuthenticationApi,
   FhirMonitoringApi,
   HealthcareUsersApi,
   IdentityProvidersApi,
   LaunchContextsApi,
-  McpManagementApi,
   OauthMonitoringApi,
   OrganizationsApi,
   RolesApi,
@@ -113,13 +111,11 @@ export const createAuthApi = (token?: string) => new AuthenticationApi(createCon
 export const createHealthcareUsersApi = (token?: string) => new HealthcareUsersApi(createConfig(token));
 export const createIdentityProvidersApi = (token?: string) => new IdentityProvidersApi(createConfig(token));
 export const createLaunchContextsApi = (token?: string) => new LaunchContextsApi(createConfig(token));
-export const createMcpManagementApi = (token?: string) => new McpManagementApi(createConfig(token));
 export const createOauthMonitoringApi = (token?: string) => new OauthMonitoringApi(createConfig(token));
 export const createRolesApi = (token?: string) => new RolesApi(createConfig(token));
 export const createSmartAppsApi = (token?: string) => new SmartAppsApi(createConfig(token));
 export const createServersApi = (token?: string) => new ServersApi(createConfig(token));
 export const createServerApi = (token?: string) => new ServerApi(createConfig(token));
-export const createAiToolsApi = (token?: string) => new AiToolsApi(createConfig(token));
 export const createFhirMonitoringApi = (token?: string) => new FhirMonitoringApi(createConfig(token));
 export const createUserFederationApi = (token?: string) => new UserFederationApi(createConfig(token));
 export const createOrganizationsApi = (token?: string) => new OrganizationsApi(createConfig(token));
@@ -165,14 +161,12 @@ const wrapApiClient = <T extends object>(client: T): T => {
 // Create all client APIs at once with automatic auth error handling
 export const createClientApis = (token?: string) => ({
   admin: wrapApiClient(createAdminApi(token)),
-  aiTools: wrapApiClient(createAiToolsApi(token)),
   appStore: wrapApiClient(createAppStoreApi(token)),
   auth: wrapApiClient(createAuthApi(token)),
   fhirMonitoring: wrapApiClient(createFhirMonitoringApi(token)),
   healthcareUsers: wrapApiClient(createHealthcareUsersApi(token)),
   identityProviders: wrapApiClient(createIdentityProvidersApi(token)),
   launchContexts: wrapApiClient(createLaunchContextsApi(token)),
-  mcpManagement: wrapApiClient(createMcpManagementApi(token)),
   oauthMonitoring: wrapApiClient(createOauthMonitoringApi(token)),
   roles: wrapApiClient(createRolesApi(token)),
   smartApps: wrapApiClient(createSmartAppsApi(token)),

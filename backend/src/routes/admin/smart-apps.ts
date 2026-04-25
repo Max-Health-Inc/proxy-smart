@@ -28,7 +28,6 @@ function getAttr(attrs: Record<string, any> | undefined, key: string): string | 
 /** Valid literal values for schema-validated enums */
 const VALID_APP_TYPES = new Set(['standalone-app', 'ehr-launch', 'backend-service', 'agent'])
 const VALID_SERVER_ACCESS_TYPES = new Set(['all-servers', 'selected-servers', 'user-person-servers'])
-const VALID_MCP_ACCESS_TYPES = new Set(['none', 'all-mcp-servers', 'selected-mcp-servers'])
 
 /**
  * Register JWKS for a Backend Services client in Keycloak.
@@ -189,13 +188,6 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               serverAccessType: (VALID_SERVER_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'server_access_type')!) ? getAttr(fullClient.attributes, 'server_access_type') : undefined) as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
               allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
               
-              // MCP server access control
-              mcpAccessType: (VALID_MCP_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'mcp_access_type')!) ? getAttr(fullClient.attributes, 'mcp_access_type') : 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
-              allowedMcpServerNames: getAttr(fullClient.attributes, 'allowed_mcp_server_names')?.split(',').filter(Boolean) || [],
-              
-              // Skills access control
-              allowedSkillNames: getAttr(fullClient.attributes, 'allowed_skill_names')?.split(',').filter(Boolean) || [],
-              
               // Organization assignment
               organizationIds: getAttr(fullClient.attributes, 'organization_ids')?.split(',').filter(Boolean) || [],
               
@@ -344,17 +336,6 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.serverAccessType && { 'server_access_type': body.serverAccessType }),
           ...(body.allowedServerIds && body.allowedServerIds.length > 0 && { 
             'allowed_server_ids': body.allowedServerIds.join(',') 
-          }),
-          
-          // MCP server access control
-          ...(body.mcpAccessType && { 'mcp_access_type': body.mcpAccessType }),
-          ...(body.allowedMcpServerNames && body.allowedMcpServerNames.length > 0 && {
-            'allowed_mcp_server_names': body.allowedMcpServerNames.join(',')
-          }),
-          
-          // Skills access control
-          ...(body.allowedSkillNames && body.allowedSkillNames.length > 0 && {
-            'allowed_skill_names': body.allowedSkillNames.join(',')
           }),
           
           // Organization assignment
@@ -680,13 +661,6 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             serverAccessType: getAttr(fullClient.attributes, 'server_access_type') as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
             allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
             
-            // MCP server access control
-            mcpAccessType: (getAttr(fullClient.attributes, 'mcp_access_type') || 'none') as 'none' | 'all-mcp-servers' | 'selected-mcp-servers',
-            allowedMcpServerNames: getAttr(fullClient.attributes, 'allowed_mcp_server_names')?.split(',').filter(Boolean) || [],
-            
-            // Skills access control
-            allowedSkillNames: getAttr(fullClient.attributes, 'allowed_skill_names')?.split(',').filter(Boolean) || [],
-            
             // Organization assignment
             organizationIds: getAttr(fullClient.attributes, 'organization_ids')?.split(',').filter(Boolean) || [],
             
@@ -798,15 +772,6 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           'post.logout.redirect.uris': existing.attributes?.['post.logout.redirect.uris'] || '+',
           smart_version: body.smartVersion ? [body.smartVersion] : existing.attributes?.smart_version,
           fhir_version: body.fhirVersion ? [body.fhirVersion] : existing.attributes?.fhir_version,
-          // MCP server access control
-          ...(body.mcpAccessType !== undefined && { 'mcp_access_type': body.mcpAccessType }),
-          ...(body.allowedMcpServerNames !== undefined && {
-            'allowed_mcp_server_names': body.allowedMcpServerNames.length > 0 ? body.allowedMcpServerNames.join(',') : ''
-          }),
-          // Skills access control
-          ...(body.allowedSkillNames !== undefined && {
-            'allowed_skill_names': body.allowedSkillNames.length > 0 ? body.allowedSkillNames.join(',') : ''
-          }),
           // Server access control
           ...(body.serverAccessType !== undefined && { 'server_access_type': body.serverAccessType }),
           ...(body.allowedServerIds !== undefined && {

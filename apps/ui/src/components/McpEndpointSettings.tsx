@@ -1,7 +1,7 @@
 /**
  * MCP Endpoint Settings — admin panel for managing the built-in MCP server.
  *
- * Rendered as a TabsContent inside McpServersManager ("MCP Endpoint" tab).
+ * Rendered as the "AI Tools" tab content in the admin panel.
  */
 
 import { useState, useEffect, useCallback } from 'react';
