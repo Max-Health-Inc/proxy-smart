@@ -18,7 +18,7 @@ import {
 } from '@/schemas/ai-assistant'
 import { getToolRegistry, createToolExecutor } from '@/lib/ai/tool-registry'
 import { type AIContext } from '@/lib/ai/assistant'
-import { streamText, generateText, jsonSchema, stepCountIs, type Tool as AiSdkTool, type LanguageModel } from 'ai'
+import { streamText, generateText, stepCountIs, type Tool as AiSdkTool, type LanguageModel } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { validateToken } from '@/lib/auth'

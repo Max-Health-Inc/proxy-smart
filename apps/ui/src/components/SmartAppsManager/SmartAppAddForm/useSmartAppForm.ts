@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useFhirServers } from '@/stores/smartStore';
 import type { ScopeSet, SmartAppFormData } from '@/lib/types/api';
-import type { SmartAppType, AuthenticationType, ServerAccessType } from './helpers';
+import type { SmartAppType, ServerAccessType } from './helpers';
 import { requiresRedirectUri, hasFixedAuthType, getFixedAuthType } from './helpers';
 
 const INITIAL_FORM_STATE: SmartAppFormData = {
