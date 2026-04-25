@@ -5,6 +5,7 @@ import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X } from "luc
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"
 import type { ImagingStudyStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImagingStudyStatusUvIps"
+import { RecordName, type AnyResource } from "@/lib/ips-display-helpers"
 import {
   getStudyInstanceUID,
   getStudyThumbnailUrl,
@@ -221,10 +222,12 @@ export function ImagingStudyCard({
   imagingStudies,
   radiologyResults,
   readOnly = false,
+  onOpenDetail,
 }: {
   imagingStudies: ImagingStudy[]
   radiologyResults: RadiologyResult[]
   readOnly?: boolean
+  onOpenDetail?: (title: string, resource: AnyResource) => void
 }) {
   const { t } = useTranslation()
   const [viewerTarget, setViewerTarget] = useState<ViewerTarget | null>(null)
@@ -350,11 +353,19 @@ export function ImagingStudyCard({
                             key={obs.id || `rad-${i}`}
                             className="text-sm flex justify-between gap-2"
                           >
-                            <span className="font-medium truncate min-w-0">
-                              {obs.code?.coding?.[0]?.display ||
-                                obs.code?.text ||
-                                "Radiology result"}
-                            </span>
+                            {onOpenDetail ? (
+                              <RecordName resource={obs as AnyResource} onOpen={onOpenDetail}>
+                                {obs.code?.coding?.[0]?.display ||
+                                  obs.code?.text ||
+                                  "Radiology result"}
+                              </RecordName>
+                            ) : (
+                              <span className="font-medium truncate min-w-0">
+                                {obs.code?.coding?.[0]?.display ||
+                                  obs.code?.text ||
+                                  "Radiology result"}
+                              </span>
+                            )}
                             {obs.effectiveDateTime && (
                               <span className="text-muted-foreground whitespace-nowrap">
                                 {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
