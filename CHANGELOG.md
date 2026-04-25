@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604251357.feaf2389] - 2026-04-25
+
+- 🔧 Chores & Improvements: Version bump to 0.0.8-alpha.202604251357.feaf2389 across packages
+- 🔧 Chores & Improvements: Remove unused imports (UI: SmartAppType in useSmartAppForm.ts; Backend: LanguageModel in ai.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/578
+
+
 ## [0.0.8-alpha.202604241730.a780750b] - 2026-04-25
 
 - 🔧 Chores & Improvements: UI refactor of MCP configuration (MCP ServersManager replaced with MCP Endpoint Settings under AI Tools; navigation label updated to "MCP Endpoint")
