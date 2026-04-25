@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-beta.202604251600.c1abef92] - 2026-04-25
+
+- 🔧 Chores & Improvements: Refactor usePerson hook to fetch via fetchPerson and expose refetch; update dependency references to reflect new fetchPerson usage
+- 🔧 Chores & Improvements: Downgrade Vue devDependencies from 3.5.33 to 3.5.32 in bun.lock and package.json
+- 🔧 Chores & Improvements: Bump consent-app and dtr-app versions to 202604251600
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/581
+
+
 ## [0.0.8-alpha.202604251600.c1abef92] - 2026-04-25
 
 - 🔧 Chores & Improvements: Version bump to 0.0.8-alpha.202604251600.c1abef92 across multiple packages (consent-app, dtr-app, patient-portal, patient-portal/package, smart-dicom-template, ui, eslint-config, testing/e2e)
