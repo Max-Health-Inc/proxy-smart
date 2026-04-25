@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.8-alpha.202604251402.0ddf9508] - 2026-04-25
+
+- 🔧 Chores & Improvements: Major ESLint configuration refactor with shared base and React/UI-specific configs; update root config to delegate to base with ignores; add eslint-config scaffolding and shared UI lint config
+- 🔧 Chores & Improvements: Dependency and version bumps to 0.0.8-alpha.202604251402.0ddf9508 across app packages (tailwind, lucide-react, shadcn, etc.)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/579
+
+
 ## [0.0.8-alpha.202604251357.feaf2389] - 2026-04-25
 
 - 🔧 Chores & Improvements: Version bump to 0.0.8-alpha.202604251357.feaf2389 across packages
