@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604252202.6b15be32] - 2026-04-25
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages; minor typings tightening and null-safety refinements
+  - UI: strengthen Dicom server add/update types and import paths
+  - Backend: broaden types, safer optional chaining, and refactors in auth, org-branding, runtime-config, smart-scope-mappers, and admin routes
+  - Keycloak: stricter typing on token payloads/responses and adjusted error handling
+  - Dicom/DICOM routes: tightened parameter handling types
+  - ESLint: elevate no-explicit-any to error
+  - Misc: small refactors in app discovery and organization representations
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/585
+
+
 ## [0.0.8-alpha.202604251656.4c9a01c0] - 2026-04-25
 
 - 🔧 Chores & Improvements: Add onOpenDetail callbacks to Dashboard, ImagingStudyCard, and GenomicsCard to enable opening detailed views (passed through from Dashboard to card components).
