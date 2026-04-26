@@ -123,22 +123,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       
-      # Inferno's postgres
-      inferno-db:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: inferno
-          POSTGRES_PASSWORD: inferno
-          POSTGRES_DB: inferno
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-      
-      # Redis for Inferno
+      # Redis for Inferno (Sidekiq job queue)
       redis:
         image: redis:8-alpine
         ports:
@@ -731,13 +716,12 @@ jobs:
       - name: Resolve Inferno Version
         id: inferno-version
         run: |
-          LATEST_TAG=$(curl -sf https://api.github.com/repos/inferno-framework/smart-app-launch-test-kit/releases/latest | jq -r '.tag_name')
-          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-            echo "WARNING: Could not fetch latest release, falling back to main"
-            LATEST_TAG="main"
-          fi
-          echo "Inferno version: $LATEST_TAG"
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          # Pin to v0.6.4 — last known working release.
+          # v1.0.0 (inferno_core 1.0.2) changed DB/migration internals and breaks our setup.
+          # TODO: Test and migrate to v1.0.0+ (uses `bundle exec inferno migrate` instead of rake)
+          PINNED_TAG="v0.6.4"
+          echo "Inferno version: $PINNED_TAG (pinned)"
+          echo "tag=$PINNED_TAG" >> $GITHUB_OUTPUT
 
       - name: Cache Inferno
         id: inferno-cache
@@ -752,16 +736,11 @@ jobs:
         if: steps.inferno-cache.outputs.cache-hit != 'true'
         run: |
           TAG="${{ steps.inferno-version.outputs.tag }}"
-          if [ "$TAG" = "main" ]; then
-            git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          else
-            git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          fi
+          git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
           cd inferno
           bundle install
           
-          # Setup database
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          # Inferno uses SQLite internally (not PostgreSQL) — do NOT set DATABASE_URL
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
 
@@ -769,14 +748,14 @@ jobs:
         if: steps.inferno-cache.outputs.cache-hit == 'true'
         run: |
           cd inferno
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          # Inferno uses SQLite internally — do NOT set DATABASE_URL
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
 
       - name: Start Inferno
         run: |
           cd inferno
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          # Inferno uses SQLite internally — do NOT set DATABASE_URL
           export REDIS_URL="redis://localhost:6379"
           
           # Disable TLS tests in local CI (no HTTPS) — TLS is validated on deployed environments
@@ -798,14 +777,23 @@ jobs:
           
           # Wait for Inferno to be ready
           echo "Waiting for Inferno..."
+          INFERNO_READY=false
           for i in {1..60}; do
             if curl -sf http://localhost:4567 > /dev/null 2>&1; then
               echo "Inferno is ready!"
+              INFERNO_READY=true
               break
             fi
             echo "Attempt $i/60..."
             sleep 5
           done
+          
+          if [ "$INFERNO_READY" = "false" ]; then
+            echo "ERROR: Inferno failed to start after 300 seconds"
+            echo "Puma logs:"
+            jobs -l || true
+            exit 1
+          fi
 
       # Register test client in Keycloak (only for local targets - deployed already configured)
       - name: Verify Keycloak Setup
