@@ -30,7 +30,7 @@ import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
 
-interface DiscoveredApp {
+export interface DiscoveredApp {
     id: string
     launch_url: string
     client_id: string
