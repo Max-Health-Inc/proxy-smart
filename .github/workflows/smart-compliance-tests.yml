@@ -729,26 +729,25 @@ jobs:
         with:
           path: |
             inferno
-            ~/.bundle
-          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3
+          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3-v2
 
       - name: Setup Inferno
         if: steps.inferno-cache.outputs.cache-hit != 'true'
         run: |
           TAG="${{ steps.inferno-version.outputs.tag }}"
           git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          cd inferno
-          bundle install
-          
-          # Inferno uses SQLite internally (not PostgreSQL) — do NOT set DATABASE_URL
-          export REDIS_URL="redis://localhost:6379"
-          bundle exec rake db:migrate || bundle exec rake db:setup || true
 
-      - name: Setup Inferno DB (cached)
-        if: steps.inferno-cache.outputs.cache-hit == 'true'
+      # Always run bundle install — the cache only stores the git clone, not installed gems.
+      # bundle install is fast (~5s) when Gemfile.lock hasn't changed.
+      - name: Install Inferno Gems
         run: |
           cd inferno
-          # Inferno uses SQLite internally — do NOT set DATABASE_URL
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4
+
+      - name: Setup Inferno DB
+        run: |
+          cd inferno
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
 
