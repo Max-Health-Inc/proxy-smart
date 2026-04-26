@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604260157.83fc33d8] - 2026-04-26
+
+- 🔧 Chores & Improvements: CI workflow tightened to run feature-branch tests only on dev/develop and alpha flows; prevent direct pushes to main/test/beta to avoid deployment race; alpha deploy via Northflank auto-deploy on push
+- 🔧 Chores & Improvements: Version bumps standardized to 0.0.9-alpha.202604260157.83fc33d8 across multiple packages (consent-app, dtr-app, patient-portal, ui, patient-portal package, eslint-config, testing/e2e, and several apps/templates)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/589
+
+
 ## [0.0.9-alpha.202604260114.bfb2c188] - 2026-04-26
 
 - 🔧 Chores & Improvements: CI workflow cache key rename and new “Install Inferno Gems” step; remove DB setup cache-conditional logic
