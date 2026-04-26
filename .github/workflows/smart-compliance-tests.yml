@@ -48,14 +48,17 @@ on:
         description: 'Overall test status'
         value: ${{ jobs.smart-compliance-test.outputs.status }}
   
-  # Feature branches - test with local CI stack
+  # Feature branches & alpha - test with local CI stack or deployed Northflank
+  # NOTE: 'test' and 'main' are intentionally excluded here because their
+  # release workflows (release-beta.yml, release-production.yml) call
+  # testing-strategy.yml → smart-compliance-tests.yml AFTER deployment.
+  # Running compliance tests directly on push would race against deployment
+  # and hit a 503 because the new code isn't deployed yet.
   push:
     branches:
       - 'dev/*'
       - 'develop/*'
-      - 'develop'  # Alpha deployed
-      - 'test'     # Beta deployed
-      - 'main'     # Production deployed
+      - 'develop'  # Alpha (Northflank auto-deploys on push)
     tags:
       - 'v*'
     paths:
