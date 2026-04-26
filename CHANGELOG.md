@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604260114.bfb2c188] - 2026-04-26
+
+- 🔧 Chores & Improvements: CI workflow cache key rename and new “Install Inferno Gems” step; remove DB setup cache-conditional logic
+- 🔧 Chores & Improvements: Bump versions across all packages (consent-app, dtr-app, patient-portal and nested package.jsons; eslint-config; testing/e2e) to 0.0.9-alpha.202604260114.bfb2c188
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/588
+
+
 ## [0.0.9-alpha.202604260015.56fd77e4] - 2026-04-26
 
 - 🔧 Chores & Improvements: Remove Inferno PostgreSQL service and associated health config; pin Inferno version to v0.6.4 with notes on compatibility and future migration; clarify Redis usage for Sidekiq (dedicated service)
