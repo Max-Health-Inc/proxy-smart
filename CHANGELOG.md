@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604252254.403d4d46] - 2026-04-26
+
+- 🔧 Chores & Improvements: Version bumps across packages to 0.0.9-alpha.202604252202.6b15be32; general typings hardening and null-safety improvements; safer optional chaining; broader/stricter typing in UI, backend, Keycloak, and DICOM routes; ESLint no-explicit-any raised to error; minor refactors in app discovery and organization representations.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/586
+
+
 ## [0.0.9-alpha.202604252202.6b15be32] - 2026-04-25
 
 - 🔧 Chores & Improvements: Version bumps across multiple packages; minor typings tightening and null-safety refinements
