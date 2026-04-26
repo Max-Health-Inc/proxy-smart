@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604260015.56fd77e4] - 2026-04-26
+
+- 🔧 Chores & Improvements: Remove Inferno PostgreSQL service and associated health config; pin Inferno version to v0.6.4 with notes on compatibility and future migration; clarify Redis usage for Sidekiq (dedicated service)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/587
+
+
 ## [0.0.9-alpha.202604252254.403d4d46] - 2026-04-26
 
 - 🔧 Chores & Improvements: Version bumps across packages to 0.0.9-alpha.202604252202.6b15be32; general typings hardening and null-safety improvements; safer optional chaining; broader/stricter typing in UI, backend, Keycloak, and DICOM routes; ESLint no-explicit-any raised to error; minor refactors in app discovery and organization representations.
