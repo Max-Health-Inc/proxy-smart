@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604260219.72c2f545] - 2026-04-27
+
+- ✨ Features: Custom Keycloak login theme support
+  - Add custom login theme files (proxy-smart), IdP icons infrastructure (idp-icons.css, social-providers.ftl), and theme.properties wiring for login styles.
+
+- 🔧 Chores & Improvements: Version bumps and packaging updates
+  - Bump versions across multiple packages/apps (consent-app, dtr-app, patient-portal, eslint-config, smart-dicom-template, ui, testing/e2e) to alpha with timestamped tag.
+
+- ⚠️ Breaking Changes: None detected
+
+Note: No user-facing changes beyond branding/theme customization and version updates.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/590
+
+
 ## [0.0.9-alpha.202604260157.83fc33d8] - 2026-04-26
 
 - 🔧 Chores & Improvements: CI workflow tightened to run feature-branch tests only on dev/develop and alpha flows; prevent direct pushes to main/test/beta to avoid deployment race; alpha deploy via Northflank auto-deploy on push
