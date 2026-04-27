@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604272007.ad815d0a] - 2026-04-27
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages to 0.0.9-alpha.202604271326.1163fe78
+- 🔧 Chores & Improvements: .dockerignore adjustments to preserve Keycloak themes directory while excluding other data; realm-export files remain unignored
+- ✨ Features: UI: BrandSettings exports new theme option "proxy-smart"
+- 🔧 Chores & Improvements: Various package.json updates to align with new alpha version
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/592
+
+
 ## [0.0.9-alpha.202604271402.ef62ac9b] - 2026-04-27
 
 - ✨ Features: UI option added — BrandSettings now exports a new theme option "proxy-smart".
