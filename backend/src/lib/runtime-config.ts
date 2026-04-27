@@ -519,13 +519,12 @@ export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfi
 
   const realmUpdate: Record<string, unknown> = { attributes }
 
-  // Sync brand name + logo → Keycloak login page heading (displayName + displayNameHtml)
+  // Sync brand name → Keycloak login page heading (displayName + displayNameHtml)
+  // Note: kcSanitize() in keycloak.v2 template.ftl strips <img>/<svg> tags,
+  // so we only use plain text. The login theme CSS handles visual branding.
   if (settings.name) {
     realmUpdate.displayName = settings.name
-    const logoHtml = settings.logoUrl
-      ? `<img src="${settings.logoUrl}" alt="${settings.name}" style="height:32px;margin-right:8px;vertical-align:middle" />`
-      : ''
-    realmUpdate.displayNameHtml = `<div class="kc-logo-text">${logoHtml}<span>${settings.name}</span></div>`
+    realmUpdate.displayNameHtml = settings.name
   }
 
   // Sync loginTheme → Keycloak realm login theme
