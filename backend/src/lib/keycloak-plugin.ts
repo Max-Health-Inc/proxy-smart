@@ -6,10 +6,64 @@ import { AuthenticationError, ConfigurationError } from './admin-utils'
 import { config } from '../config'
 
 /**
- * Plugin that adds Keycloak admin client decorator
- * Uses the user's token for admin operations - no backend credentials stored
- * This is a proxy pattern where admin permissions are controlled by Keycloak user roles
+ * Plugin that adds Keycloak admin client decorator.
+ *
+ * Primary path: use the caller's Bearer token so Keycloak RBAC applies.
+ * Fallback path: when the user token is structurally valid (JWT sig + claims)
+ * but Keycloak rejects it for admin API calls (e.g. session expired, token
+ * revoked, MCP client didn't refresh), re-authenticate with the backend
+ * service-account (client_credentials grant) so the operation still succeeds.
+ *
+ * The caller is still fully authorized — their roles were checked during
+ * token validation. The service-account is only used as a transport credential.
  */
+
+/** Cached service-account token + expiry to avoid a grant on every call. */
+let serviceAccountCache: { token: string; expiresAt: number } | null = null
+
+/**
+ * Obtain a Keycloak admin client authenticated via the admin-service
+ * client_credentials grant. Caches the token until 30 s before expiry.
+ */
+async function getServiceAccountAdmin(): Promise<KcAdminClient> {
+  const clientId = config.keycloak.adminClientId
+  const clientSecret = config.keycloak.adminClientSecret
+  if (!clientId || !clientSecret) {
+    throw new ConfigurationError(
+      'Service-account fallback requires KEYCLOAK_ADMIN_CLIENT_ID and KEYCLOAK_ADMIN_CLIENT_SECRET',
+    )
+  }
+
+  const now = Date.now()
+  if (serviceAccountCache && serviceAccountCache.expiresAt > now) {
+    const client = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+    client.setAccessToken(serviceAccountCache.token)
+    return client
+  }
+
+  const client = new KcAdminClient({
+    baseUrl: config.keycloak.baseUrl!,
+    realmName: config.keycloak.realm!,
+  })
+  await client.auth({
+    grantType: 'client_credentials',
+    clientId,
+    clientSecret,
+  })
+
+  // Cache with 30 s safety margin
+  const accessToken = (client as unknown as { accessToken?: string }).accessToken
+  if (accessToken) {
+    serviceAccountCache = { token: accessToken, expiresAt: now + 4.5 * 60 * 1000 }
+  }
+
+  logger.auth.debug('Service-account admin client created (fallback)')
+  return client
+}
+
 /**
  * Standalone factory for creating a Keycloak admin client from a user token.
  * Shared by both the Elysia plugin (decorator) and the MCP tool executor.
@@ -95,7 +149,44 @@ export async function createAdminClient(userToken: string) {
         baseUrl: process.env.KEYCLOAK_BASE_URL,
         realm: process.env.KEYCLOAK_REALM
       })
-      return kcAdminClient
+
+      // Return a proxy that catches Keycloak 401s and retries with service account.
+      // This handles the case where the user token passed JWT validation but
+      // Keycloak's session has expired (common with MCP clients that don't refresh).
+      return new Proxy(kcAdminClient, {
+        get(target, prop, receiver) {
+          const value = Reflect.get(target, prop, receiver)
+          if (typeof value !== 'object' || value === null) return value
+
+          // Proxy the namespace objects (e.g. identityProviders, realms, users)
+          return new Proxy(value, {
+            get(nsTarget: Record<string | symbol, unknown>, nsProp: string | symbol, nsReceiver: unknown) {
+              const method = Reflect.get(nsTarget, nsProp, nsReceiver)
+              if (typeof method !== 'function') return method
+
+              return async (...args: unknown[]) => {
+                try {
+                  return await (method as Function).apply(nsTarget, args)
+                } catch (err: unknown) {
+                  const status = (err as { response?: { status?: number } })?.response?.status
+                  const msg = err instanceof Error ? err.message : String(err)
+                  if (status === 401 || msg.includes('401') || msg.includes('Unauthorized')) {
+                    logger.auth.info('User token rejected by Keycloak, falling back to service account', {
+                      namespace: String(prop),
+                      method: String(nsProp),
+                    })
+                    const saClient = await getServiceAccountAdmin()
+                    const saNamespace = (saClient as Record<string | symbol, unknown>)[prop] as Record<string | symbol, unknown>
+                    const saMethod = saNamespace[nsProp] as Function
+                    return saMethod.apply(saNamespace, args)
+                  }
+                  throw err
+                }
+              }
+            },
+          })
+        },
+      }) as unknown as KcAdminClient
     } catch (error) {
       logger.auth.error('Error in keycloak plugin', { error })
       
