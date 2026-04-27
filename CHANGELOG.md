@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604272012.f4f1f7b3] - 2026-04-27
+
+- 🔧 Chores & Improvements: Remove service-account fallback flow; always use caller's Bearer token and drop service-account cache and admin logic. Update RBAC enforcement documentation to reflect direct token-based checks.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/593
+
+
 ## [0.0.9-alpha.202604272007.ad815d0a] - 2026-04-27
 
 - 🔧 Chores & Improvements: Version bumps across multiple packages to 0.0.9-alpha.202604271326.1163fe78
