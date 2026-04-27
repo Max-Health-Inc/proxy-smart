@@ -66,9 +66,10 @@ Dockerfile*
 docker-compose*.yml
 .dockerignore
 
-# Keycloak (exclude everything except realm export files)
+# Keycloak (exclude everything except realm export files and themes)
 keycloak/
 !keycloak/realm-export*.json
+!keycloak/themes/
 
 # Agent (if not needed in production)
 agent/
