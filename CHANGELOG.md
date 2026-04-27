@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604272029.bb4d43c9] - 2026-04-27
+
+- 🧪 ⚠️ Breaking Changes: Runtime config now only syncs displayName with name; removed building of HTML badge/logo in realm displayNameHtml (affects KC realm export and display). Plain text displayName maintained.
+- 🔧 Chores & Improvements: Added proxy-smart brand.css and integrated into theme styles for login; new CSS to render a heart icon and customize realm name visuals.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/594
+
+
 ## [0.0.9-alpha.202604272012.f4f1f7b3] - 2026-04-27
 
 - 🔧 Chores & Improvements: Remove service-account fallback flow; always use caller's Bearer token and drop service-account cache and admin logic. Update RBAC enforcement documentation to reflect direct token-based checks.
