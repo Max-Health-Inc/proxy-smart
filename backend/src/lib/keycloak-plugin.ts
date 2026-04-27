@@ -176,7 +176,7 @@ export async function createAdminClient(userToken: string) {
                       method: String(nsProp),
                     })
                     const saClient = await getServiceAccountAdmin()
-                    const saNamespace = (saClient as Record<string | symbol, unknown>)[prop] as Record<string | symbol, unknown>
+                    const saNamespace = (saClient as unknown as Record<string | symbol, unknown>)[prop] as Record<string | symbol, unknown>
                     const saMethod = saNamespace[nsProp] as Function
                     return saMethod.apply(saNamespace, args)
                   }
