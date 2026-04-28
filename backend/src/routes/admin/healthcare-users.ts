@@ -19,7 +19,8 @@ import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, mapHealth
 import { logger } from '@/lib/logger'
 
 /** Shared error handler for Keycloak admin errors */
-function handleKeycloakError(error: unknown, set: { status: number }, action: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function handleKeycloakError(error: unknown, set: { status?: any }, action: string) {
   if (error instanceof AuthenticationError) {
     set.status = 401
     return UNAUTHORIZED_RESPONSE

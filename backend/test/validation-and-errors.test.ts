@@ -17,7 +17,7 @@ const buildValidatedApp = () => {
     })
     .post(
       '/sum',
-      ({ body }) => ({ sum: (body as any).a + (body as any).b }),
+      ({ body }) => ({ sum: (body as Record<string, number>).a + (body as Record<string, number>).b }),
       {
         body: t.Object({ a: t.Number(), b: t.Number() })
       }

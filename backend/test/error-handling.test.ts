@@ -10,7 +10,7 @@ const createErrorApp = () => {
       throw new Error('async boom')
     })
     .post('/validate', async ({ body }) => {
-      const parsed = body as any
+      const parsed = body as Record<string, unknown>
       if (!parsed || typeof parsed !== 'object' || !('name' in parsed) || !parsed.name) {
         return new Response(JSON.stringify({ error: 'name required' }), {
           status: 400,

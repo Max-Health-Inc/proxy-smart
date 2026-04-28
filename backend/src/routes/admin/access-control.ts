@@ -43,7 +43,7 @@ import {
   SaveAccessControlConfigResponse,
   IdParam,
 } from '@/schemas/admin/access-control'
-import type { SyncResponseType, AccessHealthResponseType, AccessControlConfigStatusType, TestAccessControlConfigResponseType, SaveAccessControlConfigResponseType } from '@/schemas/admin/access-control'
+import type { SyncResponseType, AccessHealthResponseType, TestAccessControlConfigResponseType, SaveAccessControlConfigResponseType } from '@/schemas/admin/access-control'
 import type { ErrorResponseType } from '@/schemas'
 import type { KeycloakUserIdentity, AccessControlProvider, AccessMember, AccessGroupDoor } from '@/lib/access-control/types'
 import fs from 'fs'
