@@ -7,6 +7,7 @@ import { HealthcareUsersStats } from './HealthcareUsersStats';
 import { HealthcareUserAddForm } from './HealthcareUserAddForm';
 import { HealthcareUserEditForm } from './HealthcareUserEditForm';
 import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } from '@/lib/types/api';
+import type { FederatedIdentity, IdentityProviderResponse } from '@/lib/api-client';
 import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
@@ -123,6 +124,10 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
   const [availableRealmRoles, setAvailableRealmRoles] = useState<string[]>([]);
   const [availableClientRoles, setAvailableClientRoles] = useState<Record<string, string[]>>({ 'admin-ui': [] });
 
+  // Identity providers and per-user federated identities
+  const [availableIdPs, setAvailableIdPs] = useState<IdentityProviderResponse[]>([]);
+  const [editingUserFederatedIdentities, setEditingUserFederatedIdentities] = useState<FederatedIdentity[]>([]);
+
   const getAllAvailableRoles = useCallback(() => {
     const allRoles = [...availableRealmRoles];
     Object.values(availableClientRoles).forEach(roles => {
@@ -146,25 +151,54 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
       })
       .finally(() => setLoading(false));
 
-    // Load roles
+    // Load roles and identity providers
     Promise.all([
       clientApis.roles.getAdminRoles().catch(() => []),
       fetchClientRoles('admin-ui'),
+      clientApis.identityProviders.getAdminIdps().catch(() => []),
     ])
-      .then(([realmRoles, adminUiRoles]) => {
+      .then(([realmRoles, adminUiRoles, idps]) => {
         const realmRoleNames = realmRoles
           .map(r => r.name)
           .filter((n): n is string => !!n)
           .filter(n => !n.startsWith('default-roles-'));
         setAvailableRealmRoles(realmRoleNames);
         setAvailableClientRoles({ 'admin-ui': adminUiRoles });
+        setAvailableIdPs(idps);
       })
       .catch(() => { /* Fallback: leave empty */ });
-  }, [isAuthenticated, clientApis.healthcareUsers, clientApis.roles]);
+  }, [isAuthenticated, clientApis.healthcareUsers, clientApis.roles, clientApis.identityProviders]);
 
   const handleEditUser = (user: HealthcareUserWithPersons) => {
     setEditingUser(user);
     setShowEditForm(true);
+    // Load federated identities for this user
+    setEditingUserFederatedIdentities(user.federatedIdentities ?? []);
+    if (user.id) {
+      clientApis.healthcareUsers.getAdminHealthcareUsersByUserIdFederatedIdentities({ userId: user.id })
+        .then(setEditingUserFederatedIdentities)
+        .catch(() => setEditingUserFederatedIdentities(user.federatedIdentities ?? []));
+    }
+  };
+
+  const handleLinkIdP = async (userId: string, provider: string, idpUserId: string, userName: string) => {
+    await clientApis.healthcareUsers.postAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
+      userId,
+      provider,
+      linkFederatedIdentityRequest: { userId: idpUserId, userName },
+    });
+    // Refresh federated identities
+    const updated = await clientApis.healthcareUsers.getAdminHealthcareUsersByUserIdFederatedIdentities({ userId });
+    setEditingUserFederatedIdentities(updated);
+  };
+
+  const handleUnlinkIdP = async (userId: string, provider: string) => {
+    await clientApis.healthcareUsers.deleteAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
+      userId,
+      provider,
+    });
+    // Remove from local state
+    setEditingUserFederatedIdentities(prev => prev.filter(fi => fi.identityProvider !== provider));
   };
 
   const toggleUserStatus = async (id: string, currentStatus: 'active' | 'inactive') => {
@@ -418,6 +452,10 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
         availableRealmRoles={availableRealmRoles}
         availableClientRoles={availableClientRoles}
         getAllAvailableRoles={getAllAvailableRoles}
+        federatedIdentities={editingUserFederatedIdentities}
+        availableIdPs={availableIdPs}
+        onLinkIdP={handleLinkIdP}
+        onUnlinkIdP={handleUnlinkIdP}
       />
 
       {/* Users Table */}

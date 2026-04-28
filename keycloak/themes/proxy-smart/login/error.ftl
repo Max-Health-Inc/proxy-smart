@@ -13,8 +13,13 @@
                 <#if client?? && client.baseUrl?has_content>
                     <p><a id="backToApplication" href="${client.baseUrl}">${msg("backToApplication")}</a></p>
                 </#if>
-                <#-- Always show a "Back to login" link so users are never stuck -->
-                <p><a id="backToLogin" href="${url.loginUrl}">${msg("backToLogin", "Back to login")}</a></p>
+                <#-- Use loginRestartFlowUrl to start a fresh session instead of resuming the broken one.
+                     Fall back to the realm root URL if loginRestartFlowUrl is unavailable. -->
+                <#if url.loginRestartFlowUrl??>
+                    <p><a id="backToLogin" href="${url.loginRestartFlowUrl}">&laquo; Back to login</a></p>
+                <#else>
+                    <p><a id="backToLogin" href="/auth/realms/${realm.name}/account">&laquo; Back to login</a></p>
+                </#if>
             </#if>
         </div>
     </#if>

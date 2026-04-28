@@ -17,15 +17,15 @@ import { Elysia } from 'elysia'
 // Mutable mock state — tests configure these before each run
 // ---------------------------------------------------------------------------
 
-let capturedCreatePayload: any = null
-let capturedUpdateQuery: any = null
-let capturedUpdatePayload: any = null
-let mockClientsList: any[] = []
-let mockFindOneResult: any = null
+let capturedCreatePayload: Record<string, unknown> | null = null
+let _capturedUpdateQuery: Record<string, unknown> | null = null
+let capturedUpdatePayload: Record<string, unknown> | null = null
+let mockClientsList: Record<string, unknown>[] = []
+let mockFindOneResult: Record<string, unknown> | null = null
 
 // Track init-level update calls (routed when kcClientsFindResult is non-empty)
-let kcClientsFindResult: any[] = []
-let kcClientsUpdateCalls: Array<{ query: any; payload: any }> = []
+let kcClientsFindResult: Record<string, unknown>[] = []
+let kcClientsUpdateCalls: Array<{ query: Record<string, unknown>; payload: Record<string, unknown> }> = []
 
 // ---------------------------------------------------------------------------
 // Module-level mocks — must be before imports that depend on them
@@ -55,24 +55,24 @@ mock.module('@keycloak/keycloak-admin-client', () => ({
   default: class MockKcAdminClient {
     constructor() {}
     setAccessToken(_token: string) {}
-    async auth(_opts: any) {}
+    async auth(_opts: Record<string, unknown>) {}
     clients = {
-      create: async (payload: any) => {
+      create: async (payload: Record<string, unknown>) => {
         capturedCreatePayload = payload
         return { id: 'new-id' }
       },
-      find: async (query?: any) => {
+      find: async (query?: Record<string, unknown>) => {
         if (kcClientsFindResult.length > 0) return kcClientsFindResult
-        if (query?.clientId) return mockClientsList.filter((c: any) => c.clientId === query.clientId)
+        if (query?.clientId) return mockClientsList.filter((c) => c.clientId === query.clientId)
         return mockClientsList
       },
       findOne: async () => mockFindOneResult,
-      update: async (query: any, payload: any) => {
+      update: async (query: Record<string, unknown>, payload: Record<string, unknown>) => {
         if (kcClientsFindResult.length > 0) {
           kcClientsUpdateCalls.push({ query, payload })
           return
         }
-        capturedUpdateQuery = query
+        _capturedUpdateQuery = query
         capturedUpdatePayload = payload
       },
       del: async () => {},
@@ -91,7 +91,7 @@ mock.module('@keycloak/keycloak-admin-client', () => ({
         { id: 'scope-web-origins', name: 'web-origins' },
         { id: 'scope-acr', name: 'acr' },
       ],
-      findOne: async (q: any) => ({ id: q.id, name: q.id }),
+      findOne: async (q: Record<string, unknown>) => ({ id: q.id, name: q.id }),
     }
   },
 }))
@@ -107,7 +107,7 @@ import { ensurePostLogoutRedirectUris } from '../src/init'
 function fakeKeycloakClient(opts: {
   id?: string
   clientId?: string
-  attributes?: Record<string, any>
+  attributes?: Record<string, unknown>
   publicClient?: boolean
 }) {
   return {
@@ -209,7 +209,7 @@ describe('Smart-Apps POST / — post.logout.redirect.uris on create', () => {
 describe('Smart-Apps PUT /:clientId — post.logout.redirect.uris on update', () => {
   beforeEach(() => {
     capturedUpdatePayload = null
-    capturedUpdateQuery = null
+    _capturedUpdateQuery = null
     capturedCreatePayload = null
     kcClientsFindResult = [] // ensure route-mode
     mockValidateToken.mockClear()

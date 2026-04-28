@@ -85,7 +85,7 @@ const mapResponseToStats = (provider: IdentityProviderResponse): IdentityProvide
     config,
     vendorName: (provider as IdentityProviderWithStats).vendorName ?? config.displayName,
     status: provider.enabled === false ? 'inactive' : 'active',
-    userCount: 0,
+    userCount: provider.userCount ?? 0,
     lastUsed: new Date().toISOString(),
   };
 };

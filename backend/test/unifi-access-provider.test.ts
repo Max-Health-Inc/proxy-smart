@@ -28,7 +28,7 @@ const mockFloors = [
     location_type: 'floor',
     timezone: 'Europe/Vienna',
     extra_type: '',
-    extras: {} as any,
+    extras: {} as Record<string, unknown>,
     up_id: 'root',
     work_time_id: '',
     work_time: [],
@@ -42,7 +42,7 @@ const mockFloors = [
         location_type: 'door',
         timezone: 'Europe/Vienna',
         extra_type: '',
-        extras: {} as any,
+        extras: {} as Record<string, unknown>,
         work_time_id: '',
         work_time: [],
         camera_resource_ids: [],
@@ -59,10 +59,10 @@ const mockFloors = [
             bom_rev: '',
             capabilities: [],
             connected_uah_id: '',
-            door: {} as any,
+            door: {} as Record<string, unknown>,
             firmware_update_time: 0,
             firmware: '2.0.0',
-            floor: {} as any,
+            floor: {} as Record<string, unknown>,
             guid: '',
             hw_type: '',
             images: { l: '', m: '', s: '', xl: '', xs: '' },
@@ -70,7 +70,7 @@ const mockFloors = [
             is_adopted: true,
             is_managed: true,
             is_rebooting: false,
-            location: {} as any,
+            location: {} as Record<string, unknown>,
             location_id: 'door-1',
             mac: 'AA:BB:CC:DD:EE:FF',
             model: 'UA-G2-Pro',
@@ -84,10 +84,10 @@ const mockFloors = [
             source_id: '',
             start_time: 0,
             update: '',
-            update_manual: {} as any,
+            update_manual: {} as Record<string, unknown>,
             version_update_time: 0,
             version: '2.0.0',
-          } as any,
+          } as unknown,
         ],
       },
       {
@@ -99,7 +99,7 @@ const mockFloors = [
         location_type: 'door',
         timezone: 'Europe/Vienna',
         extra_type: '',
-        extras: {} as any,
+        extras: {} as Record<string, unknown>,
         work_time_id: '',
         work_time: [],
         camera_resource_ids: [],
@@ -111,7 +111,7 @@ const mockFloors = [
             device_type: 'UA-Hub',
             is_connected: false,
             is_online: false,
-          } as any,
+          } as unknown,
         ],
       },
     ],
@@ -124,7 +124,7 @@ const mockFloors = [
     location_type: 'floor',
     timezone: 'Europe/Vienna',
     extra_type: '',
-    extras: {} as any,
+    extras: {} as Record<string, unknown>,
     up_id: 'root',
     work_time_id: '',
     work_time: [],
@@ -151,6 +151,7 @@ describe('UnifiAccessProvider', () => {
     provider = new UnifiAccessProvider(createMockConfig())
 
     // Inject mock data by accessing the private api field
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private field for test setup
     const api = (provider as any).api
     Object.defineProperty(api, 'bootstrap', { get: () => ({ floors: mockFloors }) })
     Object.defineProperty(api, 'floors', { get: () => mockFloors })
@@ -158,6 +159,7 @@ describe('UnifiAccessProvider', () => {
     Object.defineProperty(api, 'devices', { get: () => mockDevices })
 
     // Mark as bootstrapped so we skip login
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private field for test setup
     ;(provider as any).bootstrapped = true
   })
 
@@ -254,6 +256,7 @@ describe('UnifiAccessProvider', () => {
 
   describe('unlock', () => {
     it('calls api.unlock with the correct device', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private field for test
       const api = (provider as any).api
       api.unlock = mock(() => Promise.resolve(true))
 
@@ -267,6 +270,7 @@ describe('UnifiAccessProvider', () => {
     })
 
     it('throws when unlock command fails', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accessing private field for test
       const api = (provider as any).api
       api.unlock = mock(() => Promise.resolve(false))
 
