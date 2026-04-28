@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604282337.e7f0fd37] - 2026-04-28
+
+- ✨ Features: 
+  - UI/admin: Support federated identities and IdP linking/unlinking; added federatedIdentities and onLinkIdP/onUnlink props.
+  - Admin/identity providers: Fetch and attach parallel userCounts to providers.
+
+- 🔧 Chores & Improvements:
+  - Metrics/logging: Introduced UTC-based sparse hourly bucketing and in-memory event utilities; added monitoring thresholds.
+  - General: Version bumps across multiple apps/components to 0.0.9-alpha.202604282337.e7f0fd37.
+
+- 🚧 Documentation:
+  - (No explicit docs changes detected.)
+
+- ⚠️ Breaking Changes:
+  - (No breaking changes detected.)
+
+- 🐛 Bug Fixes:
+  - (No specific user-facing bug fixes detected.)
+
+Note: Only changes since last release included; merge/update commits omitted.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/597
+
+
 ## [0.0.9-alpha.202604280055.22eda139] - 2026-04-28
 
 - ✨ Features: Added federated identities support in UI admin forms with IdP linking/unlinking capabilities; IdP responses now include user counts and fetched in parallel. 
