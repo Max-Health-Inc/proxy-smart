@@ -176,7 +176,8 @@ describe('Smart-Apps POST / — post.logout.redirect.uris on create', () => {
 
     expect(res.status).toBe(200)
     expect(capturedCreatePayload).not.toBeNull()
-    expect(capturedCreatePayload.attributes['post.logout.redirect.uris']).toBe('+')
+    const createAttrs = (capturedCreatePayload as Record<string, Record<string, string>>).attributes
+    expect(createAttrs['post.logout.redirect.uris']).toBe('+')
   })
 
   it('sets post.logout.redirect.uris alongside PKCE config', async () => {
@@ -197,8 +198,9 @@ describe('Smart-Apps POST / — post.logout.redirect.uris on create', () => {
 
     expect(res.status).toBe(200)
     expect(capturedCreatePayload).not.toBeNull()
-    expect(capturedCreatePayload.attributes['post.logout.redirect.uris']).toBe('+')
-    expect(capturedCreatePayload.attributes['pkce.code.challenge.method']).toBe('S256')
+    const pkceAttrs = (capturedCreatePayload as Record<string, Record<string, string>>).attributes
+    expect(pkceAttrs['post.logout.redirect.uris']).toBe('+')
+    expect(pkceAttrs['pkce.code.challenge.method']).toBe('S256')
   })
 })
 
@@ -245,7 +247,8 @@ describe('Smart-Apps PUT /:clientId — post.logout.redirect.uris on update', ()
 
     expect(res.status).toBe(200)
     expect(capturedUpdatePayload).not.toBeNull()
-    expect(capturedUpdatePayload.attributes['post.logout.redirect.uris']).toBe('+')
+    const updateAttrs = (capturedUpdatePayload as Record<string, Record<string, string>>).attributes
+    expect(updateAttrs['post.logout.redirect.uris']).toBe('+')
   })
 
   it('defaults post.logout.redirect.uris to "+" when existing client lacks it', async () => {
@@ -270,7 +273,8 @@ describe('Smart-Apps PUT /:clientId — post.logout.redirect.uris on update', ()
 
     expect(res.status).toBe(200)
     expect(capturedUpdatePayload).not.toBeNull()
-    expect(capturedUpdatePayload.attributes['post.logout.redirect.uris']).toBe('+')
+    const defaultAttrs = (capturedUpdatePayload as Record<string, Record<string, string>>).attributes
+    expect(defaultAttrs['post.logout.redirect.uris']).toBe('+')
   })
 })
 
@@ -299,8 +303,10 @@ describe('ensurePostLogoutRedirectUris — startup repair', () => {
     await ensurePostLogoutRedirectUris()
 
     expect(kcClientsUpdateCalls.length).toBe(2)
-    expect(kcClientsUpdateCalls[0].payload.attributes['post.logout.redirect.uris']).toBe('+')
-    expect(kcClientsUpdateCalls[1].payload.attributes['post.logout.redirect.uris']).toBe('+')
+    const attrs0 = (kcClientsUpdateCalls[0].payload as Record<string, Record<string, string>>).attributes
+    const attrs1 = (kcClientsUpdateCalls[1].payload as Record<string, Record<string, string>>).attributes
+    expect(attrs0['post.logout.redirect.uris']).toBe('+')
+    expect(attrs1['post.logout.redirect.uris']).toBe('+')
   })
 
   it('skips internal Keycloak clients', async () => {

@@ -108,7 +108,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const components = await admin.components.find({ type: PROVIDER_TYPE })
-      const ldap = components.filter((c: Record<string, unknown>) => c.providerId === 'ldap')
+      const ldap = components.filter((c) => c.providerId === 'ldap')
       return { count: ldap.length, total: components.length }
     })
 
@@ -118,7 +118,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const components = await admin.components.find({ type: PROVIDER_TYPE })
-      return components.filter((c: Record<string, unknown>) => c.providerId === 'ldap')
+      return components.filter((c) => c.providerId === 'ldap')
     })
 
     // Create
@@ -179,7 +179,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const syncBody = body as { action: string }
-      const result = await admin.userStorageProvider.sync({ id: params.id, action: syncBody.action as string })
+      const result = await admin.userStorageProvider.sync({ id: params.id, action: syncBody.action as 'triggerFullSync' | 'triggerChangedUsersSync' })
       return result
     })
 
@@ -413,7 +413,7 @@ describe('User Federation Routes', () => {
     })
 
     it('returns 404 when provider does not exist', async () => {
-      mockAdmin.components.findOne = mock(async () => null) as ReturnType<typeof createDefaultComponents>['findOne']
+      mockAdmin.components.findOne = mock(async () => null) as unknown as ReturnType<typeof createDefaultComponents>['findOne']
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/nonexistent'))
       expect(res.status).toBe(404)
@@ -444,7 +444,7 @@ describe('User Federation Routes', () => {
     })
 
     it('returns 404 when updating nonexistent provider', async () => {
-      mockAdmin.components.findOne = mock(async () => null) as ReturnType<typeof createDefaultComponents>['findOne']
+      mockAdmin.components.findOne = mock(async () => null) as unknown as ReturnType<typeof createDefaultComponents>['findOne']
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('PUT', '/nonexistent', { name: 'x' }))
       expect(res.status).toBe(404)
