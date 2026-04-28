@@ -6,6 +6,20 @@ import { AttributesMap } from './common'
  */
 
 /**
+ * Federated identity link - represents a social/IdP login linked to a user
+ */
+export const FederatedIdentity = t.Object({
+  identityProvider: t.String({ description: 'Identity provider alias' }),
+  userId: t.String({ description: 'User ID at the identity provider' }),
+  userName: t.String({ description: 'Username at the identity provider' })
+}, { title: 'FederatedIdentity' })
+
+export const LinkFederatedIdentityRequest = t.Object({
+  userId: t.String({ description: 'User ID at the identity provider' }),
+  userName: t.String({ description: 'Username at the identity provider' })
+}, { title: 'LinkFederatedIdentityRequest' })
+
+/**
  * FHIR Person association - links a user to a Person resource on a specific FHIR server
  */
 export const FhirPersonAssociation = t.Object({
@@ -34,7 +48,10 @@ export const HealthcareUser = t.Object({
   
   // Additional user properties
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
-  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' }))
+  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' })),
+  
+  // Federated identity links (social/IdP logins)
+  federatedIdentities: t.Optional(t.Array(FederatedIdentity, { description: 'Linked identity provider accounts' }))
 }, { title: 'HealthcareUser' })
 
 export const CreateHealthcareUserRequest = t.Object({
@@ -76,6 +93,8 @@ export const UserIdParam = t.Object({
 
 // TypeScript type inference helpers
 export type FhirPersonAssociationType = Static<typeof FhirPersonAssociation>
+export type FederatedIdentityType = Static<typeof FederatedIdentity>
+export type LinkFederatedIdentityRequestType = Static<typeof LinkFederatedIdentityRequest>
 export type HealthcareUserType = Static<typeof HealthcareUser>
 export type CreateHealthcareUserRequestType = Static<typeof CreateHealthcareUserRequest>
 export type UpdateHealthcareUserRequestType = Static<typeof UpdateHealthcareUserRequest>

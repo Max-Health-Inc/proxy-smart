@@ -95,7 +95,8 @@ export const IdentityProviderResponse = t.Object({
   postBrokerLoginFlowAlias: t.Optional(t.String()),
   storeToken: t.Optional(t.Boolean()),
   trustEmail: t.Optional(t.Boolean()),
-  organizationId: t.Optional(t.String())
+  organizationId: t.Optional(t.String()),
+  userCount: t.Optional(t.Number({ description: 'Number of users linked via this identity provider' }))
 }, { title: 'IdentityProviderResponse' })
 
 // TypeScript type inference helpers

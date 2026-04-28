@@ -8,12 +8,37 @@ import {
   CreateHealthcareUserRequest,
   UpdateHealthcareUserRequest,
   UserIdParam,
+  FederatedIdentity,
+  LinkFederatedIdentityRequest,
   HealthcareUserType,
   SuccessResponseType,
   ErrorResponseType
 } from '@/schemas'
+import type { LinkFederatedIdentityRequestType } from '@/schemas'
 import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, mapHealthcareUser, AuthenticationError } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
+
+/** Shared error handler for Keycloak admin errors */
+function handleKeycloakError(error: unknown, set: { status: number }, action: string) {
+  if (error instanceof AuthenticationError) {
+    set.status = 401
+    return UNAUTHORIZED_RESPONSE
+  }
+  const errorObj = error as Record<string, unknown>
+  const response = errorObj?.response as Record<string, unknown> | undefined
+  const keycloakStatus = response?.status as number | undefined
+  if (keycloakStatus && typeof keycloakStatus === 'number') {
+    set.status = keycloakStatus
+    if (keycloakStatus === 401) return UNAUTHORIZED_RESPONSE
+    if (keycloakStatus === 403) return { error: 'Forbidden - Insufficient permissions' }
+    if (keycloakStatus === 404) return { error: 'Resource not found' }
+    if (keycloakStatus === 409) return { error: 'Conflict - Link already exists' }
+    return { error: 'Keycloak error', details: error instanceof Error ? error.message : String(error) }
+  }
+  logger.admin.error(`Failed to ${action}`, { error })
+  set.status = 500
+  return { error: `Failed to ${action}`, details: error instanceof Error ? error.message : String(error) }
+}
 
 /**
  * Healthcare User Management - specialized for healthcare professionals
@@ -108,13 +133,27 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         
         // Use custom attributes for additional info
         const organization = user.attributes?.organization?.[0] || ''
+
+        // Get federated identity links
+        let federatedIdentities: { identityProvider: string; userId: string; userName: string }[] = []
+        try {
+          const links = await admin.users.listFederatedIdentities({ id: user.id! })
+          federatedIdentities = links.map(link => ({
+            identityProvider: link.identityProvider ?? '',
+            userId: link.userId ?? '',
+            userName: link.userName ?? ''
+          }))
+        } catch (fedError) {
+          logger.admin.warn(`Could not get federated identities for user ${user.username}`, { error: fedError })
+        }
         
         return {
           ...profile,
           realmRoles,
           clientRoles,
           organization,
-          lastLogin: lastLogin
+          lastLogin: lastLogin,
+          federatedIdentities
         }
       }))
       
@@ -552,6 +591,97 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
     detail: {
       summary: 'Delete Healthcare User',
       description: 'Delete a healthcare user by userId',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  // ── Federated Identity (IdP Link) Management ──────────────────────────
+
+  .get('/:userId/federated-identities', async ({ getAdmin, params, set, headers }) => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+      const identities = await admin.users.listFederatedIdentities({ id: params.userId })
+      return identities.map(id => ({
+        identityProvider: id.identityProvider ?? '',
+        userId: id.userId ?? '',
+        userName: id.userName ?? ''
+      }))
+    } catch (error) {
+      return handleKeycloakError(error, set, 'fetch federated identities')
+    }
+  }, {
+    params: UserIdParam,
+    response: { 200: t.Array(FederatedIdentity), ...CommonErrorResponses },
+    detail: {
+      summary: 'List Federated Identities',
+      description: 'Get all identity provider links for a user',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  .post('/:userId/federated-identities/:provider', async ({ getAdmin, params, body, set, headers }) => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+      const linkBody = body as LinkFederatedIdentityRequestType
+      await admin.users.addToFederatedIdentity({
+        id: params.userId,
+        federatedIdentityId: params.provider,
+        federatedIdentity: {
+          identityProvider: params.provider,
+          userId: linkBody.userId,
+          userName: linkBody.userName
+        }
+      })
+      return { success: true, message: `Linked identity provider '${params.provider}'` }
+    } catch (error) {
+      return handleKeycloakError(error, set, 'link federated identity')
+    }
+  }, {
+    params: t.Object({
+      userId: t.String({ description: 'User ID' }),
+      provider: t.String({ description: 'Identity provider alias' })
+    }),
+    body: LinkFederatedIdentityRequest,
+    response: { 200: SuccessResponse, ...CommonErrorResponses },
+    detail: {
+      summary: 'Link Federated Identity',
+      description: 'Link an identity provider account to a user',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  .delete('/:userId/federated-identities/:provider', async ({ getAdmin, params, set, headers }) => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+      await admin.users.delFromFederatedIdentity({
+        id: params.userId,
+        federatedIdentityId: params.provider
+      })
+      return { success: true, message: `Unlinked identity provider '${params.provider}'` }
+    } catch (error) {
+      return handleKeycloakError(error, set, 'unlink federated identity')
+    }
+  }, {
+    params: t.Object({
+      userId: t.String({ description: 'User ID' }),
+      provider: t.String({ description: 'Identity provider alias' })
+    }),
+    response: { 200: SuccessResponse, ...CommonErrorResponses },
+    detail: {
+      summary: 'Unlink Federated Identity',
+      description: 'Remove an identity provider link from a user',
       tags: ['healthcare-users'],
       security: [{ BearerAuth: [] }]
     }

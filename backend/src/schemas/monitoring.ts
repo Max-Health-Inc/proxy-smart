@@ -34,7 +34,7 @@ export const MonitoringHealthResponse = t.Object({
   }),
   network: t.Object({
     status: t.String({ description: 'Network status' }),
-    throughput: t.String({ description: 'Requests per minute' }),
+    throughput: t.Number({ description: 'Requests per minute (measured over last 60s)' }),
     errorRate: t.Number({ description: 'Error rate percentage' })
   }),
   alerts: t.Array(AlertInfo, { description: 'System alerts' }),
@@ -236,6 +236,8 @@ export const FhirProxyEventSchema = t.Object({
   statusCode: t.Number({ description: 'HTTP response status code' }),
   responseTimeMs: t.Number({ description: 'Response time in milliseconds' }),
   clientId: t.Optional(t.String({ description: 'OAuth client ID' })),
+  userId: t.Optional(t.String({ description: 'Authenticated user ID' })),
+  username: t.Optional(t.String({ description: 'Authenticated username' })),
   error: t.Optional(t.String({ description: 'Error description' })),
 }, { title: 'FhirProxyEvent' })
 
