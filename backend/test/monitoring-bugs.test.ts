@@ -347,7 +347,7 @@ describe('Bug 5: Hourly stats must use consistent UTC bucketing', () => {
 
     // Local-time-based (buggy, used by oauth/consent)
     const localDate = new Date(ts)
-    const localHour = localDate.getHours() // depends on server TZ
+    const _localHour = localDate.getHours() // depends on server TZ
 
     // In UTC+0, these match. In any other TZ, they diverge.
     // We assert that the correct approach is always UTC:
