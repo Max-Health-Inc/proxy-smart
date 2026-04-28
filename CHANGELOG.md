@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604280055.22eda139] - 2026-04-28
+
+- ✨ Features: Added federated identities support in UI admin forms with IdP linking/unlinking capabilities; IdP responses now include user counts and fetched in parallel. 
+- 🔧 Chores & Improvements: Refactored hourly metrics bucketing to UTC-based sparse buckets; introduced in-memory event utilities and monitoring thresholds for enhanced observability. 
+- 🔧 Chores & Improvements: Version bumps across multiple apps to 0.0.9-alpha → 0.0.9-beta in preparation for release. 
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/596
+
+
 ## [0.0.9-alpha.202604272029.bb4d43c9] - 2026-04-27
 
 - 🧪 ⚠️ Breaking Changes: Runtime config now only syncs displayName with name; removed building of HTML badge/logo in realm displayNameHtml (affects KC realm export and display). Plain text displayName maintained.
