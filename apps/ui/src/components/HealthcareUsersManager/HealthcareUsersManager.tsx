@@ -5,7 +5,7 @@ import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';
 import { HealthcareUsersStats } from './HealthcareUsersStats';
 import { HealthcareUserAddForm } from './HealthcareUserAddForm';
-import { HealthcareUserEditForm } from './HealthcareUserEditForm';
+import { HealthcareUserEditForm, type PendingIdPOperation } from './HealthcareUserEditForm';
 import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } from '@/lib/types/api';
 import type { FederatedIdentity, IdentityProviderResponse } from '@/lib/api-client';
 import { useFhirServers } from '@/stores/smartStore';
@@ -179,26 +179,6 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
         .then(setEditingUserFederatedIdentities)
         .catch(() => setEditingUserFederatedIdentities(user.federatedIdentities ?? []));
     }
-  };
-
-  const handleLinkIdP = async (userId: string, provider: string, idpUserId: string, userName: string) => {
-    await clientApis.healthcareUsers.postAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
-      userId,
-      provider,
-      linkFederatedIdentityRequest: { userId: idpUserId, userName },
-    });
-    // Refresh federated identities
-    const updated = await clientApis.healthcareUsers.getAdminHealthcareUsersByUserIdFederatedIdentities({ userId });
-    setEditingUserFederatedIdentities(updated);
-  };
-
-  const handleUnlinkIdP = async (userId: string, provider: string) => {
-    await clientApis.healthcareUsers.deleteAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
-      userId,
-      provider,
-    });
-    // Remove from local state
-    setEditingUserFederatedIdentities(prev => prev.filter(fi => fi.identityProvider !== provider));
   };
 
   const toggleUserStatus = async (id: string, currentStatus: 'active' | 'inactive') => {
@@ -395,7 +375,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
           setShowEditForm(false);
           setEditingUser(null);
         }}
-        onSubmit={async (formData) => {
+        onSubmit={async (formData, pendingIdPOps) => {
           try {
             setSubmitting(true);
             setError(null);
@@ -416,6 +396,28 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
               userId: formData.id,
               updateHealthcareUserRequest: updateRequest
             });
+
+            // Execute pending IdP operations after successful user update
+            for (const op of pendingIdPOps) {
+              if (op.type === 'unlink') {
+                await clientApis.healthcareUsers.deleteAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
+                  userId: formData.id,
+                  provider: op.provider,
+                });
+              } else if (op.type === 'link') {
+                await clientApis.healthcareUsers.postAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
+                  userId: formData.id,
+                  provider: op.provider,
+                  linkFederatedIdentityRequest: { userId: op.idpUserId, userName: op.userName },
+                });
+              }
+            }
+
+            // Refresh federated identities if any IdP ops were executed
+            if (pendingIdPOps.length > 0) {
+              const updatedIdentities = await clientApis.healthcareUsers.getAdminHealthcareUsersByUserIdFederatedIdentities({ userId: formData.id });
+              setEditingUserFederatedIdentities(updatedIdentities);
+            }
 
             // Update the user in the local state
             const transformedUser = transformApiUser(updatedUser);
@@ -454,8 +456,6 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
         getAllAvailableRoles={getAllAvailableRoles}
         federatedIdentities={editingUserFederatedIdentities}
         availableIdPs={availableIdPs}
-        onLinkIdP={handleLinkIdP}
-        onUnlinkIdP={handleUnlinkIdP}
       />
 
       {/* Users Table */}
