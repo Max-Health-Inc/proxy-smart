@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604282343.fd4ad718] - 2026-04-29
+
+- 🔧 Chores & Improvements: Replace jwks-rsa usage with built-in crypto for JWK→PEM conversion in verifyJwtSignature; add createPublicKey import and support for PEM export
+- 🧪 Features: Added backend tests for JWT/token flow with RSA keys and JWKS mock (backend/test/backend-services.test.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/598
+
+
 ## [0.0.9-alpha.202604282337.e7f0fd37] - 2026-04-28
 
 - ✨ Features: 
