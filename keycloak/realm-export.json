@@ -462,6 +462,26 @@
       }
     },
     {
+      "name": "user/Claim.cud",
+      "description": "SMART on FHIR v2: Create, update, delete Claims",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Create, update, and delete insurance claims"
+      }
+    },
+    {
+      "name": "user/QuestionnaireResponse.cud",
+      "description": "SMART on FHIR v2: Create, update, delete QuestionnaireResponses",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Create, update, and delete questionnaire responses"
+      }
+    },
+    {
       "name": "user/*.*",
       "description": "SMART on FHIR: Full access to user's data",
       "protocol": "openid-connect",
@@ -910,7 +930,9 @@
         "patient/*.*",
         "user/*.read",
         "user/*.write",
-        "user/*.*"
+        "user/*.*",
+        "user/Claim.cud",
+        "user/QuestionnaireResponse.cud"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
