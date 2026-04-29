@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604291402.356eaf91] - 2026-04-29
+
+- 🔧 Chores & Improvements: CI/CD and maintenance across multiple packages
+  - Minor UI updates: added Undo2 icon import and pending IdP operation types; export and integrate PendingIdPOperation in HealthcareUserEditForm/UsersManager
+  - Backend: replace jwks-rsa with built-in crypto for JWK→PEM conversion; add createPublicKey usage and PEM export
+  - Tests: introduce backend-services test suite with RSA keys, JWKS mock, and fetch mocking to cover token flow
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/599
+
+
 ## [0.0.9-alpha.202604282343.fd4ad718] - 2026-04-29
 
 - 🔧 Chores & Improvements: Replace jwks-rsa usage with built-in crypto for JWK→PEM conversion in verifyJwtSignature; add createPublicKey import and support for PEM export
