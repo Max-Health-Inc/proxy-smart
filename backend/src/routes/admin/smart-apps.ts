@@ -25,6 +25,49 @@ function getAttr(attrs: Record<string, string | string[]> | undefined, key: stri
   return typeof val === 'string' ? val : undefined
 }
 
+/** SMART scope pattern: context/Resource.permissions */
+const SMART_SCOPE_PATTERN = /^(patient|user|system|agent)\/([\w*]+)\.(([cruds]+)|\*|read|write)$/
+
+/**
+ * Auto-create missing SMART client scopes in Keycloak.
+ * For each scope name that matches the SMART pattern but doesn't exist,
+ * creates a new client scope so it can be assigned to clients.
+ * Returns the updated list of all client scopes.
+ */
+async function ensureScopesExist(
+  admin: KcAdminClient,
+  scopeNames: string[],
+  existingScopes: { id?: string; name?: string }[]
+): Promise<{ id?: string; name?: string }[]> {
+  const existingNames = new Set(existingScopes.map(s => s.name))
+  let updatedScopes = [...existingScopes]
+
+  for (const name of scopeNames) {
+    if (existingNames.has(name)) continue
+    if (!SMART_SCOPE_PATTERN.test(name)) continue
+
+    try {
+      const created = await admin.clientScopes.create({
+        name,
+        description: `SMART scope: ${name}`,
+        protocol: 'openid-connect',
+        attributes: {
+          'include.in.token.scope': 'true',
+          'display.on.consent.screen': 'true',
+          'consent.screen.text': name,
+        },
+      })
+      updatedScopes.push({ id: created.id, name })
+      existingNames.add(name)
+      logger.admin.info('Auto-created missing SMART scope', { name, id: created.id })
+    } catch (err) {
+      logger.admin.warn('Failed to auto-create SMART scope', { name, error: err })
+    }
+  }
+
+  return updatedScopes
+}
+
 /** Valid literal values for schema-validated enums */
 const VALID_APP_TYPES = new Set(['standalone-app', 'ehr-launch', 'backend-service', 'agent'])
 const VALID_SERVER_ACCESS_TYPES = new Set(['all-servers', 'selected-servers', 'user-person-servers'])
@@ -424,7 +467,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         const optionalScopesToAssign = body.optionalClientScopes || []
 
         // Get all available client scopes to find matching ones by name
-        const allClientScopes = await admin.clientScopes.find()
+        let allClientScopes = await admin.clientScopes.find()
+
+        // Auto-create any missing SMART scopes (e.g. user/Claim.cud)
+        const allRequestedScopes = [...defaultScopesToAssign, ...optionalScopesToAssign]
+        allClientScopes = await ensureScopesExist(admin, allRequestedScopes, allClientScopes)
 
         // Find scope IDs for default scopes
         const defaultScopeIds = defaultScopesToAssign
@@ -874,7 +921,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       if (body.defaultClientScopes || body.optionalClientScopes) {
         try {
           // Get all available client scopes to find matching ones by name
-          const allClientScopes = await admin.clientScopes.find()
+          let allClientScopes = await admin.clientScopes.find()
+
+          // Auto-create any missing SMART scopes
+          const allRequestedScopes = [...(body.defaultClientScopes || []), ...(body.optionalClientScopes || [])]
+          allClientScopes = await ensureScopesExist(admin, allRequestedScopes, allClientScopes)
 
           if (body.defaultClientScopes) {
             // Remove all existing default client scopes

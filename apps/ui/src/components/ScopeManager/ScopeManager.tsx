@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { FHIR_RESOURCES, SCOPE_TEMPLATES } from './constants';
 import { ScopeBuilder } from './ScopeBuilder';
 import { ScopeSetsTable } from './ScopeSetsTable';
+import { RegisteredScopes } from './RegisteredScopes';
 import type { BuilderState, ScopeSet, ScopeTemplate, ScopeValidation } from './types';
 
 const INITIAL_BUILDER_STATE: BuilderState = {
@@ -231,6 +232,9 @@ export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
           </div>
         </div>
       )}
+
+      {/* Registered Keycloak Scopes */}
+      <RegisteredScopes embedded />
 
       {/* Scope Builder */}
       {showBuilder && (

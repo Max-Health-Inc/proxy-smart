@@ -99,23 +99,59 @@ mock.module('cross-fetch', () => ({
   default: (...args: unknown[]) => fetchMock(...args),
 }))
 
-mock.module('@/config', () => ({
-  config: {
-    baseUrl: TEST_BASE_URL,
-    keycloak: {
-      baseUrl: TEST_KC_BASE_URL,
-      realm: TEST_REALM,
-      adminClientId: 'admin-service',
-      adminClientSecret: 'admin-secret',
-    },
+// NOTE: mock.module is global in Bun — partial config mocks leak to other
+// test files.  Use a Proxy so only the keys this test cares about are
+// overridden; every other property falls through to safe defaults.
+const configOverrides: Record<string, unknown> = {
+  baseUrl: TEST_BASE_URL,
+  keycloak: {
+    baseUrl: TEST_KC_BASE_URL,
+    realm: TEST_REALM,
+    adminClientId: 'admin-service',
+    adminClientSecret: 'admin-secret',
+    isConfigured: true,
+    publicUrl: TEST_KC_BASE_URL,
+    jwksUri: `${TEST_KC_BASE_URL}/realms/${TEST_REALM}/protocol/openid-connect/certs`,
+    expectedIssuer: `${TEST_KC_BASE_URL}/realms/${TEST_REALM}`,
   },
+}
+
+// Import the real config so non-overridden keys still resolve
+const { config: realConfig } = await import('../src/config')
+
+const proxyConfig = new Proxy(realConfig, {
+  get(target, prop) {
+    if (typeof prop === 'string' && prop in configOverrides) {
+      return configOverrides[prop]
+    }
+    return (target as Record<string | symbol, unknown>)[prop]
+  },
+})
+
+mock.module('@/config', () => ({
+  config: proxyConfig,
 }))
 
 // Suppress logger output in tests
-mock.module('@/lib/logger', () => ({
-  logger: {
-    auth: { info: () => {}, warn: () => {}, error: () => {}, debug: () => {} },
+// NOTE: mock.module is global in Bun — partial mocks leak to other test files.
+// Use a Proxy so every namespace (server, consent, fhir, …) and top-level
+// method (info, debug, …) resolves to a no-op, keeping other suites safe.
+const noop = () => {}
+const noopCategory = { error: noop, warn: noop, info: noop, debug: noop, trace: noop }
+const noopLogger = new Proxy({} as Record<string, unknown>, {
+  get(_target, prop) {
+    if (typeof prop === 'string') {
+      if (['error', 'warn', 'info', 'debug', 'trace'].includes(prop)) return noop
+      return noopCategory
+    }
+    return undefined
   },
+})
+mock.module('@/lib/logger', () => ({
+  logger: noopLogger,
+  createLogger: () => noopLogger,
+  PerformanceTimer: class { start() {} stop() {} },
+  createRequestLogger: () => ({ request: noop, response: noop }),
 }))
 
 // ─── Import after mocking ───────────────────────────────────────────────────
