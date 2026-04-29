@@ -16,8 +16,8 @@
  *   5. Return the token to the client
  */
 
+import { createPublicKey } from 'crypto'
 import jwt from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
 import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
@@ -241,6 +241,7 @@ async function getClientSecret(clientId: string): Promise<string> {
 /**
  * Verify the JWT signature against a JWKS.
  * Finds the matching key by kid (or uses the first key), then verifies.
+ * Uses crypto.createPublicKey to convert JWK → PEM directly (no network fallback).
  */
 async function verifyJwtSignature(
   token: string,
@@ -256,13 +257,9 @@ async function verifyJwtSignature(
     throw new Error(`No matching key found for kid '${header.kid}'`)
   }
 
-  // Use jwks-rsa to convert the JWK to a PEM public key
-  const client = jwksClient({
-    jwksUri: 'https://unused', // not used — we provide keys directly
-    getKeysInterceptor: async () => jwksJson.keys as unknown as import('jwks-rsa').JSONWebKey[]
-  })
-  const signingKey = await client.getSigningKey(matchingKey.kid as string)
-  const publicKey = signingKey.getPublicKey()
+  // Convert JWK to PEM public key using Node's built-in crypto
+  const keyObject = createPublicKey({ key: matchingKey as JsonWebKey, format: 'jwk' })
+  const publicKey = keyObject.export({ type: 'spki', format: 'pem' }) as string
 
   // Verify the token — only check signature, we already validated claims above
   jwt.verify(token, publicKey, {
