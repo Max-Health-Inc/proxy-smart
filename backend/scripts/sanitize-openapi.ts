@@ -15,13 +15,17 @@
 import { readFileSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 
+/** Recursive JSON object type for OpenAPI spec manipulation */
+type JsonObject = { [key: string]: JsonValue }
+type JsonValue = string | number | boolean | null | JsonValue[] | JsonObject
+
 const OPENAPI_PATH = resolve(import.meta.dir, '../dist/openapi.json')
 
 console.log('🔧 Sanitizing OpenAPI spec...')
 
 // Read the OpenAPI spec
 const content = readFileSync(OPENAPI_PATH, 'utf-8')
-const spec = JSON.parse(content)
+const spec = JSON.parse(content) as JsonObject
 
 let changeCount = 0
 
@@ -33,16 +37,16 @@ let changeCount = 0
  * - anyOf containing {type: "null"} → non-null type with nullable: true
  * - standalone {type: "null"} → {nullable: true}
  */
-function downgradeToOpenApi303(obj: any): void {
+function downgradeToOpenApi303(obj: JsonObject): void {
   if (!obj || typeof obj !== 'object') return
   if (Array.isArray(obj)) {
-    for (const item of obj) downgradeToOpenApi303(item)
+    for (const item of obj) if (item && typeof item === 'object' && !Array.isArray(item)) downgradeToOpenApi303(item as JsonObject)
     return
   }
 
   // Convert patternProperties to additionalProperties
   if ('patternProperties' in obj) {
-    const patterns = obj.patternProperties
+    const patterns = obj.patternProperties as JsonObject
     const patternKeys = Object.keys(patterns)
     // Use the first pattern's schema as the additionalProperties schema
     if (patternKeys.length > 0) {
@@ -59,12 +63,13 @@ function downgradeToOpenApi303(obj: any): void {
 
   // Convert anyOf with null type to nullable
   if ('anyOf' in obj && Array.isArray(obj.anyOf)) {
-    const nullIndex = obj.anyOf.findIndex(
-      (s: any) => s && typeof s === 'object' && s.type === 'null'
+    const anyOfArr = obj.anyOf as JsonObject[]
+    const nullIndex = anyOfArr.findIndex(
+      (s) => s && typeof s === 'object' && s.type === 'null'
     )
     if (nullIndex !== -1) {
       // Remove the null variant
-      const nonNull = obj.anyOf.filter((_: any, i: number) => i !== nullIndex)
+      const nonNull = anyOfArr.filter((_, i) => i !== nullIndex)
       if (nonNull.length === 1) {
         // Single remaining type: flatten and add nullable
         const remaining = nonNull[0]
@@ -93,8 +98,11 @@ function downgradeToOpenApi303(obj: any): void {
 
   // Recurse into all nested objects
   for (const key of Object.keys(obj)) {
-    if (typeof obj[key] === 'object' && obj[key] !== null) {
-      downgradeToOpenApi303(obj[key])
+    const val = obj[key]
+    if (val && typeof val === 'object' && !Array.isArray(val)) {
+      downgradeToOpenApi303(val as JsonObject)
+    } else if (Array.isArray(val)) {
+      for (const item of val) if (item && typeof item === 'object' && !Array.isArray(item)) downgradeToOpenApi303(item as JsonObject)
     }
   }
 }
@@ -112,7 +120,7 @@ if (spec.openapi === '3.1.0' || spec.openapi === '3.1.1') {
 // --- Phase 2: Fix incomplete $ref references ---
 
 // Function to recursively fix $ref in an object
-function fixRefs(obj: any): void {
+function fixRefs(obj: JsonObject): void {
   if (!obj || typeof obj !== 'object') return
 
   for (const key in obj) {
@@ -123,7 +131,9 @@ function fixRefs(obj: any): void {
       if (!ref.startsWith('#') && !ref.startsWith('http')) {
         // Check if this schema exists in components
         const schemaName = ref
-        const schemaExists = spec.components?.schemas?.[schemaName]
+        const components = spec.components as JsonObject | undefined
+        const schemas = components?.schemas as JsonObject | undefined
+        const schemaExists = schemas?.[schemaName]
         
         if (schemaExists) {
           // Fix the reference to use proper JSON Pointer
@@ -139,11 +149,12 @@ function fixRefs(obj: any): void {
           changeCount++
         }
       }
-    } else if (typeof obj[key] === 'object') {
-      fixRefs(obj[key])
+    } else if (obj[key] && typeof obj[key] === 'object') {
+      fixRefs(obj[key] as JsonObject)
       
       // Clean up marked objects
-      if (obj[key]?._removeMe) {
+      const nested = obj[key] as JsonObject | null
+      if (nested?._removeMe) {
         // For redirect endpoints, remove the entire content/application/json section
         if (key === 'schema') {
           delete obj[key]
@@ -157,25 +168,30 @@ function fixRefs(obj: any): void {
 fixRefs(spec)
 
 // Clean up responses with empty content for redirect endpoints
-function cleanupEmptyResponses(obj: any): void {
+function cleanupEmptyResponses(obj: JsonObject): void {
   if (!obj || typeof obj !== 'object') return
 
   for (const key in obj) {
-    if (key === 'responses' && typeof obj[key] === 'object') {
-      for (const statusCode in obj[key]) {
-        const response = obj[key][statusCode]
-        if (response.content?.['application/json'] && !response.content['application/json'].schema) {
-          // Remove empty content
-          delete response.content
-          response.description = response.description || 'Redirect response'
-          console.log(`  ✓ Removed empty content from response ${statusCode}`)
-          changeCount++
+    if (key === 'responses' && obj[key] && typeof obj[key] === 'object') {
+      const responses = obj[key] as JsonObject
+      for (const statusCode in responses) {
+        const response = responses[statusCode] as JsonObject
+        if (response?.content && typeof response.content === 'object') {
+          const content = response.content as JsonObject
+          const jsonContent = content['application/json'] as JsonObject | undefined
+          if (jsonContent && !jsonContent.schema) {
+            // Remove empty content
+            delete response.content
+            response.description = response.description || 'Redirect response'
+            console.log(`  ✓ Removed empty content from response ${statusCode}`)
+            changeCount++
+          }
         }
       }
     }
     
-    if (typeof obj[key] === 'object') {
-      cleanupEmptyResponses(obj[key])
+    if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+      cleanupEmptyResponses(obj[key] as JsonObject)
     }
   }
 }
@@ -187,7 +203,7 @@ cleanupEmptyResponses(spec)
 // `requestBody: { content: {}, required: true }` even though `body` schema is defined.
 // See: https://github.com/elysiajs/elysia/issues/1825
 // We inject the proper schema from our TypeBox definitions for affected routes.
-const emptyRequestBodyFixes: Record<string, { title: string; schema: object }> = {
+const emptyRequestBodyFixes: Record<string, { title: string; schema: JsonObject }> = {
   '/auth/token': {
     title: 'TokenRequest',
     schema: {
@@ -219,9 +235,13 @@ const emptyRequestBodyFixes: Record<string, { title: string; schema: object }> =
 
 if (spec.paths) {
   for (const [path, fix] of Object.entries(emptyRequestBodyFixes)) {
-    const operation = (spec.paths as any)[path]?.post
-    if (operation?.requestBody && operation.requestBody.content && Object.keys(operation.requestBody.content).length === 0) {
-      operation.requestBody.content = {
+    const paths = spec.paths as JsonObject
+    const pathObj = paths[path] as JsonObject | undefined
+    const operation = pathObj?.post as JsonObject | undefined
+    const requestBody = operation?.requestBody as JsonObject | undefined
+    const content = requestBody?.content as JsonObject | undefined
+    if (requestBody && content && Object.keys(content).length === 0) {
+      requestBody.content = {
         'application/x-www-form-urlencoded': { schema: fix.schema },
         'application/json': { schema: fix.schema },
       }
@@ -233,9 +253,9 @@ if (spec.paths) {
 
 // Remove WebSocket endpoints (not part of OpenAPI 3.0.x)
 if (spec.paths && typeof spec.paths === 'object') {
-  for (const pathItem of Object.values(spec.paths as Record<string, Record<string, unknown>>)) {
-    if (pathItem && typeof pathItem === 'object' && 'ws' in pathItem) {
-      delete pathItem.ws
+  for (const pathItem of Object.values(spec.paths as JsonObject)) {
+    if (pathItem && typeof pathItem === 'object' && !Array.isArray(pathItem) && 'ws' in pathItem) {
+      delete (pathItem as JsonObject).ws
       console.log(`  ✓ Removed WebSocket endpoint`)
       changeCount++
     }
