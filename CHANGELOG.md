@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-beta.202604302110.bc07682c] - 2026-04-30
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+- ✨ Features:
+  - DTR/Consent/Portal UI: enhanced error UI for expired SHL with new icons and translations; updated icon set usage.
+
+- 🐛 Bug Fixes:
+  - Backend:
+    - CORS: refined origin logic to allow dicomweb paths directly and otherwise whitelist origins.
+    - Keycloak-config: improved error handling by wrapping in try/catch and using handleAdminError.
+    - auth/backend-services: added JWT replay protection.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/612
+
+
 ## [0.0.9-alpha.202604301738.a2ee7edc] - 2026-04-30
 
 - 🔧 Chores & Improvements: Bump all package.json versions to 0.0.9-alpha.202604301738.a2ee7edc across apps, UI, backend, and testing
