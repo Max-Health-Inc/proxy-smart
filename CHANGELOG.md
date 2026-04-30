@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-beta.202604300242.fd141e34] - 2026-04-30
+
+- 🔧 Chores & Improvements: Dependency bumps and alignment
+  - Bump versions to 0.0.9-beta.202604300242.fd141e34 across apps/packages
+  - Add Vue 3 dependency (vue ^3.5.32) in bun.lock and root package.json; align related spread
+  - Remove stray @vue/server-renderer references from root and bun.lock
+  - Ensure vue dependency appears where previously missing in bun.lock/root package.json
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/607
+
+
 ## [0.0.9-alpha.202604300208.b08206e4] - 2026-04-30
 
 - ✨ Features
