@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604301056.b2972881] - 2026-04-30
+
+- ✨ Features: Frontend UI for BackendServicesSettings (URL management) with load/save flow and error handling
+- 🔧 Chores & Improvements: Adjust SmartConfigManager to support BackendServicesSettings and upgrade Tabs grid; minor UI import tweaks (Globe icon)
+- 🔧 Chores & Improvements: Extend admin API to support POST for admin calls
+- 🔧 Chores & Improvements: Backend: add Keycloak frontend URL endpoints and types (GET /frontend-url, related request/response schemas)
+- 🔧 Chores & Improvements: Backend: enhance frontend-url retrieval logic via Keycloak admin client with proper error handling (401/404)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/609
+
+
 ## [0.0.9-beta.202604300242.fd141e34] - 2026-04-30
 
 - 🔧 Chores & Improvements: Dependency bumps and alignment
