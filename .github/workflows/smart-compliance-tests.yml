@@ -255,7 +255,7 @@ jobs:
         if: steps.config.outputs.target != 'deployed'
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: '1.3.13'
 
       - name: Install dependencies
         if: steps.config.outputs.target != 'deployed'
