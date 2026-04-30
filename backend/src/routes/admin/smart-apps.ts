@@ -40,7 +40,7 @@ async function ensureScopesExist(
   existingScopes: { id?: string; name?: string }[]
 ): Promise<{ id?: string; name?: string }[]> {
   const existingNames = new Set(existingScopes.map(s => s.name))
-  let updatedScopes = [...existingScopes]
+  const updatedScopes = [...existingScopes]
 
   for (const name of scopeNames) {
     if (existingNames.has(name)) continue
