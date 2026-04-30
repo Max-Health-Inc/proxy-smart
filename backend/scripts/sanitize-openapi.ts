@@ -182,6 +182,55 @@ function cleanupEmptyResponses(obj: any): void {
 
 cleanupEmptyResponses(spec)
 
+// --- Phase 3: Fix empty requestBody content (Elysia OpenAPI bug with custom `parse` functions) ---
+// When a route uses a custom `parse` function, Elysia's OpenAPI generator emits
+// `requestBody: { content: {}, required: true }` even though `body` schema is defined.
+// See: https://github.com/elysiajs/elysia/issues/1825
+// We inject the proper schema from our TypeBox definitions for affected routes.
+const emptyRequestBodyFixes: Record<string, { title: string; schema: object }> = {
+  '/auth/token': {
+    title: 'TokenRequest',
+    schema: {
+      title: 'TokenRequest',
+      type: 'object',
+      required: ['grant_type'],
+      properties: {
+        grant_type: { type: 'string', description: 'OAuth2 grant type (authorization_code, refresh_token, client_credentials, password, urn:ietf:params:oauth:grant-type:token-exchange)' },
+        code: { type: 'string', description: 'Authorization code (for authorization_code grant)', nullable: true },
+        redirect_uri: { type: 'string', description: 'Redirect URI used in authorization request', nullable: true },
+        client_id: { type: 'string', description: 'OAuth2 client ID', nullable: true },
+        client_secret: { type: 'string', description: 'OAuth2 client secret', nullable: true },
+        code_verifier: { type: 'string', description: 'PKCE code verifier', nullable: true },
+        refresh_token: { type: 'string', description: 'Refresh token (for refresh_token grant)', nullable: true },
+        scope: { type: 'string', description: 'Requested scopes (space-separated)', nullable: true },
+        audience: { type: 'string', description: 'Target audience for the token', nullable: true },
+        resource: { type: 'string', description: 'Target resource URI (RFC 8707 Resource Indicators)', nullable: true },
+        username: { type: 'string', description: 'Username (for password grant)', nullable: true },
+        password: { type: 'string', description: 'Password (for password grant)', nullable: true },
+        client_assertion_type: { type: 'string', description: 'Client assertion type for JWT authentication', nullable: true },
+        client_assertion: { type: 'string', description: 'Client assertion JWT for authentication', nullable: true },
+        subject_token: { type: 'string', description: 'Security token to be exchanged (for token-exchange grant)', nullable: true },
+        subject_token_type: { type: 'string', description: 'Type of subject_token (urn:ietf:params:oauth:token-type:access_token)', nullable: true },
+        requested_token_type: { type: 'string', description: 'Type of requested token (urn:ietf:params:oauth:token-type:access_token)', nullable: true },
+      }
+    }
+  }
+}
+
+if (spec.paths) {
+  for (const [path, fix] of Object.entries(emptyRequestBodyFixes)) {
+    const operation = (spec.paths as any)[path]?.post
+    if (operation?.requestBody && operation.requestBody.content && Object.keys(operation.requestBody.content).length === 0) {
+      operation.requestBody.content = {
+        'application/x-www-form-urlencoded': { schema: fix.schema },
+        'application/json': { schema: fix.schema },
+      }
+      console.log(`  ✓ Injected missing requestBody schema for POST ${path} (${fix.title})`)
+      changeCount++
+    }
+  }
+}
+
 // Remove WebSocket endpoints (not part of OpenAPI 3.0.x)
 if (spec.paths && typeof spec.paths === 'object') {
   for (const pathItem of Object.values(spec.paths as Record<string, Record<string, unknown>>)) {
