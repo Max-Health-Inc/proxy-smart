@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604300054.7d016d52] - 2026-04-30
+
+- 🔧 Chores & Improvements: Improve OAuth token endpoint to correctly parse application/x-www-form-urlencoded bodies using URLSearchParams; add integration tests validating form body parsing and preservation of client_assertion_type for RS384 JWTs.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/603
+
+
 ## [0.0.9-alpha.202604300020.0341d81f] - 2026-04-30
 
 - 🔧 Chores & Improvements: Improve OAuth token parsing by adding a custom body parser for application/x-www-form-urlencoded using URLSearchParams; update tests to cover form body parsing and client_assertion preservation with RS384 JWTs
