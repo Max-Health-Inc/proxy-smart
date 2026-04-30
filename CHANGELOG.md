@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604301738.a2ee7edc] - 2026-04-30
+
+- 🔧 Chores & Improvements: Bump all package.json versions to 0.0.9-alpha.202604301738.a2ee7edc across apps, UI, backend, and testing
+- 🔧 Chores & Improvements: Make updatedScopes immutable in backend/admin smart-apps.ts
+- 📚 Documentation: Add JsonObject/JsonValue types in sanitize-openapi.ts for OpenAPI parsing
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/610
+
+
 ## [0.0.9-alpha.202604301056.b2972881] - 2026-04-30
 
 - ✨ Features: Frontend UI for BackendServicesSettings (URL management) with load/save flow and error handling
