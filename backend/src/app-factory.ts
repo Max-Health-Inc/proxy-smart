@@ -113,7 +113,7 @@ export function createApp() {
         sanitize: (value) => Bun.escapeHTML(value)
     })
         .use(cors({
-            origin: ({ request }) => {
+            origin: (request: Request) => {
                 // DICOMweb uses Bearer tokens, not cookies — safe to allow any origin.
                 // Required for VS Code webviews, Electron apps, and embedded viewers.
                 const path = new URL(request.url).pathname
