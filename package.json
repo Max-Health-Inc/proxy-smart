@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.0.9-beta.202604300208.b08206e4",
+  "version": "0.0.9-alpha.202604300242.fd141e34",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/quotentiroler/proxy-smart.git"
@@ -8,6 +8,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/fhir": "^0.0.42",
+    "@vue/server-renderer": "^3.5.32",
     "babelfhir-ts": "1.5.0",
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
