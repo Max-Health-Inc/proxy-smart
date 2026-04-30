@@ -99,38 +99,16 @@ mock.module('cross-fetch', () => ({
   default: (...args: unknown[]) => fetchMock(...args),
 }))
 
-// NOTE: mock.module is global in Bun — partial config mocks leak to other
-// test files.  Use a Proxy so only the keys this test cares about are
-// overridden; every other property falls through to safe defaults.
-const configOverrides: Record<string, unknown> = {
-  baseUrl: TEST_BASE_URL,
-  keycloak: {
-    baseUrl: TEST_KC_BASE_URL,
-    realm: TEST_REALM,
-    adminClientId: 'admin-service',
-    adminClientSecret: 'admin-secret',
-    isConfigured: true,
-    publicUrl: TEST_KC_BASE_URL,
-    jwksUri: `${TEST_KC_BASE_URL}/realms/${TEST_REALM}/protocol/openid-connect/certs`,
-    expectedIssuer: `${TEST_KC_BASE_URL}/realms/${TEST_REALM}`,
-  },
-}
-
-// Import the real config so non-overridden keys still resolve
-const { config: realConfig } = await import('../src/config')
-
-const proxyConfig = new Proxy(realConfig, {
-  get(target, prop) {
-    if (typeof prop === 'string' && prop in configOverrides) {
-      return configOverrides[prop]
-    }
-    return (target as Record<string | symbol, unknown>)[prop]
-  },
-})
-
-mock.module('@/config', () => ({
-  config: proxyConfig,
-}))
+// NOTE: Do NOT mock.module('@/config') — it's global in Bun and leaks to other
+// test files. Instead, set env vars so the real config's dynamic getters pick
+// them up. Save and restore in beforeEach/afterEach.
+const CONFIG_ENV_VARS = {
+  BASE_URL: TEST_BASE_URL,
+  KEYCLOAK_BASE_URL: TEST_KC_BASE_URL,
+  KEYCLOAK_REALM: TEST_REALM,
+  KEYCLOAK_ADMIN_CLIENT_ID: 'admin-service',
+  KEYCLOAK_ADMIN_CLIENT_SECRET: 'admin-secret',
+} as const
 
 // Suppress logger output in tests
 // NOTE: mock.module is global in Bun — partial mocks leak to other test files.
@@ -194,8 +172,27 @@ function createClientAssertion(overrides?: {
 // ─── Tests ──────────────────────────────────────────────────────────────────
 
 describe('Backend Services', () => {
+  let envSnapshot: Record<string, string | undefined>
+
   beforeEach(() => {
+    // Snapshot env vars that we'll override
+    envSnapshot = {}
+    for (const key of Object.keys(CONFIG_ENV_VARS)) {
+      envSnapshot[key] = process.env[key]
+    }
+    // Set config env vars for this test
+    for (const [key, value] of Object.entries(CONFIG_ENV_VARS)) {
+      process.env[key] = value
+    }
     fetchMock = createFetchMock()
+  })
+
+  afterEach(() => {
+    // Restore env vars
+    for (const [key, value] of Object.entries(envSnapshot)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
   })
 
   describe('isBackendServicesRequest', () => {
