@@ -113,7 +113,16 @@ export function createApp() {
         sanitize: (value) => Bun.escapeHTML(value)
     })
         .use(cors({
-            origin: config.cors.origins,
+            origin: ({ request }) => {
+                // DICOMweb uses Bearer tokens, not cookies — safe to allow any origin.
+                // Required for VS Code webviews, Electron apps, and embedded viewers.
+                const path = new URL(request.url).pathname
+                if (path.startsWith('/dicomweb')) return true
+
+                // All other routes: use the configured whitelist
+                const from = request.headers.get('origin') || ''
+                return config.cors.origins.some(o => from.includes(o))
+            },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']

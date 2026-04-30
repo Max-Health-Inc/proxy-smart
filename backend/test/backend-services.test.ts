@@ -134,7 +134,7 @@ mock.module('@/lib/logger', () => ({
 
 // ─── Import after mocking ───────────────────────────────────────────────────
 
-const { handleBackendServicesToken, isBackendServicesRequest } = await import(
+const { handleBackendServicesToken, isBackendServicesRequest, clearJtiCache } = await import(
   '../src/routes/auth/backend-services'
 )
 
@@ -185,6 +185,7 @@ describe('Backend Services', () => {
       process.env[key] = value
     }
     fetchMock = createFetchMock()
+    clearJtiCache()
   })
 
   afterEach(() => {
@@ -528,6 +529,100 @@ describe('Backend Services', () => {
       expect(result.status).toBe(400)
       expect(result.body.error).toBe('invalid_client')
       expect(result.body.error_description).toContain('JWKS')
+    })
+
+    it('rejects JWT with exp more than 5 minutes in the future', async () => {
+      const result = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion({ exp: Math.floor(Date.now() / 1000) + 600 }),
+      })
+
+      expect(result.status).toBe(400)
+      expect(result.body.error).toBe('invalid_client')
+      expect(result.body.error_description).toContain('5 minutes')
+    })
+
+    it('rejects replayed jti (same jti used twice)', async () => {
+      const fixedJti = 'replay-test-jti-12345'
+
+      // First request should succeed
+      const result1 = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion({ jti: fixedJti }),
+      })
+      expect(result1.status).toBe(200)
+
+      // Second request with same jti should be rejected
+      const result2 = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion({ jti: fixedJti }),
+      })
+      expect(result2.status).toBe(400)
+      expect(result2.body.error).toBe('invalid_client')
+      expect(result2.body.error_description).toContain('jti')
+    })
+
+    it('allows same jti from different issuers (scoped per iss)', async () => {
+      const fixedJti = 'shared-jti-different-iss'
+
+      // First request from client A
+      const result1 = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion({ jti: fixedJti, iss: TEST_CLIENT_ID, sub: TEST_CLIENT_ID }),
+      })
+      expect(result1.status).toBe(200)
+
+      // Same jti from a different issuer — the jti check should pass because
+      // jti is scoped per iss. The mock doesn't differentiate clients, so this
+      // will succeed end-to-end (proving jti replay is per-iss, not global).
+      const result2 = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion({ jti: fixedJti, iss: 'other-client', sub: 'other-client' }),
+      })
+      // Should NOT be rejected for jti replay — if it fails, it's for a different reason
+      if (result2.status !== 200) {
+        expect(result2.body.error_description).not.toContain('jti has already been used')
+      }
+    })
+
+    it('rejects when client_id body param does not match JWT iss', async () => {
+      const result = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion(),
+        client_id: 'wrong-client-id',
+      })
+
+      expect(result.status).toBe(400)
+      expect(result.body.error).toBe('invalid_client')
+      expect(result.body.error_description).toContain('client_id')
+    })
+
+    it('accepts when client_id body param matches JWT iss', async () => {
+      const result = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion(),
+        client_id: TEST_CLIENT_ID,
+      })
+
+      expect(result.status).toBe(200)
+    })
+
+    it('accepts exp just under 5-minute ceiling', async () => {
+      // exp = now + 299 seconds (within 300 + 30 clock skew tolerance)
+      const result = await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion({ exp: Math.floor(Date.now() / 1000) + 299 }),
+      })
+
+      expect(result.status).toBe(200)
     })
   })
 })

@@ -27,8 +27,41 @@ interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
 
 const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
+/** Maximum JWT lifetime allowed (5 minutes per SMART STU2.2 spec) */
+const MAX_JWT_LIFETIME_SECONDS = 300
+
+/** TTL for JWKS/secret cache entries (60 seconds) */
+const CACHE_TTL_MS = 60_000
+
 /** Cached admin-service access token for Keycloak admin API calls */
 let adminTokenCache: { token: string; expiresAt: number } | null = null
+
+// ─── jti replay protection ──────────────────────────────────────────────────
+// Map of `${iss}:${jti}` → expiration timestamp (seconds since epoch).
+// Entries are kept until the JWT's exp passes, preventing replay within the
+// token's lifetime window (max 5 minutes per spec).
+const usedJtis = new Map<string, number>()
+
+/** Purge expired jti entries to prevent unbounded memory growth. */
+function purgeExpiredJtis(): void {
+  const now = Math.floor(Date.now() / 1000)
+  for (const [key, exp] of usedJtis) {
+    if (exp <= now) usedJtis.delete(key)
+  }
+}
+
+/** Clear jti cache (exposed for testing). */
+export function clearJtiCache(): void {
+  usedJtis.clear()
+  jwksCache.clear()
+  secretCache.clear()
+  adminTokenCache = null
+}
+
+// ─── Client config cache (JWKS + secret) ───────────────────────────────────
+interface CacheEntry<T> { value: T; expiresAt: number }
+const jwksCache = new Map<string, CacheEntry<{ keys: JwkKey[] }>>()
+const secretCache = new Map<string, CacheEntry<string>>()
 
 /**
  * Detect whether a token request is a Backend Services flow.
@@ -86,9 +119,30 @@ export async function handleBackendServicesToken(
     return { status: 400, body: { error: 'invalid_client', error_description: 'JWT has expired' } }
   }
 
+  // 5b. exp ceiling: MUST be no more than 5 minutes in the future (SMART STU2.2 §4.1.5.1)
+  const now = Math.floor(Date.now() / 1000)
+  if (exp > now + MAX_JWT_LIFETIME_SECONDS + 30) { // +30s clock skew tolerance
+    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT exp must not be more than 5 minutes in the future' } }
+  }
+
   // 6. jti MUST be present (replay protection)
   if (!jti) {
     return { status: 400, body: { error: 'invalid_client', error_description: 'JWT must contain a jti claim' } }
+  }
+
+  // 6b. jti replay check: jti must not have been used before for this iss (SMART STU2.2 §4.1.5.2.1)
+  purgeExpiredJtis()
+  const jtiKey = `${iss}:${jti}`
+  if (usedJtis.has(jtiKey)) {
+    logger.auth.warn('Backend Services JWT replay detected', { clientId: iss, jti })
+    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT jti has already been used' } }
+  }
+  usedJtis.set(jtiKey, exp)
+
+  // 6c. client_id body param validation (SMART STU2.2 §4.1.5.2.1)
+  // If client_id is provided in the request body, it MUST match the JWT iss claim.
+  if (body.client_id && body.client_id !== iss) {
+    return { status: 400, body: { error: 'invalid_client', error_description: 'client_id does not match JWT iss claim' } }
   }
 
   const clientId = iss
@@ -175,10 +229,15 @@ async function getAdminToken(): Promise<string> {
 }
 
 /**
- * Fetch the JWKS registered for a Keycloak client.
+ * Fetch the JWKS registered for a Keycloak client (with TTL cache).
  * Uses the admin REST API: GET /admin/realms/{realm}/clients?clientId=X → attrs.jwks.string
  */
 async function getClientJwks(clientId: string): Promise<{ keys: JwkKey[] }> {
+  const cached = jwksCache.get(clientId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value
+  }
+
   const adminToken = await getAdminToken()
   const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
 
@@ -200,22 +259,32 @@ async function getClientJwks(clientId: string): Promise<{ keys: JwkKey[] }> {
     throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
 
+  let result: { keys: JwkKey[] }
+
   // jwks.string is a JSON string of the JWKS
   if (client.attributes?.['jwks.string']) {
-    return JSON.parse(jwksString)
+    result = JSON.parse(jwksString)
+  } else {
+    // jwks.url — fetch it
+    const jwksResp = await fetch(jwksString)
+    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksString}`)
+    result = await jwksResp.json()
   }
 
-  // jwks.url — fetch it
-  const jwksResp = await fetch(jwksString)
-  if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksString}`)
-  return await jwksResp.json()
+  jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })
+  return result
 }
 
 /**
- * Fetch the client secret from Keycloak admin API.
+ * Fetch the client secret from Keycloak admin API (with TTL cache).
  * GET /admin/realms/{realm}/clients/{id}/client-secret
  */
 async function getClientSecret(clientId: string): Promise<string> {
+  const cached = secretCache.get(clientId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value
+  }
+
   const adminToken = await getAdminToken()
 
   // First get the internal UUID for this clientId
@@ -238,7 +307,10 @@ async function getClientSecret(clientId: string): Promise<string> {
   if (!secretResp.ok) throw new Error(`Failed to fetch secret for client '${clientId}': ${secretResp.status}`)
 
   const secretData = await secretResp.json()
-  return secretData.value
+  const secret = secretData.value
+
+  secretCache.set(clientId, { value: secret, expiresAt: Date.now() + CACHE_TTL_MS })
+  return secret
 }
 
 /**
