@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604291410.81639e41] - 2026-04-29
+
+- ✨ Features
+  - 🧪 Auto-PR: Merge develop → test
+
+- 🐛 Bug Fixes
+  - Backend: Replace jwks-rsa with built-in crypto for JWK→PEM conversion; add createPublicKey usage and PEM export
+  - UI: Minor UI tweaks (Undo2 icon import in HealthcareUserEditForm; PendingIdP* types and related updates)
+
+- 🔧 Chores & Improvements
+  - Version bump across multiple packages for 0.0.9-alpha.202604291402.356eaf91
+  - Scope/Smart scopes: integrate RegisteredScopes into ScopeManager and admin smart-scopes support
+  - Backend: extend realm export to include SMART v2 scopes
+  - Tests: scope backend config mocking via Proxy; new backend test scaffolding for token flows
+
+- 📚 Documentation
+  - (No explicit docs changes identified)
+
+- ⚠️ Breaking Changes
+  - (No breaking changes detected)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/600
+
+
 ## [0.0.9-alpha.202604291402.356eaf91] - 2026-04-29
 
 - 🔧 Chores & Improvements: CI/CD and maintenance across multiple packages
