@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604300208.b08206e4] - 2026-04-30
+
+- ✨ Features
+  - Backend: JWKS handling improvements with JwkKey interface and widened getClientJwks/JWKS types for better flexibility
+
+- 🔧 Chores & Improvements
+  - CI/CD: Bump Bun to 1.3.13 across actions and Dockerfiles (base, builder, runner) and update related images
+  - Code quality: minor TypeScript formatting and comments for JWKS handling
+
+- ⚠️ Breaking Changes
+  - None
+
+- 📚 Documentation
+  - None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/605
+
+
 ## [0.0.9-alpha.202604300118.38a52ce6] - 2026-04-30
 
 - 🔧 Chores & Improvements: Improve OAuth token parsing by adding a custom body parser for application/x-www-form-urlencoded (URLSearchParams) to fix form-parser bug with base64url JWTs
