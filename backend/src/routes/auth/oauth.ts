@@ -640,12 +640,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     }
   },
     {
-      // Custom body parser to avoid Elysia/Bun form-parser bug where certain
-      // base64url character sequences in JWT client_assertion values corrupt
-      // parsing of subsequent form fields (e.g. client_assertion_type disappears).
-      // We manually parse application/x-www-form-urlencoded using URLSearchParams.
+      // Defense-in-depth: manually parse form bodies using URLSearchParams.
+      // Elysia/Bun's internal form parser previously dropped fields after
+      // long JWT client_assertion values (observed 2026-04-30, not reliably
+      // reproducible across Bun reinstalls). URLSearchParams is spec-compliant
+      // and immune to any native parser edge cases.
       async parse({ request, contentType }) {
-        if (contentType === 'application/x-www-form-urlencoded') {
+        if (contentType?.startsWith('application/x-www-form-urlencoded')) {
           const text = await request.text()
           return Object.fromEntries(new URLSearchParams(text).entries())
         }
