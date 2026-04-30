@@ -22,6 +22,9 @@ import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
 
+/** A JSON Web Key with required kty and optional kid, plus any additional JWK fields */
+interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
+
 const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
 /** Cached admin-service access token for Keycloak admin API calls */
@@ -91,7 +94,7 @@ export async function handleBackendServicesToken(
   const clientId = iss
 
   // 7. Fetch the client's registered JWKS from Keycloak admin API
-  let clientJwksJson: { keys: Array<Record<string, unknown>> }
+  let clientJwksJson: { keys: JwkKey[] }
   try {
     clientJwksJson = await getClientJwks(clientId)
   } catch (err) {
@@ -175,7 +178,7 @@ async function getAdminToken(): Promise<string> {
  * Fetch the JWKS registered for a Keycloak client.
  * Uses the admin REST API: GET /admin/realms/{realm}/clients?clientId=X → attrs.jwks.string
  */
-async function getClientJwks(clientId: string): Promise<{ keys: Array<Record<string, unknown>> }> {
+async function getClientJwks(clientId: string): Promise<{ keys: JwkKey[] }> {
   const adminToken = await getAdminToken()
   const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
 
@@ -246,7 +249,7 @@ async function getClientSecret(clientId: string): Promise<string> {
 async function verifyJwtSignature(
   token: string,
   header: jwt.JwtHeader,
-  jwksJson: { keys: Array<Record<string, unknown>> }
+  jwksJson: { keys: JwkKey[] }
 ): Promise<void> {
   // Find the matching key by kid, or fall back to first key
   const matchingKey = header.kid
@@ -258,7 +261,7 @@ async function verifyJwtSignature(
   }
 
   // Convert JWK to PEM public key using Node's built-in crypto
-  const keyObject = createPublicKey({ key: matchingKey as JsonWebKey, format: 'jwk' })
+  const keyObject = createPublicKey({ key: matchingKey, format: 'jwk' })
   const publicKey = keyObject.export({ type: 'spki', format: 'pem' }) as string
 
   // Verify the token — only check signature, we already validated claims above

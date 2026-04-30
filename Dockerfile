@@ -1,6 +1,6 @@
 # Multi-stage build for Proxy Smart monorepo
 # Single backend image serves API + all frontend apps (Admin UI, SMART apps, docs)
-FROM oven/bun:slim AS base
+FROM oven/bun:1.3.13-slim AS base
 WORKDIR /app
 
 # Common build dependencies stage
