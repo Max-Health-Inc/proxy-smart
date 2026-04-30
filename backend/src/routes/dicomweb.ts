@@ -314,7 +314,30 @@ const dicomwebDetail = (summary: string, description: string) => ({
   security: [{ BearerAuth: [] }],
 })
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Authorization, Accept, Content-Type',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+} as const
+
 export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb'] })
+
+  // CORS — required for VS Code webview origins (random UUIDs like vscode-webview://...)
+  .onAfterHandle(({ set, response }) => {
+    // For raw Response objects, clone with CORS headers appended
+    if (response instanceof Response) {
+      const headers = new Headers(response.headers)
+      for (const [k, v] of Object.entries(CORS_HEADERS)) headers.set(k, v)
+      return new Response(response.body, { status: response.status, headers })
+    }
+    // For JSON responses, Elysia will apply set.headers
+    Object.assign(set.headers, CORS_HEADERS)
+  })
+  .options('/*', ({ set }) => {
+    Object.assign(set.headers, CORS_HEADERS)
+    set.status = 204
+    return ''
+  })
 
   // ==================== Health / Status ====================
 
