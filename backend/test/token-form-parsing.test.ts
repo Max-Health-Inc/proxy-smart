@@ -99,7 +99,8 @@ describe('Token endpoint form-body parsing — isolated', () => {
         return body
       }, {
         async parse({ request, contentType }) {
-          if (contentType?.startsWith('application/x-www-form-urlencoded')) {
+          const mediaType = contentType?.split(';')[0]?.trim()
+          if (mediaType === 'application/x-www-form-urlencoded') {
             const text = await request.text()
             return Object.fromEntries(new URLSearchParams(text).entries())
           }
@@ -144,7 +145,8 @@ describe('Token endpoint form-body parsing — isolated', () => {
         return body
       }, {
         async parse({ request, contentType }) {
-          if (contentType?.startsWith('application/x-www-form-urlencoded')) {
+          const mediaType = contentType?.split(';')[0]?.trim()
+          if (mediaType === 'application/x-www-form-urlencoded') {
             const text = await request.text()
             return Object.fromEntries(new URLSearchParams(text).entries())
           }

@@ -646,7 +646,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       // reproducible across Bun reinstalls). URLSearchParams is spec-compliant
       // and immune to any native parser edge cases.
       async parse({ request, contentType }) {
-        if (contentType?.startsWith('application/x-www-form-urlencoded')) {
+        const mediaType = contentType?.split(';')[0]?.trim()
+        if (mediaType === 'application/x-www-form-urlencoded') {
           const text = await request.text()
           return Object.fromEntries(new URLSearchParams(text).entries())
         }
