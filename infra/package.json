@@ -28,12 +28,12 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.6.0",
-    "aws-cdk": "^2.1119.0",
-    "eslint": "^10.1.0",
+    "aws-cdk": "^2.1120.0",
+    "eslint": "^10.2.1",
     "globals": "^17.5.0",
     "tsx": "^4.21.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.59.1"
   },
   "engines": {
     "node": ">=18.0.0",
