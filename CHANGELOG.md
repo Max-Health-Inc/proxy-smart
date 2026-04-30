@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604291854.5d6050bc] - 2026-04-30
+
+- ✨ Features
+  - UI: RegisteredScopes component and SMART scope badges/UI integrated into ScopeManager
+  - Backend: SMART scopes feature with CRUD endpoints and admin routes
+  - Backend: Extended realm export to include SMART v2 scopes and related UI/config support
+
+- 🐛 Bug Fixes
+  - Backend: Replace jwks-rsa with built-in crypto for JWK→PEM conversion; add createPublicKey usage
+
+- 🔧 Chores & Improvements
+  - Tests: Scope backend config mocking scoped via Proxy; suppress logger in tests
+  - Minor UI/code imports: ScopeManager imports and translation/hooks adjustments
+  - Version/CI: Version bump across packages
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/601
+
+
 ## [0.0.9-alpha.202604291410.81639e41] - 2026-04-29
 
 - ✨ Features
