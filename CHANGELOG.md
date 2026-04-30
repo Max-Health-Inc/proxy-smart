@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604302300.35715d6b] - 2026-04-30
+
+- ✨ Features
+  - ShlView.tsx: enhanced error UI for expired SHL with new icons and translations; additional lucide-react icons imported.
+- 🐛 Bug Fixes
+  - Backend: refined CORS origin logic to allow dicomweb paths directly and whitelist otherwise.
+  - Keycloak-config: improved error handling with try/catch and handleAdminError.
+  - auth/backend-services: added JWT replay protection.
+- 🔧 Chores & Improvements
+  - Bump and synchronize versions across multiple packages/apps/configs.
+  - Minor consistency: updated type annotation in app-factory.ts.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/613
+
+
 ## [0.0.9-beta.202604302110.bc07682c] - 2026-04-30
 
 - 🔧 Chores & Improvements: Internal updates and maintenance
