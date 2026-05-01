@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
+import { config } from '@/config'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -105,7 +106,10 @@ async function registerJwksForClient(
     attributes: {
       'use.jwks.string': 'true',
       'jwks.string': jwksJson,
-      'token.endpoint.auth.signing.alg': alg
+      'token.endpoint.auth.signing.alg': alg,
+      // Tell Keycloak to accept the proxy's token endpoint URL as a valid audience
+      // in client_assertion JWTs (required for Backend Services flow via proxy)
+      'jwtClientAuthentication.tokenEndpointUrl': `${config.baseUrl}/auth/token`,
     }
   })
 
@@ -999,6 +1003,19 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           })
         } catch (error) {
           logger.admin.warn('Failed to update scopes for client', { clientId: existing.clientId, error })
+        }
+      }
+
+      // Handle JWKS update (also auto-sets jwtClientAuthentication.tokenEndpointUrl)
+      if (body.jwksString || body.publicKey || body.jwksUri) {
+        try {
+          await registerJwksForClient(admin, existing.id!, {
+            jwksString: body.jwksString,
+            publicKeyPem: body.publicKey,
+          })
+          logger.admin.debug('JWKS updated for client', { clientId: params.clientId })
+        } catch (error) {
+          logger.admin.warn('Failed to update JWKS for client', { clientId: params.clientId, error })
         }
       }
 
