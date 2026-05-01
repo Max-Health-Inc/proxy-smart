@@ -143,6 +143,29 @@ export const TokenResponse = t.Object({
 }, { title: 'TokenResponse' })
 export type TokenResponseType = Static<typeof TokenResponse>
 
+// ==================== EHR Launch Schemas (SMART App Launch 2.2.0) ====================
+
+export const EhrLaunchRequest = t.Object({
+  /** Required: Keycloak user ID (the user who will be launched into the app) */
+  userId: t.String({ description: 'Keycloak user ID of the user who will authenticate (required for setting launch context)' }),
+  patient: t.Optional(t.String({ description: 'Patient ID in context (e.g., "123" or "Patient/123")' })),
+  encounter: t.Optional(t.String({ description: 'Encounter ID in context (e.g., "456" or "Encounter/456")' })),
+  fhirUser: t.Optional(t.String({ description: 'FHIR user reference (e.g., "Practitioner/789")' })),
+  intent: t.Optional(t.String({ description: 'Intent string (e.g., "order-review", "reconcile-medications")' })),
+  smartStyleUrl: t.Optional(t.String({ description: 'URL to CSS stylesheet for styling' })),
+  tenant: t.Optional(t.String({ description: 'Tenant identifier' })),
+  needPatientBanner: t.Optional(t.Boolean({ description: 'Whether patient banner is required' })),
+  fhirContext: t.Optional(t.Array(FhirContextItem, { description: 'Additional FHIR resources in context' })),
+  clientId: t.Optional(t.String({ description: 'Target client_id this launch code is intended for (optional audience restriction)' })),
+}, { title: 'EhrLaunchRequest' })
+export type EhrLaunchRequestType = Static<typeof EhrLaunchRequest>
+
+export const EhrLaunchResponse = t.Object({
+  launch: t.String({ description: 'Opaque launch code to pass to /authorize (SMART App Launch 2.2.0)' }),
+  expires_in: t.Number({ description: 'Seconds until the launch code expires' }),
+}, { title: 'EhrLaunchResponse' })
+export type EhrLaunchResponseType = Static<typeof EhrLaunchResponse>
+
 // ==================== User Info Schemas ====================
 
 export const UserInfoHeader = t.Object({

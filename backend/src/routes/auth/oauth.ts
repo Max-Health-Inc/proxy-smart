@@ -1,10 +1,12 @@
 import { Elysia } from 'elysia'
 import fetch from 'cross-fetch'
+import KcAdminClient from '@keycloak/keycloak-admin-client'
 import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { getAllServers, ensureServersInitialized } from '@/lib/fhir-server-store'
 import { logger } from '@/lib/logger'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
+import { signLaunchCode, verifyLaunchCode } from '@/lib/launch-code'
 import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
 import {
   TokenRequest,
@@ -18,7 +20,7 @@ import {
   UserInfoHeader,
   UserInfoResponse,
   UserInfoErrorResponse,
-  
+  EhrLaunchRequest,
 } from '@/schemas'
 
 interface TokenPayload {
@@ -142,9 +144,116 @@ a,button{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.25re
 }
 
 /**
+ * Get a Keycloak admin client authenticated with the service account (client_credentials).
+ * Used for server-to-server operations where no user token is available (e.g., EHR Launch pre-set).
+ * Returns null if admin credentials are not configured.
+ */
+async function getServiceAccountAdmin(): Promise<KcAdminClient | null> {
+  if (!config.keycloak.isConfigured || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    return null
+  }
+  const admin = new KcAdminClient({
+    baseUrl: config.keycloak.baseUrl!,
+    realmName: config.keycloak.realm!,
+  })
+  await admin.auth({
+    grantType: 'client_credentials',
+    clientId: config.keycloak.adminClientId,
+    clientSecret: config.keycloak.adminClientSecret,
+  })
+  return admin
+}
+
+/**
  * OAuth2/OIDC proxy routes - handles token exchange and introspection
  */
 export const oauthRoutes = new Elysia({ tags: ['authentication'] })
+  // EHR Launch: issue a signed launch code (SMART App Launch 2.2.0 EHR Launch)
+  .post('/launch', async ({ body, set, headers }) => {
+    // Require authentication — caller must be an EHR admin or authorized system
+    const authHeader = headers.authorization || headers.Authorization
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      set.status = 401
+      return { error: 'unauthorized', error_description: 'Bearer token required to issue launch codes' }
+    }
+    try {
+      await validateToken(authHeader.slice(7))
+    } catch {
+      set.status = 401
+      return { error: 'unauthorized', error_description: 'Invalid or expired Bearer token' }
+    }
+
+    // At least one context parameter must be provided
+    if (!body.patient && !body.encounter && !body.fhirUser && !body.intent && !body.fhirContext) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'At least one launch context parameter is required (patient, encounter, fhirUser, intent, or fhirContext)' }
+    }
+
+    // Pre-set user attributes in Keycloak so existing protocol mappers
+    // will include the launch context in the token claims.
+    // This requires the admin service account to be configured.
+    if (config.keycloak.isConfigured && config.keycloak.adminClientId && config.keycloak.adminClientSecret) {
+      try {
+        const admin = await getServiceAccountAdmin()
+        if (admin) {
+          const userId = body.userId
+          const user = await admin.users.findOne({ id: userId })
+          if (user) {
+            const attributes = user.attributes || {}
+            if (body.patient) attributes.smart_patient = [body.patient]
+            if (body.encounter) attributes.smart_encounter = [body.encounter]
+            if (body.fhirUser) attributes.fhirUser = [body.fhirUser]
+            if (body.intent) attributes.smart_intent = [body.intent]
+            if (body.smartStyleUrl) attributes.smart_style_url = [body.smartStyleUrl]
+            if (body.tenant) attributes.smart_tenant = [body.tenant]
+            if (body.needPatientBanner !== undefined) attributes.smart_need_patient_banner = [String(body.needPatientBanner)]
+            if (body.fhirContext) attributes.smart_fhir_context = [JSON.stringify(body.fhirContext)]
+
+            await admin.users.update({ id: userId }, {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              enabled: user.enabled,
+              emailVerified: user.emailVerified,
+              attributes,
+            })
+            logger.auth.info('EHR Launch: pre-set user attributes', { userId, patient: body.patient, encounter: body.encounter })
+          } else {
+            logger.auth.warn('EHR Launch: user not found for attribute pre-set', { userId })
+          }
+        }
+      } catch (err) {
+        // Non-fatal: launch code still works, but token enrichment may fall back to proxy-side resolution
+        logger.auth.warn('EHR Launch: failed to pre-set user attributes (non-fatal)', { error: err })
+      }
+    }
+
+    const launch = signLaunchCode({
+      userId: body.userId,
+      ...(body.patient && { patient: body.patient }),
+      ...(body.encounter && { encounter: body.encounter }),
+      ...(body.fhirUser && { fhirUser: body.fhirUser }),
+      ...(body.intent && { intent: body.intent }),
+      ...(body.smartStyleUrl && { smartStyleUrl: body.smartStyleUrl }),
+      ...(body.tenant && { tenant: body.tenant }),
+      ...(body.needPatientBanner !== undefined && { needPatientBanner: body.needPatientBanner }),
+      ...(body.fhirContext && { fhirContext: JSON.stringify(body.fhirContext) }),
+      ...(body.clientId && { clientId: body.clientId }),
+    })
+
+    return {
+      launch,
+      expires_in: config.smart.launchCodeTtlSeconds,
+    }
+  }, {
+    body: EhrLaunchRequest,
+    detail: {
+      summary: 'EHR Launch: Issue Launch Code',
+      description: 'Issues a signed, time-limited launch code that encodes EHR session context (patient, encounter, intent, etc.). Also pre-sets user attributes in Keycloak so protocol mappers include context in token claims. The code is passed as the `launch` parameter on /authorize per SMART App Launch 2.2.0.',
+      tags: ['authentication']
+    }
+  })
+
   // redirect into Keycloak's /auth endpoint
   .get('/authorize', async ({ query, redirect, set }) => {
     // Check KC is reachable before redirecting — avoids raw browser ERR_CONNECTION_REFUSED
@@ -179,6 +288,35 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       }
     }
 
+    // EHR Launch: resolve the launch code (signed JWT) to context.
+    // If `launch` is present and valid, we verify it and pass the embedded context
+    // as login_hint metadata. The launch param itself is still forwarded to Keycloak
+    // (stored as client_request_param_launch) for protocol mapper access.
+    let resolvedLaunchContext: import('@/lib/launch-code').LaunchCodePayload | null = null
+    if (query.launch) {
+      const result = verifyLaunchCode(query.launch)
+      if (result) {
+        resolvedLaunchContext = result.payload
+        // Optionally validate client_id audience restriction
+        if (resolvedLaunchContext.clientId && query.client_id && resolvedLaunchContext.clientId !== query.client_id) {
+          logger.auth.warn('Launch code client_id mismatch', {
+            expected: resolvedLaunchContext.clientId,
+            actual: query.client_id,
+          })
+          set.status = 400
+          return { error: 'invalid_request', error_description: 'Launch code was issued for a different client' }
+        }
+        logger.auth.info('EHR Launch code resolved', {
+          patient: resolvedLaunchContext.patient,
+          encounter: resolvedLaunchContext.encounter,
+          intent: resolvedLaunchContext.intent,
+        })
+      } else {
+        // Invalid/expired launch code — per spec, EHR can reject or proceed without context
+        logger.auth.warn('EHR Launch code invalid or expired, proceeding without launch context')
+      }
+    }
+
     const url = new URL(
       `${config.keycloak.publicUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/auth`
     )
@@ -191,6 +329,36 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         url.searchParams.set(k, v as string)
       }
     })
+
+    // If we resolved a launch code, pass context as additional params for Keycloak.
+    // These become client_request_param_* notes on the auth session, accessible by
+    // protocol mappers (Script Mapper or custom SPI).
+    if (resolvedLaunchContext) {
+      if (resolvedLaunchContext.patient) {
+        url.searchParams.set('smart_launch_patient', resolvedLaunchContext.patient)
+      }
+      if (resolvedLaunchContext.encounter) {
+        url.searchParams.set('smart_launch_encounter', resolvedLaunchContext.encounter)
+      }
+      if (resolvedLaunchContext.fhirUser) {
+        url.searchParams.set('smart_launch_fhir_user', resolvedLaunchContext.fhirUser)
+      }
+      if (resolvedLaunchContext.intent) {
+        url.searchParams.set('smart_launch_intent', resolvedLaunchContext.intent)
+      }
+      if (resolvedLaunchContext.tenant) {
+        url.searchParams.set('smart_launch_tenant', resolvedLaunchContext.tenant)
+      }
+      if (resolvedLaunchContext.smartStyleUrl) {
+        url.searchParams.set('smart_launch_style_url', resolvedLaunchContext.smartStyleUrl)
+      }
+      if (resolvedLaunchContext.needPatientBanner !== undefined) {
+        url.searchParams.set('smart_launch_need_patient_banner', String(resolvedLaunchContext.needPatientBanner))
+      }
+      if (resolvedLaunchContext.fhirContext) {
+        url.searchParams.set('smart_launch_fhir_context', resolvedLaunchContext.fhirContext)
+      }
+    }
 
     return redirect(url.href)
   }, {
