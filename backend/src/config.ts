@@ -1,6 +1,11 @@
 import { readFileSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { randomBytes } from 'crypto'
+
+// Per-process fallback secret for EHR Launch codes when SMART_LAUNCH_SECRET is not set.
+// WARNING: This is NOT safe for multi-node deployments — set SMART_LAUNCH_SECRET env var.
+const _defaultLaunchSecret = randomBytes(32).toString('hex')
 
 // Get package.json path - try multiple strategies for robustness
 let packageJson: { name: string; displayName?: string; version: string }
@@ -95,6 +100,15 @@ export const config = {
     configCacheTtl: parseInt(process.env.SMART_CONFIG_CACHE_TTL || '300000'), // 5 minutes
     scopesSupported: process.env.SMART_SCOPES_SUPPORTED?.split(',').map(s => s.trim()),
     capabilities: process.env.SMART_CAPABILITIES?.split(',').map(s => s.trim()),
+    // HMAC secret for signing EHR Launch codes (stateless JWT).
+    // Auto-generated per process if not set — multi-node deployments MUST set this.
+    get launchSecret(): string {
+      return process.env.SMART_LAUNCH_SECRET || _defaultLaunchSecret
+    },
+    // Launch code TTL in seconds (default 5 minutes)
+    get launchCodeTtlSeconds(): number {
+      return parseInt(process.env.SMART_LAUNCH_CODE_TTL || '300', 10)
+    },
   },
 
   // User-Access Brands (SMART App Launch 2.2.0 Section 8)

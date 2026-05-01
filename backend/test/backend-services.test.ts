@@ -638,61 +638,9 @@ describe('Backend Services', () => {
       expect(result.status).toBe(200)
     })
 
-    it('forwards assertion for private_key_jwt (client-jwt) clients instead of client_secret', async () => {
-      // Override mock: client has clientAuthenticatorType = 'client-jwt'
-      const originalFetch = fetchMock
-      let capturedTokenBody: string | undefined
-
-      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
-
-        // Client lookup returns 'client-jwt' authenticator type
-        if (urlStr.includes('/admin/realms/') && urlStr.includes('clients?clientId=')) {
-          return Promise.resolve(new Response(JSON.stringify([{
-            id: TEST_INTERNAL_CLIENT_UUID,
-            clientId: TEST_CLIENT_ID,
-            clientAuthenticatorType: 'client-jwt',
-            attributes: {
-              'jwks.string': JSON.stringify(clientJwks),
-            },
-          }]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-
-        // Token endpoint — capture the request body for assertion
-        if (urlStr.includes('/protocol/openid-connect/token') && init?.body?.toString().includes(TEST_CLIENT_ID)) {
-          capturedTokenBody = init?.body?.toString()
-          return Promise.resolve(new Response(JSON.stringify({
-            access_token: 'private-key-jwt-token',
-            token_type: 'Bearer',
-            expires_in: 300,
-            scope: 'system/*.read',
-          }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-
-        return originalFetch(url, init)
-      })
-
-      const assertion = createClientAssertion()
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-        scope: 'system/*.read',
-      })
-
-      expect(result.status).toBe(200)
-      expect(result.body.access_token).toBe('private-key-jwt-token')
-
-      // Verify the token request forwarded client_assertion instead of client_secret
-      expect(capturedTokenBody).toBeDefined()
-      const params = new URLSearchParams(capturedTokenBody!)
-      expect(params.get('client_assertion_type')).toBe('urn:ietf:params:oauth:client-assertion-type:jwt-bearer')
-      expect(params.get('client_assertion')).toBe(assertion)
-      expect(params.has('client_secret')).toBe(false)
-    })
-
-    it('uses client_secret for client-secret authenticator type (default behavior)', async () => {
-      // The default fetchMock does NOT set clientAuthenticatorType — defaults to 'client-secret'
+    it('always uses client_secret internally with Keycloak (proxy enforces private_key_jwt externally)', async () => {
+      // The proxy validates JWT signature (private_key_jwt) at steps 4-8,
+      // then authenticates to Keycloak using client_secret internally.
       let capturedTokenBody: string | undefined
       const originalFetch = fetchMock
 
@@ -717,15 +665,17 @@ describe('Backend Services', () => {
         grant_type: 'client_credentials',
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
         client_assertion: assertion,
+        scope: 'system/*.read',
       })
 
       expect(result.status).toBe(200)
 
-      // Verify it uses client_secret, NOT client_assertion
+      // Verify it uses client_secret internally, never forwards client_assertion to Keycloak
       expect(capturedTokenBody).toBeDefined()
       const params = new URLSearchParams(capturedTokenBody!)
       expect(params.get('client_secret')).toBe(TEST_CLIENT_SECRET)
       expect(params.has('client_assertion')).toBe(false)
+      expect(params.has('client_assertion_type')).toBe(false)
     })
   })
 })
