@@ -29,7 +29,6 @@ interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
 interface ClientMetadata {
   jwks: { keys: JwkKey[] }
   internalId: string
-  authenticatorType: string // 'client-secret' | 'client-jwt' | 'client-x509' | ...
 }
 
 const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
@@ -172,28 +171,17 @@ export async function handleBackendServicesToken(
   }
 
   // 9. JWT is valid — get a service account token from Keycloak.
-  //    Strategy depends on the client's configured authentication method:
-  //    - client-secret: use client_id + client_secret (standard)
-  //    - client-jwt (private_key_jwt): forward the original assertion to Keycloak
+  //    The proxy has already enforced private_key_jwt (steps 4-8).
+  //    Internally, we authenticate to Keycloak using client_secret.
+  //    Keycloak is just our token factory; the proxy is the SMART authorization server.
   try {
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
+    const clientSecret = await getClientSecret(clientId, clientMeta.internalId)
     const formData = new URLSearchParams()
     formData.append('grant_type', 'client_credentials')
     formData.append('client_id', clientId)
+    formData.append('client_secret', clientSecret)
     if (scope) formData.append('scope', scope)
-
-    if (clientMeta.authenticatorType === 'client-jwt') {
-      // Client uses private_key_jwt — forward the validated assertion to Keycloak.
-      // We already verified the signature, so Keycloak just needs to issue the token.
-      // The aud claim targets our proxy, but Keycloak accepts it because we've
-      // pre-validated and Keycloak is configured to trust its own token endpoint.
-      formData.append('client_assertion_type', 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer')
-      formData.append('client_assertion', assertion)
-    } else {
-      // Client uses client_secret — standard approach
-      const clientSecret = await getClientSecret(clientId, clientMeta.internalId)
-      formData.append('client_secret', clientSecret)
-    }
 
     const resp = await fetch(kcUrl, {
       method: 'POST',
@@ -203,11 +191,11 @@ export async function handleBackendServicesToken(
 
     const data = await resp.json()
     if (resp.status !== 200) {
-      logger.auth.warn('Keycloak rejected Backend Services token request', { clientId, authenticatorType: clientMeta.authenticatorType, error: data.error, desc: data.error_description })
+      logger.auth.warn('Keycloak rejected Backend Services token request', { clientId, error: data.error, desc: data.error_description })
       return { status: resp.status, body: data }
     }
 
-    logger.auth.info('Backend Services token issued', { clientId, scope: data.scope, authenticatorType: clientMeta.authenticatorType })
+    logger.auth.info('Backend Services token issued', { clientId, scope: data.scope })
     return { status: 200, body: data }
   } catch (err) {
     logger.auth.error('Backend Services Keycloak token exchange failed', { clientId, error: err })
@@ -294,7 +282,6 @@ async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
   const result: ClientMetadata = {
     jwks,
     internalId: client.id,
-    authenticatorType: client.clientAuthenticatorType || 'client-secret',
   }
 
   jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })

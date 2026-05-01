@@ -15,7 +15,6 @@ import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
-import { config } from '@/config'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -102,14 +101,11 @@ async function registerJwksForClient(
   logger.admin.debug('Registering JWKS for client', { clientInternalId, alg })
 
   await admin.clients.update({ id: clientInternalId }, {
-    clientAuthenticatorType: 'client-jwt',
+    clientAuthenticatorType: 'client-secret',
     attributes: {
       'use.jwks.string': 'true',
       'jwks.string': jwksJson,
       'token.endpoint.auth.signing.alg': alg,
-      // Tell Keycloak to accept the proxy's token endpoint URL as a valid audience
-      // in client_assertion JWTs (required for Backend Services flow via proxy)
-      'jwtClientAuthentication.tokenEndpointUrl': `${config.baseUrl}/auth/token`,
     }
   })
 
@@ -1006,7 +1002,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
-      // Handle JWKS update (also auto-sets jwtClientAuthentication.tokenEndpointUrl)
+      // Handle JWKS update (stores JWKS for proxy-side JWT validation)
       if (body.jwksString || body.publicKey || body.jwksUri) {
         try {
           await registerJwksForClient(admin, existing.id!, {
