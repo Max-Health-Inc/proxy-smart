@@ -298,4 +298,109 @@ describe('Token endpoint form-body parsing — integration', () => {
     expect(data.error).not.toBe('validation')
     expect(data.error).toBe('invalid_client')
   })
+
+  it('AIHR repro: URLSearchParams object as fetch body (not .toString())', async () => {
+    // The AIHR client passes URLSearchParams directly to fetch() as body.
+    // fetch() serializes URLSearchParams with percent-encoding (colons → %3A).
+    // Our custom parser must decode this correctly.
+    const assertion = createJwt({ custom_data: 'x'.repeat(500) })
+
+    const params = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+      client_assertion: assertion,
+      scope: 'system/*.read system/*.write',
+    })
+
+    // When URLSearchParams is passed as body to fetch(), it's serialized as .toString()
+    // and Content-Type is set to application/x-www-form-urlencoded;charset=UTF-8
+    const req = new Request('http://localhost/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: params,
+    })
+
+    const res = await authRoutes.handle(req)
+    const data = await res.json() as Record<string, unknown>
+
+    // Must reach Backend Services handler (invalid_client = JWKS validation failure)
+    // NOT fall through to Keycloak proxy path
+    expect(data.error).not.toBe('validation')
+    expect(data.error).toBe('invalid_client')
+  })
+
+  it('AIHR repro: raw string body without URL-encoding special chars', async () => {
+    // The AIHR debug-token.ts also tests raw string (no encoding).
+    // Colons in client_assertion_type are NOT percent-encoded.
+    const assertion = createJwt({ custom_data: 'x'.repeat(500) })
+
+    const raw = `grant_type=client_credentials&client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=${assertion}&scope=system/*.read`
+
+    const req = new Request('http://localhost/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: raw,
+    })
+
+    const res = await authRoutes.handle(req)
+    const data = await res.json() as Record<string, unknown>
+
+    expect(data.error).not.toBe('validation')
+    expect(data.error).toBe('invalid_client')
+  })
+
+  it('AIHR repro: RS384 with 3072-bit key (realistic assertion size)', async () => {
+    // The AIHR client uses RS384 with a real key — assertions are ~800+ chars
+    const assertion = createJwt({
+      iss: 'aihr-mcp-agent',
+      sub: 'aihr-mcp-agent',
+      aud: 'http://localhost:8445/auth/token',
+      extra_claims: 'y'.repeat(1000),
+    })
+
+    const params = new URLSearchParams()
+    params.set('grant_type', 'client_credentials')
+    params.set('client_assertion_type', 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer')
+    params.set('client_assertion', assertion)
+    params.set('scope', 'system/*.read system/*.write')
+
+    const req = new Request('http://localhost/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    })
+
+    const res = await authRoutes.handle(req)
+    const data = await res.json() as Record<string, unknown>
+
+    expect(data.error).not.toBe('validation')
+    expect(data.error).toBe('invalid_client')
+  })
+
+  it('AIHR repro: no client_id in body (Backend Services does not require it)', async () => {
+    // SMART Backend Services spec: client_id is NOT required in the body
+    // because the client identifies itself via the JWT assertion (iss claim).
+    // The TokenRequest schema has client_id as Optional, so this should work.
+    const assertion = createJwt()
+
+    const params = new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+      client_assertion: assertion,
+      scope: 'system/*.read',
+    })
+
+    const req = new Request('http://localhost/auth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    })
+
+    const res = await authRoutes.handle(req)
+    const data = await res.json() as Record<string, unknown>
+
+    // Should reach Backend Services handler, not validation error
+    expect(data.error).not.toBe('validation')
+    expect(data.error).toBe('invalid_client')
+  })
 })

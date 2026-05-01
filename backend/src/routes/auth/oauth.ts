@@ -363,6 +363,14 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       // ── Backend Services (private_key_jwt) ────────────────────────────
       // Our proxy is the advertised token endpoint. We validate the JWT
       // assertion ourselves, then use Keycloak client_secret for token issuance.
+      if (bodyObj.client_assertion && !isBackendServicesRequest(bodyObj)) {
+        logger.auth.warn('Backend Services detection failed — client_assertion present but check returned false', {
+          has_client_assertion_type: !!bodyObj.client_assertion_type,
+          client_assertion_type_value: bodyObj.client_assertion_type,
+          client_assertion_length: bodyObj.client_assertion?.length,
+          bodyKeys: Object.keys(bodyObj),
+        })
+      }
       if (isBackendServicesRequest(bodyObj)) {
         logger.auth.debug('Backend Services request detected — handling JWT assertion at proxy layer')
         const result = await handleBackendServicesToken(bodyObj)

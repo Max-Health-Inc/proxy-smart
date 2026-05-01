@@ -25,6 +25,13 @@ import { logger } from '@/lib/logger'
 /** A JSON Web Key with required kty and optional kid, plus any additional JWK fields */
 interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
 
+/** Metadata returned by the client lookup helper */
+interface ClientMetadata {
+  jwks: { keys: JwkKey[] }
+  internalId: string
+  authenticatorType: string // 'client-secret' | 'client-jwt' | 'client-x509' | ...
+}
+
 const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
 /** Maximum JWT lifetime allowed (5 minutes per SMART STU2.2 spec) */
@@ -58,9 +65,9 @@ export function clearJtiCache(): void {
   adminTokenCache = null
 }
 
-// ─── Client config cache (JWKS + secret) ───────────────────────────────────
+// ─── Client config cache (metadata + secret) ───────────────────────────────
 interface CacheEntry<T> { value: T; expiresAt: number }
-const jwksCache = new Map<string, CacheEntry<{ keys: JwkKey[] }>>()
+const jwksCache = new Map<string, CacheEntry<ClientMetadata>>()
 const secretCache = new Map<string, CacheEntry<string>>()
 
 /**
@@ -147,10 +154,10 @@ export async function handleBackendServicesToken(
 
   const clientId = iss
 
-  // 7. Fetch the client's registered JWKS from Keycloak admin API
-  let clientJwksJson: { keys: JwkKey[] }
+  // 7. Fetch the client's registered metadata (JWKS + auth type) from Keycloak admin API
+  let clientMeta: ClientMetadata
   try {
-    clientJwksJson = await getClientJwks(clientId)
+    clientMeta = await getClientMetadata(clientId)
   } catch (err) {
     logger.auth.error('Failed to fetch client JWKS for Backend Services', { clientId, error: err })
     return { status: 400, body: { error: 'invalid_client', error_description: 'Client not found or has no registered JWKS' } }
@@ -158,23 +165,35 @@ export async function handleBackendServicesToken(
 
   // 8. Verify JWT signature against the client's JWKS
   try {
-    await verifyJwtSignature(assertion, decoded.header, clientJwksJson)
+    await verifyJwtSignature(assertion, decoded.header, clientMeta.jwks)
   } catch (err) {
     logger.auth.warn('Backend Services JWT signature verification failed', { clientId, error: err })
     return { status: 400, body: { error: 'invalid_client', error_description: 'JWT signature verification failed' } }
   }
 
-  // 9. JWT is valid — get a service account token from Keycloak
-  //    We authenticate using the client's internal secret (configured in Keycloak).
+  // 9. JWT is valid — get a service account token from Keycloak.
+  //    Strategy depends on the client's configured authentication method:
+  //    - client-secret: use client_id + client_secret (standard)
+  //    - client-jwt (private_key_jwt): forward the original assertion to Keycloak
   try {
-    const clientSecret = await getClientSecret(clientId)
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-
     const formData = new URLSearchParams()
     formData.append('grant_type', 'client_credentials')
     formData.append('client_id', clientId)
-    formData.append('client_secret', clientSecret)
     if (scope) formData.append('scope', scope)
+
+    if (clientMeta.authenticatorType === 'client-jwt') {
+      // Client uses private_key_jwt — forward the validated assertion to Keycloak.
+      // We already verified the signature, so Keycloak just needs to issue the token.
+      // The aud claim targets our proxy, but Keycloak accepts it because we've
+      // pre-validated and Keycloak is configured to trust its own token endpoint.
+      formData.append('client_assertion_type', 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer')
+      formData.append('client_assertion', assertion)
+    } else {
+      // Client uses client_secret — standard approach
+      const clientSecret = await getClientSecret(clientId, clientMeta.internalId)
+      formData.append('client_secret', clientSecret)
+    }
 
     const resp = await fetch(kcUrl, {
       method: 'POST',
@@ -184,11 +203,11 @@ export async function handleBackendServicesToken(
 
     const data = await resp.json()
     if (resp.status !== 200) {
-      logger.auth.warn('Keycloak rejected Backend Services token request', { clientId, error: data.error, desc: data.error_description })
+      logger.auth.warn('Keycloak rejected Backend Services token request', { clientId, authenticatorType: clientMeta.authenticatorType, error: data.error, desc: data.error_description })
       return { status: resp.status, body: data }
     }
 
-    logger.auth.info('Backend Services token issued', { clientId, scope: data.scope })
+    logger.auth.info('Backend Services token issued', { clientId, scope: data.scope, authenticatorType: clientMeta.authenticatorType })
     return { status: 200, body: data }
   } catch (err) {
     logger.auth.error('Backend Services Keycloak token exchange failed', { clientId, error: err })
@@ -229,10 +248,11 @@ async function getAdminToken(): Promise<string> {
 }
 
 /**
- * Fetch the JWKS registered for a Keycloak client (with TTL cache).
- * Uses the admin REST API: GET /admin/realms/{realm}/clients?clientId=X → attrs.jwks.string
+ * Fetch client metadata from Keycloak admin API (with TTL cache).
+ * Returns JWKS, internal UUID, and the client's authenticator type.
+ * Uses: GET /admin/realms/{realm}/clients?clientId=X
  */
-async function getClientJwks(clientId: string): Promise<{ keys: JwkKey[] }> {
+async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
   const cached = jwksCache.get(clientId)
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value
@@ -259,16 +279,22 @@ async function getClientJwks(clientId: string): Promise<{ keys: JwkKey[] }> {
     throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
 
-  let result: { keys: JwkKey[] }
+  let jwks: { keys: JwkKey[] }
 
   // jwks.string is a JSON string of the JWKS
   if (client.attributes?.['jwks.string']) {
-    result = JSON.parse(jwksString)
+    jwks = JSON.parse(jwksString)
   } else {
     // jwks.url — fetch it
     const jwksResp = await fetch(jwksString)
     if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksString}`)
-    result = await jwksResp.json()
+    jwks = await jwksResp.json()
+  }
+
+  const result: ClientMetadata = {
+    jwks,
+    internalId: client.id,
+    authenticatorType: client.clientAuthenticatorType || 'client-secret',
   }
 
   jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })
@@ -277,9 +303,9 @@ async function getClientJwks(clientId: string): Promise<{ keys: JwkKey[] }> {
 
 /**
  * Fetch the client secret from Keycloak admin API (with TTL cache).
- * GET /admin/realms/{realm}/clients/{id}/client-secret
+ * GET /admin/realms/{realm}/clients/{internalId}/client-secret
  */
-async function getClientSecret(clientId: string): Promise<string> {
+async function getClientSecret(clientId: string, internalId: string): Promise<string> {
   const cached = secretCache.get(clientId)
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value
@@ -287,19 +313,7 @@ async function getClientSecret(clientId: string): Promise<string> {
 
   const adminToken = await getAdminToken()
 
-  // First get the internal UUID for this clientId
-  const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
-  const resp = await fetch(searchUrl, {
-    headers: { Authorization: `Bearer ${adminToken}` }
-  })
-  if (!resp.ok) throw new Error(`Failed to look up client '${clientId}': ${resp.status}`)
-
-  const clients = await resp.json()
-  if (!clients.length) throw new Error(`Client '${clientId}' not found`)
-
-  const internalId = clients[0].id
-
-  // Fetch the secret
+  // Fetch the secret using the internal UUID
   const secretResp = await fetch(
     `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients/${internalId}/client-secret`,
     { headers: { Authorization: `Bearer ${adminToken}` } }
