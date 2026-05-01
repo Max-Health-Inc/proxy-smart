@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605011334.786d5900] - 2026-05-01
+
+- ✨ Features
+  - Add per-process EHR Launch support: default fallback, new launch code config (launchSecret, launchCodeTtlSeconds), and new launch-code.ts with payload/context and JWT signing/verification. Includes updated OAuth routes/schemas and EhrLaunchRequest/Response types. (backend; tests for EHR Launch flow)
+
+- 🔧 Chores & Improvements
+  - Bump version strings across multiple packages to 0.0.9-alpha.202605011334.786d5900 (and related prior bumps in 0.0.9-alpha.202605011236.25453c95 / df545ab1) ensuring consistency across consent-app, dtr-app, patient-portal, smart-dicom-template, ui, eslint-config, testing/e2e, and generated package.
+  - Switch Keycloak authentication: backend/admin now uses client_secret instead of client-jwt for Keycloak integration; backend/auth adjusted accordingly; Keycloak realm-export updated. Added secret for AI Assistant Agent.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/616
+
+
 ## [0.0.9-alpha.202605011236.25453c95] - 2026-05-01
 
 - ✨ Features
