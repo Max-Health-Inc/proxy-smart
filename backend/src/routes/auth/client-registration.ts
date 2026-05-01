@@ -223,9 +223,10 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
             return uri // fallback for invalid URIs
           }
         }),
-        clientAuthenticatorType: isConfidential 
-          ? (body.jwks_uri || body.jwks ? 'client-jwt' : 'client-secret')
-          : 'none',
+        // Proxy validates JWT assertions itself, then authenticates to Keycloak
+        // using client_secret. Must be 'client-secret' so Keycloak accepts the
+        // proxy's internal token request for backend services.
+        clientAuthenticatorType: isConfidential ? 'client-secret' : 'none',
         attributes: {
           'pkce.code.challenge.method': 'S256',
           'client.secret.creation.time': Date.now().toString(),

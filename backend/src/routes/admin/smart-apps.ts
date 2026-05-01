@@ -319,8 +319,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       let clientAuthenticatorType = 'none'
       
       if (isBackendService) {
-        // Backend services always use JWT authentication
-        clientAuthenticatorType = 'client-jwt'
+        // Backend services: proxy validates JWT assertions itself, then authenticates
+        // to Keycloak using client_secret internally. Must be 'client-secret' so
+        // Keycloak accepts the proxy's internal token request.
+        clientAuthenticatorType = 'client-secret'
       } else if (!isPublicClient) {
         // Confidential client - determine based on whether JWKS/publicKey is provided
         if (body.jwksUri || body.publicKey) {
@@ -357,13 +359,14 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // If no appType, fallback to clientType
           ...(!body.appType && isBackendService && { 'client_type': 'backend-service' }),
           
-          // Store JWKS info for JWT authentication (backend services or confidential JWT clients)
-          ...(body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+          // Store JWKS info for JWT authentication (proxy-side validation for backend
+          // services, or Keycloak-side validation for confidential JWT clients)
+          ...(body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
             'use.jwks.url': 'true',
             'jwks.url': body.jwksUri
           }),
           // Inline JWKS string (alternative to jwksUri)
-          ...(body.jwksString && !body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+          ...(body.jwksString && !body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
             'use.jwks.string': 'true',
             'jwks.string': body.jwksString
           }),
@@ -578,10 +581,26 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
-      // If Backend Services with public key (PEM), convert and register JWKS
-      if (isBackendService && body.publicKey && !body.jwksString && !body.jwksUri && createdClient.id) {
+      // Register JWKS for Backend Services clients (sets signing alg attribute
+      // and ensures clientAuthenticatorType stays 'client-secret')
+      if (isBackendService && (body.publicKey || body.jwksString || body.jwksUri) && createdClient.id) {
         try {
-          await registerJwksForClient(admin, createdClient.id, { publicKeyPem: body.publicKey })
+          if (body.publicKey || body.jwksString) {
+            await registerJwksForClient(admin, createdClient.id, {
+              publicKeyPem: body.publicKey,
+              jwksString: body.jwksString,
+            })
+          }
+          // jwksUri is already stored in attributes during creation — just ensure
+          // the signing alg attribute is set for consistency
+          if (body.jwksUri && !body.publicKey && !body.jwksString) {
+            await admin.clients.update({ id: createdClient.id }, {
+              clientAuthenticatorType: 'client-secret',
+              attributes: {
+                'token.endpoint.auth.signing.alg': 'RS384',
+              }
+            })
+          }
 
           // Re-fetch client details after key registration
           const updatedClient = await admin.clients.findOne({ id: createdClient.id })
@@ -592,7 +611,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // Clean up created client if key registration fails
           await admin.clients.del({ id: createdClient.id })
           set.status = 400
-          return { error: 'Failed to register public key for Backend Services client', details: keyError }
+          return { error: 'Failed to register JWKS for Backend Services client', details: keyError }
         }
       }
 
