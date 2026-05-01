@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605011803.e740003b] - 2026-05-01
+
+- 🔧 Chores & Improvements: Version bumps across multiple apps/configs (0.0.9-beta → 0.0.9-alpha) and 0.0.9-alpha → 0.0.9-beta.  
+- 🐛 Bug Fixes: Harden JWKS handling in backend to support isBackendService or client-jwt for jwksUri/jwksString, and ensure jwksString/jwksUri are included when publicKey/jwksString/jwksUri are present in body for backend services.  
+- 🔧 Chores & Improvements: Align client-registration and backend authentication flows to use client-secret where appropriate; minor JWKS handling adjustments.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/618
+
+
 ## [0.0.9-alpha.202605011334.786d5900] - 2026-05-01
 
 - ✨ Features
