@@ -43,10 +43,18 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
       }
       
       const oidcConfig = await response.json()
-      
-      // Return Keycloak's metadata - the issuer will be Keycloak's realm URL
-      // but the endpoints can be proxied through the backend
-      return oidcConfig
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      // Rewrite endpoints to proxy URLs so MCP clients go through our auth layer
+      return {
+        ...oidcConfig,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
+        registration_endpoint: `${baseUrl}/auth/register`,
+        introspection_endpoint: `${baseUrl}/auth/introspect`,
+        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+      }
     } catch {
       set.status = 500
       return {
@@ -94,12 +102,12 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
         authMethods.push('none')
       }
       
-      // Return OAuth 2.0 AS Metadata format (subset of OIDC)
+      // Return OAuth 2.0 AS Metadata format — point to proxy endpoints
       return {
         issuer: baseUrl,
-        authorization_endpoint: oidcConfig.authorization_endpoint,
-        token_endpoint: oidcConfig.token_endpoint,
-        jwks_uri: oidcConfig.jwks_uri,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,

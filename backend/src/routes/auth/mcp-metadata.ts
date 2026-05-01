@@ -132,9 +132,11 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         // acts as AS from MCP clients' perspective (it owns the registration_endpoint
         // and proxies authorization/token endpoints), so use baseUrl, not Keycloak's issuer.
         issuer: baseUrl,
-        authorization_endpoint: oidcConfig.authorization_endpoint,
-        token_endpoint: oidcConfig.token_endpoint,
-        jwks_uri: oidcConfig.jwks_uri,
+        // Point to proxy endpoints so MCP clients go through our auth layer
+        // (SMART launch context enrichment, Backend Services JWT validation, aud enforcement)
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         // Point to our own DCR endpoint instead of Keycloak's native one
         // (Keycloak's requires initial access tokens / trusted host policy)
         registration_endpoint: `${baseUrl}/auth/register`,
@@ -186,10 +188,18 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       }
       
       const oidcConfig = await response.json()
-      
-      // Return Keycloak's metadata as-is
-      // The issuer will be Keycloak's realm URL (the real token issuer)
-      return oidcConfig
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      // Rewrite endpoints to proxy URLs so MCP clients go through our auth layer
+      return {
+        ...oidcConfig,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
+        registration_endpoint: `${baseUrl}/auth/register`,
+        introspection_endpoint: `${baseUrl}/auth/introspect`,
+        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+      }
     } catch {
       set.status = 500
       return {
@@ -231,8 +241,17 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       }
       
       const oidcConfig = await response.json()
-      
-      return oidcConfig
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      return {
+        ...oidcConfig,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
+        registration_endpoint: `${baseUrl}/auth/register`,
+        introspection_endpoint: `${baseUrl}/auth/introspect`,
+        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+      }
     } catch {
       set.status = 500
       return {
@@ -284,12 +303,12 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         authMethods.push('none')
       }
       
-      // Return OAuth 2.0 AS Metadata format (subset of OIDC)
+      // Return OAuth 2.0 AS Metadata format — point to proxy endpoints
       return {
         issuer: baseUrl,
-        authorization_endpoint: oidcConfig.authorization_endpoint,
-        token_endpoint: oidcConfig.token_endpoint,
-        jwks_uri: oidcConfig.jwks_uri,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         client_registration_types_supported: ['client_id_metadata_document', 'dynamic_client_registration'],
         scopes_supported: oidcConfig.scopes_supported,
