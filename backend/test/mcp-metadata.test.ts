@@ -227,15 +227,16 @@ describe('MCP Metadata — /.well-known/oauth-authorization-server', () => {
     expect(noneCount).toBe(1)
   })
 
-  it('passes through Keycloak authorization/token endpoints', async () => {
+  it('rewrites authorization/token endpoints to proxy URLs', async () => {
     const app = createApp()
     const res = await app.handle(
       new Request('http://localhost/.well-known/oauth-authorization-server'),
     )
     const body = await res.json()
-    // These should be Keycloak's actual endpoints (clients redirect there)
-    expect(body.authorization_endpoint).toBe(MOCK_KEYCLOAK_OIDC.authorization_endpoint)
-    expect(body.token_endpoint).toBe(MOCK_KEYCLOAK_OIDC.token_endpoint)
+    // MCP clients must go through our proxy (SMART context enrichment, backend services, aud enforcement)
+    expect(body.authorization_endpoint).toBe(`${TEST_BASE_URL}/auth/authorize`)
+    expect(body.token_endpoint).toBe(`${TEST_BASE_URL}/auth/token`)
+    expect(body.jwks_uri).toBe(`${TEST_BASE_URL}/.well-known/jwks.json`)
   })
 
   it('returns 502 when Keycloak is unreachable', async () => {
