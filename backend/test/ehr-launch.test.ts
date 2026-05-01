@@ -19,32 +19,41 @@ const TEST_PATIENT_ID = 'Patient/test-patient-123'
 const TEST_ENCOUNTER_ID = 'Encounter/test-encounter-456'
 const TEST_CLIENT_ID = 'smart-app-client'
 
-// ─── Mock config ────────────────────────────────────────────────────────────
+// ─── Mock config via env vars ───────────────────────────────────────────────
+// NOTE: Do NOT mock.module('@/config') — it's global in Bun and leaks to other
+// test files. Instead, set env vars so the real config's dynamic getters pick
+// them up. Save and restore in beforeEach/afterEach.
+const CONFIG_ENV_VARS = {
+  BASE_URL: TEST_BASE_URL,
+  SMART_LAUNCH_SECRET: TEST_LAUNCH_SECRET,
+  SMART_LAUNCH_CODE_TTL_SECONDS: '300',
+  KEYCLOAK_BASE_URL: 'http://localhost:8080',
+  KEYCLOAK_REALM: 'smart-health',
+  KEYCLOAK_PUBLIC_URL: 'http://localhost:8080',
+  KEYCLOAK_ADMIN_CLIENT_ID: 'admin-service',
+  KEYCLOAK_ADMIN_CLIENT_SECRET: 'admin-secret',
+} as const
 
-mock.module('@/config', () => ({
-  config: {
-    baseUrl: TEST_BASE_URL,
-    name: 'proxy-smart-backend',
-    smart: {
-      launchSecret: TEST_LAUNCH_SECRET,
-      launchCodeTtlSeconds: 300,
-    },
-    keycloak: {
-      isConfigured: true,
-      baseUrl: 'http://localhost:8080',
-      realm: 'smart-health',
-      publicUrl: 'http://localhost:8080',
-      adminClientId: 'admin-service',
-      adminClientSecret: 'admin-secret',
-    },
+// Suppress logger output in tests
+// NOTE: mock.module is global in Bun — partial mocks leak to other test files.
+// Use a Proxy so every namespace (server, consent, fhir, …) and top-level
+// method (info, debug, …) resolves to a no-op, keeping other suites safe.
+const noop = () => {}
+const noopCategory = { error: noop, warn: noop, info: noop, debug: noop, trace: noop }
+const noopLogger = new Proxy({} as Record<string, unknown>, {
+  get(_target, prop) {
+    if (typeof prop === 'string') {
+      if (['error', 'warn', 'info', 'debug', 'trace'].includes(prop)) return noop
+      return noopCategory
+    }
+    return undefined
   },
-}))
-
+})
 mock.module('@/lib/logger', () => ({
-  logger: {
-    auth: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
-    app: { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} },
-  },
+  logger: noopLogger,
+  createLogger: () => noopLogger,
+  PerformanceTimer: class { start() {} stop() {} },
+  createRequestLogger: () => ({ request: noop, response: noop }),
 }))
 
 // ─── Import after mocks ─────────────────────────────────────────────────────
@@ -54,6 +63,22 @@ import { signLaunchCode, verifyLaunchCode, type LaunchCodePayload } from '../src
 // ─── Launch Code Service Tests ──────────────────────────────────────────────
 
 describe('Launch Code Service', () => {
+  const savedEnv: Record<string, string | undefined> = {}
+
+  beforeEach(() => {
+    for (const [key, value] of Object.entries(CONFIG_ENV_VARS)) {
+      savedEnv[key] = process.env[key]
+      process.env[key] = value
+    }
+  })
+
+  afterEach(() => {
+    for (const key of Object.keys(CONFIG_ENV_VARS)) {
+      if (savedEnv[key] === undefined) delete process.env[key]
+      else process.env[key] = savedEnv[key]
+    }
+  })
+
   describe('signLaunchCode', () => {
     it('signs a launch code with patient context', () => {
       const payload: LaunchCodePayload = {
