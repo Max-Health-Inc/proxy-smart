@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605011236.25453c95] - 2026-05-01
+
+- ✨ Features
+  - Introduce per-process EHR Launch code support: new launch code config (launchSecret, launchCodeTtlSeconds), LaunchCodePayload/Context, JWT signing/verification, and EHR Launch 2.2.0 schema/types.
+  - Add service-account admin
+
+- 🐛 Bug Fixes
+  - Adjust Keycloak authentication flow: switch from client_jwt to client-secret (backend/admin and backend/auth) and update tests accordingly.
+
+- 🔧 Chores & Improvements
+  - Bump version strings across multiple packages to 0.0.9-alpha.202605011236.25453c95.
+  - Update OAuth routes/schemas to include EhrLaunchRequest/Response types and related signing/verification imports.
+  - Update Keycloak realm-export.json to reflect clientAuthenticatorType change and add AI Assistant Agent secret; remove tokenEndpointUrl.
+
+Notes:
+- Excludes update/merge/metadata commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/615
+
+
 ## [0.0.9-alpha.202604302305.da2c1b18] - 2026-05-01
 
 - 🔧 Chores & Improvements: Internal maintenance and refactoring across admin smart-apps, backend-services auth, oauth, and tests
