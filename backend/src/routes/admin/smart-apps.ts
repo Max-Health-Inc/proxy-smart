@@ -359,13 +359,14 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // If no appType, fallback to clientType
           ...(!body.appType && isBackendService && { 'client_type': 'backend-service' }),
           
-          // Store JWKS info for JWT authentication (backend services or confidential JWT clients)
-          ...(body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+          // Store JWKS info for JWT authentication (proxy-side validation for backend
+          // services, or Keycloak-side validation for confidential JWT clients)
+          ...(body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
             'use.jwks.url': 'true',
             'jwks.url': body.jwksUri
           }),
           // Inline JWKS string (alternative to jwksUri)
-          ...(body.jwksString && !body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+          ...(body.jwksString && !body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
             'use.jwks.string': 'true',
             'jwks.string': body.jwksString
           }),
@@ -582,12 +583,24 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       // Register JWKS for Backend Services clients (sets signing alg attribute
       // and ensures clientAuthenticatorType stays 'client-secret')
-      if (isBackendService && (body.publicKey || body.jwksString) && createdClient.id) {
+      if (isBackendService && (body.publicKey || body.jwksString || body.jwksUri) && createdClient.id) {
         try {
-          await registerJwksForClient(admin, createdClient.id, {
-            publicKeyPem: body.publicKey,
-            jwksString: body.jwksString,
-          })
+          if (body.publicKey || body.jwksString) {
+            await registerJwksForClient(admin, createdClient.id, {
+              publicKeyPem: body.publicKey,
+              jwksString: body.jwksString,
+            })
+          }
+          // jwksUri is already stored in attributes during creation — just ensure
+          // the signing alg attribute is set for consistency
+          if (body.jwksUri && !body.publicKey && !body.jwksString) {
+            await admin.clients.update({ id: createdClient.id }, {
+              clientAuthenticatorType: 'client-secret',
+              attributes: {
+                'token.endpoint.auth.signing.alg': 'RS384',
+              }
+            })
+          }
 
           // Re-fetch client details after key registration
           const updatedClient = await admin.clients.findOne({ id: createdClient.id })
