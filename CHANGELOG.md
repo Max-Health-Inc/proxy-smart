@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202604302305.da2c1b18] - 2026-05-01
+
+- 🔧 Chores & Improvements: Internal maintenance and refactoring across admin smart-apps, backend-services auth, oauth, and tests
+- 🐛 Bug Fixes: JWKS update logic now auto-sets jwtClientAuthentication.tokenEndpointUrl; ensure proper ClientMetadata cache handling
+- ✨ Features: Added ClientMetadata cache type and updated caches to store ClientMetadata; new warning log for non-backend-services requests containing client_assertion; backend services detection handler path
+- 📚 Documentation: Keycloak realm-export updated with jwtClientAuthentication.tokenEndpointUrl entry
+- ⚠️ Breaking Changes: None identified
+
+Note: No non-meaningful or purely update/merge commits included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/614
+
+
 ## [0.0.9-alpha.202604302300.35715d6b] - 2026-04-30
 
 - ✨ Features
