@@ -319,8 +319,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       let clientAuthenticatorType = 'none'
       
       if (isBackendService) {
-        // Backend services always use JWT authentication
-        clientAuthenticatorType = 'client-jwt'
+        // Backend services: proxy validates JWT assertions itself, then authenticates
+        // to Keycloak using client_secret internally. Must be 'client-secret' so
+        // Keycloak accepts the proxy's internal token request.
+        clientAuthenticatorType = 'client-secret'
       } else if (!isPublicClient) {
         // Confidential client - determine based on whether JWKS/publicKey is provided
         if (body.jwksUri || body.publicKey) {
@@ -578,10 +580,14 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
-      // If Backend Services with public key (PEM), convert and register JWKS
-      if (isBackendService && body.publicKey && !body.jwksString && !body.jwksUri && createdClient.id) {
+      // Register JWKS for Backend Services clients (sets signing alg attribute
+      // and ensures clientAuthenticatorType stays 'client-secret')
+      if (isBackendService && (body.publicKey || body.jwksString) && createdClient.id) {
         try {
-          await registerJwksForClient(admin, createdClient.id, { publicKeyPem: body.publicKey })
+          await registerJwksForClient(admin, createdClient.id, {
+            publicKeyPem: body.publicKey,
+            jwksString: body.jwksString,
+          })
 
           // Re-fetch client details after key registration
           const updatedClient = await admin.clients.findOne({ id: createdClient.id })
@@ -592,7 +598,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // Clean up created client if key registration fails
           await admin.clients.del({ id: createdClient.id })
           set.status = 400
-          return { error: 'Failed to register public key for Backend Services client', details: keyError }
+          return { error: 'Failed to register JWKS for Backend Services client', details: keyError }
         }
       }
 
