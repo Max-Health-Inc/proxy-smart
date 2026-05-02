@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605021852.b4e1d881] - 2026-05-02
+
+- ✨ Features: Persist SHL sessions with SQLite, fix expiration, hide app store in shared view (quotentiroler)
+- 🔧 Chores & Improvements: Update all outdated packages (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/628
+
+
 ## [0.1.0-alpha.202605021846.96e0e538] - 2026-05-02
 
 - ✨ Features: 
