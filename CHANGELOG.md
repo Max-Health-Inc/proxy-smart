@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605021709.cf0c5f80] - 2026-05-02
+
+- ✨ Features: Version bump to 0.0.9-alpha.202605021709.cf0c5f80 across multiple packages; updated repository URLs and homepage references
+- 🔧 Chores & Improvements: Deploy-beta workflow improvement for DICOM copy logic (copy all .dcm when directory exists and contains .dcm); seed-dicom.sh handles empty directory
+- 🔧 Chores & Improvements: OAuth /aud validation refactor to use faster prefix checks and MCP endpoint path, avoiding expensive server checks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/620
+
+
 ## [0.0.9-alpha.202605011807.e7d41bb1] - 2026-05-02
 
 - ✨ Features: 
