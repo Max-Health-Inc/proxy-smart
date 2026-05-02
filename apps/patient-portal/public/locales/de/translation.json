@@ -187,7 +187,8 @@
     "viewImages": "Bilder anzeigen",
     "viewSeries": "Serien anzeigen",
     "nSeries": "{{n}} Serien",
-    "nImages": "{{n}} Bilder"
+    "nImages": "{{n}} Bilder",
+    "dataWarning": "Das Anzeigen von Bildstudien kann viel Datenvolumen verbrauchen. Nutzen Sie wenn möglich WLAN."
   },
   "healthCharts": {
     "title": "Gesundheitsdiagramme",

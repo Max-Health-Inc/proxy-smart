@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
-import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X } from "lucide-react"
+import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"
 import type { ImagingStudyStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImagingStudyStatusUvIps"
@@ -16,7 +16,7 @@ import {
   getDicomwebAuthHeaders,
   extractServerIdFromEndpoint,
 } from "@/lib/dicomweb"
-import { DicomViewerDialog, type ViewerTarget } from "./DicomViewer"
+import { DicomViewerDialog, type ViewerTarget, type ViewerAppInfo } from "./DicomViewer"
 
 // ── Thumbnail with auth + graceful fallback ────────────────────────────────
 
@@ -241,6 +241,18 @@ export function ImagingStudyCard({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
+  const [viewerApp, setViewerApp] = useState<ViewerAppInfo | null>(null)
+  const [viewerAppFetched, setViewerAppFetched] = useState(false)
+
+  // Lazy-fetch the configured viewer app only when expanded
+  useEffect(() => {
+    if (collapsed || viewerAppFetched) return
+    setViewerAppFetched(true)
+    fetch('/dicomweb/viewer-app')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setViewerApp(data) })
+      .catch(() => {})
+  }, [collapsed, viewerAppFetched])
 
   const handleViewSeries = (target: ViewerTarget) => {
     setViewerTarget(target)
@@ -301,6 +313,12 @@ export function ImagingStudyCard({
             )}
             {collapsed ? <ChevronDown className="size-4 text-muted-foreground shrink-0" /> : <ChevronUp className="size-4 text-muted-foreground shrink-0" />}
           </CardTitle>
+          {!collapsed && hasData && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-1">
+              <AlertTriangle className="size-3 shrink-0" />
+              {t("imagingStudy.dataWarning")}
+            </p>
+          )}
         </CardHeader>
         {!collapsed && (
         <CardContent>
@@ -399,6 +417,7 @@ export function ImagingStudyCard({
         target={viewerTarget}
         open={viewerOpen}
         onOpenChange={setViewerOpen}
+        viewerApp={viewerApp}
       />
     </>
   )

@@ -50,3 +50,6 @@ mcp-endpoint.json
 
 # Runtime FHIR server config (managed via UI)
 fhir-servers.json
+
+# Persistent data (SQLite databases, runtime state)
+/data
