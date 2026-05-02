@@ -9,10 +9,10 @@ import {
   ExportResponse, 
   OAuthEventsResponse, 
   OAuthAnalyticsResponse,
-  MonitoringHealthResponseType,
-  ExportResponseType,
-  OAuthEventsResponseType,
-  OAuthAnalyticsResponseType
+  type MonitoringHealthResponseType,
+  type ExportResponseType,
+  type OAuthEventsResponseType,
+  type OAuthAnalyticsResponseType
 } from '../schemas/monitoring';
 
 /**

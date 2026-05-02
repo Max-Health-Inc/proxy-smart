@@ -32,6 +32,7 @@ export function reactConfig({ tsconfigRootDir, files, ignores = [] }) {
       rules: {
         ...sharedRules,
         ...reactHooks.configs.recommended.rules,
+        'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
         'react-refresh/only-export-components': [
           'warn',
           { allowConstantExport: true },

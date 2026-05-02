@@ -21,6 +21,7 @@ export const DicomServerConfig = t.Object({
   password: t.Optional(t.String({ description: 'Password (for basic auth)' })),
   timeoutMs: t.Optional(t.Number({ description: 'Request timeout in milliseconds', default: 30000 })),
   isDefault: t.Optional(t.Boolean({ description: 'Whether this is the default DICOM server', default: false })),
+  viewerAppClientId: t.Optional(t.String({ description: 'Client ID of the SMART app to use as DICOM viewer' })),
 }, { title: 'DicomServerConfig' })
 
 export type DicomServerConfigType = Static<typeof DicomServerConfig>
@@ -41,6 +42,7 @@ export const AddDicomServerRequest = t.Object({
   password: t.Optional(t.String()),
   timeoutMs: t.Optional(t.Number({ default: 30000 })),
   isDefault: t.Optional(t.Boolean({ default: false })),
+  viewerAppClientId: t.Optional(t.String({ description: 'Client ID of the SMART app to use as DICOM viewer' })),
 }, { title: 'AddDicomServerRequest' })
 
 export type AddDicomServerRequestType = Static<typeof AddDicomServerRequest>

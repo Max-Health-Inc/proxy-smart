@@ -74,8 +74,7 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       const created = await admin.roles.findOneByName({ name: body.name })
       return created ?? {}
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to create role', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: CreateRoleRequest,
@@ -155,8 +154,7 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       await admin.roles.updateByName({ name: params.roleName }, updateData)
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to update role', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -195,8 +193,7 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       await admin.roles.delByName({ name: params.roleName })
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to delete role', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({

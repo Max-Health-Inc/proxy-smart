@@ -170,7 +170,8 @@
     "loadFailed": "DICOM-Betrachter konnte nicht geladen werden",
     "controlWL": "🖱️ L: F/H",
     "controlZoom": "🖱️ R: Zoom",
-    "controlScroll": "⚙️ Scrollen: Schicht"
+    "controlScroll": "⚙️ Scrollen: Schicht",
+    "openInViewer": "Im Viewer öffnen"
   },
   "imagingStudy": {
     "title": "Bildgebungsstudien",

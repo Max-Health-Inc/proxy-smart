@@ -170,7 +170,8 @@
     "loadFailed": "Échec du chargement de la visionneuse DICOM",
     "controlWL": "🖱️ G: N/L",
     "controlZoom": "🖱️ D: Zoom",
-    "controlScroll": "⚙️ Molette: Coupe"
+    "controlScroll": "⚙️ Molette: Coupe",
+    "openInViewer": "Ouvrir dans le Viewer"
   },
   "imagingStudy": {
     "title": "Études d'imagerie",

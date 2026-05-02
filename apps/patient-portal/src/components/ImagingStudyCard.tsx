@@ -14,6 +14,7 @@ import {
   getPrimaryModality,
   getModalityInfo,
   getDicomwebAuthHeaders,
+  extractServerIdFromEndpoint,
 } from "@/lib/dicomweb"
 import { DicomViewerDialog, type ViewerTarget } from "./DicomViewer"
 
@@ -67,10 +68,12 @@ function StudyRow({
   study,
   onViewSeries,
   readOnly: _readOnly = false,
+  serverId,
 }: {
   study: ImagingStudy
   onViewSeries: (target: ViewerTarget) => void
   readOnly?: boolean
+  serverId?: string
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
@@ -89,6 +92,7 @@ function StudyRow({
       seriesUID: first.uid,
       seriesDescription: first.description || title,
       modality: first.modality?.code || modality || undefined,
+      serverId,
     })
   }
 
@@ -101,7 +105,7 @@ function StudyRow({
       >
         {studyUID ? (
           <DicomThumbnail
-            src={getStudyThumbnailUrl(studyUID)}
+            src={getStudyThumbnailUrl(studyUID, serverId)}
             alt={title}
             className="size-12 shrink-0 rounded"
           />
@@ -166,7 +170,7 @@ function StudyRow({
               return (
                 <li key={series.uid || `s-${si}`} className="flex items-start gap-2">
                   <DicomThumbnail
-                    src={getSeriesThumbnailUrl(studyUID, series.uid)}
+                    src={getSeriesThumbnailUrl(studyUID, series.uid, serverId)}
                     alt={series.description || `Series ${si + 1}`}
                     className="size-10 shrink-0 rounded"
                   />
@@ -199,6 +203,7 @@ function StudyRow({
                         seriesDescription:
                           series.description || `Series ${(series.number ?? si) + 1}`,
                         modality: seriesModality || modality || undefined,
+                        serverId,
                       })
                     }
                     className="shrink-0 mt-0.5 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
@@ -223,16 +228,19 @@ export function ImagingStudyCard({
   radiologyResults,
   readOnly = false,
   onOpenDetail,
+  defaultCollapsed = false,
 }: {
   imagingStudies: ImagingStudy[]
   radiologyResults: RadiologyResult[]
   readOnly?: boolean
   onOpenDetail?: (title: string, resource: AnyResource) => void
+  defaultCollapsed?: boolean
 }) {
   const { t } = useTranslation()
   const [viewerTarget, setViewerTarget] = useState<ViewerTarget | null>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [search, setSearch] = useState("")
+  const [collapsed, setCollapsed] = useState(defaultCollapsed)
 
   const handleViewSeries = (target: ViewerTarget) => {
     setViewerTarget(target)
@@ -281,18 +289,20 @@ export function ImagingStudyCard({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="cursor-pointer select-none" onClick={() => setCollapsed(!collapsed)}>
           <CardTitle className="flex items-center gap-2 text-base">
             <ScanLine className="size-4 text-violet-500" />
             {t("imagingStudy.title")}
             {hasData && (
-              <span className="text-xs font-normal text-muted-foreground ml-auto">
+              <span className="text-xs font-normal text-muted-foreground ml-auto mr-1">
                 {t("imagingStudy.nStudies", { count: imagingStudies.length })}
                 {radiologyResults.length > 0 && ` · ${t("imagingStudy.nReports", { n: radiologyResults.length })}`}
               </span>
             )}
+            {collapsed ? <ChevronDown className="size-4 text-muted-foreground shrink-0" /> : <ChevronUp className="size-4 text-muted-foreground shrink-0" />}
           </CardTitle>
         </CardHeader>
+        {!collapsed && (
         <CardContent>
           {!hasData ? (
             <p className="text-sm text-muted-foreground">{t("imagingStudy.noImagingRecords")}</p>
@@ -334,6 +344,7 @@ export function ImagingStudyCard({
                           study={study}
                           onViewSeries={handleViewSeries}
                           readOnly={readOnly}
+                          serverId={extractServerIdFromEndpoint(study.endpoint)}
                         />
                       ))}
                     </ul>
@@ -381,6 +392,7 @@ export function ImagingStudyCard({
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       <DicomViewerDialog

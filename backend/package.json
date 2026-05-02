@@ -9,7 +9,7 @@
     "dev": "bun run --watch --watch-path src src/index.ts",
     "start": "bun run src/index.ts",
     "mcp": "bun run src/mcp-server.ts",
-    "build": "tsc --noEmit && bun build src/index.ts --outdir dist --target node",
+    "build": "tsc --noEmit && bun build src/index.ts --outdir dist --target node --external undici --external node-fetch",
     "export-openapi": "mkdir -p dist && bun run src/export-openapi.ts && bun run scripts/sanitize-openapi.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",

@@ -170,7 +170,8 @@
     "loadFailed": "Failed to load DICOM viewer",
     "controlWL": "🖱️ L: W/L",
     "controlZoom": "🖱️ R: Zoom",
-    "controlScroll": "⚙️ Scroll: Slice"
+    "controlScroll": "⚙️ Scroll: Slice",
+    "openInViewer": "Open in Viewer"
   },
   "imagingStudy": {
     "title": "Imaging Studies",

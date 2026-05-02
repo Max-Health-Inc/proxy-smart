@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, Button, Spinner, Badge } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import {
@@ -45,9 +45,9 @@ import {
   type ConditionSeverityCode, type AnyResource,
 } from "@/lib/ips-display-helpers"
 import { PatientBanner } from "@/components/PatientBanner"
-import { ImagingStudyCard } from "@/components/ImagingStudyCard"
-import { HealthChartsCard } from "@/components/HealthChartsCard"
-import { GenomicsCard } from "@/components/GenomicsCard"
+const HealthChartsCard = lazy(() => import("@/components/HealthChartsCard").then(m => ({ default: m.HealthChartsCard })))
+const ImagingStudyCard = lazy(() => import("@/components/ImagingStudyCard").then(m => ({ default: m.ImagingStudyCard })))
+const GenomicsCard = lazy(() => import("@/components/GenomicsCard").then(m => ({ default: m.GenomicsCard })))
 import { DocumentsCard } from "@/components/DocumentsCard"
 import { CoverageCard } from "@/components/CoverageCard"
 import { EncountersCard } from "@/components/EncountersCard"
@@ -749,21 +749,28 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
         <DocumentsCard documents={documents} onOpenDetail={openDetail} />
 
         <div className="md:col-span-2">
-          <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} readOnly={readOnly} onOpenDetail={openDetail} />
+          <Suspense fallback={<Card><CardContent className="flex items-center justify-center py-12"><Spinner size="sm" /></CardContent></Card>}>
+            <HealthChartsCard vitals={vitals} labs={labs} />
+          </Suspense>
         </div>
 
         <div className="md:col-span-2">
-          <HealthChartsCard vitals={vitals} labs={labs} />
+          <Suspense fallback={<Card><CardContent className="flex items-center justify-center py-12"><Spinner size="sm" /></CardContent></Card>}>
+            <ImagingStudyCard imagingStudies={imagingStudies} radiologyResults={radiologyResults} readOnly={readOnly} onOpenDetail={openDetail} defaultCollapsed />
+          </Suspense>
         </div>
 
         <div className="md:col-span-2">
-          <GenomicsCard
-            reports={genomicReports}
-            variants={variants}
-            diagnosticImplications={diagnosticImplications}
-            therapeuticImplications={therapeuticImplications}
-            onOpenDetail={openDetail}
-          />
+          <Suspense fallback={<Card><CardContent className="flex items-center justify-center py-12"><Spinner size="sm" /></CardContent></Card>}>
+            <GenomicsCard
+              reports={genomicReports}
+              variants={variants}
+              diagnosticImplications={diagnosticImplications}
+              therapeuticImplications={therapeuticImplications}
+              onOpenDetail={openDetail}
+              defaultCollapsed
+            />
+          </Suspense>
         </div>
       </div>
       )}

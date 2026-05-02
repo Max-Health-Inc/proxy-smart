@@ -170,7 +170,8 @@
     "loadFailed": "Caricamento del visualizzatore DICOM fallito",
     "controlWL": "🖱️ S: F/L",
     "controlZoom": "🖱️ D: Zoom",
-    "controlScroll": "⚙️ Rotella: Fetta"
+    "controlScroll": "⚙️ Rotella: Fetta",
+    "openInViewer": "Apri nel Viewer"
   },
   "imagingStudy": {
     "title": "Studi di imaging",

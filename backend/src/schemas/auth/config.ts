@@ -1,4 +1,4 @@
-import { t, Static } from 'elysia'
+import { t, type Static } from 'elysia'
 
 /**
  * Keycloak configuration for public authentication

@@ -354,6 +354,12 @@ export function getDefaultDicomServer(): DicomServerConfigType | null {
   return servers.find(s => s.isDefault) ?? servers[0] ?? null
 }
 
+/** Look up a specific DICOM server by its config ID (e.g. for /dicomweb/servers/:serverId routes) */
+export function getDicomServerById(id: string): DicomServerConfigType | null {
+  const servers = getRuntimeDicomServers()
+  return servers.find(s => s.id === id) ?? null
+}
+
 /** Save DICOM servers list to Keycloak realm attributes */
 export async function saveDicomServers(admin: KcAdminClient, servers: DicomServerConfigType[]): Promise<void> {
   const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })

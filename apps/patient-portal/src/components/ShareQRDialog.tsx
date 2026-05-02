@@ -62,7 +62,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
   const copyLink = useCallback(async () => {
     if (!shlData) return
     try {
-      await navigator.clipboard.writeText(shlData.viewerUrl)
+      await navigator.clipboard.writeText(shlData.shortUrl ?? shlData.viewerUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -127,7 +127,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
             <>
               <div className="rounded-xl border bg-white p-4">
                 <QRCodeSVG
-                  value={shlData.viewerUrl}
+                  value={shlData.shortUrl ?? shlData.viewerUrl}
                   size={220}
                   level="M"
                   includeMargin

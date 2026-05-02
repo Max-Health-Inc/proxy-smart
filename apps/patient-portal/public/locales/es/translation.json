@@ -170,7 +170,8 @@
     "loadFailed": "Error al cargar el visor DICOM",
     "controlWL": "🖱️ I: N/V",
     "controlZoom": "🖱️ D: Zoom",
-    "controlScroll": "⚙️ Rueda: Corte"
+    "controlScroll": "⚙️ Rueda: Corte",
+    "openInViewer": "Abrir en el Visor"
   },
   "imagingStudy": {
     "title": "Estudios de imagen",

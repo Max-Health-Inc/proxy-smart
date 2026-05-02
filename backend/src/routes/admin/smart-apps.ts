@@ -7,9 +7,9 @@ import {
   CreateSmartAppRequest,
   UpdateSmartAppRequest,
   ClientIdParam,
-  SmartAppType,
-  SuccessResponseType,
-  ErrorResponseType
+  type SmartAppType,
+  type SuccessResponseType,
+  type ErrorResponseType
 } from '@/schemas'
 import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
@@ -610,15 +610,13 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         } catch (keyError) {
           // Clean up created client if key registration fails
           await admin.clients.del({ id: createdClient.id })
-          set.status = 400
-          return { error: 'Failed to register JWKS for Backend Services client', details: keyError }
+          return handleAdminError(keyError, set)
         }
       }
 
       return finalClientForResponse
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to create SMART application', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: CreateSmartAppRequest,
@@ -1036,8 +1034,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       return { success: true, message: 'SMART application updated successfully' }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to update SMART application', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ClientIdParam,

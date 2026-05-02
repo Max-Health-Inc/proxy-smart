@@ -3,8 +3,8 @@ import { collectSystemStatus } from '../lib/system-status'
 import { 
   HealthResponse, 
   SystemStatusResponse, 
-  HealthResponseType,
-  SystemStatusResponseType
+  type HealthResponseType,
+  type SystemStatusResponseType
 } from '../schemas'
 
 // Legacy helper removed: FHIR server health collection centralized in system-status.ts

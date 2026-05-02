@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import { validateToken } from '@/lib/auth'
 import { BrandConfig, BrandConfigUpdateResponse, ErrorResponse, type BrandConfigType } from '@/schemas'
 import { getRuntimeBrandConfig, saveBrandConfig, loadRuntimeConfig, isRuntimeConfigLoaded } from '@/lib/runtime-config'
@@ -47,8 +48,7 @@ export const brandingAdminRoutes = new Elysia({ prefix: '/branding', tags: ['adm
       }
     } catch (error) {
       logger.admin.error('Failed to get brand config', { error })
-      set.status = 500
-      return { error: 'Failed to get brand configuration', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -89,8 +89,7 @@ export const brandingAdminRoutes = new Elysia({ prefix: '/branding', tags: ['adm
       }
     } catch (error) {
       logger.admin.error('Failed to update brand config', { error })
-      set.status = 500
-      return { error: 'Failed to update brand configuration', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: BrandConfig,

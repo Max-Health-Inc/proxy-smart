@@ -8,6 +8,7 @@ import {
   Check,
   X,
   Loader2,
+  Eye,
 } from 'lucide-react'
 import { Badge, Button } from '@proxy-smart/shared-ui'
 import { CopyButton } from '@/components/ui/copy-button'
@@ -20,9 +21,10 @@ interface DicomServerCardProps {
   onDelete: () => void
   onProbeStatus: () => void
   onSetDefault: () => void
+  onViewDetails: () => void
 }
 
-export function DicomServerCard({ server, onEdit, onDelete, onProbeStatus, onSetDefault }: DicomServerCardProps) {
+export function DicomServerCard({ server, onEdit, onDelete, onProbeStatus, onSetDefault, onViewDetails }: DicomServerCardProps) {
   const { t } = useTranslation()
 
   const statusBadge = () => {
@@ -120,6 +122,15 @@ export function DicomServerCard({ server, onEdit, onDelete, onProbeStatus, onSet
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onViewDetails}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl border-border hover:bg-muted transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <Eye className="w-3 h-3" />
+            <span>{t('View Details')}</span>
+          </Button>
           <Button
             variant="outline"
             size="sm"

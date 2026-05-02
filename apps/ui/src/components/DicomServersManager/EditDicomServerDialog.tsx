@@ -10,23 +10,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
+import type { UpdateDicomServerRequest, SmartApp } from '@/lib/api-client'
 import type { DicomServerWithStatus } from './DicomServersManager'
+import { AUTH_TYPES } from './constants'
 
 interface EditDicomServerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   server: DicomServerWithStatus | null
-  onUpdate: (serverId: string, body: Record<string, unknown>) => Promise<void>
+  onUpdate: (serverId: string, body: UpdateDicomServerRequest) => Promise<void>
+  smartApps?: SmartApp[]
 }
 
-const AUTH_TYPES = [
-  { value: 'none', label: 'No Authentication' },
-  { value: 'basic', label: 'Basic Auth' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'header', label: 'Custom Header' },
-] as const
-
-export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: EditDicomServerDialogProps) {
+export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate, smartApps = [] }: EditDicomServerDialogProps) {
   const { t } = useTranslation()
   const [name, setName] = useState(server?.name ?? '')
   const [baseUrl, setBaseUrl] = useState(server?.baseUrl ?? '')
@@ -35,6 +31,7 @@ export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: 
   const [password, setPassword] = useState(server?.password ?? '')
   const [authHeader, setAuthHeader] = useState(server?.authHeader ?? '')
   const [timeoutMs, setTimeoutMs] = useState<string>(String(server?.timeoutMs ?? 30000))
+  const [viewerAppClientId, setViewerAppClientId] = useState(server?.viewerAppClientId ?? '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -55,11 +52,12 @@ export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: 
       await onUpdate(server.id, {
         name: name.trim(),
         baseUrl: baseUrl.trim(),
-        authType: authType !== 'none' ? authType : 'none',
+        authType: authType !== 'none' ? authType : undefined,
         username: authType === 'basic' ? username : undefined,
         password: authType === 'basic' ? password : undefined,
         authHeader: (authType === 'bearer' || authType === 'header') ? authHeader : undefined,
         timeoutMs: parseInt(timeoutMs, 10) || 30000,
+        viewerAppClientId: viewerAppClientId || undefined,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update server')
@@ -125,6 +123,26 @@ export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: 
             <Label htmlFor="edit-dicom-timeout">{t('Timeout (ms)')}</Label>
             <Input id="edit-dicom-timeout" type="number" value={timeoutMs} onChange={e => setTimeoutMs(e.target.value)} />
           </div>
+
+          {smartApps.length > 0 && (
+            <div className="space-y-2">
+              <Label>{t('DICOM Viewer App')}</Label>
+              <Select value={viewerAppClientId} onValueChange={setViewerAppClientId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t('None (use built-in viewer)')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">{t('None (use built-in viewer)')}</SelectItem>
+                  {smartApps.filter(a => a.enabled).map(app => (
+                    <SelectItem key={app.clientId} value={app.clientId ?? ''}>
+                      {app.name || app.clientId}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{t('Choose a registered SMART app to launch as the DICOM viewer.')}</p>
+            </div>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
