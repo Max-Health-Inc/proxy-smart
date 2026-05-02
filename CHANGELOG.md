@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605021737.9eb9882b] - 2026-05-02
+
+- 🔧 Chores & Improvements: Bump version to 0.0.9-alpha.202605021737.9eb9882b across packages/apps
+- 🐛 Bug Fixes: Patient-portal DicomViewer.tsx fix — open in app when viewerApp is present and always show "open in app" label using viewerApp.name
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/622
+
+
 ## [0.0.9-alpha.202605021730.c2652a64] - 2026-05-02
 
 - 🔧 Chores & Improvements: Version bump to 0.0.9-alpha.202605021730.c2652a64 across packages
