@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605011807.e7d41bb1] - 2026-05-02
+
+- ✨ Features: 
+  - Add DICOM Viewer multi-server support hooks, including new ChartRenderer and lazy-loaded integration in HealthChartsCard
+  - Implement server-scoped DICOMweb client with serverId plumbing across ImagingStudyCard, DicomViewer, and Dicomweb routes
+  - DicomServers UI enhancements: new AUTH_TYPES constants, DicomServerDetails/Overview, extended DicomServerCard, lazy-loaded HealthChartsCard, onViewDetails with serverId propagation
+  - DicomServersManager refactor to lazy-load cards, add details/overview components, and improve server/client wiring
+  - SHL flow enhancement: optional shortUrl via URL shortener; SHL returns shortUrl when available
+  - DICOM viewer app wiring improvements to associate with serverId
+
+- 🔧 Chores & Improvements:
+  - Updated DICOM server thumbnail wiring to include serverId
+  - General lazy-loading and wiring optimizations across DICOM components
+
+Note: No breaking changes detected; no documentation or bug-fix items identified in provided diffs.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/619
+
+
 ## [0.0.9-alpha.202605011803.e740003b] - 2026-05-01
 
 - 🔧 Chores & Improvements: Version bumps across multiple apps/configs (0.0.9-beta → 0.0.9-alpha) and 0.0.9-alpha → 0.0.9-beta.  
