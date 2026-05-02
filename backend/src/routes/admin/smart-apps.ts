@@ -16,6 +16,7 @@ import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
 import { refreshCorsOrigins } from '@/lib/cors-origins'
+import { toTokenEndpointAuthMethod, toKeycloakAuthType } from '@/lib/auth-method-mapping'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -217,6 +218,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
               optionalClientScopes: optionalScopeNames,
               appType: (VALID_APP_TYPES.has(appType!) ? appType : undefined) || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
               clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
+              tokenEndpointAuthMethod: toTokenEndpointAuthMethod(fullClient),
               
               // Client secret — masked in list responses (Keycloak returns plaintext to admin callers)
               ...(fullClient.secret && { secret: '**********' }),
@@ -316,20 +318,23 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       const isBackendService = effectiveClientType === 'backend-service'
       const isPublicClient = body.publicClient || effectiveClientType === 'public'
 
-      // Determine authentication method
-      let clientAuthenticatorType = 'none'
+      // Determine Keycloak clientAuthenticatorType from standard OAuth method or heuristics
+      let clientAuthenticatorType: string
       
-      if (isBackendService) {
+      if (body.tokenEndpointAuthMethod) {
+        // Explicit OAuth method provided — map to Keycloak internal type
+        clientAuthenticatorType = toKeycloakAuthType(body.tokenEndpointAuthMethod, isBackendService)
+      } else if (isBackendService) {
         // Backend services: proxy validates JWT assertions itself, then authenticates
-        // to Keycloak using client_secret internally. Must be 'client-secret' so
-        // Keycloak accepts the proxy's internal token request.
+        // to Keycloak using client_secret internally.
         clientAuthenticatorType = 'client-secret'
-      } else if (!isPublicClient) {
+      } else if (isPublicClient) {
+        clientAuthenticatorType = 'none'
+      } else {
         // Confidential client - determine based on whether JWKS/publicKey is provided
         if (body.jwksUri || body.publicKey) {
           clientAuthenticatorType = 'client-jwt'
         } else {
-          // Default to client-secret for confidential clients without JWT config
           clientAuthenticatorType = 'client-secret'
         }
       }
@@ -717,6 +722,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             optionalClientScopes: optionalScopeNames,
             appType: appType || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
             clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
+            tokenEndpointAuthMethod: toTokenEndpointAuthMethod(fullClient),
             
             // Client secret — masked in detail responses (Keycloak returns plaintext to admin callers)
             ...(fullClient.secret && { secret: '**********' }),
@@ -880,6 +886,13 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           publicClient: effectiveClientType === 'public',
           serviceAccountsEnabled: effectiveClientType === 'backend-service',
           standardFlowEnabled: effectiveClientType !== 'backend-service',
+        }),
+        // Token endpoint auth method → Keycloak clientAuthenticatorType
+        ...(body.tokenEndpointAuthMethod !== undefined && {
+          clientAuthenticatorType: toKeycloakAuthType(
+            body.tokenEndpointAuthMethod,
+            effectiveClientType === 'backend-service' || !!existing.serviceAccountsEnabled
+          ),
         }),
       }
       await admin.clients.update({ id: existing.id! }, updateData)
