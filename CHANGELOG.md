@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605021846.96e0e538] - 2026-05-02
+
+- ✨ Features: 
+  - Add URL shortening opt-in for SHL QR flows (shortenUrl and maxUses support in frontend, payload, and backend; API schema updated)
+  - Dynamic CORS origins support derived from Keycloak webOrigins with 5-minute cache; isOriginAllowed uses merged static+dynamic origins
+
+- 🔧 Chores & Improvements:
+  - Wire refreshCorsOrigins() across app init and admin/user flows to keep origins up to date
+  - Minor workflow and docker-compose tweak removing maxhealth.tech from allowed CORS origins
+  - Integrate new cors-origins module across app factory, init, and routes (admin smart-apps, auth client-registration)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/626
+
+
 ## [0.1.0-alpha.202605021839.15271362] - 2026-05-02
 
 - 🔧 Chores & Improvements: Introduce dynamic CORS origins from Keycloak webOrigins with 5-minute cache; replace static CORS_ORIGINS logic with isOriginAllowed based on merged static+dynamic origins; wire refreshCorsOrigins() into app init and admin/user flows; import/use new cors-origins module across app factory, init, and routes (admin smart-apps, auth client-registration); minor workflow/docker-compose tweak removing maxhealth.tech from allowed origins.
