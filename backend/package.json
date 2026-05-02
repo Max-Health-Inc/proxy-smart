@@ -40,7 +40,7 @@
     "pg": "^8.20.0",
     "resend": "^6.12.2",
     "unifi-access": "^1.5.3",
-    "zod": "4.4.2"
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

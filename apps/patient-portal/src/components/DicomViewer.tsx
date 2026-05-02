@@ -13,6 +13,8 @@ import { useTranslation } from "react-i18next"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export type { ViewerAppInfo }
+
 export interface ViewerTarget {
   studyUID: string
   seriesUID: string
@@ -248,24 +250,15 @@ export function DicomViewerDialog({
   target,
   open,
   onOpenChange,
+  viewerApp = null,
 }: {
   target: ViewerTarget | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  viewerApp?: ViewerAppInfo | null
 }) {
   const [imageInfo, setImageInfo] = useState<{ current: number; total: number } | null>(null)
-  const [viewerApp, setViewerApp] = useState<ViewerAppInfo | null>(null)
   const { t } = useTranslation()
-
-  // Fetch the configured viewer app (once)
-  useEffect(() => {
-    let cancelled = false
-    fetch('/dicomweb/viewer-app')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (!cancelled && data) setViewerApp(data) })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [])
 
   const handleImageChange = useCallback((current: number, total: number) => {
     setImageInfo({ current, total })

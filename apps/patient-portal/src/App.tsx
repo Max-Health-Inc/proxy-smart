@@ -28,6 +28,7 @@ export default function App() {
           authenticated={state === "authenticated"}
           onSignOut={shlMode ? undefined : handleLogout}
           maxWidth="max-w-6xl"
+          hideActions={shlMode}
         >
         <LanguageSwitcher />
       </AppHeader>

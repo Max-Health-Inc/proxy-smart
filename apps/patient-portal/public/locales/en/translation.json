@@ -187,7 +187,8 @@
     "viewImages": "View images",
     "viewSeries": "View series",
     "nSeries": "{{n}} series",
-    "nImages": "{{n}} images"
+    "nImages": "{{n}} images",
+    "dataWarning": "Viewing imaging studies may use significant data. Use Wi-Fi when possible."
   },
   "healthCharts": {
     "title": "Health Charts",

@@ -18,6 +18,8 @@ export interface AppHeaderProps {
   children?: ReactNode
   /** Tailwind max-width class for the inner container (default: "max-w-5xl") */
   maxWidth?: string
+  /** Hide all action buttons (Sign Out, App Store) — useful for shared/public views */
+  hideActions?: boolean
 }
 
 export function AppHeader({
@@ -27,6 +29,7 @@ export function AppHeader({
   onSignOut,
   children,
   maxWidth = "max-w-5xl",
+  hideActions,
 }: AppHeaderProps) {
   const brand = useBranding()
 
@@ -43,7 +46,7 @@ export function AppHeader({
           {children}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {authenticated ? (
+          {!hideActions && (authenticated ? (
             <Button variant="ghost" size="sm" onClick={onSignOut}>
               <LogOut className="size-4" />
               <span className="hidden sm:inline">Sign Out</span>
@@ -55,7 +58,7 @@ export function AppHeader({
                 <span className="hidden sm:inline">App Store</span>
               </a>
             </Button>
-          )}
+          ))}
         </div>
       </div>
     </header>
