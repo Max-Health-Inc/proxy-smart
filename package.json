@@ -3,7 +3,7 @@
   "version": "0.0.9-alpha.202605021709.cf0c5f80",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/quotentiroler/proxy-smart.git"
+    "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -153,9 +153,9 @@
   },
   "author": "",
   "bugs": {
-    "url": "https://github.com/quotentiroler/proxy-smart/issues"
+    "url": "https://github.com/Max-Health-Inc/proxy-smart/issues"
   },
-  "homepage": "https://github.com/quotentiroler/proxy-smart#readme",
+  "homepage": "https://beta.proxy-smart.com",
   "dependencies": {
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
     "undici": "^8.1.0"
