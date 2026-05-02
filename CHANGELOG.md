@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.0.9-alpha.202605021730.c2652a64] - 2026-05-02
+
+- 🔧 Chores & Improvements: Version bump to 0.0.9-alpha.202605021730.c2652a64 across packages
+- 🔧 Chores & Improvements: Update ignore rules to allow DICOM files under deploy/dicom
+- ✨ Features: Add Keycloak realm client "dicom-viewer" with OpenID Connect settings and scopes
+- ✨ Features: Include new binary deploy/dicom/CTImage.dcm
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/621
+
+
 ## [0.0.9-alpha.202605021709.cf0c5f80] - 2026-05-02
 
 - ✨ Features: Version bump to 0.0.9-alpha.202605021709.cf0c5f80 across multiple packages; updated repository URLs and homepage references
