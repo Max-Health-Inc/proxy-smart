@@ -15,6 +15,7 @@ import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
+import { refreshCorsOrigins } from '@/lib/cors-origins'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -606,6 +607,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           const updatedClient = await admin.clients.findOne({ id: createdClient.id })
           const finalResponse = updatedClient || finalClientForResponse
 
+          // Refresh CORS origins cache (new app may have webOrigins)
+          refreshCorsOrigins().catch(() => {})
+
           return finalResponse
         } catch (keyError) {
           // Clean up created client if key registration fails
@@ -613,6 +617,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           return handleAdminError(keyError, set)
         }
       }
+
+      // Refresh CORS origins cache (new app may have webOrigins)
+      refreshCorsOrigins().catch(() => {})
 
       return finalClientForResponse
     } catch (error) {
@@ -1032,6 +1039,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
+      // Refresh CORS origins cache (webOrigins may have changed)
+      refreshCorsOrigins().catch(() => {})
+
       return { success: true, message: 'SMART application updated successfully' }
     } catch (error) {
       return handleAdminError(error, set)
@@ -1073,6 +1083,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         return { error: 'SMART application not found' }
       }
       await admin.clients.del({ id: clients[0].id! })
+
+      // Refresh CORS origins cache (removed app's webOrigins should be cleared)
+      refreshCorsOrigins().catch(() => {})
+
       return { success: true, message: 'SMART application deleted successfully' }
     } catch (error) {
       return handleAdminError(error, set)
