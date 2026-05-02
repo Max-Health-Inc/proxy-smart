@@ -238,6 +238,12 @@ function CornerstoneViewport({
 
 // ── Viewer Dialog ──────────────────────────────────────────────────────────
 
+interface ViewerAppInfo {
+  clientId: string
+  name: string
+  launchUrl: string
+}
+
 export function DicomViewerDialog({
   target,
   open,
@@ -248,7 +254,18 @@ export function DicomViewerDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const [imageInfo, setImageInfo] = useState<{ current: number; total: number } | null>(null)
+  const [viewerApp, setViewerApp] = useState<ViewerAppInfo | null>(null)
   const { t } = useTranslation()
+
+  // Fetch the configured viewer app (once)
+  useEffect(() => {
+    let cancelled = false
+    fetch('/dicomweb/viewer-app')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (!cancelled && data) setViewerApp(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   const handleImageChange = useCallback((current: number, total: number) => {
     setImageInfo({ current, total })
@@ -309,11 +326,12 @@ export function DicomViewerDialog({
                       study: target.studyUID,
                       series: target.seriesUID,
                     })
-                    window.open(`/apps/dicom-viewer/?${params.toString()}`, '_blank')
+                    const baseUrl = viewerApp?.launchUrl ?? '/apps/dicom-viewer/'
+                    window.open(`${baseUrl}?${params.toString()}`, '_blank')
                   }}
                 >
                   <ExternalLink className="size-3" />
-                  {t("dicomViewer.openInViewer")}
+                  {viewerApp ? t("dicomViewer.openInApp", { name: viewerApp.name }) : t("dicomViewer.openInViewer")}
                 </Button>
               )}
               <DialogPrimitive.Close className="rounded-sm p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">

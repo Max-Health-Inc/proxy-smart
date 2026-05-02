@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
-import { HardDrive, RefreshCw, Plus, Info } from 'lucide-react'
-import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui'
+import { HardDrive, RefreshCw, Plus, Info, Eye } from 'lucide-react'
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from '@proxy-smart/shared-ui'
+import { LoadingButton } from '@/components/ui/loading-button'
 import { PageLoadingState } from '@/components/ui/page-loading-state'
 import { PageErrorState } from '@/components/ui/page-error-state'
 import { useAuth } from '@/stores/authStore'
 import { useAlertStore } from '@/stores/alertStore'
 import { useNotificationStore } from '@/stores/notificationStore'
+import { adminApiCall } from '@/lib/admin-api'
 import type { DicomServerConfig, DicomServerStatusResponse, AddDicomServerRequest, UpdateDicomServerRequest, SmartApp } from '@/lib/api-client'
 import { DicomStatsCards } from './DicomStatsCards'
 import { DicomServerOverview } from './DicomServerOverview'
@@ -33,6 +35,8 @@ export function DicomServersManager() {
   const [selectedServer, setSelectedServer] = useState<DicomServerWithStatus | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [smartApps, setSmartApps] = useState<SmartApp[]>([])
+  const [viewerAppClientId, setViewerAppClientId] = useState<string>('')
+  const [savingViewerApp, setSavingViewerApp] = useState(false)
 
   // ── Auto-probe all servers after loading ───────────────────────────
   const probeAllServers = useCallback(async (serverList: DicomServerWithStatus[]) => {
@@ -61,6 +65,10 @@ export function DicomServersManager() {
       clientApis.smartApps.getAdminSmartApps()
         .then(apps => setSmartApps(Array.isArray(apps) ? apps : []))
         .catch(() => { /* ignore — selector will just be empty */ })
+      // Fetch current viewer app setting (non-blocking)
+      adminApiCall<{ viewerAppClientId: string | null }>('/admin/dicom-servers/viewer-app')
+        .then(res => setViewerAppClientId(res.viewerAppClientId ?? ''))
+        .catch(() => { /* ignore */ })
       // Auto-probe reachability after load (non-blocking)
       probeAllServers(serverList)
     } catch (err) {
@@ -127,6 +135,21 @@ export function DicomServersManager() {
     }
   }
 
+  const handleViewerAppChange = async (clientId: string) => {
+    setViewerAppClientId(clientId)
+    setSavingViewerApp(true)
+    try {
+      await adminApiCall('/admin/dicom-servers/viewer-app', 'PUT', {
+        viewerAppClientId: clientId || null,
+      })
+      notify({ type: 'success', message: t('DICOM viewer app updated') })
+    } catch (err) {
+      notify({ type: 'error', message: err instanceof Error ? err.message : t('Failed to update viewer app') })
+    } finally {
+      setSavingViewerApp(false)
+    }
+  }
+
   const handleSetDefault = async (serverId: string) => {
     await clientApis.admin.putAdminDicomServersByServerId({ serverId, updateDicomServerRequest: { isDefault: true } })
     notify({ type: 'success', message: t('Default DICOM server updated') })
@@ -177,6 +200,36 @@ export function DicomServersManager() {
 
       {/* Stats Cards */}
       <DicomStatsCards servers={servers} />
+
+      {/* DICOM Viewer App Setting */}
+      {smartApps.length > 0 && (
+        <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shadow-sm">
+              <Eye className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-medium text-foreground">{t('DICOM Viewer App')}</h2>
+              <p className="text-sm text-muted-foreground">{t('Choose a registered SMART app to use as the DICOM image viewer across the platform.')}</p>
+            </div>
+          </div>
+          <div className="max-w-md">
+            <Select value={viewerAppClientId} onValueChange={handleViewerAppChange} disabled={savingViewerApp}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={t('None (use built-in viewer)')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('None (use built-in viewer)')}</SelectItem>
+                {smartApps.filter(a => a.enabled).map(app => (
+                  <SelectItem key={app.clientId} value={app.clientId ?? ''}>
+                    {app.name || app.clientId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
 
       {/* Main Content — Tabs */}
       <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
@@ -240,7 +293,6 @@ export function DicomServersManager() {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onAdd={handleAdd}
-        smartApps={smartApps}
       />
       <EditDicomServerDialog
         key={editingServer?.id ?? 'new'}
@@ -248,7 +300,6 @@ export function DicomServersManager() {
         onOpenChange={(open) => { if (!open) setEditingServer(null) }}
         server={editingServer}
         onUpdate={handleUpdate}
-        smartApps={smartApps}
       />
     </div>
   )

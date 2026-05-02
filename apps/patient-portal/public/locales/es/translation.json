@@ -171,7 +171,8 @@
     "controlWL": "🖱️ I: N/V",
     "controlZoom": "🖱️ D: Zoom",
     "controlScroll": "⚙️ Rueda: Corte",
-    "openInViewer": "Abrir en el Visor"
+    "openInViewer": "Abrir en el Visor",
+    "openInApp": "Abrir en {{name}}"
   },
   "imagingStudy": {
     "title": "Estudios de imagen",

@@ -171,7 +171,8 @@
     "controlWL": "🖱️ G: N/L",
     "controlZoom": "🖱️ D: Zoom",
     "controlScroll": "⚙️ Molette: Coupe",
-    "openInViewer": "Ouvrir dans le Viewer"
+    "openInViewer": "Ouvrir dans le Viewer",
+    "openInApp": "Ouvrir dans {{name}}"
   },
   "imagingStudy": {
     "title": "Études d'imagerie",

@@ -171,7 +171,8 @@
     "controlWL": "🖱️ L: F/H",
     "controlZoom": "🖱️ R: Zoom",
     "controlScroll": "⚙️ Scrollen: Schicht",
-    "openInViewer": "Im Viewer öffnen"
+    "openInViewer": "Im Viewer öffnen",
+    "openInApp": "In {{name}} öffnen"
   },
   "imagingStudy": {
     "title": "Bildgebungsstudien",

@@ -171,7 +171,8 @@
     "controlWL": "🖱️ S: F/L",
     "controlZoom": "🖱️ D: Zoom",
     "controlScroll": "⚙️ Rotella: Fetta",
-    "openInViewer": "Apri nel Viewer"
+    "openInViewer": "Apri nel Viewer",
+    "openInApp": "Apri in {{name}}"
   },
   "imagingStudy": {
     "title": "Studi di imaging",

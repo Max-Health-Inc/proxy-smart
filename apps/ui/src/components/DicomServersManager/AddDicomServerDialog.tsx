@@ -10,17 +10,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
-import type { AddDicomServerRequest, AddDicomServerRequestAuthTypeEnum, SmartApp } from '@/lib/api-client'
+import type { AddDicomServerRequest, AddDicomServerRequestAuthTypeEnum } from '@/lib/api-client'
 import { AUTH_TYPES } from './constants'
 
 interface AddDicomServerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAdd: (body: AddDicomServerRequest) => Promise<void>
-  smartApps?: SmartApp[]
 }
 
-export function AddDicomServerDialog({ open, onOpenChange, onAdd, smartApps = [] }: AddDicomServerDialogProps) {
+export function AddDicomServerDialog({ open, onOpenChange, onAdd }: AddDicomServerDialogProps) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
@@ -28,7 +27,6 @@ export function AddDicomServerDialog({ open, onOpenChange, onAdd, smartApps = []
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [authHeader, setAuthHeader] = useState('')
-  const [viewerAppClientId, setViewerAppClientId] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -39,7 +37,6 @@ export function AddDicomServerDialog({ open, onOpenChange, onAdd, smartApps = []
     setUsername('')
     setPassword('')
     setAuthHeader('')
-    setViewerAppClientId('')
     setError(null)
   }
 
@@ -63,7 +60,6 @@ export function AddDicomServerDialog({ open, onOpenChange, onAdd, smartApps = []
         username: authType === 'basic' ? username : undefined,
         password: authType === 'basic' ? password : undefined,
         authHeader: (authType === 'bearer' || authType === 'header') ? authHeader : undefined,
-        viewerAppClientId: viewerAppClientId || undefined,
       })
       reset()
     } catch (err) {
@@ -123,26 +119,6 @@ export function AddDicomServerDialog({ open, onOpenChange, onAdd, smartApps = []
             <div className="space-y-2">
               <Label htmlFor="dicom-header">{authType === 'bearer' ? t('Bearer Token') : t('Authorization Header Value')}</Label>
               <Input id="dicom-header" placeholder={authType === 'bearer' ? 'eyJhbGci...' : 'Bearer xyz / ApiKey abc'} value={authHeader} onChange={e => setAuthHeader(e.target.value)} />
-            </div>
-          )}
-
-          {smartApps.length > 0 && (
-            <div className="space-y-2">
-              <Label>{t('DICOM Viewer App')}</Label>
-              <Select value={viewerAppClientId} onValueChange={setViewerAppClientId}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t('None (use built-in viewer)')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">{t('None (use built-in viewer)')}</SelectItem>
-                  {smartApps.filter(a => a.enabled).map(app => (
-                    <SelectItem key={app.clientId} value={app.clientId ?? ''}>
-                      {app.name || app.clientId}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">{t('Choose a registered SMART app to launch as the DICOM viewer.')}</p>
             </div>
           )}
 

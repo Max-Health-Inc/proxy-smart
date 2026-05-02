@@ -4,7 +4,7 @@ import { readdirSync, readFileSync, existsSync } from 'fs'
 import { validateToken } from '../lib/auth'
 import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
 import { config } from '../config'
-import { getDefaultDicomServer, getDicomServerById } from '../lib/runtime-config'
+import { getDefaultDicomServer, getDicomServerById, getDicomViewerAppClientId } from '../lib/runtime-config'
 import { getPublishedApps } from '../lib/app-store-config'
 import type { DicomServerConfigType } from '../schemas'
 import { logger } from '../lib/logger'
@@ -481,6 +481,52 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
     detail: dicomwebDetail('Store Instances in Study (STOW-RS)', 'Store DICOM instances into a specific study via multipart/related POST.'),
   })
 
+  // ==================== Viewer App ====================
+
+  .get('/viewer-app', async ({ set }) => {
+    const clientId = getDicomViewerAppClientId()
+    if (!clientId) {
+      set.status = 404
+      return { error: 'No viewer app configured' }
+    }
+
+    // Look up in filesystem apps (public/apps/*/smart-manifest.json)
+    const appsDir = join(import.meta.dir, '..', '..', 'public', 'apps')
+    if (existsSync(appsDir)) {
+      for (const d of readdirSync(appsDir, { withFileTypes: true })) {
+        if (!d.isDirectory()) continue
+        const manifestPath = join(appsDir, d.name, 'smart-manifest.json')
+        if (!existsSync(manifestPath)) continue
+        try {
+          const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+          const mClientId = manifest.client_id ?? d.name
+          if (mClientId === clientId) {
+            return { clientId, name: manifest.client_name ?? d.name, launchUrl: `/apps/${d.name}/` }
+          }
+        } catch { /* skip malformed manifests */ }
+      }
+    }
+
+    // Look up in published registered apps
+    const published = getPublishedApps().find(pa => pa.clientId === clientId)
+    if (published) {
+      return { clientId: published.clientId, name: published.name, launchUrl: published.launchUrl }
+    }
+
+    set.status = 404
+    return { error: 'Configured viewer app not found in app store' }
+  }, {
+    response: {
+      200: t.Object({
+        clientId: t.String(),
+        name: t.String(),
+        launchUrl: t.String(),
+      }),
+      404: t.Object({ error: t.String() }),
+    },
+    detail: dicomwebDetail('DICOM Viewer App', 'Get the globally configured DICOM viewer SMART app.'),
+  })
+
   // ==================== Server-scoped routes ====================
   //
   // /dicomweb/servers/:serverId/...  routes DICOMweb requests to a specific
@@ -499,55 +545,6 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
     params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
     response: PacsStatusResponse,
     detail: dicomwebDetail('Server-scoped PACS Status', 'Check whether a specific DICOM server is configured and reachable.'),
-  })
-
-  .get('/servers/:serverId/viewer-app', async ({ params, set }) => {
-    const server = getDicomServerById(params.serverId)
-    if (!server) {
-      set.status = 404
-      return { error: 'DICOM server not found' }
-    }
-    if (!server.viewerAppClientId) {
-      set.status = 404
-      return { error: 'No viewer app configured for this server' }
-    }
-
-    // Look up in filesystem apps (public/apps/*/smart-manifest.json)
-    const appsDir = join(import.meta.dir, '..', '..', 'public', 'apps')
-    if (existsSync(appsDir)) {
-      for (const d of readdirSync(appsDir, { withFileTypes: true })) {
-        if (!d.isDirectory()) continue
-        const manifestPath = join(appsDir, d.name, 'smart-manifest.json')
-        if (!existsSync(manifestPath)) continue
-        try {
-          const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
-          const clientId = manifest.client_id ?? d.name
-          if (clientId === server.viewerAppClientId) {
-            return { clientId, name: manifest.client_name ?? d.name, launchUrl: `/apps/${d.name}/` }
-          }
-        } catch { /* skip malformed manifests */ }
-      }
-    }
-
-    // Look up in published registered apps
-    const published = getPublishedApps().find(pa => pa.clientId === server.viewerAppClientId)
-    if (published) {
-      return { clientId: published.clientId, name: published.name, launchUrl: published.launchUrl }
-    }
-
-    set.status = 404
-    return { error: 'Configured viewer app not found in app store' }
-  }, {
-    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
-    response: {
-      200: t.Object({
-        clientId: t.String(),
-        name: t.String(),
-        launchUrl: t.String(),
-      }),
-      404: t.Object({ error: t.String() }),
-    },
-    detail: dicomwebDetail('Server Viewer App', 'Get the configured DICOM viewer SMART app for a specific server.'),
   })
 
   .get('/servers/:serverId/*', async ({ request, params, set }) => {
