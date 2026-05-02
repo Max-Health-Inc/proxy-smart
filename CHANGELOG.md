@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605021839.15271362] - 2026-05-02
+
+- 🔧 Chores & Improvements: Introduce dynamic CORS origins from Keycloak webOrigins with 5-minute cache; replace static CORS_ORIGINS logic with isOriginAllowed based on merged static+dynamic origins; wire refreshCorsOrigins() into app init and admin/user flows; import/use new cors-origins module across app factory, init, and routes (admin smart-apps, auth client-registration); minor workflow/docker-compose tweak removing maxhealth.tech from allowed origins.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/625
+
+
 ## [0.1.0-alpha.202605021830.ca96449b] - 2026-05-02
 
 - 🔧 Chores & Improvements: Update CORS origins to include maxhealth.tech in beta deployment (deploy-beta.yml, docker-compose.beta.yml)
