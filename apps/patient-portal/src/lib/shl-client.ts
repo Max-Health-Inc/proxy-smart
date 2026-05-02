@@ -22,12 +22,16 @@ export async function createShl(opts: {
   verifiedOnly: boolean
   expiresInMinutes?: number
   label?: string
+  shortenUrl?: boolean
+  maxUses?: number
 }): Promise<PostApiShl200Response> {
   return shlApi.postApiShl({
     postApiShlRequest: {
       verifiedOnly: opts.verifiedOnly,
       expiresInMinutes: opts.expiresInMinutes ?? 60,
       label: opts.label,
+      ...(opts.shortenUrl && { shortenUrl: true }),
+      ...(opts.shortenUrl && opts.maxUses && { maxUses: opts.maxUses }),
     },
   })
 }
