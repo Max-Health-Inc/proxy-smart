@@ -316,7 +316,7 @@ export function DicomViewerDialog({
                 <span>{t("dicomViewer.controlZoom")}</span>
                 <span>{t("dicomViewer.controlScroll")}</span>
               </div>
-              {target && (
+              {target && viewerApp && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -326,12 +326,11 @@ export function DicomViewerDialog({
                       study: target.studyUID,
                       series: target.seriesUID,
                     })
-                    const baseUrl = viewerApp?.launchUrl ?? '/apps/dicom-viewer/'
-                    window.open(`${baseUrl}?${params.toString()}`, '_blank')
+                    window.open(`${viewerApp.launchUrl}?${params.toString()}`, '_blank')
                   }}
                 >
                   <ExternalLink className="size-3" />
-                  {viewerApp ? t("dicomViewer.openInApp", { name: viewerApp.name }) : t("dicomViewer.openInViewer")}
+                  {t("dicomViewer.openInApp", { name: viewerApp.name })}
                 </Button>
               )}
               <DialogPrimitive.Close className="rounded-sm p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
