@@ -214,14 +214,14 @@ export function DicomServersManager() {
             </div>
           </div>
           <div className="max-w-md">
-            <Select value={viewerAppClientId} onValueChange={handleViewerAppChange} disabled={savingViewerApp}>
+            <Select value={viewerAppClientId || "__none__"} onValueChange={(v) => handleViewerAppChange(v === "__none__" ? "" : v)} disabled={savingViewerApp}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder={t('None (use built-in viewer)')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('None (use built-in viewer)')}</SelectItem>
-                {smartApps.filter(a => a.enabled).map(app => (
-                  <SelectItem key={app.clientId} value={app.clientId ?? ''}>
+                <SelectItem value="__none__">{t('None (use built-in viewer)')}</SelectItem>
+                {smartApps.filter(a => a.enabled && a.clientId).map(app => (
+                  <SelectItem key={app.clientId} value={app.clientId!}>
                     {app.name || app.clientId}
                   </SelectItem>
                 ))}

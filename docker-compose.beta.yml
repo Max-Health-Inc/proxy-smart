@@ -101,7 +101,7 @@ services:
       SHL_EXCHANGE_CLIENT_ID: shl-exchange
       SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:-shl-exchange-dev-secret}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
-      CORS_ORIGINS: https://beta.proxy-smart.com,http://localhost:4567
+      CORS_ORIGINS: https://beta.proxy-smart.com,http://localhost:4567,maxhealth.tech
       DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
       DICOMWEB_USERNAME: ${ORTHANC_USERNAME:-orthanc}
       DICOMWEB_PASSWORD: ${ORTHANC_PASSWORD:?Set ORTHANC_PASSWORD}
