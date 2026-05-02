@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605021830.ca96449b] - 2026-05-02
+
+- 🔧 Chores & Improvements: Update CORS origins to include maxhealth.tech in beta deployment (deploy-beta.yml, docker-compose.beta.yml)
+- 🐛 Bug Fixes: Improve viewer app selection logic:
+  - Default value now "__none__" when none chosen
+  - Empty string maps to "__none__" on change
+  - Include only enabled apps with non-empty clientId and render items by clientId
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/623
+
+
 ## [0.0.9-alpha.202605021737.9eb9882b] - 2026-05-02
 
 - 🔧 Chores & Improvements: Bump version to 0.0.9-alpha.202605021737.9eb9882b across packages/apps
