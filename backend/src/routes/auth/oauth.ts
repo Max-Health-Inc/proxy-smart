@@ -256,36 +256,46 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // redirect into Keycloak's /auth endpoint
   .get('/authorize', async ({ query, redirect, set }) => {
-    // Check KC is reachable before redirecting — avoids raw browser ERR_CONNECTION_REFUSED
-    if (!await isKeycloakReachable()) {
-      logger.auth.warn('Keycloak unreachable — returning friendly error page instead of redirect')
-      return kcUnavailablePage()
-    }
-
-    // SMART App Launch 2.2.0: validate the aud parameter against our FHIR endpoints.
+    // SMART App Launch 2.2.0 / MCP (RFC 8707): validate aud/resource parameter FIRST.
+    // This is a cheap input validation — fail fast before making network calls.
     // "aud" is the FHIR server URL the app wants to access — prevents token
     // leakage to counterfeit resource servers.  RFC 8707 "resource" is a synonym.
+    // MCP clients send resource=<MCP server URL> per MCP spec Section 2.5.1.
     const aud = query.aud || query.resource
     if (aud) {
-      await ensureServersInitialized()
-      const servers = await getAllServers()
       const fhirBasePrefix = `${config.baseUrl}/${config.name}/`
-      // Valid aud values: exact FHIR base or any sub-path under it
-      const isValidAud = aud.startsWith(fhirBasePrefix) ||
-        servers.some(s =>
+      const mcpEndpoint = `${config.baseUrl}${config.mcp.path}`
+
+      // Fast O(1) checks first — no network calls needed
+      const matchesPrefix = aud.startsWith(fhirBasePrefix)
+      const matchesMcp = aud === mcpEndpoint || aud.startsWith(mcpEndpoint + '/')
+
+      if (!matchesPrefix && !matchesMcp) {
+        // Expensive check: compare against dynamically discovered FHIR servers
+        await ensureServersInitialized()
+        const servers = await getAllServers()
+        const matchesServer = servers.some(s =>
           config.fhir.supportedVersions.some(v => {
             const endpoint = `${fhirBasePrefix}${s.identifier}/${v}`
             return aud === endpoint || aud.startsWith(endpoint + '/')
           })
         )
-      if (!isValidAud) {
-        logger.auth.warn('SMART authorize rejected — aud does not match any FHIR endpoint', {
-          aud,
-          expectedPrefix: fhirBasePrefix,
-        })
-        set.status = 400
-        return { error: 'invalid_request', error_description: `aud parameter does not match a known FHIR endpoint on this server` }
+        if (!matchesServer) {
+          logger.auth.warn('Authorize rejected — aud/resource does not match any known endpoint', {
+            aud,
+            expectedPrefix: fhirBasePrefix,
+            mcpEndpoint,
+          })
+          set.status = 400
+          return { error: 'invalid_request', error_description: `aud parameter does not match a known endpoint on this server` }
+        }
       }
+    }
+
+    // Check KC is reachable before redirecting — avoids raw browser ERR_CONNECTION_REFUSED
+    if (!await isKeycloakReachable()) {
+      logger.auth.warn('Keycloak unreachable — returning friendly error page instead of redirect')
+      return kcUnavailablePage()
     }
 
     // EHR Launch: resolve the launch code (signed JWT) to context.
