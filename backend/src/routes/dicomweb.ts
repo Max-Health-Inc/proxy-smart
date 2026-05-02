@@ -1,8 +1,12 @@
 import { Elysia, t } from 'elysia'
+import { join } from 'path'
+import { readdirSync, readFileSync, existsSync } from 'fs'
 import { validateToken } from '../lib/auth'
 import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
 import { config } from '../config'
-import { getDefaultDicomServer } from '../lib/runtime-config'
+import { getDefaultDicomServer, getDicomServerById, getDicomViewerAppClientId } from '../lib/runtime-config'
+import { getPublishedApps } from '../lib/app-store-config'
+import type { DicomServerConfigType } from '../schemas'
 import { logger } from '../lib/logger'
 
 /**
@@ -56,9 +60,9 @@ function buildServerAuthHeader(server: { authType?: string; authHeader?: string;
 }
 
 /** Build upstream URL from the DICOMweb base and the incoming sub-path + query string */
-function buildUpstreamUrl(subPath: string, queryString: string): string {
-  const server = getDefaultDicomServer()
-  const base = server?.baseUrl ?? config.dicomweb.baseUrl
+function buildUpstreamUrl(subPath: string, queryString: string, server?: DicomServerConfigType | null): string {
+  const resolved = server ?? getDefaultDicomServer()
+  const base = resolved?.baseUrl ?? config.dicomweb.baseUrl
   if (!base) throw new ConfigurationError('DICOMweb is not configured (no DICOM server or DICOMWEB_BASE_URL)')
   const normalizedBase = base.replace(/\/+$/, '')
   const path = subPath.startsWith('/') ? subPath : `/${subPath}`
@@ -66,8 +70,8 @@ function buildUpstreamUrl(subPath: string, queryString: string): string {
 }
 
 /** Forward a request to the upstream PACS and stream the response back */
-async function proxyDicomWeb(request: Request, subPath: string, set: { status?: number | string; headers: Record<string, string | number | undefined> }): Promise<Response | string | object> {
-  const server = getDefaultDicomServer()
+async function proxyDicomWeb(request: Request, subPath: string, set: { status?: number | string; headers: Record<string, string | number | undefined> }, explicitServer?: DicomServerConfigType | null): Promise<Response | string | object> {
+  const server = explicitServer ?? getDefaultDicomServer()
   if (!server && !config.dicomweb.enabled) {
     set.status = 501
     return { error: 'DICOMweb proxy is not configured', message: 'Add a DICOM server or set DICOMWEB_BASE_URL to enable DICOM imaging' }
@@ -93,7 +97,7 @@ async function proxyDicomWeb(request: Request, subPath: string, set: { status?: 
 
   // 2) Build upstream URL
   const requestUrl = new URL(request.url)
-  const target = buildUpstreamUrl(subPath, requestUrl.search)
+  const target = buildUpstreamUrl(subPath, requestUrl.search, server)
 
   // 3) Build upstream headers
   const headers = new Headers()
@@ -156,8 +160,8 @@ async function proxyDicomWeb(request: Request, subPath: string, set: { status?: 
 }
 
 /** Forward a POST (STOW-RS) request to the upstream PACS, streaming the body through */
-async function proxyDicomWebPost(request: Request, subPath: string, set: { status?: number | string; headers: Record<string, string | number | undefined> }): Promise<Response | string | object> {
-  const server = getDefaultDicomServer()
+async function proxyDicomWebPost(request: Request, subPath: string, set: { status?: number | string; headers: Record<string, string | number | undefined> }, explicitServer?: DicomServerConfigType | null): Promise<Response | string | object> {
+  const server = explicitServer ?? getDefaultDicomServer()
   if (!server && !config.dicomweb.enabled) {
     set.status = 501
     return { error: 'DICOMweb proxy is not configured', message: 'Add a DICOM server or set DICOMWEB_BASE_URL to enable DICOM imaging' }
@@ -181,7 +185,7 @@ async function proxyDicomWebPost(request: Request, subPath: string, set: { statu
   }
 
   const requestUrl = new URL(request.url)
-  const target = buildUpstreamUrl(subPath, requestUrl.search)
+  const target = buildUpstreamUrl(subPath, requestUrl.search, server)
 
   const headers = new Headers()
   // STOW-RS requires the Content-Type with boundary for multipart/related
@@ -260,8 +264,8 @@ export interface PacsStatus {
 }
 
 /** Lightweight probe: is PACS configured + can we reach it? */
-async function probePacs(): Promise<PacsStatus> {
-  const server = getDefaultDicomServer()
+async function probePacs(explicitServer?: DicomServerConfigType | null): Promise<PacsStatus> {
+  const server = explicitServer ?? getDefaultDicomServer()
   if (!server && (!config.dicomweb.enabled || !config.dicomweb.baseUrl)) {
     return { configured: false, reachable: null, message: 'DICOMweb is not configured. No PACS connection available.' }
   }
@@ -475,4 +479,96 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
   }, {
     params: t.Object({ studyUID: UidParam }),
     detail: dicomwebDetail('Store Instances in Study (STOW-RS)', 'Store DICOM instances into a specific study via multipart/related POST.'),
+  })
+
+  // ==================== Viewer App ====================
+
+  .get('/viewer-app', async ({ set }) => {
+    const clientId = getDicomViewerAppClientId()
+    if (!clientId) {
+      set.status = 404
+      return { error: 'No viewer app configured' }
+    }
+
+    // Look up in filesystem apps (public/apps/*/smart-manifest.json)
+    const appsDir = join(import.meta.dir, '..', '..', 'public', 'apps')
+    if (existsSync(appsDir)) {
+      for (const d of readdirSync(appsDir, { withFileTypes: true })) {
+        if (!d.isDirectory()) continue
+        const manifestPath = join(appsDir, d.name, 'smart-manifest.json')
+        if (!existsSync(manifestPath)) continue
+        try {
+          const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+          const mClientId = manifest.client_id ?? d.name
+          if (mClientId === clientId) {
+            return { clientId, name: manifest.client_name ?? d.name, launchUrl: `/apps/${d.name}/` }
+          }
+        } catch { /* skip malformed manifests */ }
+      }
+    }
+
+    // Look up in published registered apps
+    const published = getPublishedApps().find(pa => pa.clientId === clientId)
+    if (published) {
+      return { clientId: published.clientId, name: published.name, launchUrl: published.launchUrl }
+    }
+
+    set.status = 404
+    return { error: 'Configured viewer app not found in app store' }
+  }, {
+    response: {
+      200: t.Object({
+        clientId: t.String(),
+        name: t.String(),
+        launchUrl: t.String(),
+      }),
+      404: t.Object({ error: t.String() }),
+    },
+    detail: dicomwebDetail('DICOM Viewer App', 'Get the globally configured DICOM viewer SMART app.'),
+  })
+
+  // ==================== Server-scoped routes ====================
+  //
+  // /dicomweb/servers/:serverId/...  routes DICOMweb requests to a specific
+  // DICOM server by its config ID (instead of the default server).
+  // This enables multi-PACS routing when ImagingStudy.endpoint identifies
+  // which PACS holds a particular study.
+
+  .get('/servers/:serverId/status', async ({ params, set }) => {
+    const server = getDicomServerById(params.serverId)
+    if (!server) {
+      set.status = 404
+      return { configured: false, reachable: null, message: `DICOM server '${params.serverId}' not found` }
+    }
+    return probePacs(server)
+  }, {
+    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
+    response: PacsStatusResponse,
+    detail: dicomwebDetail('Server-scoped PACS Status', 'Check whether a specific DICOM server is configured and reachable.'),
+  })
+
+  .get('/servers/:serverId/*', async ({ request, params, set }) => {
+    const server = getDicomServerById(params.serverId)
+    if (!server) {
+      set.status = 404
+      return { error: 'DICOM server not found', message: `No server with ID '${params.serverId}' is configured` }
+    }
+    const subPath = `/${(params as Record<string, string>)['*'] || ''}`
+    return proxyDicomWeb(request, subPath, set, server)
+  }, {
+    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
+    detail: dicomwebDetail('Server-scoped DICOMweb (GET)', 'Proxy any DICOMweb GET request to a specific DICOM server (QIDO-RS, WADO-RS).'),
+  })
+
+  .post('/servers/:serverId/*', async ({ request, params, set }) => {
+    const server = getDicomServerById(params.serverId)
+    if (!server) {
+      set.status = 404
+      return { error: 'DICOM server not found', message: `No server with ID '${params.serverId}' is configured` }
+    }
+    const subPath = `/${(params as Record<string, string>)['*'] || ''}`
+    return proxyDicomWebPost(request, subPath, set, server)
+  }, {
+    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
+    detail: dicomwebDetail('Server-scoped STOW-RS (POST)', 'Proxy any DICOMweb POST request to a specific DICOM server (STOW-RS).'),
   })

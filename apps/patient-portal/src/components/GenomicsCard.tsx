@@ -193,14 +193,17 @@ export function GenomicsCard({
   diagnosticImplications,
   therapeuticImplications,
   onOpenDetail,
+  defaultCollapsed = false,
 }: {
   reports: GenomicReport[]
   variants: Variant[]
   diagnosticImplications: DiagnosticImplication[]
   therapeuticImplications: TherapeuticImplication[]
   onOpenDetail?: (title: string, resource: AnyResource) => void
+  defaultCollapsed?: boolean
 }) {
   const { t } = useTranslation()
+  const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const isEmpty =
     reports.length === 0 &&
     variants.length === 0 &&
@@ -209,12 +212,20 @@ export function GenomicsCard({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="cursor-pointer select-none" onClick={() => setCollapsed(!collapsed)}>
         <CardTitle className="flex items-center gap-2 text-base">
           <Dna className="size-4 text-violet-500" />
           {t("genomics.title")}
+          {!isEmpty && (
+            <span className="text-xs font-normal text-muted-foreground ml-auto mr-1">
+              {variants.length > 0 && t("genomics.variants", { n: variants.length })}
+              {reports.length > 0 && ` · ${reports.length} ${t("genomics.reports").toLowerCase()}`}
+            </span>
+          )}
+          {collapsed ? <ChevronDown className="size-4 text-muted-foreground shrink-0" /> : <ChevronUp className="size-4 text-muted-foreground shrink-0" />}
         </CardTitle>
       </CardHeader>
+      {!collapsed && (
       <CardContent>
         {isEmpty ? (
           <p className="text-sm text-muted-foreground">{t("genomics.noRecords")}</p>
@@ -311,6 +322,7 @@ export function GenomicsCard({
           </div>
         )}
       </CardContent>
+      )}
     </Card>
   )
 }

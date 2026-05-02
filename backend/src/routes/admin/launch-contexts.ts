@@ -11,6 +11,7 @@ import {
   SuccessResponse
 } from '@/schemas'
 import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, getUserAttribute, getUserAttributeBoolean, setUserAttribute } from '@/lib/admin-utils'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import { logger } from '@/lib/logger'
 
 /**
@@ -91,8 +92,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       logger.admin.error('Failed to fetch launch contexts', { error: errorMessage }, error instanceof Error ? error : undefined)
-      set.status = 500
-      return { error: 'Failed to fetch launch contexts', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -135,8 +135,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
         fhirUserId: params.fhirUserId,
         error: errorMessage 
       }, error instanceof Error ? error : undefined)
-      set.status = 400
-      return { error: 'Failed to set fhirUser context', details: error }
+      return handleAdminError(error, set)
     }
   }, {    params: t.Object({
       userId: t.String({ description: 'Keycloak user ID' }),
@@ -181,8 +180,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
         patientId: params.patientId,
         error: errorMessage 
       }, error instanceof Error ? error : undefined)
-      set.status = 400
-      return { error: 'Failed to set patient context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -220,8 +218,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to set encounter context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -275,8 +272,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to set fhirContext', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -312,8 +308,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove fhirUser context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -349,8 +344,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove patient context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -386,8 +380,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove encounter context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -421,8 +414,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove fhirContext', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -456,8 +448,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to set intent context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -491,8 +482,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to set need-patient-banner context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -526,8 +516,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to set smart-style-url context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -561,8 +550,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to set tenant context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -598,8 +586,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove intent context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -633,8 +620,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove need-patient-banner context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -668,8 +654,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove smart-style-url context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -703,8 +688,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to remove tenant context', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({

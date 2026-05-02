@@ -101,8 +101,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
 
   return providers.map((provider, i) => normalizeProvider(provider, userCounts[i]))
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to fetch identity providers', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -140,8 +139,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       const created = await admin.identityProviders.findOne({ alias: payload.alias })
       return normalizeProvider((created ?? payload) as IdentityProviderType)
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to create identity provider', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: CreateIdentityProviderRequest,
@@ -173,8 +171,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       }
       return normalizeProvider({ ...provider, alias: provider.alias ?? params.alias })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to fetch identity provider', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -222,8 +219,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       )
       return { success: true }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to update identity provider', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({
@@ -254,8 +250,7 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       await admin.identityProviders.del({ alias: params.alias })
       return { success: true }
     } catch (error) {
-      set.status = 404
-      return { error: 'Identity provider not found or could not be deleted', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({

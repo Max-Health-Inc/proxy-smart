@@ -13,6 +13,7 @@ import { accessControlPlugin, resetAccessControlPlugin } from '@/lib/access-cont
 import { detectProvider, createProvider } from '@/lib/access-control/factory'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken, UNAUTHORIZED_RESPONSE, getValidatedAdmin, ConfigurationError } from '@/lib/admin-utils'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import { validateToken, validateAdminToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { config } from '@/config'
@@ -226,8 +227,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       return { locations, doors, groups, members }
     } catch (error) {
       logger.error('access-control', 'Failed to get overview', { error })
-      set.status = 500
-      return { error: 'Failed to get access control overview', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     response: { 200: OverviewResponse, 500: ErrorResponse },
@@ -244,8 +244,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       const provider = getAccessControl()
       return await provider.getLocations({ limit: query.limit, offset: query.offset })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to list locations', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     query: PaginationQuery,
@@ -258,8 +257,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       const provider = getAccessControl()
       return await provider.getLocation(params.id)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to get location', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -273,8 +271,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       const provider = getAccessControl()
       return await provider.getDoors({ limit: query.limit, offset: query.offset })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to list doors', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     query: PaginationQuery,
@@ -287,8 +284,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       const provider = getAccessControl()
       return await provider.getDoor(params.id)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to get door', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -388,8 +384,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
         doorId: params.id,
         reason: `Unlock denied: runtime error (${String(error)})`,
       })
-      set.status = 500
-      return { error: 'Failed to unlock', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -409,8 +404,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.getGroups) { set.status = 501; return NOT_SUPPORTED }
       return await provider.getGroups({ limit: query.limit, offset: query.offset })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to list groups', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     query: PaginationQuery,
@@ -424,8 +418,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.getGroup) { set.status = 501; return NOT_SUPPORTED }
       return await provider.getGroup(params.id)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to get group', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -439,8 +432,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.createGroup) { set.status = 501; return NOT_SUPPORTED }
       return await provider.createGroup(body.name, body.description)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to create group', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     body: CreateGroupRequest,
@@ -455,8 +447,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       await provider.deleteGroup(params.id)
       return { success: true, message: 'Group deleted' }
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to delete group', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -475,8 +466,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.getGroupDoors) { set.status = 501; return NOT_SUPPORTED }
       return await provider.getGroupDoors({ limit: query.limit, offset: query.offset })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to list group-door assignments', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     query: PaginationQuery,
@@ -490,8 +480,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.assignDoorToGroup) { set.status = 501; return NOT_SUPPORTED }
       return await provider.assignDoorToGroup(body.groupId, body.doorId)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to assign door to group', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     body: AssignDoorRequest,
@@ -506,8 +495,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       await provider.removeDoorFromGroup(params.id)
       return { success: true, message: 'Door removed from group' }
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to remove door from group', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -526,8 +514,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.getMembers) { set.status = 501; return NOT_SUPPORTED }
       return await provider.getMembers({ limit: query.limit, offset: query.offset })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to list members', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     query: PaginationQuery,
@@ -541,8 +528,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.getMember) { set.status = 501; return NOT_SUPPORTED }
       return await provider.getMember(params.id)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to get member', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -556,8 +542,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       if (!provider.createMember) { set.status = 501; return NOT_SUPPORTED }
       return await provider.createMember(body.email, body.name)
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to create member', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     body: CreateMemberRequest,
@@ -572,8 +557,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       await provider.deleteMember(params.id)
       return { success: true, message: 'Member deleted' }
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to delete member', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     params: IdParam,
@@ -592,8 +576,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
     try {
       return await provider.getEvents({ limit: query.limit, offset: query.offset })
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to list events', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     query: PaginationQuery,
@@ -647,8 +630,7 @@ export const accessControlRoutes = new Elysia({ prefix: '/access-control', tags:
       return result
     } catch (error) {
       logger.error('access-control', 'Sync failed', { error })
-      set.status = 500
-      return { error: 'Keycloak sync failed', details: String(error) }
+      return handleAdminError(error, set)
     }
   }, {
     body: SyncRequest,

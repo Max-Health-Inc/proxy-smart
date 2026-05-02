@@ -10,8 +10,7 @@ import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';
 import { useAlertStore } from '@/stores/alertStore';
-import { config } from '@/config';
-import { getStoredToken } from '@/lib/apiClient';
+import { useNotificationStore } from '@/stores/notificationStore';
 import type { 
   FhirServerWithState
 } from '@/lib/types/api';
@@ -30,6 +29,7 @@ export function FhirServersManager() {
   const { t } = useTranslation();
   const { clientApis } = useAuth();
   const { confirm } = useAlertStore();
+  const { notify } = useNotificationStore();
   const [servers, setServers] = useState<FhirServerWithState[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +133,7 @@ export function FhirServersManager() {
         return updatedChecks;
       });
     } catch (err) {
-      setError('Failed to load FHIR servers');
+      setError(t('Failed to load FHIR servers'));
       console.error('Error fetching servers:', err);
     } finally {
       setLoading(false);
@@ -158,6 +158,7 @@ export function FhirServersManager() {
       });
 
       setShowAddDialog(false);
+      notify({ type: 'success', message: t('FHIR server added') });
       await fetchServers();
     } catch (err: unknown) {
       console.error('Failed to add FHIR server:', err);
@@ -165,13 +166,12 @@ export function FhirServersManager() {
       const error = err as { response?: { status?: number }; message?: string };
       
       if (error?.response?.status === 409 || error?.message?.includes('duplicate') || error?.message?.includes('already exists')) {
-        setUrlError('This URL is already registered');
+        setUrlError(t('This URL is already registered'));
       } else if (error?.response?.status === 400) {
-        setUrlError('Invalid server URL or server not accessible');
+        setUrlError(t('Invalid server URL or server not accessible'));
       } else {
-        setError('Failed to add FHIR server. Please check if the server is accessible and supports FHIR.');
+        setError(t('Failed to add FHIR server. Please check if the server is accessible and supports FHIR.'));
       }
-      throw err;
     }
   };
 
@@ -209,6 +209,7 @@ export function FhirServersManager() {
 
       setShowEditDialog(false);
       setEditingServer(null);
+      notify({ type: 'success', message: t('FHIR server updated') });
       await fetchServers();
     } catch (err: unknown) {
       console.error('Failed to update FHIR server:', err);
@@ -216,13 +217,12 @@ export function FhirServersManager() {
       const error = err as { response?: { status?: number }; message?: string };
       
       if (error?.response?.status === 409 || error?.message?.includes('duplicate') || error?.message?.includes('already exists')) {
-        setUrlError('This URL is already registered');
+        setUrlError(t('This URL is already registered'));
       } else if (error?.response?.status === 400) {
-        setUrlError('Invalid server URL or server not accessible');
+        setUrlError(t('Invalid server URL or server not accessible'));
       } else {
-        setError('Failed to update FHIR server. Please check if the server is accessible and supports FHIR.');
+        setError(t('Failed to update FHIR server. Please check if the server is accessible and supports FHIR.'));
       }
-      throw err;
     }
   };
 
@@ -306,19 +306,14 @@ export function FhirServersManager() {
       confirmText: t('Delete Server'),
       cancelText: t('Cancel'),
       onConfirm: async () => {
-        const token = await getStoredToken();
-        const res = await fetch(`${config.api.baseUrl}/fhir-servers/${encodeURIComponent(server.id)}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error || 'Failed to delete server');
+        try {
+          await clientApis.servers.deleteFhirServersByServerId({ serverId: server.id });
+          notify({ type: 'success', message: t('FHIR server deleted') });
+          if (selectedServer?.id === server.id) setSelectedServer(null);
+          await fetchServers();
+        } catch (err) {
+          notify({ type: 'error', message: err instanceof Error ? err.message : t('Delete failed') });
         }
-        await fetchServers();
       },
     });
   };
@@ -335,38 +330,13 @@ export function FhirServersManager() {
       ));
     } catch (err) {
       console.error('Failed to toggle strict capabilities:', err);
-      setError('Failed to update strict capabilities setting');
+      setError(t('Failed to update strict capabilities setting'));
     }
   }, [clientApis]);
 
   useEffect(() => {
-    clientApis.servers.getFhirServers()
-      .then(response => {
-        const mappedServers: FhirServerWithState[] = response.servers.map((server) => ({
-          ...server,
-          connectionStatus: server.fhirVersion === 'Unknown' ? 'disconnected' : 'connected',
-          loading: false,
-          error: undefined
-        }));
-        setServers(mappedServers);
-        setSecurityChecks(prevChecks => {
-          const updatedChecks = { ...prevChecks };
-          mappedServers.forEach((server) => {
-            if (server.connectionStatus === 'disconnected') {
-              delete updatedChecks[server.id];
-            } else {
-              checkServerSecurity(server);
-            }
-          });
-          return updatedChecks;
-        });
-      })
-      .catch(err => {
-        setError('Failed to load FHIR servers');
-        console.error('Error fetching servers:', err);
-      })
-      .finally(() => setLoading(false));
-  }, [clientApis, checkServerSecurity]);
+    fetchServers();
+  }, [fetchServers]);
 
   if (loading) {
     return <PageLoadingState message={t('Loading FHIR Servers...')} />;
@@ -378,7 +348,7 @@ export function FhirServersManager() {
         title={t('Error Loading Servers')}
         message={error}
         onRetry={fetchServers}
-        retryLabel="Retry"
+        retryLabel={t('Retry')}
       />
     );
   }
@@ -447,7 +417,7 @@ export function FhirServersManager() {
 
           <TabsContent value="details" className="p-6 space-y-6">
             {selectedServer ? (
-              <ServerDetails {...selectedServer} />
+              <ServerDetails server={selectedServer} />
             ) : (
               <div className="bg-card/70 backdrop-blur-sm p-12 rounded-2xl border border-border shadow-lg text-center">
                 <div className="w-16 h-16 mx-auto mb-6 bg-muted/50 rounded-2xl flex items-center justify-center shadow-sm">
@@ -471,8 +441,6 @@ export function FhirServersManager() {
         open={showAddDialog}
         onOpenChange={setShowAddDialog}
         onAddServer={handleAddServer}
-        loading={false}
-        error={error}
         urlError={urlError}
       />
 
@@ -481,8 +449,6 @@ export function FhirServersManager() {
         onOpenChange={setShowEditDialog}
         server={editingServer}
         onUpdateServer={handleUpdateServer}
-        loading={false}
-        error={error}
         urlError={urlError}
       />
 

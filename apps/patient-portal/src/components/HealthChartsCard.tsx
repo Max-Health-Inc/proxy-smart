@@ -1,20 +1,19 @@
-import { useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
-  Card, CardContent, CardHeader, CardTitle, Badge, Button,
+  Card, CardContent, CardHeader, CardTitle, Badge, Button, Spinner,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@proxy-smart/shared-ui"
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts"
 import { Activity, Plus, Minus } from "lucide-react"
 import { format } from "date-fns"
 import type { Observation } from "@/lib/fhir-client"
 import type { ObservationResultsLaboratoryPathologyUvIps as LabResult } from "hl7.fhir.uv.ips-generated"
 
+const ChartRenderer = lazy(() => import("@/components/ChartRenderer").then(m => ({ default: m.ChartRenderer })))
+
 // ── Metric definitions ──────────────────────────────────────────────────────
 
-interface MetricDef {
+export interface MetricDef {
   label: string
   loinc: string[]
   unit?: string
@@ -63,7 +62,7 @@ function obsMatchesMetric(obs: Observation | LabResult, metric: MetricDef): bool
 
 // ── Build merged chart data for one or two metrics ──────────────────────────
 
-interface ChartPoint {
+export interface ChartPoint {
   date: string
   ts: number
   primary?: number
@@ -237,75 +236,14 @@ export function HealthChartsCard({ vitals, labs }: HealthChartsCardProps) {
             {t("healthCharts.notEnoughData", { metric: activeMetricKey })}
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={280}>
-            <LineChart data={chartData} margin={{ top: 8, right: secondaryDef ? 16 : 16, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11 }}
-                className="fill-muted-foreground"
-              />
-
-              {/* Left Y-axis — primary metric */}
-              <YAxis
-                yAxisId="left"
-                tick={{ fontSize: 11 }}
-                className="fill-muted-foreground"
-                unit={primaryDef?.unit ? ` ${primaryDef.unit}` : ""}
-                width={70}
-              />
-
-              {/* Right Y-axis — secondary metric (only when active) */}
-              {secondaryDef && hasSecondaryData && (
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  tick={{ fontSize: 11 }}
-                  className="fill-muted-foreground"
-                  unit={secondaryDef.unit ? ` ${secondaryDef.unit}` : ""}
-                  width={70}
-                />
-              )}
-
-              <Tooltip
-                contentStyle={{ borderRadius: 8, fontSize: 13 }}
-                formatter={(val, name) => {
-                  const def = name === primaryDef?.label ? primaryDef : secondaryDef
-                  return [`${val ?? ""} ${def?.unit ?? ""}`, name]
-                }}
-              />
-              <Legend />
-
-              {/* Primary line */}
-              <Line
-                yAxisId="left"
-                type="monotone"
-                dataKey="primary"
-                name={primaryDef?.label}
-                stroke={primaryDef?.color ?? "#6366f1"}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-                connectNulls
-              />
-
-              {/* Secondary line */}
-              {secondaryDef && hasSecondaryData && (
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="secondary"
-                  name={secondaryDef.label}
-                  stroke={secondaryDef.color}
-                  strokeWidth={2}
-                  strokeDasharray="5 3"
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                  connectNulls
-                />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<div className="flex items-center justify-center py-12"><Spinner size="sm" /></div>}>
+            <ChartRenderer
+              data={chartData}
+              primaryDef={primaryDef!}
+              secondaryDef={secondaryDef}
+              hasSecondaryData={hasSecondaryData}
+            />
+          </Suspense>
         )}
       </CardContent>
     </Card>

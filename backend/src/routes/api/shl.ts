@@ -21,6 +21,7 @@ import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
 import { getAllServers } from '@/lib/fhir-server-store'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
+import { shortenUrl } from '@/lib/url-shortener'
 import * as crypto from 'crypto'
 
 // KTC doesn't support smart-api-access yet (in their Future Work).
@@ -136,6 +137,7 @@ const CreateShlBody = t.Object({
 const ShlResponse = t.Object({
   shlinkPayload: t.String({ description: 'Base64url-encoded SHL payload for QR encoding' }),
   viewerUrl: t.String({ description: 'Full URL for QR code (viewer app with SHL in hash)' }),
+  shortUrl: t.Optional(t.String({ description: 'Shortened viewer URL via go.maxhealth.tech (if available)' })),
   expiresAt: t.String({ description: 'ISO 8601 expiry timestamp' }),
 })
 
@@ -460,6 +462,11 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
       const viewerUrl = `${config.baseUrl}/apps/patient-portal/#${shlinkURI}`
 
+      // Shorten the viewer URL for QR codes / messaging (best-effort)
+      const shortUrl = await shortenUrl(viewerUrl, {
+        expiresAt: new Date(expiresAt).toISOString(),
+      })
+
       logger.auth.info('SHL created', {
         shlId,
         patientId,
@@ -471,6 +478,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       return {
         shlinkPayload,
         viewerUrl,
+        ...(shortUrl && { shortUrl }),
         expiresAt: new Date(expiresAt).toISOString(),
       }
     } catch (error) {

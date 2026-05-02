@@ -633,6 +633,35 @@
       }
     },
     {
+      "fullUrl": "Endpoint/env-default",
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "env-default",
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "dicom-wado-rs",
+          "display": "DICOM WADO-RS"
+        },
+        "name": "Default PACS (DICOMweb)",
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/endpoint-payload-type",
+                "code": "any"
+              }
+            ]
+          }
+        ],
+        "address": "http://orthanc:8042/dicom-web"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Endpoint/env-default"
+      }
+    },
+    {
       "fullUrl": "ImagingStudy/max-ct-chest",
       "resource": {
         "resourceType": "ImagingStudy",
@@ -646,6 +675,11 @@
         "subject": {
           "reference": "Patient/max-nussbaumer"
         },
+        "endpoint": [
+          {
+            "reference": "Endpoint/env-default"
+          }
+        ],
         "started": "2001-01-05",
         "identifier": [
           {

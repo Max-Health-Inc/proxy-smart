@@ -1,5 +1,5 @@
-import jwt, { JwtPayload } from 'jsonwebtoken'
-import jwksClient, { JwksClient } from 'jwks-rsa'
+import jwt, { type JwtPayload } from 'jsonwebtoken'
+import jwksClient, { type JwksClient } from 'jwks-rsa'
 import { config } from '../config'
 import { AuthenticationError, ConfigurationError } from './admin-utils'
 import { logger } from './logger'

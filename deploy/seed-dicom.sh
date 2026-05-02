@@ -24,11 +24,11 @@ if [ ! -d "$DICOM_DIR" ]; then
   exit 0
 fi
 
-# Collect all .dcm files
+# Collect all .dcm files (recursive — supports subdirectories like lidc-idri-0001/)
 DCM_FILES=()
 while IFS= read -r -d '' f; do
   DCM_FILES+=("$f")
-done < <(find "$DICOM_DIR" -maxdepth 1 -name '*.dcm' -print0 2>/dev/null)
+done < <(find "$DICOM_DIR" -name '*.dcm' -print0 2>/dev/null)
 
 if [ "${#DCM_FILES[@]}" -eq 0 ]; then
   echo "ℹ️  No .dcm files found in $DICOM_DIR — skipping DICOM seed"

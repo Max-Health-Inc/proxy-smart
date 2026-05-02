@@ -308,6 +308,15 @@ export const config = {
     },
   },
 
+  urlShortener: {
+    get baseUrl() {
+      return process.env.URL_SHORTENER_BASE || 'https://go.maxhealth.tech'
+    },
+    get enabled() {
+      return process.env.URL_SHORTENER_ENABLED !== 'false'
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins

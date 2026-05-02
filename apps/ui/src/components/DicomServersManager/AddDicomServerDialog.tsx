@@ -11,19 +11,13 @@ import {
 } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
 import type { AddDicomServerRequest, AddDicomServerRequestAuthTypeEnum } from '@/lib/api-client'
+import { AUTH_TYPES } from './constants'
 
 interface AddDicomServerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onAdd: (body: AddDicomServerRequest) => Promise<void>
 }
-
-const AUTH_TYPES = [
-  { value: 'none', label: 'No Authentication' },
-  { value: 'basic', label: 'Basic Auth' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'header', label: 'Custom Header' },
-] as const
 
 export function AddDicomServerDialog({ open, onOpenChange, onAdd }: AddDicomServerDialogProps) {
   const { t } = useTranslation()

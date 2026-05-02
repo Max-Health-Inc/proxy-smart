@@ -26,6 +26,7 @@ let ialOverrides: Partial<IalConfig> | null = null
 let brandOverrides: Partial<BrandConfigType> | null = null
 let accessControlOverrides: Partial<SmartAccessControlConfigType> | null = null
 let dicomServersCache: DicomServerConfigType[] | null = null
+let dicomViewerAppClientId: string | null = null
 let loaded = false
 
 // ─── Consent ─────────────────────────────────────────────────────────
@@ -166,6 +167,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     brandOverrides = parseBrandFromAttributes(attrs)
     accessControlOverrides = parseAccessControlFromAttributes(attrs)
     dicomServersCache = parseDicomServersFromAttributes(attrs)
+    dicomViewerAppClientId = attrs['dicom_viewer_app'] || null
     // loginTheme is a top-level realm property, not an attribute
     if (brandOverrides) {
       brandOverrides.loginTheme = realm?.loginTheme || null
@@ -183,6 +185,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
       brandOverrides: !!brandOverrides,
       accessControlOverrides: !!accessControlOverrides,
       dicomServers: dicomServersCache?.length ?? 0,
+      dicomViewerApp: dicomViewerAppClientId,
     })
   } catch (error) {
     logger.admin.warn('Failed to load runtime config from Keycloak, using env var defaults', { error })
@@ -354,6 +357,12 @@ export function getDefaultDicomServer(): DicomServerConfigType | null {
   return servers.find(s => s.isDefault) ?? servers[0] ?? null
 }
 
+/** Look up a specific DICOM server by its config ID (e.g. for /dicomweb/servers/:serverId routes) */
+export function getDicomServerById(id: string): DicomServerConfigType | null {
+  const servers = getRuntimeDicomServers()
+  return servers.find(s => s.id === id) ?? null
+}
+
 /** Save DICOM servers list to Keycloak realm attributes */
 export async function saveDicomServers(admin: KcAdminClient, servers: DicomServerConfigType[]): Promise<void> {
   const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
@@ -371,6 +380,34 @@ export async function saveDicomServers(admin: KcAdminClient, servers: DicomServe
 
   dicomServersCache = [...servers]
   logger.admin.info('DICOM servers config saved to Keycloak realm attributes', { count: servers.length })
+}
+
+// ─── DICOM Viewer App ────────────────────────────────────────────────
+
+/** Get the globally configured DICOM viewer SMART app client ID */
+export function getDicomViewerAppClientId(): string | null {
+  return dicomViewerAppClientId
+}
+
+/** Save the global DICOM viewer app client ID to Keycloak realm attributes */
+export async function saveDicomViewerApp(admin: KcAdminClient, clientId: string | null): Promise<void> {
+  const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
+  const existingAttrs = (realm?.attributes || {}) as Record<string, string>
+
+  const attributes = { ...existingAttrs }
+  if (clientId) {
+    attributes['dicom_viewer_app'] = clientId
+  } else {
+    delete attributes['dicom_viewer_app']
+  }
+
+  await admin.realms.update(
+    { realm: process.env.KEYCLOAK_REALM! },
+    { attributes }
+  )
+
+  dicomViewerAppClientId = clientId
+  logger.admin.info('DICOM viewer app setting saved', { clientId })
 }
 
 /** Whether runtime config has been loaded from Keycloak at least once */

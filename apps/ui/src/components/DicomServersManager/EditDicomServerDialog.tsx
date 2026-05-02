@@ -10,21 +10,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
+import type { UpdateDicomServerRequest } from '@/lib/api-client'
+import type { UpdateDicomServerRequestAuthTypeEnum } from '@/lib/api-client/models/UpdateDicomServerRequest'
 import type { DicomServerWithStatus } from './DicomServersManager'
+import { AUTH_TYPES } from './constants'
 
 interface EditDicomServerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   server: DicomServerWithStatus | null
-  onUpdate: (serverId: string, body: Record<string, unknown>) => Promise<void>
+  onUpdate: (serverId: string, body: UpdateDicomServerRequest) => Promise<void>
 }
-
-const AUTH_TYPES = [
-  { value: 'none', label: 'No Authentication' },
-  { value: 'basic', label: 'Basic Auth' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'header', label: 'Custom Header' },
-] as const
 
 export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: EditDicomServerDialogProps) {
   const { t } = useTranslation()
@@ -55,7 +51,7 @@ export function EditDicomServerDialog({ open, onOpenChange, server, onUpdate }: 
       await onUpdate(server.id, {
         name: name.trim(),
         baseUrl: baseUrl.trim(),
-        authType: authType !== 'none' ? authType : 'none',
+        authType: authType !== 'none' ? authType as UpdateDicomServerRequestAuthTypeEnum : undefined,
         username: authType === 'basic' ? username : undefined,
         password: authType === 'basic' ? password : undefined,
         authHeader: (authType === 'bearer' || authType === 'header') ? authHeader : undefined,
