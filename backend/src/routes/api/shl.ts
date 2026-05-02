@@ -132,6 +132,8 @@ const CreateShlBody = t.Object({
   passcode: t.Optional(t.String({ description: 'Optional passcode to protect the SHL' })),
   expiresInMinutes: t.Optional(t.Number({ description: 'Expiry in minutes (default 60, max 4320 = 72h)', default: 60 })),
   verifiedOnly: t.Optional(t.Boolean({ description: 'Whether to include only verified resources', default: false })),
+  shortenUrl: t.Optional(t.Boolean({ description: 'Opt-in: shorten the viewer URL via go.maxhealth.tech (stored securely, auto-expires)', default: false })),
+  maxUses: t.Optional(t.Number({ description: 'Maximum number of times the shortened URL can be accessed before expiring (only when shortenUrl is true)', minimum: 1 })),
 })
 
 const ShlResponse = t.Object({
@@ -462,10 +464,13 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
       const viewerUrl = `${config.baseUrl}/apps/patient-portal/#${shlinkURI}`
 
-      // Shorten the viewer URL for QR codes / messaging (best-effort)
-      const shortUrl = await shortenUrl(viewerUrl, {
-        expiresAt: new Date(expiresAt).toISOString(),
-      })
+      // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)
+      const shortUrl = body.shortenUrl
+        ? await shortenUrl(viewerUrl, {
+            expiresAt: new Date(expiresAt).toISOString(),
+            ...(body.maxUses && { maxUses: body.maxUses }),
+          })
+        : null
 
       logger.auth.info('SHL created', {
         shlId,
