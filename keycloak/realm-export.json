@@ -813,6 +813,56 @@
       }
     },
     {
+      "clientId": "dicom-viewer",
+      "name": "DICOM Viewer",
+      "description": "SMART on FHIR DICOM medical image viewer",
+      "enabled": true,
+      "clientAuthenticatorType": "client-dummy",
+      "redirectUris": [
+        "http://localhost:5181/*",
+        "https://dicom.maxhealth.tech/view/*",
+        "https://dicom-viewer-3yz.pages.dev/view/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5181",
+        "https://dicom.maxhealth.tech",
+        "https://dicom-viewer-3yz.pages.dev",
+        "*"
+      ],
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "consentRequired": true,
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "openid"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "launch/patient",
+        "launch",
+        "fhirUser",
+        "online_access",
+        "patient/*.read",
+        "patient/ImagingStudy.read"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "+"
+      }
+    },
+    {
       "clientId": "consent-app",
       "name": "Consent Management App",
       "description": "SMART on FHIR consent management application",
