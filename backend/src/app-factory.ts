@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { openapi, fromTypes } from '@elysiajs/openapi'
 import { cors } from '@elysiajs/cors'
+import { isOriginAllowed, refreshIfStale } from './lib/cors-origins'
 import staticPlugin from '@elysiajs/static'
 import { join } from 'path'
 import { readdirSync, readFileSync, existsSync } from 'fs'
@@ -119,9 +120,12 @@ export function createApp() {
                 const path = new URL(request.url).pathname
                 if (path.startsWith('/dicomweb')) return true
 
-                // All other routes: use the configured whitelist
+                // Trigger background refresh if cache is stale
+                refreshIfStale()
+
+                // All other routes: check against dynamic origins (env + Keycloak webOrigins)
                 const from = request.headers.get('origin') || ''
-                return config.cors.origins.some(o => from.includes(o))
+                return isOriginAllowed(from)
             },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
+import { refreshCorsOrigins } from '@/lib/cors-origins'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import * as crypto from 'crypto'
 import { getClientRegistrationSettings } from '../admin/client-registration-settings'
@@ -392,6 +393,9 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         isBackendService,
         requiresApproval: settings.adminApprovalRequired 
       })
+
+      // Refresh CORS origins cache (new client has webOrigins)
+      refreshCorsOrigins().catch(() => {})
       
       return response
 

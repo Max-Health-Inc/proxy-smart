@@ -1,6 +1,7 @@
 import { config } from './config'
 import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
+import { refreshCorsOrigins } from './lib/cors-origins'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -561,6 +562,9 @@ export async function initializeServer(): Promise<void> {
 
       // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
       await ensurePostLogoutRedirectUris()
+
+      // Populate CORS origins cache from Keycloak client webOrigins
+      await refreshCorsOrigins()
 
       // Ensure Keycloak Organizations feature is enabled on the realm
       await ensureOrganizationsEnabled()
