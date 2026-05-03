@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.1.0-beta.202605031204.060ce013",
+  "version": "0.1.0-alpha.202605031618.8061482e",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -137,6 +137,7 @@
   },
   "type": "module",
   "workspaces": [
+    "packages/auth",
     "eslint-config",
     "backend",
     "infra",
@@ -144,6 +145,7 @@
     "apps/ui",
     "apps/dtr-app",
     "apps/consent-app",
+    "apps/patient-picker",
     "apps/patient-portal",
     "apps/smart-dicom-template"
   ],

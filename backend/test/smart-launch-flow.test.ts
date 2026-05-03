@@ -81,7 +81,8 @@ mock.module('@/lib/oauth-metrics-logger', () => ({
 // Mock cross-fetch so oauth.ts uses our controlled fetch
 // This is critical because oauth.ts does `import fetch from 'cross-fetch'`
 // which is NOT globalThis.fetch in Bun.
-let mockFetchFn: typeof fetch = async () => new Response('{}', { status: 200 })
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let mockFetchFn: (...args: any[]) => Promise<Response> = async () => new Response('{}', { status: 200 })
 mock.module('cross-fetch', () => ({
   default: (...args: Parameters<typeof fetch>) => mockFetchFn(...args),
 }))
@@ -212,7 +213,8 @@ describe('SMART Launch Flow Integration', () => {
       else process.env[key] = savedEnv[key]
     }
     // Reset mock fetch
-    mockFetchFn = async () => new Response('{}', { status: 200 })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockFetchFn = async () => new Response('{}', { status: 200 }) as any
     // Clear all sessions between tests
     launchContextStore.dispose()
   })
@@ -421,7 +423,7 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(302)
       const location = new URL(res.headers.get('location')!)
-      expect(location.pathname).toBe('/auth/patient-select')
+      expect(location.pathname).toBe('/apps/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
       expect(location.searchParams.get('code')).toBe('picker-code')
     })
@@ -462,19 +464,18 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Patient Picker — GET & POST /auth/patient-select', () => {
-    it('GET serves HTML picker when session is valid', async () => {
+    it('GET redirects to patient picker app when session is valid', async () => {
       const [sessionKey] = createTestSession({ needsPatientPicker: true })
 
       const res = await authRoutes.handle(authRequest(
         `/auth/patient-select?session=${sessionKey}&code=the-code`
       ))
 
-      expect(res.status).toBe(200)
-      const ct = res.headers.get('content-type')!
-      expect(ct).toContain('text/html')
-      const html = await res.text()
-      expect(html).toContain(sessionKey)
-      expect(html).toContain('the-code')
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/apps/patient-picker/')
+      expect(location.searchParams.get('session')).toBe(sessionKey)
+      expect(location.searchParams.get('code')).toBe('the-code')
     })
 
     it('GET returns 400 when session param is missing', async () => {
@@ -587,7 +588,8 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('POST /auth/token — session-based context enrichment', () => {
-    it('enriches token response with patient from session (launch/patient scope)', async () => {
+    // These tests share mutable state via launchContextStore and must run sequentially
+    it.serial('enriches token response with patient from session (launch/patient scope)', async () => {
       // Create a session that would exist after /smart-callback
       createTestSession({
         patient: TEST_PATIENT_ID,
@@ -622,7 +624,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.access_token).toBeTruthy()
     })
 
-    it('enriches with encounter when launch/encounter scope is granted', async () => {
+    it.serial('enriches with encounter when launch/encounter scope is granted', async () => {
       createTestSession({
         patient: TEST_PATIENT_ID,
         encounter: TEST_ENCOUNTER_ID,
@@ -657,7 +659,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.encounter).toBe(TEST_ENCOUNTER_ID)
     })
 
-    it('does NOT emit patient when launch/patient scope is not granted', async () => {
+    it.serial('does NOT emit patient when launch/patient scope is not granted', async () => {
       createTestSession({
         patient: TEST_PATIENT_ID,
         needsPatientPicker: false,
@@ -691,7 +693,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.patient).toBeUndefined()
     })
 
-    it('consumes session after token exchange (no reuse)', async () => {
+    it.serial('consumes session after token exchange (no reuse)', async () => {
       const [sessionKey] = createTestSession({
         patient: TEST_PATIENT_ID,
         needsPatientPicker: false,
@@ -736,7 +738,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data2.patient).toBeUndefined()
     })
 
-    it('rewrites redirect_uri to proxy callback for KC token exchange', async () => {
+    it.serial('rewrites redirect_uri to proxy callback for KC token exchange', async () => {
       createTestSession({
         patient: TEST_PATIENT_ID,
         needsPatientPicker: false,
@@ -787,10 +789,10 @@ describe('SMART Launch Flow Integration', () => {
       }))
 
       // The redirect_uri sent to KC should be the proxy's smart-callback, not the client's
-      expect(capturedRedirectUri).toBe(`${TEST_BASE_URL}/auth/smart-callback`)
+      expect(capturedRedirectUri!).toBe(`${TEST_BASE_URL}/auth/smart-callback`)
     })
 
-    it('does NOT rewrite redirect_uri when no session matches', async () => {
+    it.serial('does NOT rewrite redirect_uri when no session matches', async () => {
       // No session created — direct token exchange (non-SMART flow)
       let capturedRedirectUri: string | null = null
       mockFetchFn = (async (url: string | URL | Request, opts?: RequestInit) => {
@@ -831,10 +833,10 @@ describe('SMART Launch Flow Integration', () => {
       }))
 
       // Should pass through unchanged — no session to rewrite for
-      expect(capturedRedirectUri).toBe(TEST_CLIENT_REDIRECT)
+      expect(capturedRedirectUri!).toBe(TEST_CLIENT_REDIRECT)
     })
 
-    it('includes Cache-Control: no-store header per RFC 6749', async () => {
+    it.serial('includes Cache-Control: no-store header per RFC 6749', async () => {
       const mockToken = createMockAccessToken()
       mockFetchFn = createKcReachableFetch({
         access_token: mockToken,
@@ -866,7 +868,7 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Concurrent sessions — isolation', () => {
-    it('two sessions for same client with different redirect_uris resolve independently', async () => {
+    it.serial('two sessions for same client with different redirect_uris resolve independently', async () => {
       const REDIRECT_A = 'http://app-a.local/callback'
       const REDIRECT_B = 'http://app-b.local/callback'
 
@@ -918,7 +920,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(dataB.patient).toBe('Patient/bob')
     })
 
-    it('two sessions for different clients with same redirect_uri resolve independently', async () => {
+    it.serial('two sessions for different clients with same redirect_uri resolve independently', async () => {
       createTestSession({
         clientId: 'client-x',
         patient: 'Patient/x-patient',
@@ -971,7 +973,7 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Full flow — authorize → callback → token', () => {
-    it('standalone launch: authorize → callback → picker → token with patient', async () => {
+    it.serial('standalone launch: authorize → callback → picker → token with patient', async () => {
       // Step 1: Authorize — creates session, rewrites redirect_uri
       const authorizeRes = await authRoutes.handle(authRequest(
         `/auth/authorize?response_type=code&client_id=${TEST_CLIENT_ID}&redirect_uri=${encodeURIComponent(TEST_CLIENT_REDIRECT)}&scope=openid+launch/patient+patient/*.read&state=e2e-state`
@@ -986,7 +988,7 @@ describe('SMART Launch Flow Integration', () => {
       ))
       expect(callbackRes.status).toBe(302)
       const pickerUrl = new URL(callbackRes.headers.get('location')!)
-      expect(pickerUrl.pathname).toBe('/auth/patient-select')
+      expect(pickerUrl.pathname).toBe('/apps/patient-picker/')
       expect(pickerUrl.searchParams.get('session')).toBe(sessionKey)
 
       // Step 3: Patient picker submission
@@ -1033,7 +1035,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(launchContextStore.get(sessionKey)).toBeNull()
     })
 
-    it('EHR launch: authorize with code → callback → token with pre-populated context', async () => {
+    it.serial('EHR launch: authorize with code → callback → token with pre-populated context', async () => {
       // Issue a launch code
       const launchCode = signLaunchCode({
         patient: TEST_PATIENT_ID,
@@ -1096,7 +1098,7 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Edge cases — bug detection', () => {
-    it('client state with special characters is preserved correctly', async () => {
+    it.serial('client state with special characters is preserved correctly', async () => {
       const specialState = 'state=with&special/chars?and#fragment'
       const [sessionKey] = createTestSession({
         clientState: specialState,
@@ -1113,7 +1115,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(location.searchParams.get('state')).toBe(specialState)
     })
 
-    it('empty client state is handled gracefully', async () => {
+    it.serial('empty client state is handled gracefully', async () => {
       const [sessionKey] = createTestSession({
         clientState: '',
         needsPatientPicker: false,
@@ -1130,7 +1132,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(location.searchParams.has('state')).toBe(false)
     })
 
-    it('token request without client_id does not crash (no session match)', async () => {
+    it.serial('token request without client_id does not crash (no session match)', async () => {
       createTestSession({ patient: TEST_PATIENT_ID, needsPatientPicker: false })
 
       const mockToken = createMockAccessToken()
@@ -1159,7 +1161,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.patient).toBeUndefined()
     })
 
-    it('token request without redirect_uri does not crash', async () => {
+    it.serial('token request without redirect_uri does not crash', async () => {
       createTestSession({ patient: TEST_PATIENT_ID, needsPatientPicker: false })
 
       const mockToken = createMockAccessToken()
@@ -1186,7 +1188,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(res.status).toBe(200)
     })
 
-    it('scope with launch (EHR) emits patient from session', async () => {
+    it.serial('scope with launch (EHR) emits patient from session', async () => {
       // "launch" scope (without /patient) should also gate patient emission
       createTestSession({
         patient: TEST_PATIENT_ID,
@@ -1220,7 +1222,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.patient).toBe(TEST_PATIENT_ID)
     })
 
-    it('handles launch/encounter scope for EHR launch context', async () => {
+    it.serial('handles launch/encounter scope for EHR launch context', async () => {
       createTestSession({
         encounter: TEST_ENCOUNTER_ID,
         needsPatientPicker: false,
@@ -1253,7 +1255,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.encounter).toBe(TEST_ENCOUNTER_ID)
     })
 
-    it('intent, tenant, smart_style_url are passed through without scope gating', async () => {
+    it.serial('intent, tenant, smart_style_url are passed through without scope gating', async () => {
       createTestSession({
         patient: TEST_PATIENT_ID,
         intent: 'order-review',
@@ -1290,7 +1292,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.smart_style_url).toBe('https://ehr.example/style.json')
     })
 
-    it('fhirUser-to-patient derivation when session has no patient but token has Patient/ fhirUser', async () => {
+    it.serial('fhirUser-to-patient derivation when session has no patient but token has Patient/ fhirUser', async () => {
       // Patient portal scenario: fhirUser is Patient/123, no explicit patient in session
       // Should derive patient from fhirUser
       createTestSession({
@@ -1328,7 +1330,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.patient).toBe('portal-user-456')
     })
 
-    it('fhirUser derivation does NOT trigger for Practitioner/ references', async () => {
+    it.serial('fhirUser derivation does NOT trigger for Practitioner/ references', async () => {
       createTestSession({
         needsPatientPicker: false,
         // No patient set
@@ -1364,7 +1366,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.patient).toBeUndefined()
     })
 
-    it('KC token error response is forwarded with correct status code', async () => {
+    it.serial('KC token error response is forwarded with correct status code', async () => {
       mockFetchFn = (async (url: string | URL | Request) => {
         const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : url.url
         if (urlStr.includes(`/realms/${TEST_REALM}`) && !urlStr.includes('/protocol/')) {
@@ -1401,7 +1403,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.error_description).toBe('Code not valid')
     })
 
-    it('duplicate sessions (same clientId + redirectUri) — first match wins, second survives', async () => {
+    it.serial('duplicate sessions (same clientId + redirectUri) — first match wins, second survives', async () => {
       // Bug vector: find() returns first match. If two sessions exist for
       // the same client+redirect, only first is consumed.
       const [key1] = createTestSession({
@@ -1455,7 +1457,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(launchContextStore.get(key2)).toBeNull()
     })
 
-    it('needPatientBanner boolean false is correctly included in token response', async () => {
+    it.serial('needPatientBanner boolean false is correctly included in token response', async () => {
       createTestSession({
         patient: TEST_PATIENT_ID,
         needPatientBanner: false, // explicitly false
@@ -1489,7 +1491,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(data.need_patient_banner).toBe(false)
     })
 
-    it('fhirContext JSON is parsed and included in token response', async () => {
+    it.serial('fhirContext JSON is parsed and included in token response', async () => {
       const fhirContext = JSON.stringify([{ reference: 'ImagingStudy/img-001' }])
       createTestSession({
         patient: TEST_PATIENT_ID,

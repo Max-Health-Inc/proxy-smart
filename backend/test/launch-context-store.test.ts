@@ -140,7 +140,7 @@ describe('LaunchContextStore', () => {
       shortStore.set('key-1', createSession())
 
       const start = Date.now()
-      while (Date.now() - start < 5) {}
+      while (Date.now() - start < 5) { /* busy-wait for TTL expiry */ }
 
       expect(shortStore.update('key-1', { patient: 'P/1' })).toBe(false)
       shortStore.dispose()
@@ -181,7 +181,7 @@ describe('LaunchContextStore', () => {
       shortStore.set('key-expired', createSession({ clientId: 'expired-app' }))
 
       const start = Date.now()
-      while (Date.now() - start < 5) {}
+      while (Date.now() - start < 5) { /* busy-wait for TTL expiry */ }
 
       expect(shortStore.find(s => s.clientId === 'expired-app')).toBeNull()
       shortStore.dispose()
@@ -227,7 +227,7 @@ describe('LaunchContextStore', () => {
       shortStore.set('k1', createSession())
 
       const start = Date.now()
-      while (Date.now() - start < 5) {}
+      while (Date.now() - start < 5) { /* busy-wait for TTL expiry */ }
 
       // size() reports map size (expired entry not yet cleaned)
       expect(shortStore.size()).toBe(1)
