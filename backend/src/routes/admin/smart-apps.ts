@@ -23,35 +23,44 @@ import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
 
 /**
- * Register JWKS for a Backend Services client in Keycloak.
+ * Register JWKS for a client in Keycloak.
  * Accepts either an inline JWKS JSON string or a PEM public key (which gets converted to JWK).
+ * Does NOT override clientAuthenticatorType — caller is responsible for setting that.
  */
 async function registerJwksForClient(
   admin: KcAdminClient,
   clientInternalId: string,
   options: { jwksString?: string; publicKeyPem?: string; signingAlg?: string }
 ): Promise<void> {
-  const alg = options.signingAlg || 'RS384'
   let jwksJson: string
+  let detectedAlg: string | undefined
 
   if (options.jwksString) {
-    // Use inline JWKS directly
+    // Use inline JWKS directly, and try to detect alg from the first key
     jwksJson = options.jwksString
+    try {
+      const parsed = JSON.parse(options.jwksString) as { keys?: { alg?: string }[] }
+      detectedAlg = parsed.keys?.[0]?.alg
+    } catch { /* ignore parse errors — will use fallback */ }
   } else if (options.publicKeyPem) {
     // Convert PEM → JWK using Node crypto
+    const alg = options.signingAlg || 'RS384'
     const keyObject = crypto.createPublicKey(options.publicKeyPem)
     const jwk = keyObject.export({ format: 'jwk' }) as Record<string, unknown>
     jwksJson = JSON.stringify({
       keys: [{ ...jwk, use: 'sig', alg, kid: crypto.randomUUID() }]
     })
+    detectedAlg = alg
   } else {
     throw new Error('Either jwksString or publicKeyPem must be provided')
   }
 
+  // Priority: explicit signingAlg > detected from JWKS > fallback RS384
+  const alg = options.signingAlg || detectedAlg || 'RS384'
+
   logger.admin.debug('Registering JWKS for client', { clientInternalId, alg })
 
   await admin.clients.update({ id: clientInternalId }, {
-    clientAuthenticatorType: 'client-secret',
     attributes: {
       'use.jwks.string': 'true',
       'jwks.string': jwksJson,
@@ -424,8 +433,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
-      // Register JWKS for Backend Services clients (sets signing alg attribute
-      // and ensures clientAuthenticatorType stays 'client-secret')
+      // Register JWKS for Backend Services clients (proxy validates JWT externally,
+      // authenticates to Keycloak with client-secret internally)
       if (isBackendService && (body.publicKey || body.jwksString || body.jwksUri) && createdClient.id) {
         try {
           if (body.publicKey || body.jwksString) {
