@@ -20,7 +20,7 @@ export default function App() {
             <AlertTriangle className="h-12 w-12 text-destructive" />
             <h2 className="text-xl font-semibold">Invalid Request</h2>
             <p className="text-muted-foreground">
-              Missing session or code parameter. This page should only be accessed during a SMART authorization flow.
+              Missing session, code, or aud parameter. This page should only be accessed during a SMART authorization flow.
             </p>
           </div>
         </main>
@@ -58,7 +58,7 @@ export default function App() {
           </p>
         </div>
 
-        <PatientList onSelect={setSelected} selected={selected} />
+        <PatientList fhirBaseUrl={params.aud} onSelect={setSelected} selected={selected} />
 
         {selected && (
           <div className="mt-6 flex flex-col gap-3">

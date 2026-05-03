@@ -1,19 +1,11 @@
 /**
  * Patient picker app config.
  *
- * This app does NOT use SMART auth — it's shown mid-OAuth-flow before any
- * token exists. It only needs the FHIR proxy base URL for Patient search.
+ * The FHIR base URL comes from the `aud` query parameter, which is the
+ * FHIR server URL from the original authorize request (SMART App Launch
+ * spec §2.1.9). This app does NOT use SMART auth — it's shown mid-OAuth-flow
+ * before any token exists.
  */
-export const config = {
-  /** Backend base URL (same origin in production, configurable for dev) */
-  proxyBase: import.meta.env.VITE_PROXY_BASE ?? window.location.origin,
-  /** FHIR proxy path prefix */
-  proxyPrefix: import.meta.env.VITE_PROXY_PREFIX ?? 'fhir/proxy-smart-backend',
-  /** FHIR server ID */
-  fhirServerId: import.meta.env.VITE_FHIR_SERVER_ID ?? 'default',
-  /** FHIR version */
-  fhirVersion: import.meta.env.VITE_FHIR_VERSION ?? 'R4',
-}
 
-/** FHIR base URL for Patient search */
-export const fhirBaseUrl = `${config.proxyBase}/${config.proxyPrefix}/${config.fhirServerId}/${config.fhirVersion}`
+/** Fallback FHIR base URL for dev mode (when no aud param is available). */
+export const devFhirBaseUrl = import.meta.env.VITE_FHIR_BASE_URL ?? `${window.location.origin}/proxy-smart-backend/hapi-fhir-server/R4`

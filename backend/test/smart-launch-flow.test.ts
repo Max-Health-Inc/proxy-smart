@@ -37,6 +37,7 @@ const TEST_CLIENT_ID = 'smart-app-client'
 const TEST_CLIENT_REDIRECT = 'http://localhost:3000/callback'
 const TEST_PATIENT_ID = 'Patient/test-patient-123'
 const TEST_ENCOUNTER_ID = 'Encounter/test-encounter-456'
+const TEST_FHIR_BASE = `${TEST_BASE_URL}/proxy-smart-backend/hapi-fhir-server/R4`
 
 // ─── Environment Setup ──────────────────────────────────────────────────────
 
@@ -184,6 +185,7 @@ function createTestSession(overrides?: Partial<LaunchSession>): [string, LaunchS
     clientState: 'original-state-abc',
     clientId: TEST_CLIENT_ID,
     scope: 'openid launch/patient patient/*.read',
+    aud: TEST_FHIR_BASE,
     createdAt: Date.now(),
     ...overrides,
   }
@@ -426,6 +428,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(location.pathname).toBe('/apps/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
       expect(location.searchParams.get('code')).toBe('picker-code')
+      expect(location.searchParams.get('aud')).toBe(TEST_FHIR_BASE)
     })
 
     it('does NOT redirect to picker when needsPatientPicker=true but patient already set', async () => {
@@ -476,6 +479,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(location.pathname).toBe('/apps/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
       expect(location.searchParams.get('code')).toBe('the-code')
+      expect(location.searchParams.get('aud')).toBe(TEST_FHIR_BASE)
     })
 
     it('GET returns 400 when session param is missing', async () => {
@@ -976,7 +980,7 @@ describe('SMART Launch Flow Integration', () => {
     it.serial('standalone launch: authorize → callback → picker → token with patient', async () => {
       // Step 1: Authorize — creates session, rewrites redirect_uri
       const authorizeRes = await authRoutes.handle(authRequest(
-        `/auth/authorize?response_type=code&client_id=${TEST_CLIENT_ID}&redirect_uri=${encodeURIComponent(TEST_CLIENT_REDIRECT)}&scope=openid+launch/patient+patient/*.read&state=e2e-state`
+        `/auth/authorize?response_type=code&client_id=${TEST_CLIENT_ID}&redirect_uri=${encodeURIComponent(TEST_CLIENT_REDIRECT)}&scope=openid+launch/patient+patient/*.read&state=e2e-state&aud=${encodeURIComponent(TEST_FHIR_BASE)}`
       ))
       expect(authorizeRes.status).toBe(302)
       const kcRedirect = new URL(authorizeRes.headers.get('location')!)

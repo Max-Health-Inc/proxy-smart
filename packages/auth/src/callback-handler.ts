@@ -89,6 +89,7 @@ export function handleCallback(
     const pickerUrl = new URL(`${config.baseUrl}${patientPickerPath}`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)
+    if (session.aud) pickerUrl.searchParams.set('aud', session.aud)
     return {
       result: { type: 'redirect', url: pickerUrl.href },
       session,
