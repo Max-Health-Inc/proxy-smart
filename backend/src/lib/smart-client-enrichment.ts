@@ -119,6 +119,11 @@ export async function enrichClient(
     allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
     requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
 
+    // fhirUser resolution
+    patientFacing: getAttr(fullClient.attributes, 'patient_facing') === 'true' ? true
+      : getAttr(fullClient.attributes, 'patient_facing') === 'false' ? false
+      : undefined,
+
     // Consent & scope settings
     consentRequired: fullClient.consentRequired ?? false,
     fullScopeAllowed: fullClient.fullScopeAllowed ?? true,

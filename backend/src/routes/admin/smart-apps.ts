@@ -18,6 +18,7 @@ import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappe
 import { refreshCorsOrigins } from '@/lib/cors-origins'
 import { toKeycloakAuthType } from '@/lib/auth-method-mapping'
 import { enrichClient, ensureScopesExist, replaceClientScopes } from '@/lib/smart-client-enrichment'
+import { invalidateClientConfig } from '@/lib/smart-client-config-cache'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
@@ -260,6 +261,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.requiredRoles && body.requiredRoles.length > 0 && {
             'required_roles': body.requiredRoles.join(',')
           }),
+
+          // fhirUser resolution mode
+          ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
 
           // Session timeout overrides
           ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
@@ -604,6 +608,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.requiredRoles !== undefined && {
             'required_roles': body.requiredRoles.length > 0 ? body.requiredRoles.join(',') : ''
           }),
+          // fhirUser resolution mode
+          ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
           // Session timeout overrides
           ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
           ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),
@@ -745,6 +751,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       // Refresh CORS origins cache (webOrigins may have changed)
       refreshCorsOrigins().catch(() => {})
+
+      // Invalidate client config cache (patientFacing etc. may have changed)
+      invalidateClientConfig(params.clientId)
 
       return { success: true, message: 'SMART application updated successfully' }
     } catch (error) {

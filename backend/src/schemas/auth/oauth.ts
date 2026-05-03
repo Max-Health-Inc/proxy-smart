@@ -63,6 +63,16 @@ export const AuthorizationQuery = t.Object({
 }, { title: 'AuthorizationQuery' })
 export type AuthorizationQueryType = Static<typeof AuthorizationQuery>
 
+/** Query schema for the SMART callback endpoint (receives redirect from Keycloak) */
+export const SmartCallbackQuery = t.Object({
+  code: t.Optional(t.String({ description: 'Authorization code from Keycloak' })),
+  state: t.Optional(t.String({ description: 'State parameter (session key for SMART flows)' })),
+  error: t.Optional(t.String({ description: 'OAuth error code from Keycloak' })),
+  error_description: t.Optional(t.String({ description: 'Human-readable error description' })),
+  session_state: t.Optional(t.String({ description: 'Keycloak session state' })),
+}, { title: 'SmartCallbackQuery' })
+export type SmartCallbackQueryType = Static<typeof SmartCallbackQuery>
+
 export const LoginQuery = t.Object({
   client_id: t.Optional(t.String({ description: 'OAuth client ID (defaults to admin-ui)' })),
   redirect_uri: t.Optional(t.String({ description: 'OAuth redirect URI (defaults to base URL)' })),

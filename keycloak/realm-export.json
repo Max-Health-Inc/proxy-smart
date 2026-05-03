@@ -757,9 +757,13 @@
       "redirectUris": [
         "http://localhost:5176/*",
         "http://localhost:8445/apps/patient-portal/*",
+        "http://localhost:8445/auth/smart-callback",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/patient-portal/*",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/patient-portal/*",
-        "https://proxy-smart.com/apps/patient-portal/*"
+        "https://beta.proxy-smart.com/auth/smart-callback",
+        "https://proxy-smart.com/apps/patient-portal/*",
+        "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5176",
@@ -820,8 +824,11 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:5181/*",
+        "http://localhost:8445/auth/smart-callback",
         "https://dicom.maxhealth.tech/view/*",
-        "https://dicom-viewer-3yz.pages.dev/view/*"
+        "https://dicom-viewer-3yz.pages.dev/view/*",
+        "https://beta.proxy-smart.com/auth/smart-callback",
+        "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5181",
@@ -871,11 +878,15 @@
       "redirectUris": [
         "http://localhost:5174/*",
         "http://localhost:8445/apps/consent/*",
+        "http://localhost:8445/auth/smart-callback",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/consent/*",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/consent/*",
-        "https://proxy-smart.com/apps/consent/*",
         "https://beta.proxy-smart.com/apps/consent-app/*",
-        "https://proxy-smart.com/apps/consent-app/*"
+        "https://beta.proxy-smart.com/auth/smart-callback",
+        "https://proxy-smart.com/apps/consent/*",
+        "https://proxy-smart.com/apps/consent-app/*",
+        "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5174",
@@ -937,9 +948,13 @@
       "redirectUris": [
         "http://localhost:5175/*",
         "http://localhost:8445/apps/dtr/*",
+        "http://localhost:8445/auth/smart-callback",
         "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/dtr/*",
+        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/dtr/*",
-        "https://proxy-smart.com/apps/dtr/*"
+        "https://beta.proxy-smart.com/auth/smart-callback",
+        "https://proxy-smart.com/apps/dtr/*",
+        "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5175",
@@ -1004,7 +1019,8 @@
       "redirectUris": [
         "http://localhost:4567/*",
         "http://localhost:4567/custom/smart_stu2_2/redirect",
-        "http://localhost:4567/custom/smart_stu2/redirect"
+        "http://localhost:4567/custom/smart_stu2/redirect",
+        "http://localhost:8445/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:4567",
@@ -1180,8 +1196,7 @@
       "email": "doctor@example.com",
       "emailVerified": true,
       "attributes": {
-        "fhirUser": ["Practitioner/example-practitioner"],
-        "smart_patient": ["test-patient"]
+        "fhirUser": ["Practitioner/example-practitioner"]
       },
       "credentials": [
         {
