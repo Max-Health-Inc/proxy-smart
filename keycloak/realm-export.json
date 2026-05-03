@@ -825,8 +825,8 @@
       "redirectUris": [
         "http://localhost:5181/*",
         "http://localhost:8445/auth/smart-callback",
-        "https://dicom.maxhealth.tech/view/*",
-        "https://dicom-viewer-3yz.pages.dev/view/*",
+        "https://dicom.maxhealth.tech/*",
+        "https://dicom-viewer-3yz.pages.dev/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/auth/smart-callback"
       ],
