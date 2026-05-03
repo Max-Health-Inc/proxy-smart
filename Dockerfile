@@ -20,7 +20,6 @@ COPY lib/ ./lib/
 
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
-COPY shared-ui/package.json ./shared-ui/
 COPY apps/ui/package.json ./apps/ui/
 COPY apps/consent-app/package.json ./apps/consent-app/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
@@ -30,10 +29,13 @@ COPY apps/patient-picker/package.json ./apps/patient-picker/
 COPY packages/auth/package.json ./packages/auth/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal","apps/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","apps/ui","apps/consent-app","apps/dtr-app","apps/patient-portal","apps/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
+
+# Copy shared Vite config (imported by all SMART apps via ../../config/vite-config)
+COPY config/ ./config/
 
 # Backend build stage (just the JS bundle)
 FROM build-deps AS backend-build
@@ -67,7 +69,6 @@ ARG VITE_ENCRYPTION_SECRET
 RUN test -n "$VITE_ENCRYPTION_SECRET" || (echo "ERROR: VITE_ENCRYPTION_SECRET build arg is required" && exit 1)
 ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 ENV VITE_BASE=/webapp/
-COPY shared-ui/ ./shared-ui/
 COPY apps/ui/ ./apps/ui/
 COPY --from=api-client-gen /app/apps/ui/src/lib/api-client ./apps/ui/src/lib/api-client/
 WORKDIR /app/apps/ui
@@ -75,28 +76,24 @@ RUN bun run build
 
 # Consent App build stage
 FROM build-deps AS consent-app-build
-COPY shared-ui/ ./shared-ui/
 COPY apps/consent-app/ ./apps/consent-app/
 WORKDIR /app/apps/consent-app
 RUN bun run build
 
 # DTR App build stage
 FROM build-deps AS dtr-app-build
-COPY shared-ui/ ./shared-ui/
 COPY apps/dtr-app/ ./apps/dtr-app/
 WORKDIR /app/apps/dtr-app
 RUN bun run build
 
 # Patient Picker build stage
 FROM build-deps AS patient-picker-build
-COPY shared-ui/ ./shared-ui/
 COPY apps/patient-picker/ ./apps/patient-picker/
 WORKDIR /app/apps/patient-picker
 RUN bun run build
 
 # Patient Portal build stage
 FROM build-deps AS patient-portal-build
-COPY shared-ui/ ./shared-ui/
 COPY apps/patient-portal/ ./apps/patient-portal/
 COPY --from=api-client-gen /app/apps/patient-portal/src/lib/api-client ./apps/patient-portal/src/lib/api-client/
 WORKDIR /app/apps/patient-portal

@@ -1,9 +1,11 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { toast } from "sonner"
-import { searchPatients, type Patient } from "@/lib/fhir-client"
+import { searchPatients, listPatients, type Patient } from "@/lib/fhir-client"
 import { formatHumanName } from "@max-health-inc/shared-ui"
 import { Input, Button, Card, CardContent, Spinner, Badge, ScrollArea } from "@max-health-inc/shared-ui"
-import { Search, User, Calendar, Hash } from "lucide-react"
+import { Search, User, Calendar, Hash, ChevronLeft, ChevronRight } from "lucide-react"
+
+const PAGE_SIZE = 10
 
 interface PatientListProps {
   fhirBaseUrl: string
@@ -13,24 +15,55 @@ interface PatientListProps {
 
 export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProps) {
   const [query, setQuery] = useState("")
-  const [patients, setPatients] = useState<Patient[]>([])
+  const [searchResults, setSearchResults] = useState<Patient[]>([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
+
+  // Paginated browse state
+  const [browsePatients, setBrowsePatients] = useState<Patient[]>([])
+  const [browseTotal, setBrowseTotal] = useState<number | null>(null)
+  const [browseOffset, setBrowseOffset] = useState(0)
+  const [browseLoading, setBrowseLoading] = useState(false)
+
+  // Load initial patient list on mount
+  useEffect(() => {
+    loadPage(0)
+  }, [fhirBaseUrl])
+
+  const loadPage = useCallback(async (offset: number) => {
+    setBrowseLoading(true)
+    try {
+      const bundle = await listPatients(fhirBaseUrl, offset, PAGE_SIZE)
+      const patients = (bundle.entry ?? [])
+        .map(e => e.resource)
+        .filter((r): r is NonNullable<typeof r> => r != null)
+      setBrowsePatients(patients)
+      setBrowseTotal(bundle.total ?? null)
+      setBrowseOffset(offset)
+    } catch (err) {
+      toast.error("Failed to load patients", {
+        description: err instanceof Error ? err.message : "Unknown error"
+      })
+    } finally {
+      setBrowseLoading(false)
+    }
+  }, [fhirBaseUrl])
 
   const doSearch = useCallback(async () => {
     const q = query.trim()
-    if (!q) return
+    if (!q) {
+      setSearched(false)
+      setSearchResults([])
+      return
+    }
     setLoading(true)
-    setError(null)
     try {
       const results = await searchPatients(fhirBaseUrl, q)
-      setPatients(results)
+      setSearchResults(results)
       setSearched(true)
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Search failed"
-      setError(msg)
-      setPatients([])
+      setSearchResults([])
       toast.error("Patient search failed", { description: msg })
     } finally {
       setLoading(false)
@@ -44,8 +77,20 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
     }
   }
 
+  const clearSearch = () => {
+    setQuery("")
+    setSearched(false)
+    setSearchResults([])
+  }
+
+  // Determine which list to show
+  const showSearchResults = searched || loading
+  const displayPatients = showSearchResults ? searchResults : browsePatients
+  const isLoading = showSearchResults ? loading : browseLoading
+
   return (
     <div className="space-y-4">
+      {/* Search bar */}
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -62,40 +107,78 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
         <Button onClick={doSearch} disabled={loading || !query.trim()}>
           {loading ? <Spinner size="sm" /> : "Search"}
         </Button>
+        {searched && (
+          <Button variant="ghost" onClick={clearSearch} size="sm" className="text-xs">
+            Clear
+          </Button>
+        )}
       </div>
 
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-12 gap-3">
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
           <Spinner size="lg" />
-          <p className="text-muted-foreground text-sm">Searching patients...</p>
+          <p className="text-muted-foreground text-sm">
+            {showSearchResults ? "Searching..." : "Loading patients..."}
+          </p>
         </div>
       )}
 
-      {!loading && searched && patients.length === 0 && !error && (
-        <div className="text-center py-12 text-muted-foreground text-sm">
+      {/* Empty search result */}
+      {!isLoading && searched && searchResults.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground text-sm">
           No patients found. Try a different search term.
         </div>
       )}
 
-      {!loading && !searched && !error && (
-        <div className="text-center py-12 text-muted-foreground text-sm">
-          Enter a name or MRN to search for patients.
-        </div>
-      )}
+      {/* Patient list */}
+      {!isLoading && displayPatients.length > 0 && (
+        <>
+          {!showSearchResults && (
+            <p className="text-xs text-muted-foreground">
+              {browseTotal != null ? `${browseTotal} patients` : "All patients"} — select one or search above
+            </p>
+          )}
+          <ScrollArea className="max-h-[400px]">
+            <div className="space-y-2 pr-1">
+              {displayPatients.map((patient) => (
+                <PatientRow
+                  key={patient.id}
+                  patient={patient}
+                  isSelected={selected?.id === patient.id}
+                  onSelect={onSelect}
+                />
+              ))}
+            </div>
+          </ScrollArea>
 
-      {!loading && patients.length > 0 && (
-        <ScrollArea className="max-h-[400px]">
-          <div className="space-y-2 pr-1">
-            {patients.map((patient) => (
-              <PatientRow
-                key={patient.id}
-                patient={patient}
-                isSelected={selected?.id === patient.id}
-                onSelect={onSelect}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+          {/* Pagination (browse mode only) */}
+          {!showSearchResults && browseTotal != null && browseTotal > PAGE_SIZE && (
+            <div className="flex items-center justify-between pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={browseOffset === 0 || browseLoading}
+                onClick={() => loadPage(Math.max(0, browseOffset - PAGE_SIZE))}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                {browseOffset + 1}–{Math.min(browseOffset + PAGE_SIZE, browseTotal)} of {browseTotal}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={browseOffset + PAGE_SIZE >= browseTotal || browseLoading}
+                onClick={() => loadPage(browseOffset + PAGE_SIZE)}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

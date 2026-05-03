@@ -1,7 +1,7 @@
 import { FhirResourceReader } from "@babelfhir-ts/client-r4"
-import type { Patient } from "fhir/r4"
+import type { Patient, Bundle } from "fhir/r4"
 
-export type { Patient }
+export type { Patient, Bundle }
 
 /**
  * Create an unauthenticated FHIR Patient reader for the given base URL.
@@ -28,4 +28,9 @@ export async function getPatient(fhirBaseUrl: string, id: string): Promise<Patie
 /** Search patients and return the raw Bundle (for pagination metadata). */
 export async function searchPatientsBundle(fhirBaseUrl: string, query: string, count = 20) {
   return createPatientReader(fhirBaseUrl).search({ name: query, _count: count })
+}
+
+/** List patients with offset-based pagination. */
+export async function listPatients(fhirBaseUrl: string, offset: number, count = 10) {
+  return createPatientReader(fhirBaseUrl).search({ _count: count, _offset: offset, _sort: "family" })
 }
