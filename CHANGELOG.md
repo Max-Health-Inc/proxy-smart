@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605032311.11fc5699] - 2026-05-03
+
+- ✨ Features
+  - UI/back-end: add favicon link in index.html
+  - Auth: fallback in callback-handler to resolve patient from session.fhirUser when auto-resolve fails
+
+- 🔧 Chores & Improvements
+  - Auth: update TS config to exclude test files from compilation
+  - Auth: added new test file for callback-handler (patient picker gate) with fallback scenarios
+
+- ⚠️ Breaking Changes
+  - (none)
+
+- 📚 Documentation
+  - (none)
+
+- 🐛 Bug Fixes
+  - KC-session-resolver: store session.fhirUser on session during auto-resolve
+
+Note: Version bumps across multiple packages applied (0.1.0-beta... to 0.1.0-alpha...).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/650
+
+
 ## [0.1.0-alpha.202605032256.b5a9856f] - 2026-05-03
 
 - ✨ Features
