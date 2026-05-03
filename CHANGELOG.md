@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605032120.8346c70b] - 2026-05-03
+
+- ✨ Features
+  - Patient Picker: add pagination state and listPatients fetch; fhir-client now exposes listPatients with offset-based pagination and Bundle type
+  - Backend auth: auto-inject proxy SMART callback URI into redirectUris to support proxy interception
+
+- 🔧 Chores & Improvements
+  - CI: add new build steps for smart-compliance-tests (Build Patient Picker (static), Copy Apps to Backend)
+  - Docker: copy shared config into image; restrict docker-workspaces subset; copy config/ into image
+  - Version bumps across multiple packages/apps/libs to 0.1.0-alpha.x (then prep for beta)
+
+- ⚠️ Breaking Changes
+  - Consent-app and DTR-app refactors to SmartAppShell; removal of previous header/auth flow wiring (affects auth flow usage)
+
+- 📚 Documentation
+  - (No explicit documentation changes detected)
+
+- 🐛 Bug Fixes
+  - (No user-facing bug fixes detected)
+
+Note: Merges, metadata-only updates, and non-meaningful “update” commits are skipped.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/647
+
+
 ## [0.1.0-beta.202605032049.bd54d5fb] - 2026-05-03
 
 - ✨ Features
