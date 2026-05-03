@@ -19,7 +19,7 @@ Checking Inferno availability...
 ✓ Inferno is ready
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: kNyrux4fbq1
+✓ Created test session: 5PA8F0YrWcF
 
 === Running Standalone Launch Tests ===
 
@@ -32,8 +32,8 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: cf8e2bbc-12f0-4b1b-928a-5a923f2e7445
-Waiting for test run cf8e2bbc-12f0-4b1b-928a-5a923f2e7445 to complete (timeout: 3 minutes)...
+✓ Started test run: 4dc5af9a-7634-47e9-b70c-48752bbbeec3
+Waiting for test run 4dc5af9a-7634-47e9-b70c-48752bbbeec3 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: waiting
   Test is waiting for user action (OAuth flow, attempt 1/3)...
@@ -41,24 +41,24 @@ Waiting for test run cf8e2bbc-12f0-4b1b-928a-5a923f2e7445 to complete (timeout: 
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A8445%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=63f0593a-5cd8-42cc-9b63-a794325a4afe&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A8445%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=a077e276-46a0-411d-bc80-72968dc69f50&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   On Keycloak login page, entering credentials...
   Filled username
   Filled password
   Clicked login button
-  Post-login URL: http://localhost:8445/apps/patient-picker/?session=63f0593a-5cd8-42cc-9b63-a794325a4afe&code=53ec4c25-aeb5-54cf-abb3-71bc968234d5.8MRNr6OlDs9HNNs9m-DpKFmv.a9791bde-94ca-4a00-9331-160b89cea694&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Post-login URL: http://localhost:8445/apps/patient-picker/?session=a077e276-46a0-411d-bc80-72968dc69f50&code=bc26eee7-71ce-1df0-f331-85f26cf28901.66ipmgP5Qybx9QsUjHaAjhQH.002f7e05-1b50-44ca-9704-1625dccbc188&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   OAuth flow error: page.waitForURL: Timeout 30000ms exceeded.
 =========================== logs ===========================
 waiting for navigation until "load"
 ============================================================
   Page title: Select Patient — Proxy Smart
-  Page URL: http://localhost:8445/apps/patient-picker/?session=63f0593a-5cd8-42cc-9b63-a794325a4afe&code=53ec4c25-aeb5-54cf-abb3-71bc968234d5.8MRNr6OlDs9HNNs9m-DpKFmv.a9791bde-94ca-4a00-9331-160b89cea694&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Page URL: http://localhost:8445/apps/patient-picker/?session=a077e276-46a0-411d-bc80-72968dc69f50&code=bc26eee7-71ce-1df0-f331-85f26cf28901.66ipmgP5Qybx9QsUjHaAjhQH.002f7e05-1b50-44ca-9704-1625dccbc188&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   Page content (first 1000 chars): <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg">
@@ -83,13 +83,13 @@ waiting for navigation until "load"
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=c7a3411f-9fbd-4011-a03f-b76742d264cd&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=JGfKPqhlSFPEkHlMvLeFjLyU759adwIXNzzyt3SHfCM&code_challenge_method=S256
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=53e8d717-b4a0-4e5b-a199-f74a8b1bd205&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=kWsZXgFYCuNGIDvG5r_v4brWul9WzVZkm3H5wxfnUL4&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:8445/apps/patient-picker/?session=37e8af36-9487-4db8-b6e1-d56901e020a6&code=aba54534-90c0-2aee-3afe-58ba398c59d3.8MRNr6OlDs9HNNs9m-DpKFmv.a9791bde-94ca-4a00-9331-160b89cea694&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Current URL after navigation: http://localhost:8445/apps/patient-picker/?session=3882bbb4-3bf6-48e0-bab6-90cf38cfcee9&code=446cfa51-c466-d344-1700-05d58b4ba5a5.66ipmgP5Qybx9QsUjHaAjhQH.002f7e05-1b50-44ca-9704-1625dccbc188&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   Not on Keycloak login page. Page title: Select Patient — Proxy Smart
   OAuth flow completed, continuing to poll...
   Progress: 5 passed, 0 failed, 3 waiting, 9 total
