@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605032256.b5a9856f] - 2026-05-03
+
+- ✨ Features
+  - Patient picker: initialize on mount with loadPage(0) and improved resource type casting
+  - FHIR client: refactored to session-validated /auth/patient-search flow with getSearchUrl and fetchBundle
+  - Backend: added /patient-search OAuth-protected endpoint logic (session validation and aud parsing) to proxy to FHIR server
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages to 0.1.0-alpha.202605032256.b5a9856f
+  - Fix CSS import source paths to local node_modules for shared UI across several apps
+  - Update docs: Admin UI and Patient Picker docs; update docs/index.md with new features and Shared UI Library notes
+
+- 📚 Documentation
+  - Admin UI and Patient Picker docs added; docs/index.md updated with feature entries and Shared UI Library notes
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 🐛 Bug Fixes
+  - CSS path fixes to ensure local module imports work across apps
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/649
+
+
 ## [0.1.0-alpha.202605032155.b401b02a] - 2026-05-03
 
 - ✨ Features: Global alias migration to @proxy-smart/shared-ui across apps/libs; updated UI component imports (Button, Card, Tabs, etc.) and docs/assets to reflect new shared-ui package. 
