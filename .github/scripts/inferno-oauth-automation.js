@@ -512,7 +512,11 @@ function buildBackendServicesSmartAuthInfo() {
  * EHR Launch differs from Standalone: Inferno presents a launch URL that we must
  * navigate to (simulating the EHR initiating the launch). Inferno then adds `iss`
  * and `launch` params and redirects to our /authorize → Keycloak → login → callback.
- * Patient context comes from the doctor user's smart_patient Keycloak attribute.
+ *
+ * NOTE: Patient context for EHR launch comes from a signed launch code issued via
+ * POST /auth/launch. Inferno uses its own opaque launch value which our proxy cannot
+ * verify, so EHR Launch tests may not return patient context unless a real launch code
+ * is pre-registered. See backend launch-context-store for the session-based flow.
  */
 async function runEhrLaunchTests(sessionId, browser) {
   console.log('\n=== Running EHR Launch Tests ===\n');

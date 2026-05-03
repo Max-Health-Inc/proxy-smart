@@ -7,12 +7,16 @@ import { getAllServers, ensureServersInitialized } from '@/lib/fhir-server-store
 import { logger } from '@/lib/logger'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { signLaunchCode, verifyLaunchCode } from '@/lib/launch-code'
+import { launchContextStore, type LaunchSession } from '@/lib/launch-context-store'
+import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
+import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
 import {
   TokenRequest,
   IntrospectRequest,
   IntrospectResponse,
   AuthorizationQuery,
+  SmartCallbackQuery,
   LoginQuery,
   LogoutQuery,
   PublicIdentityProvidersResponse,
@@ -25,14 +29,7 @@ import {
 
 interface TokenPayload {
   sub?: string
-  smart_patient?: string
-  smart_encounter?: string
   fhirUser?: string
-  smart_fhir_context?: string | object
-  smart_intent?: string
-  smart_style_url?: string
-  smart_tenant?: string
-  smart_need_patient_banner?: string | boolean
   smart_scope?: string
   [key: string]: unknown
 }
@@ -77,13 +74,7 @@ async function generateAuthorizationDetailsFromToken(
         fhirVersions: [serverInfo.metadata.fhirVersion]
       }
 
-      // Add launch context from token claims
-      if (tokenPayload.smart_patient) {
-        serverDetail.patient = tokenPayload.smart_patient
-      }
-      if (tokenPayload.smart_encounter) {
-        serverDetail.encounter = tokenPayload.smart_encounter
-      }
+      // Add scope from token claims (if present)
       if (tokenPayload.smart_scope) {
         serverDetail.scope = tokenPayload.smart_scope
       }
@@ -110,6 +101,95 @@ async function isKeycloakReachable(): Promise<boolean> {
   } catch {
     return false
   }
+}
+
+/** Minimal patient picker HTML page served during standalone SMART launch */
+function patientPickerPage(sessionKey: string, code: string): string {
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Select Patient — Proxy Smart</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:2rem;display:flex;align-items:flex-start;justify-content:center}
+.container{background:#1e293b;border-radius:1rem;padding:2rem;max-width:640px;width:100%;border:1px solid #334155}
+h1{font-size:1.25rem;margin-bottom:.5rem;color:#f8fafc}
+.subtitle{color:#94a3b8;margin-bottom:1.5rem;font-size:.875rem}
+.search-box{display:flex;gap:.5rem;margin-bottom:1rem}
+input[type="text"]{flex:1;padding:.625rem 1rem;border-radius:.5rem;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.875rem;outline:none}
+input[type="text"]:focus{border-color:#3b82f6}
+button{padding:.625rem 1rem;border-radius:.5rem;border:none;font-size:.875rem;font-weight:500;cursor:pointer;transition:background .15s}
+.btn-search{background:#3b82f6;color:#fff}.btn-search:hover{background:#2563eb}
+.btn-select{background:#10b981;color:#fff;width:100%;margin-top:.5rem}.btn-select:hover{background:#059669}
+.btn-select:disabled{background:#475569;cursor:not-allowed}
+.results{max-height:400px;overflow-y:auto;margin-top:.5rem}
+.patient-row{padding:.75rem 1rem;border:1px solid #334155;border-radius:.5rem;margin-bottom:.5rem;cursor:pointer;transition:background .15s}
+.patient-row:hover,.patient-row.selected{background:#334155;border-color:#3b82f6}
+.patient-row .name{font-weight:500;color:#f8fafc}
+.patient-row .meta{font-size:.8rem;color:#94a3b8;margin-top:.25rem}
+.loading,.error,.empty{text-align:center;padding:2rem;color:#94a3b8;font-size:.875rem}
+.error{color:#f87171}
+</style></head><body>
+<div class="container">
+<h1>Select Patient</h1>
+<p class="subtitle">This application is requesting patient context. Search and select the patient whose data you want to access.</p>
+<div class="search-box">
+  <input type="text" id="search" placeholder="Search by name or MRN..." autocomplete="off">
+  <button class="btn-search" onclick="searchPatients()">Search</button>
+</div>
+<div id="results" class="results"><div class="empty">Enter a search term to find patients</div></div>
+<form id="selectForm" method="POST" action="/auth/patient-select">
+  <input type="hidden" name="session" value="${sessionKey}">
+  <input type="hidden" name="code" value="${code}">
+  <input type="hidden" name="patient" id="selectedPatient" value="">
+  <button type="submit" class="btn-select" id="submitBtn" disabled>Select Patient</button>
+</form>
+</div>
+<script>
+let selected = null;
+const baseUrl = location.origin;
+
+async function searchPatients() {
+  const q = document.getElementById('search').value.trim();
+  if (!q) return;
+  const results = document.getElementById('results');
+  results.innerHTML = '<div class="loading">Searching...</div>';
+  try {
+    const resp = await fetch(baseUrl + '/fhir/proxy-smart-backend/default/R4/Patient?name=' + encodeURIComponent(q) + '&_count=20', {
+      headers: { 'Accept': 'application/fhir+json' }
+    });
+    if (!resp.ok) throw new Error('Search failed: ' + resp.status);
+    const bundle = await resp.json();
+    const entries = bundle.entry || [];
+    if (entries.length === 0) {
+      results.innerHTML = '<div class="empty">No patients found</div>';
+      return;
+    }
+    results.innerHTML = entries.map(e => {
+      const p = e.resource;
+      const name = (p.name && p.name[0]) ? [p.name[0].given?.join(' '), p.name[0].family].filter(Boolean).join(' ') : 'Unknown';
+      const dob = p.birthDate || '';
+      const gender = p.gender || '';
+      const mrn = p.identifier?.find(i => i.type?.coding?.[0]?.code === 'MR')?.value || p.id;
+      return '<div class="patient-row" data-id="'+p.id+'" onclick="selectPatient(this, \\''+p.id+'\\')">' +
+        '<div class="name">'+name+'</div>' +
+        '<div class="meta">ID: '+p.id+(dob ? ' • DOB: '+dob : '')+(gender ? ' • '+gender : '')+'</div></div>';
+    }).join('');
+  } catch(err) {
+    results.innerHTML = '<div class="error">'+err.message+'</div>';
+  }
+}
+
+function selectPatient(el, id) {
+  document.querySelectorAll('.patient-row').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('selectedPatient').value = id;
+  document.getElementById('submitBtn').disabled = false;
+  selected = id;
+}
+
+document.getElementById('search').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); searchPatients(); } });
+</script>
+</body></html>`
 }
 
 /** Friendly HTML page shown when Keycloak is unreachable */
@@ -256,6 +336,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // redirect into Keycloak's /auth endpoint
   .get('/authorize', async ({ query, redirect, set }) => {
+    // Determine if this is a SMART launch that needs context interception.
+    // If so, we replace the app's redirect_uri with our own callback endpoint
+    // and store the original in a session for later retrieval.
+    const requestedScopes = new Set((query.scope || '').split(' ').filter(Boolean))
+    const isSmartLaunch = requestedScopes.has('launch') || requestedScopes.has('launch/patient') || requestedScopes.has('launch/encounter')
+    const isStandaloneLaunch = requestedScopes.has('launch/patient') && !query.launch
+
     // SMART App Launch 2.2.0 / MCP (RFC 8707): validate aud/resource parameter FIRST.
     // This is a cheap input validation — fail fast before making network calls.
     // "aud" is the FHIR server URL the app wants to access — prevents token
@@ -331,6 +418,48 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       `${config.keycloak.publicUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/auth`
     )
 
+    // For SMART launches, intercept the callback to resolve launch context.
+    // We replace the client's redirect_uri with our smart-callback endpoint and store
+    // the original so we can forward back to the app after context resolution.
+    const sessionKey = crypto.randomUUID()
+    const shouldIntercept = isSmartLaunch && query.redirect_uri
+
+    if (shouldIntercept) {
+      const session: LaunchSession = {
+        clientRedirectUri: query.redirect_uri!,
+        clientState: query.state || '',
+        clientId: query.client_id || '',
+        scope: query.scope || '',
+        codeChallenge: query.code_challenge,
+        codeChallengeMethod: query.code_challenge_method,
+        needsPatientPicker: isStandaloneLaunch && !resolvedLaunchContext?.patient,
+        createdAt: Date.now(),
+      }
+
+      // Pre-populate context from EHR launch code if available
+      if (resolvedLaunchContext) {
+        if (resolvedLaunchContext.patient) session.patient = resolvedLaunchContext.patient
+        if (resolvedLaunchContext.encounter) session.encounter = resolvedLaunchContext.encounter
+        if (resolvedLaunchContext.fhirUser) session.fhirUser = resolvedLaunchContext.fhirUser
+        if (resolvedLaunchContext.intent) session.intent = resolvedLaunchContext.intent
+        if (resolvedLaunchContext.smartStyleUrl) session.smartStyleUrl = resolvedLaunchContext.smartStyleUrl
+        if (resolvedLaunchContext.tenant) session.tenant = resolvedLaunchContext.tenant
+        if (resolvedLaunchContext.needPatientBanner !== undefined) session.needPatientBanner = resolvedLaunchContext.needPatientBanner
+        if (resolvedLaunchContext.fhirContext) session.fhirContext = resolvedLaunchContext.fhirContext
+        // EHR launch with patient already set — no picker needed
+        if (resolvedLaunchContext.patient) session.needsPatientPicker = false
+      }
+
+      launchContextStore.set(sessionKey, session)
+
+      logger.auth.info('SMART launch session created — intercepting callback', {
+        sessionKey: sessionKey.slice(0, 8) + '...',
+        clientId: session.clientId,
+        needsPatientPicker: session.needsPatientPicker,
+        hasLaunchCode: !!resolvedLaunchContext,
+      })
+    }
+
     // Add all query parameters to the Keycloak URL
     // SMART scopes (launch/patient, patient/*.read, etc.) are now configured in Keycloak
     // as client scopes, so we can pass them through directly
@@ -339,6 +468,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         url.searchParams.set(k, v as string)
       }
     })
+
+    if (shouldIntercept) {
+      // Replace redirect_uri and state with proxy's callback
+      const callbackUrl = `${config.baseUrl}/auth/smart-callback`
+      url.searchParams.set('redirect_uri', callbackUrl)
+      url.searchParams.set('state', sessionKey)
+    }
 
     // If we resolved a launch code, pass context as additional params for Keycloak.
     // These become client_request_param_* notes on the auth session, accessible by
@@ -376,6 +512,154 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     detail: {
       summary: 'OAuth Authorization Endpoint',
       description: 'Redirects to Keycloak authorization endpoint for OAuth flow with support for authorization details',
+      tags: ['authentication']
+    }
+  })
+
+  // SMART Launch Callback — proxy intercepts KC's redirect to resolve launch context
+  // before forwarding to the client app. This enables:
+  //   1. Per-session launch context (no more static user attributes)
+  //   2. Patient picker for standalone launches (launch/patient without EHR code)
+  //   3. Race-condition-free concurrent EHR launches for the same user
+  .get('/smart-callback', async ({ query, redirect, set }) => {
+    const sessionKey = query.state
+    const code = query.code
+    const error = query.error
+
+    // Validate session exists
+    if (!sessionKey) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing state parameter in callback' }
+    }
+
+    const session = launchContextStore.get(sessionKey)
+    if (!session) {
+      logger.auth.warn('SMART callback: session not found or expired', { state: sessionKey?.slice(0, 8) + '...' })
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Session expired or invalid. Please restart the authorization flow.' }
+    }
+
+    // Handle authorization errors from Keycloak — forward to client as-is
+    if (error) {
+      const clientUrl = new URL(session.clientRedirectUri)
+      clientUrl.searchParams.set('error', error)
+      if (query.error_description) clientUrl.searchParams.set('error_description', query.error_description)
+      if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+      launchContextStore.delete(sessionKey)
+      return redirect(clientUrl.href)
+    }
+
+    if (!code) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing authorization code in callback' }
+    }
+
+    // If patient picker is needed and no patient is set yet, redirect to picker UI
+    if (session.needsPatientPicker && !session.patient) {
+      // Store the auth code in the session — we'll forward it after picker selection
+      launchContextStore.update(sessionKey, { needsPatientPicker: true })
+
+      // Redirect to patient picker UI with session reference
+      const pickerUrl = new URL(`${config.baseUrl}/auth/patient-select`)
+      pickerUrl.searchParams.set('session', sessionKey)
+      pickerUrl.searchParams.set('code', code)
+      return redirect(pickerUrl.href)
+    }
+
+    // Context is fully resolved — exchange the code by forwarding to the client.
+    // The session stays alive until /token is called, where we inject the context.
+    // Store the KC auth code in the session so /token can correlate.
+    launchContextStore.update(sessionKey, { userSub: undefined })
+
+    // Build the redirect back to the client with the original state
+    const clientUrl = new URL(session.clientRedirectUri)
+    clientUrl.searchParams.set('code', code)
+    if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+
+    logger.auth.info('SMART callback: forwarding to client', {
+      sessionKey: sessionKey.slice(0, 8) + '...',
+      clientId: session.clientId,
+      hasPatient: !!session.patient,
+      hasEncounter: !!session.encounter,
+    })
+
+    return redirect(clientUrl.href)
+  }, {
+    query: SmartCallbackQuery,
+    detail: {
+      summary: 'SMART Launch Callback',
+      description: 'Receives Keycloak callback during SMART launch flows. Resolves launch context (patient picker if needed) before redirecting to the client application.',
+      tags: ['authentication']
+    }
+  })
+
+  // Patient selection endpoint — serves a minimal patient picker for standalone launches
+  .get('/patient-select', async ({ query, set }) => {
+    const sessionKey = query.session as string | undefined
+    const code = query.code as string | undefined
+
+    if (!sessionKey || !code) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing session or code parameter' }
+    }
+
+    const session = launchContextStore.get(sessionKey)
+    if (!session) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    // Serve a minimal patient picker HTML page
+    // This will call POST /auth/patient-select to submit the selection
+    const html = patientPickerPage(sessionKey, code)
+    return new Response(html, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    })
+  }, {
+    detail: {
+      summary: 'Patient Picker Page',
+      description: 'Serves the patient picker UI for standalone SMART launches that require patient context selection.',
+      tags: ['authentication']
+    }
+  })
+
+  // Patient selection submission — receives the selected patient and redirects to client
+  .post('/patient-select', async ({ body, redirect, set }) => {
+    const { session: sessionKey, code, patient } = body as { session?: string; code?: string; patient?: string }
+
+    if (!sessionKey || !code || !patient) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing required parameters (session, code, patient)' }
+    }
+
+    const session = launchContextStore.get(sessionKey)
+    if (!session) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    // Update session with selected patient
+    launchContextStore.update(sessionKey, {
+      patient,
+      needsPatientPicker: false,
+    })
+
+    logger.auth.info('Patient selected in picker', {
+      sessionKey: sessionKey.slice(0, 8) + '...',
+      patient,
+      clientId: session.clientId,
+    })
+
+    // Redirect back to client with the auth code
+    const clientUrl = new URL(session.clientRedirectUri)
+    clientUrl.searchParams.set('code', code)
+    if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+
+    return redirect(clientUrl.href)
+  }, {
+    detail: {
+      summary: 'Patient Picker Submission',
+      description: 'Receives patient selection from the picker UI and redirects to the client application with the authorization code.',
       tags: ['authentication']
     }
   })
@@ -592,7 +876,31 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       // Handle both camelCase and snake_case field names for OAuth2 standard field names
       if (bodyObj.grant_type || bodyObj.grantType) formData.append('grant_type', bodyObj.grant_type || bodyObj.grantType!)
       if (bodyObj.code) formData.append('code', bodyObj.code)
-      if (bodyObj.redirect_uri || bodyObj.redirectUri) formData.append('redirect_uri', bodyObj.redirect_uri || bodyObj.redirectUri!)
+
+      // SMART launch redirect_uri rewrite: if a session exists for this client+redirect_uri,
+      // we intercepted the callback so KC expects OUR callback URI, not the client's.
+      const clientRedirectUri = bodyObj.redirect_uri || bodyObj.redirectUri
+      const clientIdForSession = bodyObj.client_id || bodyObj.clientId
+      let rewrittenRedirectUri = false
+      if (clientRedirectUri && clientIdForSession) {
+        const matchingSession = launchContextStore.find(
+          s => s.clientId === clientIdForSession && s.clientRedirectUri === clientRedirectUri
+        )
+        if (matchingSession) {
+          // KC expects our callback URI — rewrite for the KC token exchange
+          const proxyCallbackUri = `${config.baseUrl}/auth/smart-callback`
+          formData.append('redirect_uri', proxyCallbackUri)
+          rewrittenRedirectUri = true
+          logger.auth.debug('Token: rewrote redirect_uri for SMART session', {
+            original: clientRedirectUri,
+            rewritten: proxyCallbackUri,
+          })
+        }
+      }
+      if (!rewrittenRedirectUri && clientRedirectUri) {
+        formData.append('redirect_uri', clientRedirectUri)
+      }
+
       if (bodyObj.client_id || bodyObj.clientId) formData.append('client_id', bodyObj.client_id || bodyObj.clientId!)
       if (bodyObj.client_secret || bodyObj.clientSecret) formData.append('client_secret', bodyObj.client_secret || bodyObj.clientSecret!)
       if (bodyObj.code_verifier || bodyObj.codeVerifier) formData.append('code_verifier', bodyObj.code_verifier || bodyObj.codeVerifier!)
@@ -721,14 +1029,70 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
             (data.scope || requestedScope || '').split(' ').filter(Boolean)
           )
 
-          // Add SMART launch context parameters from token claims (if available)
-          // Only include context parameters when the corresponding scope was granted
-          if (tokenPayload.smart_patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
-            data.patient = tokenPayload.smart_patient
+          // ── Session-based context (priority source) ──────────────────────
+          // Look up launch context from the session store. This handles:
+          //   - EHR Launch (context from JWT launch code, stored in session)
+          //   - Standalone Launch with patient picker (patient selected in picker)
+          // The session is keyed by the proxy-generated state param. We can
+          // correlate via the user sub (from the token) to find the session.
+          let sessionContext: import('@/lib/launch-context-store').LaunchSession | null = null
+
+          // Try to find session by redirect_uri correlation:
+          // When we intercepted, we used our callback URI. The client sent its
+          // original redirect_uri to us, and we forwarded our own to KC.
+          // At /token time, the client sends redirect_uri = its original one.
+          // We need to match by client_id + redirect_uri.
+          const tokenClientId = bodyObj.client_id || bodyObj.clientId
+          const tokenRedirectUri = bodyObj.redirect_uri || bodyObj.redirectUri
+
+          if (tokenClientId && tokenRedirectUri) {
+            const found = launchContextStore.find(
+              s => s.clientId === tokenClientId && s.clientRedirectUri === tokenRedirectUri
+            )
+            if (found) {
+              const [key, session] = found
+              sessionContext = session
+              // Consume the session — single use
+              launchContextStore.delete(key)
+              logger.auth.info('Token enrichment: resolved session context', {
+                key: key.slice(0, 8) + '...',
+                patient: session.patient,
+                encounter: session.encounter,
+                clientId: session.clientId,
+              })
+            }
           }
 
-          // Fallback: derive patient ID from fhirUser when launch/patient was requested
-          // but smart_patient isn't set (e.g. patient portal where user IS the patient)
+          // Apply session context (takes priority over token claims)
+          if (sessionContext) {
+            if (sessionContext.patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
+              data.patient = sessionContext.patient
+            }
+            if (sessionContext.encounter && (grantedScopes.has('launch/encounter') || grantedScopes.has('launch'))) {
+              data.encounter = sessionContext.encounter
+            }
+            if (sessionContext.intent) {
+              data.intent = sessionContext.intent
+            }
+            if (sessionContext.smartStyleUrl) {
+              data.smart_style_url = sessionContext.smartStyleUrl
+            }
+            if (sessionContext.tenant) {
+              data.tenant = sessionContext.tenant
+            }
+            if (sessionContext.needPatientBanner !== undefined) {
+              data.need_patient_banner = sessionContext.needPatientBanner
+            }
+            if (sessionContext.fhirContext) {
+              try {
+                data.fhirContext = JSON.parse(sessionContext.fhirContext)
+              } catch { /* ignore parse errors */ }
+            }
+          }
+
+          // ── Derive patient ID from fhirUser (spec-compliant) ────────────────
+          // When launch/patient was requested but session doesn't have explicit patient,
+          // derive it from fhirUser (e.g. patient portal where user IS the patient)
           if (!data.patient && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
             const fhirUser = tokenPayload.fhirUser as string | undefined
             if (fhirUser) {
@@ -739,56 +1103,43 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
             }
           }
 
-          if (tokenPayload.smart_encounter && (grantedScopes.has('launch/encounter') || grantedScopes.has('launch'))) {
-            data.encounter = tokenPayload.smart_encounter
-          }
+          if (!data.fhirUser && tokenPayload.fhirUser && (grantedScopes.has('fhirUser') || grantedScopes.has('openid'))) {
+            // Per-client fhirUser resolution: resolve Person → Patient/Practitioner based on patientFacing flag
+            const clientConfig = await getSmartClientConfig(tokenClientId || '')
+            const serverInfos = await getAllServers()
+            const firstServer = serverInfos.length > 0 ? serverInfos[0] : null
+            const fhirBaseUrl = firstServer
+              ? `${config.baseUrl}/${config.name}/${firstServer.identifier}/${firstServer.metadata.fhirVersion}`
+              : ''
 
-          if (tokenPayload.fhirUser && (grantedScopes.has('fhirUser') || grantedScopes.has('openid'))) {
-            // Convert relative fhirUser reference to absolute URL per SMART spec
-            // The fhirUser claim should be a full URL to the FHIR resource
-            const fhirUserValue = tokenPayload.fhirUser
-            if (fhirUserValue.startsWith('http://') || fhirUserValue.startsWith('https://')) {
-              // Already an absolute URL
-              data.fhirUser = fhirUserValue
-            } else {
-              // Convert relative reference (e.g., "Practitioner/123") to absolute URL
-              // Use the first FHIR server as the base
-              const serverInfos = await getAllServers()
-              if (serverInfos.length > 0) {
-                const server = serverInfos[0]
-                const fhirBaseUrl = `${config.baseUrl}/${config.name}/${server.identifier}/${server.metadata.fhirVersion}`
-                data.fhirUser = `${fhirBaseUrl}/${fhirUserValue}`
+            const resolvedFhirUser = await resolveFhirUserForClient(
+              tokenPayload.fhirUser,
+              clientConfig.patientFacing,
+              fhirBaseUrl,
+              firstServer?.identifier || '',
+              `Bearer ${data.access_token}`
+            )
+
+            if (resolvedFhirUser) {
+              // Convert relative fhirUser reference to absolute URL per SMART spec
+              if (resolvedFhirUser.startsWith('http://') || resolvedFhirUser.startsWith('https://')) {
+                data.fhirUser = resolvedFhirUser
+              } else if (fhirBaseUrl) {
+                data.fhirUser = `${fhirBaseUrl}/${resolvedFhirUser}`
               } else {
-                // Fallback to relative if no servers configured
-                data.fhirUser = fhirUserValue
+                data.fhirUser = resolvedFhirUser
               }
             }
+            // If resolvedFhirUser is undefined → omit claim (no matching identity for this client type)
           }
 
-          if (tokenPayload.smart_fhir_context) {
-            try {
-              data.fhirContext = typeof tokenPayload.smart_fhir_context === 'string'
-                ? JSON.parse(tokenPayload.smart_fhir_context)
-                : tokenPayload.smart_fhir_context
-            } catch {
-              // If parse fails, don't include invalid fhirContext
+          // ── Derive patient from resolved fhirUser (Person→Patient resolution) ──
+          // If patient was not derived earlier (raw fhirUser was Person/*), try again from resolved value
+          if (!data.patient && data.fhirUser && (grantedScopes.has('launch/patient') || grantedScopes.has('launch'))) {
+            const patientMatch = data.fhirUser.match(/Patient\/([^/]+)$/)
+            if (patientMatch) {
+              data.patient = patientMatch[1]
             }
-          }
-
-          if (tokenPayload.smart_intent) {
-            data.intent = tokenPayload.smart_intent
-          }
-
-          if (tokenPayload.smart_style_url) {
-            data.smart_style_url = tokenPayload.smart_style_url
-          }
-
-          if (tokenPayload.smart_tenant) {
-            data.tenant = tokenPayload.smart_tenant
-          }
-
-          if (tokenPayload.smart_need_patient_banner) {
-            data.need_patient_banner = tokenPayload.smart_need_patient_banner === 'true' || tokenPayload.smart_need_patient_banner === true
           }
 
           // Restore SMART scopes in the token response
