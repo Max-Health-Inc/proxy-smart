@@ -17,17 +17,7 @@ import {
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
-
-/**
- * SMART v2 scope pattern: context/Resource.permissions
- * Validates that a scope name follows SMART on FHIR conventions.
- */
-const SMART_SCOPE_PATTERN = /^(patient|user|system|agent)\/([\w*]+)\.(([cruds]+)|\*|read|write)$/
-const SMART_LAUNCH_SCOPES = ['openid', 'profile', 'email', 'fhirUser', 'launch', 'launch/patient', 'launch/encounter', 'offline_access', 'online_access']
-
-function isSMARTScope(name: string): boolean {
-  return SMART_SCOPE_PATTERN.test(name) || SMART_LAUNCH_SCOPES.includes(name)
-}
+import { isSMARTScope, SMART_LAUNCH_SCOPES } from '@/lib/smart-client-enrichment'
 
 /**
  * SMART Client Scope management endpoints.
