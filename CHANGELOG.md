@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605032049.bd54d5fb] - 2026-05-03
+
+- ✨ Features
+  - Add listPatients with offset-based pagination in fhir-client and expose in UI PatientPicker (with pagination state and fetch listPatients)
+
+- 🔧 Chores & Improvements
+  - Bump all package.json versions from alpha to beta across apps, libs, and testing
+  - Add shared Vite config copy in Dockerfile
+  - Copy config/ into Docker image
+  - Restrict docker-workspaces to a smaller subset (remove shared-ui, patient-portal, etc.)
+  - Backend auth: auto-inject proxy SMART callback URI into redirectUris to support proxy interception
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None detected
+
+- 🔧 Other
+  - Version bumps for Consent, DTR, Patient Picker tests/apps
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/646
+
+
 ## [0.1.0-alpha.202605031909.22b57f72] - 2026-05-03
 
 - ✨ Features: None detected
