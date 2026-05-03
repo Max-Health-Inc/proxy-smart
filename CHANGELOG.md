@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605032155.b401b02a] - 2026-05-03
+
+- ✨ Features: Global alias migration to @proxy-smart/shared-ui across apps/libs; updated UI component imports (Button, Card, Tabs, etc.) and docs/assets to reflect new shared-ui package. 
+- 🔧 Chores & Improvements: Dependency alignment and version bumps to alpha 0.1.0-alpha.202605032155.*; updates to bun.lock and test/import references to match new UI alias.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/648
+
+
 ## [0.1.0-alpha.202605032120.8346c70b] - 2026-05-03
 
 - ✨ Features
