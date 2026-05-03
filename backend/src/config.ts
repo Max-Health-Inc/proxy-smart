@@ -231,6 +231,11 @@ export const config = {
       const env = process.env.PATIENT_SCOPED_RESOURCES?.split(',').map(s => s.trim()).filter(Boolean)
       return env && env.length > 0 ? env : defaults
     },
+    // External resource servers allowed as aud/resource in authorize requests.
+    // Entries starting with '.' match all subdomains (e.g. '.maxhealth.tech').
+    get externalAudiences(): string[] {
+      return (process.env.ALLOWED_EXTERNAL_AUDIENCES || '').split(',').map(s => s.trim()).filter(Boolean)
+    },
   },
 
   kisi: {

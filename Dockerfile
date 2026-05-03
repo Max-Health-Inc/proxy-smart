@@ -26,15 +26,17 @@ COPY apps/consent-app/package.json ./apps/consent-app/
 COPY apps/dtr-app/package.json ./apps/dtr-app/
 COPY apps/dtr-app/lib/ ./apps/dtr-app/lib/
 COPY apps/patient-portal/package.json ./apps/patient-portal/
+COPY packages/auth/package.json ./packages/auth/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","apps/ui","shared-ui","apps/consent-app","apps/dtr-app","apps/patient-portal"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
 
 # Backend build stage (just the JS bundle)
 FROM build-deps AS backend-build
+COPY packages/auth/ ./packages/auth/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run build
@@ -42,6 +44,7 @@ RUN bun run build
 # OpenAPI spec generation (runs in parallel with backend-build)
 # export-openapi imports TypeScript source directly, doesn't need dist/
 FROM build-deps AS openapi-gen
+COPY packages/auth/ ./packages/auth/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run export-openapi

@@ -5,6 +5,7 @@ import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { getAllServers, ensureServersInitialized } from '@/lib/fhir-server-store'
 import { logger } from '@/lib/logger'
+import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
@@ -103,10 +104,11 @@ async function getServiceAccountAdmin(): Promise<KcAdminClient | null> {
   return admin
 }
 
-/** Validate aud/resource against known FHIR servers and MCP endpoint */
+/** Validate aud/resource against known FHIR servers, MCP endpoint, and external allowlist */
 async function validateAudience(aud: string): Promise<string | null> {
-  const fhirBasePrefix = `${config.baseUrl}/${config.name}/`
-  const mcpEndpoint = `${config.baseUrl}${config.mcp.path}`
+  const baseUrl = config.baseUrl
+  const fhirBasePrefix = `${baseUrl}/${config.name}/`
+  const mcpEndpoint = `${baseUrl}${config.mcp.path}`
 
   if (aud.startsWith(fhirBasePrefix)) return null
   if (aud === mcpEndpoint || aud.startsWith(mcpEndpoint + '/')) return null
@@ -121,8 +123,28 @@ async function validateAudience(aud: string): Promise<string | null> {
   )
   if (matchesServer) return null
 
+  // External resource servers that use this proxy as their authorization server
+  // (e.g. third-party MCP servers). Configurable via admin UI or ALLOWED_EXTERNAL_AUDIENCES env var.
+  // Entries starting with '.' match all subdomains (e.g. '.maxhealth.tech' matches
+  // 'dicom.maxhealth.tech', 'api.maxhealth.tech', etc. as well as 'maxhealth.tech' itself).
+  const { externalAudiences } = getRuntimeAccessControlConfig()
+  const matchesExternal = externalAudiences.some(allowed => {
+    if (allowed.startsWith('.')) {
+      // Wildcard domain: match apex and all subdomains
+      try {
+        const audHost = new URL(aud).hostname
+        const domain = allowed.slice(1) // remove leading dot
+        return audHost === domain || audHost.endsWith('.' + domain)
+      } catch {
+        return false
+      }
+    }
+    return aud === allowed || aud.startsWith(allowed + '/') || aud.startsWith(allowed + '?')
+  })
+  if (matchesExternal) return null
+
   logger.auth.warn('Authorize rejected — aud/resource does not match any known endpoint', {
-    aud, expectedPrefix: fhirBasePrefix, mcpEndpoint,
+    aud, expectedPrefix: fhirBasePrefix, mcpEndpoint, externalAudiences,
   })
   return 'aud parameter does not match a known endpoint on this server'
 }
