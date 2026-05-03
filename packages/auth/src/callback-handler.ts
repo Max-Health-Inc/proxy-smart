@@ -22,6 +22,12 @@ export interface CallbackHandlerDeps {
   logger?: SmartProxyLogger
   /** Path for the patient picker page (default: "/apps/patient-picker/") */
   patientPickerPath?: string
+  /**
+   * Optional hook to auto-resolve the patient before showing the picker.
+   * Called when the picker gate would fire. If it returns a patient ID
+   * (e.g. because fhirUser is "Patient/123"), the picker is skipped.
+   */
+  autoResolvePatient?: (session: LaunchSession, params: CallbackParams) => Promise<string | null>
 }
 
 export interface CallbackResult {
@@ -36,11 +42,15 @@ export interface CallbackResult {
  * Validates the session by state param, handles IdP errors by forwarding
  * them to the client, gates on patient picker if needed, then forwards
  * the auth code back to the client app.
+ *
+ * When `autoResolvePatient` is provided and the user's identity resolves
+ * to a Patient resource (e.g. fhirUser = "Patient/123"), the picker is
+ * skipped and the patient is set automatically.
  */
-export function handleCallback(
+export async function handleCallback(
   params: CallbackParams,
   deps: CallbackHandlerDeps,
-): CallbackResult {
+): Promise<CallbackResult> {
   const { config, store, logger } = deps
   const patientPickerPath = deps.patientPickerPath ?? '/apps/patient-picker/'
 
@@ -84,7 +94,25 @@ export function handleCallback(
   }
 
   // ── Patient picker gate ───────────────────────────────────────────────
+  let patientAutoResolved = false
   if (session.needsPatientPicker && !session.patient) {
+    // Try auto-resolving (e.g. fhirUser is Patient/* → skip the picker)
+    if (deps.autoResolvePatient) {
+      const autoPatient = await deps.autoResolvePatient(session, params)
+      if (autoPatient) {
+        store.update(sessionKey, { patient: autoPatient, needsPatientPicker: false })
+        patientAutoResolved = true
+        logger?.info('SMART callback: auto-resolved patient from fhirUser', {
+          sessionKey: sessionKey.slice(0, 8) + '...',
+          patient: autoPatient,
+        })
+        // Fall through to "forward code to client"
+      }
+    }
+  }
+
+  // If still needs picker after auto-resolve attempt, redirect to picker UI
+  if (session.needsPatientPicker && !session.patient && !patientAutoResolved) {
     store.update(sessionKey, { needsPatientPicker: true })
     const pickerUrl = new URL(`${config.baseUrl}${patientPickerPath}`)
     pickerUrl.searchParams.set('session', sessionKey)

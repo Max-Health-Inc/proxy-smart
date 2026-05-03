@@ -88,6 +88,13 @@ mock.module('cross-fetch', () => ({
   default: (...args: Parameters<typeof fetch>) => mockFetchFn(...args),
 }))
 
+// Mock kc-session-resolver — the real implementation needs a live Keycloak admin API.
+// Tests control the return value via mockAutoResolvePatient.
+let mockAutoResolvePatient: (() => Promise<string | null>) = async () => null
+mock.module('@/lib/kc-session-resolver', () => ({
+  autoResolvePatient: async (..._args: unknown[]) => mockAutoResolvePatient(),
+}))
+
 // Mock validateToken — we don't have real JWKS in tests
 mock.module('@/lib/auth', () => ({
   validateToken: async (token: string) => {
@@ -459,6 +466,48 @@ describe('SMART Launch Flow Integration', () => {
       const body = await res.json()
       expect(body.error).toBe('invalid_request')
       expect(body.error_description).toContain('Missing authorization code')
+    })
+
+    it('auto-resolves patient and skips picker when fhirUser is Patient/*', async () => {
+      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+
+      // Simulate a Patient user logging in — auto-resolve returns their patient ID
+      mockAutoResolvePatient = async () => 'jane-123'
+
+      const res = await authRoutes.handle(authRequest(
+        `/auth/smart-callback?code=patient-code&state=${sessionKey}&session_state=kc-session-xyz`
+      ))
+
+      // Should skip picker and go straight to client
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.origin + location.pathname).toBe(TEST_CLIENT_REDIRECT)
+      expect(location.searchParams.get('code')).toBe('patient-code')
+
+      // Session should have patient auto-set
+      const updatedSession = launchContextStore.get(sessionKey)
+      expect(updatedSession?.patient).toBe('jane-123')
+      expect(updatedSession?.needsPatientPicker).toBe(false)
+
+      // Cleanup
+      mockAutoResolvePatient = async () => null
+    })
+
+    it('falls through to picker when fhirUser is not Patient/*', async () => {
+      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+
+      // Practitioner user — auto-resolve returns null (not a Patient)
+      mockAutoResolvePatient = async () => null
+
+      const res = await authRoutes.handle(authRequest(
+        `/auth/smart-callback?code=pract-code&state=${sessionKey}&session_state=kc-session-pract`
+      ))
+
+      // Practitioner → still needs picker
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/apps/patient-picker/')
+      expect(location.searchParams.get('session')).toBe(sessionKey)
     })
   })
 

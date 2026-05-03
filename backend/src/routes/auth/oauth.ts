@@ -11,6 +11,7 @@ import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
 import { kcUnavailablePage } from './smart-templates'
+import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
 import {
   handleAuthorize,
@@ -257,9 +258,9 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // ── SMART callback (delegates to @proxy-smart/auth) ───────────────────
   .get('/smart-callback', async ({ query, redirect, set }) => {
-    const { result } = handleCallback(
-      { state: query.state, code: query.code, error: query.error, error_description: query.error_description },
-      { config: smartProxyConfig, store: smartStore, logger: smartLogger },
+    const { result } = await handleCallback(
+      { state: query.state, code: query.code, error: query.error, error_description: query.error_description, session_state: query.session_state },
+      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient },
     )
 
     switch (result.type) {
