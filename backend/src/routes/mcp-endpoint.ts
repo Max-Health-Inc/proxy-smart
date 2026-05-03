@@ -477,7 +477,7 @@ function unauthorized(): Response {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource"`,
+        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="openid profile email"`,
       },
     },
   )

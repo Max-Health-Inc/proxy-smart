@@ -325,6 +325,7 @@ export const config = {
         'http://localhost:5173', // Vite dev server (admin UI)
         'http://localhost:5174', // Vite dev server (consent app)
         'http://localhost:5175', // Vite dev server (DTR app)
+        'http://localhost:5176', // Vite dev server (patient picker)
         'http://localhost:3000', // React dev server  
         'http://localhost:4567', // Inferno SMART compliance test runner
         'http://localhost:8445', // App server
