@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605031909.22b57f72] - 2026-05-03
+
+- ✨ Features: None detected
+
+- 🐛 Bug Fixes: None detected
+
+- 📚 Documentation: None detected
+
+- 🔧 Chores & Improvements:
+  - Bump all package.json versions to 0.1.0-alpha.202605031909.22b57f72 across multiple apps/packages
+  - Add/update devDeps in root: @tailwindcss/vite and @vitejs/plugin-react-swc
+  - Replace shared UI references: switch imports from @proxy-smart/shared-ui to @max-health-inc/shared-ui across apps
+  - Rewire app configuration imports to reference config/ instead of shared-ui paths
+  - Update deployment/test workflow logic: adjust stage mappings (alpha now dev-only), e2e/test inputs, and targeted deployment steps
+
+- ⚠️ Breaking Changes: None detected
+
+If you intended more granular grouping, I can adjust.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/644
+
+
 ## [0.1.0-alpha.202605031824.bbd27301] - 2026-05-03
 
 - 🔧 Chores & Improvements: Update shared UI package references to forked version and adjust imports (several apps), plus rewire configuration paths and app config imports
