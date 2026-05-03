@@ -81,6 +81,13 @@ export const UpdateHealthcareUserRequest = t.Object({
   fhirPersons: t.Optional(t.Array(FhirPersonAssociation, { description: 'FHIR Person associations to update' })),
   realmRoles: t.Optional(t.Array(t.String(), { description: 'Realm-level roles' })),
   clientRoles: t.Optional(t.Record(t.String(), t.Array(t.String()))),
+  password: t.Optional(t.String({ description: 'New password (resets the user password)' })),
+  temporaryPassword: t.Optional(t.Boolean({ description: 'Whether password is temporary and must be changed on next login' })),
+  credentials: t.Optional(t.Array(t.Object({
+    type: t.String({ description: 'Credential type (e.g. "password")' }),
+    value: t.String({ description: 'Credential value' }),
+    temporary: t.Optional(t.Boolean({ description: 'Whether credential is temporary' }))
+  }), { description: 'Credentials array (alternative to password field)' })),
   
   // Additional user properties
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
