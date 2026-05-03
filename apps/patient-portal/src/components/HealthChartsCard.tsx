@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 import {
   Card, CardContent, CardHeader, CardTitle, Badge, Button, Spinner,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@max-health-inc/shared-ui"
+} from "@proxy-smart/shared-ui"
 import { Activity, Plus, Minus } from "lucide-react"
 import { format } from "date-fns"
 import type { Observation } from "@/lib/fhir-client"

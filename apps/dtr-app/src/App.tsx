@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react"
-import { SmartAppShell } from "@max-health-inc/shared-ui"
+import { SmartAppShell } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import type { LaunchMode } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { Dashboard } from "@/components/Dashboard"

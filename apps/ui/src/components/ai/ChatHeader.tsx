@@ -1,6 +1,6 @@
 import { Brain, Bot, RotateCcw, RefreshCw, X, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { ChatSettings } from './ChatSettings';
 import { AVAILABLE_MODELS } from './constants';
 

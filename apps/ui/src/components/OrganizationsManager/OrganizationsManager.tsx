@@ -1,4 +1,4 @@
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Landmark } from 'lucide-react';

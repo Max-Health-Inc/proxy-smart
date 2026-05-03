@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@max-health-inc/shared-ui';
+} from '@proxy-smart/shared-ui';
 import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from '@/components/ui/navigation-menu';
 import { useAuthStore } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';

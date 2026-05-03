@@ -1,6 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { config } from "@/config"
-import { createAuthFetch } from "@max-health-inc/shared-ui"
+import { createAuthFetch } from "@proxy-smart/shared-ui"
 import {
   FhirResourceReader,
   FhirResourceWriter,
@@ -114,7 +114,7 @@ export function extractPatientLinks(person: Person): Array<{ reference: string; 
 }
 
 // Re-export from shared-ui to avoid duplication
-export { formatHumanName } from "@max-health-inc/shared-ui"
+export { formatHumanName } from "@proxy-smart/shared-ui"
 
 // ── Backend API notifications ────────────────────────────────────────────────
 

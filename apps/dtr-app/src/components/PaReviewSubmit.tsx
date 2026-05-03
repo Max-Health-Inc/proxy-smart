@@ -1,6 +1,6 @@
 import type { Patient, QuestionnaireResponse } from "fhir/r4"
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner, Separator } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner, Separator } from "@proxy-smart/shared-ui"
 import { formatHumanName, searchCoverage, type PASCoverage } from "@/lib/fhir-client"
 import { getUSCoreDemographics } from "@/lib/patient-extensions"
 import { type SelectedService } from "@/components/ServiceSelector"

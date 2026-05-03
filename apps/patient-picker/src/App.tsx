@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { getPickerParams } from "@/lib/picker-params"
 import { PatientList } from "@/components/PatientList"
-import { formatHumanName, AppHeader, Button } from "@max-health-inc/shared-ui"
+import { formatHumanName, AppHeader, Button } from "@proxy-smart/shared-ui"
 import { UserSearch, AlertTriangle, CheckCircle2 } from "lucide-react"
 import type { Patient } from "@/lib/fhir-client"
 import "./index.css"

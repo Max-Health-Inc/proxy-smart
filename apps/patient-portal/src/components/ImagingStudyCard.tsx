@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"

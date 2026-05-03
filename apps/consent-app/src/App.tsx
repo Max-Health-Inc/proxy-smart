@@ -1,5 +1,5 @@
 import { Dashboard } from "@/components/Dashboard"
-import { SmartAppShell, ModalStackProvider } from "@max-health-inc/shared-ui"
+import { SmartAppShell, ModalStackProvider } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { ShieldCheck } from "lucide-react"
 import "./index.css"

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
-import { Badge, Button, CHART_COLORS, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
+import { Badge, Button, CHART_COLORS, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { SearchInput } from '@/components/ui/search-input';
 import { EmptyState } from '@/components/ui/empty-state';
 import { PageLoadingState } from './ui/page-loading-state';

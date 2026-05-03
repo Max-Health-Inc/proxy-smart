@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { Dna, ChevronDown, ChevronUp, FileText, AlertTriangle, Pill } from "lucide-react"
 import { format } from "date-fns"
 import type {

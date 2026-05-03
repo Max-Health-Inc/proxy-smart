@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { getItem, storeItem } from '@/lib/storage';
 import { StatCard } from '@/components/ui/stat-card';
 import { Plus, Shield, Code, Database, Settings } from 'lucide-react';

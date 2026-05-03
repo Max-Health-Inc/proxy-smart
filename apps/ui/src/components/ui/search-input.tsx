@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import { Input } from '@max-health-inc/shared-ui';
+import { Input } from '@proxy-smart/shared-ui';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 

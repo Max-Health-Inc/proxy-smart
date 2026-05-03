@@ -1,4 +1,4 @@
-import { AppHeader, SmartAppShell, ModalStackProvider } from "@max-health-inc/shared-ui"
+import { AppHeader, SmartAppShell, ModalStackProvider } from "@proxy-smart/shared-ui"
 import { useTranslation } from "react-i18next"
 import { smartAuth } from "@/lib/smart-auth"
 import { Heart, Link2 } from "lucide-react"

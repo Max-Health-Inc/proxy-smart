@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
   type UserProfileData,
-} from "@max-health-inc/shared-ui"
+} from "@proxy-smart/shared-ui"
 import { updatePatient, type Patient } from "@/lib/fhir-client"
 import { Loader2, Phone, MapPin, User } from "lucide-react"
 import { useTranslation } from "react-i18next"

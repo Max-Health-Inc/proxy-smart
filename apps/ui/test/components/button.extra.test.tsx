@@ -2,7 +2,7 @@ import React from 'react'
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Button } from '@max-health-inc/shared-ui'
+import { Button } from '@proxy-smart/shared-ui'
 
 describe('Button (extra)', () => {
   it('calls onClick when enabled', async () => {

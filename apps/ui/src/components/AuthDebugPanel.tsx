@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@max-health-inc/shared-ui';
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@proxy-smart/shared-ui';
 import { useAuthStore } from '../stores/authStore';
 import { getItem, removeItem, getSessionItem, removeSessionItem, clearAuthorizationCodeData } from '@/lib/storage';
 import { AlertCircle, RefreshCw, Trash2 } from 'lucide-react';

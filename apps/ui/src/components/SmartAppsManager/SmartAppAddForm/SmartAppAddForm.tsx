@@ -1,4 +1,4 @@
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ScopeSet, SmartAppFormData } from '@/lib/types/api';

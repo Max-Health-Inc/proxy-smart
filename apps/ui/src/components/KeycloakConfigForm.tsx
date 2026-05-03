@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Button, Input, Label } from '@max-health-inc/shared-ui';
+import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Check,
   AlertCircle,

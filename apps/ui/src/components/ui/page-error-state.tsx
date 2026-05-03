@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 

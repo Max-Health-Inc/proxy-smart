@@ -11,7 +11,7 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react';
-import { Badge, Button, Input, Label } from '@max-health-inc/shared-ui';
+import { Badge, Button, Input, Label } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';

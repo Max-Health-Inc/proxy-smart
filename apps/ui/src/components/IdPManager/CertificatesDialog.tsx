@@ -1,4 +1,4 @@
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,

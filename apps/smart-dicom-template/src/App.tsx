@@ -1,4 +1,4 @@
-import { SmartAppShell } from "@max-health-inc/shared-ui"
+import { SmartAppShell } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { Brain } from "lucide-react"
 import { AlgorithmRunner } from "@/components/AlgorithmRunner"

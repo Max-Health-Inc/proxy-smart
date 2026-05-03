@@ -4,8 +4,8 @@ import { useAuth } from '@/stores/authStore';
 import { CheckCircle, AlertCircle, Shield, Wrench, Trash2, RefreshCw, Loader2 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Button } from '@max-health-inc/shared-ui';
-import { Badge } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
+import { Badge } from '@proxy-smart/shared-ui';
 import type { ScopeMapperInfo } from '@/lib/api-client';
 
 interface ProtocolMappersManagerProps {

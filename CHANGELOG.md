@@ -66,7 +66,7 @@ Note: Merges, metadata-only updates, and non-meaningful “update” commits are
 - 🔧 Chores & Improvements:
   - Bump all package.json versions to 0.1.0-alpha.202605031909.22b57f72 across multiple apps/packages
   - Add/update devDeps in root: @tailwindcss/vite and @vitejs/plugin-react-swc
-  - Replace shared UI references: switch imports from @proxy-smart/shared-ui to @max-health-inc/shared-ui across apps
+  - Replace shared UI references: switch imports from @proxy-smart/shared-ui to @proxy-smart/shared-ui across apps
   - Rewire app configuration imports to reference config/ instead of shared-ui paths
   - Update deployment/test workflow logic: adjust stage mappings (alpha now dev-only), e2e/test inputs, and targeted deployment steps
 

@@ -5,7 +5,7 @@
  * plan class, period, and identifier (member ID).
  */
 import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Badge, Spinner } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { searchCoverage, type PASCoverage } from "@/lib/fhir-client"
 import type { SubscriberRelationshipCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-SubscriberRelationship"
 import { Shield, Building2, Calendar, CreditCard, Users } from "lucide-react"

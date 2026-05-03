@@ -1,4 +1,4 @@
-import { createSmartAppConfig } from '@max-health-inc/shared-ui'
+import { createSmartAppConfig } from '@proxy-smart/shared-ui'
 
 export const config = createSmartAppConfig({
   clientId: 'consent-app',

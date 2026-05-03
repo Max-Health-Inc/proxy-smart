@@ -1,4 +1,4 @@
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
     Database,

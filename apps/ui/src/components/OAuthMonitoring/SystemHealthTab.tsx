@@ -1,4 +1,4 @@
-import { Badge, Button } from '@max-health-inc/shared-ui';
+import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
   Activity,
   AlertCircle,

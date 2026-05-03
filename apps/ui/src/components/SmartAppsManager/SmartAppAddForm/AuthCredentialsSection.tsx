@@ -1,4 +1,4 @@
-import { Input, Label } from '@max-health-inc/shared-ui';
+import { Input, Label } from '@proxy-smart/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Shield, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

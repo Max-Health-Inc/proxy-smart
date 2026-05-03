@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState } from "react"
-import { Spinner, Badge } from "@max-health-inc/shared-ui"
+import { Spinner, Badge } from "@proxy-smart/shared-ui"
 import { parseShl, isShlExpired, resolveShl, createShlFhirClient, type ShlResult } from "@/lib/shl-viewer-client"
 import { setActiveFhirClient, resetFhirClient } from "@/lib/fhir-client"
 import { setShlDicomwebMode, resetShlDicomwebMode } from "@/lib/dicomweb"

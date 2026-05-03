@@ -1,7 +1,7 @@
 import React from 'react';
 import { Brain, Loader2, Mic, MicOff, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button, CardContent, Input } from '@max-health-inc/shared-ui';
+import { Button, CardContent, Input } from '@proxy-smart/shared-ui';
 import { ChatMessage as ChatMessageComponent } from './ChatMessage';
 import type { ChatMessage } from '../../lib/ai-assistant';
 

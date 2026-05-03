@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Badge, Button, Label } from '@max-health-inc/shared-ui';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@max-health-inc/shared-ui';
+import { Badge, Button, Label } from '@proxy-smart/shared-ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { LaunchContextSetBuilder } from './LaunchContextSetBuilder';
 import { useLaunchContextSets } from '../stores/smartStore';
 import { useAuth } from '@/stores/authStore';

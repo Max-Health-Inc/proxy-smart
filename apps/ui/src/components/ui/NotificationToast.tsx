@@ -1,4 +1,4 @@
-import { Button } from '@max-health-inc/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import type { Toast } from '@/stores/notificationStore';

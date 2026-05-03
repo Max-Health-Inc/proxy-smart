@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
 import type { Consent, Practitioner } from "fhir/r4"
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Badge, Spinner } from "@max-health-inc/shared-ui"
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { usePractitioners } from "@/hooks/usePractitioners"
 import { buildR4Consent, RESOURCE_TYPE_OPTIONS, type ConsentDraft } from "@/lib/consent-builder"
 import { formatHumanName } from "@/lib/fhir-client"

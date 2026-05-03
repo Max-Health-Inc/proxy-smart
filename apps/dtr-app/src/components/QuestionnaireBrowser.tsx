@@ -10,14 +10,14 @@
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Input, Spinner } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Input, Spinner } from "@proxy-smart/shared-ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@max-health-inc/shared-ui"
+} from "@proxy-smart/shared-ui"
 import { SmartFormsQuestionnaireRenderer } from "@/components/SmartFormsQuestionnaireRenderer"
 import { searchQuestionnaires, createQuestionnaireResponse } from "@/lib/fhir-client"
 import type { PublicationStatusCode } from "hl7.fhir.us.davinci-dtr-generated/valuesets/ValueSet-PublicationStatus"
