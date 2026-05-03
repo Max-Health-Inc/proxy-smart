@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605031756.2732f9a0] - 2026-05-03
+
+- ✨ Features:
+  - Patient picker: add aud parameter support and propagate through UI, config, and FHIR fetch usage
+  - Picker params: return aud; require session, code, and aud for validation
+  - Backend: forward aud through OAuth flow to picker; smart-templates render with provided FHIR base
+  - Types: LaunchSession augmented with aud field
+
+- 🔧 Chores & Improvements:
+  - Refactor: fhir-client.ts to create reader per base URL
+  - App wiring: PatientList.tsx updated to accept fhirBaseUrl and use it for searches
+  - App wiring: Patient picker App.tsx updated to require aud and pass to PatientList
+
+- ⚠️ Breaking Changes:
+  - None detected
+
+- 📚 Documentation:
+  - None detected
+
+- 🐛 Bug Fixes:
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/640
+
+
 ## [0.1.0-beta.202605031718.19041127] - 2026-05-03
 
 - ⚠️ Breaking Changes
