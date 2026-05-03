@@ -10,7 +10,7 @@ import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
-import { kcUnavailablePage, patientPickerPage } from './smart-templates'
+import { kcUnavailablePage } from './smart-templates'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
 import {
   handleAuthorize,
@@ -277,8 +277,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     detail: { summary: 'SMART Launch Callback', description: 'Receives Keycloak callback during SMART launch flows.', tags: ['authentication'] }
   })
 
-  // ── Patient picker page (inline HTML until React app is deployed) ───
-  .get('/patient-select', async ({ query, set }) => {
+  // ── Patient picker redirect (→ React app at /apps/patient-picker/) ──
+  .get('/patient-select', async ({ query, redirect, set }) => {
     const sessionKey = query.session as string | undefined
     const code = query.code as string | undefined
 
@@ -291,11 +291,12 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       set.status = 400
       return { error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
     }
-    return new Response(patientPickerPage(sessionKey, code), {
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
-    })
+    const pickerUrl = new URL(`${config.baseUrl}/apps/patient-picker/`)
+    pickerUrl.searchParams.set('session', sessionKey)
+    pickerUrl.searchParams.set('code', code)
+    return redirect(pickerUrl.href)
   }, {
-    detail: { summary: 'Patient Picker Page', description: 'Serves the patient picker UI for standalone SMART launches.', tags: ['authentication'] }
+    detail: { summary: 'Patient Picker Redirect', description: 'Redirects to the patient picker React app for standalone SMART launches.', tags: ['authentication'] }
   })
 
   // ── Patient picker submission (delegates to @proxy-smart/auth) ────────
