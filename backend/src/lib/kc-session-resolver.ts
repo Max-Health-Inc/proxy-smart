@@ -18,7 +18,7 @@ import { logger } from '@/lib/logger'
  * Returns null on any failure (non-fatal).
  */
 export async function autoResolvePatient(
-  _session: LaunchSession,
+  session: LaunchSession,
   params: CallbackParams,
 ): Promise<string | null> {
   const sessionState = params.session_state
@@ -51,6 +51,11 @@ export async function autoResolvePatient(
     const user = await admin.users.findOne({ id: sessionData.userId })
     const fhirUser = user?.attributes?.fhirUser?.[0]
     if (!fhirUser) return null
+
+    // Store fhirUser on the session so the fallback path in callback-handler can use it
+    if (!session.fhirUser) {
+      session.fhirUser = fhirUser
+    }
 
     return extractPatientFromFhirUser(fhirUser)
   } catch (err) {

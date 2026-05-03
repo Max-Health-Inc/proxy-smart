@@ -7,6 +7,7 @@
 
 import type { LaunchSession, SmartProxyConfig, SmartProxyLogger, SmartProxyResult } from './types'
 import type { ILaunchContextStore } from './stores/interface'
+import { extractPatientFromFhirUser } from './fhir-user'
 
 export interface CallbackParams {
   state?: string
@@ -107,6 +108,22 @@ export async function handleCallback(
           patient: autoPatient,
         })
         // Fall through to "forward code to client"
+      }
+    }
+
+    // Fallback: if session already has fhirUser = "Patient/*", extract the patient directly.
+    // This handles the case where autoResolvePatient fails (e.g. Keycloak admin API unreachable)
+    // but the user is clearly a Patient — they must never see the picker.
+    if (!patientAutoResolved && session.fhirUser) {
+      const patientFromSession = extractPatientFromFhirUser(session.fhirUser)
+      if (patientFromSession) {
+        store.update(sessionKey, { patient: patientFromSession, needsPatientPicker: false })
+        patientAutoResolved = true
+        logger?.info('SMART callback: resolved patient from session fhirUser (fallback)', {
+          sessionKey: sessionKey.slice(0, 8) + '...',
+          patient: patientFromSession,
+          fhirUser: session.fhirUser,
+        })
       }
     }
   }
