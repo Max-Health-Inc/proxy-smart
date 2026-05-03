@@ -12,7 +12,7 @@ export type { Patient }
  * @param fhirBaseUrl - The FHIR server base URL from the `aud` parameter
  */
 function createPatientReader(fhirBaseUrl: string) {
-  return new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", fetch)
+  return new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", (...args) => fetch(...args))
 }
 
 /** Search patients by name, returning up to `count` results. */
