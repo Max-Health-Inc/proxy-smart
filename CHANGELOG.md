@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605031204.060ce013] - 2026-05-03
+
+- ✨ Features: Add SMART launch context handling enhancements, including in-memory launch-context-store with TTL and Redis hint, and SMART client config cache with TTL and invalidation utilities
+- ✨ Features: Enrichment improvements to resolve patientFacing flag for fhirUser (true/false/undefined)
+- 🔧 Chores & Improvements: Admin UI/API updates to support fhirUser and patientFacing in smart apps schema; cache invalidation on update
+- 🔧 Chores & Improvements: OAuth callback updates to include SmartCallbackQuery schema and integrate launch-context-store and smart client in routes
+- 🧪 Features (testing): EHR launch tests note about pre-registered codes and context sourcing from signed launch code via POST /auth/launch
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/634
+
+
 ## [0.1.0-beta.202605030722.9169611c] - 2026-05-03
 
 - 🔧 Chores & Improvements: Bump version fields across all packages to 0.1.0-beta.202605030722.9169611c; minor backend comment tweaks and JWKS handling clarifications (inline JWKS/PEM alg detection).
