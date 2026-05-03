@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605031618.8061482e] - 2026-05-03
+
+- ✨ Features: 
+  - UI: Manage externalAudiences in AccessControlSettings (state and add/remove flows)
+  - Backend config: support externalAudiences in runtime config and config getters; OAuth audience validation updated for external audiences and subdomain wildcard
+
+- 🐛 Bug Fixes:
+  - Backend: OAuth audience validation updated to accommodate external audiences and wildcards
+
+- 🔧 Chores & Improvements:
+  - Dockerfile: include packages/auth in build and workspace pruning; copy auth package into build contexts; propagate auth in backend-build and openapi-gen stages
+  - Version bumps: bump multiple apps/packages from alpha to beta
+
+- 📚 Documentation:
+  - Schemas: SmartAccessControlConfig now includes externalAudiences with description
+
+- ⚠️ Breaking Changes:
+  - (none)
+
+- Note: Excludes update/merge/metadata commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/636
+
+
 ## [0.1.0-beta.202605031204.060ce013] - 2026-05-03
 
 - ✨ Features: Add SMART launch context handling enhancements, including in-memory launch-context-store with TTL and Redis hint, and SMART client config cache with TTL and invalidation utilities
