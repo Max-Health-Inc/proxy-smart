@@ -18,16 +18,18 @@ features:
     details: Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, and refresh token rotation.
   - title: Stateless FHIR Proxy
     details: No clinical data stored — requests pass through to your FHIR servers with full audit logging.
+  - title: 6 SMART Apps
+    details: Patient Portal, Consent Manager, DTR/Prior Auth, Patient Picker, DICOM Algorithm Template, and Admin UI.
   - title: MCP Server
     details: Streamable HTTP endpoint at /mcp exposing all admin tools and documentation search to AI clients.
+  - title: Shared UI Library
+    details: "@proxy-smart/shared-ui — reusable components, SmartAppShell, hooks, and MaxHealth design system."
+  - title: Medical Imaging
+    details: DICOMweb proxy with QIDO-RS & WADO-RS, Cornerstone3D viewer, and SMART DICOM algorithm template.
   - title: AI Assistant & RAG
     details: Built-in assistant with semantic documentation search powered by OpenAI embeddings.
-  - title: Admin Dashboard
-    details: React UI for managing apps, users, servers, scopes, identity providers, and consent.
-  - title: Medical Imaging
-    details: DICOMweb proxy with QIDO-RS & WADO-RS, Patient Portal imaging viewer powered by Cornerstone3D.
-  - title: Docker-Ready
-    details: Mono-container and multi-container deployments with automatic version management.
+  - title: Docker & AWS CDK
+    details: Docker Compose for dev/staging. AWS CDK (ECS Fargate, RDS, WAF, ALB) for production.
 ---
 
 # Proxy Smart — Documentation
@@ -36,23 +38,69 @@ Comprehensive documentation for the Proxy Smart platform: a stateless FHIR proxy
 
 ## Platform Overview
 
-Proxy Smart sits between SMART apps and FHIR servers, handling authentication and authorization without storing clinical data. It includes an admin dashboard, AI assistant with RAG-powered documentation search, MCP server integration, consent management, and access control.
+Proxy Smart sits between SMART apps and FHIR servers, handling authentication and authorization without storing clinical data. The platform includes 6 frontend apps, an AI assistant, MCP server, and a shared component library.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Frontend Apps                           │
+│  Patient Portal │ Consent │ DTR │ Patient Picker │ Admin UI │
+│                      SMART DICOM Template                   │
+│                                                             │
+│  All built with @proxy-smart/shared-ui (SmartAppShell)      │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ SMART App Launch 2.2.0
+┌──────────────────────────▼──────────────────────────────────┐
+│                    Proxy Smart Backend                        │
+│  Elysia/Bun │ OAuth Proxy │ FHIR Proxy │ MCP Server │ AI    │
+└──────────┬──────────┬──────────┬────────────────────────────┘
+           │          │          │
+     ┌─────▼───┐ ┌────▼────┐ ┌──▼───────┐
+     │Keycloak │ │FHIR R4  │ │Orthanc   │
+     │  (IdP)  │ │Server(s)│ │(DICOMweb)│
+     └─────────┘ └─────────┘ └──────────┘
+```
+
+### Apps
+
+| App | Port | Purpose |
+|-----|------|---------|
+| [Patient Portal](./apps/patient-portal.md) | 5173 | Patient-facing health records, imaging, SHL sharing |
+| [Consent Manager](./apps/consent-app.md) | 5174 | FHIR Consent resource management |
+| [DTR / Prior Auth](./apps/dtr-app.md) | 5175 | Da Vinci DTR questionnaires and PA workflow |
+| [Patient Picker](./apps/patient-picker.md) | 5176 | Patient selection during standalone SMART launch |
+| [Admin UI](./apps/admin-ui.md) | 5177 | Platform administration dashboard |
+| [SMART DICOM Template](./apps/smart-dicom-template.md) | 5180 | Starter kit for imaging algorithm SMART apps |
 
 ### Key Features
 
 - **SMART App Launch 2.2.0** — Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation
 - **Stateless FHIR Proxy** — No clinical data stored; requests pass through to your FHIR servers
+- **Shared UI Library** — `@proxy-smart/shared-ui` with `SmartAppShell`, design system, hooks
 - **Admin Dashboard** — React UI for managing apps, users, servers, scopes, and identity providers
-- **AI Assistant & RAG** — Built-in assistant with semantic documentation search (`search_documentation` tool)
-- **MCP Server** — Streamable HTTP endpoint at `/mcp` exposing all admin tools + documentation search
-- **Consent Management** — Patient consent app for authorization flows (`consent-app/`)
-- **DTR App** — Documentation, Templates & Rules app (`dtr-app/`)
-- **Medical Imaging** — DICOMweb proxy (QIDO-RS & WADO-RS) with Cornerstone3D viewer in the Patient Portal
+- **AI Assistant & RAG** — Built-in assistant with semantic documentation search
+- **MCP Server** — Streamable HTTP endpoint at `/mcp` exposing all admin tools
+- **Consent Management** — Patient consent app for authorization flows
+- **DTR App** — Da Vinci Documentation, Templates & Rules
+- **Medical Imaging** — DICOMweb proxy (QIDO-RS & WADO-RS) with Cornerstone3D viewer
 - **Access Control** — Physical access integrations (Kisi, UniFi Access)
-- **AI Skills System** — Installable skills for extending AI assistant capabilities
-- **Docker-Ready** — Mono-container and multi-container deployments
+- **Docker & CDK** — Docker Compose for dev/staging, AWS CDK for production (ECS Fargate, RDS, WAF)
 
 ## Documentation
+
+### Apps
+
+- [Patient Portal](./apps/patient-portal.md) — Health records, imaging, SHL viewer
+- [Consent Manager](./apps/consent-app.md) — FHIR Consent resource management
+- [DTR / Prior Auth](./apps/dtr-app.md) — Da Vinci DTR workflow
+- [Patient Picker](./apps/patient-picker.md) — Patient selection for standalone launch
+- [Admin UI](./apps/admin-ui.md) — Platform administration
+- [SMART DICOM Template](./apps/smart-dicom-template.md) — Imaging algorithm starter kit
+
+### Shared UI
+
+- [Shared UI Library](./shared-ui.md) — `@proxy-smart/shared-ui`, SmartAppShell, design system, hooks
 
 ### Admin UI
 
@@ -87,6 +135,8 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 
 ### Guides
 
+- [Deployment](./deployment.md) — Docker Compose, production, AWS CDK
+- [Environment Variables](./environment-variables.md) — Configuration reference
 - [Version Management](./tutorials/version-management.md) — Branching, versioning, and releases
 
 ## AI Assistant
