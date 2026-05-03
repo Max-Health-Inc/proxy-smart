@@ -3,7 +3,7 @@ import fetch from 'cross-fetch'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
-import { getAllServers, ensureServersInitialized } from '@/lib/fhir-server-store'
+import { getAllServers, ensureServersInitialized, getServerInfoByName } from '@/lib/fhir-server-store'
 import { logger } from '@/lib/logger'
 import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
@@ -321,6 +321,68 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     }
   }, {
     detail: { summary: 'Patient Picker Submission', description: 'Receives patient selection from the picker UI.', tags: ['authentication'] }
+  })
+
+  // ── Patient search (session-validated, for patient picker SPA) ────────
+  .get('/patient-search', async ({ query, set }) => {
+    const sessionKey = query.session as string | undefined
+    if (!sessionKey) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing session parameter' }
+    }
+
+    const session = smartStore.get(sessionKey)
+    if (!session) {
+      set.status = 401
+      return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    // Parse server_name and fhir_version from the session aud URL
+    // aud format: {baseUrl}/{appName}/{server_name}/{fhir_version}
+    const aud = session.aud
+    if (!aud) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'No FHIR server audience in session' }
+    }
+
+    const audUrl = new URL(aud)
+    const segments = audUrl.pathname.split('/').filter(Boolean)
+    // Expected: [appName, server_name, fhir_version]
+    if (segments.length < 3) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Cannot parse FHIR server from aud URL' }
+    }
+    const serverName = segments[segments.length - 2]
+    const serverInfo = await getServerInfoByName(serverName)
+    if (!serverInfo) {
+      set.status = 404
+      return { error: 'server_not_found', error_description: `FHIR server '${serverName}' not found` }
+    }
+
+    // Build upstream Patient search URL from query params
+    const upstreamUrl = new URL(`${serverInfo.url}/Patient`)
+    const allowedParams = ['name', '_count', '_offset', '_sort', '_id', 'family', 'given', 'identifier']
+    for (const [key, value] of Object.entries(query)) {
+      if (key !== 'session' && allowedParams.includes(key) && typeof value === 'string') {
+        upstreamUrl.searchParams.set(key, value)
+      }
+    }
+
+    try {
+      const res = await fetch(upstreamUrl.href, {
+        headers: { 'Accept': 'application/fhir+json' },
+      })
+      const body = await res.text()
+      set.status = res.status
+      set.headers['content-type'] = 'application/fhir+json'
+      return body
+    } catch (err) {
+      logger.auth.error('Patient search proxy failed', { error: err instanceof Error ? err.message : String(err) })
+      set.status = 502
+      return { error: 'upstream_error', error_description: 'Failed to reach FHIR server' }
+    }
+  }, {
+    detail: { summary: 'Patient Search (Picker)', description: 'Session-validated Patient search for the patient picker SPA. Proxies to upstream FHIR server without requiring a Bearer token.', tags: ['authentication'] }
   })
 
   // ── Login redirect ────────────────────────────────────────────────────
