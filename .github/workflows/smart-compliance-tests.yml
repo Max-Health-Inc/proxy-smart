@@ -258,6 +258,14 @@ jobs:
         if: steps.config.outputs.target != 'deployed'
         run: bun install
 
+      - name: Build Patient Picker
+        if: steps.config.outputs.target != 'deployed'
+        run: bun run build:patient-picker:static
+
+      - name: Copy Apps to Backend
+        if: steps.config.outputs.target != 'deployed'
+        run: bun run copy:apps-to-backend
+
       - name: Build Backend
         if: steps.config.outputs.target != 'deployed'
         run: |
