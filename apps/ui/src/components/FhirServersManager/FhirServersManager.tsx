@@ -5,7 +5,7 @@ import {
   Plus,
   Info
 } from 'lucide-react';
-import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@max-health-inc/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { PageErrorState } from '@/components/ui/page-error-state';
 import { useAuth } from '@/stores/authStore';

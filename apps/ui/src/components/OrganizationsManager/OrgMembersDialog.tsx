@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@proxy-smart/shared-ui';
+} from '@max-health-inc/shared-ui';
 import {
   Dialog,
   DialogContent,

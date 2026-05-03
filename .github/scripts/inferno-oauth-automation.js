@@ -1071,7 +1071,7 @@ async function main() {
     await waitForInferno();
     
     // Pre-flight warm-up: ensure FHIR server endpoints are responsive
-    // (Northflank services may have gone cold during CI tool setup)
+    // (deployed services may have gone cold during CI tool setup)
     if (FHIR_SERVER_URL.startsWith('https')) {
       console.log('Pre-flight warm-up (deployed mode)...');
       const smartConfigUrl = `${FHIR_SERVER_URL}/.well-known/smart-configuration`;

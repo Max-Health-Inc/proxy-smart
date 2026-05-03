@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
 import type { Patient, Task } from "fhir/r4"
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Badge, Spinner } from "@proxy-smart/shared-ui"
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Badge, Spinner } from "@max-health-inc/shared-ui"
 import {
   buildAccessRequestTask,
   type AccessRequestDraft,

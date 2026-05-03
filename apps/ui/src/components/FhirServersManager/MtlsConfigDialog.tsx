@@ -7,7 +7,7 @@ import {
   Calendar,
   Info,
 } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button } from '@max-health-inc/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
 import {
   Dialog,

@@ -1,1 +1,1 @@
-export { onAuthError, reportAuthError } from "@proxy-smart/shared-ui"
+export { onAuthError, reportAuthError } from "@max-health-inc/shared-ui"

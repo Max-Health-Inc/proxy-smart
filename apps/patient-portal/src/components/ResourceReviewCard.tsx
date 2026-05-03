@@ -11,7 +11,7 @@ import {
   DialogFooter,
   Input,
   Label,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import {
   CheckCircle2,
   AlertTriangle,

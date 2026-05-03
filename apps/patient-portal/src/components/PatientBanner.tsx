@@ -1,4 +1,4 @@
-import { PatientBanner as SharedPatientBanner, Button } from "@proxy-smart/shared-ui"
+import { PatientBanner as SharedPatientBanner, Button } from "@max-health-inc/shared-ui"
 import type { Patient } from "@/lib/fhir-client"
 import { Pencil } from "lucide-react"
 import { useState } from "react"

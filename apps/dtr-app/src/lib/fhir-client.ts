@@ -1,6 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 export { fhirBaseUrl }
-import { createAuthFetch } from "@proxy-smart/shared-ui"
+import { createAuthFetch } from "@max-health-inc/shared-ui"
 import { FhirClient as DTRFhirClient } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { FhirClient as PASFhirClient } from "hl7.fhir.us.davinci-pas-generated/fhir-client"
 import type {
@@ -268,4 +268,4 @@ export async function searchTasks(patientId: string): Promise<PASTask[]> {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 // Re-export from shared-ui to avoid duplication
-export { formatHumanName } from "@proxy-smart/shared-ui"
+export { formatHumanName } from "@max-health-inc/shared-ui"

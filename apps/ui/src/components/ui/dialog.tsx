@@ -4,7 +4,7 @@ import { X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { useTranslation } from 'react-i18next';
-import { useModalLayer, LayerContext } from '@proxy-smart/shared-ui';
+import { useModalLayer, LayerContext } from '@max-health-inc/shared-ui';
 
 const Dialog = DialogPrimitive.Root
 

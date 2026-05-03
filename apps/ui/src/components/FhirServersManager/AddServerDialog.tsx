@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Input, Label } from '@max-health-inc/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
 import {
   Dialog,

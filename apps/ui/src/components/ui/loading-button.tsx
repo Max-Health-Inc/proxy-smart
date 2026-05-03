@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button } from '@max-health-inc/shared-ui';
 import { cn } from '@/lib/utils';
 
 interface LoadingButtonProps extends React.ComponentProps<typeof Button> {

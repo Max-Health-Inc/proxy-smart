@@ -3,7 +3,7 @@
  *
  * Usage in each app's vite.config.ts:
  * ```ts
- * import { createSmartViteConfig } from '../../shared-ui/vite-config'
+ * import { createSmartViteConfig } from '../../config/vite-config'
  * export default createSmartViteConfig({ base: '/apps/my-app/', port: 5174 })
  * ```
  */
@@ -39,7 +39,6 @@ export function createSmartViteConfig(
     resolve: {
       alias: {
         '@': path.resolve(appDir, './src'),
-        '@proxy-smart/shared-ui': path.resolve(appDir, '../../shared-ui/src'),
       },
     },
     ...(opts.optimizeDeps ? { optimizeDeps: opts.optimizeDeps } : {}),

@@ -1,4 +1,4 @@
-import { Button } from '@proxy-smart/shared-ui';
+import { Button } from '@max-health-inc/shared-ui';
 import { Shield, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {

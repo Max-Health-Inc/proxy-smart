@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
-import { Input } from '@proxy-smart/shared-ui'
+import { Input } from '@max-health-inc/shared-ui'
 
 describe('Input', () => {
   it('renders an input with provided placeholder and type', () => {

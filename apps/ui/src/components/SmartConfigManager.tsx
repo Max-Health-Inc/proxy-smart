@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, Play, Shield, Link, ShieldCheck, Lock, Globe } from 'lucide-react';
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@max-health-inc/shared-ui';
 import { ScopeManager } from './ScopeManager';
 import { LaunchContextManager } from './LaunchContextManager';
 import { ProtocolMappersManager } from './ProtocolMappersManager';

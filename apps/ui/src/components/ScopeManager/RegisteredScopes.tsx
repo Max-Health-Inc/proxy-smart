@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
-} from '@proxy-smart/shared-ui';
+} from '@max-health-inc/shared-ui';
 import { Plus, Trash2, RefreshCw, Shield, Search, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SmartScopeResponse } from '@/lib/api-client';

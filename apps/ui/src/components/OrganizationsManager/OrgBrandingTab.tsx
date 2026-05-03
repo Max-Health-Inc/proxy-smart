@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Save, RotateCcw, Loader2, Image, Globe, MapPin } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';

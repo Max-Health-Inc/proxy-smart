@@ -23,7 +23,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button } from '@max-health-inc/shared-ui';
 import { useTranslation } from 'react-i18next';
 
 export function LoginForm() {

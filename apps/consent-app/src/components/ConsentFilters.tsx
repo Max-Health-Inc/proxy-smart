@@ -1,11 +1,11 @@
-import { Input } from "@proxy-smart/shared-ui"
+import { Input } from "@max-health-inc/shared-ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import { Search } from "lucide-react"
 import type { ConsentStatusFilter, ConsentSortKey } from "@/hooks/useConsents"
 

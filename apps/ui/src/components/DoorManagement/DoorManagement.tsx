@@ -8,8 +8,8 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { Badge, Button, Spinner } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Badge, Button, Spinner } from '@max-health-inc/shared-ui';
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@max-health-inc/shared-ui';
 import type {
   AccessHealthResponse,
 } from '../../lib/api-client';

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Copy, Check } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button } from '@max-health-inc/shared-ui';
 import { cn } from '@/lib/utils';
 
 type CopyButtonVariant = 'icon' | 'icon-sm' | 'icon-xs' | 'text';

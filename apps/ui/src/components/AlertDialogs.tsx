@@ -8,7 +8,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from './ui/dialog';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Input, Label } from '@max-health-inc/shared-ui';
 import { Textarea } from './ui/textarea';
 import { useAlertStore } from '../stores/alertStore';
 import {

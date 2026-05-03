@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X, Loader2, ExternalLink } from "lucide-react"
-import { Badge, Button } from "@proxy-smart/shared-ui"
+import { Badge, Button } from "@max-health-inc/shared-ui"
 import {
   initCornerstoneDicomweb,
   getCornerstoneDicomweb,

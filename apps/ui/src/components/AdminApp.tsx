@@ -14,7 +14,7 @@ import { AlertDialogs } from './AlertDialogs';
 import { NotificationToasts } from './ui/NotificationToast';
 import { AIChatOverlay } from './ai/AIChatOverlay';
 import { Panel } from './ui/panel';
-import { Button, Spinner } from '@proxy-smart/shared-ui';
+import { Button, Spinner } from '@max-health-inc/shared-ui';
 import { ADMIN_TABS, type AdminTab } from '@/lib/admin-tabs';
 import { useTranslation } from 'react-i18next';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';

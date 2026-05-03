@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { ContextSet } from '@/lib/types/api';
-import { Badge, Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
+import { Badge, Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   Dialog,

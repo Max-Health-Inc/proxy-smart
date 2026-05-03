@@ -10,7 +10,7 @@ import {
   Input,
   Label,
   Badge,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import { Loader2, Pencil, Save, X, AlertTriangle } from "lucide-react"
 import { updateResource, type DynamicFhirResource } from "@/lib/fhir-client"
 import { useTranslation } from "react-i18next"

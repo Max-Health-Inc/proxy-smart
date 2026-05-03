@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button } from '@max-health-inc/shared-ui';
 import { useAuth } from '@/stores/authStore';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';

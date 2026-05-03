@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger, Spinner } from "@proxy-smart/shared-ui"
+import { Tabs, TabsContent, TabsList, TabsTrigger, Spinner } from "@max-health-inc/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import type { LaunchMode } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
 import { PatientSearch } from "@/components/PatientSearch"

@@ -8,7 +8,7 @@ import {
   Database,
   Lock
 } from 'lucide-react';
-import { Badge, Button } from '@proxy-smart/shared-ui';
+import { Badge, Button } from '@max-health-inc/shared-ui';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerDetails } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';

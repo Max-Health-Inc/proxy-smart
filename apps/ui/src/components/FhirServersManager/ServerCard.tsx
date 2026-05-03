@@ -13,7 +13,7 @@ import {
   Lock,
   Trash2
 } from 'lucide-react';
-import { Badge, Button, Label } from '@proxy-smart/shared-ui';
+import { Badge, Button, Label } from '@max-health-inc/shared-ui';
 import { Switch } from '@/components/ui/switch';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerWithState } from '@/lib/types/api';

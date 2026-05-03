@@ -1,5 +1,5 @@
 import { Dashboard } from "@/components/Dashboard"
-import { AppHeader, Button, Spinner, useBranding, useSmartAuth, ModalStackProvider } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth, ModalStackProvider } from "@max-health-inc/shared-ui"
 import {
   smartAuth,
 } from "@/lib/smart-auth"
