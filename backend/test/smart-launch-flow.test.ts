@@ -423,7 +423,7 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(302)
       const location = new URL(res.headers.get('location')!)
-      expect(location.pathname).toBe('/auth/patient-select')
+      expect(location.pathname).toBe('/apps/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
       expect(location.searchParams.get('code')).toBe('picker-code')
     })
@@ -464,19 +464,18 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Patient Picker — GET & POST /auth/patient-select', () => {
-    it('GET serves HTML picker when session is valid', async () => {
+    it('GET redirects to patient picker app when session is valid', async () => {
       const [sessionKey] = createTestSession({ needsPatientPicker: true })
 
       const res = await authRoutes.handle(authRequest(
         `/auth/patient-select?session=${sessionKey}&code=the-code`
       ))
 
-      expect(res.status).toBe(200)
-      const ct = res.headers.get('content-type')!
-      expect(ct).toContain('text/html')
-      const html = await res.text()
-      expect(html).toContain(sessionKey)
-      expect(html).toContain('the-code')
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/apps/patient-picker/')
+      expect(location.searchParams.get('session')).toBe(sessionKey)
+      expect(location.searchParams.get('code')).toBe('the-code')
     })
 
     it('GET returns 400 when session param is missing', async () => {
@@ -989,7 +988,7 @@ describe('SMART Launch Flow Integration', () => {
       ))
       expect(callbackRes.status).toBe(302)
       const pickerUrl = new URL(callbackRes.headers.get('location')!)
-      expect(pickerUrl.pathname).toBe('/auth/patient-select')
+      expect(pickerUrl.pathname).toBe('/apps/patient-picker/')
       expect(pickerUrl.searchParams.get('session')).toBe(sessionKey)
 
       // Step 3: Patient picker submission
