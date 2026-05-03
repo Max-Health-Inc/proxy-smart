@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle, Badge } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
 import { ShieldCheck } from "lucide-react"
 import { format } from "date-fns"
 import type { Coverage } from "@/lib/fhir-client"

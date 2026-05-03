@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from "react"
 import { toast } from "sonner"
 import { searchPatients, listPatients, type Patient } from "@/lib/fhir-client"
-import { formatHumanName } from "@max-health-inc/shared-ui"
-import { Input, Button, Card, CardContent, Spinner, Badge, ScrollArea } from "@max-health-inc/shared-ui"
+import { formatHumanName } from "@proxy-smart/shared-ui"
+import { Input, Button, Card, CardContent, Spinner, Badge, ScrollArea } from "@proxy-smart/shared-ui"
 import { Search, User, Calendar, Hash, ChevronLeft, ChevronRight } from "lucide-react"
 
 const PAGE_SIZE = 10

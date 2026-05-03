@@ -1,6 +1,6 @@
 import type { Patient } from "fhir/r4"
 import type { LaunchMode } from "hl7.fhir.us.davinci-dtr-generated/fhir-client"
-import { Card, CardContent, Button, Badge, Tooltip, TooltipContent, TooltipTrigger } from "@max-health-inc/shared-ui"
+import { Card, CardContent, Button, Badge, Tooltip, TooltipContent, TooltipTrigger } from "@proxy-smart/shared-ui"
 import { formatHumanName } from "@/lib/fhir-client"
 import { getUSCoreDemographics } from "@/lib/patient-extensions"
 import { User, Calendar, Hash, X, Globe, Heart } from "lucide-react"

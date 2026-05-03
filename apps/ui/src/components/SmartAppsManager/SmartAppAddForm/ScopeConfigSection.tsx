@@ -1,4 +1,4 @@
-import { Badge, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
+import { Badge, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SmartAppFormData, ScopeSet } from '@/lib/types/api';

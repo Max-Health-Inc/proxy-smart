@@ -20,7 +20,7 @@ import {
   removeEmptyAnswersFromResponse,
   RendererThemeProvider,
 } from "@aehrc/smart-forms-renderer"
-import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from "@max-health-inc/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Badge, Spinner } from "@proxy-smart/shared-ui"
 import { type SelectedService } from "@/components/ServiceSelector"
 import { prePopulate, type PrePopulationResult } from "@/lib/questionnaire-populate"
 import { ArrowRight, FileQuestion, Sparkles, Zap } from "lucide-react"

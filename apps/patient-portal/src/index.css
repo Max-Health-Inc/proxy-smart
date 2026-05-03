@@ -2,8 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@source "@max-health-inc/shared-ui/src";
-@import "@max-health-inc/shared-ui/theme.css";
+@source "@proxy-smart/shared-ui/src";
+@import "@proxy-smart/shared-ui/theme.css";
 
 @custom-variant dark (&:is(.dark *));
 

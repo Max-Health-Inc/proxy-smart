@@ -1,6 +1,6 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { config } from "@/config"
-import { createAuthFetch } from "@max-health-inc/shared-ui"
+import { createAuthFetch } from "@proxy-smart/shared-ui"
 import { FhirClient, type FhirResource as IpsFhirResource } from "hl7.fhir.uv.ips-generated/fhir-client"
 import { FhirClient as GenomicsFhirClient, type FhirResource as GenomicsFhirResource } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
 import type {
@@ -401,7 +401,7 @@ export async function searchOrganizations(): Promise<OrganizationUvIps[]> {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 // Re-export from shared-ui to avoid duplication
-export { formatHumanName } from "@max-health-inc/shared-ui"
+export { formatHumanName } from "@proxy-smart/shared-ui"
 
 // ── Genomics Reporting (HL7 Genomics Reporting 3.0.0) ────────────────────────
 

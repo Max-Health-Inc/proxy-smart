@@ -1,4 +1,4 @@
-import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@max-health-inc/shared-ui';
+import { Badge, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
 import { StatCard } from '../ui/stat-card';
 import {
   AlertCircle,

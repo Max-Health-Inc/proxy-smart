@@ -2,7 +2,7 @@ import { useState, useCallback } from "react"
 import {
   Card, CardContent, CardHeader, CardTitle, Badge,
   Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@max-health-inc/shared-ui"
+} from "@proxy-smart/shared-ui"
 import { FileText, ExternalLink } from "lucide-react"
 import { format } from "date-fns"
 import { fetchBinaryUrl, type DocumentReference } from "@/lib/fhir-client"

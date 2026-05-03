@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Consent App",
   "description": "SMART on FHIR consent management app — manage FHIR Consent resources for linked Patient records.",
   "private": true,
-  "version": "0.1.0-beta.202605032120.8346c70b",
+  "version": "0.1.0-alpha.202605032155.b401b02a",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5174",
@@ -16,7 +16,7 @@
   "dependencies": {
     "@babelfhir-ts/client-r4": "^0.2.4",
     "@fontsource-variable/geist": "^5.2.8",
-    "@max-health-inc/shared-ui": "github:Max-Health-Inc/shared-ui",
+    "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",

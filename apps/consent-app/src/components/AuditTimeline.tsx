@@ -8,7 +8,7 @@ import {
   Ban,
   RefreshCw,
 } from "lucide-react"
-import { Badge, Button, Spinner, ScrollArea } from "@max-health-inc/shared-ui"
+import { Badge, Button, Spinner, ScrollArea } from "@proxy-smart/shared-ui"
 import { config } from "@/config"
 import { smartAuth } from "@/lib/smart-auth"
 

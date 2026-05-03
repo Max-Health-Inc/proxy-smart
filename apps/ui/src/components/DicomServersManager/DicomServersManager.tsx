@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { HardDrive, RefreshCw, Plus, Info, Eye } from 'lucide-react'
-import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from '@max-health-inc/shared-ui'
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from '@proxy-smart/shared-ui'
 import { LoadingButton } from '@/components/ui/loading-button'
 import { PageLoadingState } from '@/components/ui/page-loading-state'
 import { PageErrorState } from '@/components/ui/page-error-state'

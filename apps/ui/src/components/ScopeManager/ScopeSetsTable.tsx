@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@max-health-inc/shared-ui';
+} from '@proxy-smart/shared-ui';
 import { Copy, Database, Edit, Settings, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ScopeSet } from './types';

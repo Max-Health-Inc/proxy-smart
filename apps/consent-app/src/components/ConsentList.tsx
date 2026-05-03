@@ -1,5 +1,5 @@
 import type { Consent } from "fhir/r4"
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, CardAction } from "@max-health-inc/shared-ui"
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, CardAction } from "@proxy-smart/shared-ui"
 import { format } from "date-fns"
 import { ShieldCheck, ShieldOff, User, Clock, Eye } from "lucide-react"
 

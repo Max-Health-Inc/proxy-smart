@@ -1,4 +1,4 @@
-import { Badge, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
+import { Badge, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Server, Users, Globe, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';

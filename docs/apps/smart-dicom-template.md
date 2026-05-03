@@ -25,7 +25,7 @@ The SMART DICOM Template provides the full boilerplate for a SMART-launched imag
 - **Cornerstone3D Viewer** with stack scrolling, zoom, pan, and window/level
 - **Algorithm Runner UI** that calls your algorithm and displays results
 - **Result Write-back** via FHIR DiagnosticReport creation
-- **Shared UI Components** from `@max-health-inc/shared-ui`
+- **Shared UI Components** from `@proxy-smart/shared-ui`
 
 ## Quick Start
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, FolderSync, Plus } from 'lucide-react';
-import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@max-health-inc/shared-ui';
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { HealthcareUsersManager } from './HealthcareUsersManager/HealthcareUsersManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 

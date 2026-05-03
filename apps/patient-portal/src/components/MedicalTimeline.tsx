@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { Badge } from "@max-health-inc/shared-ui"
+import { Badge } from "@proxy-smart/shared-ui"
 import { RecordName, type AnyResource } from "@/lib/ips-display-helpers"
 import { useFhirTranslation } from "@/lib/fhir-translations"
 import {

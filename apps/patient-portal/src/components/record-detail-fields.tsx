@@ -4,7 +4,7 @@ import {
   Calendar, Clock, Tag, FileText, User, ShieldAlert,
   Phone, Mail, MapPin, GraduationCap, Link2, Activity,
 } from "lucide-react"
-import { Badge } from "@max-health-inc/shared-ui"
+import { Badge } from "@proxy-smart/shared-ui"
 import type { DynamicFhirResource, DocumentReference } from "@/lib/fhir-client"
 import { findLinkedDocuments } from "@/components/DocumentsCard"
 import { isValidConditionSeverityCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionSeverity"

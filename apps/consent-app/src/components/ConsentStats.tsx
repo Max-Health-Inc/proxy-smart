@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@max-health-inc/shared-ui"
+import { Card, CardContent } from "@proxy-smart/shared-ui"
 import { ShieldCheck, ShieldOff, AlertTriangle, FileStack } from "lucide-react"
 
 interface ConsentStatsProps {

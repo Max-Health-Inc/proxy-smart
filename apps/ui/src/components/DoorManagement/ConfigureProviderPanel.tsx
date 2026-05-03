@@ -11,7 +11,7 @@ import {
   User,
   Lock,
 } from 'lucide-react';
-import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
+import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type {
   TestAccessControlConfigResponse,

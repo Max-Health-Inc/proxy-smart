@@ -6,7 +6,7 @@ import {
   CardTitle,
   Button,
   Spinner,
-} from "@max-health-inc/shared-ui"
+} from "@proxy-smart/shared-ui"
 import {
   MessageSquare,
   Send,
