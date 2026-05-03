@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605031824.bbd27301] - 2026-05-03
+
+- 🔧 Chores & Improvements: Update shared UI package references to forked version and adjust imports (several apps), plus rewire configuration paths and app config imports
+- 🔧 Chores & Improvements: Update deployment/test workflows for alpha/dev handling (alpha becomes dev-only) and adjust e2e/test inputs to run locally/dev for alpha
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/643
+
+
 ## [0.1.0-alpha.202605031820.02615011] - 2026-05-03
 
 - ✨ Features
