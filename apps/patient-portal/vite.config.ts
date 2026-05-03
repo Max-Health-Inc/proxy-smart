@@ -1,5 +1,5 @@
 import { viteCommonjs } from '@originjs/vite-plugin-commonjs'
-import { createSmartViteConfig } from '../../shared-ui/vite-config'
+import { createSmartViteConfig } from '../../config/vite-config'
 
 export default createSmartViteConfig(
   {

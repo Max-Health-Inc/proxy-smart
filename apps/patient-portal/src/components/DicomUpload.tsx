@@ -7,7 +7,7 @@ import {
   Button,
   Badge,
   Spinner,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import {
   Upload,
   FileImage,

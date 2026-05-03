@@ -1,4 +1,4 @@
-import { CHART_COLORS } from '@proxy-smart/shared-ui';
+import { CHART_COLORS } from '@max-health-inc/shared-ui';
 import {
   TrendingUp,
   Zap,

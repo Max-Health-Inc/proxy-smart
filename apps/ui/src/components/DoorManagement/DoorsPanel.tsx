@@ -13,7 +13,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
-import { Badge, Button } from '@proxy-smart/shared-ui';
+import { Badge, Button } from '@max-health-inc/shared-ui';
 import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useNotificationStore } from '@/stores/notificationStore';

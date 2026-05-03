@@ -9,7 +9,7 @@ import {
 } from '../../lib/ai-assistant';
 import type { ChatResponseTokensUsed, DocumentChunk, ToolExecution } from '../../lib/api-client';
 import { useAIChatStore } from '../../stores/aiChatStore';
-import { Button, Card } from '@proxy-smart/shared-ui';
+import { Button, Card } from '@max-health-inc/shared-ui';
 import { logger } from '@/lib/logger';
 import { Bot, Brain } from 'lucide-react';
 import { ChatHeader } from './ChatHeader';

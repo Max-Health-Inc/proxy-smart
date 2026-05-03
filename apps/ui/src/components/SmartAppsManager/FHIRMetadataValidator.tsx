@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input } from '@proxy-smart/shared-ui';
+import { Button, Input } from '@max-health-inc/shared-ui';
 import { useTranslation } from 'react-i18next';
 
 /**

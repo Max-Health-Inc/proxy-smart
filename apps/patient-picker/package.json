@@ -16,7 +16,7 @@
   "dependencies": {
     "@babelfhir-ts/client-r4": "^0.2.4",
     "@fontsource-variable/geist": "^5.2.8",
-    "@proxy-smart/shared-ui": "workspace:*",
+    "@max-health-inc/shared-ui": "github:Max-Health-Inc/shared-ui",
     "@tailwindcss/vite": "^4.2.4",
     "@types/fhir": "^0.0.42",
     "class-variance-authority": "^0.7.1",

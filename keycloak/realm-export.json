@@ -527,12 +527,10 @@
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
         "http://localhost:*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/*",
         "https://beta.proxy-smart.com/*"
       ],
       "webOrigins": [
         "http://localhost:*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
         "https://beta.proxy-smart.com"
       ],
       "protocol": "openid-connect",
@@ -758,8 +756,6 @@
         "http://localhost:5176/*",
         "http://localhost:8445/apps/patient-portal/*",
         "http://localhost:8445/auth/smart-callback",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/patient-portal/*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/patient-portal/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/apps/patient-portal/*",
@@ -768,7 +764,6 @@
       "webOrigins": [
         "http://localhost:5176",
         "http://localhost:8445",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
         "https://beta.proxy-smart.com",
         "https://proxy-smart.com",
         "*"
@@ -879,8 +874,6 @@
         "http://localhost:5174/*",
         "http://localhost:8445/apps/consent/*",
         "http://localhost:8445/auth/smart-callback",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/consent/*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/consent/*",
         "https://beta.proxy-smart.com/apps/consent-app/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
@@ -891,7 +884,6 @@
       "webOrigins": [
         "http://localhost:5174",
         "http://localhost:8445",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
         "https://beta.proxy-smart.com",
         "https://proxy-smart.com",
         "*"
@@ -949,8 +941,6 @@
         "http://localhost:5175/*",
         "http://localhost:8445/apps/dtr/*",
         "http://localhost:8445/auth/smart-callback",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/apps/dtr/*",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/dtr/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/apps/dtr/*",
@@ -959,7 +949,6 @@
       "webOrigins": [
         "http://localhost:5175",
         "http://localhost:8445",
-        "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
         "https://beta.proxy-smart.com",
         "https://proxy-smart.com",
         "*"

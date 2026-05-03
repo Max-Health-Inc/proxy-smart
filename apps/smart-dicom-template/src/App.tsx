@@ -1,4 +1,4 @@
-import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth } from "@max-health-inc/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { Brain, LogIn, AlertTriangle } from "lucide-react"
 import { AlgorithmRunner } from "@/components/AlgorithmRunner"

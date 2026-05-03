@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@proxy-smart/shared-ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@max-health-inc/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui'
+import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@max-health-inc/shared-ui'
 import { LoadingButton } from '@/components/ui/loading-button'
 import {
   Dialog,

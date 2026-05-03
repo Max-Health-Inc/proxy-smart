@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 
 const LANGUAGES = [
   { code: "en", label: "English" },

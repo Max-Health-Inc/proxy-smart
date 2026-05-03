@@ -1,6 +1,6 @@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Badge, Button,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import { useState } from "react"
 import { ShieldCheck, ShieldAlert, Pencil, Trash2, Undo2 } from "lucide-react"
 import type { DocumentReference, DynamicFhirResource } from "@/lib/fhir-client"

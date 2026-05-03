@@ -6,7 +6,7 @@ import type {
   QuestionnaireItem,
   QuestionnaireResponseItem,
 } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge } from "@max-health-inc/shared-ui"
 import {
   Select,
   SelectContent,
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
   Separator,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import { formatHumanName } from "@/lib/fhir-client"
 import { type SelectedService } from "@/components/ServiceSelector"
 import { GENERIC_PA_ITEMS } from "@/lib/generic-questionnaire"

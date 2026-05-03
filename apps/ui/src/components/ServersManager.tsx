@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui'
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@max-health-inc/shared-ui'
 import { useState } from 'react'
 import { FhirServersManager } from '@/components/FhirServersManager'
 import { DicomServersManager } from '@/components/DicomServersManager'

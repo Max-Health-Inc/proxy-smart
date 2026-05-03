@@ -10,7 +10,7 @@ import {
   Loader2,
   Eye,
 } from 'lucide-react'
-import { Badge, Button } from '@proxy-smart/shared-ui'
+import { Badge, Button } from '@max-health-inc/shared-ui'
 import { CopyButton } from '@/components/ui/copy-button'
 import { useTranslation } from 'react-i18next'
 import type { DicomServerWithStatus } from './DicomServersManager'

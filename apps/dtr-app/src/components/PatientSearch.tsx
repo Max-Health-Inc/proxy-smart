@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react"
 import type { Patient } from "fhir/r4"
 import { searchPatients, searchPatientByIdentifier, formatHumanName } from "@/lib/fhir-client"
 import { getUSCoreDemographics } from "@/lib/patient-extensions"
-import { Input, Card, CardContent, Badge, Spinner } from "@proxy-smart/shared-ui"
+import { Input, Card, CardContent, Badge, Spinner } from "@max-health-inc/shared-ui"
 import { Search, User, Calendar, Hash, ChevronRight } from "lucide-react"
 
 interface PatientSearchProps {

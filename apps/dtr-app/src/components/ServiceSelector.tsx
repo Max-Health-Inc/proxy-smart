@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react"
 import type { Questionnaire } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge, Spinner } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label, Badge, Spinner } from "@max-health-inc/shared-ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import { searchConditions, searchQuestionnaires, searchCoverage, type Condition, type PASCoverage } from "@/lib/fhir-client"
 import { COMMON_PROCEDURES, type ProcedureCode } from "@/lib/procedure-codes"
 import { ArrowRight, Stethoscope, Shield } from "lucide-react"

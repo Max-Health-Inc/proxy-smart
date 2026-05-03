@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, Button, Spinner, Badge } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, Button, Spinner, Badge } from "@max-health-inc/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import {
   getPatient,

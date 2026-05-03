@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@proxy-smart/shared-ui';
+} from '@max-health-inc/shared-ui';
 import {
   MoreHorizontal,
   Settings,

@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@proxy-smart/shared-ui';
+} from '@max-health-inc/shared-ui';
 import { MoreHorizontal, Edit, Trash2, Users, Power, Globe } from 'lucide-react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';

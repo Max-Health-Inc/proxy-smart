@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Patient, Questionnaire, QuestionnaireResponse } from "fhir/r4"
-import { Button, Badge } from "@proxy-smart/shared-ui"
+import { Button, Badge } from "@max-health-inc/shared-ui"
 import { toast } from "sonner"
 import { ServiceSelector, type SelectedService } from "@/components/ServiceSelector"
 import { QuestionnaireRenderer } from "@/components/QuestionnaireRenderer"

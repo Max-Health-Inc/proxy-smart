@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle } from "@max-health-inc/shared-ui"
 import { Users } from "lucide-react"
 import type { Organization, Practitioner } from "@/lib/fhir-client"
 import { formatHumanName } from "@/lib/fhir-client"

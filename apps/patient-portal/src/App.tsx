@@ -1,4 +1,4 @@
-import { AppHeader, Button, Spinner, useBranding, useSmartAuth, ModalStackProvider } from "@proxy-smart/shared-ui"
+import { AppHeader, Button, Spinner, useBranding, useSmartAuth, ModalStackProvider } from "@max-health-inc/shared-ui"
 import { useTranslation } from "react-i18next"
 import { smartAuth } from "@/lib/smart-auth"
 import { Heart, LogIn, AlertTriangle, Link2 } from "lucide-react"

@@ -1,4 +1,4 @@
-import { Button, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
+import { Button, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger } from '@max-health-inc/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import {

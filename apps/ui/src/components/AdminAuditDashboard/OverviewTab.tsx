@@ -1,4 +1,4 @@
-import { Badge } from '@proxy-smart/shared-ui';
+import { Badge } from '@max-health-inc/shared-ui';
 import { StatCard } from '../ui/stat-card';
 import { EmptyState } from '@/components/ui/empty-state';
 import {

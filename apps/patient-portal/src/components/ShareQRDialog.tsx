@@ -3,7 +3,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner, Input,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from "@proxy-smart/shared-ui"
+} from "@max-health-inc/shared-ui"
 import { QRCodeSVG } from "qrcode.react"
 import { createShl as createShlRequest, type ShlResponse } from "@/lib/shl-client"
 import { QrCode, Copy, Check, Clock, Info } from "lucide-react"

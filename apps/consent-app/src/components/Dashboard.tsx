@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Patient } from "fhir/r4"
-import { Card, CardContent, CardHeader, CardTitle, CardAction, Spinner } from "@proxy-smart/shared-ui"
+import { Card, CardContent, CardHeader, CardTitle, CardAction, Spinner } from "@max-health-inc/shared-ui"
 import { PersonCard } from "@/components/PersonCard"
 import { PatientDetail } from "@/components/PatientDetail"
 import { PractitionerDashboard } from "@/components/PractitionerDashboard"

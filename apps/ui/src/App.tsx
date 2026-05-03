@@ -1,6 +1,6 @@
 import { AdminApp } from './components/AdminApp'
 import { ThemeProvider } from './components/theme-provider'
-import { ModalStackProvider } from '@proxy-smart/shared-ui'
+import { ModalStackProvider } from '@max-health-inc/shared-ui'
 import './App.css'
 
 function App() {

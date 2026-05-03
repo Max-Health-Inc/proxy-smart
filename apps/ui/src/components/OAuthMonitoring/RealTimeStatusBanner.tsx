@@ -1,4 +1,4 @@
-import { Badge, Button } from '@proxy-smart/shared-ui';
+import { Badge, Button } from '@max-health-inc/shared-ui';
 import { Activity, AlertTriangle, Pause } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { oauthWebSocketService } from '../../service/oauth-websocket-service';

@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@proxy-smart/shared-ui';
+} from '@max-health-inc/shared-ui';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Users, Server, Plus, MoreHorizontal, Link } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer, HealthcareUser } from '@/lib/types/api';

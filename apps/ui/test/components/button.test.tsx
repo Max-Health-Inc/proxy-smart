@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Button } from '@proxy-smart/shared-ui'
+import { Button } from '@max-health-inc/shared-ui'
 
 describe('Button', () => {
   it('renders with default props', () => {

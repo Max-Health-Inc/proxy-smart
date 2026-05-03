@@ -3,7 +3,7 @@ import {
   Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter, Input, Label, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue,
-} from '@proxy-smart/shared-ui';
+} from '@max-health-inc/shared-ui';
 import { Eye, EyeOff, RefreshCw, ExternalLink, Store, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
