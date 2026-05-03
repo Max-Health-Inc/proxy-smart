@@ -5,11 +5,12 @@ import { Input, Button, Card, CardContent, Spinner, Badge } from "@proxy-smart/s
 import { Search, User, Calendar, Hash, AlertCircle } from "lucide-react"
 
 interface PatientListProps {
+  fhirBaseUrl: string
   onSelect: (patient: Patient) => void
   selected: Patient | null
 }
 
-export function PatientList({ onSelect, selected }: PatientListProps) {
+export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProps) {
   const [query, setQuery] = useState("")
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(false)
@@ -22,7 +23,7 @@ export function PatientList({ onSelect, selected }: PatientListProps) {
     setLoading(true)
     setError(null)
     try {
-      const results = await searchPatients(q)
+      const results = await searchPatients(fhirBaseUrl, q)
       setPatients(results)
       setSearched(true)
     } catch (err) {
@@ -31,7 +32,7 @@ export function PatientList({ onSelect, selected }: PatientListProps) {
     } finally {
       setLoading(false)
     }
-  }, [query])
+  }, [query, fhirBaseUrl])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {

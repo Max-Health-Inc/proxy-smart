@@ -294,6 +294,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     const pickerUrl = new URL(`${config.baseUrl}/apps/patient-picker/`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)
+    if (session.aud) pickerUrl.searchParams.set('aud', session.aud)
     return redirect(pickerUrl.href)
   }, {
     detail: { summary: 'Patient Picker Redirect', description: 'Redirects to the patient picker React app for standalone SMART launches.', tags: ['authentication'] }

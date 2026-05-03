@@ -4,7 +4,7 @@
  */
 
 /** Minimal patient picker HTML page served during standalone SMART launch */
-export function patientPickerPage(sessionKey: string, code: string): string {
+export function patientPickerPage(sessionKey: string, code: string, fhirBaseUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Select Patient — Proxy Smart</title>
@@ -46,7 +46,7 @@ button{padding:.625rem 1rem;border-radius:.5rem;border:none;font-size:.875rem;fo
 </div>
 <script>
 let selected = null;
-const baseUrl = location.origin;
+const fhirBase = ${JSON.stringify(fhirBaseUrl)};
 
 async function searchPatients() {
   const q = document.getElementById('search').value.trim();
@@ -54,7 +54,7 @@ async function searchPatients() {
   const results = document.getElementById('results');
   results.innerHTML = '<div class="loading">Searching...</div>';
   try {
-    const resp = await fetch(baseUrl + '/fhir/proxy-smart-backend/default/R4/Patient?name=' + encodeURIComponent(q) + '&_count=20', {
+    const resp = await fetch(fhirBase + '/Patient?name=' + encodeURIComponent(q) + '&_count=20', {
       headers: { 'Accept': 'application/fhir+json' }
     });
     if (!resp.ok) throw new Error('Search failed: ' + resp.status);

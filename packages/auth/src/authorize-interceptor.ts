@@ -128,6 +128,7 @@ export async function handleAuthorize(
       scope: params.scope || '',
       codeChallenge: params.code_challenge,
       codeChallengeMethod: params.code_challenge_method,
+      aud: aud || undefined,
       needsPatientPicker: standaloneLaunch && !resolvedLaunchContext?.patient,
       createdAt: Date.now(),
     }
