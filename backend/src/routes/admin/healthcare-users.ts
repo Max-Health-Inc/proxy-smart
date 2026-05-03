@@ -328,6 +328,20 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
       
       await admin.users.update({ id: params.userId }, updateData)
       
+      // Handle password reset — Keycloak requires a separate API call for credentials
+      const passwordValue = body.password || body.credentials?.find(c => c.type === 'password')?.value
+      const isTemporary = body.temporaryPassword ?? body.credentials?.find(c => c.type === 'password')?.temporary ?? false
+      if (passwordValue) {
+        await admin.users.resetPassword({
+          id: params.userId,
+          credential: {
+            type: 'password',
+            value: passwordValue,
+            temporary: isTemporary
+          }
+        })
+      }
+      
       // Handle role updates if specified
       if (body.realmRoles !== undefined || body.clientRoles !== undefined) {
         try {
