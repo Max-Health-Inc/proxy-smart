@@ -1,36 +1,56 @@
-import { FhirResourceReader } from "@babelfhir-ts/client-r4"
 import type { Patient, Bundle } from "fhir/r4"
+import { getPickerParams } from "./picker-params"
 
 export type { Patient, Bundle }
 
 /**
- * Create an unauthenticated FHIR Patient reader for the given base URL.
+ * Session-validated Patient search for the patient picker.
  *
- * The patient picker is shown mid-OAuth-flow (before any access token exists).
- * The backend FHIR proxy allows unauthenticated Patient search for this purpose.
- *
- * @param fhirBaseUrl - The FHIR server base URL from the `aud` parameter
+ * The picker is shown mid-OAuth-flow before any access token exists.
+ * Instead of calling the FHIR proxy directly (which requires Bearer auth),
+ * we call /auth/patient-search which validates the session and proxies
+ * to the upstream FHIR server using service-level access.
  */
-function createPatientReader(fhirBaseUrl: string) {
-  return new FhirResourceReader<Patient>(fhirBaseUrl, "Patient", (...args) => fetch(...args))
+
+function getSearchUrl(params: Record<string, string | number>): string {
+  const pickerParams = getPickerParams()
+  const url = new URL('/auth/patient-search', window.location.origin)
+  url.searchParams.set('session', pickerParams?.session ?? '')
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, String(value))
+  }
+  return url.href
+}
+
+async function fetchBundle(params: Record<string, string | number>): Promise<Bundle> {
+  const res = await fetch(getSearchUrl(params))
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }))
+    throw new Error(err.error_description || err.error || `HTTP ${res.status}`)
+  }
+  return res.json()
 }
 
 /** Search patients by name, returning up to `count` results. */
-export async function searchPatients(fhirBaseUrl: string, query: string, count = 20): Promise<Patient[]> {
-  return createPatientReader(fhirBaseUrl).searchAll({ name: query, _count: count })
+export async function searchPatients(_fhirBaseUrl: string, query: string, count = 20): Promise<Patient[]> {
+  const bundle = await fetchBundle({ name: query, _count: count })
+  return (bundle.entry ?? []).map((e) => e.resource as Patient).filter((r): r is Patient => r !== null)
 }
 
 /** Read a single patient by ID. */
-export async function getPatient(fhirBaseUrl: string, id: string): Promise<Patient> {
-  return createPatientReader(fhirBaseUrl).read(id)
+export async function getPatient(_fhirBaseUrl: string, id: string): Promise<Patient> {
+  const bundle = await fetchBundle({ _id: id, _count: 1 })
+  const patient = bundle.entry?.[0]?.resource as Patient | undefined
+  if (!patient) throw new Error(`Patient ${id} not found`)
+  return patient
 }
 
 /** Search patients and return the raw Bundle (for pagination metadata). */
-export async function searchPatientsBundle(fhirBaseUrl: string, query: string, count = 20) {
-  return createPatientReader(fhirBaseUrl).search({ name: query, _count: count })
+export async function searchPatientsBundle(_fhirBaseUrl: string, query: string, count = 20): Promise<Bundle> {
+  return fetchBundle({ name: query, _count: count })
 }
 
 /** List patients with offset-based pagination. */
-export async function listPatients(fhirBaseUrl: string, offset: number, count = 10) {
-  return createPatientReader(fhirBaseUrl).search({ _count: count, _offset: offset, _sort: "family" })
+export async function listPatients(_fhirBaseUrl: string, offset: number, count = 10): Promise<Bundle> {
+  return fetchBundle({ _count: count, _offset: offset, _sort: 'family' })
 }

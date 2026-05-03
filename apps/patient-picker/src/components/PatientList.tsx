@@ -25,18 +25,13 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
   const [browseOffset, setBrowseOffset] = useState(0)
   const [browseLoading, setBrowseLoading] = useState(false)
 
-  // Load initial patient list on mount
-  useEffect(() => {
-    loadPage(0)
-  }, [fhirBaseUrl])
-
   const loadPage = useCallback(async (offset: number) => {
     setBrowseLoading(true)
     try {
       const bundle = await listPatients(fhirBaseUrl, offset, PAGE_SIZE)
       const patients = (bundle.entry ?? [])
-        .map(e => e.resource)
-        .filter((r): r is NonNullable<typeof r> => r != null)
+        .map(e => e.resource as Patient | undefined)
+        .filter((r): r is Patient => r !== undefined && r !== null)
       setBrowsePatients(patients)
       setBrowseTotal(bundle.total ?? null)
       setBrowseOffset(offset)
@@ -48,6 +43,12 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
       setBrowseLoading(false)
     }
   }, [fhirBaseUrl])
+
+  // Load initial patient list on mount
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching on mount is valid
+    loadPage(0)
+  }, [fhirBaseUrl, loadPage])
 
   const doSearch = useCallback(async () => {
     const q = query.trim()
@@ -136,7 +137,7 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
         <>
           {!showSearchResults && (
             <p className="text-xs text-muted-foreground">
-              {browseTotal != null ? `${browseTotal} patients` : "All patients"} — select one or search above
+              {browseTotal !== null ? `${browseTotal} patients` : "All patients"} — select one or search above
             </p>
           )}
           <ScrollArea className="max-h-[400px]">
@@ -153,7 +154,7 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
           </ScrollArea>
 
           {/* Pagination (browse mode only) */}
-          {!showSearchResults && browseTotal != null && browseTotal > PAGE_SIZE && (
+          {!showSearchResults && browseTotal !== null && browseTotal > PAGE_SIZE && (
             <div className="flex items-center justify-between pt-2">
               <Button
                 variant="outline"
