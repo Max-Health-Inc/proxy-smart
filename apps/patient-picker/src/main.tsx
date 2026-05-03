@@ -10,7 +10,7 @@ if (root) {
       <ErrorBoundary>
         <TooltipProvider>
           <App />
-          <Toaster theme="dark" />
+          <Toaster theme="system" />
         </TooltipProvider>
       </ErrorBoundary>
     </StrictMode>
