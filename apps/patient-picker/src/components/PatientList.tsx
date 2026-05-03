@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react"
+import { toast } from "sonner"
 import { searchPatients, type Patient } from "@/lib/fhir-client"
 import { formatHumanName } from "@proxy-smart/shared-ui"
-import { Input, Button, Card, CardContent, Spinner, Badge } from "@proxy-smart/shared-ui"
-import { Search, User, Calendar, Hash, AlertCircle } from "lucide-react"
+import { Input, Button, Card, CardContent, Spinner, Badge, ScrollArea } from "@proxy-smart/shared-ui"
+import { Search, User, Calendar, Hash } from "lucide-react"
 
 interface PatientListProps {
   fhirBaseUrl: string
@@ -27,8 +28,10 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
       setPatients(results)
       setSearched(true)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Search failed")
+      const msg = err instanceof Error ? err.message : "Search failed"
+      setError(msg)
       setPatients([])
+      toast.error("Patient search failed", { description: msg })
     } finally {
       setLoading(false)
     }
@@ -61,13 +64,6 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
         </Button>
       </div>
 
-      {error && (
-        <div className="flex items-center gap-2 text-destructive text-sm p-3 rounded-lg bg-destructive/10">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          {error}
-        </div>
-      )}
-
       {loading && (
         <div className="flex flex-col items-center justify-center py-12 gap-3">
           <Spinner size="lg" />
@@ -88,16 +84,18 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
       )}
 
       {!loading && patients.length > 0 && (
-        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-          {patients.map((patient) => (
-            <PatientRow
-              key={patient.id}
-              patient={patient}
-              isSelected={selected?.id === patient.id}
-              onSelect={onSelect}
-            />
-          ))}
-        </div>
+        <ScrollArea className="max-h-[400px]">
+          <div className="space-y-2 pr-1">
+            {patients.map((patient) => (
+              <PatientRow
+                key={patient.id}
+                patient={patient}
+                isSelected={selected?.id === patient.id}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        </ScrollArea>
       )}
     </div>
   )
