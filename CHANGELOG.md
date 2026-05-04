@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605041031.b5f9cef6] - 2026-05-04
+
+- ✨ Features
+  - Minor log message enhancements and expanded diagnostics in backend kc-session-resolver.ts (warnings/info when client not found, page scans, session match; added debug traces)
+
+- ⚠️ Breaking Changes
+  - No breaking changes
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages/apps to 0.1.0-alpha.202605041031.b5f9cef6
+  - Updated Keycloak realm-export.json permissions (add view-users, query-users, manage-users; ensure manage-realm)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/652
+
+
 ## [0.1.0-alpha.202605032340.faa198e5] - 2026-05-04
 
 - 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605032340.faa198e5 across multiple apps/packages (consent-app, dtr-app, patient-picker, patient-portal, patient-portal/package, smart-dicom-template, ui, eslint-config, auth, testing/e2e)
