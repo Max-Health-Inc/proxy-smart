@@ -51,11 +51,11 @@ mock.module('@/lib/logger', () => ({
   createRequestLogger: () => noop,
 }))
 
-// ── Mock KcAdminClient ──────────────────────────────────────────────────
-// NOTE: mock.module for npm packages like @keycloak/keycloak-admin-client has
-// inconsistent behaviour across platforms in bun (works on Windows, fails on
-// Linux CI). Instead, we mock our own @/lib/kc-admin-factory module which
-// bun handles reliably on all platforms.
+// ── Mock admin client via dependency injection ──────────────────────────
+// NOTE: Bun's mock.module does not reliably intercept modules on Linux CI
+// (both npm packages and path-aliased local modules fail). Instead of
+// mock.module, we use dependency injection: autoResolvePatient accepts an
+// optional adminClientFactory parameter that we pass directly in tests.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockClientsFind = mock((): Promise<any[]> => Promise.resolve([]))
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,11 +73,10 @@ const mockAdminClient = {
   },
 }
 
-mock.module('@/lib/kc-admin-factory', () => ({
-  getAdminClient: () => Promise.resolve(mockAdminClient),
-}))
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockAdminFactory = () => Promise.resolve(mockAdminClient as any)
 
-// Import AFTER mocks are set up
+// Import directly — no mock.module needed for kc-admin-factory
 const { autoResolvePatient } = await import('@/lib/kc-session-resolver')
 
 // ── Test fixtures (matching beta state) ─────────────────────────────────
@@ -138,7 +137,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
   })
 
   it('returns null when session_state is missing from params', async () => {
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams({ session_state: undefined }))
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams({ session_state: undefined }), mockAdminFactory)
     expect(result).toBeNull()
     // Admin client should not be called when there's no session_state
     expect(mockClientsFind).not.toHaveBeenCalled()
@@ -146,14 +145,14 @@ describe('kc-session-resolver: autoResolvePatient', () => {
 
   it('returns null when OIDC client is not found in Keycloak', async () => {
     mockClientsFind.mockResolvedValue([])
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
     expect(logMessages.some(l => l.msg.includes('client not found'))).toBe(true)
   })
 
   it('returns null when no sessions exist for the client', async () => {
     mockClientsListSessions.mockResolvedValue([])
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
     expect(logMessages.some(l => l.msg.includes('session_state not found'))).toBe(true)
   })
@@ -162,7 +161,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     mockClientsListSessions.mockResolvedValue([
       { id: 'different-session-id', userId: 'some-user', username: 'other' },
     ])
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
   })
 
@@ -179,7 +178,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     })
 
     const session = makeSession()
-    const result = await autoResolvePatient(session, makeCallbackParams())
+    const result = await autoResolvePatient(session, makeCallbackParams(), mockAdminFactory)
 
     expect(result).toBe('max-nussbaumer')
     expect(session.fhirUser).toBe('Patient/max-nussbaumer')
@@ -195,7 +194,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
       attributes: { fhirUser: ['Practitioner/example-practitioner'] },
     })
 
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
   })
 
@@ -209,7 +208,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
       attributes: {},
     })
 
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
   })
 
@@ -235,14 +234,14 @@ describe('kc-session-resolver: autoResolvePatient', () => {
       attributes: { fhirUser: ['Patient/max-nussbaumer'] },
     })
 
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBe('max-nussbaumer')
     expect(callCount).toBe(2)
   })
 
   it('catches exceptions and returns null gracefully', async () => {
     mockClientsFind.mockRejectedValue(new Error('Connection refused'))
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
     expect(logMessages.some(l => l.msg.includes('failed (non-fatal)'))).toBe(true)
   })
@@ -273,13 +272,13 @@ describe('kc-session-resolver: autoResolvePatient', () => {
       attributes: { fhirUser: ['Patient/max-nussbaumer'] },
     })
 
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBe('max-nussbaumer')
   })
 
   it('BUG: verifies that admin.clients.find is called with the SMART app clientId (string), not the UUID', async () => {
     const session = makeSession({ clientId: 'patient-portal' })
-    await autoResolvePatient(session, makeCallbackParams())
+    await autoResolvePatient(session, makeCallbackParams(), mockAdminFactory)
 
     // Verify the correct clientId string is used to look up the KC client
     expect(mockClientsFind).toHaveBeenCalledWith({ clientId: 'patient-portal', max: 1 })
@@ -295,7 +294,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
       attributes: { fhirUser: ['Patient/max-nussbaumer'] },
     })
 
-    await autoResolvePatient(makeSession(), makeCallbackParams())
+    await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
 
     expect(mockClientsListSessions).toHaveBeenCalledWith({
       id: KC_CLIENT_UUID,
@@ -306,7 +305,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
 
   it('BUG: what if session.clientId is empty string (authorize without client_id)?', async () => {
     const session = makeSession({ clientId: '' })
-    const result = await autoResolvePatient(session, makeCallbackParams())
+    const result = await autoResolvePatient(session, makeCallbackParams(), mockAdminFactory)
 
     // Should still attempt lookup (let KC tell us client not found)
     expect(mockClientsFind).toHaveBeenCalledWith({ clientId: '', max: 1 })
@@ -317,7 +316,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     mockClientsListSessions.mockRejectedValue(
       Object.assign(new Error('Request failed with status code 403'), { response: { status: 403 } })
     )
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
     expect(logMessages.some(l => l.msg.includes('failed (non-fatal)'))).toBe(true)
   })
@@ -338,7 +337,7 @@ describe('kc-session-resolver: autoResolvePatient', () => {
       })
     )
 
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams())
+    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
     expect(logMessages.some(l => l.msg.includes('failed (non-fatal)'))).toBe(true)
   })
