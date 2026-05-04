@@ -1,17 +1,18 @@
 /**
  * Unit tests for kc-session-resolver.ts
  *
- * Tests the autoResolvePatient flow by mocking KcAdminClient and config.
+ * Tests the autoResolvePatient flow by mocking KcAdminClient via DI.
  * Reproduces the beta bug where the patient picker still shows despite
  * the user having fhirUser=Patient/max-nussbaumer on their KC profile.
+ *
+ * NOTE: We do NOT use mock.module for any @/ path-aliased modules because
+ * Bun's mock.module does not reliably intercept them on Linux CI.
+ * Instead we use dependency injection (adminClientFactory parameter).
  */
 import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test'
 import type { LaunchSession, CallbackParams } from '@proxy-smart/auth'
 
 // ── Config via env vars ──────────────────────────────────────────────────
-// NOTE: Do NOT mock.module('@/config') — it's global in Bun and leaks to other
-// test files. Instead, set env vars so the real config's dynamic getters pick
-// them up. Save and restore in beforeEach/afterEach.
 const CONFIG_ENV_VARS = {
   KEYCLOAK_BASE_URL: 'http://keycloak:8080/auth',
   KEYCLOAK_REALM: 'proxy-smart',
@@ -19,37 +20,6 @@ const CONFIG_ENV_VARS = {
   KEYCLOAK_ADMIN_CLIENT_SECRET: 'admin-service-secret',
 } as const
 const envSnapshot: Record<string, string | undefined> = {}
-
-// ── Mock logger ─────────────────────────────────────────────────────────
-// NOTE: mock.module is global in Bun — partial logger mocks leak to other test
-// files. Use a Proxy so every namespace (server, consent, fhir, …) and top-level
-// method (info, debug, …) resolves to a no-op, keeping other suites safe.
-// We capture `auth` logs for assertions in this test file.
-const logMessages: { level: string; msg: string; meta?: unknown }[] = []
-const noop = () => {}
-const noopCategory = { error: noop, warn: noop, info: noop, debug: noop, trace: noop }
-const authCategory = {
-  debug: (msg: string, meta?: unknown) => logMessages.push({ level: 'debug', msg, meta }),
-  info: (msg: string, meta?: unknown) => logMessages.push({ level: 'info', msg, meta }),
-  warn: (msg: string, meta?: unknown) => logMessages.push({ level: 'warn', msg, meta }),
-  error: (msg: string, meta?: unknown) => logMessages.push({ level: 'error', msg, meta }),
-}
-const loggerProxy = new Proxy({} as Record<string, unknown>, {
-  get(_target, prop) {
-    if (prop === 'auth') return authCategory
-    if (typeof prop === 'string') {
-      if (['error', 'warn', 'info', 'debug', 'trace'].includes(prop)) return noop
-      return noopCategory
-    }
-    return undefined
-  },
-})
-mock.module('@/lib/logger', () => ({
-  logger: loggerProxy,
-  createLogger: () => loggerProxy,
-  PerformanceTimer: class { start() {} stop() { return 0 } },
-  createRequestLogger: () => noop,
-}))
 
 // ── Mock admin client via dependency injection ──────────────────────────
 // NOTE: Bun's mock.module does not reliably intercept modules on Linux CI
@@ -107,7 +77,6 @@ function makeCallbackParams(overrides?: Partial<CallbackParams>): CallbackParams
 
 describe('kc-session-resolver: autoResolvePatient', () => {
   beforeEach(() => {
-    logMessages.length = 0
     mockClientsFind.mockClear()
     mockClientsListSessions.mockClear()
     mockUsersFindOne.mockClear()
@@ -147,14 +116,12 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     mockClientsFind.mockResolvedValue([])
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
-    expect(logMessages.some(l => l.msg.includes('client not found'))).toBe(true)
   })
 
   it('returns null when no sessions exist for the client', async () => {
     mockClientsListSessions.mockResolvedValue([])
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
-    expect(logMessages.some(l => l.msg.includes('session_state not found'))).toBe(true)
   })
 
   it('returns null when session_state does not match any session id', async () => {
@@ -243,7 +210,6 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     mockClientsFind.mockRejectedValue(new Error('Connection refused'))
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
-    expect(logMessages.some(l => l.msg.includes('failed (non-fatal)'))).toBe(true)
   })
 
   // ─────────────────────────────────────────────────────────────────────
@@ -318,7 +284,6 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     )
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
-    expect(logMessages.some(l => l.msg.includes('failed (non-fatal)'))).toBe(true)
   })
 
   it('BUG ROOT CAUSE: 403 on users.findOne when admin-service lacks view-users role', async () => {
@@ -339,6 +304,5 @@ describe('kc-session-resolver: autoResolvePatient', () => {
 
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
-    expect(logMessages.some(l => l.msg.includes('failed (non-fatal)'))).toBe(true)
   })
 })
