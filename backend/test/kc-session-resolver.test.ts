@@ -5,33 +5,50 @@
  * Reproduces the beta bug where the patient picker still shows despite
  * the user having fhirUser=Patient/max-nussbaumer on their KC profile.
  */
-import { describe, it, expect, mock, beforeEach } from 'bun:test'
+import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test'
 import type { LaunchSession, CallbackParams } from '@proxy-smart/auth'
 
-// ── Mock config ─────────────────────────────────────────────────────────
-mock.module('@/config', () => ({
-  config: {
-    keycloak: {
-      isConfigured: true,
-      baseUrl: 'http://keycloak:8080/auth',
-      realm: 'proxy-smart',
-      adminClientId: 'admin-service',
-      adminClientSecret: 'admin-service-secret',
-    },
-  },
-}))
+// ── Config via env vars ──────────────────────────────────────────────────
+// NOTE: Do NOT mock.module('@/config') — it's global in Bun and leaks to other
+// test files. Instead, set env vars so the real config's dynamic getters pick
+// them up. Save and restore in beforeEach/afterEach.
+const CONFIG_ENV_VARS = {
+  KEYCLOAK_BASE_URL: 'http://keycloak:8080/auth',
+  KEYCLOAK_REALM: 'proxy-smart',
+  KEYCLOAK_ADMIN_CLIENT_ID: 'admin-service',
+  KEYCLOAK_ADMIN_CLIENT_SECRET: 'admin-service-secret',
+} as const
+const envSnapshot: Record<string, string | undefined> = {}
 
 // ── Mock logger ─────────────────────────────────────────────────────────
+// NOTE: mock.module is global in Bun — partial logger mocks leak to other test
+// files. Use a Proxy so every namespace (server, consent, fhir, …) and top-level
+// method (info, debug, …) resolves to a no-op, keeping other suites safe.
+// We capture `auth` logs for assertions in this test file.
 const logMessages: { level: string; msg: string; meta?: unknown }[] = []
-mock.module('@/lib/logger', () => ({
-  logger: {
-    auth: {
-      debug: (msg: string, meta?: unknown) => logMessages.push({ level: 'debug', msg, meta }),
-      info: (msg: string, meta?: unknown) => logMessages.push({ level: 'info', msg, meta }),
-      warn: (msg: string, meta?: unknown) => logMessages.push({ level: 'warn', msg, meta }),
-      error: (msg: string, meta?: unknown) => logMessages.push({ level: 'error', msg, meta }),
-    },
+const noop = () => {}
+const noopCategory = { error: noop, warn: noop, info: noop, debug: noop, trace: noop }
+const authCategory = {
+  debug: (msg: string, meta?: unknown) => logMessages.push({ level: 'debug', msg, meta }),
+  info: (msg: string, meta?: unknown) => logMessages.push({ level: 'info', msg, meta }),
+  warn: (msg: string, meta?: unknown) => logMessages.push({ level: 'warn', msg, meta }),
+  error: (msg: string, meta?: unknown) => logMessages.push({ level: 'error', msg, meta }),
+}
+const loggerProxy = new Proxy({} as Record<string, unknown>, {
+  get(_target, prop) {
+    if (prop === 'auth') return authCategory
+    if (typeof prop === 'string') {
+      if (['error', 'warn', 'info', 'debug', 'trace'].includes(prop)) return noop
+      return noopCategory
+    }
+    return undefined
   },
+})
+mock.module('@/lib/logger', () => ({
+  logger: loggerProxy,
+  createLogger: () => loggerProxy,
+  PerformanceTimer: class { start() {} stop() { return 0 } },
+  createRequestLogger: () => noop,
 }))
 
 // ── Mock KcAdminClient ──────────────────────────────────────────────────
@@ -93,12 +110,28 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     mockClientsListSessions.mockClear()
     mockUsersFindOne.mockClear()
 
+    // Save and set env vars for config dynamic getters
+    for (const key of Object.keys(CONFIG_ENV_VARS)) {
+      envSnapshot[key] = process.env[key]
+    }
+    for (const [key, value] of Object.entries(CONFIG_ENV_VARS)) {
+      process.env[key] = value
+    }
+
     // Default: client exists
     mockClientsFind.mockResolvedValue([{ id: KC_CLIENT_UUID, clientId: 'patient-portal' }])
     // Default: no sessions
     mockClientsListSessions.mockResolvedValue([])
     // Default: user not found
     mockUsersFindOne.mockResolvedValue(null)
+  })
+
+  afterEach(() => {
+    // Restore env vars
+    for (const [key, value] of Object.entries(envSnapshot)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
   })
 
   it('returns null when session_state is missing from params', async () => {
