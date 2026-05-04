@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605041920.0a9225e5] - 2026-05-04
+
+- ✨ Features
+  - Admin client integration via dependency injection: introduce AdminClientFactory and DI-based admin client retrieval in kc-session-resolver.ts (with default factory and updated usage). 
+  - Session management: add session expiration handling in fhir-client.ts and propagate session expiry through PatientList; UI supports “Session Expired” and automatic redirect after expiry.
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages to 0.1.0-alpha.202605041233.3ec8a557 (and related alpha bumps).
+  - Logging enhancements in kc-session-resolver.ts (warnings/info when client not found, start of scans, session match, and additional debug traces).
+  - UI/UX tweaks in patient-picker (icon and minor import/logic adjustments).
+
+- ⚠️ Breaking Changes
+  - None detected. (If admins client now provided via DI, ensure DI wiring is updated in consuming modules.)
+
+- 📚 Documentation
+  - None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/656
+
+
 ## [0.1.0-alpha.202605041846.e4c9b30c] - 2026-05-04
 
 - ✨ Features
