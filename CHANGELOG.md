@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605042113.61bf4e35] - 2026-05-04
+
+- 🔧 Chores & Improvements: Version bump across multiple packages
+- 🔧 Chores & Improvements: Backend session resolver now uses admin.getAccessToken() and updated test mock to include getAccessToken
+- 🔧 Chores & Improvements: Test suite updated to mock AdminClient with getAccessToken() for new auth flow
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/659
+
+
 ## [0.1.0-alpha.202605042106.ee673668] - 2026-05-04
 
 - ✨ Features: Auto-select patient on Patient Picker page during OAuth flow; increased retry attempts (maxAttempts 3 → 5) for interstitial handling
