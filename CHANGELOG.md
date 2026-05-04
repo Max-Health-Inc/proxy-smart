@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605041233.3ec8a557] - 2026-05-04
+
+- ✨ Features
+  - Session management: add session expiration handling in patient-picker with SessionExpiredError, onSessionExpired callback, and automatic redirect + UI for “Session Expired”.
+
+- 🔧 Chores & Improvements
+  - Version bumps: align versions across multiple packages/apps.
+  - Minor UI/logic tweaks in patient-picker (icon and hook usage refinements).
+  - Backend logging enhancements: add warnings/info when client not found, start scans, and log session match events for kc-session-resolver.
+  - Keycloak: update realm permissions in realm-export.json (view-users, query-users, manage-users, ensure manage-realm).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/653
+
+
 ## [0.1.0-alpha.202605041031.b5f9cef6] - 2026-05-04
 
 - ✨ Features
