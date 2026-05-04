@@ -3,6 +3,14 @@ import { getPickerParams } from "./picker-params"
 
 export type { Patient, Bundle }
 
+/** Thrown when the backend returns session_expired (401). */
+export class SessionExpiredError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'SessionExpiredError'
+  }
+}
+
 /**
  * Session-validated Patient search for the patient picker.
  *
@@ -26,6 +34,9 @@ async function fetchBundle(params: Record<string, string | number>): Promise<Bun
   const res = await fetch(getSearchUrl(params))
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }))
+    if (res.status === 401 && err.error === 'session_expired') {
+      throw new SessionExpiredError(err.error_description || 'Session expired')
+    }
     throw new Error(err.error_description || err.error || `HTTP ${res.status}`)
   }
   return res.json()

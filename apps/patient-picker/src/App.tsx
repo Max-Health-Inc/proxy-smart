@@ -1,8 +1,8 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { getPickerParams } from "@/lib/picker-params"
 import { PatientList } from "@/components/PatientList"
 import { formatHumanName, AppHeader, Button } from "@proxy-smart/shared-ui"
-import { UserSearch, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { UserSearch, AlertTriangle, CheckCircle2, LogIn } from "lucide-react"
 import type { Patient } from "@/lib/fhir-client"
 import "./index.css"
 
@@ -10,6 +10,15 @@ export default function App() {
   const params = useMemo(() => getPickerParams(), [])
   const [selected, setSelected] = useState<Patient | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [sessionExpired, setSessionExpired] = useState(false)
+
+  const handleSessionExpired = useCallback(() => {
+    setSessionExpired(true)
+    // Auto-redirect after a short delay so user sees the message
+    setTimeout(() => {
+      window.location.href = window.location.origin
+    }, 3000)
+  }, [])
 
   if (!params) {
     return (
@@ -22,6 +31,32 @@ export default function App() {
             <p className="text-muted-foreground">
               Missing session, code, or aud parameter. This page should only be accessed during a SMART authorization flow.
             </p>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (sessionExpired) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader title="Session Expired" icon={UserSearch} authenticated={false} maxWidth="max-w-2xl" />
+        <main className="max-w-2xl mx-auto px-4 py-12">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <AlertTriangle className="h-12 w-12 text-warning" />
+            <h2 className="text-xl font-semibold">Session Expired</h2>
+            <p className="text-muted-foreground">
+              Your authorization session has expired. Redirecting you to restart the login flow...
+            </p>
+            <Button
+              variant="default"
+              size="lg"
+              onClick={() => { window.location.href = window.location.origin }}
+              className="mt-2"
+            >
+              <LogIn className="h-4 w-4 mr-2" />
+              Return to Login
+            </Button>
           </div>
         </main>
       </div>
@@ -58,7 +93,7 @@ export default function App() {
           </p>
         </div>
 
-        <PatientList fhirBaseUrl={params.aud} onSelect={setSelected} selected={selected} />
+        <PatientList fhirBaseUrl={params.aud} onSelect={setSelected} selected={selected} onSessionExpired={handleSessionExpired} />
 
         {selected && (
           <div className="mt-6 flex flex-col gap-3">
