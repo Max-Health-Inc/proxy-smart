@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
 import { toast } from "sonner"
-import { searchPatients, listPatients, type Patient } from "@/lib/fhir-client"
+import { searchPatients, listPatients, SessionExpiredError, type Patient } from "@/lib/fhir-client"
 import { formatHumanName } from "@proxy-smart/shared-ui"
 import { Input, Button, Card, CardContent, Spinner, Badge, ScrollArea } from "@proxy-smart/shared-ui"
 import { Search, User, Calendar, Hash, ChevronLeft, ChevronRight } from "lucide-react"
@@ -11,9 +11,10 @@ interface PatientListProps {
   fhirBaseUrl: string
   onSelect: (patient: Patient) => void
   selected: Patient | null
+  onSessionExpired?: () => void
 }
 
-export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProps) {
+export function PatientList({ fhirBaseUrl, onSelect, selected, onSessionExpired }: PatientListProps) {
   const [query, setQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Patient[]>([])
   const [loading, setLoading] = useState(false)
@@ -36,13 +37,17 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
       setBrowseTotal(bundle.total ?? null)
       setBrowseOffset(offset)
     } catch (err) {
+      if (err instanceof SessionExpiredError) {
+        onSessionExpired?.()
+        return
+      }
       toast.error("Failed to load patients", {
         description: err instanceof Error ? err.message : "Unknown error"
       })
     } finally {
       setBrowseLoading(false)
     }
-  }, [fhirBaseUrl])
+  }, [fhirBaseUrl, onSessionExpired])
 
   // Load initial patient list on mount
   useEffect(() => {
@@ -63,13 +68,17 @@ export function PatientList({ fhirBaseUrl, onSelect, selected }: PatientListProp
       setSearchResults(results)
       setSearched(true)
     } catch (err) {
+      if (err instanceof SessionExpiredError) {
+        onSessionExpired?.()
+        return
+      }
       const msg = err instanceof Error ? err.message : "Search failed"
       setSearchResults([])
       toast.error("Patient search failed", { description: msg })
     } finally {
       setLoading(false)
     }
-  }, [query, fhirBaseUrl])
+  }, [query, fhirBaseUrl, onSessionExpired])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
