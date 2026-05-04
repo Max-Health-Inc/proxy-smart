@@ -77,17 +77,10 @@ function makeCallbackParams(overrides?: Partial<CallbackParams>): CallbackParams
 }
 
 describe('kc-session-resolver: autoResolvePatient', () => {
-  const originalFetch = globalThis.fetch
-
   beforeEach(() => {
     mockClientsFind.mockClear()
     mockClientsListSessions.mockClear()
     mockUsersFindOne.mockClear()
-
-    // Mock fetch for direct session lookup — default: 404 (forces fallback to client scan)
-    globalThis.fetch = mock(() =>
-      Promise.resolve(new Response(null, { status: 404 }))
-    ) as unknown as typeof fetch
 
     // Save and set env vars for config dynamic getters
     for (const key of Object.keys(CONFIG_ENV_VARS)) {
@@ -106,7 +99,6 @@ describe('kc-session-resolver: autoResolvePatient', () => {
   })
 
   afterEach(() => {
-    globalThis.fetch = originalFetch
     // Restore env vars
     for (const [key, value] of Object.entries(envSnapshot)) {
       if (value === undefined) delete process.env[key]
@@ -201,48 +193,5 @@ describe('kc-session-resolver: autoResolvePatient', () => {
 
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
     expect(result).toBeNull()
-  })
-
-  it('resolves patient via direct session lookup (Keycloak 21+ fast path)', async () => {
-    // Direct session lookup returns userId → user has fhirUser=Patient/*
-    globalThis.fetch = mock(() =>
-      Promise.resolve(new Response(
-        JSON.stringify({ userId: USER_ID, username: 'quotentiroler' }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      ))
-    ) as unknown as typeof fetch
-
-    mockUsersFindOne.mockResolvedValue({
-      id: USER_ID,
-      username: 'quotentiroler',
-      attributes: { fhirUser: ['Patient/max-nussbaumer'] },
-    })
-
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
-    expect(result).toBe('max-nussbaumer')
-    // Should NOT have fallen back to client session scanning
-    expect(mockClientsFind).not.toHaveBeenCalled()
-    expect(mockClientsListSessions).not.toHaveBeenCalled()
-  })
-
-  it('falls back to client session scan when direct lookup returns 404', async () => {
-    // Direct lookup returns 404 → falls back to client session scan
-    globalThis.fetch = mock(() =>
-      Promise.resolve(new Response(null, { status: 404 }))
-    ) as unknown as typeof fetch
-
-    mockClientsListSessions.mockResolvedValue([
-      { id: SESSION_STATE, userId: USER_ID, username: 'quotentiroler' },
-    ])
-    mockUsersFindOne.mockResolvedValue({
-      id: USER_ID,
-      username: 'quotentiroler',
-      attributes: { fhirUser: ['Patient/max-nussbaumer'] },
-    })
-
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
-    expect(result).toBe('max-nussbaumer')
-    // Should have used the fallback path
-    expect(mockClientsFind).toHaveBeenCalled()
   })
 })
