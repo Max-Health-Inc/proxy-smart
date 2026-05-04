@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605041920.0a9225e5] - 2026-05-04
+
+- ✨ Features
+  - 🧪 Introduced Kubernetes Admin client factory and dependency injection for admin interactions in kc-session-resolver (-admin factory, DI-based admin client retrieval, optional adminClientFactory parameter)  
+  - 🧰 Session handling enhancements: add session expiration handling in patient-picker (SessionExpiredError, onSessionExpired callback, automatic redirect and UI for "Session Expired")
+
+- 🔧 Chores & Improvements
+  - 🔧 Refactor: move admin client creation to kc-admin-factory and update tests to mock via factory; update imports and typing accordingly
+  - 🔧 Minor UI/logic tweaks in patient-picker (icon/log/icon usage adjustments, code cleanliness)
+  - 🔧 Version bumps across packages (0.1.0-alpha and related beta tag) to reflect pre-release changes
+  - 🔍 Logging improvements in kc-session-resolver (additional warnings/info about client not found, page scans, and session matches)
+
+- ⚠️ Breaking Changes
+  - None detected for end users; internal DI changes to admin client retrieval and test structure
+
+- 📚 Documentation
+  - None identified
+
+If you want a shorter version or a different grouping, tell me.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/657
+
+
 ## [0.1.0-alpha.202605041920.0a9225e5] - 2026-05-04
 
 - ✨ Features
