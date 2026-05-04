@@ -1213,7 +1213,10 @@
           "manage-clients",
           "view-clients",
           "create-client",
-          "manage-realm"
+          "manage-realm",
+          "view-users",
+          "query-users",
+          "manage-users"
         ]
       }
     },
