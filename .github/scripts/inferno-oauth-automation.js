@@ -155,10 +155,10 @@ async function waitForTestResult(sessionId, runId, browser, page) {
 
 /**
  * Handle intermediate Keycloak pages that may appear between login and redirect.
- * These include: "Update Account Information", OAuth consent grant, error pages.
+ * These include: "Update Account Information", OAuth consent grant, patient-picker, error pages.
  */
 async function handleKeycloakInterstitials(page) {
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   const infernoHost = new URL(INFERNO_URL).host;
 
   for (let i = 0; i < maxAttempts; i++) {
@@ -167,6 +167,14 @@ async function handleKeycloakInterstitials(page) {
     // Already redirected to Inferno — done
     if (currentUrl.includes(infernoHost)) {
       return;
+    }
+
+    // Handle Patient Picker page
+    if (currentUrl.includes('/apps/patient-picker') || currentUrl.includes('/patient-picker')) {
+      console.log('  Detected Patient Picker page — selecting a patient...');
+      await handlePatientPicker(page);
+      await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+      continue; // Re-check for more interstitials or final redirect
     }
 
     // Not on a Keycloak page — nothing to handle
@@ -243,6 +251,61 @@ async function handleKeycloakInterstitials(page) {
   }
 }
 
+/**
+ * Handle the Patient Picker page during the OAuth flow.
+ * The patient-picker is a React SPA that displays a list of patients.
+ * We need to select one and click "Continue" to complete the flow.
+ */
+async function handlePatientPicker(page) {
+  // Wait for the patient list to render (React hydration)
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+  // Give React a moment to render patient cards
+  await sleep(2000);
+
+  // Click the first patient card in the list
+  const patientCard = page.locator('.cursor-pointer').first();
+  if (await patientCard.count() > 0) {
+    await patientCard.click();
+    console.log('  Clicked first patient card');
+  } else {
+    // Fallback: try clicking any card-like element with patient info
+    const fallbackCard = page.locator('[data-patient-id], div:has(> .font-medium)').first();
+    if (await fallbackCard.count() > 0) {
+      await fallbackCard.click();
+      console.log('  Clicked patient card (fallback selector)');
+    } else {
+      console.error('  No patient cards found on page');
+      const content = await page.content();
+      console.error(`  Page content (first 500 chars): ${content.substring(0, 500)}`);
+      throw new Error('Patient Picker: no patient cards found');
+    }
+  }
+
+  // Wait for "Continue" button to appear after selection
+  await sleep(500);
+
+  // Click "Continue with selected patient" button
+  const continueBtn = page.getByRole('button', { name: /continue/i });
+  if (await continueBtn.count() > 0) {
+    await continueBtn.click();
+    console.log('  Clicked "Continue with selected patient" button');
+  } else {
+    // Fallback: look for submit buttons
+    const submitBtn = page.locator('button[type="submit"], button:has-text("Select"), button:has-text("Confirm")').first();
+    if (await submitBtn.count() > 0) {
+      await submitBtn.click();
+      console.log('  Clicked submit button (fallback)');
+    } else {
+      console.error('  No Continue/Submit button found after patient selection');
+      throw new Error('Patient Picker: no submit button found');
+    }
+  }
+
+  // Wait for the form submission and redirect
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+  console.log(`  Post patient-picker URL: ${page.url()}`);
+}
+
 async function handleOAuthFlow(page, authorizeUrl) {
   console.log('Handling OAuth flow...');
   console.log(`  Navigating to: ${authorizeUrl}`);
@@ -288,13 +351,13 @@ async function handleOAuthFlow(page, authorizeUrl) {
       await page.click('#kc-login, button[type="submit"], input[type="submit"]');
       console.log('  Clicked login button');
 
-      // Wait for navigation after login (could be Inferno redirect OR an intermediate Keycloak page)
+      // Wait for navigation after login (could be Inferno redirect OR an intermediate page)
       await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
       const infernoHost = new URL(INFERNO_URL).host;
       const postLoginUrl = page.url();
       console.log(`  Post-login URL: ${postLoginUrl}`);
 
-      // Handle intermediate Keycloak pages before expecting Inferno redirect
+      // Handle intermediate pages (patient-picker, consent, etc.) before expecting Inferno redirect
       await handleKeycloakInterstitials(page);
 
       // Now wait for redirect back to Inferno
@@ -302,6 +365,18 @@ async function handleOAuthFlow(page, authorizeUrl) {
         await page.waitForURL(url => url.toString().includes(infernoHost), { timeout: 30000 });
       }
       console.log('  ✓ OAuth flow completed, redirected back to Inferno');
+    } else if (currentUrl.includes('/apps/patient-picker') || currentUrl.includes('/patient-picker')) {
+      // Already logged in via SSO, landed directly on patient-picker
+      console.log('  On Patient Picker page (SSO session active), selecting patient...');
+      await handlePatientPicker(page);
+      await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+      
+      // After patient selection, wait for redirect to Inferno
+      const infernoHost = new URL(INFERNO_URL).host;
+      if (!page.url().includes(infernoHost)) {
+        await page.waitForURL(url => url.toString().includes(infernoHost), { timeout: 30000 });
+      }
+      console.log('  ✓ OAuth flow completed via patient-picker, redirected back to Inferno');
     } else {
       console.log(`  Not on Keycloak login page. Page title: ${await page.title()}`);
     }

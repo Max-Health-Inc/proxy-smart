@@ -12,13 +12,9 @@ import {
   SaveKeycloakConfigRequest,
   SaveKeycloakConfigResponse,
   KeycloakConfigResponse,
-  KeycloakFrontendUrlResponse,
-  SetKeycloakFrontendUrlRequest,
-  SetKeycloakFrontendUrlResponse,
   type SaveKeycloakConfigRequestType
 } from '@/schemas/admin/keycloak'
 import { ErrorResponse } from '@/schemas'
-import { createAdminClient } from '@/lib/keycloak-plugin'
 
 /**
  * Keycloak Configuration Management
@@ -264,104 +260,6 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
     },
     response: {
       200: SaveKeycloakConfigResponse
-    }
-  })
-
-  // Get current Keycloak realm frontend URL
-  .get('/frontend-url', async ({ headers, set }) => {
-    const token = extractBearerToken(headers)
-    if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
-
-    try {
-      const kcAdmin = await createAdminClient(token)
-      const realm = await kcAdmin.realms.findOne({ realm: config.keycloak.realm! })
-
-      if (!realm) {
-        set.status = 404
-        return { frontendUrl: null, effectiveTokenEndpoint: null, realm: config.keycloak.realm }
-      }
-
-      const frontendUrl = (realm.attributes as Record<string, string>)?.frontendUrl || null
-      const effectiveBase = frontendUrl || config.keycloak.publicUrl || config.keycloak.baseUrl
-      const effectiveTokenEndpoint = effectiveBase
-        ? `${effectiveBase}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-        : null
-
-      return { frontendUrl, effectiveTokenEndpoint, realm: config.keycloak.realm }
-    } catch (error) {
-      logger.admin.error('Failed to fetch Keycloak frontend URL', { error })
-      set.status = 500
-      return { frontendUrl: null, effectiveTokenEndpoint: null, realm: config.keycloak.realm }
-    }
-  }, {
-    detail: {
-      summary: 'Get Keycloak Frontend URL',
-      description: 'Get the realm frontend URL that Keycloak uses as its canonical base for token endpoint audience validation. Backend Services clients must set JWT aud to match this.',
-      tags: ['admin']
-    },
-    response: {
-      200: KeycloakFrontendUrlResponse,
-      401: ErrorResponse
-    }
-  })
-
-  // Set Keycloak realm frontend URL
-  .post('/frontend-url', async ({ body, headers, set }) => {
-    const token = extractBearerToken(headers)
-    if (!token) { set.status = 401; return { success: false, error: 'Bearer token required' } }
-
-    try {
-      const kcAdmin = await createAdminClient(token)
-      const realmName = config.keycloak.realm!
-      const realm = await kcAdmin.realms.findOne({ realm: realmName })
-
-      if (!realm) {
-        set.status = 404
-        return { success: false, error: `Realm '${realmName}' not found` }
-      }
-
-      // Update the realm's attributes.frontendUrl
-      const attributes = (realm.attributes || {}) as Record<string, string>
-      if (body.frontendUrl) {
-        attributes.frontendUrl = body.frontendUrl
-      } else {
-        delete attributes.frontendUrl
-      }
-
-      await kcAdmin.realms.update({ realm: realmName }, {
-        ...realm,
-        attributes
-      })
-
-      const effectiveBase = body.frontendUrl || config.keycloak.publicUrl || config.keycloak.baseUrl
-      logger.admin.info('Keycloak frontend URL updated', {
-        realm: realmName,
-        frontendUrl: body.frontendUrl || '(cleared)',
-        effectiveTokenEndpoint: `${effectiveBase}/realms/${realmName}/protocol/openid-connect/token`
-      })
-
-      return {
-        success: true,
-        message: body.frontendUrl
-          ? `Frontend URL set to ${body.frontendUrl}. Keycloak will now accept JWTs with aud matching this base URL.`
-          : 'Frontend URL cleared. Keycloak will use its internal URL for audience validation.',
-        frontendUrl: body.frontendUrl || null
-      }
-    } catch (error) {
-      logger.admin.error('Failed to set Keycloak frontend URL', { error })
-      set.status = 500
-      return { success: false, error: error instanceof Error ? error.message : 'Failed to update frontend URL' }
-    }
-  }, {
-    body: SetKeycloakFrontendUrlRequest,
-    detail: {
-      summary: 'Set Keycloak Frontend URL',
-      description: 'Configure the realm frontend URL so Keycloak accepts Backend Services JWT assertions with aud matching the proxy token endpoint. This enables transparent pass-through of client_credentials + private_key_jwt requests.',
-      tags: ['admin']
-    },
-    response: {
-      200: SetKeycloakFrontendUrlResponse,
-      401: ErrorResponse
     }
   })
 

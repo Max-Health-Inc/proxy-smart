@@ -5,31 +5,71 @@
  * Used during SMART callback to determine if the logged-in user is a Patient
  * (and thus doesn't need the patient picker).
  *
- * Strategy: List active user-sessions on the OIDC client, find the one matching
- * the session_state from the callback, then look up the user's fhirUser attribute.
- *
- * Note: Keycloak's admin REST API has no GET /sessions/{id} endpoint — only DELETE.
- * We use GET /clients/{id}/user-sessions instead and match by session ID.
+ * Strategy:
+ *   1. Direct session lookup via GET /admin/realms/{realm}/sessions/{id} (single call, Keycloak 21+)
+ *   2. Fallback: scan active user-sessions on the OIDC client (paginated)
+ *   3. Look up the user's fhirUser attribute → if Patient/*, return patient ID
  */
 
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import { extractPatientFromFhirUser, type CallbackParams, type LaunchSession } from '@proxy-smart/auth'
 import { logger } from '@/lib/logger'
+import { config } from '@/config'
 import { getAdminClient as defaultGetAdminClient } from '@/lib/kc-admin-factory'
 
 /** Factory function type for obtaining an authenticated admin client. */
 export type AdminClientFactory = () => Promise<KcAdminClient | null>
 
 /**
- * Find the userId that owns a given session_state by scanning the OIDC client's
- * active user-sessions. Returns null if not found.
+ * Direct session lookup via Keycloak REST API.
+ * Uses GET /admin/realms/{realm}/sessions/{session-id} — returns the userId directly.
+ * Available in Keycloak 21+. Falls back to null on 404 or error.
  */
-async function findUserIdBySession(
+async function findUserIdByDirectLookup(
+  admin: KcAdminClient,
+  sessionState: string,
+): Promise<string | null> {
+  const realm = config.keycloak.realm
+  const baseUrl = config.keycloak.baseUrl
+  if (!realm || !baseUrl) return null
+
+  try {
+    const resp = await fetch(`${baseUrl}/admin/realms/${realm}/sessions/${sessionState}`, {
+      headers: { Authorization: `Bearer ${admin.accessToken}` },
+    })
+    if (!resp.ok) {
+      logger.auth.debug('autoResolvePatient: direct session lookup returned non-OK', {
+        status: resp.status,
+        sessionState: sessionState.slice(0, 8) + '...',
+      })
+      return null
+    }
+    const data = await resp.json() as { userId?: string; username?: string }
+    if (data.userId) {
+      logger.auth.info('autoResolvePatient: direct session lookup matched', {
+        userId: data.userId,
+        username: data.username,
+      })
+      return data.userId
+    }
+    return null
+  } catch (err) {
+    logger.auth.debug('autoResolvePatient: direct session lookup failed', {
+      error: err instanceof Error ? err.message : String(err),
+    })
+    return null
+  }
+}
+
+/**
+ * Fallback: find the userId by scanning the OIDC client's active user-sessions.
+ * Used when direct session lookup is unavailable (older Keycloak versions).
+ */
+async function findUserIdByClientSessions(
   admin: KcAdminClient,
   clientId: string,
   sessionState: string,
 ): Promise<string | null> {
-  // Resolve the OIDC client's internal Keycloak UUID
   const clients = await admin.clients.find({ clientId, max: 1 })
   const kcClient = clients?.[0]
   if (!kcClient?.id) {
@@ -37,16 +77,9 @@ async function findUserIdBySession(
     return null
   }
 
-  logger.auth.info('autoResolvePatient: searching sessions on client', {
-    clientId,
-    kcClientUUID: kcClient.id,
-    sessionState: sessionState.slice(0, 8) + '...',
-  })
-
-  // Page through active sessions (most recent first) looking for our session_state
   const pageSize = 50
   let offset = 0
-  const maxPages = 10 // safety limit: 500 sessions max
+  const maxPages = 10
 
   for (let page = 0; page < maxPages; page++) {
     const sessions = await admin.clients.listSessions({
@@ -54,31 +87,23 @@ async function findUserIdBySession(
       first: offset,
       max: pageSize,
     })
-    if (!sessions || sessions.length === 0) {
-      logger.auth.info('autoResolvePatient: no sessions found on page', { page, offset })
-      break
-    }
-
-    logger.auth.info('autoResolvePatient: scanning page', {
-      page,
-      sessionCount: sessions.length,
-      sessionIds: sessions.map(s => s.id?.slice(0, 8)).join(','),
-    })
+    if (!sessions || sessions.length === 0) break
 
     const match = sessions.find(s => s.id === sessionState)
     if (match?.userId) {
-      logger.auth.info('autoResolvePatient: session matched', {
+      logger.auth.info('autoResolvePatient: client session scan matched', {
         userId: match.userId,
         username: match.username,
+        page,
       })
       return match.userId
     }
 
-    if (sessions.length < pageSize) break // last page
+    if (sessions.length < pageSize) break
     offset += pageSize
   }
 
-  logger.auth.warn('autoResolvePatient: session_state not found in client sessions', {
+  logger.auth.warn('autoResolvePatient: session_state not found via client session scan', {
     clientId,
     sessionState: sessionState.slice(0, 8) + '...',
   })
@@ -113,8 +138,14 @@ export async function autoResolvePatient(
       return null
     }
 
-    // Find the userId that owns this session
-    const userId = await findUserIdBySession(admin, session.clientId, sessionState)
+    // Try direct session lookup first (single HTTP call, Keycloak 21+)
+    let userId = await findUserIdByDirectLookup(admin, sessionState)
+
+    // Fallback: scan client sessions (paginated, works on all Keycloak versions)
+    if (!userId) {
+      userId = await findUserIdByClientSessions(admin, session.clientId, sessionState)
+    }
+
     if (!userId) return null
 
     // Look up the user's fhirUser attribute
