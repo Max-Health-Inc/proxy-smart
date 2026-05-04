@@ -105,6 +105,7 @@ export default function App() {
               </span>
             </div>
             <Button
+              data-testid="patient-picker-submit"
               size="lg"
               className="w-full"
               onClick={handleSubmit}

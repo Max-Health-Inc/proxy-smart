@@ -212,6 +212,8 @@ function PatientRow({
 
   return (
     <Card
+      data-testid="patient-row"
+      data-patient-id={patient.id}
       className={`cursor-pointer transition-colors hover:bg-accent/50 ${
         isSelected ? "border-primary bg-accent/30" : ""
       }`}
