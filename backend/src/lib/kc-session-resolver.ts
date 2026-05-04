@@ -12,27 +12,10 @@
  * We use GET /clients/{id}/user-sessions instead and match by session ID.
  */
 
-import KcAdminClient from '@keycloak/keycloak-admin-client'
-import { config } from '@/config'
+import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import { extractPatientFromFhirUser, type CallbackParams, type LaunchSession } from '@proxy-smart/auth'
 import { logger } from '@/lib/logger'
-
-/** Authenticate the admin client (client_credentials grant). */
-async function getAdminClient(): Promise<KcAdminClient | null> {
-  if (!config.keycloak.isConfigured) return null
-  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) return null
-
-  const admin = new KcAdminClient({
-    baseUrl: config.keycloak.baseUrl!,
-    realmName: config.keycloak.realm!,
-  })
-  await admin.auth({
-    grantType: 'client_credentials',
-    clientId: config.keycloak.adminClientId,
-    clientSecret: config.keycloak.adminClientSecret,
-  })
-  return admin
-}
+import { getAdminClient } from '@/lib/kc-admin-factory'
 
 /**
  * Find the userId that owns a given session_state by scanning the OIDC client's

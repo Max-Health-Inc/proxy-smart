@@ -52,7 +52,10 @@ mock.module('@/lib/logger', () => ({
 }))
 
 // ── Mock KcAdminClient ──────────────────────────────────────────────────
-const mockAuth = mock(() => Promise.resolve())
+// NOTE: mock.module for npm packages like @keycloak/keycloak-admin-client has
+// inconsistent behaviour across platforms in bun (works on Windows, fails on
+// Linux CI). Instead, we mock our own @/lib/kc-admin-factory module which
+// bun handles reliably on all platforms.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockClientsFind = mock((): Promise<any[]> => Promise.resolve([]))
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -60,17 +63,18 @@ const mockClientsListSessions = mock((): Promise<any[]> => Promise.resolve([]))
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockUsersFindOne = mock((): Promise<any> => Promise.resolve(null))
 
-mock.module('@keycloak/keycloak-admin-client', () => ({
-  default: class MockKcAdminClient {
-    auth = mockAuth
-    clients = {
-      find: mockClientsFind,
-      listSessions: mockClientsListSessions,
-    }
-    users = {
-      findOne: mockUsersFindOne,
-    }
+const mockAdminClient = {
+  clients: {
+    find: mockClientsFind,
+    listSessions: mockClientsListSessions,
   },
+  users: {
+    findOne: mockUsersFindOne,
+  },
+}
+
+mock.module('@/lib/kc-admin-factory', () => ({
+  getAdminClient: () => Promise.resolve(mockAdminClient),
 }))
 
 // Import AFTER mocks are set up
@@ -105,7 +109,6 @@ function makeCallbackParams(overrides?: Partial<CallbackParams>): CallbackParams
 describe('kc-session-resolver: autoResolvePatient', () => {
   beforeEach(() => {
     logMessages.length = 0
-    mockAuth.mockClear()
     mockClientsFind.mockClear()
     mockClientsListSessions.mockClear()
     mockUsersFindOne.mockClear()
@@ -137,7 +140,8 @@ describe('kc-session-resolver: autoResolvePatient', () => {
   it('returns null when session_state is missing from params', async () => {
     const result = await autoResolvePatient(makeSession(), makeCallbackParams({ session_state: undefined }))
     expect(result).toBeNull()
-    expect(mockAuth).not.toHaveBeenCalled()
+    // Admin client should not be called when there's no session_state
+    expect(mockClientsFind).not.toHaveBeenCalled()
   })
 
   it('returns null when OIDC client is not found in Keycloak', async () => {
