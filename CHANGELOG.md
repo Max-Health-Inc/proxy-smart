@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605032340.faa198e5] - 2026-05-04
+
+- 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605032340.faa198e5 across multiple apps/packages (consent-app, dtr-app, patient-picker, patient-portal, patient-portal/package, smart-dicom-template, ui, eslint-config, auth, testing/e2e)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/651
+
+
 ## [0.1.0-alpha.202605032311.11fc5699] - 2026-05-03
 
 - ✨ Features
