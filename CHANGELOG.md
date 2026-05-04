@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605042239.042641ea] - 2026-05-04
+
+- ✨ Features: Stabilized patient selection flow with robust selector based on data-testid, improving test reliability
+- 🔧 Chores & Improvements: Minor UI/UX test accessibility improvements (data-testid additions for PatientRow and submit button)
+- 🔧 Chores & Improvements: Version bumps across apps, packages, eslint config, and testing to 0.1.0-alpha.202605042239.042641ea
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/660
+
+
 ## [0.1.0-alpha.202605042113.61bf4e35] - 2026-05-04
 
 - 🔧 Chores & Improvements: Version bump across multiple packages
