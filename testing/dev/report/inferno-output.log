@@ -19,7 +19,7 @@ Checking Inferno availability...
 ✓ Inferno is ready
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: 4mrVtk9756A
+✓ Created test session: 8frb50aeUXo
 
 === Running Standalone Launch Tests ===
 
@@ -32,8 +32,8 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: e02fce69-299b-4e62-8347-7d57555ffdd3
-Waiting for test run e02fce69-299b-4e62-8347-7d57555ffdd3 to complete (timeout: 3 minutes)...
+✓ Started test run: 2f5baf9f-8442-433c-b7cf-5448a2fa1a72
+Waiting for test run 2f5baf9f-8442-433c-b7cf-5448a2fa1a72 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: waiting
   Test is waiting for user action (OAuth flow, attempt 1/3)...
@@ -41,37 +41,52 @@ Waiting for test run e02fce69-299b-4e62-8347-7d57555ffdd3 to complete (timeout: 
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A8445%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=f8f03bc9-13c0-4077-8bc2-308ebf210851&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Current URL after navigation: http://localhost:8080/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A8445%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=cf905ec6-36c7-454a-808a-320c830b7c6d&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   On Keycloak login page, entering credentials...
   Filled username
   Filled password
   Clicked login button
-  Post-login URL: http://localhost:8445/apps/patient-picker/?session=f8f03bc9-13c0-4077-8bc2-308ebf210851&code=b633a4ed-ad2a-ee77-64b3-632e8492d492.JpJdkPobvy1Dp_OS2cC_S2k4.9f308c37-59eb-4728-9708-d20311d318de&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
-  OAuth flow error: page.waitForURL: Timeout 30000ms exceeded.
-=========================== logs ===========================
-waiting for navigation until "load"
-============================================================
-  Page title: Select Patient — Proxy Smart
-  Page URL: http://localhost:8445/apps/patient-picker/?session=f8f03bc9-13c0-4077-8bc2-308ebf210851&code=b633a4ed-ad2a-ee77-64b3-632e8492d492.JpJdkPobvy1Dp_OS2cC_S2k4.9f308c37-59eb-4728-9708-d20311d318de&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Post-login URL: http://localhost:8445/apps/patient-picker/?session=cf905ec6-36c7-454a-808a-320c830b7c6d&code=150cdbbb-606a-4539-8469-0571d7f89ab3.YYSY-wORRRtK3Yort0OskmaN.851e7cf8-6866-4f7f-b539-85ea7285060e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Detected Patient Picker page — selecting a patient...
+  Clicked first patient card
+  No Continue/Submit button found after patient selection
+  OAuth flow error: Patient Picker: no submit button found
+  Page title: Apps — Proxy Smart
+  Page URL: http://localhost:8445/apps
   Page content (first 1000 chars): <!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Patient — Proxy Smart</title>
-    <script type="module" crossorigin="" src="/apps/patient-picker/assets/index-CyY7VgAa.js"></script>
-    <link rel="stylesheet" crossorigin="" href="/apps/patient-picker/assets/index-DwVxzbOg.css">
-  <style type="text/css">[data-sonner-toaster][dir=ltr],html[dir=ltr]{--toast-icon-margin-start:-3px;--toast-icon-margin-end:4px;--toast-svg-margin-start:-1px;--toast-svg-margin-end:0px;--toast-button-margin-start:auto;--toast-button-margin-end:0;--toast-close-button-start:0;--toast-close-button-end:unset;--toast-close-button-transform:translate(-35%, -35%)}[data-sonner-toaster][dir=rtl],html[dir=rtl]{--toast-icon-margin-start:4px;--toast-icon-margin-end:-3px;--toast-svg-margin-start:0px;--toast-svg-margin-end:-1px;--toast-button-margin-st
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg">
+  <title>Apps — Proxy Smart</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --fg: #111; --muted: #888; --border: #e5e5e5;
+      --primary: #00d294;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    html { min-height: 100%; }
+    body {
+      font-family: var(--font); color: var(--fg); background: #fafafa;
+      min-height: 100vh; display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Top bar (matches AppHeader from shared-ui) ── */
+    header {
+      background: #fff; border-bottom: 1px solid var(--border);
+    }
+    .bar {
   Screenshot saved to /tmp/oauth-error.png
-  OAuth flow failed: page.waitForURL: Timeout 30000ms exceeded.
-=========================== logs ===========================
-waiting for navigation until "load"
-============================================================
+  OAuth flow failed: Patient Picker: no submit button found
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Found 3 waiting result(s) but no OAuth URL found
@@ -83,138 +98,104 @@ waiting for navigation until "load"
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256.","type":"in
-  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=eed7d24c-93e0-41a0-8fcd-0a01110675d1&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=VgPvxFRj9szf2JfBobxBG0MIjIzChyZ5aEz39ELB3Ro&code_challenge_method=S256
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: http://localhost:8445/apps/patient-picker/?session=9845908f-ccdd-49b7-af5c-d9e134d40fc9&code=bf3de767-163b-5d1a-6fd7-8b934613f951.JpJdkPobvy1Dp_OS2cC_S2k4.9f308c37-59eb-4728-9708-d20311d318de&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
-  Not on Keycloak login page. Page title: Select Patient — Proxy Smart
-  OAuth flow completed, continuing to poll...
+  Current URL after navigation: http://localhost:8445/apps/patient-picker/?session=107e8b03-046a-43e8-a946-8319154afa1a&code=3dfb3ab3-8b61-dc75-5e3a-05dcbb4a53a2.YYSY-wORRRtK3Yort0OskmaN.851e7cf8-6866-4f7f-b539-85ea7285060e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  On Patient Picker page (SSO session active), selecting patient...
+  Clicked first patient card
+  No Continue/Submit button found after patient selection
+  OAuth flow error: Patient Picker: no submit button found
+  Page title: Apps — Proxy Smart
+  Page URL: http://localhost:8445/apps
+  Page content (first 1000 chars): <!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg">
+  <title>Apps — Proxy Smart</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --fg: #111; --muted: #888; --border: #e5e5e5;
+      --primary: #00d294;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    html { min-height: 100%; }
+    body {
+      font-family: var(--font); color: var(--fg); background: #fafafa;
+      min-height: 100vh; display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Top bar (matches AppHeader from shared-ui) ── */
+    header {
+      background: #fff; border-bottom: 1px solid var(--border);
+    }
+    .bar {
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: Patient Picker: no submit button found
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
   Progress: 5 passed, 0 failed, 3 waiting, 9 total
   [Poll #4] Status: waiting
-  Test is waiting (OAuth already completed)
+  Waiting 30s before OAuth retry (backoff)...
+  Test is waiting for user action (OAuth flow, attempt 3/3)...
+  Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
+  result_message (first 500 chars): 
+### Standalone Launch
+
+[Follow this link to authorize with the SMART server](http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256.","type":"in
+  Found OAuth URL in result_message: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256
+Handling OAuth flow...
+  Navigating to: http://localhost:8445/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=159b7bd6-8ef7-456e-b874-973cffb435b2&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=G05NuD4F5l53uT5Febd06IP9RHNlsob46QhzK1vfSdc&code_challenge_method=S256
+  Navigation response status: 200
+  Current URL after navigation: http://localhost:8445/apps/patient-picker/?session=c3d5b8fb-8dd5-4389-85ab-c969e86d2753&code=add609b9-3e6c-c35b-b82c-e2eec5cab3ed.YYSY-wORRRtK3Yort0OskmaN.851e7cf8-6866-4f7f-b539-85ea7285060e&aud=http%3A%2F%2Flocalhost%3A8445%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  On Patient Picker page (SSO session active), selecting patient...
+  Clicked first patient card
+  No Continue/Submit button found after patient selection
+  OAuth flow error: Patient Picker: no submit button found
+  Page title: Apps — Proxy Smart
+  Page URL: http://localhost:8445/apps
+  Page content (first 1000 chars): <!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg">
+  <title>Apps — Proxy Smart</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --fg: #111; --muted: #888; --border: #e5e5e5;
+      --primary: #00d294;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    html { min-height: 100%; }
+    body {
+      font-family: var(--font); color: var(--fg); background: #fafafa;
+      min-height: 100vh; display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button { font-family: inherit; cursor: pointer; }
+
+    /* ── Top bar (matches AppHeader from shared-ui) ── */
+    header {
+      background: #fff; border-bottom: 1px solid var(--border);
+    }
+    .bar {
+  Screenshot saved to /tmp/oauth-error.png
+  OAuth flow failed: Patient Picker: no submit button found
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
+  Found 3 waiting result(s) but no OAuth URL found
   Progress: 5 passed, 0 failed, 3 waiting, 9 total
   [Poll #5] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #6] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #7] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #8] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #9] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #10] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #11] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #12] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #13] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #14] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #15] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #16] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #17] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #18] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #19] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #20] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #21] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #22] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #23] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #24] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #25] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #26] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #27] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #28] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #29] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #30] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #31] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #32] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #33] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #34] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #35] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #36] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #37] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #38] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #39] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #40] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #41] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #42] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #43] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #44] Status: waiting
-  Test is waiting (OAuth already completed)
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-Standalone Launch tests error: Test run timed out
-Test execution failed: Test run timed out
+  OAuth failed after 3 attempts — aborting wait
+Standalone Launch tests error: OAuth automation failed after 3 attempts
+Test execution failed: OAuth automation failed after 3 attempts
