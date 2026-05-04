@@ -262,44 +262,29 @@ async function handlePatientPicker(page) {
   // Give React a moment to render patient cards
   await sleep(2000);
 
-  // Click the first patient card in the list
-  const patientCard = page.locator('.cursor-pointer').first();
-  if (await patientCard.count() > 0) {
-    await patientCard.click();
-    console.log('  Clicked first patient card');
-  } else {
-    // Fallback: try clicking any card-like element with patient info
-    const fallbackCard = page.locator('[data-patient-id], div:has(> .font-medium)').first();
-    if (await fallbackCard.count() > 0) {
-      await fallbackCard.click();
-      console.log('  Clicked patient card (fallback selector)');
-    } else {
-      console.error('  No patient cards found on page');
-      const content = await page.content();
-      console.error(`  Page content (first 500 chars): ${content.substring(0, 500)}`);
-      throw new Error('Patient Picker: no patient cards found');
-    }
+  const patientRows = page.locator('[data-testid="patient-row"]');
+  await patientRows.first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+
+  if (await patientRows.count() === 0) {
+    console.error('  No patient rows found on page');
+    const content = await page.content();
+    console.error(`  Page content (first 500 chars): ${content.substring(0, 500)}`);
+    throw new Error('Patient Picker: no patient rows found');
   }
 
-  // Wait for "Continue" button to appear after selection
-  await sleep(500);
+  await patientRows.first().click();
+  console.log('  Clicked first patient row');
 
-  // Click "Continue with selected patient" button
-  const continueBtn = page.getByRole('button', { name: /continue/i });
-  if (await continueBtn.count() > 0) {
-    await continueBtn.click();
-    console.log('  Clicked "Continue with selected patient" button');
-  } else {
-    // Fallback: look for submit buttons
-    const submitBtn = page.locator('button[type="submit"], button:has-text("Select"), button:has-text("Confirm")').first();
-    if (await submitBtn.count() > 0) {
-      await submitBtn.click();
-      console.log('  Clicked submit button (fallback)');
-    } else {
-      console.error('  No Continue/Submit button found after patient selection');
-      throw new Error('Patient Picker: no submit button found');
-    }
+  const continueBtn = page.locator('[data-testid="patient-picker-submit"]');
+  await continueBtn.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+
+  if (await continueBtn.count() === 0) {
+    console.error('  No patient submit button found after selection');
+    throw new Error('Patient Picker: no submit button found');
   }
+
+  await continueBtn.click();
+  console.log('  Clicked patient picker submit button');
 
   // Wait for the form submission and redirect
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
