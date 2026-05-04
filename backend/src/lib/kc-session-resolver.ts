@@ -15,7 +15,10 @@
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import { extractPatientFromFhirUser, type CallbackParams, type LaunchSession } from '@proxy-smart/auth'
 import { logger } from '@/lib/logger'
-import { getAdminClient } from '@/lib/kc-admin-factory'
+import { getAdminClient as defaultGetAdminClient } from '@/lib/kc-admin-factory'
+
+/** Factory function type for obtaining an authenticated admin client. */
+export type AdminClientFactory = () => Promise<KcAdminClient | null>
 
 /**
  * Find the userId that owns a given session_state by scanning the OIDC client's
@@ -90,6 +93,7 @@ async function findUserIdBySession(
 export async function autoResolvePatient(
   session: LaunchSession,
   params: CallbackParams,
+  adminClientFactory: AdminClientFactory = defaultGetAdminClient,
 ): Promise<string | null> {
   const sessionState = params.session_state
   if (!sessionState) {
@@ -103,7 +107,7 @@ export async function autoResolvePatient(
   })
 
   try {
-    const admin = await getAdminClient()
+    const admin = await adminClientFactory()
     if (!admin) {
       logger.auth.warn('autoResolvePatient: admin client not available (credentials missing?)')
       return null
