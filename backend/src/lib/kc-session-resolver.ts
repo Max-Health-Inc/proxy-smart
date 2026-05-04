@@ -47,9 +47,15 @@ async function findUserIdBySession(
   const clients = await admin.clients.find({ clientId, max: 1 })
   const kcClient = clients?.[0]
   if (!kcClient?.id) {
-    logger.auth.debug('autoResolvePatient: OIDC client not found in Keycloak', { clientId })
+    logger.auth.warn('autoResolvePatient: OIDC client not found in Keycloak', { clientId })
     return null
   }
+
+  logger.auth.info('autoResolvePatient: searching sessions on client', {
+    clientId,
+    kcClientUUID: kcClient.id,
+    sessionState: sessionState.slice(0, 8) + '...',
+  })
 
   // Page through active sessions (most recent first) looking for our session_state
   const pageSize = 50
@@ -62,16 +68,31 @@ async function findUserIdBySession(
       first: offset,
       max: pageSize,
     })
-    if (!sessions || sessions.length === 0) break
+    if (!sessions || sessions.length === 0) {
+      logger.auth.info('autoResolvePatient: no sessions found on page', { page, offset })
+      break
+    }
+
+    logger.auth.info('autoResolvePatient: scanning page', {
+      page,
+      sessionCount: sessions.length,
+      sessionIds: sessions.map(s => s.id?.slice(0, 8)).join(','),
+    })
 
     const match = sessions.find(s => s.id === sessionState)
-    if (match?.userId) return match.userId
+    if (match?.userId) {
+      logger.auth.info('autoResolvePatient: session matched', {
+        userId: match.userId,
+        username: match.username,
+      })
+      return match.userId
+    }
 
     if (sessions.length < pageSize) break // last page
     offset += pageSize
   }
 
-  logger.auth.debug('autoResolvePatient: session_state not found in client sessions', {
+  logger.auth.warn('autoResolvePatient: session_state not found in client sessions', {
     clientId,
     sessionState: sessionState.slice(0, 8) + '...',
   })
@@ -88,11 +109,22 @@ export async function autoResolvePatient(
   params: CallbackParams,
 ): Promise<string | null> {
   const sessionState = params.session_state
-  if (!sessionState) return null
+  if (!sessionState) {
+    logger.auth.info('autoResolvePatient: no session_state in callback params — skipping')
+    return null
+  }
+
+  logger.auth.info('autoResolvePatient: attempting resolution', {
+    clientId: session.clientId,
+    sessionState: sessionState.slice(0, 8) + '...',
+  })
 
   try {
     const admin = await getAdminClient()
-    if (!admin) return null
+    if (!admin) {
+      logger.auth.warn('autoResolvePatient: admin client not available (credentials missing?)')
+      return null
+    }
 
     // Find the userId that owns this session
     const userId = await findUserIdBySession(admin, session.clientId, sessionState)
@@ -101,16 +133,21 @@ export async function autoResolvePatient(
     // Look up the user's fhirUser attribute
     const user = await admin.users.findOne({ id: userId })
     const fhirUser = user?.attributes?.fhirUser?.[0]
-    if (!fhirUser) return null
+    if (!fhirUser) {
+      logger.auth.info('autoResolvePatient: user has no fhirUser attribute', { userId })
+      return null
+    }
 
     // Store fhirUser on the session so the fallback path in callback-handler can use it
     if (!session.fhirUser) {
       session.fhirUser = fhirUser
     }
 
-    return extractPatientFromFhirUser(fhirUser)
+    const patient = extractPatientFromFhirUser(fhirUser)
+    logger.auth.info('autoResolvePatient: resolved', { fhirUser, patient })
+    return patient
   } catch (err) {
-    logger.auth.debug('Auto-resolve patient from session failed (non-fatal)', { error: err })
+    logger.auth.warn('Auto-resolve patient from session failed (non-fatal)', { error: err })
     return null
   }
 }
