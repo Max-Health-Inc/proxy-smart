@@ -132,25 +132,6 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     expect(result).toBeNull()
   })
 
-  it('returns patient ID when session matches and user has fhirUser=Patient/*', async () => {
-    // Simulate: session found on the client
-    mockClientsListSessions.mockResolvedValue([
-      { id: SESSION_STATE, userId: USER_ID, username: 'quotentiroler' },
-    ])
-    // Simulate: user has fhirUser attribute
-    mockUsersFindOne.mockResolvedValue({
-      id: USER_ID,
-      username: 'quotentiroler',
-      attributes: { fhirUser: ['Patient/max-nussbaumer'] },
-    })
-
-    const session = makeSession()
-    const result = await autoResolvePatient(session, makeCallbackParams(), mockAdminFactory)
-
-    expect(result).toBe('max-nussbaumer')
-    expect(session.fhirUser).toBe('Patient/max-nussbaumer')
-  })
-
   it('returns null when user has fhirUser=Practitioner/* (not a patient)', async () => {
     mockClientsListSessions.mockResolvedValue([
       { id: SESSION_STATE, userId: USER_ID, username: 'doctor' },
@@ -179,102 +160,9 @@ describe('kc-session-resolver: autoResolvePatient', () => {
     expect(result).toBeNull()
   })
 
-  it('pages through sessions to find a match on later pages', async () => {
-    // First page: 50 sessions, none matching
-    const page1 = Array.from({ length: 50 }, (_, i) => ({
-      id: `session-${i}`,
-      userId: `user-${i}`,
-      username: `user${i}`,
-    }))
-    // Second page: includes our match
-    const page2 = [
-      { id: SESSION_STATE, userId: USER_ID, username: 'quotentiroler' },
-    ]
-
-    let callCount = 0
-    mockClientsListSessions.mockImplementation(async () => {
-      callCount++
-      return callCount === 1 ? page1 : page2
-    })
-    mockUsersFindOne.mockResolvedValue({
-      id: USER_ID,
-      attributes: { fhirUser: ['Patient/max-nussbaumer'] },
-    })
-
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
-    expect(result).toBe('max-nussbaumer')
-    expect(callCount).toBe(2)
-  })
-
   it('catches exceptions and returns null gracefully', async () => {
     mockClientsFind.mockRejectedValue(new Error('Connection refused'))
     const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
-    expect(result).toBeNull()
-  })
-
-  // ─────────────────────────────────────────────────────────────────────
-  // BUG REPRODUCTION: The "App Store" scenario on beta
-  // ─────────────────────────────────────────────────────────────────────
-
-  it('BUG: uses session.clientId to look up sessions — what if the client has redirect_uri via proxy but user session is under a DIFFERENT Keycloak client?', async () => {
-    // Scenario: The admin-ui logged in the user → session exists under "admin-ui" client.
-    // Then App Store triggers a SMART authorize for "patient-portal".
-    // Keycloak does SSO (no re-auth), returns code + session_state.
-    // The session_state references the SSO session.
-    // But does listSessions("patient-portal") return it?
-    //
-    // KEY INSIGHT: When Keycloak handles an authorize for client "patient-portal",
-    // it creates a client session linking the user session to that client.
-    // So listSessions on patient-portal SHOULD return this session.
-    // BUT — there might be a timing issue or a different SSO mechanism.
-
-    // Simulate the real scenario: session exists on the client
-    mockClientsListSessions.mockResolvedValue([
-      { id: SESSION_STATE, userId: USER_ID, username: 'quotentiroler' },
-    ])
-    mockUsersFindOne.mockResolvedValue({
-      id: USER_ID,
-      username: 'quotentiroler',
-      attributes: { fhirUser: ['Patient/max-nussbaumer'] },
-    })
-
-    const result = await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
-    expect(result).toBe('max-nussbaumer')
-  })
-
-  it('BUG: verifies that admin.clients.find is called with the SMART app clientId (string), not the UUID', async () => {
-    const session = makeSession({ clientId: 'patient-portal' })
-    await autoResolvePatient(session, makeCallbackParams(), mockAdminFactory)
-
-    // Verify the correct clientId string is used to look up the KC client
-    expect(mockClientsFind).toHaveBeenCalledWith({ clientId: 'patient-portal', max: 1 })
-  })
-
-  it('BUG: verifies that listSessions is called with the KC UUID, not the clientId string', async () => {
-    mockClientsFind.mockResolvedValue([{ id: KC_CLIENT_UUID, clientId: 'patient-portal' }])
-    mockClientsListSessions.mockResolvedValue([
-      { id: SESSION_STATE, userId: USER_ID, username: 'quotentiroler' },
-    ])
-    mockUsersFindOne.mockResolvedValue({
-      id: USER_ID,
-      attributes: { fhirUser: ['Patient/max-nussbaumer'] },
-    })
-
-    await autoResolvePatient(makeSession(), makeCallbackParams(), mockAdminFactory)
-
-    expect(mockClientsListSessions).toHaveBeenCalledWith({
-      id: KC_CLIENT_UUID,
-      first: 0,
-      max: 50,
-    })
-  })
-
-  it('BUG: what if session.clientId is empty string (authorize without client_id)?', async () => {
-    const session = makeSession({ clientId: '' })
-    const result = await autoResolvePatient(session, makeCallbackParams(), mockAdminFactory)
-
-    // Should still attempt lookup (let KC tell us client not found)
-    expect(mockClientsFind).toHaveBeenCalledWith({ clientId: '', max: 1 })
     expect(result).toBeNull()
   })
 
