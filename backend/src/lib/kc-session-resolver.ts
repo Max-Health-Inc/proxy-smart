@@ -34,8 +34,15 @@ async function findUserIdByDirectLookup(
   if (!realm || !baseUrl) return null
 
   try {
+    // Use getAccessToken() (async, handles refresh) rather than the .accessToken property
+    const token = await admin.getAccessToken()
+    if (!token) {
+      logger.auth.warn('autoResolvePatient: admin access token is empty after auth')
+      return null
+    }
+
     const resp = await fetch(`${baseUrl}/admin/realms/${realm}/sessions/${sessionState}`, {
-      headers: { Authorization: `Bearer ${admin.accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     })
     if (!resp.ok) {
       logger.auth.debug('autoResolvePatient: direct session lookup returned non-OK', {

@@ -35,6 +35,7 @@ const mockUsersFindOne = mock((): Promise<any> => Promise.resolve(null))
 
 const mockAdminClient = {
   accessToken: 'mock-admin-token',
+  getAccessToken: () => Promise.resolve('mock-admin-token'),
   clients: {
     find: mockClientsFind,
     listSessions: mockClientsListSessions,
