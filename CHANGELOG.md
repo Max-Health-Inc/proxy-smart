@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605042106.ee673668] - 2026-05-04
+
+- ✨ Features: Auto-select patient on Patient Picker page during OAuth flow; increased retry attempts (maxAttempts 3 → 5) for interstitial handling
+- 🔧 Chores & Improvements: Version bumps across multiple packages from beta to alpha; UI refactor: BackendServicesSettings.tsx removed; minor UI tweaks in SmartConfigManager (icon imports, tab layout)
+- 🔧 Chores & Improvements: Backend/Keycloak: enhanced direct session lookup in kc-session-resolver and updated session resolution flow; admin Keycloak config schema updated to remove frontend URL endpoints; related docs/tests adjusted for fast-path behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/658
+
+
 ## [0.1.0-beta.202605041920.0a9225e5] - 2026-05-04
 
 - ✨ Features
