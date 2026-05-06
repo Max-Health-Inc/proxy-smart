@@ -681,7 +681,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
       // Primary: look up stored launch context by JTI
       if (jti) {
-        const storedContext = tokenContextStore.get(jti)
+        const introspectingClientId = bodyObj.client_id || data.client_id
+        const storedContext = tokenContextStore.get(jti, introspectingClientId)
         if (storedContext) {
           if (storedContext.patient && !data.patient && !data.smart_patient) {
             data.patient = storedContext.patient
