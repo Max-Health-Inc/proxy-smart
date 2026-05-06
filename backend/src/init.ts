@@ -460,8 +460,8 @@ async function ensureOrganizationsEnabled(): Promise<void> {
  */
 const REQUIRED_USER_ATTRIBUTES = [
   { name: 'fhirUser', displayName: 'FHIR User Reference', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
-  { name: 'smart_patient', displayName: 'SMART Patient Context', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
-  { name: 'smart_encounter', displayName: 'SMART Encounter Context', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'patient_context', displayName: 'Patient Context (Admin)', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'encounter_context', displayName: 'Encounter Context (Admin)', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
   { name: 'fhir_persons', displayName: 'FHIR Person Associations', permissions: { view: ['admin'], edit: ['admin'] }, multivalued: false },
   { name: 'organization', displayName: 'Organization', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
   { name: 'lastLogin', displayName: 'Last Login', permissions: { view: ['admin'], edit: ['admin'] }, multivalued: false },

@@ -31,9 +31,9 @@ Configure launch context attributes for individual users:
 | Attribute | Token Claim | Description |
 |---|---|---|
 | **fhirUser** | `fhirUser` | FHIR resource representing the user (e.g., `Practitioner/123`, `Patient/456`) |
-| **Patient** | `smart_patient` | Patient ID in context for patient-scoped launches |
-| **Encounter** | `smart_encounter` | Encounter ID in context |
-| **fhirContext** | `smart_fhir_context` | Array of FHIR resource references providing additional context |
+| **Patient** | `patient` | Patient ID in context for patient-scoped launches |
+| **Encounter** | `encounter` | Encounter ID in context |
+| **fhirContext** | `fhirContext` | Array of FHIR resource references providing additional context |
 
 ### Extended Attributes
 

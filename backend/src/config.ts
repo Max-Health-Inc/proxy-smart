@@ -199,7 +199,7 @@ export const config = {
       return 'level3'
     },
     get verifyPatientLink() {
-      // Verify that token's smart_patient matches Person.link[]. Default true.
+      // Verify that token's patient claim matches Person.link[]. Default true.
       return process.env.IAL_VERIFY_PATIENT_LINK !== 'false'
     },
     get allowOnPersonLookupFailure() {

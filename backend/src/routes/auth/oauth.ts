@@ -1,6 +1,5 @@
 import { Elysia } from 'elysia'
 import fetch from 'cross-fetch'
-import KcAdminClient from '@keycloak/keycloak-admin-client'
 import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { getAllServers, ensureServersInitialized, getServerInfoByName } from '@/lib/fhir-server-store'
@@ -90,22 +89,6 @@ async function isKeycloakReachable(): Promise<boolean> {
   }
 }
 
-async function getServiceAccountAdmin(): Promise<KcAdminClient | null> {
-  if (!config.keycloak.isConfigured || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
-    return null
-  }
-  const admin = new KcAdminClient({
-    baseUrl: config.keycloak.baseUrl!,
-    realmName: config.keycloak.realm!,
-  })
-  await admin.auth({
-    grantType: 'client_credentials',
-    clientId: config.keycloak.adminClientId,
-    clientSecret: config.keycloak.adminClientSecret,
-  })
-  return admin
-}
-
 /** Validate aud/resource against known FHIR servers, MCP endpoint, and external allowlist */
 async function validateAudience(aud: string): Promise<string | null> {
   const baseUrl = config.baseUrl
@@ -172,36 +155,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     if (!body.patient && !body.encounter && !body.fhirUser && !body.intent && !body.fhirContext) {
       set.status = 400
       return { error: 'invalid_request', error_description: 'At least one launch context parameter is required (patient, encounter, fhirUser, intent, or fhirContext)' }
-    }
-
-    // Pre-set user attributes in Keycloak for protocol mappers
-    if (config.keycloak.isConfigured && config.keycloak.adminClientId && config.keycloak.adminClientSecret) {
-      try {
-        const admin = await getServiceAccountAdmin()
-        if (admin) {
-          const user = await admin.users.findOne({ id: body.userId })
-          if (user) {
-            const attributes = user.attributes || {}
-            if (body.patient) attributes.smart_patient = [body.patient]
-            if (body.encounter) attributes.smart_encounter = [body.encounter]
-            if (body.fhirUser) attributes.fhirUser = [body.fhirUser]
-            if (body.intent) attributes.smart_intent = [body.intent]
-            if (body.smartStyleUrl) attributes.smart_style_url = [body.smartStyleUrl]
-            if (body.tenant) attributes.smart_tenant = [body.tenant]
-            if (body.needPatientBanner !== undefined) attributes.smart_need_patient_banner = [String(body.needPatientBanner)]
-            if (body.fhirContext) attributes.smart_fhir_context = [JSON.stringify(body.fhirContext)]
-
-            await admin.users.update({ id: body.userId }, {
-              firstName: user.firstName, lastName: user.lastName,
-              email: user.email, enabled: user.enabled,
-              emailVerified: user.emailVerified, attributes,
-            })
-            logger.auth.info('EHR Launch: pre-set user attributes', { userId: body.userId, patient: body.patient })
-          }
-        }
-      } catch (err) {
-        logger.auth.warn('EHR Launch: failed to pre-set user attributes (non-fatal)', { error: err })
-      }
     }
 
     const launchPayload: LaunchCodePayload = {
@@ -684,13 +637,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         const introspectingClientId = bodyObj.client_id || data.client_id
         const storedContext = tokenContextStore.get(jti, introspectingClientId)
         if (storedContext) {
-          if (storedContext.patient && !data.patient && !data.smart_patient) {
+          if (storedContext.patient && !data.patient) {
             data.patient = storedContext.patient
           }
-          if (storedContext.encounter && !data.encounter && !data.smart_encounter) {
+          if (storedContext.encounter && !data.encounter) {
             data.encounter = storedContext.encounter
           }
-          if (storedContext.fhirUser && !data.fhirUser && !data.fhir_user) {
+          if (storedContext.fhirUser && !data.fhirUser) {
             data.fhirUser = storedContext.fhirUser
           }
           if (storedContext.intent && !data.intent) {
@@ -700,7 +653,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       }
     }
 
-    // Enrich with SMART-standard claim names (smart_patient→patient, fhir_user→fhirUser, etc.)
+    // Enrich with SMART-standard claim names (fhir_user→fhirUser, patient derivation from fhirUser)
     enrichIntrospection(data)
 
     return data

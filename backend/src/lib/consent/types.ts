@@ -192,9 +192,9 @@ export interface SmartTokenPayload extends JwtPayload {
   /** Granted scopes (space-separated) */
   scope?: string
   /** Patient ID from SMART launch context */
-  smart_patient?: string
+  patient?: string
   /** Encounter ID from SMART launch context */
-  smart_encounter?: string
+  encounter?: string
   /** FHIR User reference (e.g., Person/123, Practitioner/456) */
   fhirUser?: string
 }
@@ -348,9 +348,9 @@ export interface PersonResolutionResult {
   person?: FhirPerson
   /** All linked patient identities with IAL */
   linkedPatients: ResolvedPatientIdentity[]
-  /** The specific patient that was validated (if smart_patient was provided) */
+  /** The specific patient that was validated (if patient claim was provided) */
   validatedPatient?: ResolvedPatientIdentity
-  /** Whether smart_patient was verified against Person links */
+  /** Whether patient claim was verified against Person links */
   patientLinkVerified: boolean
   /** Cache status */
   cached: boolean
@@ -370,7 +370,7 @@ export interface IalConfig {
   sensitiveResourceTypes: string[]
   /** Minimum IAL for sensitive resources */
   sensitiveMinimumLevel: IdentityAssuranceLevel
-  /** Whether to verify smart_patient matches Person links */
+  /** Whether to verify patient claim matches Person links */
   verifyPatientLink: boolean
   /** Whether to allow access if Person lookup fails */
   allowOnPersonLookupFailure: boolean
