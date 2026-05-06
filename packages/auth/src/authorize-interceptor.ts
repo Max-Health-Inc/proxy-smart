@@ -157,8 +157,10 @@ export async function handleAuthorize(
   }
 
   // ── Forward all query params to IdP ───────────────────────────────────
+  // Strip aud/resource — already validated above; Keycloak doesn't support RFC 8707
+  const stripFromIdp = new Set(['aud', 'resource'])
   for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined && v !== null) {
+    if (v !== undefined && v !== null && !stripFromIdp.has(k)) {
       url.searchParams.set(k, v)
     }
   }
