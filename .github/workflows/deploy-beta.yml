@@ -175,7 +175,10 @@ jobs:
           ${SCP_CMD} deploy/fhir-seed-bundle.json ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/fhir-seed-bundle.json
           ${SCP_CMD} deploy/seed-dicom.sh ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/seed-dicom.sh
           ${SSH_CMD} "chmod +x ${DEPLOY_DIR}/seed-dicom.sh && mkdir -p ${DEPLOY_DIR}/dicom"
-          ${SCP_CMD} deploy/dicom/CTImage.dcm ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/dicom/CTImage.dcm
+          # Copy any DICOM files if they exist (seed-dicom.sh handles empty dir gracefully)
+          if [ -d deploy/dicom ] && ls deploy/dicom/*.dcm 1>/dev/null 2>&1; then
+            ${SCP_CMD} deploy/dicom/*.dcm ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/dicom/
+          fi
           ${SSH_CMD} "mkdir -p ${DEPLOY_DIR}/keycloak/database"
           ${SCP_CMD} keycloak/database/init.sql ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/keycloak/database/init.sql
 

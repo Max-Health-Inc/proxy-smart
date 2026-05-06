@@ -357,6 +357,7 @@ export function BrandSettings() {
                   <SelectItem value="__default__">{t('— Keycloak Default —')}</SelectItem>
                   <SelectItem value="keycloak">keycloak</SelectItem>
                   <SelectItem value="keycloak.v2">keycloak.v2</SelectItem>
+                  <SelectItem value="proxy-smart">proxy-smart</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">

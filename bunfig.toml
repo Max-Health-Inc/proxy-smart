@@ -10,6 +10,10 @@ linker = "isolated"
 # Note: This reduces supply chain attack protection
 minimumReleaseAge = 0 # Allow all packages regardless of age
 
+[install.scopes]
+# Resolve @max-health-inc packages from GitHub Packages
+"@max-health-inc" = "https://npm.pkg.github.com"
+
 # Security scanner (Socket.dev)
 # [install.security]
 # scanner = "@socketsecurity/bun-security-scanner"

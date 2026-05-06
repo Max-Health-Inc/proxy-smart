@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/eslint-config",
-  "version": "0.0.8-beta.202604251649.1dd04e7c",
+  "version": "0.1.0-beta.202605061427.fa5b001e",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.5.0",
-    "typescript-eslint": "^8.58.0"
+    "globals": "^17.6.0",
+    "typescript-eslint": "^8.59.1"
   }
 }

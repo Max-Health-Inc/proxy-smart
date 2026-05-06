@@ -134,10 +134,10 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
     {
       description:
         'Search the platform documentation knowledge base using semantic similarity. Use this when asked about platform features, configuration, SMART on FHIR concepts, admin UI, OAuth flows, or anything the docs might cover.',
-      inputSchema: z.object({
+      inputSchema: {
         query: z.string().describe('The search query to find relevant documentation'),
         limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
-      }),
+      },
     },
     async ({ query, limit }) => {
       try {
@@ -283,11 +283,31 @@ function generateDescription(toolName: string, meta: ToolMetadata): string {
  * TypeBox schemas ARE JSON Schema (with extra Symbol metadata) — strip Symbols
  * then use Zod v4's built-in z.fromJSONSchema() for a proper Zod type the MCP SDK understands.
  */
-function typeboxToZod(schema: unknown): z.ZodType | undefined {
+function typeboxToZod(schema: unknown): Record<string, z.ZodType> | undefined {
   try {
     const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
     if (jsonSchema.type !== 'object') return undefined
-    return z.fromJSONSchema(jsonSchema)
+
+    // Build a raw shape from JSON Schema properties — the MCP SDK accepts
+    // Record<string, AnySchema> (ZodRawShapeCompat) and wraps it internally.
+    const properties = jsonSchema.properties as Record<string, Record<string, unknown>> | undefined
+    if (!properties) return undefined
+
+    const required = new Set((jsonSchema.required as string[] | undefined) ?? [])
+    const shape: Record<string, z.ZodType> = {}
+
+    for (const [key, propSchema] of Object.entries(properties)) {
+      let fieldSchema = z.fromJSONSchema(propSchema)
+      if (!required.has(key)) {
+        fieldSchema = fieldSchema.optional()
+      }
+      if (propSchema.description && typeof propSchema.description === 'string') {
+        fieldSchema = fieldSchema.describe(propSchema.description)
+      }
+      shape[key] = fieldSchema
+    }
+
+    return shape
   } catch (err) {
     logger.warn('Failed to convert TypeBox schema to Zod:', err instanceof Error ? err.message : String(err))
     return undefined
@@ -457,7 +477,7 @@ function unauthorized(): Response {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource"`,
+        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="openid profile email"`,
       },
     },
   )

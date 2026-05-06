@@ -83,7 +83,7 @@ The file `deploy/fhir-seed-bundle.json` is a FHIR transaction bundle:
 | Branch | Stage | Target |
 |--------|-------|--------|
 | `dev/*`, `develop/*` | dev | Local CI (services as containers) |
-| `develop` | alpha | Deployed (Northflank) |
+| `develop` | alpha | Dev-only release (no live deployment) |
 | `test` | beta | Deployed (VPS) |
 | `main` | production | Deployed (AWS) |
 

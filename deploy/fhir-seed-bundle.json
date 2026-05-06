@@ -633,6 +633,35 @@
       }
     },
     {
+      "fullUrl": "Endpoint/env-default",
+      "resource": {
+        "resourceType": "Endpoint",
+        "id": "env-default",
+        "status": "active",
+        "connectionType": {
+          "system": "http://terminology.hl7.org/CodeSystem/endpoint-connection-type",
+          "code": "dicom-wado-rs",
+          "display": "DICOM WADO-RS"
+        },
+        "name": "Default PACS (DICOMweb)",
+        "payloadType": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/endpoint-payload-type",
+                "code": "any"
+              }
+            ]
+          }
+        ],
+        "address": "http://orthanc:8042/dicom-web"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Endpoint/env-default"
+      }
+    },
+    {
       "fullUrl": "ImagingStudy/max-ct-chest",
       "resource": {
         "resourceType": "ImagingStudy",
@@ -646,6 +675,11 @@
         "subject": {
           "reference": "Patient/max-nussbaumer"
         },
+        "endpoint": [
+          {
+            "reference": "Endpoint/env-default"
+          }
+        ],
         "started": "2001-01-05",
         "identifier": [
           {
@@ -5631,6 +5665,334 @@
       "request": {
         "method": "PUT",
         "url": "Binary/lab-report-2026-04"
+      }
+    },
+    {
+      "fullUrl": "ImagingStudy/test-ct-chest-lidc",
+      "resource": {
+        "resourceType": "ImagingStudy",
+        "id": "test-ct-chest-lidc",
+        "meta": {
+          "profile": [
+            "http://hl7.org/fhir/uv/ips/StructureDefinition/ImagingStudy-uv-ips"
+          ]
+        },
+        "status": "available",
+        "subject": {
+          "reference": "Patient/test-patient"
+        },
+        "endpoint": [
+          {
+            "reference": "Endpoint/env-default"
+          }
+        ],
+        "started": "2000-01-01",
+        "identifier": [
+          {
+            "system": "urn:dicom:uid",
+            "value": "urn:oid:1.3.6.1.4.1.14519.5.2.1.6279.6001.298806137288633453246975630178"
+          }
+        ],
+        "modality": [
+          {
+            "system": "http://dicom.nema.org/resources/ontology/DCM",
+            "code": "CT",
+            "display": "Computed Tomography"
+          }
+        ],
+        "description": "LIDC-IDRI-0001 CHEST CT",
+        "numberOfSeries": 1,
+        "numberOfInstances": 133,
+        "series": [
+          {
+            "uid": "1.3.6.1.4.1.14519.5.2.1.6279.6001.179049373636438705059720603192",
+            "number": 1,
+            "modality": {
+              "system": "http://dicom.nema.org/resources/ontology/DCM",
+              "code": "CT",
+              "display": "Computed Tomography"
+            },
+            "description": "CHEST CT AXIAL",
+            "numberOfInstances": 133
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "ImagingStudy/test-ct-chest-lidc"
+      }
+    },
+    {
+      "fullUrl": "Observation/ai-nodule-rll",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "ai-nodule-rll",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "imaging",
+                "display": "Imaging"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "59776-5",
+              "display": "Solid Pulmonary Nodule — Right Lower Lobe"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/test-patient"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "component": [
+          {
+            "code": {
+              "coding": [{ "code": "confidence" }]
+            },
+            "valueQuantity": {
+              "value": 0.97,
+              "unit": "probability"
+            }
+          },
+          {
+            "code": {
+              "coding": [{ "code": "severity" }]
+            },
+            "valueString": "high"
+          },
+          {
+            "code": {
+              "coding": [{ "code": "image-region" }]
+            },
+            "valueString": "{\"x\":305,\"y\":355,\"width\":26,\"height\":26}"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/ai-nodule-rll"
+      }
+    },
+    {
+      "fullUrl": "Observation/ai-volumetry-rll",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "ai-volumetry-rll",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "imaging",
+                "display": "Imaging"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "59776-5",
+              "display": "Volumetric Analysis — RLL Nodule"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/test-patient"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "component": [
+          {
+            "code": {
+              "coding": [{ "code": "confidence" }]
+            },
+            "valueQuantity": {
+              "value": 0.99,
+              "unit": "probability"
+            }
+          },
+          {
+            "code": {
+              "coding": [{ "code": "severity" }]
+            },
+            "valueString": "high"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/ai-volumetry-rll"
+      }
+    },
+    {
+      "fullUrl": "Observation/ai-aortic-calc",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "ai-aortic-calc",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "imaging",
+                "display": "Imaging"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "36086-6",
+              "display": "Aortic Atherosclerotic Calcification"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/test-patient"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "component": [
+          {
+            "code": {
+              "coding": [{ "code": "confidence" }]
+            },
+            "valueQuantity": {
+              "value": 0.92,
+              "unit": "probability"
+            }
+          },
+          {
+            "code": {
+              "coding": [{ "code": "severity" }]
+            },
+            "valueString": "low"
+          },
+          {
+            "code": {
+              "coding": [{ "code": "image-region" }]
+            },
+            "valueString": "{\"x\":270,\"y\":240,\"width\":20,\"height\":18}"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/ai-aortic-calc"
+      }
+    },
+    {
+      "fullUrl": "Observation/ai-spine-degen",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "ai-spine-degen",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "imaging",
+                "display": "Imaging"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "36086-6",
+              "display": "Thoracic Spine Degenerative Changes"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/test-patient"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "component": [
+          {
+            "code": {
+              "coding": [{ "code": "confidence" }]
+            },
+            "valueQuantity": {
+              "value": 0.88,
+              "unit": "probability"
+            }
+          },
+          {
+            "code": {
+              "coding": [{ "code": "severity" }]
+            },
+            "valueString": "low"
+          },
+          {
+            "code": {
+              "coding": [{ "code": "image-region" }]
+            },
+            "valueString": "{\"x\":250,\"y\":420,\"width\":22,\"height\":16}"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/ai-spine-degen"
+      }
+    },
+    {
+      "fullUrl": "DiagnosticReport/ai-lung-screening",
+      "resource": {
+        "resourceType": "DiagnosticReport",
+        "id": "ai-lung-screening",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v2-0074",
+                "code": "RAD",
+                "display": "Radiology"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "text": "AI Lung Cancer Screening Analysis"
+        },
+        "subject": {
+          "reference": "Patient/test-patient"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "issued": "2026-04-15T14:30:00Z",
+        "conclusion": "AI-assisted analysis identified a 23mm solid pulmonary nodule in the right lower lobe (Lung-RADS 4B). Tissue sampling or PET/CT recommended. Additional incidental findings of aortic calcification and mild degenerative spine changes noted.",
+        "imagingStudy": [
+          {
+            "reference": "ImagingStudy/test-ct-chest-lidc"
+          }
+        ],
+        "result": [
+          { "reference": "Observation/ai-nodule-rll" },
+          { "reference": "Observation/ai-volumetry-rll" },
+          { "reference": "Observation/ai-aortic-calc" },
+          { "reference": "Observation/ai-spine-degen" }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "DiagnosticReport/ai-lung-screening"
       }
     }
   ]

@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { openapi, fromTypes } from '@elysiajs/openapi'
 import { cors } from '@elysiajs/cors'
+import { isOriginAllowed, refreshIfStale } from './lib/cors-origins'
 import staticPlugin from '@elysiajs/static'
 import { join } from 'path'
 import { readdirSync, readFileSync, existsSync } from 'fs'
@@ -29,6 +30,21 @@ import { apiRoutes } from './routes/api'
 import { brandBundleService } from './lib/brand-bundle'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
+
+export interface DiscoveredApp {
+    id: string
+    launch_url: string
+    client_id: string
+    client_name: string
+    description: string
+    scope: string
+    category: string
+    icon: string
+    grant_types: string[]
+    token_endpoint_auth_method: string
+    hidden: boolean
+    source: 'filesystem' | 'registered'
+}
 
 /** Scan public/apps/ for sub-apps with smart-manifest.json, merge published registered apps, and return discovery list */
 function discoverApps({ includeHidden = false } = {}) {
@@ -60,7 +76,7 @@ function discoverApps({ includeHidden = false } = {}) {
             } catch { return null }
         })
         .filter(Boolean)
-        .filter(app => includeHidden || !app!.hidden) as any[]
+        .filter(app => includeHidden || !app!.hidden) as DiscoveredApp[]
 
     // 2. Published registered apps (from config)
     const publishedApps = getPublishedApps()
@@ -81,7 +97,7 @@ function discoverApps({ includeHidden = false } = {}) {
         }))
 
     // Merge, dedup by client_id (filesystem wins if both exist)
-    const fsClientIds = new Set(fsApps.map((a: any) => a.client_id))
+    const fsClientIds = new Set(fsApps.map((a) => a.client_id))
     return [...fsApps, ...publishedApps.filter(pa => !fsClientIds.has(pa.client_id))]
 }
 
@@ -98,7 +114,19 @@ export function createApp() {
         sanitize: (value) => Bun.escapeHTML(value)
     })
         .use(cors({
-            origin: config.cors.origins,
+            origin: (request: Request) => {
+                // DICOMweb uses Bearer tokens, not cookies — safe to allow any origin.
+                // Required for VS Code webviews, Electron apps, and embedded viewers.
+                const path = new URL(request.url).pathname
+                if (path.startsWith('/dicomweb')) return true
+
+                // Trigger background refresh if cache is stale
+                refreshIfStale()
+
+                // All other routes: check against dynamic origins (env + Keycloak webOrigins)
+                const from = request.headers.get('origin') || ''
+                return isOriginAllowed(from)
+            },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']

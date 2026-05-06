@@ -1,10 +1,11 @@
 import { useEffect, useRef, useCallback, useState } from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { X, Loader2 } from "lucide-react"
-import { Badge } from "@proxy-smart/shared-ui"
+import { X, Loader2, ExternalLink } from "lucide-react"
+import { Badge, Button } from "@proxy-smart/shared-ui"
 import {
   initCornerstoneDicomweb,
   getCornerstoneDicomweb,
+  getServerCornerstoneDicomweb,
   getAccessToken,
   getModalityInfo,
 } from "@/lib/dicomweb"
@@ -12,11 +13,15 @@ import { useTranslation } from "react-i18next"
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+export type { ViewerAppInfo }
+
 export interface ViewerTarget {
   studyUID: string
   seriesUID: string
   seriesDescription?: string
   modality?: string
+  /** DICOM server config ID — when set, routes DICOMweb through /dicomweb/servers/:serverId */
+  serverId?: string
 }
 
 // ── Cornerstone lazy init ──────────────────────────────────────────────────
@@ -96,7 +101,10 @@ function CornerstoneViewport({
         if (cancelled || !csCore || !csTools || !elementRef.current) return
 
         // Load series: fetches metadata, registers with Cornerstone, returns imageIds
-        const { imageIds, errors } = await getCornerstoneDicomweb().loadSeries(target.studyUID, target.seriesUID)
+        const csDw = target.serverId
+          ? getServerCornerstoneDicomweb(target.serverId)
+          : getCornerstoneDicomweb()
+        const { imageIds, errors } = await csDw.loadSeries(target.studyUID, target.seriesUID)
         if (cancelled) return
 
         if (errors.length > 0) {
@@ -136,7 +144,9 @@ function CornerstoneViewport({
 
         // Stack scroll = mouse wheel
         toolGroup.addTool(csTools.StackScrollTool.toolName)
-        toolGroup.setToolActive(csTools.StackScrollTool.toolName)
+        toolGroup.setToolActive(csTools.StackScrollTool.toolName, {
+          bindings: [{ mouseButton: csTools.Enums.MouseBindings.Wheel }],
+        })
 
         // Window/Level = left mouse drag
         toolGroup.addTool(csTools.WindowLevelTool.toolName)
@@ -230,14 +240,22 @@ function CornerstoneViewport({
 
 // ── Viewer Dialog ──────────────────────────────────────────────────────────
 
+interface ViewerAppInfo {
+  clientId: string
+  name: string
+  launchUrl: string
+}
+
 export function DicomViewerDialog({
   target,
   open,
   onOpenChange,
+  viewerApp = null,
 }: {
   target: ViewerTarget | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  viewerApp?: ViewerAppInfo | null
 }) {
   const [imageInfo, setImageInfo] = useState<{ current: number; total: number } | null>(null)
   const { t } = useTranslation()
@@ -291,6 +309,23 @@ export function DicomViewerDialog({
                 <span>{t("dicomViewer.controlZoom")}</span>
                 <span>{t("dicomViewer.controlScroll")}</span>
               </div>
+              {target && viewerApp && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1.5 text-xs"
+                  onClick={() => {
+                    const params = new URLSearchParams({
+                      study: target.studyUID,
+                      series: target.seriesUID,
+                    })
+                    window.open(`${viewerApp.launchUrl}?${params.toString()}`, '_blank')
+                  }}
+                >
+                  <ExternalLink className="size-3" />
+                  {t("dicomViewer.openInApp", { name: viewerApp.name })}
+                </Button>
+              )}
               <DialogPrimitive.Close className="rounded-sm p-1 opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
                 <X className="size-4" />
                 <span className="sr-only">Close</span>

@@ -3,11 +3,35 @@ import {
   Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter, Input, Label, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue,
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
 } from '@proxy-smart/shared-ui';
 import { Eye, EyeOff, RefreshCw, ExternalLink, Store, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import type { AppStoreApp, PublishedApp, SmartApp } from '@/lib/api-client';
+
+const ICON_OPTIONS = [
+  { emoji: '\u{1F3E5}', label: 'Hospital' },
+  { emoji: '\u2699\uFE0F', label: 'Settings' },
+  { emoji: '\u{1F9EC}', label: 'DNA' },
+  { emoji: '\u{1F4F7}', label: 'Camera' },
+  { emoji: '\u{1F464}', label: 'Person' },
+  { emoji: '\u{1F4CB}', label: 'Clipboard' },
+  { emoji: '\u{1F4F1}', label: 'Phone' },
+  { emoji: '\u{1FA7A}', label: 'Stethoscope' },
+  { emoji: '\u{1F489}', label: 'Syringe' },
+  { emoji: '\u{1F48A}', label: 'Pill' },
+  { emoji: '\u{1F9EA}', label: 'Test Tube' },
+  { emoji: '\u{1F52C}', label: 'Microscope' },
+  { emoji: '\u{1F9D1}\u200D\u2695\uFE0F', label: 'Doctor' },
+  { emoji: '\u{1F6E1}\uFE0F', label: 'Shield' },
+  { emoji: '\u{1F4CA}', label: 'Chart' },
+  { emoji: '\u{1F5C2}\uFE0F', label: 'Folder' },
+  { emoji: '\u{1F513}', label: 'Lock Open' },
+  { emoji: '\u{1F512}', label: 'Lock' },
+  { emoji: '\u{2764}\uFE0F', label: 'Heart' },
+  { emoji: '\u{1F4DD}', label: 'Memo' },
+] as const;
 
 export function AppStoreManagement() {
   const { t } = useTranslation();
@@ -179,7 +203,7 @@ export function AppStoreManagement() {
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 text-sm">
-                  {getCategoryEmoji(app.category)}
+                  {getAppIcon(app)}
                 </div>
                 <div className="min-w-0">
                   <div className="font-medium text-sm text-foreground truncate flex items-center gap-2">
@@ -287,6 +311,33 @@ export function AppStoreManagement() {
                   </div>
                 </div>
                 <div className="space-y-2">
+                  <Label>{t('Icon')}</Label>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-start gap-2 font-normal">
+                        <span className="text-lg">{publishForm.logoUri || getCategoryEmoji(publishForm.category || 'clinical')}</span>
+                        <span className="text-muted-foreground text-sm">{t('Choose an icon')}</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-64 p-3" align="start">
+                      <div className="grid grid-cols-5 gap-1">
+                        {ICON_OPTIONS.map(({ emoji, label }) => (
+                          <Button
+                            key={label}
+                            variant={publishForm.logoUri === emoji ? 'default' : 'ghost'}
+                            size="sm"
+                            className="h-9 w-9 p-0 text-lg"
+                            title={label}
+                            onClick={() => setPublishForm(prev => ({ ...prev, logoUri: emoji }))}
+                          >
+                            {emoji}
+                          </Button>
+                        ))}
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                <div className="space-y-2">
                   <Label>{t('Launch URL')}</Label>
                   <Input
                     value={publishForm.launchUrl || ''}
@@ -334,4 +385,10 @@ function getCategoryEmoji(category: string): string {
     case 'consent': return '\u{1F4CB}';
     default: return '\u{1F4F1}';
   }
+}
+
+/** Show custom icon if set, otherwise fall back to category emoji */
+function getAppIcon(app: AppStoreApp): string {
+  if (app.icon && app.icon !== 'app-window') return app.icon;
+  return getCategoryEmoji(app.category);
 }

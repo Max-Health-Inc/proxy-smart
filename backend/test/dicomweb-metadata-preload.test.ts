@@ -61,7 +61,7 @@ const METADATA_RESPONSE = [
 
 const ORIGINAL_FETCH = globalThis.fetch
 
-function mockFetchWith(body: any, init?: ResponseInit) {
+function mockFetchWith(body: unknown, init?: ResponseInit) {
   const calls: Array<{ url: string; opts?: RequestInit }> = []
   const mockFn = Object.assign(
     async (url: string | URL | Request, opts?: RequestInit) => {

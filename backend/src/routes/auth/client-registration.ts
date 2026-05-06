@@ -1,10 +1,12 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
+import { refreshCorsOrigins } from '@/lib/cors-origins'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import * as crypto from 'crypto'
 import { getClientRegistrationSettings } from '../admin/client-registration-settings'
 import { ClientRegistrationRequest, ClientRegistrationResponse, CommonErrorResponses } from '@/schemas'
+import { config } from '@/config'
 
 /**
  * OAuth 2.0 Dynamic Client Registration Protocol (RFC 7591)
@@ -206,6 +208,14 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
       const clientId = `smart_app_${crypto.randomUUID()}`
       
       // Build Keycloak client configuration (reusing logic from smart-apps.ts)
+      // The proxy intercepts SMART flows by rewriting redirect_uri to its own
+      // callback (/auth/smart-callback). Keycloak validates redirect_uris per-client,
+      // so we must include the proxy callback alongside the app's own URIs.
+      const proxyCallbackUri = `${config.baseUrl}/auth/smart-callback`
+      const allRedirectUris = body.redirect_uris.includes(proxyCallbackUri)
+        ? body.redirect_uris
+        : [...body.redirect_uris, proxyCallbackUri]
+
       const keycloakClient = {
         clientId,
         name: body.client_name || clientId,
@@ -215,7 +225,7 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         publicClient: !isConfidential,
         standardFlowEnabled: true, // Authorization code flow
         serviceAccountsEnabled: isBackendService, // Backend services
-        redirectUris: body.redirect_uris,
+        redirectUris: allRedirectUris,
         webOrigins: body.redirect_uris.map(uri => {
           try {
             return new URL(uri).origin
@@ -223,9 +233,10 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
             return uri // fallback for invalid URIs
           }
         }),
-        clientAuthenticatorType: isConfidential 
-          ? (body.jwks_uri || body.jwks ? 'client-jwt' : 'client-secret')
-          : 'none',
+        // Proxy validates JWT assertions itself, then authenticates to Keycloak
+        // using client_secret. Must be 'client-secret' so Keycloak accepts the
+        // proxy's internal token request for backend services.
+        clientAuthenticatorType: isConfidential ? 'client-secret' : 'none',
         attributes: {
           'pkce.code.challenge.method': 'S256',
           'client.secret.creation.time': Date.now().toString(),
@@ -391,6 +402,9 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         isBackendService,
         requiresApproval: settings.adminApprovalRequired 
       })
+
+      // Refresh CORS origins cache (new client has webOrigins)
+      refreshCorsOrigins().catch(() => {})
       
       return response
 

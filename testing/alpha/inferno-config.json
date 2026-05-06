@@ -1,12 +1,10 @@
 {
   "test_stage": "alpha",
-  "description": "Alpha testing against Northflank deployed instance",
-  "target": "deployed",
-  "deployed_url": "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
+  "description": "Alpha testing with local CI stack (dev-only release, not deployed)",
+  "target": "local",
   "fhir_server": {
-    "name": "hapi",
-    "fhir_version": "R4",
-    "comment": "Full FHIR proxy URL = backend.url + /proxy-smart-backend/{name}/{fhir_version}"
+    "name": "HAPI FHIR (Local CI)",
+    "port": 8081
   },
   "inferno": {
     "url": "http://localhost:4567",
@@ -25,11 +23,15 @@
     }
   },
   "keycloak": {
-    "url": "https://p01--keycloak-alpha--776jg9nwd8rw.code.run",
-    "realm": "proxy-smart"
+    "realm": "proxy-smart",
+    "port": 8080,
+    "admin": {
+      "username": "admin",
+      "password": "admin"
+    }
   },
   "backend": {
-    "url": "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run"
+    "port": 8445
   },
   "client": {
     "client_id": "inferno-test-client",
@@ -49,6 +51,6 @@
   "test_settings": {
     "timeout": 30,
     "retries": 3,
-    "validate_ssl": true
+    "validate_ssl": false
   }
 }

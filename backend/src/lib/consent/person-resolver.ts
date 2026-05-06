@@ -221,6 +221,130 @@ function extractLinkedPatients(person: FhirPerson, personId: string): ResolvedPa
   return linkedPatients
 }
 
+// =============================================================================
+// FHIR USER RESOLUTION (Per-Client Identity Selection)
+// =============================================================================
+
+/** Represents a linked FHIR identity from a Person resource */
+export interface ResolvedFhirIdentity {
+  /** Resource type (Patient, Practitioner, RelatedPerson) */
+  resourceType: 'Patient' | 'Practitioner' | 'RelatedPerson'
+  /** Resource ID */
+  resourceId: string
+  /** Full relative reference (e.g., "Practitioner/abc") */
+  reference: string
+  /** Assurance level of the link */
+  assuranceLevel: IdentityAssuranceLevel
+}
+
+/**
+ * Extract all linked identities from a Person resource (Patient, Practitioner, RelatedPerson).
+ * Used for per-client fhirUser resolution (patientFacing flag).
+ */
+export function extractLinkedIdentities(person: FhirPerson): ResolvedFhirIdentity[] {
+  const identities: ResolvedFhirIdentity[] = []
+
+  const links = (person as PersonR4 | PersonR5).link
+  if (!links || !Array.isArray(links)) {
+    return identities
+  }
+
+  for (const link of links) {
+    const targetRef = link.target?.reference
+    if (!targetRef) continue
+
+    const match = targetRef.match(/(Patient|Practitioner|RelatedPerson)\/([a-zA-Z0-9\-.]+)/)
+    if (!match) continue
+
+    const resourceType = match[1] as 'Patient' | 'Practitioner' | 'RelatedPerson'
+    const resourceId = match[2]
+    const assuranceLevel = normalizeAssuranceLevel(link.assurance)
+
+    identities.push({
+      resourceType,
+      resourceId,
+      reference: `${resourceType}/${resourceId}`,
+      assuranceLevel,
+    })
+  }
+
+  return identities
+}
+
+/**
+ * Resolve fhirUser for a specific client based on its patientFacing configuration.
+ *
+ * Resolution rules:
+ * - If patientFacing is undefined → return raw fhirUser unchanged (backward compat)
+ * - If raw fhirUser already matches the expected type → return as-is
+ * - If raw fhirUser is Person/* → fetch Person, find matching link
+ * - If no matching link found → return undefined (omit claim)
+ */
+export async function resolveFhirUserForClient(
+  rawFhirUser: string,
+  patientFacing: boolean | undefined,
+  serverUrl: string,
+  serverName: string,
+  authHeader: string
+): Promise<string | undefined> {
+  // No resolution configured → backward compat
+  if (patientFacing === undefined) {
+    return rawFhirUser
+  }
+
+  const expectedType = patientFacing ? 'Patient' : 'Practitioner'
+
+  // Already the expected type → return as-is
+  if (rawFhirUser.includes(`${expectedType}/`)) {
+    return rawFhirUser
+  }
+
+  // Check for standalone Person reference (not RelatedPerson)
+  // Match "Person/" at start, or preceded by "/" (URL path), but NOT preceded by "Related"
+  const isPersonRef = /(?<![A-Za-z])Person\//.test(rawFhirUser)
+
+  if (!isPersonRef) {
+    // Not a Person reference and doesn't match expected type → omit
+    return undefined
+  }
+
+  // Resolve Person → find matching identity link
+  const personId = rawFhirUser.match(/(?<![A-Za-z])Person\/([a-zA-Z0-9\-.]+)/)?.[1]
+  if (!personId) {
+    return undefined
+  }
+
+  // Check cache first
+  const cachedPerson = getCachedPerson(serverName, personId)
+  let person: FhirPerson | null
+
+  if (cachedPerson !== undefined) {
+    person = cachedPerson
+  } else {
+    person = await fetchPerson(serverUrl, personId, authHeader)
+    const ialConfig = getIalConfig()
+    setCachedPerson(serverName, personId, person, ialConfig.cacheTtl)
+  }
+
+  if (!person) {
+    return undefined
+  }
+
+  const identities = extractLinkedIdentities(person)
+  const match = identities.find(i => i.resourceType === expectedType)
+
+  if (!match) {
+    logger.consent.debug('No matching identity link for client type', {
+      personId,
+      expectedType,
+      availableTypes: identities.map(i => i.resourceType),
+    })
+    return undefined
+  }
+
+  return match.reference
+}
+
 /**
  * Fetch Person resource from FHIR server
  */

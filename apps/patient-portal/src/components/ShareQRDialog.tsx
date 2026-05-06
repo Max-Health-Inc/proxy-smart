@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react"
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Button, Spinner, Input,
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@proxy-smart/shared-ui"
 import { QRCodeSVG } from "qrcode.react"
 import { createShl as createShlRequest, type ShlResponse } from "@/lib/shl-client"
-import { QrCode, Copy, Check, Clock } from "lucide-react"
+import { QrCode, Copy, Check, Clock, Info } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 const EXPIRY_OPTIONS = [
@@ -29,6 +30,8 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
   const [copied, setCopied] = useState(false)
   const [expiryMinutes, setExpiryMinutes] = useState("60")
   const [expiresIn, setExpiresIn] = useState(0)
+  const [shortenUrl, setShortenUrl] = useState(false)
+  const [maxUses, setMaxUses] = useState("")
 
   const createShl = useCallback(async () => {
     setLoading(true)
@@ -38,6 +41,8 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
         verifiedOnly: !verifiedOnly,
         expiresInMinutes: parseInt(expiryMinutes),
         label: t("shareQr.label"),
+        shortenUrl,
+        ...(shortenUrl && maxUses && { maxUses: parseInt(maxUses) }),
       })
       setShlData(data)
       setExpiresIn(Math.max(0, Math.round((new Date(data.expiresAt).getTime() - Date.now()) / 60000)))
@@ -46,7 +51,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
     } finally {
       setLoading(false)
     }
-  }, [verifiedOnly, expiryMinutes, t])
+  }, [verifiedOnly, expiryMinutes, shortenUrl, maxUses, t])
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) {
@@ -55,6 +60,8 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
       setCopied(false)
       setExpiryMinutes("60")
       setExpiresIn(0)
+      setShortenUrl(false)
+      setMaxUses("")
     }
     onOpenChange(isOpen)
   }, [onOpenChange])
@@ -62,7 +69,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
   const copyLink = useCallback(async () => {
     if (!shlData) return
     try {
-      await navigator.clipboard.writeText(shlData.viewerUrl)
+      await navigator.clipboard.writeText(shlData.shortUrl ?? shlData.viewerUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
@@ -101,6 +108,53 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* URL Shortening opt-in */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="shorten-url"
+                    checked={shortenUrl}
+                    onChange={(e) => setShortenUrl(e.target.checked)}
+                    className="size-4 rounded border-input accent-primary"
+                  />
+                  <label htmlFor="shorten-url" className="text-sm font-medium cursor-pointer">
+                    {t("shareQr.shortenUrlLabel", "Shorten URL")}
+                  </label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="size-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px] text-xs">
+                        {t("shareQr.shortenUrlTooltip", "The link will be shortened via go.maxhealth.tech and stored securely until it expires.")}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+
+                {shortenUrl && (
+                  <div className="flex flex-col gap-1 pl-6">
+                    <label htmlFor="max-uses" className="text-xs text-muted-foreground">
+                      {t("shareQr.maxUsesLabel", "Max uses (optional)")}
+                    </label>
+                    <Input
+                      id="max-uses"
+                      type="number"
+                      min={1}
+                      placeholder={t("shareQr.maxUsesPlaceholder", "Unlimited")}
+                      value={maxUses}
+                      onChange={(e) => setMaxUses(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      {t("shareQr.maxUsesHint", "Link expires after this many views")}
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <Button onClick={createShl} className="w-full">
                 {t("shareQr.createLink")}
               </Button>
@@ -127,7 +181,7 @@ export function ShareQRDialog({ open, onOpenChange, verifiedOnly }: ShareQRDialo
             <>
               <div className="rounded-xl border bg-white p-4">
                 <QRCodeSVG
-                  value={shlData.viewerUrl}
+                  value={shlData.shortUrl ?? shlData.viewerUrl}
                   size={220}
                   level="M"
                   includeMargin

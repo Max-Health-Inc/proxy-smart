@@ -13,7 +13,7 @@ describe('Auth Routes', () => {
     expect(data.keycloak).toHaveProperty('isConfigured')
     expect(typeof data.keycloak.isConfigured).toBe('boolean')
 
-    if ('clientId' in data.keycloak && data.keycloak.clientId != null) {
+    if ('clientId' in data.keycloak && data.keycloak.clientId !== undefined && data.keycloak.clientId !== null) {
       expect(typeof data.keycloak.clientId).toBe('string')
     }
   })

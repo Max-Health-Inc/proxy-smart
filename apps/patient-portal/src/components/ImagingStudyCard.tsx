@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle, Badge } from "@proxy-smart/shared-ui"
-import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X } from "lucide-react"
+import { ScanLine, ChevronDown, ChevronUp, ImageIcon, Eye, Search, X, AlertTriangle } from "lucide-react"
 import { format } from "date-fns"
 import type { ImagingStudy, RadiologyResult } from "@/lib/fhir-client"
 import type { ImagingStudyStatusUvIpsCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ImagingStudyStatusUvIps"
+import { RecordName, type AnyResource } from "@/lib/ips-display-helpers"
 import {
   getStudyInstanceUID,
   getStudyThumbnailUrl,
@@ -13,8 +14,9 @@ import {
   getPrimaryModality,
   getModalityInfo,
   getDicomwebAuthHeaders,
+  extractServerIdFromEndpoint,
 } from "@/lib/dicomweb"
-import { DicomViewerDialog, type ViewerTarget } from "./DicomViewer"
+import { DicomViewerDialog, type ViewerTarget, type ViewerAppInfo } from "./DicomViewer"
 
 // ── Thumbnail with auth + graceful fallback ────────────────────────────────
 
@@ -66,10 +68,12 @@ function StudyRow({
   study,
   onViewSeries,
   readOnly: _readOnly = false,
+  serverId,
 }: {
   study: ImagingStudy
   onViewSeries: (target: ViewerTarget) => void
   readOnly?: boolean
+  serverId?: string
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
@@ -88,6 +92,7 @@ function StudyRow({
       seriesUID: first.uid,
       seriesDescription: first.description || title,
       modality: first.modality?.code || modality || undefined,
+      serverId,
     })
   }
 
@@ -100,7 +105,7 @@ function StudyRow({
       >
         {studyUID ? (
           <DicomThumbnail
-            src={getStudyThumbnailUrl(studyUID)}
+            src={getStudyThumbnailUrl(studyUID, serverId)}
             alt={title}
             className="size-12 shrink-0 rounded"
           />
@@ -165,7 +170,7 @@ function StudyRow({
               return (
                 <li key={series.uid || `s-${si}`} className="flex items-start gap-2">
                   <DicomThumbnail
-                    src={getSeriesThumbnailUrl(studyUID, series.uid)}
+                    src={getSeriesThumbnailUrl(studyUID, series.uid, serverId)}
                     alt={series.description || `Series ${si + 1}`}
                     className="size-10 shrink-0 rounded"
                   />
@@ -198,6 +203,7 @@ function StudyRow({
                         seriesDescription:
                           series.description || `Series ${(series.number ?? si) + 1}`,
                         modality: seriesModality || modality || undefined,
+                        serverId,
                       })
                     }
                     className="shrink-0 mt-0.5 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
@@ -221,15 +227,32 @@ export function ImagingStudyCard({
   imagingStudies,
   radiologyResults,
   readOnly = false,
+  onOpenDetail,
+  defaultCollapsed = false,
 }: {
   imagingStudies: ImagingStudy[]
   radiologyResults: RadiologyResult[]
   readOnly?: boolean
+  onOpenDetail?: (title: string, resource: AnyResource) => void
+  defaultCollapsed?: boolean
 }) {
   const { t } = useTranslation()
   const [viewerTarget, setViewerTarget] = useState<ViewerTarget | null>(null)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [search, setSearch] = useState("")
+  const [collapsed, setCollapsed] = useState(defaultCollapsed)
+  const [viewerApp, setViewerApp] = useState<ViewerAppInfo | null>(null)
+  const [viewerAppFetched, setViewerAppFetched] = useState(false)
+
+  // Lazy-fetch the configured viewer app only when expanded
+  useEffect(() => {
+    if (collapsed || viewerAppFetched) return
+    setViewerAppFetched(true)
+    fetch('/dicomweb/viewer-app')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setViewerApp(data) })
+      .catch(() => {})
+  }, [collapsed, viewerAppFetched])
 
   const handleViewSeries = (target: ViewerTarget) => {
     setViewerTarget(target)
@@ -278,18 +301,26 @@ export function ImagingStudyCard({
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="cursor-pointer select-none" onClick={() => setCollapsed(!collapsed)}>
           <CardTitle className="flex items-center gap-2 text-base">
             <ScanLine className="size-4 text-violet-500" />
             {t("imagingStudy.title")}
             {hasData && (
-              <span className="text-xs font-normal text-muted-foreground ml-auto">
+              <span className="text-xs font-normal text-muted-foreground ml-auto mr-1">
                 {t("imagingStudy.nStudies", { count: imagingStudies.length })}
                 {radiologyResults.length > 0 && ` · ${t("imagingStudy.nReports", { n: radiologyResults.length })}`}
               </span>
             )}
+            {collapsed ? <ChevronDown className="size-4 text-muted-foreground shrink-0" /> : <ChevronUp className="size-4 text-muted-foreground shrink-0" />}
           </CardTitle>
+          {!collapsed && hasData && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mt-1">
+              <AlertTriangle className="size-3 shrink-0" />
+              {t("imagingStudy.dataWarning")}
+            </p>
+          )}
         </CardHeader>
+        {!collapsed && (
         <CardContent>
           {!hasData ? (
             <p className="text-sm text-muted-foreground">{t("imagingStudy.noImagingRecords")}</p>
@@ -331,6 +362,7 @@ export function ImagingStudyCard({
                           study={study}
                           onViewSeries={handleViewSeries}
                           readOnly={readOnly}
+                          serverId={extractServerIdFromEndpoint(study.endpoint)}
                         />
                       ))}
                     </ul>
@@ -350,11 +382,19 @@ export function ImagingStudyCard({
                             key={obs.id || `rad-${i}`}
                             className="text-sm flex justify-between gap-2"
                           >
-                            <span className="font-medium truncate min-w-0">
-                              {obs.code?.coding?.[0]?.display ||
-                                obs.code?.text ||
-                                "Radiology result"}
-                            </span>
+                            {onOpenDetail ? (
+                              <RecordName resource={obs as AnyResource} onOpen={onOpenDetail}>
+                                {obs.code?.coding?.[0]?.display ||
+                                  obs.code?.text ||
+                                  "Radiology result"}
+                              </RecordName>
+                            ) : (
+                              <span className="font-medium truncate min-w-0">
+                                {obs.code?.coding?.[0]?.display ||
+                                  obs.code?.text ||
+                                  "Radiology result"}
+                              </span>
+                            )}
                             {obs.effectiveDateTime && (
                               <span className="text-muted-foreground whitespace-nowrap">
                                 {format(new Date(obs.effectiveDateTime), "MMM d, yyyy")}
@@ -370,12 +410,14 @@ export function ImagingStudyCard({
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       <DicomViewerDialog
         target={viewerTarget}
         open={viewerOpen}
         onOpenChange={setViewerOpen}
+        viewerApp={viewerApp}
       />
     </>
   )

@@ -218,28 +218,24 @@ class AdminAuditLogger {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10)
 
-      // Hourly
-      const hourlyStats = Array.from({ length: 24 }, (_, i) => {
-        const hour = new Date(now)
-        hour.setHours(now.getHours() - (23 - i), 0, 0, 0)
-        const nextHour = new Date(hour.getTime() + 60 * 60 * 1000)
-        const bucket = recent.filter(e => {
-          const t = new Date(e.timestamp)
-          return t >= hour && t < nextHour
-        })
-        return {
-          hour: hour.toISOString(),
-          success: bucket.filter(e => e.success).length,
-          failure: bucket.filter(e => !e.success).length,
-          total: bucket.length,
-        }
-      })
+      // Hourly — sparse UTC-based bucketing (consistent with auth/email/fhir-proxy/oauth/consent)
+      const hourBuckets = new Map<string, { success: number; failure: number }>()
+      for (const e of recent) {
+        const hourKey = e.timestamp.slice(0, 13) + ':00:00.000Z'
+        let bucket = hourBuckets.get(hourKey)
+        if (!bucket) { bucket = { success: 0, failure: 0 }; hourBuckets.set(hourKey, bucket) }
+        if (e.success) bucket.success++
+        else bucket.failure++
+      }
+      const hourlyStats = Array.from(hourBuckets.entries())
+        .map(([hour, b]) => ({ hour, success: b.success, failure: b.failure, total: b.success + b.failure }))
+        .sort((a, b) => a.hour.localeCompare(b.hour))
 
-      const recentFailures = this.events.filter(e => !e.success).slice(0, 20)
+      const recentFailures = recent.filter(e => !e.success).slice(0, 20)
 
       this.analytics = {
         totalActions: total,
-        successRate: total > 0 ? (successes / total) * 100 : 0,
+        successRate: total > 0 ? Math.round((successes / total) * 10000) / 100 : 0,
         actionsByType,
         actionsByResource,
         topActors,

@@ -108,7 +108,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const components = await admin.components.find({ type: PROVIDER_TYPE })
-      const ldap = components.filter((c: any) => c.providerId === 'ldap')
+      const ldap = components.filter((c) => c.providerId === 'ldap')
       return { count: ldap.length, total: components.length }
     })
 
@@ -118,7 +118,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const components = await admin.components.find({ type: PROVIDER_TYPE })
-      return components.filter((c: any) => c.providerId === 'ldap')
+      return components.filter((c) => c.providerId === 'ldap')
     })
 
     // Create
@@ -143,7 +143,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const component = await admin.components.findOne({ id: params.id })
-      if (!component || (component as any).providerType !== PROVIDER_TYPE) {
+      if (!component || (component as Record<string, unknown>).providerType !== PROVIDER_TYPE) {
         set.status = 404
         return { error: 'User federation provider not found' }
       }
@@ -156,7 +156,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const existing = await admin.components.findOne({ id: params.id })
-      if (!existing || (existing as any).providerType !== PROVIDER_TYPE) {
+      if (!existing || (existing as Record<string, unknown>).providerType !== PROVIDER_TYPE) {
         set.status = 404
         return { error: 'User federation provider not found' }
       }
@@ -179,7 +179,7 @@ function buildTestApp(mockAdmin: ReturnType<typeof createMockAdmin>) {
       if (!token) { set.status = 401; return { error: 'Authorization header required' } }
       const admin = await getAdmin(token)
       const syncBody = body as { action: string }
-      const result = await admin.userStorageProvider.sync({ id: params.id, action: syncBody.action as any })
+      const result = await admin.userStorageProvider.sync({ id: params.id, action: syncBody.action as 'triggerFullSync' | 'triggerChangedUsersSync' })
       return result
     })
 
@@ -413,7 +413,7 @@ describe('User Federation Routes', () => {
     })
 
     it('returns 404 when provider does not exist', async () => {
-      mockAdmin.components.findOne = mock(async () => null) as any
+      mockAdmin.components.findOne = mock(async () => null) as unknown as ReturnType<typeof createDefaultComponents>['findOne']
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/nonexistent'))
       expect(res.status).toBe(404)
@@ -444,7 +444,7 @@ describe('User Federation Routes', () => {
     })
 
     it('returns 404 when updating nonexistent provider', async () => {
-      mockAdmin.components.findOne = mock(async () => null) as any
+      mockAdmin.components.findOne = mock(async () => null) as unknown as ReturnType<typeof createDefaultComponents>['findOne']
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('PUT', '/nonexistent', { name: 'x' }))
       expect(res.status).toBe(404)
@@ -626,7 +626,7 @@ describe('User Federation Routes', () => {
       mockAdmin.components.find = mock(async (query: Record<string, unknown>) => {
         if (query?.parent) return [sampleMapper]
         return [sampleLdapComponent]
-      }) as any
+      }) as ReturnType<typeof createDefaultComponents>['find']
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/ldap-1/mappers'))
       expect(res.status).toBe(200)
@@ -640,7 +640,7 @@ describe('User Federation Routes', () => {
       mockAdmin.components.find = mock(async (query: Record<string, unknown>) => {
         if (query?.parent) return []
         return [sampleLdapComponent]
-      }) as any
+      }) as ReturnType<typeof createDefaultComponents>['find']
       app = buildTestApp(mockAdmin)
       const res = await app.handle(req('GET', '/ldap-1/mappers'))
       const data = await res.json()

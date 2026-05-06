@@ -4,6 +4,7 @@ import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
+import { handleAdminError } from '../lib/admin-error-handler'
 import { validateExternalUrl } from '../lib/url-validation'
 import { mtlsStore } from '../lib/mtls-store'
 import * as forge from 'node-forge'
@@ -22,9 +23,9 @@ import {
   UpdateMtlsConfigRequest,
   UploadCertificateRequest,
   CommonErrorResponses,
-  FhirServerInfoResponseType,
-  FhirServerListResponseType,
-  ErrorResponseType,
+  type FhirServerInfoResponseType,
+  type FhirServerListResponseType,
+  type ErrorResponseType,
   type MtlsConfig,
   FhirServerListResponse
 } from '@/schemas'
@@ -311,8 +312,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         }
       }
 
-      set.status = 500
-      return { error: 'Failed to add FHIR server', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: AddFhirServerRequest,
@@ -391,8 +391,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         }
       }
 
-      set.status = 500
-      return { error: 'Failed to update FHIR server', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -449,8 +448,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
     } catch (error) {
       logger.fhir.error('Failed to list FHIR servers', { error })
-      set.status = 500
-      return { error: 'Failed to list FHIR servers', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -508,8 +506,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
     } catch (error) {
       logger.fhir.error('Failed to get server information', { serverId: params.server_id, error })
-      set.status = 500
-      return { error: 'Failed to get server information', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -726,8 +723,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: error.message }
       }
       logger.fhir.error('Failed to update strict capabilities', { error, serverId: params.server_id })
-      set.status = 500
-      return { error: 'Failed to update strict capabilities setting', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -773,8 +769,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: error.message }
       }
       logger.fhir.error('Failed to delete FHIR server', { error, serverId: params.server_id })
-      set.status = 500
-      return { error: 'Failed to delete FHIR server', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -824,8 +819,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: error.message }
       }
       logger.fhir.error('Failed to refresh FHIR server metadata', { error, serverId: params.server_id })
-      set.status = 500
-      return { error: 'Failed to refresh server metadata', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,

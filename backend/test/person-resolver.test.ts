@@ -11,7 +11,9 @@ import {
   verifyPatientLinkOnly,
   getIalConfig,
   clearPersonCache,
-  getPersonCacheStats
+  getPersonCacheStats,
+  extractLinkedIdentities,
+  resolveFhirUserForClient
 } from '../src/lib/consent/person-resolver'
 import type { SmartTokenPayload, FhirPerson } from '../src/lib/consent/types'
 
@@ -490,6 +492,281 @@ describe('Person Resolver', () => {
       clearPersonCache()
       
       expect(getPersonCacheStats().entries).toBe(0)
+    })
+  })
+
+  // ===========================================================================
+  // Per-Client fhirUser Resolution (patientFacing)
+  // ===========================================================================
+
+  describe('extractLinkedIdentities', () => {
+    it('should extract Patient and Practitioner links', () => {
+      const person: FhirPerson = {
+        resourceType: 'Person',
+        id: 'person-multi',
+        active: true,
+        link: [
+          { target: { reference: 'Patient/pat-1' }, assurance: 'level3' },
+          { target: { reference: 'Practitioner/pract-1' }, assurance: 'level2' },
+          { target: { reference: 'RelatedPerson/rel-1' }, assurance: 'level1' },
+        ]
+      }
+
+      const identities = extractLinkedIdentities(person)
+
+      expect(identities).toHaveLength(3)
+      expect(identities[0]).toEqual({
+        resourceType: 'Patient',
+        resourceId: 'pat-1',
+        reference: 'Patient/pat-1',
+        assuranceLevel: 'level3',
+      })
+      expect(identities[1]).toEqual({
+        resourceType: 'Practitioner',
+        resourceId: 'pract-1',
+        reference: 'Practitioner/pract-1',
+        assuranceLevel: 'level2',
+      })
+      expect(identities[2]).toEqual({
+        resourceType: 'RelatedPerson',
+        resourceId: 'rel-1',
+        reference: 'RelatedPerson/rel-1',
+        assuranceLevel: 'level1',
+      })
+    })
+
+    it('should return empty array for person without links', () => {
+      expect(extractLinkedIdentities(mockPersonNoLinks)).toEqual([])
+    })
+
+    it('should skip non-standard resource types in links', () => {
+      const person: FhirPerson = {
+        resourceType: 'Person',
+        id: 'person-odd',
+        active: true,
+        link: [
+          { target: { reference: 'Organization/org-1' } },
+          { target: { reference: 'Patient/pat-1' }, assurance: 'level2' },
+        ]
+      }
+
+      const identities = extractLinkedIdentities(person)
+      expect(identities).toHaveLength(1)
+      expect(identities[0].resourceType).toBe('Patient')
+    })
+  })
+
+  describe('resolveFhirUserForClient', () => {
+    const personWithBothLinks: FhirPerson = {
+      resourceType: 'Person',
+      id: 'person-dual',
+      active: true,
+      link: [
+        { target: { reference: 'Patient/pat-dual' }, assurance: 'level3' },
+        { target: { reference: 'Practitioner/pract-dual' }, assurance: 'level2' },
+      ]
+    }
+
+    it('should return raw fhirUser when patientFacing is undefined (backward compat)', async () => {
+      const result = await resolveFhirUserForClient(
+        'Practitioner/abc',
+        undefined,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('Practitioner/abc')
+    })
+
+    it('should return raw fhirUser when it already matches expected type (patientFacing=true, Patient/*)', async () => {
+      const result = await resolveFhirUserForClient(
+        'Patient/xyz',
+        true,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('Patient/xyz')
+    })
+
+    it('should return raw fhirUser when it already matches expected type (patientFacing=false, Practitioner/*)', async () => {
+      const result = await resolveFhirUserForClient(
+        'Practitioner/abc',
+        false,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('Practitioner/abc')
+    })
+
+    it('should return undefined when fhirUser is wrong type and not Person (omit claim)', async () => {
+      const result = await resolveFhirUserForClient(
+        'Practitioner/abc',
+        true, // wants Patient
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBeUndefined()
+    })
+
+    it('should resolve Person → Patient when patientFacing=true', async () => {
+      mockFetch(async () => new Response(JSON.stringify(personWithBothLinks), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' }
+      }))
+
+      const result = await resolveFhirUserForClient(
+        'Person/person-dual',
+        true,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('Patient/pat-dual')
+    })
+
+    it('should resolve Person → Practitioner when patientFacing=false', async () => {
+      mockFetch(async () => new Response(JSON.stringify(personWithBothLinks), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' }
+      }))
+
+      const result = await resolveFhirUserForClient(
+        'Person/person-dual',
+        false,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('Practitioner/pract-dual')
+    })
+
+    it('should return undefined when Person has no matching link type', async () => {
+      const personOnlyPatient: FhirPerson = {
+        resourceType: 'Person',
+        id: 'person-patient-only',
+        active: true,
+        link: [
+          { target: { reference: 'Patient/pat-only' }, assurance: 'level3' }
+        ]
+      }
+
+      mockFetch(async () => new Response(JSON.stringify(personOnlyPatient), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' }
+      }))
+
+      const result = await resolveFhirUserForClient(
+        'Person/person-patient-only',
+        false, // wants Practitioner but none exists
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBeUndefined()
+    })
+
+    it('should return undefined when Person not found (404)', async () => {
+      mockFetch(async () => new Response('', { status: 404 }))
+
+      const result = await resolveFhirUserForClient(
+        'Person/nonexistent',
+        true,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBeUndefined()
+    })
+
+    // ─── Edge cases & bug regression ───────────────────────────────────
+
+    it('BUG: should NOT treat RelatedPerson/* as Person/* (substring false match)', async () => {
+      // "RelatedPerson/rel-1".includes("Person/") === true — must not trigger Person resolution
+      // No fetch mock — if it tries to fetch, it proves the bug
+      const fetchSpy = mock(() => Promise.resolve(new Response('SHOULD NOT BE CALLED', { status: 500 })))
+      global.fetch = fetchSpy as unknown as typeof global.fetch
+
+      const result = await resolveFhirUserForClient(
+        'RelatedPerson/rel-1',
+        true, // wants Patient
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      // Should omit claim (not try to fetch "rel-1" as a Person resource)
+      expect(result).toBeUndefined()
+      // Must NOT have made any network call
+      expect(fetchSpy).not.toHaveBeenCalled()
+    })
+
+    it('BUG: should NOT treat RelatedPerson/* as Person/* when patientFacing=false', async () => {
+      const fetchSpy = mock(() => Promise.resolve(new Response('SHOULD NOT BE CALLED', { status: 500 })))
+      global.fetch = fetchSpy as unknown as typeof global.fetch
+
+      const result = await resolveFhirUserForClient(
+        'RelatedPerson/rel-1',
+        false, // wants Practitioner
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBeUndefined()
+      expect(fetchSpy).not.toHaveBeenCalled()
+    })
+
+    it('should handle full URL fhirUser that matches expected type', async () => {
+      const result = await resolveFhirUserForClient(
+        'https://fhir.example.com/Patient/pat-url',
+        true,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('https://fhir.example.com/Patient/pat-url')
+    })
+
+    it('should handle full URL fhirUser for Person resolution', async () => {
+      mockFetch(async () => new Response(JSON.stringify(personWithBothLinks), {
+        status: 200,
+        headers: { 'Content-Type': 'application/fhir+json' }
+      }))
+
+      const result = await resolveFhirUserForClient(
+        'https://fhir.example.com/Person/person-dual',
+        true,
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBe('Patient/pat-dual')
+    })
+
+    it('should omit claim when full URL fhirUser is wrong type and not Person', async () => {
+      const result = await resolveFhirUserForClient(
+        'https://fhir.example.com/Practitioner/pract-1',
+        true, // wants Patient
+        'https://fhir.example.com',
+        'server-1',
+        'Bearer token'
+      )
+      expect(result).toBeUndefined()
+    })
+
+    it('should handle empty serverUrl gracefully (no servers configured)', async () => {
+      mockFetch(async () => new Response('', { status: 500 }))
+
+      const result = await resolveFhirUserForClient(
+        'Person/person-123',
+        true,
+        '', // empty server URL
+        '',
+        'Bearer token'
+      )
+      // fetchPerson will fail with invalid URL → returns undefined
+      expect(result).toBeUndefined()
     })
   })
 })

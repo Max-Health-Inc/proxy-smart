@@ -56,7 +56,7 @@ initializeServer()
     try {
       // In containerized environments (Docker), listen on all interfaces
       // In local development, default to localhost only
-      const listenOptions: Record<string, any> = process.env.NODE_ENV === 'production' || process.env.DOCKER
+      const listenOptions: Record<string, unknown> = process.env.NODE_ENV === 'production' || process.env.DOCKER
         ? { port: config.port, hostname: '0.0.0.0' }
         : { port: config.port };
 

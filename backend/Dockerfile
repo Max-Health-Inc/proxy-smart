@@ -1,5 +1,5 @@
 # Use Bun as the base image
-FROM oven/bun:slim AS base
+FROM oven/bun:1.3.13-slim AS base
 WORKDIR /app
 
 # Build stage

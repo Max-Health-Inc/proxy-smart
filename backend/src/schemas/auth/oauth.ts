@@ -63,6 +63,16 @@ export const AuthorizationQuery = t.Object({
 }, { title: 'AuthorizationQuery' })
 export type AuthorizationQueryType = Static<typeof AuthorizationQuery>
 
+/** Query schema for the SMART callback endpoint (receives redirect from Keycloak) */
+export const SmartCallbackQuery = t.Object({
+  code: t.Optional(t.String({ description: 'Authorization code from Keycloak' })),
+  state: t.Optional(t.String({ description: 'State parameter (session key for SMART flows)' })),
+  error: t.Optional(t.String({ description: 'OAuth error code from Keycloak' })),
+  error_description: t.Optional(t.String({ description: 'Human-readable error description' })),
+  session_state: t.Optional(t.String({ description: 'Keycloak session state' })),
+}, { title: 'SmartCallbackQuery' })
+export type SmartCallbackQueryType = Static<typeof SmartCallbackQuery>
+
 export const LoginQuery = t.Object({
   client_id: t.Optional(t.String({ description: 'OAuth client ID (defaults to admin-ui)' })),
   redirect_uri: t.Optional(t.String({ description: 'OAuth redirect URI (defaults to base URL)' })),
@@ -142,6 +152,29 @@ export const TokenResponse = t.Object({
   error_description: t.Optional(t.String({ description: 'Error description if request failed' }))
 }, { title: 'TokenResponse' })
 export type TokenResponseType = Static<typeof TokenResponse>
+
+// ==================== EHR Launch Schemas (SMART App Launch 2.2.0) ====================
+
+export const EhrLaunchRequest = t.Object({
+  /** Required: Keycloak user ID (the user who will be launched into the app) */
+  userId: t.String({ description: 'Keycloak user ID of the user who will authenticate (required for setting launch context)' }),
+  patient: t.Optional(t.String({ description: 'Patient ID in context (e.g., "123" or "Patient/123")' })),
+  encounter: t.Optional(t.String({ description: 'Encounter ID in context (e.g., "456" or "Encounter/456")' })),
+  fhirUser: t.Optional(t.String({ description: 'FHIR user reference (e.g., "Practitioner/789")' })),
+  intent: t.Optional(t.String({ description: 'Intent string (e.g., "order-review", "reconcile-medications")' })),
+  smartStyleUrl: t.Optional(t.String({ description: 'URL to CSS stylesheet for styling' })),
+  tenant: t.Optional(t.String({ description: 'Tenant identifier' })),
+  needPatientBanner: t.Optional(t.Boolean({ description: 'Whether patient banner is required' })),
+  fhirContext: t.Optional(t.Array(FhirContextItem, { description: 'Additional FHIR resources in context' })),
+  clientId: t.Optional(t.String({ description: 'Target client_id this launch code is intended for (optional audience restriction)' })),
+}, { title: 'EhrLaunchRequest' })
+export type EhrLaunchRequestType = Static<typeof EhrLaunchRequest>
+
+export const EhrLaunchResponse = t.Object({
+  launch: t.String({ description: 'Opaque launch code to pass to /authorize (SMART App Launch 2.2.0)' }),
+  expires_in: t.Number({ description: 'Seconds until the launch code expires' }),
+}, { title: 'EhrLaunchResponse' })
+export type EhrLaunchResponseType = Static<typeof EhrLaunchResponse>
 
 // ==================== User Info Schemas ====================
 

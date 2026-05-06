@@ -7,62 +7,65 @@ import {
   CreateSmartAppRequest,
   UpdateSmartAppRequest,
   ClientIdParam,
-  SmartAppType,
-  SuccessResponseType,
-  ErrorResponseType
+  type SmartAppType,
+  type SuccessResponseType,
+  type ErrorResponseType
 } from '@/schemas'
 import { logger } from '@/lib/logger'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
+import { refreshCorsOrigins } from '@/lib/cors-origins'
+import { toKeycloakAuthType } from '@/lib/auth-method-mapping'
+import { enrichClient, ensureScopesExist, replaceClientScopes } from '@/lib/smart-client-enrichment'
+import { invalidateClientConfig } from '@/lib/smart-client-config-cache'
 import * as crypto from 'crypto'
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
-
-/** Safely read a Keycloak client attribute (handles both string and string[] formats) */
-function getAttr(attrs: Record<string, any> | undefined, key: string): string | undefined {
-  const val = attrs?.[key]
-  if (Array.isArray(val)) return val[0]
-  return typeof val === 'string' ? val : undefined
-}
-
-/** Valid literal values for schema-validated enums */
-const VALID_APP_TYPES = new Set(['standalone-app', 'ehr-launch', 'backend-service', 'agent'])
-const VALID_SERVER_ACCESS_TYPES = new Set(['all-servers', 'selected-servers', 'user-person-servers'])
+import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
 
 /**
- * Register JWKS for a Backend Services client in Keycloak.
+ * Register JWKS for a client in Keycloak.
  * Accepts either an inline JWKS JSON string or a PEM public key (which gets converted to JWK).
+ * Does NOT override clientAuthenticatorType — caller is responsible for setting that.
  */
 async function registerJwksForClient(
   admin: KcAdminClient,
   clientInternalId: string,
   options: { jwksString?: string; publicKeyPem?: string; signingAlg?: string }
 ): Promise<void> {
-  const alg = options.signingAlg || 'RS384'
   let jwksJson: string
+  let detectedAlg: string | undefined
 
   if (options.jwksString) {
-    // Use inline JWKS directly
+    // Use inline JWKS directly, and try to detect alg from the first key
     jwksJson = options.jwksString
+    try {
+      const parsed = JSON.parse(options.jwksString) as { keys?: { alg?: string }[] }
+      detectedAlg = parsed.keys?.[0]?.alg
+    } catch { /* ignore parse errors — will use fallback */ }
   } else if (options.publicKeyPem) {
     // Convert PEM → JWK using Node crypto
+    const alg = options.signingAlg || 'RS384'
     const keyObject = crypto.createPublicKey(options.publicKeyPem)
     const jwk = keyObject.export({ format: 'jwk' }) as Record<string, unknown>
     jwksJson = JSON.stringify({
       keys: [{ ...jwk, use: 'sig', alg, kid: crypto.randomUUID() }]
     })
+    detectedAlg = alg
   } else {
     throw new Error('Either jwksString or publicKeyPem must be provided')
   }
 
+  // Priority: explicit signingAlg > detected from JWKS > fallback RS384
+  const alg = options.signingAlg || detectedAlg || 'RS384'
+
   logger.admin.debug('Registering JWKS for client', { clientInternalId, alg })
 
   await admin.clients.update({ id: clientInternalId }, {
-    clientAuthenticatorType: 'client-jwt',
     attributes: {
       'use.jwks.string': 'true',
       'jwks.string': jwksJson,
-      'token.endpoint.auth.signing.alg': alg
+      'token.endpoint.auth.signing.alg': alg,
     }
   })
 
@@ -113,117 +116,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       const enrichedClients = await Promise.all(
         clients.map(async (client) => {
           try {
-            // Fetch the full client details to ensure we have scope IDs
-            const fullClient = await admin.clients.findOne({ id: client.id! })
-            if (!fullClient) return client
-
-            // Fetch default client scopes details
-            let defaultScopeNames: string[] = []
-            if (fullClient.defaultClientScopes && fullClient.defaultClientScopes.length > 0) {
-              try {
-                const defaultScopeDetails = await Promise.all(
-                  fullClient.defaultClientScopes.map(async (scopeId) => {
-                    try {
-                      const scope = await admin.clientScopes.findOne({ id: scopeId })
-                      return scope?.name || scopeId
-                    } catch (error) {
-                      logger.admin.warn('Failed to fetch default client scope', { scopeId, error })
-                      return scopeId // fallback to ID if name fetch fails
-                    }
-                  })
-                )
-                defaultScopeNames = defaultScopeDetails.filter(Boolean)
-              } catch (error) {
-                logger.admin.warn('Failed to fetch default client scopes', { clientId: client.clientId, error })
-              }
-            }
-
-            // Fetch optional client scopes details
-            let optionalScopeNames: string[] = []
-            if (fullClient.optionalClientScopes && fullClient.optionalClientScopes.length > 0) {
-              try {
-                const optionalScopeDetails = await Promise.all(
-                  fullClient.optionalClientScopes.map(async (scopeId) => {
-                    try {
-                      const scope = await admin.clientScopes.findOne({ id: scopeId })
-                      return scope?.name || scopeId
-                    } catch (error) {
-                      logger.admin.warn('Failed to fetch optional client scope', { scopeId, error })
-                      return scopeId // fallback to ID if name fetch fails
-                    }
-                  })
-                )
-                optionalScopeNames = optionalScopeDetails.filter(Boolean)
-              } catch (error) {
-                logger.admin.warn('Failed to fetch optional client scopes', { clientId: client.clientId, error })
-              }
-            }
-
-            // Extract appType from client_type attribute
-            const clientType = fullClient.attributes?.['client_type']
-            const appType = Array.isArray(clientType) ? clientType[0] : clientType
-
-            // Check if offline_access is in optional scopes
-            const hasOfflineAccess = optionalScopeNames.includes('offline_access')
-
-            // Return enriched client with scope names instead of IDs and appType
-            return {
-              ...fullClient,
-              defaultClientScopes: defaultScopeNames,
-              optionalClientScopes: optionalScopeNames,
-              appType: (VALID_APP_TYPES.has(appType!) ? appType : undefined) || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
-              clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
-              
-              // Client secret — masked in list responses (Keycloak returns plaintext to admin callers)
-              ...(fullClient.secret && { secret: '**********' }),
-              
-              // Extract metadata fields from attributes
-              launchUrl: getAttr(fullClient.attributes, 'launch_url'),
-              logoUri: getAttr(fullClient.attributes, 'logo_uri'),
-              tosUri: getAttr(fullClient.attributes, 'tos_uri'),
-              policyUri: getAttr(fullClient.attributes, 'policy_uri'),
-              contacts: getAttr(fullClient.attributes, 'contacts')?.split(',').filter(Boolean),
-              
-              // Server access control
-              serverAccessType: (VALID_SERVER_ACCESS_TYPES.has(getAttr(fullClient.attributes, 'server_access_type')!) ? getAttr(fullClient.attributes, 'server_access_type') : undefined) as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
-              allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
-              
-              // Organization assignment
-              organizationIds: getAttr(fullClient.attributes, 'organization_ids')?.split(',').filter(Boolean) || [],
-              
-              // Scope set reference
-              scopeSetId: getAttr(fullClient.attributes, 'scope_set_id'),
-              
-              // PKCE and offline access
-              requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
-              allowOfflineAccess: hasOfflineAccess,
-              
-              // Token exchange & access token lifespan
-              tokenExchangeEnabled: getAttr(fullClient.attributes, 'standard.token.exchange.enabled') === 'true',
-              accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
-              
-              // Audience mappers
-              audienceClients: (fullClient as any).protocolMappers
-                ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
-                ?.map((m: any) => m.config?.['included.client.audience'])
-                ?.filter(Boolean) || [],
-              
-              // User type & role restrictions
-              allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
-              requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
-              
-              // Consent & scope settings
-              consentRequired: fullClient.consentRequired ?? false,
-              fullScopeAllowed: fullClient.fullScopeAllowed ?? true,
-              
-              // Session timeout settings
-              clientSessionIdleTimeout: getAttr(fullClient.attributes, 'client.session.idle.timeout') ? Number(getAttr(fullClient.attributes, 'client.session.idle.timeout')) : undefined,
-              clientSessionMaxLifespan: getAttr(fullClient.attributes, 'client.session.max.lifespan') ? Number(getAttr(fullClient.attributes, 'client.session.max.lifespan')) : undefined,
-              
-              // Logout settings
-              backchannelLogoutUrl: getAttr(fullClient.attributes, 'backchannel.logout.url') || undefined,
-              frontChannelLogoutUrl: getAttr(fullClient.attributes, 'frontchannel.logout.url') || undefined,
-            } as SmartAppType
+            return await enrichClient(admin, client)
           } catch (error) {
             logger.admin.warn('Failed to enrich client with scope details', { clientId: client.clientId, error })
             return client
@@ -270,20 +163,26 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       // Determine client configuration based on type
       const isBackendService = effectiveClientType === 'backend-service'
-      const isPublicClient = body.publicClient || effectiveClientType === 'public'
+      // Backend-service clients are always confidential (service accounts require it)
+      const isPublicClient = isBackendService ? false : (body.publicClient ?? effectiveClientType === 'public')
 
-      // Determine authentication method
-      let clientAuthenticatorType = 'none'
+      // Determine Keycloak clientAuthenticatorType from standard OAuth method or heuristics
+      let clientAuthenticatorType: string
       
-      if (isBackendService) {
-        // Backend services always use JWT authentication
-        clientAuthenticatorType = 'client-jwt'
-      } else if (!isPublicClient) {
+      if (body.tokenEndpointAuthMethod) {
+        // Explicit OAuth method provided — map to Keycloak internal type
+        clientAuthenticatorType = toKeycloakAuthType(body.tokenEndpointAuthMethod, isBackendService)
+      } else if (isBackendService) {
+        // Backend services: proxy validates JWT assertions itself, then authenticates
+        // to Keycloak using client_secret internally.
+        clientAuthenticatorType = 'client-secret'
+      } else if (isPublicClient) {
+        clientAuthenticatorType = 'none'
+      } else {
         // Confidential client - determine based on whether JWKS/publicKey is provided
         if (body.jwksUri || body.publicKey) {
           clientAuthenticatorType = 'client-jwt'
         } else {
-          // Default to client-secret for confidential clients without JWT config
           clientAuthenticatorType = 'client-secret'
         }
       }
@@ -314,13 +213,14 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // If no appType, fallback to clientType
           ...(!body.appType && isBackendService && { 'client_type': 'backend-service' }),
           
-          // Store JWKS info for JWT authentication (backend services or confidential JWT clients)
-          ...(body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+          // Store JWKS info for JWT authentication (proxy-side validation for backend
+          // services, or Keycloak-side validation for confidential JWT clients)
+          ...(body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
             'use.jwks.url': 'true',
             'jwks.url': body.jwksUri
           }),
           // Inline JWKS string (alternative to jwksUri)
-          ...(body.jwksString && !body.jwksUri && clientAuthenticatorType === 'client-jwt' && {
+          ...(body.jwksString && !body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
             'use.jwks.string': 'true',
             'jwks.string': body.jwksString
           }),
@@ -362,6 +262,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.requiredRoles && body.requiredRoles.length > 0 && {
             'required_roles': body.requiredRoles.join(',')
           }),
+
+          // fhirUser resolution mode
+          ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
 
           // Session timeout overrides
           ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
@@ -424,7 +327,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         const optionalScopesToAssign = body.optionalClientScopes || []
 
         // Get all available client scopes to find matching ones by name
-        const allClientScopes = await admin.clientScopes.find()
+        let allClientScopes = await admin.clientScopes.find()
+
+        // Auto-create any missing SMART scopes (e.g. user/Claim.cud)
+        const allRequestedScopes = [...defaultScopesToAssign, ...optionalScopesToAssign]
+        allClientScopes = await ensureScopesExist(admin, allRequestedScopes, allClientScopes)
 
         // Find scope IDs for default scopes
         const defaultScopeIds = defaultScopesToAssign
@@ -531,28 +438,48 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
-      // If Backend Services with public key (PEM), convert and register JWKS
-      if (isBackendService && body.publicKey && !body.jwksString && !body.jwksUri && createdClient.id) {
+      // Register JWKS for Backend Services clients (proxy validates JWT externally,
+      // authenticates to Keycloak with client-secret internally)
+      if (isBackendService && (body.publicKey || body.jwksString || body.jwksUri) && createdClient.id) {
         try {
-          await registerJwksForClient(admin, createdClient.id, { publicKeyPem: body.publicKey })
+          if (body.publicKey || body.jwksString) {
+            await registerJwksForClient(admin, createdClient.id, {
+              publicKeyPem: body.publicKey,
+              jwksString: body.jwksString,
+            })
+          }
+          // jwksUri is already stored in attributes during creation — just ensure
+          // the signing alg attribute is set for consistency
+          if (body.jwksUri && !body.publicKey && !body.jwksString) {
+            await admin.clients.update({ id: createdClient.id }, {
+              clientAuthenticatorType: 'client-secret',
+              attributes: {
+                'token.endpoint.auth.signing.alg': 'RS384',
+              }
+            })
+          }
 
           // Re-fetch client details after key registration
           const updatedClient = await admin.clients.findOne({ id: createdClient.id })
           const finalResponse = updatedClient || finalClientForResponse
 
+          // Refresh CORS origins cache (new app may have webOrigins)
+          refreshCorsOrigins().catch(() => {})
+
           return finalResponse
         } catch (keyError) {
           // Clean up created client if key registration fails
           await admin.clients.del({ id: createdClient.id })
-          set.status = 400
-          return { error: 'Failed to register public key for Backend Services client', details: keyError }
+          return handleAdminError(keyError, set)
         }
       }
 
+      // Refresh CORS origins cache (new app may have webOrigins)
+      refreshCorsOrigins().catch(() => {})
+
       return finalClientForResponse
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to create SMART application', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: CreateSmartAppRequest,
@@ -585,119 +512,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       }
 
       // Enrich the client with actual scope information
-      let enrichedClient = clients[0]
+      let enrichedClient: SmartAppType | ClientRepresentation = clients[0]
       try {
-        // Fetch the full client details to ensure we have scope IDs
-        const fullClient = await admin.clients.findOne({ id: clients[0].id! })
-        if (fullClient) {
-          // Fetch default client scopes details
-          let defaultScopeNames: string[] = []
-          if (fullClient.defaultClientScopes && fullClient.defaultClientScopes.length > 0) {
-            try {
-              const defaultScopeDetails = await Promise.all(
-                fullClient.defaultClientScopes.map(async (scopeId) => {
-                  try {
-                    const scope = await admin.clientScopes.findOne({ id: scopeId })
-                    return scope?.name || scopeId
-                  } catch (error) {
-                    logger.admin.warn('Failed to fetch default client scope', { scopeId, error })
-                    return scopeId // fallback to ID if name fetch fails
-                  }
-                })
-              )
-              defaultScopeNames = defaultScopeDetails.filter(Boolean)
-            } catch (error) {
-              logger.admin.warn('Failed to fetch default client scopes', { clientId: clients[0].clientId, error })
-            }
-          }
-
-          // Fetch optional client scopes details
-          let optionalScopeNames: string[] = []
-          if (fullClient.optionalClientScopes && fullClient.optionalClientScopes.length > 0) {
-            try {
-              const optionalScopeDetails = await Promise.all(
-                fullClient.optionalClientScopes.map(async (scopeId) => {
-                  try {
-                    const scope = await admin.clientScopes.findOne({ id: scopeId })
-                    return scope?.name || scopeId
-                  } catch (error) {
-                    logger.admin.warn('Failed to fetch optional client scope', { scopeId, error })
-                    return scopeId // fallback to ID if name fetch fails
-                  }
-                })
-              )
-              optionalScopeNames = optionalScopeDetails.filter(Boolean)
-            } catch (error) {
-              logger.admin.warn('Failed to fetch optional client scopes', { clientId: clients[0].clientId, error })
-            }
-          }
-
-          // Extract appType from client_type attribute
-          const clientType = fullClient.attributes?.['client_type']
-          const appType = Array.isArray(clientType) ? clientType[0] : clientType
-
-          // Check if offline_access is in optional scopes
-          const hasOfflineAccess = optionalScopeNames.includes('offline_access')
-
-          // Use enriched client with scope names instead of IDs
-          enrichedClient = {
-            ...fullClient,
-            defaultClientScopes: defaultScopeNames,
-            optionalClientScopes: optionalScopeNames,
-            appType: appType || (fullClient.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
-            clientType: (fullClient.serviceAccountsEnabled ? 'backend-service' : (fullClient.publicClient ? 'public' : 'confidential')) as 'backend-service' | 'public' | 'confidential',
-            
-            // Client secret — masked in detail responses (Keycloak returns plaintext to admin callers)
-            ...(fullClient.secret && { secret: '**********' }),
-            
-            // Extract metadata fields from attributes
-            launchUrl: getAttr(fullClient.attributes, 'launch_url'),
-            logoUri: getAttr(fullClient.attributes, 'logo_uri'),
-            tosUri: getAttr(fullClient.attributes, 'tos_uri'),
-            policyUri: getAttr(fullClient.attributes, 'policy_uri'),
-            contacts: getAttr(fullClient.attributes, 'contacts')?.split(',').filter(Boolean),
-            
-            // Server access control
-            serverAccessType: getAttr(fullClient.attributes, 'server_access_type') as 'all-servers' | 'selected-servers' | 'user-person-servers' | undefined,
-            allowedServerIds: getAttr(fullClient.attributes, 'allowed_server_ids')?.split(',').filter(Boolean),
-            
-            // Organization assignment
-            organizationIds: getAttr(fullClient.attributes, 'organization_ids')?.split(',').filter(Boolean) || [],
-            
-            // Scope set reference
-            scopeSetId: getAttr(fullClient.attributes, 'scope_set_id'),
-            
-            // PKCE and offline access
-            requirePkce: getAttr(fullClient.attributes, 'pkce.code.challenge.method')?.includes('S256'),
-            allowOfflineAccess: hasOfflineAccess,
-            
-            // Token exchange & access token lifespan
-            tokenExchangeEnabled: getAttr(fullClient.attributes, 'standard.token.exchange.enabled') === 'true',
-            accessTokenLifespan: getAttr(fullClient.attributes, 'access.token.lifespan') ? Number(getAttr(fullClient.attributes, 'access.token.lifespan')) : undefined,
-            
-            // Audience mappers
-            audienceClients: (fullClient as any).protocolMappers
-              ?.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
-              ?.map((m: any) => m.config?.['included.client.audience'])
-                ?.filter(Boolean) || [],
-              
-              // User type & role restrictions
-              allowedFhirUserTypes: getAttr(fullClient.attributes, 'allowed_fhir_user_types')?.split(',').filter(Boolean) || [],
-              requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
-              
-              // Consent & scope settings
-              consentRequired: fullClient.consentRequired ?? false,
-              fullScopeAllowed: fullClient.fullScopeAllowed ?? true,
-              
-              // Session timeout settings
-              clientSessionIdleTimeout: getAttr(fullClient.attributes, 'client.session.idle.timeout') ? Number(getAttr(fullClient.attributes, 'client.session.idle.timeout')) : undefined,
-              clientSessionMaxLifespan: getAttr(fullClient.attributes, 'client.session.max.lifespan') ? Number(getAttr(fullClient.attributes, 'client.session.max.lifespan')) : undefined,
-              
-              // Logout settings
-              backchannelLogoutUrl: getAttr(fullClient.attributes, 'backchannel.logout.url') || undefined,
-              frontChannelLogoutUrl: getAttr(fullClient.attributes, 'frontchannel.logout.url') || undefined,
-          } as SmartAppType
-        }
+        enrichedClient = await enrichClient(admin, clients[0])
       } catch (error) {
         logger.admin.warn('Failed to enrich individual client with scope details', { clientId: clients[0].clientId, error })
       }
@@ -792,6 +609,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.requiredRoles !== undefined && {
             'required_roles': body.requiredRoles.length > 0 ? body.requiredRoles.join(',') : ''
           }),
+          // fhirUser resolution mode
+          ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
           // Session timeout overrides
           ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
           ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),
@@ -810,6 +629,13 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           serviceAccountsEnabled: effectiveClientType === 'backend-service',
           standardFlowEnabled: effectiveClientType !== 'backend-service',
         }),
+        // Token endpoint auth method → Keycloak clientAuthenticatorType
+        ...(body.tokenEndpointAuthMethod !== undefined && {
+          clientAuthenticatorType: toKeycloakAuthType(
+            body.tokenEndpointAuthMethod,
+            effectiveClientType === 'backend-service' || !!existing.serviceAccountsEnabled
+          ),
+        }),
       }
       await admin.clients.update({ id: existing.id! }, updateData)
 
@@ -817,7 +643,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       if (body.requiredRoles !== undefined) {
         try {
           const existingRoles = await admin.clients.listRoles({ id: existing.id! })
-          const existingNames = new Set(existingRoles.map((r: any) => r.name))
+          const existingNames = new Set(existingRoles.map((r) => r.name))
           const desiredNames = new Set(body.requiredRoles)
 
           // Create missing roles
@@ -844,7 +670,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         try {
           // Remove existing audience mappers
           const existingMappers = await admin.clients.listProtocolMappers({ id: existing.id! })
-          const audienceMappers = existingMappers.filter((m: any) => m.protocolMapper === 'oidc-audience-mapper')
+          const audienceMappers = existingMappers.filter((m) => m.protocolMapper === 'oidc-audience-mapper')
           for (const mapper of audienceMappers) {
             if (mapper.id) {
               await admin.clients.delProtocolMapper({ id: existing.id!, mapperId: mapper.id })
@@ -874,61 +700,21 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
       if (body.defaultClientScopes || body.optionalClientScopes) {
         try {
           // Get all available client scopes to find matching ones by name
-          const allClientScopes = await admin.clientScopes.find()
+          let allClientScopes = await admin.clientScopes.find()
 
-          if (body.defaultClientScopes) {
-            // Remove all existing default client scopes
-            const existingClient = await admin.clients.findOne({ id: existing.id! })
-            if (existingClient?.defaultClientScopes) {
-              for (const scopeId of existingClient.defaultClientScopes) {
-                try {
-                  await admin.clients.delDefaultClientScope({ id: existing.id!, clientScopeId: scopeId })
-                } catch (error) {
-                  logger.admin.warn('Failed to remove existing default scope', { clientId: existing.clientId, scopeId, error })
-                }
-              }
-            }
+          // Auto-create any missing SMART scopes (resource-level AND launch-level)
+          const allRequestedScopes = [...(body.defaultClientScopes || []), ...(body.optionalClientScopes || [])]
+          allClientScopes = await ensureScopesExist(admin, allRequestedScopes, allClientScopes)
 
-            // Add new default scopes
-            const defaultScopeIds = body.defaultClientScopes
-              .map((scopeName: string) => allClientScopes.find(scope => scope.name === scopeName)?.id)
-              .filter(Boolean) as string[]
-
-            for (const scopeId of defaultScopeIds) {
-              try {
-                await admin.clients.addDefaultClientScope({ id: existing.id!, clientScopeId: scopeId })
-              } catch (error) {
-                logger.admin.warn('Failed to add new default scope', { clientId: existing.clientId, scopeId, error })
-              }
-            }
-          }
-
-          if (body.optionalClientScopes) {
-            // Remove all existing optional client scopes
-            const existingClient = await admin.clients.findOne({ id: existing.id! })
-            if (existingClient?.optionalClientScopes) {
-              for (const scopeId of existingClient.optionalClientScopes) {
-                try {
-                  await admin.clients.delOptionalClientScope({ id: existing.id!, clientScopeId: scopeId })
-                } catch (error) {
-                  logger.admin.warn('Failed to remove existing optional scope', { clientId: existing.clientId, scopeId, error })
-                }
-              }
-            }
-
-            // Add new optional scopes
-            const optionalScopeIds = body.optionalClientScopes
-              .map((scopeName: string) => allClientScopes.find(scope => scope.name === scopeName)?.id)
-              .filter(Boolean) as string[]
-
-            for (const scopeId of optionalScopeIds) {
-              try {
-                await admin.clients.addOptionalClientScope({ id: existing.id!, clientScopeId: scopeId })
-              } catch (error) {
-                logger.admin.warn('Failed to add new optional scope', { clientId: existing.clientId, scopeId, error })
-              }
-            }
-          }
+          // Replace scopes using proper scope IDs from the list sub-resources
+          await replaceClientScopes(
+            admin,
+            existing.id!,
+            existing.clientId!,
+            allClientScopes,
+            body.defaultClientScopes,
+            body.optionalClientScopes,
+          )
 
           // Auto-provision SMART protocol mappers on updated scopes
           const updatedScopeNames = [...(body.defaultClientScopes || []), ...(body.optionalClientScopes || [])]
@@ -951,10 +737,28 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
+      // Handle JWKS update (stores JWKS for proxy-side JWT validation)
+      if (body.jwksString || body.publicKey || body.jwksUri) {
+        try {
+          await registerJwksForClient(admin, existing.id!, {
+            jwksString: body.jwksString,
+            publicKeyPem: body.publicKey,
+          })
+          logger.admin.debug('JWKS updated for client', { clientId: params.clientId })
+        } catch (error) {
+          logger.admin.warn('Failed to update JWKS for client', { clientId: params.clientId, error })
+        }
+      }
+
+      // Refresh CORS origins cache (webOrigins may have changed)
+      refreshCorsOrigins().catch(() => {})
+
+      // Invalidate client config cache (patientFacing etc. may have changed)
+      invalidateClientConfig(params.clientId)
+
       return { success: true, message: 'SMART application updated successfully' }
     } catch (error) {
-      set.status = 400
-      return { error: 'Failed to update SMART application', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ClientIdParam,
@@ -993,6 +797,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         return { error: 'SMART application not found' }
       }
       await admin.clients.del({ id: clients[0].id! })
+
+      // Refresh CORS origins cache (removed app's webOrigins should be cleared)
+      refreshCorsOrigins().catch(() => {})
+
       return { success: true, message: 'SMART application deleted successfully' }
     } catch (error) {
       return handleAdminError(error, set)

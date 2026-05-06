@@ -29,19 +29,5 @@ jobs:
       is_prerelease: true
     secrets: inherit
 
-  # Note: Deployment is handled automatically by Northflank
-  # When code is pushed to 'develop', Northflank detects the commit and deploys automatically
-
-  # Test the deployed alpha application
-  #test-alpha-deployment:
-  #  name: Test Alpha Deployment
-  #  needs: [alpha-release]
-  #  uses: ./.github/workflows/testing-strategy.yml
-  #  with:
-  #    test_stage: 'alpha'
-   #   deployment_target: 'northflank'
-    #  fhir_server_url: 'https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run/proxy-smart-backend/hapi-fhir-server/R4'
-    #  keycloak_url: 'https://p01--keycloak-alpha--776jg9nwd8rw.code.run'
-    #  app_version: ${{ needs.alpha-release.outputs.version }}
-    #secrets:
-    #  DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  # Note: Alpha is a development-only release. No live deployment.
+  # The release-orchestrator bumps the version and creates a GitHub prerelease tag.

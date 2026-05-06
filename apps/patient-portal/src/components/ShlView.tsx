@@ -12,7 +12,7 @@ import { parseShl, isShlExpired, resolveShl, createShlFhirClient, type ShlResult
 import { setActiveFhirClient, resetFhirClient } from "@/lib/fhir-client"
 import { setShlDicomwebMode, resetShlDicomwebMode } from "@/lib/dicomweb"
 import { Dashboard } from "@/components/Dashboard"
-import { AlertCircle, Link2, Clock, Lock } from "lucide-react"
+import { AlertCircle, Link2, Clock, Lock, ShieldOff, RefreshCw } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { format } from "date-fns"
 
@@ -121,10 +121,54 @@ export function ShlView() {
   }
 
   if (state.phase === "error") {
+    const isExpired = state.message.toLowerCase().includes("expired")
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <AlertCircle className="size-12 text-destructive" />
-        <p className="text-destructive font-medium">{state.message}</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-6 max-w-md mx-auto text-center px-4">
+        {isExpired ? (
+          <>
+            <div className="rounded-full bg-amber-100 dark:bg-amber-950/50 p-4">
+              <ShieldOff className="size-10 text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">
+                {t("shl.expiredTitle", "This Link Has Expired")}
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {t(
+                  "shl.expiredDescription",
+                  "The person who shared these health records set a time limit for access. This link is no longer active."
+                )}
+              </p>
+            </div>
+            <div className="bg-muted/50 rounded-lg p-4 w-full space-y-2 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{t("shl.expiredWhatNow", "What can you do?")}</p>
+              <ul className="list-disc list-inside space-y-1 text-left">
+                <li>{t("shl.expiredTip1", "Ask the sender for a new link")}</li>
+                <li>{t("shl.expiredTip2", "Check your messages for an updated link")}</li>
+                <li>{t("shl.expiredTip3", "The sender can create a new share from their patient portal")}</li>
+              </ul>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="rounded-full bg-destructive/10 p-4">
+              <AlertCircle className="size-10 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-semibold">
+                {t("shl.errorTitle", "Unable to Open Link")}
+              </h2>
+              <p className="text-muted-foreground text-sm">{state.message}</p>
+            </div>
+            <button
+              onClick={() => resolve()}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+            >
+              <RefreshCw className="size-4" />
+              {t("shl.retry", "Try Again")}
+            </button>
+          </>
+        )}
       </div>
     )
   }

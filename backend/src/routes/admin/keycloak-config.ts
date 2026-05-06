@@ -3,6 +3,7 @@ import { logger } from '@/lib/logger'
 import { config } from '@/config'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { validateAdminToken } from '@/lib/auth'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import fs from 'fs'
 import path from 'path'
 import {
@@ -13,6 +14,7 @@ import {
   KeycloakConfigResponse,
   type SaveKeycloakConfigRequestType
 } from '@/schemas/admin/keycloak'
+import { ErrorResponse } from '@/schemas'
 
 /**
  * Keycloak Configuration Management
@@ -140,14 +142,18 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
   
   // Get current Keycloak configuration status
   .get('/status', async ({ headers, set }) => {
-    const token = extractBearerToken(headers)
-    if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } as any }
-    await validateAdminToken(token)
-    return {
-      baseUrl: config.keycloak.baseUrl,
-      realm: config.keycloak.realm,
-      hasAdminClient: !!(config.keycloak.adminClientId && config.keycloak.adminClientSecret),
-      adminClientId: config.keycloak.adminClientId || null
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+      await validateAdminToken(token)
+      return {
+        baseUrl: config.keycloak.baseUrl,
+        realm: config.keycloak.realm,
+        hasAdminClient: !!(config.keycloak.adminClientId && config.keycloak.adminClientSecret),
+        adminClientId: config.keycloak.adminClientId || null
+      }
+    } catch (error) {
+      return handleAdminError(error, set)
     }
   }, {
     detail: {
@@ -156,7 +162,8 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
       tags: ['admin']
     },
     response: {
-      200: KeycloakConfigResponse
+      200: KeycloakConfigResponse,
+      401: ErrorResponse
     }
   })
   

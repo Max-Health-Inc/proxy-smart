@@ -49,19 +49,21 @@ on:
         value: ${{ jobs.smart-compliance-test.outputs.status }}
   
   # Feature branches - test with local CI stack
+  # NOTE: 'test' and 'main' are intentionally excluded here because their
+  # release workflows (release-beta.yml, release-production.yml) call
+  # testing-strategy.yml → smart-compliance-tests.yml AFTER deployment.
+  # Running compliance tests directly on push would race against deployment
+  # and hit a 503 because the new code isn't deployed yet.
+  # NOTE: 'develop' is excluded because alpha is a dev-only release with no live deployment.
   push:
     branches:
       - 'dev/*'
       - 'develop/*'
-      - 'develop'  # Alpha deployed
-      - 'test'     # Beta deployed
-      - 'main'     # Production deployed
     tags:
       - 'v*'
     paths:
       - 'backend/**'
       - 'lib/**'
-      - 'shared-ui/**'
       - 'apps/**'
       - 'Dockerfile'
       - 'Dockerfile.keycloak'
@@ -85,12 +87,10 @@ permissions:
 env:
   # Determine test stage based on branch
   # dev/* and develop/* -> dev (local)
-  # develop -> alpha (Northflank)
   # test -> beta (VPS)
   # main -> production (AWS)
   TEST_STAGE: ${{ 
     (startsWith(github.ref, 'refs/heads/dev/') || startsWith(github.ref, 'refs/heads/develop/')) && 'dev' ||
-    github.ref == 'refs/heads/develop' && 'alpha' ||
     github.ref == 'refs/heads/test' && 'beta' ||
     github.ref == 'refs/heads/main' && 'production' ||
     inputs.test_stage || 'dev' }}
@@ -123,22 +123,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       
-      # Inferno's postgres
-      inferno-db:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: inferno
-          POSTGRES_PASSWORD: inferno
-          POSTGRES_DB: inferno
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-      
-      # Redis for Inferno
+      # Redis for Inferno (Sidekiq job queue)
       redis:
         image: redis:8-alpine
         ports:
@@ -267,11 +252,19 @@ jobs:
         if: steps.config.outputs.target != 'deployed'
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: '1.3.13'
 
       - name: Install dependencies
         if: steps.config.outputs.target != 'deployed'
         run: bun install
+
+      - name: Build Patient Picker
+        if: steps.config.outputs.target != 'deployed'
+        run: bun run build:patient-picker:static
+
+      - name: Copy Apps to Backend
+        if: steps.config.outputs.target != 'deployed'
+        run: bun run copy:apps-to-backend
 
       - name: Build Backend
         if: steps.config.outputs.target != 'deployed'
@@ -449,7 +442,7 @@ jobs:
           echo "Keycloak: $KC_URL"
           echo "Realm: $KC_REALM"
           
-          # Check backend health (with retries — Northflank may be cold-starting)
+          # Check backend health (with retries — deployed service may be cold-starting)
           echo "Checking backend health..."
           BACKEND_OK=false
           for i in $(seq 1 20); do
@@ -463,7 +456,7 @@ jobs:
           done
           if [ "$BACKEND_OK" = "false" ]; then
             echo "ERROR: Backend not reachable at $BACKEND_URL/health after 20 attempts"
-            echo "Make sure the service is scaled up on Northflank"
+            echo "Make sure the deployed service is running"
             exit 1
           fi
           
@@ -731,13 +724,12 @@ jobs:
       - name: Resolve Inferno Version
         id: inferno-version
         run: |
-          LATEST_TAG=$(curl -sf https://api.github.com/repos/inferno-framework/smart-app-launch-test-kit/releases/latest | jq -r '.tag_name')
-          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-            echo "WARNING: Could not fetch latest release, falling back to main"
-            LATEST_TAG="main"
-          fi
-          echo "Inferno version: $LATEST_TAG"
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          # Pin to v0.6.4 — last known working release.
+          # v1.0.0 (inferno_core 1.0.2) changed DB/migration internals and breaks our setup.
+          # TODO: Test and migrate to v1.0.0+ (uses `bundle exec inferno migrate` instead of rake)
+          PINNED_TAG="v0.6.4"
+          echo "Inferno version: $PINNED_TAG (pinned)"
+          echo "tag=$PINNED_TAG" >> $GITHUB_OUTPUT
 
       - name: Cache Inferno
         id: inferno-cache
@@ -745,38 +737,32 @@ jobs:
         with:
           path: |
             inferno
-            ~/.bundle
-          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3
+          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3-v2
 
       - name: Setup Inferno
         if: steps.inferno-cache.outputs.cache-hit != 'true'
         run: |
           TAG="${{ steps.inferno-version.outputs.tag }}"
-          if [ "$TAG" = "main" ]; then
-            git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          else
-            git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          fi
-          cd inferno
-          bundle install
-          
-          # Setup database
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
-          export REDIS_URL="redis://localhost:6379"
-          bundle exec rake db:migrate || bundle exec rake db:setup || true
+          git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
 
-      - name: Setup Inferno DB (cached)
-        if: steps.inferno-cache.outputs.cache-hit == 'true'
+      # Always run bundle install — the cache only stores the git clone, not installed gems.
+      # bundle install is fast (~5s) when Gemfile.lock hasn't changed.
+      - name: Install Inferno Gems
         run: |
           cd inferno
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4
+
+      - name: Setup Inferno DB
+        run: |
+          cd inferno
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
 
       - name: Start Inferno
         run: |
           cd inferno
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          # Inferno uses SQLite internally — do NOT set DATABASE_URL
           export REDIS_URL="redis://localhost:6379"
           
           # Disable TLS tests in local CI (no HTTPS) — TLS is validated on deployed environments
@@ -798,14 +784,23 @@ jobs:
           
           # Wait for Inferno to be ready
           echo "Waiting for Inferno..."
+          INFERNO_READY=false
           for i in {1..60}; do
             if curl -sf http://localhost:4567 > /dev/null 2>&1; then
               echo "Inferno is ready!"
+              INFERNO_READY=true
               break
             fi
             echo "Attempt $i/60..."
             sleep 5
           done
+          
+          if [ "$INFERNO_READY" = "false" ]; then
+            echo "ERROR: Inferno failed to start after 300 seconds"
+            echo "Puma logs:"
+            jobs -l || true
+            exit 1
+          fi
 
       # Register test client in Keycloak (only for local targets - deployed already configured)
       - name: Verify Keycloak Setup

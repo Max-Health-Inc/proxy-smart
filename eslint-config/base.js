@@ -10,11 +10,18 @@ import globals from 'globals'
 
 /** Core TypeScript rules shared by all packages */
 export const sharedRules = {
+  // ── Code quality ──────────────────────────────────────────────────
   '@typescript-eslint/no-unused-vars': [
     'error',
     { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
   ],
-  '@typescript-eslint/no-explicit-any': 'warn',
+  '@typescript-eslint/no-explicit-any': 'error',
+  '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'inline-type-imports', disallowTypeAnnotations: false }],
+
+  // ── Best practices ────────────────────────────────────────────────
+  'eqeqeq': ['error', 'always'],
+  'no-var': 'error',
+  'prefer-const': 'error',
 }
 
 /**
@@ -37,7 +44,6 @@ export function baseConfig({ tsconfigRootDir, files, ignores = [] }) {
       },
       rules: {
         ...sharedRules,
-        'no-console': 'off',
       },
     },
   ]

@@ -3,6 +3,9 @@ FROM quay.io/keycloak/keycloak:26.6.1
 # Copy the realm export file (will be overridden by docker-compose volume mount if needed)
 COPY keycloak/realm-export.json /opt/keycloak/data/import/realm-export.json
 
+# Copy custom login theme (IdP button icons, branding overrides)
+COPY keycloak/themes/proxy-smart /opt/keycloak/themes/proxy-smart
+
 # Set environment variables for production operation
 ENV KEYCLOAK_ADMIN=admin
 ENV KC_DB=postgres

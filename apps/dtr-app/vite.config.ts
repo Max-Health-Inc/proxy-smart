@@ -1,4 +1,4 @@
-import { createSmartViteConfig } from '../../shared-ui/vite-config'
+import { createSmartViteConfig } from '../../config/vite-config'
 
 export default createSmartViteConfig(
   { base: '/apps/dtr/', port: 5175 },

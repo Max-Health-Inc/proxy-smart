@@ -9,10 +9,10 @@ import {
   ExportResponse, 
   OAuthEventsResponse, 
   OAuthAnalyticsResponse,
-  MonitoringHealthResponseType,
-  ExportResponseType,
-  OAuthEventsResponseType,
-  OAuthAnalyticsResponseType
+  type MonitoringHealthResponseType,
+  type ExportResponseType,
+  type OAuthEventsResponseType,
+  type OAuthAnalyticsResponseType
 } from '../schemas/monitoring';
 
 /**
@@ -394,10 +394,14 @@ export const oauthMonitoringRoutes = new Elysia({ prefix: '/monitoring/oauth', t
       };
     }
 
+    const totalRequests = analytics.totalFlows || 0;
+    const successfulRequests = Math.round(totalRequests * ((analytics.successRate || 0) / 100));
+    const failedRequests = totalRequests - successfulRequests;
+
     return {
-      totalRequests: analytics.totalFlows || 0,
-      successfulRequests: (analytics.totalFlows || 0) * ((analytics.successRate || 0) / 100),
-      failedRequests: (analytics.totalFlows || 0) * (1 - ((analytics.successRate || 0) / 100)),
+      totalRequests,
+      successfulRequests,
+      failedRequests,
       successRate: analytics.successRate || 0,
       averageResponseTime: analytics.averageResponseTime || 0,
       activeTokens: analytics.activeTokens || 0,
@@ -444,7 +448,27 @@ export const oauthMonitoringRoutes = new Elysia({ prefix: '/monitoring/oauth', t
     }
 
     const analytics = oauthMetricsLogger.getAnalytics();
+    const storagePercent = Math.round(
+      (oauthMetricsLogger.getEventCount() / oauthMetricsLogger.getEventCapacity()) * 100
+    );
+    const throughput = oauthMetricsLogger.getThroughputPerMinute();
     
+    const alerts: Array<{ type: string; message: string }> = [];
+
+    if (analytics && analytics.averageResponseTime > 500) {
+      alerts.push({
+        type: 'warning',
+        message: `High response time detected on authorization endpoint (avg ${analytics.averageResponseTime.toFixed(0)}ms)`,
+      });
+    }
+
+    if (storagePercent >= 70) {
+      alerts.push({
+        type: 'info',
+        message: `Token storage is at ${storagePercent}% capacity. Consider cleanup or expansion.`,
+      });
+    }
+
     return {
       oauthServer: {
         status: 'healthy',
@@ -454,23 +478,14 @@ export const oauthMonitoringRoutes = new Elysia({ prefix: '/monitoring/oauth', t
       tokenStore: {
         status: 'healthy',
         activeTokens: analytics?.activeTokens || 0,
-        storageUsed: 68, // This would be calculated based on actual storage
+        storageUsed: storagePercent,
       },
       network: {
         status: 'healthy',
-        throughput: '1.2k req/min', // This would be calculated from actual metrics
+        throughput,
         errorRate: analytics ? (100 - analytics.successRate) : 0,
       },
-      alerts: [
-        ...(analytics && analytics.averageResponseTime > 500 ? [{
-          type: 'warning',
-          message: `High response time detected on authorization endpoint (avg ${analytics.averageResponseTime.toFixed(0)}ms)`
-        }] : []),
-        {
-          type: 'info',
-          message: 'Token storage is at 68% capacity. Consider cleanup or expansion.'
-        }
-      ],
+      alerts,
       timestamp: new Date().toISOString()
     };
   }, {

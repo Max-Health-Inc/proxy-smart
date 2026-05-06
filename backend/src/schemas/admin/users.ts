@@ -6,6 +6,20 @@ import { AttributesMap } from './common'
  */
 
 /**
+ * Federated identity link - represents a social/IdP login linked to a user
+ */
+export const FederatedIdentity = t.Object({
+  identityProvider: t.String({ description: 'Identity provider alias' }),
+  userId: t.String({ description: 'User ID at the identity provider' }),
+  userName: t.String({ description: 'Username at the identity provider' })
+}, { title: 'FederatedIdentity' })
+
+export const LinkFederatedIdentityRequest = t.Object({
+  userId: t.String({ description: 'User ID at the identity provider' }),
+  userName: t.String({ description: 'Username at the identity provider' })
+}, { title: 'LinkFederatedIdentityRequest' })
+
+/**
  * FHIR Person association - links a user to a Person resource on a specific FHIR server
  */
 export const FhirPersonAssociation = t.Object({
@@ -34,7 +48,10 @@ export const HealthcareUser = t.Object({
   
   // Additional user properties
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
-  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' }))
+  fhirUser: t.Optional(t.String({ description: 'FHIR User identity reference (e.g. Patient/123 or Practitioner/456)' })),
+  
+  // Federated identity links (social/IdP logins)
+  federatedIdentities: t.Optional(t.Array(FederatedIdentity, { description: 'Linked identity provider accounts' }))
 }, { title: 'HealthcareUser' })
 
 export const CreateHealthcareUserRequest = t.Object({
@@ -64,6 +81,13 @@ export const UpdateHealthcareUserRequest = t.Object({
   fhirPersons: t.Optional(t.Array(FhirPersonAssociation, { description: 'FHIR Person associations to update' })),
   realmRoles: t.Optional(t.Array(t.String(), { description: 'Realm-level roles' })),
   clientRoles: t.Optional(t.Record(t.String(), t.Array(t.String()))),
+  password: t.Optional(t.String({ description: 'New password (resets the user password)' })),
+  temporaryPassword: t.Optional(t.Boolean({ description: 'Whether password is temporary and must be changed on next login' })),
+  credentials: t.Optional(t.Array(t.Object({
+    type: t.String({ description: 'Credential type (e.g. "password")' }),
+    value: t.String({ description: 'Credential value' }),
+    temporary: t.Optional(t.Boolean({ description: 'Whether credential is temporary' }))
+  }), { description: 'Credentials array (alternative to password field)' })),
   
   // Additional user properties
   emailVerified: t.Optional(t.Boolean({ description: 'Whether the email is verified' })),
@@ -76,6 +100,8 @@ export const UserIdParam = t.Object({
 
 // TypeScript type inference helpers
 export type FhirPersonAssociationType = Static<typeof FhirPersonAssociation>
+export type FederatedIdentityType = Static<typeof FederatedIdentity>
+export type LinkFederatedIdentityRequestType = Static<typeof LinkFederatedIdentityRequest>
 export type HealthcareUserType = Static<typeof HealthcareUser>
 export type CreateHealthcareUserRequestType = Static<typeof CreateHealthcareUserRequest>
 export type UpdateHealthcareUserRequestType = Static<typeof UpdateHealthcareUserRequest>

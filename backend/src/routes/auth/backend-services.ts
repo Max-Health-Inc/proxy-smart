@@ -16,16 +16,58 @@
  *   5. Return the token to the client
  */
 
+import { createPublicKey } from 'crypto'
 import jwt from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
 import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
 
+/** A JSON Web Key with required kty and optional kid, plus any additional JWK fields */
+interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
+
+/** Metadata returned by the client lookup helper */
+interface ClientMetadata {
+  jwks: { keys: JwkKey[] }
+  internalId: string
+}
+
 const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+
+/** Maximum JWT lifetime allowed (5 minutes per SMART STU2.2 spec) */
+const MAX_JWT_LIFETIME_SECONDS = 300
+
+/** TTL for JWKS/secret cache entries (60 seconds) */
+const CACHE_TTL_MS = 60_000
 
 /** Cached admin-service access token for Keycloak admin API calls */
 let adminTokenCache: { token: string; expiresAt: number } | null = null
+
+// ─── jti replay protection ──────────────────────────────────────────────────
+// Map of `${iss}:${jti}` → expiration timestamp (seconds since epoch).
+// Entries are kept until the JWT's exp passes, preventing replay within the
+// token's lifetime window (max 5 minutes per spec).
+const usedJtis = new Map<string, number>()
+
+/** Purge expired jti entries to prevent unbounded memory growth. */
+function purgeExpiredJtis(): void {
+  const now = Math.floor(Date.now() / 1000)
+  for (const [key, exp] of usedJtis) {
+    if (exp <= now) usedJtis.delete(key)
+  }
+}
+
+/** Clear jti cache (exposed for testing). */
+export function clearJtiCache(): void {
+  usedJtis.clear()
+  jwksCache.clear()
+  secretCache.clear()
+  adminTokenCache = null
+}
+
+// ─── Client config cache (metadata + secret) ───────────────────────────────
+interface CacheEntry<T> { value: T; expiresAt: number }
+const jwksCache = new Map<string, CacheEntry<ClientMetadata>>()
+const secretCache = new Map<string, CacheEntry<string>>()
 
 /**
  * Detect whether a token request is a Backend Services flow.
@@ -83,17 +125,38 @@ export async function handleBackendServicesToken(
     return { status: 400, body: { error: 'invalid_client', error_description: 'JWT has expired' } }
   }
 
+  // 5b. exp ceiling: MUST be no more than 5 minutes in the future (SMART STU2.2 §4.1.5.1)
+  const now = Math.floor(Date.now() / 1000)
+  if (exp > now + MAX_JWT_LIFETIME_SECONDS + 30) { // +30s clock skew tolerance
+    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT exp must not be more than 5 minutes in the future' } }
+  }
+
   // 6. jti MUST be present (replay protection)
   if (!jti) {
     return { status: 400, body: { error: 'invalid_client', error_description: 'JWT must contain a jti claim' } }
   }
 
+  // 6b. jti replay check: jti must not have been used before for this iss (SMART STU2.2 §4.1.5.2.1)
+  purgeExpiredJtis()
+  const jtiKey = `${iss}:${jti}`
+  if (usedJtis.has(jtiKey)) {
+    logger.auth.warn('Backend Services JWT replay detected', { clientId: iss, jti })
+    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT jti has already been used' } }
+  }
+  usedJtis.set(jtiKey, exp)
+
+  // 6c. client_id body param validation (SMART STU2.2 §4.1.5.2.1)
+  // If client_id is provided in the request body, it MUST match the JWT iss claim.
+  if (body.client_id && body.client_id !== iss) {
+    return { status: 400, body: { error: 'invalid_client', error_description: 'client_id does not match JWT iss claim' } }
+  }
+
   const clientId = iss
 
-  // 7. Fetch the client's registered JWKS from Keycloak admin API
-  let clientJwksJson: { keys: Array<Record<string, unknown>> }
+  // 7. Fetch the client's registered metadata (JWKS + auth type) from Keycloak admin API
+  let clientMeta: ClientMetadata
   try {
-    clientJwksJson = await getClientJwks(clientId)
+    clientMeta = await getClientMetadata(clientId)
   } catch (err) {
     logger.auth.error('Failed to fetch client JWKS for Backend Services', { clientId, error: err })
     return { status: 400, body: { error: 'invalid_client', error_description: 'Client not found or has no registered JWKS' } }
@@ -101,18 +164,19 @@ export async function handleBackendServicesToken(
 
   // 8. Verify JWT signature against the client's JWKS
   try {
-    await verifyJwtSignature(assertion, decoded.header, clientJwksJson)
+    await verifyJwtSignature(assertion, decoded.header, clientMeta.jwks)
   } catch (err) {
     logger.auth.warn('Backend Services JWT signature verification failed', { clientId, error: err })
     return { status: 400, body: { error: 'invalid_client', error_description: 'JWT signature verification failed' } }
   }
 
-  // 9. JWT is valid — get a service account token from Keycloak
-  //    We authenticate using the client's internal secret (configured in Keycloak).
+  // 9. JWT is valid — get a service account token from Keycloak.
+  //    The proxy has already enforced private_key_jwt (steps 4-8).
+  //    Internally, we authenticate to Keycloak using client_secret.
+  //    Keycloak is just our token factory; the proxy is the SMART authorization server.
   try {
-    const clientSecret = await getClientSecret(clientId)
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-
+    const clientSecret = await getClientSecret(clientId, clientMeta.internalId)
     const formData = new URLSearchParams()
     formData.append('grant_type', 'client_credentials')
     formData.append('client_id', clientId)
@@ -172,10 +236,16 @@ async function getAdminToken(): Promise<string> {
 }
 
 /**
- * Fetch the JWKS registered for a Keycloak client.
- * Uses the admin REST API: GET /admin/realms/{realm}/clients?clientId=X → attrs.jwks.string
+ * Fetch client metadata from Keycloak admin API (with TTL cache).
+ * Returns JWKS, internal UUID, and the client's authenticator type.
+ * Uses: GET /admin/realms/{realm}/clients?clientId=X
  */
-async function getClientJwks(clientId: string): Promise<{ keys: Array<Record<string, unknown>> }> {
+async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
+  const cached = jwksCache.get(clientId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value
+  }
+
   const adminToken = await getAdminToken()
   const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
 
@@ -197,37 +267,40 @@ async function getClientJwks(clientId: string): Promise<{ keys: Array<Record<str
     throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
 
+  let jwks: { keys: JwkKey[] }
+
   // jwks.string is a JSON string of the JWKS
   if (client.attributes?.['jwks.string']) {
-    return JSON.parse(jwksString)
+    jwks = JSON.parse(jwksString)
+  } else {
+    // jwks.url — fetch it
+    const jwksResp = await fetch(jwksString)
+    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksString}`)
+    jwks = await jwksResp.json()
   }
 
-  // jwks.url — fetch it
-  const jwksResp = await fetch(jwksString)
-  if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksString}`)
-  return await jwksResp.json()
+  const result: ClientMetadata = {
+    jwks,
+    internalId: client.id,
+  }
+
+  jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })
+  return result
 }
 
 /**
- * Fetch the client secret from Keycloak admin API.
- * GET /admin/realms/{realm}/clients/{id}/client-secret
+ * Fetch the client secret from Keycloak admin API (with TTL cache).
+ * GET /admin/realms/{realm}/clients/{internalId}/client-secret
  */
-async function getClientSecret(clientId: string): Promise<string> {
+async function getClientSecret(clientId: string, internalId: string): Promise<string> {
+  const cached = secretCache.get(clientId)
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value
+  }
+
   const adminToken = await getAdminToken()
 
-  // First get the internal UUID for this clientId
-  const searchUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients?clientId=${encodeURIComponent(clientId)}`
-  const resp = await fetch(searchUrl, {
-    headers: { Authorization: `Bearer ${adminToken}` }
-  })
-  if (!resp.ok) throw new Error(`Failed to look up client '${clientId}': ${resp.status}`)
-
-  const clients = await resp.json()
-  if (!clients.length) throw new Error(`Client '${clientId}' not found`)
-
-  const internalId = clients[0].id
-
-  // Fetch the secret
+  // Fetch the secret using the internal UUID
   const secretResp = await fetch(
     `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients/${internalId}/client-secret`,
     { headers: { Authorization: `Bearer ${adminToken}` } }
@@ -235,17 +308,21 @@ async function getClientSecret(clientId: string): Promise<string> {
   if (!secretResp.ok) throw new Error(`Failed to fetch secret for client '${clientId}': ${secretResp.status}`)
 
   const secretData = await secretResp.json()
-  return secretData.value
+  const secret = secretData.value
+
+  secretCache.set(clientId, { value: secret, expiresAt: Date.now() + CACHE_TTL_MS })
+  return secret
 }
 
 /**
  * Verify the JWT signature against a JWKS.
  * Finds the matching key by kid (or uses the first key), then verifies.
+ * Uses crypto.createPublicKey to convert JWK → PEM directly (no network fallback).
  */
 async function verifyJwtSignature(
   token: string,
   header: jwt.JwtHeader,
-  jwksJson: { keys: Array<Record<string, unknown>> }
+  jwksJson: { keys: JwkKey[] }
 ): Promise<void> {
   // Find the matching key by kid, or fall back to first key
   const matchingKey = header.kid
@@ -256,13 +333,9 @@ async function verifyJwtSignature(
     throw new Error(`No matching key found for kid '${header.kid}'`)
   }
 
-  // Use jwks-rsa to convert the JWK to a PEM public key
-  const client = jwksClient({
-    jwksUri: 'https://unused', // not used — we provide keys directly
-    getKeysInterceptor: () => jwksJson.keys as any
-  })
-  const signingKey = await client.getSigningKey(matchingKey.kid as string)
-  const publicKey = signingKey.getPublicKey()
+  // Convert JWK to PEM public key using Node's built-in crypto
+  const keyObject = createPublicKey({ key: matchingKey, format: 'jwk' })
+  const publicKey = keyObject.export({ type: 'spki', format: 'pem' }) as string
 
   // Verify the token — only check signature, we already validated claims above
   jwt.verify(token, publicKey, {

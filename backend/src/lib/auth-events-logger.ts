@@ -347,7 +347,7 @@ class AuthEventsLogger {
         .sort((a, b) => b.count - a.count)
         .slice(0, 10)
 
-      const recentErrors = this.events.filter(e => !e.success).slice(0, 20)
+      const recentErrors = recent.filter(e => !e.success).slice(0, 20)
 
       this.analytics = {
         totalEvents: recent.length,

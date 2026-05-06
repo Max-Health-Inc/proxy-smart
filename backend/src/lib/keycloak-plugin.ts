@@ -6,10 +6,13 @@ import { AuthenticationError, ConfigurationError } from './admin-utils'
 import { config } from '../config'
 
 /**
- * Plugin that adds Keycloak admin client decorator
- * Uses the user's token for admin operations - no backend credentials stored
- * This is a proxy pattern where admin permissions are controlled by Keycloak user roles
+ * Plugin that adds Keycloak admin client decorator.
+ *
+ * Uses the caller's Bearer token so Keycloak RBAC applies directly.
+ * The user's fine-grained permissions (manage-users, manage-clients, etc.)
+ * are enforced by Keycloak on every admin API call.
  */
+
 /**
  * Standalone factory for creating a Keycloak admin client from a user token.
  * Shared by both the Elysia plugin (decorator) and the MCP tool executor.
@@ -95,6 +98,7 @@ export async function createAdminClient(userToken: string) {
         baseUrl: process.env.KEYCLOAK_BASE_URL,
         realm: process.env.KEYCLOAK_REALM
       })
+
       return kcAdminClient
     } catch (error) {
       logger.auth.error('Error in keycloak plugin', { error })

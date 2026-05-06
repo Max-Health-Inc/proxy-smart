@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  Badge,
   Button,
   Input,
   Label,
@@ -18,9 +19,10 @@ import {
   SelectValue,
 } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Shield, Server, Database, Trash2 } from 'lucide-react';
+import { Shield, Server, Database, Trash2, Link2, Unlink, Plus, Undo2 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
+import type { FederatedIdentity, IdentityProviderResponse } from '@/lib/api-client';
 import { createPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
 
@@ -39,16 +41,33 @@ export interface EditUserFormData {
   clientRoles: Record<string, string[]>;
 }
 
+/** Pending IdP operations collected during form editing, executed on save */
+export type PendingIdPLink = {
+  type: 'link';
+  provider: string;
+  idpUserId: string;
+  userName: string;
+};
+
+export type PendingIdPUnlink = {
+  type: 'unlink';
+  provider: string;
+};
+
+export type PendingIdPOperation = PendingIdPLink | PendingIdPUnlink;
+
 interface HealthcareUserEditFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: EditUserFormData) => Promise<void>;
+  onSubmit: (formData: EditUserFormData, pendingIdPOps: PendingIdPOperation[]) => Promise<void>;
   submitting: boolean;
   user: EditUserFormData | null;
   fhirServers: FhirServer[];
   availableRealmRoles: string[];
   availableClientRoles: Record<string, string[]>;
   getAllAvailableRoles: () => string[];
+  federatedIdentities?: FederatedIdentity[];
+  availableIdPs?: IdentityProviderResponse[];
 }
 
 const initialFormData: EditUserFormData = {
@@ -76,17 +95,21 @@ export function HealthcareUserEditForm({
   availableRealmRoles,
   availableClientRoles,
   getAllAvailableRoles,
+  federatedIdentities,
+  availableIdPs,
 }: HealthcareUserEditFormProps) {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<EditUserFormData>(user ?? initialFormData);
+  const [pendingIdPOps, setPendingIdPOps] = useState<PendingIdPOperation[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(formData);
+    await onSubmit(formData, pendingIdPOps);
   };
 
   const handleClose = () => {
     setFormData(initialFormData);
+    setPendingIdPOps([]);
     onClose();
   };
 
@@ -202,6 +225,18 @@ export function HealthcareUserEditForm({
             <Label htmlFor="editEnabled">{t('Account enabled')}</Label>
           </div>
 
+          {/* Federated Identity Links */}
+          {(federatedIdentities || availableIdPs) && (
+            <FederatedIdentitySection
+              t={t}
+              userId={formData.id}
+              federatedIdentities={federatedIdentities ?? []}
+              availableIdPs={availableIdPs ?? []}
+              pendingOps={pendingIdPOps}
+              onPendingOpsChange={setPendingIdPOps}
+            />
+          )}
+
           {/* Role Management */}
           <RoleManagementSection
             t={t}
@@ -227,6 +262,256 @@ export function HealthcareUserEditForm({
 }
 
 // ── Sub-components (admin-specific sections) ────────────────────────────────
+
+function FederatedIdentitySection({
+  t,
+  userId,
+  federatedIdentities,
+  availableIdPs,
+  pendingOps,
+  onPendingOpsChange,
+}: {
+  t: (key: string) => string;
+  userId: string;
+  federatedIdentities: FederatedIdentity[];
+  availableIdPs: IdentityProviderResponse[];
+  pendingOps: PendingIdPOperation[];
+  onPendingOpsChange: (ops: PendingIdPOperation[]) => void;
+}) {
+  const [showLinkForm, setShowLinkForm] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState('');
+  const [linkUserId, setLinkUserId] = useState('');
+  const [linkUserName, setLinkUserName] = useState('');
+
+  // Derive effective state from original identities + pending operations
+  const pendingUnlinks = new Set(
+    pendingOps.filter((op): op is PendingIdPUnlink => op.type === 'unlink').map(op => op.provider)
+  );
+  const pendingLinks = pendingOps.filter((op): op is PendingIdPLink => op.type === 'link');
+
+  // IdPs already linked (not pending unlink) + pending links = effectively linked
+  const effectiveLinkedAliases = new Set([
+    ...federatedIdentities.filter(fi => !pendingUnlinks.has(fi.identityProvider)).map(fi => fi.identityProvider),
+    ...pendingLinks.map(op => op.provider),
+  ]);
+  const availableToLink = availableIdPs.filter(idp => idp.alias && !effectiveLinkedAliases.has(idp.alias));
+
+  const handlePendingUnlink = (provider: string) => {
+    onPendingOpsChange([...pendingOps, { type: 'unlink', provider }]);
+  };
+
+  const handleUndoUnlink = (provider: string) => {
+    onPendingOpsChange(pendingOps.filter(op => !(op.type === 'unlink' && op.provider === provider)));
+  };
+
+  const handlePendingLink = () => {
+    if (!selectedProvider || !linkUserId || !linkUserName) return;
+    onPendingOpsChange([...pendingOps, {
+      type: 'link',
+      provider: selectedProvider,
+      idpUserId: linkUserId,
+      userName: linkUserName,
+    }]);
+    setShowLinkForm(false);
+    setSelectedProvider('');
+    setLinkUserId('');
+    setLinkUserName('');
+  };
+
+  const handleUndoLink = (provider: string) => {
+    onPendingOpsChange(pendingOps.filter(op => !(op.type === 'link' && op.provider === provider)));
+  };
+
+  const hasPendingChanges = pendingOps.length > 0;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2">
+          <Link2 className="w-4 h-4 text-primary" />
+          {t('Identity Provider Links')}
+          {hasPendingChanges && (
+            <Badge variant="outline" className="text-xs bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20">
+              {t('unsaved changes')}
+            </Badge>
+          )}
+        </Label>
+        {availableToLink.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowLinkForm(!showLinkForm)}
+          >
+            <Plus className="w-3 h-3 mr-1" />
+            {t('Link IdP')}
+          </Button>
+        )}
+      </div>
+
+      <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 space-y-3">
+        {/* Existing linked identities */}
+        {federatedIdentities.length === 0 && pendingLinks.length === 0 && !showLinkForm && (
+          <p className="text-sm text-muted-foreground text-center py-2">
+            {t('No identity providers linked to this user')}
+          </p>
+        )}
+
+        {federatedIdentities.map((fi) => {
+          const idp = availableIdPs.find(p => p.alias === fi.identityProvider);
+          const isPendingUnlink = pendingUnlinks.has(fi.identityProvider);
+          return (
+            <div
+              key={fi.identityProvider}
+              className={`flex items-center justify-between bg-card p-3 rounded-lg border ${
+                isPendingUnlink
+                  ? 'border-destructive/30 bg-destructive/5 opacity-60'
+                  : 'border-border/50'
+              }`}
+            >
+              <div className={`flex items-center gap-3 min-w-0 ${isPendingUnlink ? 'line-through' : ''}`}>
+                <div className="flex-shrink-0">
+                  <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/20">
+                    {idp?.displayName || fi.identityProvider}
+                  </Badge>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{fi.userName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{fi.userId}</p>
+                </div>
+                {isPendingUnlink && (
+                  <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/20">
+                    {t('will be removed')}
+                  </Badge>
+                )}
+              </div>
+              {isPendingUnlink ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleUndoUnlink(fi.identityProvider)}
+                  className="text-primary hover:text-primary/80 flex-shrink-0"
+                  title={t('Undo removal')}
+                >
+                  <Undo2 className="w-4 h-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handlePendingUnlink(fi.identityProvider)}
+                  className="text-destructive hover:text-destructive/80 flex-shrink-0"
+                >
+                  <Unlink className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Pending new links */}
+        {pendingLinks.map((op) => {
+          const idp = availableIdPs.find(p => p.alias === op.provider);
+          return (
+            <div
+              key={`pending-${op.provider}`}
+              className="flex items-center justify-between bg-card p-3 rounded-lg border border-green-300/50 bg-green-50/50 dark:bg-green-500/5"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex-shrink-0">
+                  <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20">
+                    {idp?.displayName || op.provider}
+                  </Badge>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{op.userName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{op.idpUserId}</p>
+                </div>
+                <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border-green-200 dark:border-green-500/20">
+                  {t('will be added')}
+                </Badge>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleUndoLink(op.provider)}
+                className="text-primary hover:text-primary/80 flex-shrink-0"
+                title={t('Undo link')}
+              >
+                <Undo2 className="w-4 h-4" />
+              </Button>
+            </div>
+          );
+        })}
+
+        {/* Link new IdP form */}
+        {showLinkForm && (
+          <div className="bg-card p-4 rounded-lg border border-dashed border-primary/30 space-y-3">
+            <h5 className="text-sm font-semibold">{t('Link New Identity Provider')}</h5>
+            <div>
+              <Label className="text-xs text-muted-foreground">{t('Identity Provider')}</Label>
+              <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                <SelectTrigger><SelectValue placeholder={t('Select identity provider')} /></SelectTrigger>
+                <SelectContent>
+                  {availableToLink.map(idp => (
+                    <SelectItem key={idp.alias!} value={idp.alias!}>
+                      {idp.displayName || idp.alias}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">{t('User ID at IdP')}</Label>
+                <Input
+                  placeholder="e.g., user-uuid-from-idp"
+                  value={linkUserId}
+                  onChange={(e) => setLinkUserId(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">{t('Username at IdP')}</Label>
+                <Input
+                  placeholder="e.g., john@external.com"
+                  value={linkUserName}
+                  onChange={(e) => setLinkUserName(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowLinkForm(false);
+                  setSelectedProvider('');
+                  setLinkUserId('');
+                  setLinkUserName('');
+                }}
+              >
+                {t('Cancel')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handlePendingLink}
+                disabled={!selectedProvider || !linkUserId || !linkUserName}
+              >
+                <Link2 className="w-3 h-3 mr-1" />
+                {t('Link')}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function FhirPersonSection({
   t,

@@ -119,7 +119,7 @@ function createMockProvider(overrides?: Partial<AccessControlProvider>): AccessC
 function buildTestApp(provider: AccessControlProvider) {
   const mockPlugin = new Elysia()
     .decorate('getAccessControl', () => provider)
-    .decorate('getAdmin', async (_token: string) => ({} as any))
+    .decorate('getAdmin', async (_token: string) => ({} as Record<string, unknown>))
 
   const PREFIX = '/admin/access-control'
 

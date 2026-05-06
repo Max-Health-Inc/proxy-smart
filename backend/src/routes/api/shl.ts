@@ -21,50 +21,17 @@ import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
 import { getAllServers } from '@/lib/fhir-server-store'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
+import { shortenUrl } from '@/lib/url-shortener'
+import { shlSessionStore } from '@/lib/shl-session-store'
 import * as crypto from 'crypto'
 
 // KTC doesn't support smart-api-access yet (in their Future Work).
 // The JWE format is identical — just a different cty header string.
 const SMART_API_ACCESS = 'application/smart-api-access' as SHLFileContentType
 
-// ── In-memory SHL session store (TTL-based, no real tokens stored) ──────────
-
-interface ShlSession {
-  /** SHL payload from kill-the-clipboard (for manifest serving) */
-  shl: { url: string; key: string; exp?: number; flag?: string; label?: string }
-  /** JWE compact string (spec-compliant, encrypted with SHL key) */
-  jwe: string
-  /** Opaque session token (256-bit, base64url) — used as Bearer token by viewer */
-  sessionToken: string
-  /** Patient ID to scope FHIR requests */
-  patientId: string
-  /** Upstream FHIR server base URL */
-  fhirServerUrl: string
-  /** Expiry timestamp (ms) */
-  expiresAt: number
-  /** Whether verified-only filter is active */
-  verifiedOnly: boolean
-  /** Number of manifest accesses */
-  accessCount: number
-  /** Optional passcode (hashed) */
-  passcodeHash?: string
-}
-
-const shlStore = new Map<string, ShlSession>()
-/** Reverse index: sessionToken → shlId for fast FHIR proxy lookups */
-const tokenIndex = new Map<string, string>()
-
-// Cleanup expired entries every 60s
-const cleanupInterval = setInterval(() => {
-  const now = Date.now()
-  for (const [id, entry] of shlStore) {
-    if (now > entry.expiresAt) {
-      tokenIndex.delete(entry.sessionToken)
-      shlStore.delete(id)
-    }
-  }
-}, 60_000)
-cleanupInterval.unref()
+// ── SHL Session Store (SQLite-persisted, survives restarts) ─────────────────
+// See @/lib/shl-session-store for implementation.
+// The store handles TTL cleanup and provides both ID and token-based lookups.
 
 // ── Service Account Token Cache ─────────────────────────────────────────────
 
@@ -129,13 +96,16 @@ const ErrorResponse = t.Object({ error: t.String() })
 const CreateShlBody = t.Object({
   label: t.Optional(t.String({ description: 'Label shown to recipient' })),
   passcode: t.Optional(t.String({ description: 'Optional passcode to protect the SHL' })),
-  expiresInMinutes: t.Optional(t.Number({ description: 'Expiry in minutes (default 60, max 4320 = 72h)', default: 60 })),
+  expiresInMinutes: t.Optional(t.Number({ description: 'Expiry in minutes (default 60, max 4320 = 72h)', default: 60, minimum: 1 })),
   verifiedOnly: t.Optional(t.Boolean({ description: 'Whether to include only verified resources', default: false })),
+  shortenUrl: t.Optional(t.Boolean({ description: 'Opt-in: shorten the viewer URL via go.maxhealth.tech (stored securely, auto-expires)', default: false })),
+  maxUses: t.Optional(t.Number({ description: 'Maximum number of times the shortened URL can be accessed before expiring (only when shortenUrl is true)', minimum: 1 })),
 })
 
 const ShlResponse = t.Object({
   shlinkPayload: t.String({ description: 'Base64url-encoded SHL payload for QR encoding' }),
   viewerUrl: t.String({ description: 'Full URL for QR code (viewer app with SHL in hash)' }),
+  shortUrl: t.Optional(t.String({ description: 'Shortened viewer URL via go.maxhealth.tech (if available)' })),
   expiresAt: t.String({ description: 'ISO 8601 expiry timestamp' }),
 })
 
@@ -156,22 +126,16 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
       return { error: 'Bearer token required' }
     }
 
-    const shlId = tokenIndex.get(bearerToken)
-    if (!shlId) {
+    const lookup = shlSessionStore.getByToken(bearerToken)
+    if (!lookup) {
       set.status = 401
       return { error: 'Invalid or expired session token' }
     }
 
-    const session = shlStore.get(shlId)
-    if (!session) {
-      tokenIndex.delete(bearerToken)
-      set.status = 401
-      return { error: 'Session not found' }
-    }
+    const { id: shlId, session } = lookup
 
     if (Date.now() > session.expiresAt) {
-      tokenIndex.delete(bearerToken)
-      shlStore.delete(shlId)
+      shlSessionStore.delete(shlId)
       set.status = 410
       return { error: 'Share link has expired' }
     }
@@ -280,22 +244,16 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
       return { error: 'Bearer token required' }
     }
 
-    const shlId = tokenIndex.get(bearerToken)
-    if (!shlId) {
+    const lookup = shlSessionStore.getByToken(bearerToken)
+    if (!lookup) {
       set.status = 401
       return { error: 'Invalid or expired session token' }
     }
 
-    const session = shlStore.get(shlId)
-    if (!session) {
-      tokenIndex.delete(bearerToken)
-      set.status = 401
-      return { error: 'Session not found' }
-    }
+    const { id: shlId, session } = lookup
 
     if (Date.now() > session.expiresAt) {
-      tokenIndex.delete(bearerToken)
-      shlStore.delete(shlId)
+      shlSessionStore.delete(shlId)
       set.status = 410
       return { error: 'Share link has expired' }
     }
@@ -385,7 +343,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
 
       const tokenPayload = await validateToken(userToken)
 
-      const expiresInMinutes = Math.min(body.expiresInMinutes ?? 60, 4320) // max 72h
+      const expiresInMinutes = Math.max(1, Math.min(body.expiresInMinutes ?? 60, 4320)) // min 1m, max 72h
       const ttlSeconds = expiresInMinutes * 60
       const expiresAt = Date.now() + ttlSeconds * 1000
 
@@ -442,7 +400,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         : undefined
 
       // Store session (proxy token → patient data mapping, no real tokens)
-      shlStore.set(shlId, {
+      shlSessionStore.set(shlId, {
         shl: shl.payload,
         jwe,
         sessionToken,
@@ -453,12 +411,19 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         accessCount: 0,
         passcodeHash,
       })
-      tokenIndex.set(sessionToken, shlId)
 
       // Build the SHL URI and viewer URL
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
       const viewerUrl = `${config.baseUrl}/apps/patient-portal/#${shlinkURI}`
+
+      // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)
+      const shortUrl = body.shortenUrl
+        ? await shortenUrl(viewerUrl, {
+            expiresAt: new Date(expiresAt).toISOString(),
+            ...(body.maxUses && { maxUses: body.maxUses }),
+          })
+        : null
 
       logger.auth.info('SHL created', {
         shlId,
@@ -471,6 +436,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       return {
         shlinkPayload,
         viewerUrl,
+        ...(shortUrl && { shortUrl }),
         expiresAt: new Date(expiresAt).toISOString(),
       }
     } catch (error) {
@@ -495,7 +461,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
    * kill-the-clipboard builds URLs as {baseManifestURL}{key}/{id}
    */
   .post('/:key/:id', async ({ params, body, set }) => {
-    const entry = shlStore.get(params.id)
+    const entry = shlSessionStore.get(params.id)
     if (!entry) {
       set.status = 404
       return { error: 'SHL not found or expired' }
@@ -503,7 +469,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
 
     // Check expiry
     if (Date.now() > entry.expiresAt) {
-      shlStore.delete(params.id)
+      shlSessionStore.delete(params.id)
       set.status = 410
       return { error: 'SHL has expired' }
     }
@@ -521,11 +487,11 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       }
     }
 
-    entry.accessCount++
+    shlSessionStore.incrementAccessCount(params.id)
 
     logger.auth.info('SHL manifest accessed', {
       shlId: params.id,
-      accessCount: entry.accessCount,
+      accessCount: entry.accessCount + 1,
       recipient: body.recipient,
     })
 

@@ -1,6 +1,7 @@
 import { config } from './config'
 import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
+import { refreshCorsOrigins } from './lib/cors-origins'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -434,14 +435,14 @@ async function ensureOrganizationsEnabled(): Promise<void> {
       return
     }
 
-    if ((realm as any).organizationsEnabled) {
+    if (realm.organizationsEnabled) {
       logger.keycloak.info('✅ Keycloak Organizations already enabled')
       return
     }
 
     await admin.realms.update(
       { realm: config.keycloak.realm! },
-      { organizationsEnabled: true } as any,
+      { organizationsEnabled: true },
     )
 
     logger.keycloak.info('✅ Keycloak Organizations enabled on realm')
@@ -537,48 +538,6 @@ async function ensureUserProfileAttributes(): Promise<void> {
 }
 
 /**
- * Sync brand name → Keycloak realm displayName + displayNameHtml.
- * Keycloak renders displayName as the login page heading instead of
- * the default Keycloak logo. Idempotent — skips update if already matching.
- */
-async function ensureRealmDisplayName(): Promise<void> {
-  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) return
-
-  try {
-    const admin = new KcAdminClient({
-      baseUrl: config.keycloak.baseUrl!,
-      realmName: config.keycloak.realm!,
-    })
-    await admin.auth({
-      grantType: 'client_credentials',
-      clientId: config.keycloak.adminClientId,
-      clientSecret: config.keycloak.adminClientSecret,
-    })
-
-    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
-    if (!realm) return
-
-    const brandName = config.brand.name
-    const expectedHtml = `<div class="kc-logo-text"><span>${brandName}</span></div>`
-
-    if (realm.displayName === brandName && realm.displayNameHtml === expectedHtml) {
-      logger.keycloak.info('✅ Realm displayName already matches brand')
-      return
-    }
-
-    await admin.realms.update(
-      { realm: config.keycloak.realm! },
-      { displayName: brandName, displayNameHtml: expectedHtml }
-    )
-    logger.keycloak.info(`✅ Realm displayName synced to "${brandName}"`)
-  } catch (error) {
-    logger.keycloak.warn('Could not sync realm displayName', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-  }
-}
-
-/**
  * Initialize all server components (Keycloak + FHIR servers)
  */
 export async function initializeServer(): Promise<void> {
@@ -604,14 +563,18 @@ export async function initializeServer(): Promise<void> {
       // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
       await ensurePostLogoutRedirectUris()
 
+      // Populate CORS origins cache from Keycloak client webOrigins
+      await refreshCorsOrigins()
+
       // Ensure Keycloak Organizations feature is enabled on the realm
       await ensureOrganizationsEnabled()
 
       // Ensure User Profile has all custom SMART attributes declared (KC 26+ requirement)
       await ensureUserProfileAttributes()
 
-      // Sync brand name → Keycloak realm displayName (login page heading)
-      await ensureRealmDisplayName()
+      // Brand display name is managed via the admin branding API (PUT /admin/branding).
+      // No longer overwritten on startup — the API calls saveBrandConfig() which syncs
+      // displayName + displayNameHtml to the Keycloak realm.
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')

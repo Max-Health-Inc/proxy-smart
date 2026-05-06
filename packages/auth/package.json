@@ -1,0 +1,39 @@
+{
+  "name": "@proxy-smart/auth",
+  "version": "0.1.0-beta.202605061427.fa5b001e",
+  "private": false,
+  "type": "module",
+  "description": "SMART on FHIR STU 2.2.0 server-side authorization proxy — launch context, session management, token enrichment. Framework-agnostic, IdP-pluggable.",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
+    "directory": "packages/auth"
+  },
+  "license": "AGPL-3.0-or-later",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./stores": "./src/stores/index.ts",
+    "./idp": "./src/idp/index.ts",
+    "./idp/keycloak": "./src/idp/keycloak.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "peerDependencies": {
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "jsonwebtoken": "^9.0.3",
+    "typescript": "6.0.3"
+  }
+}
