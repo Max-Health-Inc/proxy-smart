@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605061443.968d6bdd] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605061443.968d6bdd across multiple packages/apps
+- ⚠️ Breaking Changes: None detected
+- 🐛 Bug Fixes: None detected
+- 📚 Documentation: Keycloak realm-export.json: add introspection.token.claim: "true" for two clients
+- ✨ Features: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/663
+
+
 ## [0.1.0-alpha.202605061427.fa5b001e] - 2026-05-06
 
 - 🔧 Chores & Improvements: Bump versions across apps/packages to 0.1.0-alpha.202605061427.fa5b001e
