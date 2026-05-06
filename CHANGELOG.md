@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605061427.fa5b001e] - 2026-05-06
+
+- 🔧 Chores & Improvements: Bump versions across apps/packages to 0.1.0-alpha.202605061427.fa5b001e
+- ✨ Features: Add introspection enrichment to derive patient from fhirUser when patient is missing (with scope-aware fallback)
+- 🔧 Chores & Improvements: Minor code addition in introspection-enricher.ts to include scope field and new fallback behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/662
+
+
 ## [0.1.0-alpha.202605042315.546a45f7] - 2026-05-06
 
 - 🔧 Chores & Improvements: Version bump across all apps/packages to 0.1.0-alpha.202605042315.546a45f7; minor logic/schema tweaks for backend smart-apps (isPublicClient handling; publicClient description); tighten Keycloak endpoints in docker-compose.beta.yml; minor doc/comment updates and formatting
