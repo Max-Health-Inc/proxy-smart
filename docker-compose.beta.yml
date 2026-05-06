@@ -43,7 +43,9 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
     labels:
       caddy: beta.proxy-smart.com
-      caddy.@keycloak.path: "/auth/realms/* /auth/resources/* /auth/js/*"
+      # Only expose browser-interactive Keycloak endpoints.
+      # Token, introspection, and userinfo MUST go through the proxy (/auth/token).
+      caddy.@keycloak.path: "/auth/realms/*/protocol/openid-connect/auth /auth/realms/*/protocol/openid-connect/logout /auth/realms/*/protocol/openid-connect/certs /auth/realms/*/login-actions/* /auth/realms/*/.well-known/* /auth/resources/* /auth/js/*"
       caddy.0_reverse_proxy: "@keycloak {{upstreams 8080}}"
       caddy.0_reverse_proxy.health_uri: /auth/health/ready
       caddy.0_reverse_proxy.health_port: 9000
