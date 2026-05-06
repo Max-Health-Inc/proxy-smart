@@ -87,7 +87,7 @@ export const IalConfigSchema = t.Object({
   minimumLevel: IalLevel,
   sensitiveResourceTypes: t.Array(t.String(), { description: 'Resource types requiring elevated IAL' }),
   sensitiveMinimumLevel: IalLevel,
-  verifyPatientLink: t.Boolean({ description: 'Verify smart_patient matches Person links' }),
+  verifyPatientLink: t.Boolean({ description: 'Verify patient claim matches Person links' }),
   allowOnPersonLookupFailure: t.Boolean({ description: 'Allow access if Person lookup fails' }),
   cacheTtl: t.Number({ description: 'Cache TTL for Person lookups in milliseconds' })
 }, { title: 'IalConfig' })

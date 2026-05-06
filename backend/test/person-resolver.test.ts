@@ -52,7 +52,7 @@ const createMockToken = (overrides: Partial<SmartTokenPayload> = {}): SmartToken
   azp: 'smart-app-client',
   scope: 'patient/*.read',
   fhirUser: 'Person/person-123',
-  smart_patient: 'patient-456',
+  patient: 'patient-456',
   ...overrides
 })
 
@@ -296,7 +296,7 @@ describe('Person Resolver', () => {
       process.env.IAL_ENABLED = 'true'
       process.env.IAL_MINIMUM_LEVEL = 'level3'
       
-      const token = createMockToken({ smart_patient: 'patient-789' }) // level2 link
+      const token = createMockToken({ patient: 'patient-789' }) // level2 link
       
       const result = await checkIal(
         token,
@@ -315,7 +315,7 @@ describe('Person Resolver', () => {
       process.env.IAL_ENABLED = 'true'
       process.env.IAL_MINIMUM_LEVEL = 'level2'
       
-      const token = createMockToken({ smart_patient: 'patient-456' }) // level3 link
+      const token = createMockToken({ patient: 'patient-456' }) // level3 link
       
       const result = await checkIal(
         token,
@@ -335,7 +335,7 @@ describe('Person Resolver', () => {
       process.env.IAL_SENSITIVE_RESOURCE_TYPES = 'MedicationRequest,DiagnosticReport'
       process.env.IAL_SENSITIVE_MINIMUM_LEVEL = 'level4'
       
-      const token = createMockToken({ smart_patient: 'patient-456' }) // level3 link
+      const token = createMockToken({ patient: 'patient-456' }) // level3 link
       
       const result = await checkIal(
         token,
@@ -355,7 +355,7 @@ describe('Person Resolver', () => {
       process.env.IAL_ENABLED = 'true'
       process.env.IAL_VERIFY_PATIENT_LINK = 'true'
       
-      const token = createMockToken({ smart_patient: 'patient-unknown' })
+      const token = createMockToken({ patient: 'patient-unknown' })
       
       const result = await checkIal(
         token,
@@ -392,7 +392,7 @@ describe('Person Resolver', () => {
 
   describe('verifyPatientLinkOnly', () => {
     it('should return verified true when no patient context', async () => {
-      const token = createMockToken({ smart_patient: undefined })
+      const token = createMockToken({ patient: undefined })
       
       const result = await verifyPatientLinkOnly(
         token,
@@ -425,7 +425,7 @@ describe('Person Resolver', () => {
         headers: { 'Content-Type': 'application/fhir+json' }
       }))
 
-      const token = createMockToken({ smart_patient: 'patient-456' })
+      const token = createMockToken({ patient: 'patient-456' })
       
       const result = await verifyPatientLinkOnly(
         token,
@@ -445,7 +445,7 @@ describe('Person Resolver', () => {
         headers: { 'Content-Type': 'application/fhir+json' }
       }))
 
-      const token = createMockToken({ smart_patient: 'unknown-patient' })
+      const token = createMockToken({ patient: 'unknown-patient' })
       
       const result = await verifyPatientLinkOnly(
         token,

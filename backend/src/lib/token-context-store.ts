@@ -11,7 +11,7 @@ import { logger } from './logger'
  * and is consumed at token exchange time. This store captures the FINAL enriched context
  * AFTER token exchange and makes it available for introspection for the token's lifetime.
  *
- * Why not rely on Keycloak user attributes (smart_patient)?
+ * Why not rely on Keycloak user attributes?
  * - User attributes are per-user, not per-session → concurrent sessions race
  * - Protocol mappers are unreliable in KC 26+ introspection responses
  * - The SMART spec says "patient" is a per-token launch context, not an identity claim

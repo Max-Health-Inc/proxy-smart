@@ -48,18 +48,6 @@ async function findUserEmailByFhirPatient(patientRef: string): Promise<string | 
       if (u.email && u.emailVerified) return u.email
     }
 
-    // Fallback: search by smart_patient attribute
-    const patientId = patientRef.replace('Patient/', '')
-    const bySmartPatient = await admin.users.find({
-      realm: config.keycloak.realm!,
-      q: `smart_patient:${patientId}`,
-      max: 5,
-    })
-
-    for (const u of bySmartPatient) {
-      if (u.email && u.emailVerified) return u.email
-    }
-
     return null
   } catch (err) {
     logger.server.error('Failed to look up patient email', { err, patientRef })

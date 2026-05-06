@@ -39,8 +39,8 @@ function extractPatientId(
   resourcePath: string
 ): string | null {
   // 1. From token's SMART launch context
-  if (tokenPayload.smart_patient) {
-    return tokenPayload.smart_patient
+  if (tokenPayload.patient) {
+    return tokenPayload.patient
   }
 
   // 2. From resource path if accessing Patient resource directly

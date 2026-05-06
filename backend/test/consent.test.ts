@@ -162,11 +162,11 @@ describe('ConsentCache', () => {
 })
 
 describe('buildConsentContext', () => {
-  it('should extract patient ID from token smart_patient claim', () => {
+  it('should extract patient ID from token patient claim', () => {
     const token: SmartTokenPayload = {
       azp: 'test-client',
       scope: 'patient/*.read',
-      smart_patient: 'patient-123'
+      patient: 'patient-123'
     }
     
     const context = buildConsentContext(token, 'test-server', 'Observation?patient=Patient/123', 'GET')

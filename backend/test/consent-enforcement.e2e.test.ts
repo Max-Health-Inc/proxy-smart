@@ -144,7 +144,7 @@ function createToken(overrides: Partial<SmartTokenPayload> = {}): SmartTokenPayl
     iat: Math.floor(Date.now() / 1000),
     azp: 'test-client',
     scope: 'patient/*.read',
-    smart_patient: 'patient-123',
+    patient: 'patient-123',
     ...overrides,
   }
 }
@@ -581,9 +581,9 @@ describe('Consent Enforcement E2E', () => {
     it('should auto-PERMIT when patient ID cannot be determined', async () => {
       setConsentEnv()
 
-      // Token without smart_patient, path without Patient/
+      // Token without patient, path without Patient/
       const result = await checkConsent(
-        createToken({ smart_patient: undefined }),
+        createToken({ patient: undefined }),
         'hapi',
         'https://fhir.example.com',
         'Observation',
@@ -797,9 +797,9 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('buildConsentContext', () => {
-    it('should extract patient ID from smart_patient claim', () => {
+    it('should extract patient ID from patient claim', () => {
       const ctx = buildConsentContext(
-        createToken({ smart_patient: 'pat-abc' }),
+        createToken({ patient: 'pat-abc' }),
         'hapi',
         'Observation/obs-1',
         'GET',
@@ -809,7 +809,7 @@ describe('Consent Enforcement E2E', () => {
 
     it('should extract patient ID from Patient resource path as fallback', () => {
       const ctx = buildConsentContext(
-        createToken({ smart_patient: undefined }),
+        createToken({ patient: undefined }),
         'hapi',
         'Patient/pat-xyz',
         'GET',
@@ -940,7 +940,7 @@ describe('Consent Enforcement E2E', () => {
       })
 
       const rA = await checkConsent(
-        createToken({ smart_patient: 'patient-A' }),
+        createToken({ patient: 'patient-A' }),
         'hapi',
         'https://fhir.example.com',
         'Patient/patient-A',
@@ -950,7 +950,7 @@ describe('Consent Enforcement E2E', () => {
       expect(rA.decision).toBe('permit')
 
       const rB = await checkConsent(
-        createToken({ smart_patient: 'patient-B' }),
+        createToken({ patient: 'patient-B' }),
         'hapi',
         'https://fhir.example.com',
         'Patient/patient-B',

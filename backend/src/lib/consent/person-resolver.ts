@@ -7,7 +7,7 @@
  * This service:
  * - Fetches Person resources from FHIR server based on fhirUser claim
  * - Extracts linked Patient references with their assurance levels
- * - Validates that token's smart_patient matches Person's links
+ * - Validates that token's patient claim matches Person's links
  * - Provides IAL-based access gating for sensitive resources
  * - Auto-detects FHIR version (R3/R4/R5) and handles version-specific differences
  */
@@ -450,7 +450,7 @@ export async function resolvePerson(
     }
     
     const linkedPatients = extractLinkedPatients(cachedPerson, personId)
-    const validatedPatient = validatePatientLink(linkedPatients, tokenPayload.smart_patient)
+    const validatedPatient = validatePatientLink(linkedPatients, tokenPayload.patient)
     
     return {
       success: true,
@@ -481,7 +481,7 @@ export async function resolvePerson(
   }
   
   const linkedPatients = extractLinkedPatients(person, personId)
-  const validatedPatient = validatePatientLink(linkedPatients, tokenPayload.smart_patient)
+  const validatedPatient = validatePatientLink(linkedPatients, tokenPayload.patient)
   
   return {
     success: true,
@@ -495,7 +495,7 @@ export async function resolvePerson(
 }
 
 /**
- * Validate that smart_patient matches one of the Person's linked patients
+ * Validate that patient claim matches one of the Person's linked patients
  */
 function validatePatientLink(
   linkedPatients: ResolvedPatientIdentity[],
@@ -593,11 +593,11 @@ export async function checkIal(
   }
   
   // Check patient link verification if required
-  if (ialConfig.verifyPatientLink && tokenPayload.smart_patient) {
+  if (ialConfig.verifyPatientLink && tokenPayload.patient) {
     if (!personResolution.patientLinkVerified) {
       return {
         allowed: false,
-        reason: `Patient ${tokenPayload.smart_patient} not linked to Person ${personResolution.person?.id}`,
+        reason: `Patient ${tokenPayload.patient} not linked to Person ${personResolution.person?.id}`,
         actualLevel: personResolution.validatedPatient?.assuranceLevel ?? null,
         requiredLevel,
         isSensitiveResource,
@@ -642,7 +642,7 @@ export async function verifyPatientLinkOnly(
   serverUrl: string,
   authHeader: string
 ): Promise<{ verified: boolean; reason: string }> {
-  const patientId = tokenPayload.smart_patient
+  const patientId = tokenPayload.patient
   
   if (!patientId) {
     return { verified: true, reason: 'No patient context to verify' }

@@ -56,31 +56,25 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       const filteredUsers = users
         .filter(user => 
           user.attributes?.['fhirUser'] || 
-          user.attributes?.['smart_patient'] || 
-          user.attributes?.['smart_encounter'] ||
+          user.attributes?.['patient_context'] || 
+          user.attributes?.['encounter_context'] ||
           user.attributes?.['smart_fhir_context'] ||
           user.attributes?.['smart_intent'] ||
           user.attributes?.['smart_style_url'] ||
           user.attributes?.['smart_tenant'] ||
-          user.attributes?.['smart_need_patient_banner'] ||
-          // Legacy support
-          user.attributes?.['launch_patient'] ||
-          user.attributes?.['launch_encounter']
+          user.attributes?.['smart_need_patient_banner']
         )
         .map(user => ({
           userId: user.id ?? '',
           username: user.username ?? '',
           fhirUser: getUserAttribute(user, 'fhirUser'),
-          patient: getUserAttribute(user, 'smart_patient'),
-          encounter: getUserAttribute(user, 'smart_encounter'),
+          patient: getUserAttribute(user, 'patient_context'),
+          encounter: getUserAttribute(user, 'encounter_context'),
           fhirContext: getUserAttribute(user, 'smart_fhir_context'),
           intent: getUserAttribute(user, 'smart_intent'),
           smartStyleUrl: getUserAttribute(user, 'smart_style_url'),
           tenant: getUserAttribute(user, 'smart_tenant'),
           needPatientBanner: getUserAttributeBoolean(user, 'smart_need_patient_banner'),
-          // Legacy support for existing attributes
-          launchPatient: getUserAttribute(user, 'launch_patient'),
-          launchEncounter: getUserAttribute(user, 'launch_encounter')
         }))
       
       logger.admin.info('Successfully retrieved launch context users', { 
@@ -164,8 +158,8 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       }
 
       const admin = await getValidatedAdmin(getAdmin, token)
-      // Set both new and legacy attributes for backwards compatibility
-      await setUserAttribute(admin, params.userId, 'smart_patient', params.patientId, 'launch_patient')
+      // Set patient context attribute
+      await setUserAttribute(admin, params.userId, 'patient_context', params.patientId)
       
       logger.admin.info('Successfully set patient context', { 
         userId: params.userId, 
@@ -211,9 +205,7 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       await admin.users.update(
         { id: params.userId },
         { attributes: { 
-          smart_encounter: [params.encounterId],
-          // Keep legacy attribute for backwards compatibility
-          launch_encounter: [params.encounterId]
+          encounter_context: [params.encounterId],
         } }
       )
       return { success: true }
@@ -337,9 +329,8 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       const admin = await getAdmin(token)
       const user = await admin.users.findOne({ id: params.userId })
       if (user?.attributes) {
-        // Clean up both new and legacy attributes
-        delete user.attributes.smart_patient
-        delete user.attributes.launch_patient
+        // Clean up patient context attribute
+        delete user.attributes.patient_context
         await admin.users.update({ id: params.userId }, { attributes: user.attributes })
       }
       return { success: true }
@@ -373,9 +364,8 @@ export const launchContextRoutes = new Elysia({ prefix: '/launch-contexts' })
       const admin = await getAdmin(token)
       const user = await admin.users.findOne({ id: params.userId })
       if (user?.attributes) {
-        // Clean up both new and legacy attributes
-        delete user.attributes.smart_encounter
-        delete user.attributes.launch_encounter
+        // Clean up encounter context attribute
+        delete user.attributes.encounter_context
         await admin.users.update({ id: params.userId }, { attributes: user.attributes })
       }
       return { success: true }
