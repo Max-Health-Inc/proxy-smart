@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605062203.d6c04537] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bump across frontend apps, backend tooling, ESLint config, packages, and tests
+
+- 🐛 Bug Fixes: TokenContextStore gains security-focused constants and input validation; oauth route passes introspectingClientId to tokenContextStore.get for tighter binding
+
+- 🐛 Bug Fixes: Tests extended to cover input validation, client binding, and PHI redaction; TTL/exp handling adjusted
+
+- 📚 Documentation: Minor test data tweaks to align with new TTL/exp handling
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/665
+
+
 ## [0.1.0-alpha.202605061525.60d3a1a0] - 2026-05-06
 
 - 🔧 Chores & Improvements: Version bumps to 0.1.0-alpha.202605061525.60d3a1a0 across multiple apps/libs
