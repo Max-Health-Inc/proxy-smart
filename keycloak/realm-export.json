@@ -94,6 +94,7 @@
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
+            "introspection.token.claim": "true",
             "user.attribute": "smart_patient",
             "id.token.claim": "true",
             "access.token.claim": "true",
@@ -120,6 +121,7 @@
           "consentRequired": false,
           "config": {
             "userinfo.token.claim": "true",
+            "introspection.token.claim": "true",
             "user.attribute": "fhirUser",
             "id.token.claim": "true",
             "access.token.claim": "true",
