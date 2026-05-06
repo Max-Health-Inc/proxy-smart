@@ -5,7 +5,13 @@
  * IdPs (like Keycloak) store launch context under vendor-specific keys
  * (smart_patient, fhir_user, etc.) but SMART STU 2.2 expects top-level
  * patient, encounter, fhirUser.
+ *
+ * Also derives `patient` from `fhirUser` when the user is a Patient
+ * and no explicit smart_patient claim exists (same fallback as token enricher).
  */
+
+import { extractPatientFromFhirUser } from './fhir-user'
+import { canReturnPatient, parseScopes } from './smart-scopes'
 
 export interface IntrospectionData {
   active?: boolean
@@ -15,6 +21,7 @@ export interface IntrospectionData {
   fhirUser?: string
   patient?: string
   encounter?: string
+  scope?: string
   [key: string]: unknown
 }
 
@@ -33,6 +40,16 @@ export function enrichIntrospection(data: IntrospectionData): IntrospectionData 
   }
   if (data.fhirUser === undefined && data.fhir_user) {
     data.fhirUser = data.fhir_user
+  }
+
+  // Derive patient from fhirUser when no explicit patient claim exists
+  // (mirrors token-enricher fallback for Patient users)
+  if (!data.patient && data.fhirUser) {
+    const grantedScopes = parseScopes(data.scope || '')
+    if (canReturnPatient(grantedScopes)) {
+      const patientId = extractPatientFromFhirUser(data.fhirUser)
+      if (patientId) data.patient = patientId
+    }
   }
 
   return data
