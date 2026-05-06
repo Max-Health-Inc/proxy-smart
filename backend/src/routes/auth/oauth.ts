@@ -9,6 +9,7 @@ import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
+import { tokenContextStore } from '@/lib/token-context-store'
 import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
 import { kcUnavailablePage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
@@ -591,6 +592,24 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           // Authorization details (RFC 9396)
           const generatedDetails = await generateAuthorizationDetailsFromToken(tokenPayload as TokenPayload)
           if (generatedDetails) data.authorization_details = generatedDetails
+
+          // ── Persist launch context for introspection (SMART STU 2.2 §5.2) ──
+          // The spec requires introspection to return the same launch context
+          // that was in the original token response. Store by JTI for lookup.
+          const jti = (tokenPayload as Record<string, unknown>).jti as string | undefined
+          if (jti && (data.patient || data.encounter || data.fhirUser)) {
+            tokenContextStore.set(jti, {
+              patient: data.patient,
+              encounter: data.encounter,
+              fhirUser: data.fhirUser,
+              intent: data.intent,
+              smart_style_url: data.smart_style_url,
+              tenant: data.tenant,
+              need_patient_banner: data.need_patient_banner,
+              clientId: clientIdForSession,
+              exp: (tokenPayload as Record<string, unknown>).exp as number | undefined,
+            })
+          }
         } catch (contextError) {
           logger.auth.warn('Failed to add launch context to token response', { contextError })
         }
@@ -639,7 +658,48 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     set.headers['Cache-Control'] = 'no-store'
     set.headers['Pragma'] = 'no-cache'
 
-    // Enrich with SMART-standard claim names
+    // ── SMART launch context recovery for introspection (§5.2) ──────
+    // Priority: 1) Token context store (authoritative)
+    //           2) JWT payload decode (fallback)
+    //           3) enrichIntrospection fhirUser→patient derivation
+    if (data.active && bodyObj.token) {
+      let jti: string | undefined
+
+      // Attempt to extract JTI from token
+      try {
+        const parts = bodyObj.token.split('.')
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString())
+          jti = payload.jti
+
+          // Fallback: extract claims directly from JWT if KC didn't return them
+          if (!data.fhirUser && !data.fhir_user && payload.fhirUser) {
+            data.fhirUser = payload.fhirUser
+          }
+        }
+      } catch { /* opaque token — skip JWT decode */ }
+
+      // Primary: look up stored launch context by JTI
+      if (jti) {
+        const storedContext = tokenContextStore.get(jti)
+        if (storedContext) {
+          if (storedContext.patient && !data.patient && !data.smart_patient) {
+            data.patient = storedContext.patient
+          }
+          if (storedContext.encounter && !data.encounter && !data.smart_encounter) {
+            data.encounter = storedContext.encounter
+          }
+          if (storedContext.fhirUser && !data.fhirUser && !data.fhir_user) {
+            data.fhirUser = storedContext.fhirUser
+          }
+          if (storedContext.intent && !data.intent) {
+            data.intent = storedContext.intent
+          }
+        }
+      }
+    }
+
+    // Enrich with SMART-standard claim names (smart_patient→patient, fhir_user→fhirUser, etc.)
     enrichIntrospection(data)
 
     return data
