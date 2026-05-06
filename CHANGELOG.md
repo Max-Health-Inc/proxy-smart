@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605061525.60d3a1a0] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bumps to 0.1.0-alpha.202605061525.60d3a1a0 across multiple apps/libs
+- 🔧 Chores & Improvements: Add backend token-context-store (TokenContextStore, interfaces) and unit tests
+- 🔧 Chores & Improvements: Persist token launch context by JTI into token-context-store for SMART STU 2.2 introspection
+- 🔧 Chores & Improvements: Integrate minimal oauth route updates to store context when jti and data exist
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/664
+
+
 ## [0.1.0-alpha.202605061443.968d6bdd] - 2026-05-06
 
 - 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605061443.968d6bdd across multiple packages/apps
