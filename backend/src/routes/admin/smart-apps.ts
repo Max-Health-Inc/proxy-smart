@@ -163,7 +163,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       // Determine client configuration based on type
       const isBackendService = effectiveClientType === 'backend-service'
-      const isPublicClient = body.publicClient || effectiveClientType === 'public'
+      // Backend-service clients are always confidential (service accounts require it)
+      const isPublicClient = isBackendService ? false : (body.publicClient ?? effectiveClientType === 'public')
 
       // Determine Keycloak clientAuthenticatorType from standard OAuth method or heuristics
       let clientAuthenticatorType: string

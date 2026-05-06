@@ -79,7 +79,7 @@ export const CreateSmartAppRequest = t.Object({
   clientId: t.String({ description: 'OAuth2 client ID (must be unique)' }),
   name: t.String({ description: 'Application name' }),
   description: t.Optional(t.String({ description: 'Application description' })),
-  publicClient: t.Optional(t.Boolean({ description: 'Whether this is a public client', default: true })),
+  publicClient: t.Optional(t.Boolean({ description: 'Whether this is a public client (ignored for backend-service type)' })),
   redirectUris: t.Optional(t.Array(t.String(), { description: 'Allowed redirect URIs' })),
   webOrigins: t.Optional(t.Array(t.String(), { description: 'Allowed web origins' })),
   defaultClientScopes: t.Optional(t.Array(t.String(), { description: 'Default SMART scopes' })),
