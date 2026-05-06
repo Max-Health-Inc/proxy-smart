@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605042315.546a45f7] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bump across all apps/packages to 0.1.0-alpha.202605042315.546a45f7; minor logic/schema tweaks for backend smart-apps (isPublicClient handling; publicClient description); tighten Keycloak endpoints in docker-compose.beta.yml; minor doc/comment updates and formatting
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/661
+
+
 ## [0.1.0-alpha.202605042239.042641ea] - 2026-05-04
 
 - ✨ Features: Stabilized patient selection flow with robust selector based on data-testid, improving test reliability
