@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605062212.19f7b90d] - 2026-05-06
+
+- 🔧 Chores & Improvements: Rename and normalize SMART launch context to patient_context/encounter_context; update token top-level claims and per-token context storage (TokenContextStore); adjust IAL/consent checks to reference patient instead of smart_patient; normalize fhir_user to fhirUser in introspection.
+
+- 🔧 Chores & Improvements: Rename interfaces/types from smart_patient/smart_encounter to patient/encounter; update IAL config descriptions and tests to reflect patient claim verification and fallback paths.
+
+- 🔧 Chores & Improvements: Update token context enrichment to derive per-token context from TokenContextStore; adjust introspection enricher to normalize fhir_user to fhirUser; remove KC-based approaches.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/666
+
+
 ## [0.1.0-alpha.202605062203.d6c04537] - 2026-05-06
 
 - 🔧 Chores & Improvements: Version bump across frontend apps, backend tooling, ESLint config, packages, and tests
