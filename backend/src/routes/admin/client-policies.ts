@@ -180,8 +180,8 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
       const condition = cimdPolicy?.conditions?.find(c => c.condition === CIMD_CONDITION_ID)
 
       // Trusted domains from either the executor or condition config
-      const execDomains = (executor?.configuration as Record<string, unknown>)?.['trusted-domains'] as string[] | undefined
-      const condDomains = (condition?.configuration as Record<string, unknown>)?.['trusted-domains'] as string[] | undefined
+      const execDomains = (executor?.configuration as Record<string, unknown>)?.['cimd-allow-permitted-domains'] as string[] | undefined
+      const condDomains = (condition?.configuration as Record<string, unknown>)?.['client-id-uri-allow-permitted-domains'] as string[] | undefined
 
       return {
         enabled: (cimdPolicy?.enabled ?? false) && !!cimdProfile,
@@ -224,10 +224,10 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
         executors: [{
           executor: CIMD_EXECUTOR_ID,
           configuration: {
-            'is-allow-http-scheme': body.allowHttpScheme ?? false,
-            'trusted-domains': body.trustedDomains,
-            'is-restrict-same-domain': body.restrictSameDomain ?? false,
-            'is-only-allow-confidential-client': body.onlyConfidentialClients ?? false,
+            'cimd-allow-http-scheme': body.allowHttpScheme ?? false,
+            'cimd-allow-permitted-domains': body.trustedDomains,
+            'cimd-restrict-same-domain': body.restrictSameDomain ?? false,
+            'only-allow-confidential-client': body.onlyConfidentialClients ?? false,
           },
         }],
       }
@@ -249,8 +249,8 @@ export const clientPoliciesRoutes = new Elysia({ prefix: '/client-policies', tag
         conditions: [{
           condition: CIMD_CONDITION_ID,
           configuration: {
-            'uri-scheme': uriSchemes,
-            'trusted-domains': body.trustedDomains,
+            'client-id-uri-scheme': uriSchemes,
+            'client-id-uri-allow-permitted-domains': body.trustedDomains,
           },
         }],
         profiles: [profileName],
