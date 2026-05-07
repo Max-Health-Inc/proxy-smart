@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605062242.b30c5006] - 2026-05-07
+
+- 🔧 Chores & Improvements: Bump versions across apps/libs to 0.1.0-alpha.202605062242.b30c5006
+- 🔧 Chores & Improvements: API config updates in backend (renamed policies domains and updated CIMD config fields)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/667
+
+
 ## [0.1.0-alpha.202605062212.19f7b90d] - 2026-05-06
 
 - 🔧 Chores & Improvements: Rename and normalize SMART launch context to patient_context/encounter_context; update token top-level claims and per-token context storage (TokenContextStore); adjust IAL/consent checks to reference patient instead of smart_patient; normalize fhir_user to fhirUser in introspection.
