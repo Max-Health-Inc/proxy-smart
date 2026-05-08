@@ -1,19 +1,19 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-05-08 22:00:52,876 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 7950ms
+2026-05-08 22:31:02,323 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 7644ms
 Running the server in development mode. DO NOT use this configuration in production.
-2026-05-08 22:00:56,562 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
-2026-05-08 22:00:57,552 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-05-08 22:00:57,583 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
-2026-05-08 22:00:57,584 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1
-2026-05-08 22:00:57,584 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
-2026-05-08 22:00:58,689 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-05-08 22:01:06,359 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-05-08 22:01:06,683 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_926789, Site name: null
-2026-05-08 22:01:06,848 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 10:01:06, then every PT12H
-2026-05-08 22:01:06,901 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
-2026-05-08 22:01:07,066 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
-2026-05-08 22:01:07,093 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
-2026-05-08 22:01:07,093 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to run import
-2026-05-08 22:01:07,093 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Unrecognized field "hideOnLoginPage" (class org.keycloak.representations.idm.IdentityProviderRepresentation), not marked as ignorable (18 known properties: "enabled", "firstBrokerLoginFlowAlias", "trustEmail", "linkOnly", "hideOnLogin", "providerId", "displayName", "organizationId", "alias", "postBrokerLoginFlowAlias", "addReadTokenRoleOnCreate", "authenticateByDefault", "internalId", "types", "updateProfileFirstLoginMode", "config", "storeToken", "updateProfileFirstLogin")
+2026-05-08 22:31:06,108 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
+2026-05-08 22:31:07,060 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-05-08 22:31:07,091 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
+2026-05-08 22:31:07,092 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1
+2026-05-08 22:31:07,092 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
+2026-05-08 22:31:08,065 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-05-08 22:31:15,574 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-05-08 22:31:15,864 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_157564, Site name: null
+2026-05-08 22:31:16,081 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 10:31:16, then every PT12H
+2026-05-08 22:31:16,111 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-05-08 22:31:16,265 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
+2026-05-08 22:31:16,291 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
+2026-05-08 22:31:16,291 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to run import
+2026-05-08 22:31:16,291 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Unrecognized field "hideOnLoginPage" (class org.keycloak.representations.idm.IdentityProviderRepresentation), not marked as ignorable (18 known properties: "enabled", "firstBrokerLoginFlowAlias", "trustEmail", "linkOnly", "hideOnLogin", "providerId", "displayName", "organizationId", "alias", "postBrokerLoginFlowAlias", "addReadTokenRoleOnCreate", "authenticateByDefault", "internalId", "types", "updateProfileFirstLoginMode", "config", "storeToken", "updateProfileFirstLogin")
  at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1123, column: 30] (through reference chain: org.keycloak.representations.idm.RealmRepresentation["identityProviders"]->java.util.ArrayList[0]->org.keycloak.representations.idm.IdentityProviderRepresentation["hideOnLoginPage"])
-2026-05-08 22:01:07,093 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
+2026-05-08 22:31:16,291 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
