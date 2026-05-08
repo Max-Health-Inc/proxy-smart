@@ -115,7 +115,7 @@ export function enrichTokenResponse(
 
   // ── Scope restoration ─────────────────────────────────────────────────
   if (input.requestedScope) {
-    enrichment.scope = filterScopes(input.requestedScope, input.grantedScope || input.tokenPayload.scope)
+    enrichment.scope = filterScopes(input.requestedScope, input.grantedScope || (input.tokenPayload.scope as string | undefined))
   } else if (input.tokenPayload.smart_scope) {
     enrichment.scope = input.tokenPayload.smart_scope
   }

@@ -129,12 +129,10 @@ function checkSmartScopes(
     if (isRead && scopePermission === 'read') return true
     if (isWrite && scopePermission === 'write') return true
 
-    // SMART v2 format — exact character matching (not .includes())
-    // v2 permissions are a subset of "cruds" characters
+    // SMART v2 format — exact character matching
+    // v2 permissions are a strict subset of "cruds" characters; r and s are distinct.
     if (scopePermission.length <= 5 && /^[cruds]+$/.test(scopePermission)) {
       if (requiredChar && scopePermission.includes(requiredChar)) return true
-      // For GET requests: 'r' grants read-by-id, 's' grants search — either suffices
-      if (isRead && (scopePermission.includes('r') || scopePermission.includes('s'))) return true
     }
 
     return false

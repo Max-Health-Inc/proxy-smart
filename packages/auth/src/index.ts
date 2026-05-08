@@ -44,6 +44,10 @@ export {
   canReturnPatient,
   canReturnEncounter,
   canReturnFhirUser,
+  isScopeGranted,
+  filterScopes,
+  expandScopesToWildcards,
+  SMART_V2_SCOPE_RE,
 } from './smart-scopes'
 
 // ─── Launch Code ────────────────────────────────────────────────────────────
