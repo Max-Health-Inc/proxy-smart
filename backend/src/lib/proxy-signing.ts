@@ -7,11 +7,12 @@
  *
  * Key lifecycle:
  *   - Auto-generated at startup (ephemeral, dev-friendly)
- *   - Override via PROXY_SIGNING_KEY_PEM / PROXY_SIGNING_KEY_ID env vars
+ *   - Override via PROXY_SIGNING_KEY_FILE (path to PEM) or PROXY_SIGNING_KEY_PEM (inline PEM)
  *   - Public key exposed at /.well-known/jwks.json for KC to fetch
  */
 
 import { generateKeyPairSync, createPublicKey, randomUUID } from 'crypto'
+import { readFileSync, existsSync } from 'fs'
 import jwt from 'jsonwebtoken'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
@@ -40,13 +41,26 @@ export function getProxyKeyPair(): ProxyKeyPair {
   if (_keyPair) return _keyPair
 
   const envKey = process.env.PROXY_SIGNING_KEY_PEM
+  const envKeyFile = process.env.PROXY_SIGNING_KEY_FILE
   const envKid = process.env.PROXY_SIGNING_KEY_ID || 'proxy-signing-key-1'
 
-  if (envKey) {
+  // Resolve PEM: file path takes precedence over inline PEM
+  let resolvedPem: string | undefined
+  if (envKeyFile) {
+    if (!existsSync(envKeyFile)) {
+      throw new Error(`PROXY_SIGNING_KEY_FILE not found: ${envKeyFile}`)
+    }
+    resolvedPem = readFileSync(envKeyFile, 'utf-8').trim()
+    logger.server.info('Using proxy signing key from PROXY_SIGNING_KEY_FILE', { kid: envKid, path: envKeyFile })
+  } else if (envKey) {
+    resolvedPem = envKey
     logger.server.info('Using proxy signing key from PROXY_SIGNING_KEY_PEM env var', { kid: envKid })
-    const publicKeyObject = createPublicKey(envKey)
+  }
+
+  if (resolvedPem) {
+    const publicKeyObject = createPublicKey(resolvedPem)
     _keyPair = {
-      privateKeyPem: envKey,
+      privateKeyPem: resolvedPem,
       publicKeyPem: publicKeyObject.export({ type: 'spki', format: 'pem' }) as string,
       kid: envKid,
       jwk: { ...publicKeyObject.export({ format: 'jwk' }), kid: envKid, use: 'sig', alg: PROXY_SIGNING_ALG },

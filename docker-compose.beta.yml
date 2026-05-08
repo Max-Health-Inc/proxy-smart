@@ -109,6 +109,9 @@ services:
       DICOMWEB_PASSWORD: ${ORTHANC_PASSWORD:?Set ORTHANC_PASSWORD}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      PROXY_SIGNING_KEY_FILE: /run/secrets/proxy-signing-key.pem
+    volumes:
+      - ${PROXY_SIGNING_KEY_PATH:-./proxy-signing-key.pem}:/run/secrets/proxy-signing-key.pem:ro
     labels:
       caddy: beta.proxy-smart.com
       caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg /webapp /webapp/*"
