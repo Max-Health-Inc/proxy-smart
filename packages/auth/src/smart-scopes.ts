@@ -57,18 +57,14 @@ export const SMART_V2_SCOPE_RE = /^(user|patient|system)\/([\w*]+)\.([cruds]{1,5
  */
 export function expandScopesToWildcards(scope: string | undefined): string {
   if (!scope) return ''
-  return parseScopes(scope)
-    .values()
-    .map(s => {
-      const match = s.match(SMART_V2_SCOPE_RE)
-      if (!match) return s
-      const [, compartment, , ops] = match
-      return `${compartment}/*.${ops}`
-    })
-    .toArray()
-    // Deduplicate — multiple granular scopes may collapse to the same wildcard
-    .filter((s, i, arr) => arr.indexOf(s) === i)
-    .join(' ')
+  const expanded = Array.from(parseScopes(scope)).map((s: string) => {
+    const match = s.match(SMART_V2_SCOPE_RE)
+    if (!match) return s
+    const [, compartment, , ops] = match
+    return `${compartment}/*.${ops}`
+  })
+  // Deduplicate — multiple granular scopes may collapse to the same wildcard
+  return expanded.filter((s: string, i: number, arr: string[]) => arr.indexOf(s) === i).join(' ')
 }
 
 /**

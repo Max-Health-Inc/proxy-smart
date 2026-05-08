@@ -15,7 +15,7 @@
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
 import { enforceScopeAccess, type AccessControlContext } from '../src/lib/smart-access-control'
-import { isScopeGranted } from '../../packages/auth/src/smart-scopes'
+import { isScopeGranted } from '@proxy-smart/auth'
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 

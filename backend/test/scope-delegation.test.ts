@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { isScopeGranted, filterScopes, expandScopesToWildcards } from '../../packages/auth/src/smart-scopes'
+import { isScopeGranted, filterScopes, expandScopesToWildcards } from '@proxy-smart/auth'
 
 describe('SMART Scopes Delegation logic', () => {
 
