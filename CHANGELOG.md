@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605081120.3cb9cd33] - 2026-05-08
+
+- 🔧 Chores & Improvements: Update version strings across apps/packages to 0.1.0-alpha.202605081120.3cb9cd33
+- 🔧 Chores & Improvements: Backend: add requestedScope to TokenContext, sanitize/store it; include in token context and introspection flow
+- 🔧 Chores & Improvements: Backend OAuth: persist and reflect granular requestedScope in scopes via filterScopes (preserves user-specific scopes vs wildcards)
+- 🔧 Chores & Improvements: ESLint config and related package.jsons updated for new alpha version
+- ⚠️ Breaking Changes: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/672
+
+
 ## [0.1.0-alpha.202605081112.6bd7ebb8] - 2026-05-08
 
 - ✨ Features: SMART v2 scope expansion and wildcard delegation
