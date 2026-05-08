@@ -19,7 +19,21 @@ import { refreshCorsOrigins } from '@/lib/cors-origins'
 import { toKeycloakAuthType } from '@/lib/auth-method-mapping'
 import { enrichClient, ensureScopesExist, replaceClientScopes } from '@/lib/smart-client-enrichment'
 import { invalidateClientConfig } from '@/lib/smart-client-config-cache'
+import { config } from '@/config'
 import * as crypto from 'crypto'
+
+/**
+ * Ensure the proxy's own /auth/smart-callback URI is always present in a
+ * client's redirectUris. Keycloak validates the redirect_uri at the
+ * authorization endpoint, and the proxy rewrites every client's redirect_uri
+ * to this callback during the SMART launch flow, so it must be registered.
+ * Backend-service clients never use the authorization code flow — skip them.
+ */
+function withProxyCallback(redirectUris: string[], isBackendService: boolean): string[] {
+  if (isBackendService) return redirectUris
+  const proxyCallback = `${config.baseUrl}/auth/smart-callback`
+  return redirectUris.includes(proxyCallback) ? redirectUris : [...redirectUris, proxyCallback]
+}
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
 
@@ -202,7 +216,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         enabled: true,
         protocol: 'openid-connect',
         publicClient: isPublicClient,
-        redirectUris: body.redirectUris || [],
+        redirectUris: withProxyCallback(body.redirectUris || [], isBackendService),
         webOrigins: body.webOrigins || [],
         attributes: {
           'smart_app': 'true',
@@ -579,7 +593,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         implicitFlowEnabled: existing.implicitFlowEnabled,
         // Update client secret when provided (confidential clients only)
         ...(body.secret && !existing.publicClient && { secret: body.secret }),
-        redirectUris: body.redirectUris ?? existing.redirectUris,
+        redirectUris: withProxyCallback(
+          body.redirectUris ?? existing.redirectUris ?? [],
+          existing.serviceAccountsEnabled === true && !existing.standardFlowEnabled,
+        ),
         webOrigins: body.webOrigins ?? existing.webOrigins,
         attributes: {
           ...existing.attributes,
