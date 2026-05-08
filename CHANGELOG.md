@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605081215.8e6b1dd5] - 2026-05-08
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements:
+  - CI/CD: Replace direct Keycloak realm checks with backend health status checks via /status; improved logging and error messages when unhealthy
+  - Versioning: Standardize version bumps to new alpha tag 0.1.0-alpha.202605081201.5d503150 across multiple packages
+- ⚠️ Breaking Changes: None
+
+Note: No user-facing feature or breaking changes detected; changes are primarily CI improvements and version updates.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/673
+
+
 ## [0.1.0-alpha.202605081120.3cb9cd33] - 2026-05-08
 
 - 🔧 Chores & Improvements: Update version strings across apps/packages to 0.1.0-alpha.202605081120.3cb9cd33
