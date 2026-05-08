@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605081332.adff1b56] - 2026-05-08
+
+- 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605081332.adff1b56 across multiple packages
+- ⚠️ Breaking Changes: Backend: refine isBackendServicesRequest logic to enforce client_credentials flow for backend services with proper client_assertion checks
+- 🐛 Bug Fixes: Backend: add tests for new edge cases (authorization_code reject, missing grant_type, wrong client_assertion_type, missing client_assertion)
+- 🔧 Chores & Improvements: Minor code comments/docs added for backend-services.ts clarification
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/675
+
+
 ## [0.1.0-alpha.202605081235.d2514947] - 2026-05-08
 
 - 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605081235.d2514947; add eager runtime config loading on server init with Keycloak client credentials (loadRuntimeConfig) and error fallback.
