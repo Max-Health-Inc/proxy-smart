@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/auth",
-  "version": "0.1.0-beta.202605082005.5951dbe5",
+  "version": "0.1.0-beta.202605082106.8939ac11",
   "private": false,
   "type": "module",
   "description": "SMART on FHIR STU 2.2.0 server-side authorization proxy — launch context, session management, token enrichment. Framework-agnostic, IdP-pluggable.",
