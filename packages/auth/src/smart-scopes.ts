@@ -41,8 +41,10 @@ export function canReturnFhirUser(grantedScopes: Set<string>): boolean {
   return grantedScopes.has('fhirUser') || grantedScopes.has('openid')
 }
 
-/** SMART v2 Scope regex for permission delegation (e.g. user/Patient.read) */
-export const SMART_V2_SCOPE_RE = /^(user|patient|system)\/([\w*]+)\.(r|s|rs|read|write|crud|cruds|cud)$/
+/** SMART v2 Scope regex for permission delegation (e.g. user/Patient.read)
+ *  Ops group accepts: any 1-5 char subset of [cruds] (v2), or v1 "read"/"write".
+ */
+export const SMART_V2_SCOPE_RE = /^(user|patient|system)\/([\w*]+)\.([cruds]{1,5}|read|write)$/
 
 /**
  * Expand granular SMART v2 scopes to their wildcard equivalents for forwarding to the IdP.
@@ -88,9 +90,26 @@ export function isScopeGranted(requested: string, granted: Set<string>): boolean
   if (granted.has(`${compartment}/${resourceType}.*`)) return true
   if (granted.has(`${compartment}/*.*`)) return true
 
-  // 3. Handle common ops aliases (e.g. .rs includes .read)
-  if (ops === 'read' || ops === 'r') {
-    if (granted.has(`${compartment}/*.rs`) || granted.has(`${compartment}/*.crud`)) return true
+  // 3. v1/v2 ops aliases — "upward" matching from specific to broader grants
+
+  // v1 *.read covers all v2 read-type ops: .r, .s, .rs
+  if (ops === 'r' || ops === 's' || ops === 'rs' || ops === 'read') {
+    if (granted.has(`${compartment}/*.read`)) return true
+  }
+
+  // v2 *.rs covers individual read ops: .r, .s
+  if (ops === 'r' || ops === 's') {
+    if (granted.has(`${compartment}/*.rs`)) return true
+  }
+
+  // v2 *.crud/cruds cover .r (read is the 'r' in cruds)
+  if (ops === 'r' || ops === 'read') {
+    if (granted.has(`${compartment}/*.crud`) || granted.has(`${compartment}/*.cruds`)) return true
+  }
+
+  // v1 *.write covers all v2 write ops: any subset of [cud]
+  if (/^[cud]+$/.test(ops) || ops === 'write') {
+    if (granted.has(`${compartment}/*.write`)) return true
   }
 
   return false
