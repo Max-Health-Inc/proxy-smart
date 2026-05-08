@@ -19,6 +19,7 @@ import {
   handlePatientSelect,
   enrichTokenResponse,
   enrichIntrospection,
+  filterScopes,
   getRewrittenRedirectUri,
   signLaunchCode,
   toAbsoluteFhirUser,
@@ -561,6 +562,9 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
               need_patient_banner: data.need_patient_banner,
               clientId: clientIdForSession,
               exp: (tokenPayload as Record<string, unknown>).exp as number | undefined,
+              // Store the originally requested granular scope so introspection
+              // can echo back user/Patient.rs instead of Keycloak's user/*.rs
+              requestedScope: requestedScope || undefined,
             })
           }
         } catch (contextError) {
@@ -648,6 +652,12 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           }
           if (storedContext.intent && !data.intent) {
             data.intent = storedContext.intent
+          }
+          // Restore granular requested scope: Keycloak only stores wildcards
+          // (e.g. user/*.rs) but the client requested user/ImagingStudy.rs —
+          // introspection must reflect what was actually granted to the client.
+          if (storedContext.requestedScope && data.scope) {
+            data.scope = filterScopes(storedContext.requestedScope, data.scope)
           }
         }
       }
