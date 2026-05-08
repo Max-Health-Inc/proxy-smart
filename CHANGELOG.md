@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605071424.5b35f4d6] - 2026-05-08
+
+- ✨ Features
+  - SMART v2 scope delegation support: add SMART_V2_SCOPE_RE, isScopeGranted logic (wildcard and alias handling), and filterScopes to enforce granted scopes against requested SMART v2 scopes.
+  - Token enricher enhancement: prefer input.requestedScope with filterScopes when available; fallback to smart_scope path.
+
+- 🐛 Bug Fixes
+  - OpenID config responses: advertise client_id_metadata_document_supported: true in both discovery and config sections.
+  - Improve login UX: Keycloak template tweak in error.ftl to show "Back to application" path when loginRestartFlowUrl is unavailable; remove old back-to-login flow.
+
+- 📚 Documentation
+  - Introduce CIMD metadata test file to validate discovery endpoint returns client_id_metadata_document_supported and proxy endpoints.
+
+- 🔧 Chores & Improvements
+  - Version bumps: update to 0.1.0-alpha.202605071418.acaba93 across multiple packages/apps.
+  - Minor Freemarker comment/UX tweak in login error template.
+
+- ⚠️ Breaking Changes
+  - None detected in this release.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/668
+
+
 ## [0.1.0-alpha.202605062242.b30c5006] - 2026-05-07
 
 - 🔧 Chores & Improvements: Bump versions across apps/libs to 0.1.0-alpha.202605062242.b30c5006
