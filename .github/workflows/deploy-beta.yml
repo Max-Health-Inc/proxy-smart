@@ -168,6 +168,17 @@ jobs:
           # Ensure deploy directory exists on VPS
           ${SSH_CMD} "sudo mkdir -p ${DEPLOY_DIR} && sudo chown \$(whoami):\$(whoami) ${DEPLOY_DIR}"
 
+          # Generate proxy signing key if it doesn't exist (stable across deploys)
+          ${SSH_CMD} "
+            if [ ! -f ${DEPLOY_DIR}/proxy-signing-key.pem ]; then
+              echo '🔑 Generating proxy signing key (first-time setup)...'
+              openssl genrsa -out ${DEPLOY_DIR}/proxy-signing-key.pem 2048
+              chmod 600 ${DEPLOY_DIR}/proxy-signing-key.pem
+            else
+              echo '🔑 Proxy signing key already exists — reusing'
+            fi
+          "
+
           # Copy only the files we need (no git on VPS)
           SCP_CMD="scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
           ${SCP_CMD} docker-compose.beta.yml ${VPS_USER}@${VPS_HOST}:${DEPLOY_DIR}/
@@ -272,6 +283,7 @@ jobs:
               --network proxy-smart-beta-network \\
               --env-file .env.beta \\
               -p 9445:9445 \\
+              -v ${DEPLOY_DIR}/proxy-signing-key.pem:/run/secrets/proxy-signing-key.pem:ro \\
               -e NODE_ENV=production \\
               -e PORT=9445 \\
               -e BASE_URL=https://beta.proxy-smart.com \\
@@ -284,6 +296,7 @@ jobs:
               -e FHIR_SERVER_BASE=http://hapi-fhir:8080/fhir \\
               -e CORS_ORIGINS=https://beta.proxy-smart.com,http://localhost:4567 \\
               -e DICOMWEB_BASE_URL=http://orthanc:8042/dicom-web \\
+              -e PROXY_SIGNING_KEY_FILE=/run/secrets/proxy-signing-key.pem \\
               \$BACKEND_IMG
 
             # Wait for canary to pass health check (max 60s)
