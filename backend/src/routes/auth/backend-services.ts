@@ -31,10 +31,25 @@ interface ClientMetadata {
   internalId: string
 }
 
-const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
+export const JWT_BEARER_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
 /** Maximum JWT lifetime allowed (5 minutes per SMART STU2.2 spec) */
 const MAX_JWT_LIFETIME_SECONDS = 300
+
+/**
+ * Structured error thrown by validateClientAssertion.
+ * Carries the OAuth 2.0 error code and HTTP status for direct use in responses.
+ */
+export class ClientAssertionError extends Error {
+  constructor(
+    readonly oauthError: string,
+    readonly description: string,
+    readonly httpStatus: number = 400
+  ) {
+    super(description)
+    this.name = 'ClientAssertionError'
+  }
+}
 
 /** TTL for JWKS/secret cache entries (60 seconds) */
 const CACHE_TTL_MS = 60_000
@@ -84,6 +99,114 @@ export function isBackendServicesRequest(body: Record<string, string | undefined
 }
 
 /**
+ * Validate a private_key_jwt client assertion per RFC 7523 §3 and SMART STU2.2 §4.1.5.
+ *
+ * Checks: JWT structure, iss/sub equality, aud (proxy token endpoint), exp, jti
+ * uniqueness (replay protection), optional body client_id match, and signature
+ * against the client's registered JWKS in Keycloak.
+ *
+ * Throws ClientAssertionError on any violation.
+ * Returns { clientId, internalId } on success.
+ */
+export async function validateClientAssertion(
+  assertion: string,
+  bodyClientId?: string
+): Promise<{ clientId: string; internalId: string }> {
+  const decoded = jwt.decode(assertion, { complete: true }) as {
+    header: jwt.JwtHeader
+    payload: jwt.JwtPayload
+  } | null
+
+  if (!decoded?.payload || !decoded?.header) {
+    throw new ClientAssertionError('invalid_client', 'client_assertion is not a valid JWT')
+  }
+
+  const { iss, sub, aud, exp, jti } = decoded.payload
+
+  // iss and sub MUST equal the client_id (RFC 7523 §3)
+  if (!iss || iss !== sub) {
+    throw new ClientAssertionError('invalid_client', 'JWT iss and sub must be present and equal')
+  }
+
+  // aud MUST include the proxy's token endpoint
+  const expectedAud = `${config.baseUrl}/auth/token`
+  const audList = Array.isArray(aud) ? aud : [aud]
+  if (!audList.includes(expectedAud)) {
+    logger.auth.warn('JWT client assertion audience mismatch', { aud, expectedAud })
+    throw new ClientAssertionError('invalid_client', 'Invalid token audience')
+  }
+
+  // exp MUST be present and not expired (allow 30s clock skew)
+  if (!exp || exp < Date.now() / 1000 - 30) {
+    throw new ClientAssertionError('invalid_client', 'JWT has expired')
+  }
+
+  // exp ceiling: MUST be ≤5 minutes in the future (SMART STU2.2 §4.1.5.1)
+  const now = Math.floor(Date.now() / 1000)
+  if (exp > now + MAX_JWT_LIFETIME_SECONDS + 30) { // +30s clock skew tolerance
+    throw new ClientAssertionError('invalid_client', 'JWT exp must not be more than 5 minutes in the future')
+  }
+
+  // jti MUST be present and unique (SMART STU2.2 §4.1.5.2.1)
+  if (!jti) {
+    throw new ClientAssertionError('invalid_client', 'JWT must contain a jti claim')
+  }
+
+  purgeExpiredJtis()
+  const jtiKey = `${iss}:${jti}`
+  if (usedJtis.has(jtiKey)) {
+    logger.auth.warn('JWT client assertion replay detected', { clientId: iss, jti })
+    throw new ClientAssertionError('invalid_client', 'JWT jti has already been used')
+  }
+  usedJtis.set(jtiKey, exp)
+
+  // If client_id was provided in the request body, it MUST match the JWT iss
+  if (bodyClientId && bodyClientId !== iss) {
+    throw new ClientAssertionError('invalid_client', 'client_id does not match JWT iss claim')
+  }
+
+  const clientId = iss
+
+  // Fetch the client's registered JWKS from Keycloak admin API
+  let clientMeta: ClientMetadata
+  try {
+    clientMeta = await getClientMetadata(clientId)
+  } catch (err) {
+    logger.auth.error('Failed to fetch client JWKS for assertion validation', { clientId, error: err })
+    throw new ClientAssertionError('invalid_client', 'Client not found or has no registered JWKS')
+  }
+
+  // Verify JWT signature against the client's JWKS
+  try {
+    await verifyJwtSignature(assertion, decoded.header, clientMeta.jwks)
+  } catch (err) {
+    logger.auth.warn('JWT client assertion signature verification failed', { clientId, error: err })
+    throw new ClientAssertionError('invalid_client', 'JWT signature verification failed')
+  }
+
+  return { clientId, internalId: clientMeta.internalId }
+}
+
+/**
+ * Validate a private_key_jwt assertion and resolve the client's Keycloak secret.
+ *
+ * The proxy terminates the assertion (clients address aud to the proxy URL),
+ * then this function returns the internal client_secret so callers can
+ * authenticate to Keycloak with client_secret instead, keeping Keycloak
+ * transparent to SMART clients.
+ *
+ * Throws ClientAssertionError if the assertion is invalid.
+ */
+export async function resolveClientSecretForAssertion(
+  assertion: string,
+  bodyClientId?: string
+): Promise<{ clientId: string; clientSecret: string }> {
+  const { clientId, internalId } = await validateClientAssertion(assertion, bodyClientId)
+  const clientSecret = await getClientSecret(clientId, internalId)
+  return { clientId, clientSecret }
+}
+
+/**
  * Handle the Backend Services token request end-to-end.
  * Returns { status, body } for the caller to set on the response.
  */
@@ -94,7 +217,7 @@ export async function handleBackendServicesToken(
   const assertion = body.client_assertion!
   const scope = body.scope || ''
 
-  // 1. grant_type MUST be client_credentials
+  // grant_type MUST be client_credentials
   if (grantType !== 'client_credentials') {
     return {
       status: 400,
@@ -102,88 +225,23 @@ export async function handleBackendServicesToken(
     }
   }
 
-  // 2. Decode JWT header + payload (without verification yet)
-  const decoded = jwt.decode(assertion, { complete: true }) as {
-    header: jwt.JwtHeader
-    payload: jwt.JwtPayload
-  } | null
-
-  if (!decoded?.payload || !decoded?.header) {
-    return { status: 400, body: { error: 'invalid_client', error_description: 'client_assertion is not a valid JWT' } }
-  }
-
-  const { iss, sub, aud, exp, jti } = decoded.payload
-
-  // 3. iss and sub MUST equal the client_id (RFC 7523 §3)
-  if (!iss || iss !== sub) {
-    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT iss and sub must be present and equal' } }
-  }
-
-  // 4. aud MUST include our proxy's token endpoint
-  const expectedAud = `${config.baseUrl}/auth/token`
-  const audList = Array.isArray(aud) ? aud : [aud]
-  if (!audList.includes(expectedAud)) {
-    logger.auth.warn('Backend Services JWT audience mismatch', { aud, expectedAud })
-    return { status: 400, body: { error: 'invalid_client', error_description: 'Invalid token audience' } }
-  }
-
-  // 5. exp MUST be present and not expired (allow 30s clock skew)
-  if (!exp || exp < Date.now() / 1000 - 30) {
-    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT has expired' } }
-  }
-
-  // 5b. exp ceiling: MUST be no more than 5 minutes in the future (SMART STU2.2 §4.1.5.1)
-  const now = Math.floor(Date.now() / 1000)
-  if (exp > now + MAX_JWT_LIFETIME_SECONDS + 30) { // +30s clock skew tolerance
-    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT exp must not be more than 5 minutes in the future' } }
-  }
-
-  // 6. jti MUST be present (replay protection)
-  if (!jti) {
-    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT must contain a jti claim' } }
-  }
-
-  // 6b. jti replay check: jti must not have been used before for this iss (SMART STU2.2 §4.1.5.2.1)
-  purgeExpiredJtis()
-  const jtiKey = `${iss}:${jti}`
-  if (usedJtis.has(jtiKey)) {
-    logger.auth.warn('Backend Services JWT replay detected', { clientId: iss, jti })
-    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT jti has already been used' } }
-  }
-  usedJtis.set(jtiKey, exp)
-
-  // 6c. client_id body param validation (SMART STU2.2 §4.1.5.2.1)
-  // If client_id is provided in the request body, it MUST match the JWT iss claim.
-  if (body.client_id && body.client_id !== iss) {
-    return { status: 400, body: { error: 'invalid_client', error_description: 'client_id does not match JWT iss claim' } }
-  }
-
-  const clientId = iss
-
-  // 7. Fetch the client's registered metadata (JWKS + auth type) from Keycloak admin API
-  let clientMeta: ClientMetadata
+  // Validate the assertion and retrieve the client secret
+  let clientId: string
+  let clientSecret: string
   try {
-    clientMeta = await getClientMetadata(clientId)
+    ;({ clientId, clientSecret } = await resolveClientSecretForAssertion(assertion, body.client_id))
   } catch (err) {
-    logger.auth.error('Failed to fetch client JWKS for Backend Services', { clientId, error: err })
-    return { status: 400, body: { error: 'invalid_client', error_description: 'Client not found or has no registered JWKS' } }
+    if (err instanceof ClientAssertionError) {
+      return { status: err.httpStatus, body: { error: err.oauthError, error_description: err.description } }
+    }
+    logger.auth.error('Unexpected error during assertion validation', { error: err })
+    return { status: 500, body: { error: 'server_error', error_description: 'Internal error during assertion validation' } }
   }
 
-  // 8. Verify JWT signature against the client's JWKS
-  try {
-    await verifyJwtSignature(assertion, decoded.header, clientMeta.jwks)
-  } catch (err) {
-    logger.auth.warn('Backend Services JWT signature verification failed', { clientId, error: err })
-    return { status: 400, body: { error: 'invalid_client', error_description: 'JWT signature verification failed' } }
-  }
-
-  // 9. JWT is valid — get a service account token from Keycloak.
-  //    The proxy has already enforced private_key_jwt (steps 4-8).
-  //    Internally, we authenticate to Keycloak using client_secret.
-  //    Keycloak is just our token factory; the proxy is the SMART authorization server.
+  // JWT is valid — get a service account token from Keycloak.
+  // Internally we authenticate with client_secret; Keycloak never sees the assertion.
   try {
     const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-    const clientSecret = await getClientSecret(clientId, clientMeta.internalId)
     const formData = new URLSearchParams()
     formData.append('grant_type', 'client_credentials')
     formData.append('client_id', clientId)

@@ -134,7 +134,7 @@ mock.module('@/lib/logger', () => ({
 
 // ─── Import after mocking ───────────────────────────────────────────────────
 
-const { handleBackendServicesToken, isBackendServicesRequest, clearJtiCache } = await import(
+const { handleBackendServicesToken, isBackendServicesRequest, validateClientAssertion, resolveClientSecretForAssertion, ClientAssertionError, clearJtiCache } = await import(
   '../src/routes/auth/backend-services'
 )
 
@@ -696,6 +696,88 @@ describe('Backend Services', () => {
       expect(params.get('client_secret')).toBe(TEST_CLIENT_SECRET)
       expect(params.has('client_assertion')).toBe(false)
       expect(params.has('client_assertion_type')).toBe(false)
+    })
+  })
+
+  describe('validateClientAssertion', () => {
+    it('returns clientId and internalId for a valid assertion', async () => {
+      const result = await validateClientAssertion(createClientAssertion(), TEST_CLIENT_ID)
+      expect(result.clientId).toBe(TEST_CLIENT_ID)
+      expect(result.internalId).toBe(TEST_INTERNAL_CLIENT_UUID)
+    })
+
+    it('throws ClientAssertionError for an invalid JWT string', async () => {
+      await expect(validateClientAssertion('not.a.jwt', undefined)).rejects.toBeInstanceOf(ClientAssertionError)
+    })
+
+    it('throws ClientAssertionError for wrong aud', async () => {
+      const assertion = createClientAssertion({ aud: 'https://wrong.example.com/token' })
+      const err = await validateClientAssertion(assertion, undefined).catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.oauthError).toBe('invalid_client')
+      expect(err.description).toContain('audience')
+    })
+
+    it('throws ClientAssertionError for mismatched iss/sub', async () => {
+      const assertion = createClientAssertion({ iss: 'client-a', sub: 'client-b' })
+      await expect(validateClientAssertion(assertion, undefined)).rejects.toBeInstanceOf(ClientAssertionError)
+    })
+
+    it('throws ClientAssertionError when client_id body param does not match iss', async () => {
+      const assertion = createClientAssertion()
+      const err = await validateClientAssertion(assertion, 'wrong-client').catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.description).toContain('client_id')
+    })
+
+    it('does NOT throw when optional client_id matches iss', async () => {
+      const result = await validateClientAssertion(createClientAssertion(), TEST_CLIENT_ID)
+      expect(result.clientId).toBe(TEST_CLIENT_ID)
+    })
+
+    it('prevents jti replay', async () => {
+      const fixedJti = 'validate-replay-jti'
+      await validateClientAssertion(createClientAssertion({ jti: fixedJti }))
+      const err = await validateClientAssertion(createClientAssertion({ jti: fixedJti })).catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.description).toContain('jti')
+    })
+  })
+
+  describe('resolveClientSecretForAssertion', () => {
+    it('returns clientId and clientSecret for a valid assertion', async () => {
+      const result = await resolveClientSecretForAssertion(createClientAssertion(), TEST_CLIENT_ID)
+      expect(result.clientId).toBe(TEST_CLIENT_ID)
+      expect(result.clientSecret).toBe(TEST_CLIENT_SECRET)
+    })
+
+    it('propagates ClientAssertionError on invalid assertion', async () => {
+      const err = await resolveClientSecretForAssertion('bad.jwt.token').catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+    })
+
+    it('is the mechanism used by handleBackendServicesToken for Keycloak exchange', async () => {
+      // Regression: Backend Services should always end up with client_secret in the KC request
+      let capturedBody: URLSearchParams | undefined
+      const original = fetchMock
+      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
+        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
+        if (urlStr.includes('/protocol/openid-connect/token') && init?.body?.toString().includes(TEST_CLIENT_ID)) {
+          capturedBody = new URLSearchParams(init?.body?.toString())
+          return Promise.resolve(new Response(JSON.stringify({ access_token: 'tok', token_type: 'Bearer', expires_in: 300 }),
+            { status: 200, headers: { 'Content-Type': 'application/json' } }))
+        }
+        return original(url, init)
+      })
+
+      await handleBackendServicesToken({
+        grant_type: 'client_credentials',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: createClientAssertion(),
+      })
+
+      expect(capturedBody?.get('client_secret')).toBe(TEST_CLIENT_SECRET)
+      expect(capturedBody?.has('client_assertion')).toBe(false)
     })
   })
 })
