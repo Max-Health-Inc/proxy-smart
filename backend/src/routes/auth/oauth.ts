@@ -9,7 +9,7 @@ import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { tokenContextStore } from '@/lib/token-context-store'
-import { isBackendServicesRequest, handleBackendServicesToken, resolveClientSecretForAssertion, ClientAssertionError, JWT_BEARER_TYPE } from './backend-services'
+import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
 import { kcUnavailablePage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
@@ -425,32 +425,12 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       }
 
       // ── Standard OAuth flows (forwarded to Keycloak) ────────────────
-
-      // private_key_jwt for non-Backend-Services grants (e.g. authorization_code,
-      // refresh_token): validate the assertion at the proxy, then swap it for
-      // client_secret before forwarding. Clients target aud: {proxy}/auth/token
-      // and never need to know about Keycloak's internal URL.
-      let assertionClientSecret: string | undefined
-      if (bodyObj.client_assertion_type === JWT_BEARER_TYPE && bodyObj.client_assertion) {
-        try {
-          const resolved = await resolveClientSecretForAssertion(
-            bodyObj.client_assertion,
-            bodyObj.client_id || bodyObj.clientId
-          )
-          assertionClientSecret = resolved.clientSecret
-          logger.auth.debug('private_key_jwt assertion validated, substituting client_secret', { clientId: resolved.clientId })
-        } catch (err) {
-          if (err instanceof ClientAssertionError) {
-            set.status = err.httpStatus
-            set.headers['Cache-Control'] = 'no-store'
-            return { error: err.oauthError, error_description: err.description }
-          }
-          logger.auth.error('Unexpected error validating private_key_jwt assertion', { error: err })
-          set.status = 500
-          return { error: 'server_error', error_description: 'Internal error during client authentication' }
-        }
-      }
-
+      // NOTE: private_key_jwt assertions for authorization_code/refresh_token
+      // grants are forwarded as-is to Keycloak. The aud claim must target the
+      // Keycloak token endpoint because Keycloak validates it against its own URL
+      // and we cannot re-sign the assertion without the client's private key.
+      // Only Backend Services (client_credentials) does assertion→secret substitution
+      // because service-account clients always have a Keycloak-generated secret.
       const formData = new URLSearchParams()
 
       if (bodyObj.grant_type || bodyObj.grantType) formData.append('grant_type', bodyObj.grant_type || bodyObj.grantType!)
@@ -465,9 +445,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       formData.append('redirect_uri', rewrittenUri || clientRedirectUri || '')
 
       if (bodyObj.client_id || bodyObj.clientId) formData.append('client_id', bodyObj.client_id || bodyObj.clientId!)
-      // Use assertion-derived secret when private_key_jwt was validated; else pass through body value
-      const secretToForward = assertionClientSecret ?? bodyObj.client_secret ?? bodyObj.clientSecret
-      if (secretToForward) formData.append('client_secret', secretToForward)
+      if (bodyObj.client_secret || bodyObj.clientSecret) formData.append('client_secret', bodyObj.client_secret || bodyObj.clientSecret!)
       if (bodyObj.code_verifier || bodyObj.codeVerifier) formData.append('code_verifier', bodyObj.code_verifier || bodyObj.codeVerifier!)
       if (bodyObj.refresh_token || bodyObj.refreshToken) formData.append('refresh_token', bodyObj.refresh_token || bodyObj.refreshToken!)
       if (bodyObj.scope) formData.append('scope', bodyObj.scope)
@@ -475,11 +453,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       if (bodyObj.resource) formData.append('resource', bodyObj.resource)
       if (bodyObj.username) formData.append('username', bodyObj.username)
       if (bodyObj.password) formData.append('password', bodyObj.password)
-      // Do NOT forward assertion fields when the proxy already validated and swapped them
-      if (!assertionClientSecret) {
-        if (bodyObj.client_assertion_type) formData.append('client_assertion_type', bodyObj.client_assertion_type)
-        if (bodyObj.client_assertion) formData.append('client_assertion', bodyObj.client_assertion)
-      }
+      if (bodyObj.client_assertion_type) formData.append('client_assertion_type', bodyObj.client_assertion_type)
+      if (bodyObj.client_assertion) formData.append('client_assertion', bodyObj.client_assertion)
       if (bodyObj.subject_token) formData.append('subject_token', bodyObj.subject_token)
       if (bodyObj.subject_token_type) formData.append('subject_token_type', bodyObj.subject_token_type)
       if (bodyObj.requested_token_type) formData.append('requested_token_type', bodyObj.requested_token_type)
