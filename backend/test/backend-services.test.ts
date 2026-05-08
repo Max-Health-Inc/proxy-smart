@@ -199,13 +199,32 @@ describe('Backend Services', () => {
   describe('isBackendServicesRequest', () => {
     it('detects a valid backend services request', () => {
       expect(isBackendServicesRequest({
+        grant_type: 'client_credentials',
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
         client_assertion: 'some.jwt.here',
       })).toBe(true)
     })
 
+    it('rejects when grant_type is authorization_code (private_key_jwt confidential client)', () => {
+      // A confidential client may use private_key_jwt for token endpoint auth
+      // on a regular authorization_code grant — must NOT be treated as Backend Services
+      expect(isBackendServicesRequest({
+        grant_type: 'authorization_code',
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: 'some.jwt.here',
+      })).toBe(false)
+    })
+
+    it('rejects when grant_type is missing', () => {
+      expect(isBackendServicesRequest({
+        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+        client_assertion: 'some.jwt.here',
+      })).toBe(false)
+    })
+
     it('rejects when client_assertion_type is wrong', () => {
       expect(isBackendServicesRequest({
+        grant_type: 'client_credentials',
         client_assertion_type: 'wrong',
         client_assertion: 'some.jwt.here',
       })).toBe(false)
@@ -213,6 +232,7 @@ describe('Backend Services', () => {
 
     it('rejects when client_assertion is missing', () => {
       expect(isBackendServicesRequest({
+        grant_type: 'client_credentials',
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
       })).toBe(false)
     })
