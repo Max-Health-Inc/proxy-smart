@@ -18,7 +18,7 @@ import type {
 } from './types'
 import type { ILaunchContextStore } from './stores/interface'
 import type { IdPAdapter } from './idp/interface'
-import { isSmartLaunch, isStandaloneLaunch, parseScopes } from './smart-scopes'
+import { isSmartLaunch, isStandaloneLaunch, parseScopes, expandScopesToWildcards } from './smart-scopes'
 import { verifyLaunchCode, type LaunchCodeServiceOptions } from './launch-code'
 
 export interface AuthorizeInterceptorDeps {
@@ -162,6 +162,21 @@ export async function handleAuthorize(
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && !stripFromIdp.has(k)) {
       url.searchParams.set(k, v)
+    }
+  }
+
+  // ── Expand granular SMART v2 scopes to wildcards for Keycloak ─────────
+  // Keycloak only has wildcard scopes registered (e.g. user/*.rs).
+  // Requesting user/ImagingStudy.rs directly would fail with "Invalid scopes".
+  // We send wildcards upstream and restore the granular scopes in the token response.
+  if (params.scope) {
+    const expanded = expandScopesToWildcards(params.scope)
+    if (expanded !== params.scope) {
+      logger?.debug('Expanded granular SMART v2 scopes to wildcards for IdP', {
+        original: params.scope,
+        expanded,
+      })
+      url.searchParams.set('scope', expanded)
     }
   }
 
