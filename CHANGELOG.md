@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605081100.bf771161] - 2026-05-08
+
+- ✨ Features
+  - SMART v2 scope expansion: add expandScopesToWildcards to convert granular scopes (e.g., user/Patient.read) to wildcard forms (user/*.read) and wire into authorize interceptor with de-duplication and empty input handling
+  - SMART v2 scope delegation: introduce regex and impact logic to enforce granted scopes against requested SMART v2 scopes; token enricher uses requestedScope with filterScopes when available
+
+- 🔧 Chores & Improvements
+  - Bump global version across multiple packages/apps (0.1.0-alpha.202605081100.bf771161)
+  - Minor test updates and imports adjustments to cover new scope expansion behavior
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None
+
+- 🐛 Bug Fixes
+  - None detected
+
+If nothing meaningful beyond version bumps and minor UX tweak, would be: - 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/670
+
+
 ## [0.1.0-alpha.202605071424.5b35f4d6] - 2026-05-08
 
 - ✨ Features
