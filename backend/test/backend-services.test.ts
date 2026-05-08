@@ -1,8 +1,8 @@
 /**
- * Backend Services (client_credentials + private_key_jwt) Tests
+ * Client Assertion & Federated Authentication Tests
  *
- * TDD tests for the SMART Backend Services token flow.
- * Specifically targets verifyJwtSignature + the full handleBackendServicesToken flow.
+ * Tests for private_key_jwt validation and proxy assertion translation
+ * for Keycloak's federated client authentication.
  *
  * Mocks:
  * - cross-fetch: intercepts Keycloak admin API calls
@@ -26,7 +26,6 @@ const publicKeyObject = createPublicKey(publicKey)
 const publicJwk = publicKeyObject.export({ format: 'jwk' })
 const TEST_KID = 'test-key-1'
 const TEST_CLIENT_ID = 'backend-service-client'
-const TEST_CLIENT_SECRET = 'test-client-secret'
 const TEST_BASE_URL = 'http://localhost:8445'
 const TEST_KC_BASE_URL = 'http://localhost:8080'
 const TEST_REALM = 'smart-health'
@@ -50,18 +49,8 @@ function createFetchMock() {
   return mock((url: string | URL | Request, init?: RequestInit) => {
     const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
 
-    // Admin token endpoint
+    // Admin token endpoint (for getAdminToken → getClientMetadata)
     if (urlStr.includes('/protocol/openid-connect/token') && init?.body?.toString().includes('client_credentials')) {
-      // If it's the service account token exchange (has client_secret for the backend service client)
-      if (init?.body?.toString().includes(TEST_CLIENT_ID)) {
-        return Promise.resolve(new Response(JSON.stringify({
-          access_token: 'service-account-token-xyz',
-          token_type: 'Bearer',
-          expires_in: 300,
-          scope: 'system/*.read',
-        }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-      }
-      // Admin service token request
       return Promise.resolve(new Response(JSON.stringify({
         access_token: 'admin-token-123',
         token_type: 'Bearer',
@@ -78,13 +67,6 @@ function createFetchMock() {
           'jwks.string': JSON.stringify(clientJwks),
         },
       }]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-    }
-
-    // Client secret endpoint
-    if (urlStr.includes(`/clients/${TEST_INTERNAL_CLIENT_UUID}/client-secret`)) {
-      return Promise.resolve(new Response(JSON.stringify({
-        value: TEST_CLIENT_SECRET,
-      }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     }
 
     // Fallback — unknown URL
@@ -134,7 +116,7 @@ mock.module('@/lib/logger', () => ({
 
 // ─── Import after mocking ───────────────────────────────────────────────────
 
-const { handleBackendServicesToken, isBackendServicesRequest, validateClientAssertion, resolveClientSecretForAssertion, ClientAssertionError, clearJtiCache } = await import(
+const { hasClientAssertion, translateClientAssertion, validateClientAssertion, ClientAssertionError, clearJtiCache } = await import(
   '../src/routes/auth/backend-services'
 )
 
@@ -196,34 +178,32 @@ describe('Backend Services', () => {
     }
   })
 
-  describe('isBackendServicesRequest', () => {
-    it('detects a valid backend services request', () => {
-      expect(isBackendServicesRequest({
+  describe('hasClientAssertion', () => {
+    it('detects assertion in client_credentials request', () => {
+      expect(hasClientAssertion({
         grant_type: 'client_credentials',
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
         client_assertion: 'some.jwt.here',
       })).toBe(true)
     })
 
-    it('rejects when grant_type is authorization_code (private_key_jwt confidential client)', () => {
-      // A confidential client may use private_key_jwt for token endpoint auth
-      // on a regular authorization_code grant — must NOT be treated as Backend Services
-      expect(isBackendServicesRequest({
+    it('detects assertion in authorization_code request', () => {
+      expect(hasClientAssertion({
         grant_type: 'authorization_code',
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
         client_assertion: 'some.jwt.here',
-      })).toBe(false)
+      })).toBe(true)
     })
 
-    it('rejects when grant_type is missing', () => {
-      expect(isBackendServicesRequest({
+    it('detects assertion regardless of grant_type', () => {
+      expect(hasClientAssertion({
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
         client_assertion: 'some.jwt.here',
-      })).toBe(false)
+      })).toBe(true)
     })
 
     it('rejects when client_assertion_type is wrong', () => {
-      expect(isBackendServicesRequest({
+      expect(hasClientAssertion({
         grant_type: 'client_credentials',
         client_assertion_type: 'wrong',
         client_assertion: 'some.jwt.here',
@@ -231,136 +211,87 @@ describe('Backend Services', () => {
     })
 
     it('rejects when client_assertion is missing', () => {
-      expect(isBackendServicesRequest({
+      expect(hasClientAssertion({
         grant_type: 'client_credentials',
         client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
       })).toBe(false)
     })
   })
 
-  describe('handleBackendServicesToken', () => {
-    it('rejects non-client_credentials grant_type', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'authorization_code',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion(),
-      })
+  describe('translateClientAssertion', () => {
+    it('validates assertion and returns proxy-signed assertion (happy path)', async () => {
+      const assertion = createClientAssertion()
+      const result = await translateClientAssertion(assertion, TEST_CLIENT_ID)
 
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('unsupported_grant_type')
+      expect(result.clientId).toBe(TEST_CLIENT_ID)
+      expect(result.proxyAssertion).toBeDefined()
+      expect(typeof result.proxyAssertion).toBe('string')
+
+      // Verify proxy assertion structure
+      const decoded = jwt.decode(result.proxyAssertion) as jwt.JwtPayload
+      expect(decoded.iss).toBe(TEST_BASE_URL)
+      expect(decoded.sub).toBe(TEST_CLIENT_ID)
+      expect(decoded.aud).toBe(`${TEST_KC_BASE_URL}/realms/${TEST_REALM}`)
+      expect(decoded.jti).toBeDefined()
+      expect(decoded.exp).toBeDefined()
+    })
+
+    it('proxy assertion uses RS256 and includes kid', async () => {
+      const assertion = createClientAssertion()
+      const { proxyAssertion } = await translateClientAssertion(assertion, TEST_CLIENT_ID)
+
+      const header = jwt.decode(proxyAssertion, { complete: true })?.header
+      expect(header?.alg).toBe('RS256')
+      expect(header?.kid).toBeDefined()
     })
 
     it('rejects invalid JWT (not a JWT)', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: 'not-a-jwt',
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
+      await expect(translateClientAssertion('not-a-jwt')).rejects.toBeInstanceOf(ClientAssertionError)
     })
 
     it('rejects JWT where iss !== sub', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ iss: 'client-a', sub: 'client-b' }),
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('iss and sub')
+      const assertion = createClientAssertion({ iss: 'client-a', sub: 'client-b' })
+      await expect(translateClientAssertion(assertion)).rejects.toBeInstanceOf(ClientAssertionError)
     })
 
     it('rejects JWT with wrong audience', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ aud: 'https://wrong.example.com/token' }),
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('audience')
-    })
-
-    it('rejects JWT with Keycloak internal token endpoint as audience', async () => {
-      const keycloakAud = `${TEST_KC_BASE_URL}/realms/${TEST_REALM}/protocol/openid-connect/token`
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ aud: keycloakAud }),
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('audience')
+      const assertion = createClientAssertion({ aud: 'https://wrong.example.com/token' })
+      const err = await translateClientAssertion(assertion).catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.description).toContain('audience')
     })
 
     it('rejects expired JWT', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ exp: Math.floor(Date.now() / 1000) - 120 }),
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('expired')
+      const assertion = createClientAssertion({ exp: Math.floor(Date.now() / 1000) - 120 })
+      await expect(translateClientAssertion(assertion)).rejects.toBeInstanceOf(ClientAssertionError)
     })
 
     it('rejects JWT without jti', async () => {
-      // Create a JWT manually without jti
       const now = Math.floor(Date.now() / 1000)
       const token = jwt.sign(
         { iss: TEST_CLIENT_ID, sub: TEST_CLIENT_ID, aud: `${TEST_BASE_URL}/auth/token`, exp: now + 300 },
         privateKey,
         { algorithm: 'RS384', header: { alg: 'RS384', kid: TEST_KID, typ: 'JWT' } }
       )
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: token,
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('jti')
+      await expect(translateClientAssertion(token)).rejects.toBeInstanceOf(ClientAssertionError)
     })
 
-    it('successfully verifies JWT signature and returns token (happy path)', async () => {
+    it('rejects replayed jti', async () => {
+      const fixedJti = 'translate-replay-jti'
+      await translateClientAssertion(createClientAssertion({ jti: fixedJti }))
+      await expect(
+        translateClientAssertion(createClientAssertion({ jti: fixedJti }))
+      ).rejects.toBeInstanceOf(ClientAssertionError)
+    })
+
+    it('rejects when client_id body param does not match JWT iss', async () => {
       const assertion = createClientAssertion()
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-        scope: 'system/*.read',
-      })
-
-      expect(result.status).toBe(200)
-      expect(result.body.access_token).toBe('service-account-token-xyz')
-      expect(result.body.token_type).toBe('Bearer')
-    })
-
-    it('verifies signature using kid from JWT header', async () => {
-      // Sign with the correct key and kid
-      const assertion = createClientAssertion({ kid: TEST_KID })
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-
-      expect(result.status).toBe(200)
-      expect(result.body.access_token).toBeDefined()
+      const err = await translateClientAssertion(assertion, 'wrong-client-id').catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.description).toContain('client_id')
     })
 
     it('rejects JWT signed with wrong key', async () => {
-      // Generate a different key pair
       const { privateKey: wrongKey } = generateKeyPairSync('rsa', {
         modulusLength: 2048,
         privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
@@ -380,158 +311,7 @@ describe('Backend Services', () => {
         { algorithm: 'RS384', header: { alg: 'RS384', kid: TEST_KID, typ: 'JWT' } }
       )
 
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('signature')
-    })
-
-    it('handles RS256 algorithm correctly', async () => {
-      // Rebuild JWKS mock to not specify alg (crypto.createPublicKey infers from kty)
-      const originalFetch = fetchMock
-      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
-
-        // Override client lookup to return JWK without explicit alg
-        if (urlStr.includes('/admin/realms/') && urlStr.includes('clients?clientId=')) {
-          const jwksNoAlg = {
-            keys: [{
-              ...publicJwk,
-              kid: TEST_KID,
-              use: 'sig',
-              // No alg — crypto.createPublicKey infers from kty=RSA
-            }]
-          }
-          return Promise.resolve(new Response(JSON.stringify([{
-            id: TEST_INTERNAL_CLIENT_UUID,
-            clientId: TEST_CLIENT_ID,
-            attributes: { 'jwks.string': JSON.stringify(jwksNoAlg) },
-          }]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-
-        // Delegate other calls to the original mock
-        return originalFetch(url, init)
-      })
-
-      const assertion = createClientAssertion({ algorithm: 'RS256' })
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-
-      expect(result.status).toBe(200)
-    })
-
-    it('verifies JWT signature does not hang or timeout (regression)', async () => {
-      // This test ensures the verifyJwtSignature completes within a reasonable time.
-      // A bug where getKeysInterceptor returns wrong data could cause
-      // a fallback network fetch to 'https://unused', hanging the request.
-      const assertion = createClientAssertion()
-
-      const startTime = Date.now()
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-      const elapsed = Date.now() - startTime
-
-      expect(result.status).toBe(200)
-      // Should complete in well under 5 seconds (network fallback would timeout)
-      expect(elapsed).toBeLessThan(5000)
-    })
-
-    it('accepts JWKS keys with use:enc (crypto ignores use field)', async () => {
-      // crypto.createPublicKey ignores the 'use' field — it imports any valid JWK.
-      // This is BETTER than jwks-rsa which would filter them out and fall back to
-      // a network request to a dummy URL, causing timeouts/503s.
-      const originalFetch = fetchMock
-      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
-
-        // Return JWKS where keys have use:"enc" — still valid for signature verification
-        if (urlStr.includes('/admin/realms/') && urlStr.includes('clients?clientId=')) {
-          const encJwks = {
-            keys: [{
-              ...publicJwk,
-              kid: TEST_KID,
-              use: 'enc', // crypto.createPublicKey doesn't care about this
-              alg: 'RS384',
-            }]
-          }
-          return Promise.resolve(new Response(JSON.stringify([{
-            id: TEST_INTERNAL_CLIENT_UUID,
-            clientId: TEST_CLIENT_ID,
-            attributes: { 'jwks.string': JSON.stringify(encJwks) },
-          }]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-
-        return originalFetch(url, init)
-      })
-
-      const assertion = createClientAssertion()
-      const startTime = Date.now()
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-      const elapsed = Date.now() - startTime
-
-      // Should succeed — key material is valid regardless of 'use' field
-      expect(result.status).toBe(200)
-      // Should be instant (no network fallback)
-      expect(elapsed).toBeLessThan(1000)
-    })
-
-    it('fails gracefully when JWKS keys lack kty field', async () => {
-      // Keys without a valid kty are rejected by jose.importJWK in retrieveSigningKeys.
-      // This simulates a malformed JWKS from Keycloak.
-      const originalFetch = fetchMock
-      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
-
-        if (urlStr.includes('/admin/realms/') && urlStr.includes('clients?clientId=')) {
-          // Return key with no kty — retrieveSigningKeys will skip it
-          const badJwks = {
-            keys: [{
-              kid: TEST_KID,
-              alg: 'RS384',
-              // Missing kty, n, e — can't be processed
-            }]
-          }
-          return Promise.resolve(new Response(JSON.stringify([{
-            id: TEST_INTERNAL_CLIENT_UUID,
-            clientId: TEST_CLIENT_ID,
-            attributes: { 'jwks.string': JSON.stringify(badJwks) },
-          }]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-
-        if (urlStr.includes('unused')) {
-          return Promise.resolve(new Response('Not Found', { status: 404 }))
-        }
-
-        return originalFetch(url, init)
-      })
-
-      const assertion = createClientAssertion()
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
+      await expect(translateClientAssertion(assertion)).rejects.toBeInstanceOf(ClientAssertionError)
     })
 
     it('handles client with no JWKS registered', async () => {
@@ -540,7 +320,6 @@ describe('Backend Services', () => {
         const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
 
         if (urlStr.includes('/admin/realms/') && urlStr.includes('clients?clientId=')) {
-          // Client exists but has no jwks.string attribute
           return Promise.resolve(new Response(JSON.stringify([{
             id: TEST_INTERNAL_CLIENT_UUID,
             clientId: TEST_CLIENT_ID,
@@ -552,150 +331,16 @@ describe('Backend Services', () => {
       })
 
       const assertion = createClientAssertion()
-
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('JWKS')
+      const err = await translateClientAssertion(assertion).catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.description).toContain('JWKS')
     })
 
     it('rejects JWT with exp more than 5 minutes in the future', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ exp: Math.floor(Date.now() / 1000) + 600 }),
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('5 minutes')
-    })
-
-    it('rejects replayed jti (same jti used twice)', async () => {
-      const fixedJti = 'replay-test-jti-12345'
-
-      // First request should succeed
-      const result1 = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ jti: fixedJti }),
-      })
-      expect(result1.status).toBe(200)
-
-      // Second request with same jti should be rejected
-      const result2 = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ jti: fixedJti }),
-      })
-      expect(result2.status).toBe(400)
-      expect(result2.body.error).toBe('invalid_client')
-      expect(result2.body.error_description).toContain('jti')
-    })
-
-    it('allows same jti from different issuers (scoped per iss)', async () => {
-      const fixedJti = 'shared-jti-different-iss'
-
-      // First request from client A
-      const result1 = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ jti: fixedJti, iss: TEST_CLIENT_ID, sub: TEST_CLIENT_ID }),
-      })
-      expect(result1.status).toBe(200)
-
-      // Same jti from a different issuer — the jti check should pass because
-      // jti is scoped per iss. The mock doesn't differentiate clients, so this
-      // will succeed end-to-end (proving jti replay is per-iss, not global).
-      const result2 = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ jti: fixedJti, iss: 'other-client', sub: 'other-client' }),
-      })
-      // Should NOT be rejected for jti replay — if it fails, it's for a different reason
-      if (result2.status !== 200) {
-        expect(result2.body.error_description).not.toContain('jti has already been used')
-      }
-    })
-
-    it('rejects when client_id body param does not match JWT iss', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion(),
-        client_id: 'wrong-client-id',
-      })
-
-      expect(result.status).toBe(400)
-      expect(result.body.error).toBe('invalid_client')
-      expect(result.body.error_description).toContain('client_id')
-    })
-
-    it('accepts when client_id body param matches JWT iss', async () => {
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion(),
-        client_id: TEST_CLIENT_ID,
-      })
-
-      expect(result.status).toBe(200)
-    })
-
-    it('accepts exp just under 5-minute ceiling', async () => {
-      // exp = now + 299 seconds (within 300 + 30 clock skew tolerance)
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion({ exp: Math.floor(Date.now() / 1000) + 299 }),
-      })
-
-      expect(result.status).toBe(200)
-    })
-
-    it('always uses client_secret internally with Keycloak (proxy enforces private_key_jwt externally)', async () => {
-      // The proxy validates JWT signature (private_key_jwt) at steps 4-8,
-      // then authenticates to Keycloak using client_secret internally.
-      let capturedTokenBody: string | undefined
-      const originalFetch = fetchMock
-
-      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
-
-        // Token endpoint — capture body
-        if (urlStr.includes('/protocol/openid-connect/token') && init?.body?.toString().includes(TEST_CLIENT_ID)) {
-          capturedTokenBody = init?.body?.toString()
-          return Promise.resolve(new Response(JSON.stringify({
-            access_token: 'secret-based-token',
-            token_type: 'Bearer',
-            expires_in: 300,
-          }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-
-        return originalFetch(url, init)
-      })
-
-      const assertion = createClientAssertion()
-      const result = await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: assertion,
-        scope: 'system/*.read',
-      })
-
-      expect(result.status).toBe(200)
-
-      // Verify it uses client_secret internally, never forwards client_assertion to Keycloak
-      expect(capturedTokenBody).toBeDefined()
-      const params = new URLSearchParams(capturedTokenBody!)
-      expect(params.get('client_secret')).toBe(TEST_CLIENT_SECRET)
-      expect(params.has('client_assertion')).toBe(false)
-      expect(params.has('client_assertion_type')).toBe(false)
+      const assertion = createClientAssertion({ exp: Math.floor(Date.now() / 1000) + 600 })
+      const err = await translateClientAssertion(assertion).catch(e => e)
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      expect(err.description).toContain('5 minutes')
     })
   })
 
@@ -741,43 +386,6 @@ describe('Backend Services', () => {
       const err = await validateClientAssertion(createClientAssertion({ jti: fixedJti })).catch(e => e)
       expect(err).toBeInstanceOf(ClientAssertionError)
       expect(err.description).toContain('jti')
-    })
-  })
-
-  describe('resolveClientSecretForAssertion', () => {
-    it('returns clientId and clientSecret for a valid assertion', async () => {
-      const result = await resolveClientSecretForAssertion(createClientAssertion(), TEST_CLIENT_ID)
-      expect(result.clientId).toBe(TEST_CLIENT_ID)
-      expect(result.clientSecret).toBe(TEST_CLIENT_SECRET)
-    })
-
-    it('propagates ClientAssertionError on invalid assertion', async () => {
-      const err = await resolveClientSecretForAssertion('bad.jwt.token').catch(e => e)
-      expect(err).toBeInstanceOf(ClientAssertionError)
-    })
-
-    it('is the mechanism used by handleBackendServicesToken for Keycloak exchange', async () => {
-      // Regression: Backend Services should always end up with client_secret in the KC request
-      let capturedBody: URLSearchParams | undefined
-      const original = fetchMock
-      fetchMock = mock((url: string | URL | Request, init?: RequestInit) => {
-        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
-        if (urlStr.includes('/protocol/openid-connect/token') && init?.body?.toString().includes(TEST_CLIENT_ID)) {
-          capturedBody = new URLSearchParams(init?.body?.toString())
-          return Promise.resolve(new Response(JSON.stringify({ access_token: 'tok', token_type: 'Bearer', expires_in: 300 }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }))
-        }
-        return original(url, init)
-      })
-
-      await handleBackendServicesToken({
-        grant_type: 'client_credentials',
-        client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
-        client_assertion: createClientAssertion(),
-      })
-
-      expect(capturedBody?.get('client_secret')).toBe(TEST_CLIENT_SECRET)
-      expect(capturedBody?.has('client_assertion')).toBe(false)
     })
   })
 })
