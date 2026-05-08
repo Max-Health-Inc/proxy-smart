@@ -294,7 +294,7 @@ jobs:
             -e KC_HTTP_ENABLED=true \
             -e KC_HOSTNAME_STRICT=false \
             quay.io/keycloak/keycloak:26.6.1 \
-            start-dev --import-realm
+            start-dev --import-realm --features=cimd,token-exchange,client-auth-federated
           
           # Wait for Keycloak to be ready
           # Note: Health endpoints return 404 in dev mode, check the realm endpoint instead

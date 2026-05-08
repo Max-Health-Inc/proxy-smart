@@ -1,19 +1,18 @@
 /**
- * SMART Backend Services (client_credentials + private_key_jwt) handler
+ * Client Assertion Validation & Federated Authentication
  *
  * Our proxy IS the token endpoint advertised in .well-known/smart-configuration.
  * Clients send JWT assertions with aud = our proxy's token URL.
- * Keycloak can't validate this because it expects its own endpoint URL as the audience.
  *
- * Solution: validate the JWT assertion at the proxy layer, then authenticate
- * to Keycloak using the client's internal secret for the actual token issuance.
+ * Solution: validate the JWT assertion at the proxy layer, then re-sign a new
+ * assertion with the proxy's own signing key for Keycloak's federated client auth.
  *
- * Flow:
+ * Flow (all grant types with private_key_jwt):
  *   1. Decode & validate the client's JWT assertion (aud, iss, sub, exp, jti)
  *   2. Fetch the client's registered public JWKS from Keycloak admin API
  *   3. Verify the JWT signature against the JWKS
- *   4. Forward a client_secret-authenticated request to Keycloak to get the service account token
- *   5. Return the token to the client
+ *   4. Sign a new assertion with the proxy's key (iss=proxy, sub=clientId, aud=KC)
+ *   5. Forward the proxy-signed assertion to Keycloak for token issuance
  */
 
 import { createPublicKey } from 'crypto'
@@ -21,6 +20,7 @@ import jwt from 'jsonwebtoken'
 import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { signProxyAssertion } from '@/lib/proxy-signing'
 
 /** A JSON Web Key with required kty and optional kid, plus any additional JWK fields */
 interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
@@ -75,26 +75,19 @@ function purgeExpiredJtis(): void {
 export function clearJtiCache(): void {
   usedJtis.clear()
   jwksCache.clear()
-  secretCache.clear()
   adminTokenCache = null
 }
 
-// ─── Client config cache (metadata + secret) ───────────────────────────────
+// ─── Client config cache (metadata) ────────────────────────────────────────
 interface CacheEntry<T> { value: T; expiresAt: number }
 const jwksCache = new Map<string, CacheEntry<ClientMetadata>>()
-const secretCache = new Map<string, CacheEntry<string>>()
 
 /**
- * Detect whether a token request is a Backend Services flow.
- *
- * A client_assertion (private_key_jwt) can also be used for regular
- * authorization_code grants by confidential clients (RFC 7523 §2.2).
- * Only treat it as Backend Services when grant_type=client_credentials.
+ * Check whether a token request contains a private_key_jwt client assertion.
+ * Works for any grant type (client_credentials, authorization_code, refresh_token).
  */
-export function isBackendServicesRequest(body: Record<string, string | undefined>): boolean {
-  const grantType = body.grant_type || body.grantType
-  return grantType === 'client_credentials'
-    && body.client_assertion_type === JWT_BEARER_TYPE
+export function hasClientAssertion(body: Record<string, string | undefined>): boolean {
+  return body.client_assertion_type === JWT_BEARER_TYPE
     && !!body.client_assertion
 }
 
@@ -188,84 +181,23 @@ export async function validateClientAssertion(
 }
 
 /**
- * Validate a private_key_jwt assertion and resolve the client's Keycloak secret.
+ * Validate a private_key_jwt assertion and return a proxy-signed assertion
+ * for forwarding to Keycloak's federated client authentication.
  *
- * The proxy terminates the assertion (clients address aud to the proxy URL),
- * then this function returns the internal client_secret so callers can
- * authenticate to Keycloak with client_secret instead, keeping Keycloak
- * transparent to SMART clients.
+ * Flow:
+ *   1. Validate incoming client assertion (structure, claims, signature)
+ *   2. Sign a new JWT with the proxy's key (iss=proxy, sub=clientId, aud=KC realm)
+ *   3. Return the proxy assertion for the caller to forward to KC
  *
- * Throws ClientAssertionError if the assertion is invalid.
+ * Throws ClientAssertionError if the incoming assertion is invalid.
  */
-export async function resolveClientSecretForAssertion(
+export async function translateClientAssertion(
   assertion: string,
   bodyClientId?: string
-): Promise<{ clientId: string; clientSecret: string }> {
-  const { clientId, internalId } = await validateClientAssertion(assertion, bodyClientId)
-  const clientSecret = await getClientSecret(clientId, internalId)
-  return { clientId, clientSecret }
-}
-
-/**
- * Handle the Backend Services token request end-to-end.
- * Returns { status, body } for the caller to set on the response.
- */
-export async function handleBackendServicesToken(
-  body: Record<string, string | undefined>
-): Promise<{ status: number; body: Record<string, unknown> }> {
-  const grantType = body.grant_type || body.grantType
-  const assertion = body.client_assertion!
-  const scope = body.scope || ''
-
-  // grant_type MUST be client_credentials
-  if (grantType !== 'client_credentials') {
-    return {
-      status: 400,
-      body: { error: 'unsupported_grant_type', error_description: 'Backend Services requires grant_type=client_credentials' }
-    }
-  }
-
-  // Validate the assertion and retrieve the client secret
-  let clientId: string
-  let clientSecret: string
-  try {
-    ;({ clientId, clientSecret } = await resolveClientSecretForAssertion(assertion, body.client_id))
-  } catch (err) {
-    if (err instanceof ClientAssertionError) {
-      return { status: err.httpStatus, body: { error: err.oauthError, error_description: err.description } }
-    }
-    logger.auth.error('Unexpected error during assertion validation', { error: err })
-    return { status: 500, body: { error: 'server_error', error_description: 'Internal error during assertion validation' } }
-  }
-
-  // JWT is valid — get a service account token from Keycloak.
-  // Internally we authenticate with client_secret; Keycloak never sees the assertion.
-  try {
-    const kcUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-    const formData = new URLSearchParams()
-    formData.append('grant_type', 'client_credentials')
-    formData.append('client_id', clientId)
-    formData.append('client_secret', clientSecret)
-    if (scope) formData.append('scope', scope)
-
-    const resp = await fetch(kcUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: formData.toString()
-    })
-
-    const data = await resp.json()
-    if (resp.status !== 200) {
-      logger.auth.warn('Keycloak rejected Backend Services token request', { clientId, error: data.error, desc: data.error_description })
-      return { status: resp.status, body: data }
-    }
-
-    logger.auth.info('Backend Services token issued', { clientId, scope: data.scope })
-    return { status: 200, body: data }
-  } catch (err) {
-    logger.auth.error('Backend Services Keycloak token exchange failed', { clientId, error: err })
-    return { status: 500, body: { error: 'server_error', error_description: 'Internal error during token issuance' } }
-  }
+): Promise<{ clientId: string; proxyAssertion: string }> {
+  const { clientId } = await validateClientAssertion(assertion, bodyClientId)
+  const proxyAssertion = signProxyAssertion(clientId)
+  return { clientId, proxyAssertion }
 }
 
 // ─── Internal helpers ───────────────────────────────────────────────────────
@@ -351,32 +283,6 @@ async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
 
   jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })
   return result
-}
-
-/**
- * Fetch the client secret from Keycloak admin API (with TTL cache).
- * GET /admin/realms/{realm}/clients/{internalId}/client-secret
- */
-async function getClientSecret(clientId: string, internalId: string): Promise<string> {
-  const cached = secretCache.get(clientId)
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.value
-  }
-
-  const adminToken = await getAdminToken()
-
-  // Fetch the secret using the internal UUID
-  const secretResp = await fetch(
-    `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/clients/${internalId}/client-secret`,
-    { headers: { Authorization: `Bearer ${adminToken}` } }
-  )
-  if (!secretResp.ok) throw new Error(`Failed to fetch secret for client '${clientId}': ${secretResp.status}`)
-
-  const secretData = await secretResp.json()
-  const secret = secretData.value
-
-  secretCache.set(clientId, { value: secret, expiresAt: Date.now() + CACHE_TTL_MS })
-  return secret
 }
 
 /**

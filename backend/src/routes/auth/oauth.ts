@@ -9,7 +9,7 @@ import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { tokenContextStore } from '@/lib/token-context-store'
-import { isBackendServicesRequest, handleBackendServicesToken } from './backend-services'
+import { hasClientAssertion, translateClientAssertion, ClientAssertionError } from './backend-services'
 import { kcUnavailablePage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
@@ -415,22 +415,29 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     })
 
     try {
-      // ── Backend Services (private_key_jwt) ──────────────────────────
-      if (isBackendServicesRequest(bodyObj)) {
-        const result = await handleBackendServicesToken(bodyObj)
-        set.status = result.status
-        set.headers['Cache-Control'] = 'no-store'
-        set.headers['Pragma'] = 'no-cache'
-        return result.body
+      // ── Intercept private_key_jwt assertions (all grant types) ──────
+      // Validate the client's assertion, then re-sign with the proxy's key
+      // for Keycloak's federated client authentication. This lets clients
+      // use aud=proxy_url without knowing Keycloak's internal URL.
+      if (hasClientAssertion(bodyObj)) {
+        try {
+          const { clientId, proxyAssertion } = await translateClientAssertion(
+            bodyObj.client_assertion!, bodyObj.client_id
+          )
+          bodyObj.client_assertion = proxyAssertion
+          if (!bodyObj.client_id) bodyObj.client_id = clientId
+        } catch (err) {
+          if (err instanceof ClientAssertionError) {
+            set.status = err.httpStatus
+            set.headers['Cache-Control'] = 'no-store'
+            set.headers['Pragma'] = 'no-cache'
+            return { error: err.oauthError, error_description: err.description }
+          }
+          throw err
+        }
       }
 
       // ── Standard OAuth flows (forwarded to Keycloak) ────────────────
-      // NOTE: private_key_jwt assertions for authorization_code/refresh_token
-      // grants are forwarded as-is to Keycloak. The aud claim must target the
-      // Keycloak token endpoint because Keycloak validates it against its own URL
-      // and we cannot re-sign the assertion without the client's private key.
-      // Only Backend Services (client_credentials) does assertion→secret substitution
-      // because service-account clients always have a Keycloak-generated secret.
       const formData = new URLSearchParams()
 
       if (bodyObj.grant_type || bodyObj.grantType) formData.append('grant_type', bodyObj.grant_type || bodyObj.grantType!)

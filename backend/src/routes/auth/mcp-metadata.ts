@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { getProxyJwks } from '@/lib/proxy-signing'
 import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
 
 /**
@@ -341,7 +342,8 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
    * Proxies to Keycloak's JWKS endpoint so clients (including MCP servers)
    * can validate tokens without knowing about Keycloak directly.
    */
-  .get('/jwks.json', async ({ set }) => {
+  .get('/jwks.json', async () => {
+    const proxyJwks = getProxyJwks()
     try {
       const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
       const realm = config.keycloak.realm
@@ -350,32 +352,21 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       const response = await fetch(jwksUrl)
       
       if (!response.ok) {
-        logger.auth.error('Failed to fetch JWKS from Keycloak', {
+        logger.auth.warn('Failed to fetch JWKS from Keycloak, serving proxy keys only', {
           status: response.status,
           statusText: response.statusText,
           jwksUrl
         })
-        set.status = 502
-        return {
-          error: 'bad_gateway',
-          error_description: 'Failed to fetch JWKS from authorization server'
-        }
+        return proxyJwks
       }
       
-      const jwks = await response.json()
+      const kcJwks = await response.json()
       
-      logger.auth.debug('Successfully proxied JWKS from well-known endpoint', {
-        keyCount: jwks.keys?.length || 0
-      })
-      
-      return jwks
+      // Merge Keycloak keys (token validation) with proxy signing key (federated client auth)
+      return { keys: [...(kcJwks.keys || []), ...proxyJwks.keys] }
     } catch (error) {
-      logger.auth.error('Error proxying JWKS from well-known endpoint', { error })
-      set.status = 500
-      return {
-        error: 'server_error',
-        error_description: 'Internal server error while fetching JWKS'
-      }
+      logger.auth.warn('Error fetching JWKS from Keycloak, serving proxy keys only', { error })
+      return proxyJwks
     }
   }, {
     detail: {
