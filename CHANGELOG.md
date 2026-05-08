@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605082149.73713843] - 2026-05-08
+
+- 🔧 Chores & Improvements: CI/CD and build optimizations
+  - Dockerfile.keycloak: add http-relative-path constraint and --optimized flag; include features cimd, token-exchange, client-auth-federated; set path /auth to avoid feature-dropping rebuilds; start with optimized and realm import
+  - Version bumps across apps/packages/testing/eslint-config to 0.1.0-beta.202605082149.73713843
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/680
+
+
 ## [0.1.0-alpha.202605081814.6aaf417a] - 2026-05-08
 
 - 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605081814.6aaf417a; introduce backend client assertion types and error handling; add assertion resolution and validation flows; enhance OAuth path to validate private_key_jwt assertions; minor test updates for new validation APIs
