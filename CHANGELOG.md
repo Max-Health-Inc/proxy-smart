@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605081112.6bd7ebb8] - 2026-05-08
+
+- ✨ Features: SMART v2 scope expansion and wildcard delegation
+  - Introduced expandScopesToWildcards and integrated into authorize-interceptor to convert granular scopes to wildcard forms (e.g., user/*.read) with de-duplication and empty-input handling.
+  - Added SMART v2 scope regex, isScopeGranted logic, and filterScopes to enforce granted scopes against requested SMART v2 scopes.
+  - Token enricher supported new scope flow via input.requestedScope with filterScopes; fallback path preserved.
+
+- 🐛 Bug Fixes: Improved SMART v2 scope handling and compatibility
+  - Updated scope matching to support v2 operations (1-5 chars from cruds) and upmapping to v1 read/write via aliases.
+  - Removed legacy fallbacks that granted read-by-id or search via any v2 scope.
+
+- 📚 Documentation: CI/CD and config notes
+  - Metadata/config: OpenID responses include client_id_metadata_document_supported; CIMD metadata test added to validate discovery endpoints.
+
+- 🔧 Chores & Improvements: Version bumps and test coverage
+  - Global version bumps across multiple packages/apps; added tests for new scope expansion and delegation logic.
+  - Minor test/import cleanups to align with new expandScopesToWildcards.
+
+- ⚠️ Breaking Changes: None detected in user-facing behavior.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/671
+
+
 ## [0.1.0-alpha.202605081100.bf771161] - 2026-05-08
 
 - ✨ Features
