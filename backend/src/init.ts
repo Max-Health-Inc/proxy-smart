@@ -2,6 +2,7 @@ import { config } from './config'
 import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
 import { refreshCorsOrigins } from './lib/cors-origins'
+import { loadRuntimeConfig } from './lib/runtime-config'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -565,6 +566,27 @@ export async function initializeServer(): Promise<void> {
 
       // Populate CORS origins cache from Keycloak client webOrigins
       await refreshCorsOrigins()
+
+      // Eagerly load runtime config (consent, access-control, brand, etc.) from
+      // Keycloak realm attributes so externalAudiences and other settings are
+      // available immediately — without waiting for the first admin UI request.
+      try {
+        const runtimeAdmin = new KcAdminClient({
+          baseUrl: config.keycloak.baseUrl!,
+          realmName: config.keycloak.realm!,
+        })
+        await runtimeAdmin.auth({
+          grantType: 'client_credentials',
+          clientId: config.keycloak.adminClientId!,
+          clientSecret: config.keycloak.adminClientSecret!,
+        })
+        await loadRuntimeConfig(runtimeAdmin)
+        logger.keycloak.info('✅ Runtime config loaded from Keycloak realm attributes')
+      } catch (err) {
+        logger.keycloak.warn('Could not eagerly load runtime config — will load on first admin request', {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
 
       // Ensure Keycloak Organizations feature is enabled on the realm
       await ensureOrganizationsEnabled()
