@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605082226.dc9f9827] - 2026-05-08
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages/apps and testing config (no functional changes)
+- 🔧 Chores & Improvements: Dockerfile.keycloak tweak to enforce http-relative-path constraint, enable --optimized build, and include cimd, token-exchange, client-auth-federated features; start with optimized and realm import
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/681
+
+
 ## [0.1.0-beta.202605082149.73713843] - 2026-05-08
 
 - 🔧 Chores & Improvements: CI/CD and build optimizations
