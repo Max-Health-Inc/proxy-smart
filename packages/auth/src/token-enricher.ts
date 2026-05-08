@@ -15,7 +15,13 @@ import type {
   TokenPayload,
 } from './types'
 import type { ILaunchContextStore } from './stores/interface'
-import { canReturnPatient, canReturnEncounter, canReturnFhirUser, parseScopes } from './smart-scopes'
+import {
+  canReturnPatient,
+  canReturnEncounter,
+  canReturnFhirUser,
+  parseScopes,
+  filterScopes,
+} from './smart-scopes'
 import { extractPatientFromFhirUser } from './fhir-user'
 
 export interface TokenEnricherDeps {
@@ -108,10 +114,10 @@ export function enrichTokenResponse(
   }
 
   // ── Scope restoration ─────────────────────────────────────────────────
-  if (input.tokenPayload.smart_scope) {
+  if (input.requestedScope) {
+    enrichment.scope = filterScopes(input.requestedScope, input.grantedScope || input.tokenPayload.scope)
+  } else if (input.tokenPayload.smart_scope) {
     enrichment.scope = input.tokenPayload.smart_scope
-  } else if (input.requestedScope && !input.grantedScope) {
-    enrichment.scope = input.requestedScope
   }
 
   return enrichment
