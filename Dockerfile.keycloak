@@ -23,7 +23,14 @@ ENV JAVA_OPTS_KC_HEAP="-Xms128m -Xmx512m"
 # Features:
 #   cimd  — OAuth Client ID Metadata Document for MCP 2025-11-25 client registration
 #   token-exchange — RFC 8693 Standard Token Exchange (required for SHL)
-RUN JAVA_TOOL_OPTIONS="-Xmx512m" /opt/keycloak/bin/kc.sh build --features=cimd,token-exchange,client-auth-federated
+#   client-auth-federated — Federated JWT client auth (proxy assertion validation)
+# --http-relative-path must match the runtime KC_HTTP_RELATIVE_PATH from docker-compose,
+# otherwise KC detects config drift and re-builds WITHOUT features, causing realm import crash.
+RUN JAVA_TOOL_OPTIONS="-Xmx512m" /opt/keycloak/bin/kc.sh build \
+    --features=cimd,token-exchange,client-auth-federated \
+    --http-relative-path=/auth
 
 # Start Keycloak in production mode with realm import and optimized settings
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--import-realm"]
+# --optimized tells KC to use the pre-built config from `kc.sh build` above,
+# preventing a re-build that would strip the --features flag.
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized", "--import-realm"]
