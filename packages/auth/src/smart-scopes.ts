@@ -45,6 +45,31 @@ export function canReturnFhirUser(grantedScopes: Set<string>): boolean {
 export const SMART_V2_SCOPE_RE = /^(user|patient|system)\/([\w*]+)\.(r|s|rs|read|write|crud|cruds|cud)$/
 
 /**
+ * Expand granular SMART v2 scopes to their wildcard equivalents for forwarding to the IdP.
+ * e.g. "user/Patient.read" → "user/*.read", "user/ImagingStudy.rs" → "user/*.rs"
+ *
+ * The IdP only has wildcards registered. We send wildcards upstream so it doesn't reject
+ * the request, then restore the specific scopes in the token response.
+ *
+ * Non-SMART-v2 scopes (openid, fhirUser, launch, etc.) are passed through unchanged.
+ */
+export function expandScopesToWildcards(scope: string | undefined): string {
+  if (!scope) return ''
+  return parseScopes(scope)
+    .values()
+    .map(s => {
+      const match = s.match(SMART_V2_SCOPE_RE)
+      if (!match) return s
+      const [, compartment, , ops] = match
+      return `${compartment}/*.${ops}`
+    })
+    .toArray()
+    // Deduplicate — multiple granular scopes may collapse to the same wildcard
+    .filter((s, i, arr) => arr.indexOf(s) === i)
+    .join(' ')
+}
+
+/**
  * Check if a specific requested scope is granted via a wildcard scope.
  * Implements SMART v2 scope delegation (e.g. user/Patient.read matches user/*.read)
  */

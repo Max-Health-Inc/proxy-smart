@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { isScopeGranted, filterScopes } from '../../packages/auth/src/smart-scopes'
+import { isScopeGranted, filterScopes, expandScopesToWildcards } from '../../packages/auth/src/smart-scopes'
 
 describe('SMART Scopes Delegation logic', () => {
 
@@ -44,8 +44,38 @@ describe('SMART Scopes Delegation logic', () => {
     const requested = 'user/Patient.write user/Observation.read'
     const granted = 'user/*.read'
     const result = filterScopes(requested, granted)
-    
+
     expect(result).toContain('user/Observation.read')
     expect(result).not.toContain('user/Patient.write')
+  })
+})
+
+describe('expandScopesToWildcards (authorize interceptor — the critical path)', () => {
+  it('expands granular scope to wildcard before sending to Keycloak', () => {
+    const result = expandScopesToWildcards('openid fhirUser user/ImagingStudy.rs')
+    expect(result).toContain('user/*.rs')
+    expect(result).not.toContain('user/ImagingStudy.rs')
+    expect(result).toContain('openid')
+    expect(result).toContain('fhirUser')
+  })
+
+  it('deduplicates wildcards when multiple granular scopes map to the same wildcard', () => {
+    const result = expandScopesToWildcards('user/Patient.read user/Observation.read user/ImagingStudy.read')
+    const parts = result.split(' ')
+    expect(parts.filter(s => s === 'user/*.read').length).toBe(1)
+  })
+
+  it('leaves already-wildcard scopes unchanged', () => {
+    expect(expandScopesToWildcards('openid user/*.read')).toBe('openid user/*.read')
+  })
+
+  it('handles empty/undefined scope gracefully', () => {
+    expect(expandScopesToWildcards('')).toBe('')
+    expect(expandScopesToWildcards(undefined)).toBe('')
+  })
+
+  it('does not expand launch/* or other non-resource scopes', () => {
+    const result = expandScopesToWildcards('openid launch/patient fhirUser')
+    expect(result).toBe('openid launch/patient fhirUser')
   })
 })
