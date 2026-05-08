@@ -460,21 +460,22 @@ jobs:
             exit 1
           fi
           
-          # Check Keycloak realm (with retries)
-          echo "Checking Keycloak realm..."
+          # Check Keycloak health via the backend's /status endpoint (avoids direct Keycloak exposure)
+          echo "Checking Keycloak health via backend /status..."
           KC_OK=false
           for i in $(seq 1 20); do
-            if curl -sf --max-time 10 "$KC_URL/realms/$KC_REALM" > /dev/null 2>&1; then
-              echo "✓ Keycloak realm $KC_REALM is accessible (attempt $i)"
+            KC_STATUS=$(curl -sf --max-time 10 "$BACKEND_URL/status" 2>/dev/null | jq -r '.keycloak.status' 2>/dev/null || echo "error")
+            if [ "$KC_STATUS" = "healthy" ]; then
+              echo "✓ Keycloak is healthy (attempt $i)"
               KC_OK=true
               break
             fi
-            echo "  Attempt $i/20 — not ready, waiting 10s..."
+            echo "  Attempt $i/20 — Keycloak status: $KC_STATUS, waiting 10s..."
             sleep 10
           done
           if [ "$KC_OK" = "false" ]; then
-            echo "ERROR: Keycloak realm not reachable at $KC_URL/realms/$KC_REALM after 20 attempts"
-            echo "Make sure Keycloak is scaled up and realm exists"
+            echo "ERROR: Keycloak not healthy after 20 attempts (last status: $KC_STATUS)"
+            echo "Make sure Keycloak is scaled up and the realm exists"
             exit 1
           fi
           
@@ -1003,15 +1004,15 @@ jobs:
             sleep 5
           done
           
-          # Step 2: Wait for Keycloak
+          # Step 2: Wait for Keycloak (via backend /status — avoids direct Keycloak exposure)
           echo "Step 2: Waiting for Keycloak..."
           for i in $(seq 1 40); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$KC_URL/realms/$KC_REALM" 2>/dev/null || echo "000")
-            if [ "$HTTP_CODE" = "200" ]; then
-              echo "✓ Keycloak realm is up (attempt $i)"
+            KC_STATUS=$(curl -s --max-time 10 "$BACKEND_URL/status" 2>/dev/null | jq -r '.keycloak.status' 2>/dev/null || echo "error")
+            if [ "$KC_STATUS" = "healthy" ]; then
+              echo "✓ Keycloak is healthy (attempt $i)"
               break
             fi
-            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
+            echo "  Attempt $i/40 — Keycloak status: $KC_STATUS, waiting 5s..."
             sleep 5
           done
           
