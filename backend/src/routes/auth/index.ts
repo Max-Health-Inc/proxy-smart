@@ -54,6 +54,7 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
         registration_endpoint: `${baseUrl}/auth/register`,
         introspection_endpoint: `${baseUrl}/auth/introspect`,
         userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+        client_id_metadata_document_supported: true,
       }
     } catch {
       set.status = 500
@@ -113,7 +114,8 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
         response_types_supported: oidcConfig.response_types_supported,
         grant_types_supported: oidcConfig.grant_types_supported,
         token_endpoint_auth_methods_supported: authMethods,
-        code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported
+        code_challenge_methods_supported: oidcConfig.code_challenge_methods_supported,
+        client_id_metadata_document_supported: true,
       }
     } catch {
       set.status = 500
