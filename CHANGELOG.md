@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605081235.d2514947] - 2026-05-08
+
+- 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605081235.d2514947; add eager runtime config loading on server init with Keycloak client credentials (loadRuntimeConfig) and error fallback.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/674
+
+
 ## [0.1.0-alpha.202605081215.8e6b1dd5] - 2026-05-08
 
 - ✨ Features: None
