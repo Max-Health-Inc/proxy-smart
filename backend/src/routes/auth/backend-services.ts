@@ -71,9 +71,16 @@ const secretCache = new Map<string, CacheEntry<string>>()
 
 /**
  * Detect whether a token request is a Backend Services flow.
+ *
+ * A client_assertion (private_key_jwt) can also be used for regular
+ * authorization_code grants by confidential clients (RFC 7523 §2.2).
+ * Only treat it as Backend Services when grant_type=client_credentials.
  */
 export function isBackendServicesRequest(body: Record<string, string | undefined>): boolean {
-  return body.client_assertion_type === JWT_BEARER_TYPE && !!body.client_assertion
+  const grantType = body.grant_type || body.grantType
+  return grantType === 'client_credentials'
+    && body.client_assertion_type === JWT_BEARER_TYPE
+    && !!body.client_assertion
 }
 
 /**
