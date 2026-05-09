@@ -24,6 +24,7 @@ import { DoorManagement } from './DoorManagement/DoorManagement';
 import { IdPManager } from './IdPManager/IdPManager';
 import { BrandSettings } from './BrandSettings';
 import { OrganizationsManager } from './OrganizationsManager/OrganizationsManager';
+import { AuthFlowsManager } from './AuthFlowsManager/AuthFlowsManager';
 
 
 // Get tab from URL hash
@@ -166,6 +167,7 @@ export function AdminApp() {
                             {currentTab === 'door-management' && <DoorManagement />}
                             {currentTab === 'branding' && <BrandSettings />}
                             {currentTab === 'organizations' && <OrganizationsManager />}
+                            {currentTab === 'auth-flows' && <AuthFlowsManager />}
                         </Panel>
                     </div>
                 </div>

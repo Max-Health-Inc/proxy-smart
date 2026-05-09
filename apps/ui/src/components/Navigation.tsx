@@ -34,6 +34,7 @@ import {
   DoorOpen,
   Building2,
   Landmark,
+  Workflow,
   Eye,
   EyeOff,
 } from 'lucide-react';
@@ -175,6 +176,12 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       label: t('Organizations'), 
       description: t('Multi-Tenancy'),
       icon: Landmark
+    },
+    { 
+      id: 'auth-flows', 
+      label: t('Auth Flows'), 
+      description: t('Client Authentication'),
+      icon: Workflow
     },
 
   ];
