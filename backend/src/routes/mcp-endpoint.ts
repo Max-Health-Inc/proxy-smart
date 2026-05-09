@@ -33,6 +33,7 @@ import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/
 import type { ToolMetadata, ResourceMetadata as ResourceMeta } from '../lib/ai/tool-registry'
 import { searchDocumentation } from '../lib/ai/rag-tools'
 import { registerFhirTools } from '../lib/ai/fhir-tools'
+import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { Value } from '@sinclair/typebox/value'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
@@ -73,19 +74,20 @@ if (sessionCleanupInterval.unref) sessionCleanupInterval.unref()
 
 /**
  * Register all exposed tools from the tool-registry onto an McpServer instance.
+ * Mutation tools (POST/PUT/DELETE) are registered individually.
+ * GET (read-only) tools are collapsed into a single `read_resource` tool.
  */
 function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   // Register route-based tools from the tool registry (if initialized)
   if (isToolRegistryInitialized()) {
     const registry = getToolRegistry()
-    const cfg = loadMcpEndpointConfig()
 
     for (const [toolName, meta] of registry) {
       // Respect admin MCP-endpoint tool config
       if (!isToolExposed(toolName)) continue
 
-      // Skip readOnly (GET) tools when exposeResourcesAsTools is disabled
-      if (meta.readOnly && !cfg.exposeResourcesAsTools) continue
+      // Skip ALL read-only (GET) tools — they're handled by the unified read_resource tool
+      if (meta.readOnly) continue
 
       // Permission: skip admin-only tools when caller has no admin role
       if (!meta.public && !userRoles.includes('admin')) continue
@@ -94,18 +96,12 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       const inputSchema = getMergedInputSchema(meta)
       const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
 
-      // Add readOnlyHint annotation for GET routes so clients skip confirmation
-      const annotations = meta.readOnly
-        ? { readOnlyHint: true, idempotentHint: true } as const
-        : undefined
-
       if (zodSchema) {
         server.registerTool(
           toolName,
           {
             description: generateDescription(toolName, meta),
             inputSchema: zodSchema,
-            ...(annotations && { annotations }),
           },
           async (args: unknown) => {
             return executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current)
@@ -116,7 +112,6 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
           toolName,
           {
             description: generateDescription(toolName, meta),
-            ...(annotations && { annotations }),
           },
           async () => {
             return executeTool(toolName, meta, {}, tokenRef.current)
@@ -157,6 +152,11 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       }
     },
   )
+  }
+
+  // Register unified read_resource tool — collapses all GET route tools into one
+  if (isToolExposed('read_resource')) {
+    registerReadResourceTool(server, userRoles, tokenRef)
   }
 
   // Register FHIR data tools (fhir_read, fhir_search, fhir_create, fhir_update, fhir_delete, fhir_capabilities)
