@@ -6,12 +6,20 @@ import { PageLoadingState } from '@/components/ui/page-loading-state'
 import {
   Button,
   Badge,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  Tabs,
+  TabsContent,
+  TabsTrigger,
+  ResponsiveTabsList,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,8 +36,6 @@ import {
   MoreHorizontal,
   ArrowLeft,
   RefreshCw,
-  Activity,
-  Settings2,
 } from 'lucide-react'
 import type {
   AuthFlow,
@@ -39,8 +45,6 @@ import type {
 import { SmartFlowsView } from './SmartFlowsView'
 
 // ── Types ────────────────────────────────────────────────────────────────────
-
-type ViewMode = 'smart' | 'keycloak'
 
 interface FlowWithExecutions extends AuthFlow {
   executions?: AuthFlowExecution[]
@@ -73,7 +77,7 @@ export function AuthFlowsManager() {
   const [executions, setExecutions] = useState<AuthFlowExecution[]>([])
   const [showAddExecution, setShowAddExecution] = useState(false)
   const [addingProvider, setAddingProvider] = useState<string>('')
-  const [viewMode, setViewMode] = useState<ViewMode>('smart')
+  const [activeTab, setActiveTab] = useState('smart')
 
   // ── Data fetching ────────────────────────────────────────────────────────
 
@@ -189,12 +193,20 @@ export function AuthFlowsManager() {
 
   if (loading) return <PageLoadingState message={t('Loading authentication flows...')} />
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    if (tab === 'smart') {
+      setSelectedFlow(null)
+      setExecutions([])
+    }
+  }
+
   return (
-    <div className="space-y-6">
+    <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {viewMode === 'keycloak' && selectedFlow && (
+          {activeTab === 'keycloak' && selectedFlow && (
             <Button variant="ghost" size="sm" onClick={() => { setSelectedFlow(null); setExecutions([]) }}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -202,48 +214,27 @@ export function AuthFlowsManager() {
           <Workflow className="w-6 h-6 text-primary" />
           <div>
             <h2 className="text-xl font-semibold">
-              {viewMode === 'keycloak' && selectedFlow
+              {activeTab === 'keycloak' && selectedFlow
                 ? selectedFlow.alias
                 : t('Authentication Flows')
               }
             </h2>
             <p className="text-sm text-muted-foreground">
-              {viewMode === 'keycloak' && selectedFlow
+              {activeTab === 'keycloak' && selectedFlow
                 ? t('Manage authenticator executions for this flow')
                 : t('SMART on FHIR flow types and Keycloak authentication flows')
               }
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          {/* View toggle */}
-          <div className="flex rounded-lg border bg-muted/30 p-0.5">
-            <Button
-              variant={viewMode === 'smart' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-7 px-3 text-xs"
-              onClick={() => setViewMode('smart')}
-            >
-              <Activity className="w-3.5 h-3.5 mr-1" />
-              {t('SMART Flows')}
-            </Button>
-            <Button
-              variant={viewMode === 'keycloak' ? 'default' : 'ghost'}
-              size="sm"
-              className="h-7 px-3 text-xs"
-              onClick={() => { setViewMode('keycloak'); setSelectedFlow(null); setExecutions([]) }}
-            >
-              <Settings2 className="w-3.5 h-3.5 mr-1" />
-              {t('KC Flows')}
-            </Button>
-          </div>
-          {viewMode === 'keycloak' && selectedFlow && (
+        <div className="flex items-center gap-2">
+          {activeTab === 'keycloak' && selectedFlow && (
             <Button variant="outline" size="sm" onClick={() => setShowAddExecution(!showAddExecution)}>
               <Plus className="w-4 h-4 mr-1" />
               {t('Add Execution')}
             </Button>
           )}
-          {viewMode === 'keycloak' && (
+          {activeTab === 'keycloak' && (
             <Button variant="outline" size="sm" onClick={() => {
               if (selectedFlow?.alias) loadExecutions(selectedFlow.alias)
               else refreshFlows()
@@ -254,16 +245,23 @@ export function AuthFlowsManager() {
         </div>
       </div>
 
-      {/* SMART Flows View */}
-      {viewMode === 'smart' && <SmartFlowsView />}
+      <ResponsiveTabsList>
+        <TabsTrigger value="smart">{t('SMART Flows')}</TabsTrigger>
+        <TabsTrigger value="keycloak">{t('KC Flows')}</TabsTrigger>
+      </ResponsiveTabsList>
 
-      {/* KC Flows View */}
-      {viewMode === 'keycloak' && (
-        <>
-          {/* Add Execution Panel */}
-          {showAddExecution && selectedFlow && (
-            <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-              <p className="text-sm font-medium">{t('Select authenticator provider')}</p>
+      <TabsContent value="smart">
+        <SmartFlowsView />
+      </TabsContent>
+
+      <TabsContent value="keycloak">
+        {/* Add Execution Panel */}
+        {showAddExecution && selectedFlow && (
+          <Card className="mb-4">
+            <CardHeader>
+              <CardTitle className="text-sm">{t('Select authenticator provider')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="flex gap-2 flex-wrap">
                 {providers.map(p => (
                   <Button
@@ -284,24 +282,24 @@ export function AuthFlowsManager() {
                   {t('Cancel')}
                 </Button>
               </div>
-            </div>
-          )}
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Flow List or Execution Detail */}
-          {!selectedFlow ? (
-            <FlowList flows={flows} onSelect={handleSelectFlow} />
-          ) : (
-            <ExecutionTable
-              executions={executions}
-              onUpdateRequirement={handleUpdateRequirement}
-              onDelete={handleDeleteExecution}
-              onRaisePriority={handleRaisePriority}
-              onLowerPriority={handleLowerPriority}
-            />
-          )}
-        </>
-      )}
-    </div>
+        {/* Flow List or Execution Detail */}
+        {!selectedFlow ? (
+          <FlowList flows={flows} onSelect={handleSelectFlow} />
+        ) : (
+          <ExecutionTable
+            executions={executions}
+            onUpdateRequirement={handleUpdateRequirement}
+            onDelete={handleDeleteExecution}
+            onRaisePriority={handleRaisePriority}
+            onLowerPriority={handleLowerPriority}
+          />
+        )}
+      </TabsContent>
+    </Tabs>
   )
 }
 
