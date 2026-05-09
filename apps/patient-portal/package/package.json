@@ -1,6 +1,6 @@
 {
   "name": "hl7.fhir.uv.ips-generated",
-  "version": "0.1.0-beta.202605090914.34723e6c",
+  "version": "0.1.0-alpha.202605091133.d4798d2e",
   "description": "Generated TypeScript interfaces for hl7.fhir.uv.ips",
   "type": "module",
   "main": "index.js",
