@@ -317,7 +317,7 @@ jobs:
                 # Check for OOM kill
                 OOM_KILLED=\$(docker inspect -f '{{.State.OOMKilled}}' \$CANARY_NAME 2>/dev/null || echo 'unknown')
                 EXIT_CODE=\$(docker inspect -f '{{.State.ExitCode}}' \$CANARY_NAME 2>/dev/null || echo 'unknown')
-                echo "  📊 Exit code: \$EXIT_CODE | OOMKilled: \$OOM_KILLED"
+                echo \"  📊 Exit code: \$EXIT_CODE | OOMKilled: \$OOM_KILLED\"
                 echo '  📋 Canary logs:'
                 docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
