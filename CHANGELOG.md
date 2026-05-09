@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605082250.e9054b2a] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605082250.e9054b2a across multiple packages
+- ⚠️ Breaking Changes: Rename Keycloak realm-export.json field from hideOnLoginPage to hideOnLogin
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/682
+
+
 ## [0.1.0-alpha.202605082226.dc9f9827] - 2026-05-08
 
 - 🔧 Chores & Improvements: Version bumps across multiple packages/apps and testing config (no functional changes)
