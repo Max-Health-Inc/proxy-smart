@@ -11,6 +11,7 @@ export const ADMIN_TABS = [
   'door-management',
   'branding',
   'organizations',
+  'auth-flows',
 ] as const
 
 export type AdminTab = (typeof ADMIN_TABS)[number]
