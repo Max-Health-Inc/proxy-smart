@@ -259,13 +259,18 @@ jobs:
 
             # Wait for Keycloak to be ready (backend health check depends on it)
             echo '  ⏳ Waiting for Keycloak...'
-            for i in \$(seq 1 40); do
+            KC_READY=false
+            for i in \$(seq 1 80); do
               if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /auth/health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
                 echo '  ✅ Keycloak ready'
+                KC_READY=true
                 break
               fi
-              if [ \$i -eq 40 ]; then
-                echo '  ⚠️ Keycloak not ready after 120s — proceeding anyway'
+              if [ \$i -eq 80 ]; then
+                echo '  ❌ Keycloak not ready after 240s — aborting deploy'
+                echo '  📋 Keycloak container logs (last 40 lines):'
+                docker logs --tail 40 proxy-smart-keycloak-beta 2>&1 || true
+                exit 1
               fi
               sleep 3
             done
@@ -282,6 +287,7 @@ jobs:
             # Use a different port (9445) to avoid conflict with the running backend
             docker run -d --name \$CANARY_NAME \\
               --network proxy-smart-beta-network \\
+              --memory 1024m \\
               --env-file .env.beta \\
               -p 9445:9445 \\
               -v ${DEPLOY_DIR}/proxy-signing-key.pem:/run/secrets/proxy-signing-key.pem:ro \\
@@ -297,6 +303,8 @@ jobs:
               -e FHIR_SERVER_BASE=http://hapi-fhir:8080/fhir \\
               -e CORS_ORIGINS=https://beta.proxy-smart.com,http://localhost:4567 \\
               -e DICOMWEB_BASE_URL=http://orthanc:8042/dicom-web \\
+              -e DICOMWEB_USERNAME=\${ORTHANC_USERNAME:-orthanc} \\
+              -e DICOMWEB_PASSWORD=\${ORTHANC_PASSWORD} \\
               -e PROXY_SIGNING_KEY_FILE=/run/secrets/proxy-signing-key.pem \\
               \$BACKEND_IMG
 
@@ -306,6 +314,11 @@ jobs:
               # Check if container is still running (not crash-looping)
               if ! docker inspect -f '{{.State.Running}}' \$CANARY_NAME 2>/dev/null | grep -q true; then
                 echo '  ❌ Canary container crashed!'
+                # Check for OOM kill
+                OOM_KILLED=\$(docker inspect -f '{{.State.OOMKilled}}' \$CANARY_NAME 2>/dev/null || echo 'unknown')
+                EXIT_CODE=\$(docker inspect -f '{{.State.ExitCode}}' \$CANARY_NAME 2>/dev/null || echo 'unknown')
+                echo "  📊 Exit code: \$EXIT_CODE | OOMKilled: \$OOM_KILLED"
+                echo '  📋 Canary logs:'
                 docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
               fi
