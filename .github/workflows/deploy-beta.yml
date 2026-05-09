@@ -258,17 +258,19 @@ jobs:
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d keycloak hapi-fhir orthanc
 
             # Wait for Keycloak to be ready (backend health check depends on it)
-            # Uses HTTP/1.0 so the connection closes after response (HTTP/1.1 keep-alive hangs cat)
+            # Uses Docker's built-in healthcheck status (avoids SSH double-quote escaping issues
+            # with manual bash /dev/tcp probing inside the SSH command string)
             echo '  ⏳ Waiting for Keycloak...'
             KC_READY=false
             for i in \$(seq 1 80); do
-              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /auth/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
-                echo '  ✅ Keycloak ready'
+              KC_HEALTH=\$(docker inspect --format='{{.State.Health.Status}}' proxy-smart-keycloak-beta 2>/dev/null || echo 'none')
+              if [ \"\$KC_HEALTH\" = 'healthy' ]; then
+                echo '  ✅ Keycloak ready (Docker healthcheck: healthy)'
                 KC_READY=true
                 break
               fi
               if [ \$i -eq 80 ]; then
-                echo '  ❌ Keycloak not ready after 240s — aborting deploy'
+                echo \"  ❌ Keycloak not ready after 240s (status: \$KC_HEALTH) — aborting deploy\"
                 echo '  📋 Keycloak container logs (last 40 lines):'
                 docker logs --tail 40 proxy-smart-keycloak-beta 2>&1 || true
                 exit 1
