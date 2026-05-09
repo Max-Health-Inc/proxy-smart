@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605090009.02f9e031] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605090009.02f9e031 across multiple packages
+- ⚠️ Breaking Changes: Update to authentication flow
+  - Switch client-auth determination from client-jwt/none to federated-jwt for certain JWKS-based flows
+  - Adjust JWKS handling for federated-jwt and backend-service scenarios
+  - Add proxy-signing flow notes: federated-jwt path via proxy's signing identity
+  - Introduce jwt.credential metadata for federated-jwt in client registrations
+- 🔧 Chores & Improvements: Minor comments and documentation updates
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/683
+
+
 ## [0.1.0-alpha.202605082250.e9054b2a] - 2026-05-09
 
 - 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605082250.e9054b2a across multiple packages
