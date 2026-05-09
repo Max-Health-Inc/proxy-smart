@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605091527.c7e4e0f2] - 2026-05-09
+
+- 🔧 Chores & Improvements: CI log quote fix in deploy-beta workflow; version bumps across apps, packages, and testing/e2e to v0.1.0-beta.202605091527.c7e4e0f2
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/688
+
+
 ## [0.1.0-beta.202605090914.34723e6c] - 2026-05-09
 
 - 🔧 Chores & Improvements: Version bump across packages to 0.1.0-beta.202605090914.34723e6c
