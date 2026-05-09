@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605092005.e8c13449] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605092005.e8c13449 across multiple packages/apps
+- 🔧 Chores & Improvements: Backend auth logic updated to treat all private_key_jwt usage as federated-jwt with proxy validation and re-signing; updated comments and global usage terms
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/692
+
+
 ## [0.1.0-alpha.202605091906.cb646698] - 2026-05-09
 
 - 🔧 Chores & Improvements: Version bump from 0.1.0-beta to 0.1.0-alpha across multiple apps/packages
