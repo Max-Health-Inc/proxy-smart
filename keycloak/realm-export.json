@@ -1122,13 +1122,13 @@
       "linkOnly": false,
       "hideOnLogin": true,
       "config": {
-        "issuer": "http://localhost:8445",
-        "tokenUrl": "http://localhost:8445/auth/token",
-        "authorizationUrl": "http://localhost:8445/auth/authorize",
+        "issuer": "http://backend:8445",
+        "tokenUrl": "http://backend:8445/auth/token",
+        "authorizationUrl": "http://backend:8445/auth/authorize",
         "clientId": "keycloak",
         "clientSecret": "unused",
         "useJwksUrl": "true",
-        "jwksUrl": "http://localhost:8445/.well-known/jwks.json",
+        "jwksUrl": "http://backend:8445/.well-known/jwks.json",
         "supportsClientAssertions": "true",
         "validateSignature": "true",
         "clientAuthMethod": "client_secret_post"
