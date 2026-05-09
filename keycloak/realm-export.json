@@ -1120,7 +1120,7 @@
       "trustEmail": false,
       "storeToken": false,
       "linkOnly": false,
-      "hideOnLoginPage": true,
+      "hideOnLogin": true,
       "config": {
         "issuer": "http://localhost:8445",
         "tokenUrl": "http://localhost:8445/auth/token",
