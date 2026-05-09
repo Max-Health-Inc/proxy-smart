@@ -6,6 +6,10 @@ import { PageLoadingState } from '@/components/ui/page-loading-state'
 import {
   Badge,
   Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
 } from '@proxy-smart/shared-ui'
 import {
   ChevronDown,
@@ -94,41 +98,39 @@ export function SmartFlowsView() {
         const isExpanded = expandedCards.has(card.flowType)
 
         return (
-          <div
-            key={card.flowType}
-            className={`rounded-xl border bg-gradient-to-br ${config.gradient} overflow-hidden`}
-          >
-            {/* Card Header */}
-            <button
-              type="button"
-              className="w-full px-5 py-4 flex items-center gap-4 text-left hover:bg-muted/20 transition-colors"
+          <Card key={card.flowType} className={`bg-gradient-to-br ${config.gradient} overflow-hidden`}>
+            {/* Card Header — clickable to expand */}
+            <CardHeader
+              className="cursor-pointer hover:bg-muted/20 transition-colors"
               onClick={() => toggleCard(card.flowType)}
             >
-              <div className="shrink-0 w-10 h-10 rounded-lg bg-background/80 flex items-center justify-center border">
-                <Icon className="w-5 h-5 text-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-base">{card.title}</h3>
-                  <Badge variant={config.badgeVariant}>{card.oauthGrant}</Badge>
-                  <Badge variant="outline">{card.clients.length} {t('clients')}</Badge>
+              <div className="flex items-center gap-4">
+                <div className="shrink-0 w-10 h-10 rounded-lg bg-background/80 flex items-center justify-center border">
+                  <Icon className="w-5 h-5 text-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground mt-0.5 truncate">{card.description}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-base">{card.title}</CardTitle>
+                    <Badge variant={config.badgeVariant}>{card.oauthGrant}</Badge>
+                    <Badge variant="outline">{card.clients.length} {t('clients')}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-0.5 truncate">{card.description}</p>
+                </div>
+                <div className="shrink-0">
+                  {isExpanded ? (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  )}
+                </div>
               </div>
-              <div className="shrink-0">
-                {isExpanded ? (
-                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                )}
-              </div>
-            </button>
+            </CardHeader>
 
             {/* Expanded Detail */}
             {isExpanded && (
-              <div className="px-5 pb-5 space-y-4 border-t border-border/40">
+              <CardContent className="space-y-4 border-t border-border/40">
                 {/* Flow Steps */}
-                <div className="pt-4">
+                <div>
                   <h4 className="text-sm font-medium mb-3">{t('Flow Steps')}</h4>
                   <div className="flex items-start gap-0">
                     {card.steps.map((step, i) => (
@@ -188,32 +190,31 @@ export function SmartFlowsView() {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {card.clients.map(client => (
-                        <div
-                          key={client.clientId}
-                          className="flex items-center gap-2 rounded-lg border bg-background/60 px-3 py-2"
-                        >
-                          <div className={`w-2 h-2 rounded-full ${client.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium truncate block">
-                              {client.name || client.clientId}
-                            </span>
-                            {client.name && (
-                              <span className="text-[10px] text-muted-foreground truncate block">
-                                {client.clientId}
+                        <Card key={client.clientId} className="bg-background/60">
+                          <CardContent className="flex items-center gap-2 p-3">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${client.enabled ? 'bg-green-500' : 'bg-red-500'}`} />
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium truncate block">
+                                {client.name || client.clientId}
                               </span>
-                            )}
-                          </div>
-                          <Badge variant="outline" className="text-[10px] shrink-0">
-                            {client.publicClient ? 'public' : (client.tokenEndpointAuthMethod ?? 'confidential')}
-                          </Badge>
-                        </div>
+                              {client.name && (
+                                <span className="text-[10px] text-muted-foreground truncate block">
+                                  {client.clientId}
+                                </span>
+                              )}
+                            </div>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              {client.publicClient ? 'public' : (client.tokenEndpointAuthMethod ?? 'confidential')}
+                            </Badge>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   )}
                 </div>
-              </div>
+              </CardContent>
             )}
-          </div>
+          </Card>
         )
       })}
 
