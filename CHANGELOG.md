@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605090914.34723e6c] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump across packages to 0.1.0-beta.202605090914.34723e6c
+- 🔧 Chores & Improvements: UI refactor in AuthFlowsManager/SmartFlowsView to use Card components (Card, CardHeader, CardContent, CardTitle) and switch from viewMode to activeTab; update imports accordingly
+- 🔧 Chores & Improvements: Minor package.json updates to reflect new version across apps
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/686
+
+
 ## [0.1.0-alpha.202605090009.02f9e031] - 2026-05-09
 
 - 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605090009.02f9e031 across multiple packages
