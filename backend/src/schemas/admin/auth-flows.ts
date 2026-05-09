@@ -62,3 +62,37 @@ export const AuthenticatorProvider = t.Object({
 }, { title: 'AuthenticatorProvider' })
 
 export type AuthenticatorProviderType = Static<typeof AuthenticatorProvider>
+
+// ── SMART Flow Mapping ───────────────────────────────────────────────────────
+
+export const SmartFlowClient = t.Object({
+  clientId: t.String({ description: 'OAuth2 client ID' }),
+  name: t.Optional(t.String({ description: 'Application display name' })),
+  enabled: t.Optional(t.Boolean({ description: 'Whether the client is enabled' })),
+  publicClient: t.Optional(t.Boolean({ description: 'Whether this is a public client' })),
+  tokenEndpointAuthMethod: t.Optional(t.String({ description: 'Token endpoint authentication method' })),
+  clientAuthenticatorType: t.Optional(t.String({ description: 'Keycloak internal authenticator type' })),
+}, { title: 'SmartFlowClient' })
+
+export type SmartFlowClientType = Static<typeof SmartFlowClient>
+
+export const SmartFlowStep = t.Object({
+  label: t.String({ description: 'Step label (e.g. "User Login", "Client Authentication")' }),
+  kcFlow: t.Optional(t.String({ description: 'Related KC flow alias (e.g. "browser", "clients")' })),
+  kcExecution: t.Optional(t.String({ description: 'Specific KC execution provider ID used' })),
+  description: t.Optional(t.String({ description: 'What happens at this step' })),
+}, { title: 'SmartFlowStep' })
+
+export type SmartFlowStepType = Static<typeof SmartFlowStep>
+
+export const SmartFlowCard = t.Object({
+  flowType: t.UnionEnum(['ehr-launch', 'standalone-launch', 'backend-services'], { description: 'SMART flow type' }),
+  title: t.String({ description: 'Human-readable title' }),
+  description: t.String({ description: 'Flow description' }),
+  oauthGrant: t.String({ description: 'OAuth2 grant type used' }),
+  steps: t.Array(SmartFlowStep, { description: 'Ordered steps in the flow' }),
+  clients: t.Array(SmartFlowClient, { description: 'Clients using this flow type' }),
+  kcFlows: t.Array(t.String(), { description: 'KC flow aliases involved' }),
+}, { title: 'SmartFlowCard' })
+
+export type SmartFlowCardType = Static<typeof SmartFlowCard>

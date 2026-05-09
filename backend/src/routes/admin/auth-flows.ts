@@ -2,17 +2,21 @@ import { Elysia, t } from 'elysia'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
+import { toTokenEndpointAuthMethod } from '@/lib/auth-method-mapping'
 import {
   AuthFlow,
   AuthFlowExecution,
   AddExecutionRequest,
   UpdateExecutionRequest,
   AuthenticatorProvider,
+  SmartFlowCard,
   type AuthFlowType,
   type AuthFlowExecutionType,
   type UpdateExecutionRequestType,
   type AddExecutionRequestType,
   type AuthenticatorProviderType,
+  type SmartFlowCardType,
+  type SmartFlowClientType,
 } from '@/schemas/admin/auth-flows'
 import {
   SuccessResponse,
@@ -224,4 +228,132 @@ export const authFlowsRoutes = new Elysia({ prefix: '/auth-flows' })
   }, {
     response: { 200: t.Array(AuthenticatorProvider), ...CommonErrorResponses },
     detail: { summary: 'List Client Authenticator Providers', description: 'Get available client authenticator types (client-secret, client-jwt, federated-jwt, etc.)', tags: ['auth-flows'] },
+  })
+
+  // ── SMART flow mapping ─────────────────────────────────────────────────
+
+  .get('/smart-flow-mapping', async ({ getAdmin, headers, set }): Promise<SmartFlowCardType[] | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Authorization header required' } }
+
+      const admin = await getAdmin(token)
+
+      // Fetch clients and flows in parallel
+      const [allClients, flows] = await Promise.all([
+        admin.clients.find(),
+        admin.authenticationManagement.getFlows(),
+      ])
+
+      // Fetch executions for browser and clients flows
+      const browserFlow = flows.find(f => f.alias === 'browser')
+      const clientsFlow = flows.find(f => f.alias === 'clients')
+
+      const [browserExecs, clientsExecs] = await Promise.all([
+        browserFlow ? admin.authenticationManagement.getExecutions({ flow: 'browser' }) : Promise.resolve([]),
+        clientsFlow ? admin.authenticationManagement.getExecutions({ flow: 'clients' }) : Promise.resolve([]),
+      ])
+
+      // Filter to SMART-relevant clients (non-internal, non-bearer-only)
+      const INTERNAL_CLIENTS = new Set([
+        'account', 'account-console', 'admin-cli', 'broker',
+        'realm-management', 'security-admin-console', 'admin-ui',
+      ])
+
+      const smartClients = allClients.filter(c =>
+        c.protocol === 'openid-connect' &&
+        !c.bearerOnly &&
+        !INTERNAL_CLIENTS.has(c.clientId ?? '')
+      )
+
+      // Classify clients into SMART flow types
+      const ehrClients: SmartFlowClientType[] = []
+      const standaloneClients: SmartFlowClientType[] = []
+      const backendClients: SmartFlowClientType[] = []
+
+      for (const client of smartClients) {
+        const mapped: SmartFlowClientType = {
+          clientId: client.clientId ?? '',
+          name: client.name,
+          enabled: client.enabled,
+          publicClient: client.publicClient,
+          tokenEndpointAuthMethod: toTokenEndpointAuthMethod(client),
+          clientAuthenticatorType: client.clientAuthenticatorType,
+        }
+
+        if (client.serviceAccountsEnabled && !client.standardFlowEnabled) {
+          backendClients.push(mapped)
+        } else if (client.standardFlowEnabled) {
+          // EHR Launch: apps with launch scope capability (has 'launch' in scopes or has launch_url)
+          const hasLaunchAttr = client.attributes?.['launch_url'] || client.attributes?.['client_type'] === 'ehr-launch'
+          if (hasLaunchAttr) {
+            ehrClients.push(mapped)
+          }
+          // All standard-flow clients support standalone launch
+          standaloneClients.push(mapped)
+        }
+      }
+
+      // Build execution step descriptions from actual KC data
+      const browserSteps = browserExecs
+        .filter(e => !e.authenticationFlow && e.requirement !== 'DISABLED')
+        .map(e => e.displayName || e.providerId || 'unknown')
+
+      const clientsSteps = clientsExecs
+        .filter(e => !e.authenticationFlow && e.requirement !== 'DISABLED')
+        .map(e => e.displayName || e.providerId || 'unknown')
+
+      const cards: SmartFlowCardType[] = [
+        {
+          flowType: 'ehr-launch',
+          title: 'EHR Launch',
+          description: 'Application launched from within an EHR with pre-selected patient/encounter context via a launch code.',
+          oauthGrant: 'authorization_code',
+          steps: [
+            { label: 'Launch Code', description: 'EHR provides a launch code with patient/encounter context' },
+            { label: 'Authorize', kcFlow: 'browser', description: `User authenticates via KC browser flow (${browserSteps.join(', ') || 'N/A'})` },
+            { label: 'Callback', description: 'Proxy validates session and forwards authorization code' },
+            { label: 'Token Exchange', kcFlow: 'clients', kcExecution: clientsSteps[0], description: `Client authenticates via KC clients flow (${clientsSteps.join(', ') || 'N/A'})` },
+            { label: 'Context Enrichment', description: 'Proxy enriches token with patient, encounter, fhirUser from launch context' },
+          ],
+          clients: ehrClients,
+          kcFlows: ['browser', 'clients'],
+        },
+        {
+          flowType: 'standalone-launch',
+          title: 'Standalone Launch',
+          description: 'Application launches independently. User selects patient via patient picker if launch/patient scope is requested.',
+          oauthGrant: 'authorization_code',
+          steps: [
+            { label: 'Authorize', kcFlow: 'browser', description: `User authenticates via KC browser flow (${browserSteps.join(', ') || 'N/A'})` },
+            { label: 'Patient Picker', description: 'Proxy gates on patient selection if launch/patient scope is requested' },
+            { label: 'Callback', description: 'Proxy validates session and forwards authorization code' },
+            { label: 'Token Exchange', kcFlow: 'clients', kcExecution: clientsSteps[0], description: `Client authenticates via KC clients flow (${clientsSteps.join(', ') || 'N/A'})` },
+            { label: 'Context Enrichment', description: 'Proxy enriches token with patient, fhirUser from session' },
+          ],
+          clients: standaloneClients,
+          kcFlows: ['browser', 'clients'],
+        },
+        {
+          flowType: 'backend-services',
+          title: 'Backend Services',
+          description: 'System-to-system access with no user interaction. Client authenticates with a signed JWT assertion (client_credentials grant).',
+          oauthGrant: 'client_credentials',
+          steps: [
+            { label: 'JWT Assertion', description: 'Client signs a JWT with its private key and sends to token endpoint' },
+            { label: 'Client Authentication', kcFlow: 'clients', kcExecution: clientsSteps[0], description: `Proxy validates JWT, then authenticates to KC (${clientsSteps.join(', ') || 'N/A'})` },
+            { label: 'Token Issued', description: 'Access token with system/* scopes — no patient context' },
+          ],
+          clients: backendClients,
+          kcFlows: ['clients'],
+        },
+      ]
+
+      return cards
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    response: { 200: t.Array(SmartFlowCard), ...CommonErrorResponses },
+    detail: { summary: 'SMART Flow Mapping', description: 'Get SMART on FHIR flow types with their KC flow mappings and classified clients', tags: ['auth-flows'] },
   })

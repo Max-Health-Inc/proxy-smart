@@ -28,14 +28,19 @@ import {
   MoreHorizontal,
   ArrowLeft,
   RefreshCw,
+  Activity,
+  Settings2,
 } from 'lucide-react'
 import type {
   AuthFlow,
   AuthFlowExecution,
   AuthenticatorProvider,
 } from '@/lib/api-client'
+import { SmartFlowsView } from './SmartFlowsView'
 
 // ── Types ────────────────────────────────────────────────────────────────────
+
+type ViewMode = 'smart' | 'keycloak'
 
 interface FlowWithExecutions extends AuthFlow {
   executions?: AuthFlowExecution[]
@@ -68,6 +73,7 @@ export function AuthFlowsManager() {
   const [executions, setExecutions] = useState<AuthFlowExecution[]>([])
   const [showAddExecution, setShowAddExecution] = useState(false)
   const [addingProvider, setAddingProvider] = useState<string>('')
+  const [viewMode, setViewMode] = useState<ViewMode>('smart')
 
   // ── Data fetching ────────────────────────────────────────────────────────
 
@@ -188,7 +194,7 @@ export function AuthFlowsManager() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {selectedFlow && (
+          {viewMode === 'keycloak' && selectedFlow && (
             <Button variant="ghost" size="sm" onClick={() => { setSelectedFlow(null); setExecutions([]) }}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -196,70 +202,104 @@ export function AuthFlowsManager() {
           <Workflow className="w-6 h-6 text-primary" />
           <div>
             <h2 className="text-xl font-semibold">
-              {selectedFlow ? selectedFlow.alias : t('Authentication Flows')}
+              {viewMode === 'keycloak' && selectedFlow
+                ? selectedFlow.alias
+                : t('Authentication Flows')
+              }
             </h2>
             <p className="text-sm text-muted-foreground">
-              {selectedFlow
+              {viewMode === 'keycloak' && selectedFlow
                 ? t('Manage authenticator executions for this flow')
-                : t('Configure how clients and users authenticate')
+                : t('SMART on FHIR flow types and Keycloak authentication flows')
               }
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          {selectedFlow && (
+          {/* View toggle */}
+          <div className="flex rounded-lg border bg-muted/30 p-0.5">
+            <Button
+              variant={viewMode === 'smart' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-3 text-xs"
+              onClick={() => setViewMode('smart')}
+            >
+              <Activity className="w-3.5 h-3.5 mr-1" />
+              {t('SMART Flows')}
+            </Button>
+            <Button
+              variant={viewMode === 'keycloak' ? 'default' : 'ghost'}
+              size="sm"
+              className="h-7 px-3 text-xs"
+              onClick={() => { setViewMode('keycloak'); setSelectedFlow(null); setExecutions([]) }}
+            >
+              <Settings2 className="w-3.5 h-3.5 mr-1" />
+              {t('KC Flows')}
+            </Button>
+          </div>
+          {viewMode === 'keycloak' && selectedFlow && (
             <Button variant="outline" size="sm" onClick={() => setShowAddExecution(!showAddExecution)}>
               <Plus className="w-4 h-4 mr-1" />
               {t('Add Execution')}
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => {
-            if (selectedFlow?.alias) loadExecutions(selectedFlow.alias)
-            else refreshFlows()
-          }}>
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+          {viewMode === 'keycloak' && (
+            <Button variant="outline" size="sm" onClick={() => {
+              if (selectedFlow?.alias) loadExecutions(selectedFlow.alias)
+              else refreshFlows()
+            }}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Add Execution Panel */}
-      {showAddExecution && selectedFlow && (
-        <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
-          <p className="text-sm font-medium">{t('Select authenticator provider')}</p>
-          <div className="flex gap-2 flex-wrap">
-            {providers.map(p => (
-              <Button
-                key={p.id}
-                variant={addingProvider === p.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setAddingProvider(p.id ?? '')}
-              >
-                {p.displayName || p.id}
-              </Button>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Button size="sm" disabled={!addingProvider} onClick={handleAddExecution}>
-              {t('Add')}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setShowAddExecution(false); setAddingProvider('') }}>
-              {t('Cancel')}
-            </Button>
-          </div>
-        </div>
-      )}
+      {/* SMART Flows View */}
+      {viewMode === 'smart' && <SmartFlowsView />}
 
-      {/* Flow List or Execution Detail */}
-      {!selectedFlow ? (
-        <FlowList flows={flows} onSelect={handleSelectFlow} />
-      ) : (
-        <ExecutionTable
-          executions={executions}
-          onUpdateRequirement={handleUpdateRequirement}
-          onDelete={handleDeleteExecution}
-          onRaisePriority={handleRaisePriority}
-          onLowerPriority={handleLowerPriority}
-        />
+      {/* KC Flows View */}
+      {viewMode === 'keycloak' && (
+        <>
+          {/* Add Execution Panel */}
+          {showAddExecution && selectedFlow && (
+            <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
+              <p className="text-sm font-medium">{t('Select authenticator provider')}</p>
+              <div className="flex gap-2 flex-wrap">
+                {providers.map(p => (
+                  <Button
+                    key={p.id}
+                    variant={addingProvider === p.id ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setAddingProvider(p.id ?? '')}
+                  >
+                    {p.displayName || p.id}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" disabled={!addingProvider} onClick={handleAddExecution}>
+                  {t('Add')}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => { setShowAddExecution(false); setAddingProvider('') }}>
+                  {t('Cancel')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Flow List or Execution Detail */}
+          {!selectedFlow ? (
+            <FlowList flows={flows} onSelect={handleSelectFlow} />
+          ) : (
+            <ExecutionTable
+              executions={executions}
+              onUpdateRequirement={handleUpdateRequirement}
+              onDelete={handleDeleteExecution}
+              onRaisePriority={handleRaisePriority}
+              onLowerPriority={handleLowerPriority}
+            />
+          )}
+        </>
       )}
     </div>
   )
