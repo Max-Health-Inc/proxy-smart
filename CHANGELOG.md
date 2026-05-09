@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605091737.e7dae71a] - 2026-05-09
+
+- 🔧 Chores & Improvements: Update CI deploy-beta health check to use HTTP/1.0 to prevent keep-alive hang
+- 🔧 Chores & Improvements: Version bumps across apps/packages to 0.1.0-alpha.202605091737.e7dae71a
+- 🔧 Chores & Improvements: Minor CI log formatting tweaks in deploy-beta workflow
+- 🔧 Chores & Improvements: Version bumps across multiple components from 0.1.0-alpha.202605091133.d4798d2e to 0.1.0-beta.202605091527.c7e4e0f2 (note: includes apps, packages, and testing/e2e)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/689
+
+
 ## [0.1.0-beta.202605091527.c7e4e0f2] - 2026-05-09
 
 - 🔧 Chores & Improvements: CI log quote fix in deploy-beta workflow; version bumps across apps, packages, and testing/e2e to v0.1.0-beta.202605091527.c7e4e0f2
