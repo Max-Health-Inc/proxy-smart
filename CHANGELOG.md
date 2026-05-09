@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605091845.ecad3533] - 2026-05-09
+
+- 🔧 Chores & Improvements: CI: swap SSH-based HTTP probing for Docker healthcheck in Keycloak readiness; add explicit healthy status check and clearer timeout error logs
+- 🔧 Chores & Improvements: Update version bumps across apps, packages, and tests to 0.1.0-alpha.202605091845.ecad3533
+- 🐛 Bug Fixes: Improve Keycloak readiness messages with clearer success/failure logs
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/690
+
+
 ## [0.1.0-alpha.202605091737.e7dae71a] - 2026-05-09
 
 - 🔧 Chores & Improvements: Update CI deploy-beta health check to use HTTP/1.0 to prevent keep-alive hang
