@@ -258,10 +258,11 @@ jobs:
             docker compose -f docker-compose.beta.yml --env-file .env.beta up -d keycloak hapi-fhir orthanc
 
             # Wait for Keycloak to be ready (backend health check depends on it)
+            # Uses HTTP/1.0 so the connection closes after response (HTTP/1.1 keep-alive hangs cat)
             echo '  ⏳ Waiting for Keycloak...'
             KC_READY=false
             for i in \$(seq 1 80); do
-              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /auth/health/ready HTTP/1.1\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
+              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T keycloak bash -c 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /auth/health/ready HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3 && cat <&3 | grep -q 200' 2>/dev/null; then
                 echo '  ✅ Keycloak ready'
                 KC_READY=true
                 break
