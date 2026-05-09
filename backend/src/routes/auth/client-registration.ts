@@ -233,10 +233,15 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
             return uri // fallback for invalid URIs
           }
         }),
-        // Proxy validates JWT assertions itself, then authenticates to Keycloak
-        // using client_secret. Must be 'client-secret' so Keycloak accepts the
-        // proxy's internal token request for backend services.
-        clientAuthenticatorType: isConfidential ? 'client-secret' : 'none',
+        // Client authentication type:
+        // - Backend services: proxy validates JWT, authenticates to KC with client-secret
+        // - Confidential with JWKS: proxy re-signs assertions → KC verifies via federated-jwt
+        // - Public: no authentication
+        clientAuthenticatorType: isBackendService
+          ? 'client-secret'
+          : isConfidential
+            ? 'federated-jwt'
+            : 'none',
         attributes: {
           'pkce.code.challenge.method': 'S256',
           'client.secret.creation.time': Date.now().toString(),
@@ -255,6 +260,11 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
           // Client lifetime
           ...(settings.maxClientLifetime > 0 && {
             'expires_at': (Date.now() + (settings.maxClientLifetime * 24 * 60 * 60 * 1000)).toString()
+          }),
+          // Federated-jwt: KC verifies proxy-signed assertions via the IdP
+          ...(isConfidential && !isBackendService && {
+            'jwt.credential.issuer': 'proxy-smart-signing',
+            'jwt.credential.sub': clientId,
           }),
           ...(body.jwks_uri && {
             'use.jwks.url': 'true',

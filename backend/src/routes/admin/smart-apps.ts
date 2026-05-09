@@ -194,8 +194,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         clientAuthenticatorType = 'none'
       } else {
         // Confidential client - determine based on whether JWKS/publicKey is provided
-        if (body.jwksUri || body.publicKey) {
-          clientAuthenticatorType = 'client-jwt'
+        if (body.jwksUri || body.publicKey || body.jwksString) {
+          // Proxy re-signs client assertions → KC verifies via federated-jwt
+          clientAuthenticatorType = 'federated-jwt'
         } else {
           clientAuthenticatorType = 'client-secret'
         }
@@ -228,15 +229,21 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(!body.appType && isBackendService && { 'client_type': 'backend-service' }),
           
           // Store JWKS info for JWT authentication (proxy-side validation for backend
-          // services, or Keycloak-side validation for confidential JWT clients)
-          ...(body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
+          // services, or stored for proxy-side validation on federated-jwt clients)
+          ...(body.jwksUri && (isBackendService || clientAuthenticatorType === 'federated-jwt') && {
             'use.jwks.url': 'true',
             'jwks.url': body.jwksUri
           }),
           // Inline JWKS string (alternative to jwksUri)
-          ...(body.jwksString && !body.jwksUri && (isBackendService || clientAuthenticatorType === 'client-jwt') && {
+          ...(body.jwksString && !body.jwksUri && (isBackendService || clientAuthenticatorType === 'federated-jwt') && {
             'use.jwks.string': 'true',
             'jwks.string': body.jwksString
+          }),
+          
+          // Federated-jwt: KC verifies proxy-signed assertions via the IdP
+          ...(clientAuthenticatorType === 'federated-jwt' && {
+            'jwt.credential.issuer': 'proxy-smart-signing',
+            'jwt.credential.sub': body.clientId,
           }),
           
           // Metadata fields
@@ -634,6 +641,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // Logout settings
           ...(body.backchannelLogoutUrl !== undefined && { 'backchannel.logout.url': body.backchannelLogoutUrl || '' }),
           ...(body.frontChannelLogoutUrl !== undefined && { 'frontchannel.logout.url': body.frontChannelLogoutUrl || '' }),
+          // Federated-jwt: KC verifies proxy-signed assertions via the IdP
+          ...(body.tokenEndpointAuthMethod === 'private_key_jwt' &&
+            !(effectiveClientType === 'backend-service' || existing.serviceAccountsEnabled) && {
+            'jwt.credential.issuer': 'proxy-smart-signing',
+            'jwt.credential.sub': existing.clientId,
+          }),
         },
         // Consent & scope settings (top-level Keycloak properties)
         ...(body.consentRequired !== undefined && { consentRequired: body.consentRequired }),
