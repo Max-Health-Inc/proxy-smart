@@ -173,10 +173,11 @@ jobs:
             if [ ! -f ${DEPLOY_DIR}/proxy-signing-key.pem ]; then
               echo '🔑 Generating proxy signing key (first-time setup)...'
               openssl genrsa -out ${DEPLOY_DIR}/proxy-signing-key.pem 2048
-              chmod 600 ${DEPLOY_DIR}/proxy-signing-key.pem
             else
               echo '🔑 Proxy signing key already exists — reusing'
             fi
+            # Container runs as app:app (UID 1001) — needs read access via bind mount
+            chmod 644 ${DEPLOY_DIR}/proxy-signing-key.pem
           "
 
           # Copy only the files we need (no git on VPS)
