@@ -187,9 +187,10 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         // Explicit OAuth method provided — map to Keycloak internal type
         clientAuthenticatorType = toKeycloakAuthType(body.tokenEndpointAuthMethod, isBackendService)
       } else if (isBackendService) {
-        // Backend services: proxy validates JWT assertions itself, then authenticates
-        // to Keycloak using client_secret internally.
-        clientAuthenticatorType = 'client-secret'
+        // Backend services always use private_key_jwt via federated-jwt:
+        // proxy validates the client's JWT assertion, re-signs with proxy key,
+        // KC verifies via the proxy-smart-signing IdP
+        clientAuthenticatorType = 'federated-jwt'
       } else if (isPublicClient) {
         clientAuthenticatorType = 'none'
       } else {
@@ -641,9 +642,13 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           // Logout settings
           ...(body.backchannelLogoutUrl !== undefined && { 'backchannel.logout.url': body.backchannelLogoutUrl || '' }),
           ...(body.frontChannelLogoutUrl !== undefined && { 'frontchannel.logout.url': body.frontChannelLogoutUrl || '' }),
-          // Federated-jwt: KC verifies proxy-signed assertions via the IdP
-          ...(body.tokenEndpointAuthMethod === 'private_key_jwt' &&
-            !(effectiveClientType === 'backend-service' || existing.serviceAccountsEnabled) && {
+          // Federated-jwt: KC verifies proxy-signed assertions via the proxy-smart-signing IdP.
+          // Set for ALL clients using private_key_jwt (user-facing and backend services).
+          ...((body.tokenEndpointAuthMethod === 'private_key_jwt' ||
+            effectiveClientType === 'backend-service' || existing.serviceAccountsEnabled) &&
+            (body.jwksUri || body.publicKey || body.jwksString ||
+              existing.attributes?.['use.jwks.url'] === 'true' ||
+              existing.attributes?.['use.jwks.string'] === 'true') && {
             'jwt.credential.issuer': 'proxy-smart-signing',
             'jwt.credential.sub': existing.clientId,
           }),

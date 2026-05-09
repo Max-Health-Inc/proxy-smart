@@ -8,11 +8,10 @@
  *   - 'federated-jwt'   → for private_key_jwt where an IdP verifies the assertion
  *   - 'none'            → public clients (no authentication)
  *
- * Our proxy intercepts private_key_jwt assertions, validates them against the
- * client's registered JWKS, then re-signs with the proxy's own key. Keycloak
- * verifies the re-signed assertion via the 'proxy-smart-signing' IdP
- * (federated-jwt). Backend services are an exception: the proxy validates the
- * JWT itself, then authenticates to KC with client_secret internally.
+ * Our proxy intercepts ALL private_key_jwt assertions (both user-facing and
+ * backend services), validates them against the client's registered JWKS, then
+ * re-signs with the proxy's own key. Keycloak verifies the re-signed assertion
+ * via the 'proxy-smart-signing' IdP (federated-jwt).
  *
  * Standard OAuth values (RFC 7591 / RFC 7523):
  *   - 'none'                → public client
@@ -67,21 +66,20 @@ export function toTokenEndpointAuthMethod(client: ClientRepresentation): TokenEn
  * Convert a standard OAuth token_endpoint_auth_method to the Keycloak
  * clientAuthenticatorType value for storage.
  *
- * Note: For 'private_key_jwt' on backend services, we still store 'client-secret'
- * in Keycloak because the proxy handles JWT validation itself and uses the
- * secret for the internal Keycloak token exchange.
+ * For 'private_key_jwt', ALL clients (user-facing and backend services) use
+ * 'federated-jwt' — the proxy validates the original JWT assertion against the
+ * client's JWKS, re-signs it with the proxy's own key, and KC verifies the
+ * re-signed assertion via the 'proxy-smart-signing' IdP.
  */
 export function toKeycloakAuthType(
   method: TokenEndpointAuthMethod | string | undefined,
-  isBackendService: boolean
+  _isBackendService?: boolean
 ): string {
   switch (method) {
     case 'none':
       return 'none'
     case 'private_key_jwt':
-      // Backend services: proxy validates JWT, authenticates to KC with secret
-      if (isBackendService) return 'client-secret'
-      // Non-backend clients: proxy re-signs assertions with its own key;
+      // Proxy re-signs assertions with its own key;
       // KC verifies via the proxy-smart-signing IdP (federated-jwt)
       return 'federated-jwt'
     case 'client_secret_post':
