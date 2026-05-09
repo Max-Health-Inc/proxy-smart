@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605091906.cb646698] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump from 0.1.0-beta to 0.1.0-alpha across multiple apps/packages
+- ✨ Features: UI enhancements for smart flow cards in AuthFlowsManager (imports and state)
+- 🔧 Chores & Improvements: Backend refactor to introduce a unified read-resource tool replacing multiple GET route tools; update MCP endpoint tool list and tool registration flow to use the unified read tool
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/691
+
+
 ## [0.1.0-alpha.202605091845.ecad3533] - 2026-05-09
 
 - 🔧 Chores & Improvements: CI: swap SSH-based HTTP probing for Docker healthcheck in Keycloak readiness; add explicit healthy status check and clearer timeout error logs
