@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { PageLoadingState } from '@/components/ui/page-loading-state'
+import { StatCard } from '@/components/ui/stat-card'
 import {
   Button,
   Badge,
@@ -36,11 +37,15 @@ import {
   MoreHorizontal,
   ArrowLeft,
   RefreshCw,
+  Monitor,
+  Users,
+  Server,
 } from 'lucide-react'
 import type {
   AuthFlow,
   AuthFlowExecution,
   AuthenticatorProvider,
+  SmartFlowCard,
 } from '@/lib/api-client'
 import { SmartFlowsView } from './SmartFlowsView'
 
@@ -71,6 +76,7 @@ export function AuthFlowsManager() {
   const { notify } = useNotificationStore()
 
   const [flows, setFlows] = useState<FlowWithExecutions[]>([])
+  const [smartCards, setSmartCards] = useState<SmartFlowCard[]>([])
   const [loading, setLoading] = useState(true)
   const [providers, setProviders] = useState<AuthenticatorProvider[]>([])
   const [selectedFlow, setSelectedFlow] = useState<FlowWithExecutions | null>(null)
@@ -112,6 +118,9 @@ export function AuthFlowsManager() {
       clientApis.authFlows.getAdminAuthFlowsClientAuthenticators()
         .then(data => setProviders(data))
         .catch(error => console.error('Failed to load providers:', error)),
+      clientApis.authFlows.getAdminAuthFlowsSmartFlowMapping()
+        .then(data => setSmartCards(data))
+        .catch(error => console.error('Failed to load SMART flow cards:', error)),
     ]).finally(() => setLoading(false))
   }, [isAuthenticated, clientApis.authFlows])
 
@@ -189,9 +198,10 @@ export function AuthFlowsManager() {
     }
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────
 
-  if (loading) return <PageLoadingState message={t('Loading authentication flows...')} />
+  const getFlowClientCount = (flowType: string) =>
+    smartCards.find(c => c.flowType === flowType)?.clients.length ?? 0
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab)
@@ -201,105 +211,133 @@ export function AuthFlowsManager() {
     }
   }
 
+  const handleRefresh = () => {
+    if (activeTab === 'keycloak') {
+      if (selectedFlow?.alias) loadExecutions(selectedFlow.alias)
+      else refreshFlows()
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
+
+  if (loading) return <PageLoadingState message={t('Loading authentication flows...')} />
+
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {activeTab === 'keycloak' && selectedFlow && (
-            <Button variant="ghost" size="sm" onClick={() => { setSelectedFlow(null); setExecutions([]) }}>
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          )}
-          <Workflow className="w-6 h-6 text-primary" />
-          <div>
-            <h2 className="text-xl font-semibold">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+      {/* Enhanced Header */}
+      <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
+          <div className="flex-1">
+            <h1 className="text-3xl font-medium text-foreground mb-3 tracking-tight">
               {activeTab === 'keycloak' && selectedFlow
                 ? selectedFlow.alias
                 : t('Authentication Flows')
               }
-            </h2>
-            <p className="text-sm text-muted-foreground">
+            </h1>
+            <div className="text-muted-foreground text-lg flex items-center">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
+                <Workflow className="w-5 h-5 text-primary" />
+              </div>
               {activeTab === 'keycloak' && selectedFlow
                 ? t('Manage authenticator executions for this flow')
                 : t('SMART on FHIR flow types and Keycloak authentication flows')
               }
-            </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {activeTab === 'keycloak' && selectedFlow && (
-            <Button variant="outline" size="sm" onClick={() => setShowAddExecution(!showAddExecution)}>
-              <Plus className="w-4 h-4 mr-1" />
-              {t('Add Execution')}
-            </Button>
-          )}
-          {activeTab === 'keycloak' && (
-            <Button variant="outline" size="sm" onClick={() => {
-              if (selectedFlow?.alias) loadExecutions(selectedFlow.alias)
-              else refreshFlows()
-            }}>
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {activeTab === 'keycloak' && selectedFlow && (
+              <>
+                <Button variant="outline" onClick={() => { setSelectedFlow(null); setExecutions([]) }}>
+                  <ArrowLeft className="w-5 h-5 mr-2" />
+                  {t('Back')}
+                </Button>
+                <Button onClick={() => setShowAddExecution(!showAddExecution)}>
+                  <Plus className="w-5 h-5 mr-2" />
+                  {t('Add Execution')}
+                </Button>
+              </>
+            )}
+            {activeTab === 'keycloak' && (
+              <Button variant="outline" onClick={handleRefresh}>
+                <RefreshCw className="w-5 h-5 mr-2" />
+                {t('Refresh')}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <ResponsiveTabsList>
-        <TabsTrigger value="smart">{t('SMART Flows')}</TabsTrigger>
-        <TabsTrigger value="keycloak">{t('KC Flows')}</TabsTrigger>
-      </ResponsiveTabsList>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard icon={Monitor} label={t('EHR Launch Clients')} value={getFlowClientCount('ehr-launch')} color="primary" />
+        <StatCard icon={Users} label={t('Standalone Launch Clients')} value={getFlowClientCount('standalone-launch')} color="emerald" />
+        <StatCard icon={Server} label={t('Backend Service Clients')} value={getFlowClientCount('backend-services')} color="purple" />
+      </div>
 
-      <TabsContent value="smart">
-        <SmartFlowsView />
-      </TabsContent>
+      {/* Main Content */}
+      <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <ResponsiveTabsList columns={2}>
+            <TabsTrigger value="smart" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+              {t('SMART Flows')}
+            </TabsTrigger>
+            <TabsTrigger value="keycloak" className="rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
+              {t('KC Flows')}
+            </TabsTrigger>
+          </ResponsiveTabsList>
 
-      <TabsContent value="keycloak">
-        {/* Add Execution Panel */}
-        {showAddExecution && selectedFlow && (
-          <Card className="mb-4">
-            <CardHeader>
-              <CardTitle className="text-sm">{t('Select authenticator provider')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex gap-2 flex-wrap">
-                {providers.map(p => (
-                  <Button
-                    key={p.id}
-                    variant={addingProvider === p.id ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setAddingProvider(p.id ?? '')}
-                  >
-                    {p.displayName || p.id}
-                  </Button>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" disabled={!addingProvider} onClick={handleAddExecution}>
-                  {t('Add')}
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => { setShowAddExecution(false); setAddingProvider('') }}>
-                  {t('Cancel')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          <TabsContent value="smart" className="p-6 space-y-6">
+            <SmartFlowsView />
+          </TabsContent>
 
-        {/* Flow List or Execution Detail */}
-        {!selectedFlow ? (
-          <FlowList flows={flows} onSelect={handleSelectFlow} />
-        ) : (
-          <ExecutionTable
-            executions={executions}
-            onUpdateRequirement={handleUpdateRequirement}
-            onDelete={handleDeleteExecution}
-            onRaisePriority={handleRaisePriority}
-            onLowerPriority={handleLowerPriority}
-          />
-        )}
-      </TabsContent>
-    </Tabs>
+          <TabsContent value="keycloak" className="p-6 space-y-6">
+            {/* Add Execution Panel */}
+            {showAddExecution && selectedFlow && (
+              <Card className="mb-4">
+                <CardHeader>
+                  <CardTitle className="text-sm">{t('Select authenticator provider')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2 flex-wrap">
+                    {providers.map(p => (
+                      <Button
+                        key={p.id}
+                        variant={addingProvider === p.id ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setAddingProvider(p.id ?? '')}
+                      >
+                        {p.displayName || p.id}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" disabled={!addingProvider} onClick={handleAddExecution}>
+                      {t('Add')}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setShowAddExecution(false); setAddingProvider('') }}>
+                      {t('Cancel')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Flow List or Execution Detail */}
+            {!selectedFlow ? (
+              <FlowList flows={flows} onSelect={handleSelectFlow} />
+            ) : (
+              <ExecutionTable
+                executions={executions}
+                onUpdateRequirement={handleUpdateRequirement}
+                onDelete={handleDeleteExecution}
+                onRaisePriority={handleRaisePriority}
+                onLowerPriority={handleLowerPriority}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   )
 }
 
