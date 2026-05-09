@@ -25,6 +25,7 @@ import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
 import { dicomServersAdminRoutes } from './dicom-servers'
+import { authFlowsRoutes } from './auth-flows'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -129,6 +130,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(clientPoliciesRoutes)
   // DICOM/PACS server management
   .use(dicomServersAdminRoutes)
+  // Authentication flow management (client authenticators, federated-jwt)
+  .use(authFlowsRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

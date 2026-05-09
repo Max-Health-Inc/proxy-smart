@@ -363,20 +363,38 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   })
 
   // ── Logout ────────────────────────────────────────────────────────────
-  .get('/logout', ({ query, redirect }) => {
-    const url = new URL(keycloakAdapter.getLogoutUrl())
-    url.searchParams.set('post_logout_redirect_uri', query.post_logout_redirect_uri || `${config.baseUrl}/`)
+  // Server-side proxy: calls Keycloak internally instead of redirecting the
+  // browser to a Keycloak URL. This avoids exposing the Keycloak logout and
+  // logout-confirm pages through the reverse proxy (Caddy).
+  .get('/logout', async ({ query, redirect }) => {
+    const postLogoutUri = query.post_logout_redirect_uri || `${config.baseUrl}/`
 
     if (query.id_token_hint && typeof query.id_token_hint === 'string' &&
         query.id_token_hint.split('.').length === 3 && query.id_token_hint.length > 50) {
-      url.searchParams.set('id_token_hint', query.id_token_hint)
-    }
-    if (query.client_id) url.searchParams.set('client_id', query.client_id)
+      try {
+        const kcLogoutUrl = new URL(
+          `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/logout`,
+        )
+        kcLogoutUrl.searchParams.set('id_token_hint', query.id_token_hint)
+        kcLogoutUrl.searchParams.set('post_logout_redirect_uri', postLogoutUri)
+        if (query.client_id) kcLogoutUrl.searchParams.set('client_id', query.client_id)
 
-    return redirect(url.href)
+        const resp = await fetch(kcLogoutUrl.href, { redirect: 'manual' })
+
+        if (resp.status >= 200 && resp.status < 400) {
+          logger.auth.debug('Keycloak session ended via server-side logout')
+        } else {
+          logger.auth.warn('Keycloak logout returned unexpected status', { status: resp.status })
+        }
+      } catch (error) {
+        logger.auth.error('Server-side Keycloak logout failed', { error })
+      }
+    }
+
+    return redirect(postLogoutUri)
   }, {
     query: LogoutQuery,
-    detail: { summary: 'Logout Endpoint', description: 'Proxies logout requests to Keycloak', tags: ['authentication'] }
+    detail: { summary: 'Logout Endpoint', description: 'Proxies logout to Keycloak server-side and redirects to post_logout_redirect_uri', tags: ['authentication'] }
   })
 
   // ── Public identity providers ─────────────────────────────────────────
