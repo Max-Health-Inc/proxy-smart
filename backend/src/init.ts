@@ -3,6 +3,7 @@ import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
 import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
+import { resolveKcRealmIssuer } from './lib/proxy-signing'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -554,6 +555,9 @@ export async function initializeServer(): Promise<void> {
       
       // Check Keycloak connection before proceeding
       await checkKeycloakConnection()
+
+      // Resolve the canonical KC realm issuer (respects KC_HOSTNAME if set)
+      await resolveKcRealmIssuer()
       
       // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
       await ensureKeycloakEventLogging()

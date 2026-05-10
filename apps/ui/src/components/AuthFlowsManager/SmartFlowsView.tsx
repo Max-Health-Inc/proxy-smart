@@ -82,7 +82,7 @@ export function SmartFlowsView() {
   if (loading) return <PageLoadingState message={t('Loading SMART flow mapping...')} />
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-4xl mx-auto space-y-5 px-2 sm:px-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           {t('How SMART on FHIR launch flows map to Keycloak authentication flows and which clients use each flow type.')}
