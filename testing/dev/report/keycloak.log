@@ -1,19 +1,19 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-05-09 20:10:23,561 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 7129ms
+2026-05-10 15:51:41,372 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8218ms
 Running the server in development mode. DO NOT use this configuration in production.
-2026-05-09 20:10:26,308 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
-2026-05-09 20:10:27,055 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-05-09 20:10:27,081 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
-2026-05-09 20:10:27,081 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1
-2026-05-09 20:10:27,082 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
-2026-05-09 20:10:27,828 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-05-09 20:10:33,656 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-05-09 20:10:33,897 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_942215, Site name: null
-2026-05-09 20:10:34,009 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 08:10:34, then every PT12H
-2026-05-09 20:10:34,063 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
-2026-05-09 20:10:34,195 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
-2026-05-09 20:10:35,634 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
-2026-05-09 20:10:36,133 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
-2026-05-09 20:10:36,149 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
-2026-05-09 20:10:36,149 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: The url [authorization_url] requires secure connections
-2026-05-09 20:10:36,149 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
+2026-05-10 15:51:45,063 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
+2026-05-10 15:51:46,051 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-05-10 15:51:46,084 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
+2026-05-10 15:51:46,085 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1
+2026-05-10 15:51:46,085 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
+2026-05-10 15:51:47,164 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-05-10 15:51:54,609 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-05-10 15:51:54,903 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_497264, Site name: null
+2026-05-10 15:51:55,116 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 03:51:55, then every PT12H
+2026-05-10 15:51:55,162 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-05-10 15:51:55,340 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-05-10 15:51:57,377 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
+2026-05-10 15:51:57,982 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
+2026-05-10 15:51:58,007 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
+2026-05-10 15:51:58,007 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: The url [authorization_url] requires secure connections
+2026-05-10 15:51:58,007 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.

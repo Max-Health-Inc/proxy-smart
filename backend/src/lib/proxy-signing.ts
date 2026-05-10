@@ -9,6 +9,13 @@
  *   - Auto-generated at startup (ephemeral, dev-friendly)
  *   - Override via PROXY_SIGNING_KEY_FILE (path to PEM) or PROXY_SIGNING_KEY_PEM (inline PEM)
  *   - Public key exposed at /.well-known/jwks.json for KC to fetch
+ *
+ * Audience resolution:
+ *   When KC_HOSTNAME is configured, Keycloak rewrites its realm issuer URL to
+ *   the public hostname — even for requests arriving via the internal Docker
+ *   network.  The proxy therefore fetches KC's OIDC discovery endpoint once
+ *   at startup to obtain the canonical realm issuer URL and uses that as the
+ *   `aud` claim in proxy-signed assertions.
  */
 
 import { generateKeyPairSync, createPublicKey, randomUUID } from 'crypto'
@@ -102,7 +109,7 @@ export function getProxyJwks(): { keys: Record<string, unknown>[] } {
  * Claims per KC Federated Client Authentication (26.6.0):
  *   iss = proxy issuer URL (matches the OIDC IdP alias issuer in KC)
  *   sub = clientId (matches the "federated subject" configured on the KC client)
- *   aud = Keycloak realm issuer URL (required by KC)
+ *   aud = Keycloak realm issuer URL (required by KC — must match KC_HOSTNAME if set)
  *   exp = now + 60s (short-lived)
  *   jti = fresh UUID
  *   iat = now
@@ -111,12 +118,10 @@ export function signProxyAssertion(clientId: string): string {
   const kp = getProxyKeyPair()
   const now = Math.floor(Date.now() / 1000)
 
-  const kcRealmIssuer = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}`
-
   const payload = {
     iss: config.baseUrl,
     sub: clientId,
-    aud: kcRealmIssuer,
+    aud: getKcRealmIssuer(),
     exp: now + 60,
     iat: now,
     jti: randomUUID(),
@@ -130,6 +135,55 @@ export function signProxyAssertion(clientId: string): string {
       typ: 'JWT',
     },
   })
+}
+
+// ─── KC Realm Issuer Resolution ─────────────────────────────────────────────
+
+let _kcRealmIssuer: string | null = null
+
+/**
+ * Return the canonical KC realm issuer URL.
+ *
+ * When KC_HOSTNAME is configured on Keycloak, the realm issuer is the public
+ * URL (e.g. `https://beta.proxy-smart.com/auth/realms/proxy-smart`) even for
+ * requests arriving over the internal Docker network.  We discover the
+ * correct value from KC's OIDC discovery endpoint at startup and cache it.
+ *
+ * Falls back to constructing the URL from `config.keycloak.baseUrl` if
+ * discovery hasn't been performed yet (synchronous fallback).
+ */
+export function getKcRealmIssuer(): string {
+  return _kcRealmIssuer ?? `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}`
+}
+
+/**
+ * Fetch the KC realm issuer from OIDC discovery and cache it.
+ *
+ * Call this once during server startup.  If the fetch fails the proxy falls
+ * back to the internal URL which works when KC_HOSTNAME is not set.
+ */
+export async function resolveKcRealmIssuer(): Promise<void> {
+  const discoveryUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/.well-known/openid-configuration`
+  try {
+    const resp = await fetch(discoveryUrl, { signal: AbortSignal.timeout(5_000) })
+    if (!resp.ok) {
+      logger.server.warn('KC OIDC discovery failed, using internal URL for realm issuer', {
+        status: resp.status,
+        url: discoveryUrl,
+      })
+      return
+    }
+    const data = await resp.json() as { issuer?: string }
+    if (data.issuer) {
+      _kcRealmIssuer = data.issuer
+      logger.server.info('Resolved KC realm issuer from OIDC discovery', { issuer: _kcRealmIssuer })
+    }
+  } catch (err) {
+    logger.server.warn('KC OIDC discovery unreachable, using internal URL for realm issuer', {
+      url: discoveryUrl,
+      error: err,
+    })
+  }
 }
 
 /** Reset key pair (for testing only). */
