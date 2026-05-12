@@ -645,12 +645,15 @@ async function ensureProxySigningIdp(): Promise<void> {
       jwksUrl,
       validateSignature: 'true',
       clientAuthMethod: 'client_secret_post',
+      supportsClientAssertions: 'true',
     }
 
     if (getRes.ok) {
       // IdP exists — check if jwksUrl needs updating
       const existing = await getRes.json() as { config?: Record<string, string> }
-      if (existing.config?.jwksUrl === jwksUrl && existing.config?.issuer === config.baseUrl) {
+      if (existing.config?.jwksUrl === jwksUrl
+        && existing.config?.issuer === config.baseUrl
+        && existing.config?.supportsClientAssertions === 'true') {
         logger.keycloak.info('✅ proxy-smart-signing IdP already configured correctly')
       } else {
 
