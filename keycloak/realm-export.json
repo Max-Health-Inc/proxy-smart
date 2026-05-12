@@ -1226,7 +1226,9 @@
           "manage-realm",
           "view-users",
           "query-users",
-          "manage-users"
+          "manage-users",
+          "manage-identity-providers",
+          "view-identity-providers"
         ]
       }
     },

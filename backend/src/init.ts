@@ -569,6 +569,53 @@ async function ensureProxySigningIdp(): Promise<void> {
       clientSecret: config.keycloak.adminClientSecret,
     })
 
+    // ── Ensure admin-service has manage-identity-providers role ──
+    // Existing deployments may lack this role (added after initial import).
+    // The admin-service already has manage-users which allows role assignment.
+    try {
+      const adminClients = await admin.clients.find({ clientId: 'realm-management' })
+      const realmMgmt = adminClients?.[0]
+      if (realmMgmt?.id) {
+        // Find the admin-service's service account user
+        const svcClients = await admin.clients.find({ clientId: config.keycloak.adminClientId })
+        const svcClient = svcClients?.[0]
+        if (svcClient?.id) {
+          const svcUser = await admin.clients.getServiceAccountUser({ id: svcClient.id })
+          if (svcUser?.id) {
+            // Check current role assignments
+            const currentRoles = await admin.users.listClientRoleMappings({
+              id: svcUser.id,
+              clientUniqueId: realmMgmt.id,
+            })
+            const hasIdpRole = currentRoles.some(r => r.name === 'manage-identity-providers')
+            if (!hasIdpRole) {
+              // Find and assign the role
+              const availableRoles = await admin.clients.listRoles({ id: realmMgmt.id })
+              const idpRole = availableRoles.find(r => r.name === 'manage-identity-providers')
+              if (idpRole?.id) {
+                await admin.users.addClientRoleMappings({
+                  id: svcUser.id,
+                  clientUniqueId: realmMgmt.id,
+                  roles: [{ id: idpRole.id, name: 'manage-identity-providers' }],
+                })
+                logger.keycloak.info('Assigned manage-identity-providers role to admin-service')
+                // Re-authenticate to get a token with the new role
+                await admin.auth({
+                  grantType: 'client_credentials',
+                  clientId: config.keycloak.adminClientId,
+                  clientSecret: config.keycloak.adminClientSecret,
+                })
+              }
+            }
+          }
+        }
+      }
+    } catch (roleErr) {
+      logger.keycloak.debug('Could not self-assign IdP role (may already have it)', {
+        error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+      })
+    }
+
     const IDP_ALIAS = 'proxy-smart-signing'
     const token = await admin.getAccessToken()
     const idpUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances/${IDP_ALIAS}`
@@ -633,8 +680,12 @@ async function ensureProxySigningIdp(): Promise<void> {
         const body = await putRes.text()
         logger.keycloak.warn(`Failed to update proxy-smart-signing IdP (${putRes.status}): ${body}`)
       }
-    } else if (getRes.status === 404) {
-      // IdP doesn't exist — create it
+    } else if (getRes.status === 404 || getRes.status === 403) {
+      // IdP doesn't exist (404) or we lacked permission on first check (403).
+      // After self-assigning manage-identity-providers, try to create it.
+      if (getRes.status === 403) {
+        logger.keycloak.info('Got 403 checking IdP — retrying after role self-assignment')
+      }
       const createUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances`
       const postRes = await fetch(createUrl, {
         method: 'POST',
