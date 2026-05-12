@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605121710.8c4f2d1c] - 2026-05-12
+
+- 🔧 Chores & Improvements: Update versions across apps/packages/docs to 0.1.0-alpha.202605121710.8c4f2d1c
+- 🔧 Chores & Improvements: Backend: enable supportsClientAssertions: true check for proxy signing IdP configuration; tighten IdP existence criteria
+- ⚠️ Breaking Changes: None
+- 📚 Documentation: Add Federated JWT client authentication guide (new file)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/701
+
+
 ## [0.1.0-alpha.202605121707.0600c9d4] - 2026-05-12
 
 - ✨ Features
