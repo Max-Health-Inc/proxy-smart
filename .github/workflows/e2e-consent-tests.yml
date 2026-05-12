@@ -308,10 +308,26 @@ jobs:
           cd testing/e2e
           npm install
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('testing/e2e/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: |
           cd testing/e2e
           npx playwright install chromium --with-deps
+
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: |
+          cd testing/e2e
+          npx playwright install-deps chromium
 
       # ── Run E2E tests ──
       - name: Run Consent App E2E Tests
