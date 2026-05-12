@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605121343.f6981e3a] - 2026-05-12
+
+- 🔧 Chores & Improvements: E2E workflow improvements (Playwright caching, conditional install, cache-hit flow) and Smart-compliance workflow refactor (setup in tmp, browser cache, global install, copy into workspace); CI/CD enhancements
+- 🔧 Chores & Improvements: Version bumps across multiple packages/apps from alpha to beta
+- ⚠️ Breaking Changes: Keycloak realm-export updated to include manage-identity-providers and view-identity-providers; init.ts ensures admin-service role via service account
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/699
+
+
 ## [0.1.0-alpha.202605121209.44813356] - 2026-05-12
 
 - 🔧 Chores & Improvements: Bump package versions across apps/libs/tests to 0.1.0-alpha.202605121209.44813356
