@@ -671,24 +671,31 @@ async function ensureProxySigningIdp(): Promise<void> {
     // changed to "federated-jwt" in realm-export.json, the old value persists.
     // Also, the jwt.credential.* attributes needed for federated auth may be
     // missing entirely.  Detect affected clients by their JWKS registration
-    // (use.jwks.string=true + serviceAccountsEnabled) and migrate them.
+    // (use.jwks.string=true) and migrate them.
+    // IMPORTANT: use the full client representation in the PUT to avoid
+    // resetting other fields (serviceAccountsEnabled, scopes, etc.).
     const allClients = await admin.clients.find()
     let migratedCount = 0
     for (const client of allClients) {
       if (!client.id || !client.clientId) continue
-      if (!client.serviceAccountsEnabled) continue
 
       const attrs = (client.attributes ?? {}) as Record<string, string>
       // Only touch clients with registered JWKS (private_key_jwt pattern)
       if (attrs['use.jwks.string'] !== 'true') continue
-      // Skip if already correctly configured
-      if (client.clientAuthenticatorType === 'federated-jwt'
-          && attrs['jwt.credential.issuer'] === IDP_ALIAS
-          && attrs['jwt.credential.sub'] === client.clientId) continue
+
+      // Check if anything needs fixing
+      const needsAuthType = client.clientAuthenticatorType !== 'federated-jwt'
+      const needsCredAttrs = attrs['jwt.credential.issuer'] !== IDP_ALIAS
+          || attrs['jwt.credential.sub'] !== client.clientId
+      const needsServiceAccount = !client.serviceAccountsEnabled
+
+      if (!needsAuthType && !needsCredAttrs && !needsServiceAccount) continue
 
       try {
         await admin.clients.update({ id: client.id }, {
+          ...client,
           clientAuthenticatorType: 'federated-jwt',
+          serviceAccountsEnabled: true,
           attributes: {
             ...attrs,
             'jwt.credential.issuer': IDP_ALIAS,
@@ -696,7 +703,11 @@ async function ensureProxySigningIdp(): Promise<void> {
           },
         })
         migratedCount++
-        logger.keycloak.info(`Migrated client "${client.clientId}" to federated-jwt auth`)
+        logger.keycloak.info(`Migrated client "${client.clientId}" to federated-jwt auth`, {
+          fixedAuthType: needsAuthType,
+          fixedCredAttrs: needsCredAttrs,
+          fixedServiceAccount: needsServiceAccount,
+        })
       } catch (err) {
         logger.keycloak.warn(`Failed to migrate client "${client.clientId}" to federated-jwt`, {
           error: err instanceof Error ? err.message : String(err),
