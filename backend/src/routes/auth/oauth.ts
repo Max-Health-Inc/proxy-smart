@@ -467,7 +467,8 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       const rewrittenUri = getRewrittenRedirectUri(clientIdForSession, clientRedirectUri, {
         config: smartProxyConfig, store: smartStore, logger: smartLogger,
       })
-      formData.append('redirect_uri', rewrittenUri || clientRedirectUri || '')
+      const finalRedirectUri = rewrittenUri || clientRedirectUri
+      if (finalRedirectUri) formData.append('redirect_uri', finalRedirectUri)
 
       if (bodyObj.client_id || bodyObj.clientId) formData.append('client_id', bodyObj.client_id || bodyObj.clientId!)
       if (bodyObj.client_secret || bodyObj.clientSecret) formData.append('client_secret', bodyObj.client_secret || bodyObj.clientSecret!)
