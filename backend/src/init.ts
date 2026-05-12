@@ -745,7 +745,7 @@ async function ensureProxySigningIdp(): Promise<void> {
           // Copy the built-in "clients" flow
           await admin.authenticationManagement.copyFlow({
             flow: 'clients',
-            payload: { newName: CUSTOM_FLOW_ALIAS },
+            newName: CUSTOM_FLOW_ALIAS,
           })
           logger.keycloak.info('Copied built-in "clients" flow')
         }
