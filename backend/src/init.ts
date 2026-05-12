@@ -3,7 +3,7 @@ import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
 import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
-import { resolveKcRealmIssuer } from './lib/proxy-signing'
+import { resolveKcRealmIssuer, getProxyJwks, PROXY_SIGNING_ALG } from './lib/proxy-signing'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -540,6 +540,138 @@ async function ensureUserProfileAttributes(): Promise<void> {
 }
 
 /**
+ * Ensure the 'proxy-smart-signing' Identity Provider exists in Keycloak.
+ *
+ * KC's --import-realm is a no-op when the realm already exists (persistent DB).
+ * New IdPs/clients added to realm-export.json after initial deployment won't
+ * appear until manually created.  This function reconciles the IdP state at
+ * startup so federated-jwt client authentication works regardless of when
+ * the proxy-smart-signing IdP was introduced.
+ *
+ * The IdP's JWKS URL points to the backend's /.well-known/jwks.json so
+ * Keycloak can verify proxy-signed assertions for the federated-jwt flow.
+ */
+async function ensureProxySigningIdp(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping proxy-signing IdP check — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const IDP_ALIAS = 'proxy-smart-signing'
+    const token = await admin.getAccessToken()
+    const idpUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances/${IDP_ALIAS}`
+
+    // Compute the internal JWKS URL (how KC reaches the backend within Docker)
+    // If KEYCLOAK_BASE_URL has an internal hostname (e.g., http://keycloak:8080/auth),
+    // we know we're in Docker and the backend is at http://backend:PORT.
+    // Otherwise (localhost), the backend is also on localhost.
+    const kcHost = new URL(config.keycloak.baseUrl!).hostname
+    const internalBackendHost = (kcHost !== 'localhost' && kcHost !== '127.0.0.1')
+      ? 'backend'
+      : 'localhost'
+    const jwksUrl = `http://${internalBackendHost}:${config.port}/.well-known/jwks.json`
+
+    // Check if the IdP already exists
+    const getRes = await fetch(idpUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    const expectedConfig = {
+      issuer: config.baseUrl,
+      tokenUrl: `${config.baseUrl}/auth/token`,
+      authorizationUrl: `${config.baseUrl}/auth/authorize`,
+      clientId: 'keycloak',
+      clientSecret: 'unused',
+      useJwksUrl: 'true',
+      jwksUrl,
+      validateSignature: 'true',
+      clientAuthMethod: 'client_secret_post',
+    }
+
+    if (getRes.ok) {
+      // IdP exists — check if jwksUrl needs updating
+      const existing = await getRes.json() as { config?: Record<string, string> }
+      if (existing.config?.jwksUrl === jwksUrl && existing.config?.issuer === config.baseUrl) {
+        logger.keycloak.info('✅ proxy-smart-signing IdP already configured correctly')
+        return
+      }
+
+      // Update IdP config
+      const putRes = await fetch(idpUrl, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alias: IDP_ALIAS,
+          displayName: 'Proxy Smart Signing',
+          providerId: 'oidc',
+          enabled: true,
+          trustEmail: false,
+          storeToken: false,
+          linkOnly: false,
+          config: expectedConfig,
+        }),
+      })
+
+      if (putRes.ok) {
+        logger.keycloak.info('✅ proxy-smart-signing IdP updated (jwksUrl/issuer synced)')
+      } else {
+        const body = await putRes.text()
+        logger.keycloak.warn(`Failed to update proxy-smart-signing IdP (${putRes.status}): ${body}`)
+      }
+    } else if (getRes.status === 404) {
+      // IdP doesn't exist — create it
+      const createUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances`
+      const postRes = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alias: IDP_ALIAS,
+          displayName: 'Proxy Smart Signing',
+          providerId: 'oidc',
+          enabled: true,
+          trustEmail: false,
+          storeToken: false,
+          linkOnly: false,
+          hideOnLogin: true,
+          config: expectedConfig,
+        }),
+      })
+
+      if (postRes.ok || postRes.status === 201) {
+        logger.keycloak.info('✅ proxy-smart-signing IdP created')
+      } else {
+        const body = await postRes.text()
+        logger.keycloak.warn(`Failed to create proxy-smart-signing IdP (${postRes.status}): ${body}`)
+      }
+    } else {
+      logger.keycloak.warn(`Unexpected response checking proxy-smart-signing IdP: ${getRes.status}`)
+    }
+  } catch (error) {
+    logger.keycloak.warn('Could not ensure proxy-smart-signing IdP exists', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
  * Initialize all server components (Keycloak + FHIR servers)
  */
 export async function initializeServer(): Promise<void> {
@@ -558,6 +690,9 @@ export async function initializeServer(): Promise<void> {
 
       // Resolve the canonical KC realm issuer (respects KC_HOSTNAME if set)
       await resolveKcRealmIssuer()
+
+      // Ensure the proxy-smart-signing IdP exists (required for federated-jwt client auth)
+      await ensureProxySigningIdp()
       
       // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
       await ensureKeycloakEventLogging()
