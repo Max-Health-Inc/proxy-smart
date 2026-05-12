@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605121209.44813356] - 2026-05-12
+
+- 🔧 Chores & Improvements: Bump package versions across apps/libs/tests to 0.1.0-alpha.202605121209.44813356
+- 🔧 Chores & Improvements: Update Keycloak config endpoints to localhost:8445 (issuer/tokenUrl/authorizationUrl/jwksUrl)
+- 🔧 Chores & Improvements: Add backend ensureProxySigningIdp() helper to support proxy-smart-signing IdP startup (handles missing admin creds)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/697
+
+
 ## [0.1.0-beta.202605121120.bc164c98] - 2026-05-12
 
 - 🔧 Chores & Improvements: Bump versions across apps/libs/tests to 0.1.0-beta.202605121120.bc164c98
