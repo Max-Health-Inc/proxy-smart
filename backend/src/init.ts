@@ -664,6 +664,49 @@ async function ensureProxySigningIdp(): Promise<void> {
     } else {
       logger.keycloak.warn(`Unexpected response checking proxy-smart-signing IdP: ${getRes.status}`)
     }
+
+    // ── Ensure private_key_jwt clients use federated-jwt authenticator ──
+    // KC's --import-realm doesn't update existing clients. If a client was
+    // originally imported with clientAuthenticatorType "client-jwt" and later
+    // changed to "federated-jwt" in realm-export.json, the old value persists.
+    // Also, the jwt.credential.* attributes needed for federated auth may be
+    // missing entirely.  Detect affected clients by their JWKS registration
+    // (use.jwks.string=true + serviceAccountsEnabled) and migrate them.
+    const allClients = await admin.clients.find()
+    let migratedCount = 0
+    for (const client of allClients) {
+      if (!client.id || !client.clientId) continue
+      if (!client.serviceAccountsEnabled) continue
+
+      const attrs = (client.attributes ?? {}) as Record<string, string>
+      // Only touch clients with registered JWKS (private_key_jwt pattern)
+      if (attrs['use.jwks.string'] !== 'true') continue
+      // Skip if already correctly configured
+      if (client.clientAuthenticatorType === 'federated-jwt'
+          && attrs['jwt.credential.issuer'] === IDP_ALIAS
+          && attrs['jwt.credential.sub'] === client.clientId) continue
+
+      try {
+        await admin.clients.update({ id: client.id }, {
+          clientAuthenticatorType: 'federated-jwt',
+          attributes: {
+            ...attrs,
+            'jwt.credential.issuer': IDP_ALIAS,
+            'jwt.credential.sub': client.clientId,
+          },
+        })
+        migratedCount++
+        logger.keycloak.info(`Migrated client "${client.clientId}" to federated-jwt auth`)
+      } catch (err) {
+        logger.keycloak.warn(`Failed to migrate client "${client.clientId}" to federated-jwt`, {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+
+    if (migratedCount > 0) {
+      logger.keycloak.info(`✅ Migrated ${migratedCount} client(s) to federated-jwt`)
+    }
   } catch (error) {
     logger.keycloak.warn('Could not ensure proxy-smart-signing IdP exists', {
       error: error instanceof Error ? error.message : String(error),
