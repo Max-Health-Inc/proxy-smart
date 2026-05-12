@@ -652,8 +652,7 @@ async function ensureProxySigningIdp(): Promise<void> {
       const existing = await getRes.json() as { config?: Record<string, string> }
       if (existing.config?.jwksUrl === jwksUrl && existing.config?.issuer === config.baseUrl) {
         logger.keycloak.info('✅ proxy-smart-signing IdP already configured correctly')
-        return
-      }
+      } else {
 
       // Update IdP config
       const putRes = await fetch(idpUrl, {
@@ -679,6 +678,7 @@ async function ensureProxySigningIdp(): Promise<void> {
       } else {
         const body = await putRes.text()
         logger.keycloak.warn(`Failed to update proxy-smart-signing IdP (${putRes.status}): ${body}`)
+      }
       }
     } else if (getRes.status === 404 || getRes.status === 403) {
       // IdP doesn't exist (404) or we lacked permission on first check (403).
@@ -714,6 +714,78 @@ async function ensureProxySigningIdp(): Promise<void> {
       }
     } else {
       logger.keycloak.warn(`Unexpected response checking proxy-smart-signing IdP: ${getRes.status}`)
+    }
+
+    // ── Ensure the client auth flow includes federated-jwt execution ──
+    // When the realm was created before --features=client-auth-federated was enabled,
+    // the built-in "clients" flow won't have the "Signed JWT - Federated" execution.
+    // KC needs this execution to authenticate clients with clientAuthenticatorType=federated-jwt.
+    // Built-in flows can't be modified, so we copy and bind a new flow if needed.
+    try {
+      const CUSTOM_FLOW_ALIAS = 'clients with federated-jwt'
+      const flows = await admin.authenticationManagement.getFlows()
+      const realmInfo = await admin.realms.findOne({ realm: config.keycloak.realm! })
+      const currentFlowAlias = realmInfo?.clientAuthenticationFlow || 'clients'
+
+      // Check if the current flow already has federated-jwt
+      let needsFlowSetup = true
+      try {
+        const execs = await admin.authenticationManagement.getExecutions({ flow: currentFlowAlias })
+        if (execs.some((e: { providerId?: string }) => e.providerId === 'federated-jwt')) {
+          needsFlowSetup = false
+          logger.keycloak.debug('Client auth flow already has federated-jwt execution')
+        }
+      } catch { /* flow not found — will create */ }
+
+      if (needsFlowSetup) {
+        // Check if the custom flow already exists (from a previous run that failed to bind)
+        let customFlow = flows.find(f => f.alias === CUSTOM_FLOW_ALIAS)
+
+        if (!customFlow) {
+          // Copy the built-in "clients" flow
+          await admin.authenticationManagement.copyFlow({
+            flow: 'clients',
+            newName: CUSTOM_FLOW_ALIAS,
+          })
+          logger.keycloak.info('Copied built-in "clients" flow')
+        }
+
+        // Add federated-jwt execution to the custom flow (idempotent check)
+        const customExecs = await admin.authenticationManagement.getExecutions({ flow: CUSTOM_FLOW_ALIAS })
+        const hasFederated = customExecs.some((e: { providerId?: string }) => e.providerId === 'federated-jwt')
+
+        if (!hasFederated) {
+          await admin.authenticationManagement.addExecutionToFlow({
+            flow: CUSTOM_FLOW_ALIAS,
+            provider: 'federated-jwt',
+          })
+          logger.keycloak.info('Added federated-jwt execution to client auth flow')
+
+          // Enable the execution (it's added as DISABLED by default)
+          const updatedExecs = await admin.authenticationManagement.getExecutions({ flow: CUSTOM_FLOW_ALIAS })
+          const fedExec = updatedExecs.find((e: { providerId?: string }) => e.providerId === 'federated-jwt')
+          if (fedExec?.id) {
+            await admin.authenticationManagement.updateExecution(
+              { flow: CUSTOM_FLOW_ALIAS },
+              { ...fedExec, requirement: 'ALTERNATIVE' },
+            )
+            logger.keycloak.info('Set federated-jwt execution to ALTERNATIVE')
+          }
+        }
+
+        // Bind the custom flow as the realm's client authentication flow
+        if (currentFlowAlias !== CUSTOM_FLOW_ALIAS) {
+          await admin.realms.update({ realm: config.keycloak.realm! }, {
+            ...realmInfo,
+            clientAuthenticationFlow: CUSTOM_FLOW_ALIAS,
+          })
+          logger.keycloak.info('✅ Bound "clients with federated-jwt" as client authentication flow')
+        }
+      }
+    } catch (flowErr) {
+      logger.keycloak.warn('Could not ensure federated-jwt client auth flow', {
+        error: flowErr instanceof Error ? flowErr.message : String(flowErr),
+      })
     }
 
     // ── Ensure private_key_jwt clients use federated-jwt authenticator ──
