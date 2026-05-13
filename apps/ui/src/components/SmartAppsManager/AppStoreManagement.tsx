@@ -1,37 +1,53 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import {
   Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter, Input, Label, Select, SelectContent,
   SelectItem, SelectTrigger, SelectValue,
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
 } from '@proxy-smart/shared-ui';
-import { Eye, EyeOff, RefreshCw, ExternalLink, Store, Plus, Trash2 } from 'lucide-react';
+import {
+  Eye, EyeOff, RefreshCw, ExternalLink, Store, Plus, Trash2,
+  HeartPulse, FileText, ShieldCheck, ClipboardList, AppWindow,
+  Stethoscope, Syringe, Pill, TestTube2, Microscope, UserRound,
+  Camera, Dna, Smartphone, Settings, FolderOpen, Lock, LockOpen,
+  BarChart3, Brain, Activity, Hospital, Scan, type LucideIcon,
+} from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import type { AppStoreApp, PublishedApp, SmartApp } from '@/lib/api-client';
 
-const ICON_OPTIONS = [
-  { emoji: '\u{1F3E5}', label: 'Hospital' },
-  { emoji: '\u2699\uFE0F', label: 'Settings' },
-  { emoji: '\u{1F9EC}', label: 'DNA' },
-  { emoji: '\u{1F4F7}', label: 'Camera' },
-  { emoji: '\u{1F464}', label: 'Person' },
-  { emoji: '\u{1F4CB}', label: 'Clipboard' },
-  { emoji: '\u{1F4F1}', label: 'Phone' },
-  { emoji: '\u{1FA7A}', label: 'Stethoscope' },
-  { emoji: '\u{1F489}', label: 'Syringe' },
-  { emoji: '\u{1F48A}', label: 'Pill' },
-  { emoji: '\u{1F9EA}', label: 'Test Tube' },
-  { emoji: '\u{1F52C}', label: 'Microscope' },
-  { emoji: '\u{1F9D1}\u200D\u2695\uFE0F', label: 'Doctor' },
-  { emoji: '\u{1F6E1}\uFE0F', label: 'Shield' },
-  { emoji: '\u{1F4CA}', label: 'Chart' },
-  { emoji: '\u{1F5C2}\uFE0F', label: 'Folder' },
-  { emoji: '\u{1F513}', label: 'Lock Open' },
-  { emoji: '\u{1F512}', label: 'Lock' },
-  { emoji: '\u{2764}\uFE0F', label: 'Heart' },
-  { emoji: '\u{1F4DD}', label: 'Memo' },
-] as const;
+/** Icon registry — maps icon key to Lucide component. Synced with public /apps store SVG names. */
+const ICON_MAP: Record<string, LucideIcon> = {
+  'heart-pulse': HeartPulse,
+  'document-text': FileText,
+  'shield-check': ShieldCheck,
+  'clipboard-list': ClipboardList,
+  'app-window': AppWindow,
+  'stethoscope': Stethoscope,
+  'syringe': Syringe,
+  'pill': Pill,
+  'test-tube': TestTube2,
+  'microscope': Microscope,
+  'user': UserRound,
+  'camera': Camera,
+  'dna': Dna,
+  'phone': Smartphone,
+  'settings': Settings,
+  'folder': FolderOpen,
+  'lock': Lock,
+  'lock-open': LockOpen,
+  'chart': BarChart3,
+  'brain': Brain,
+  'activity': Activity,
+  'hospital': Hospital,
+  'scan': Scan,
+};
+
+const ICON_OPTIONS = Object.entries(ICON_MAP).map(([key, Icon]) => ({
+  key,
+  Icon,
+  label: key.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' '),
+}));
 
 export function AppStoreManagement() {
   const { t } = useTranslation();
@@ -202,8 +218,8 @@ export function AppStoreManagement() {
               className={`flex items-center justify-between px-4 py-3 transition-colors ${app.hidden ? 'opacity-50' : ''}`}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 text-sm">
-                  {getAppIcon(app)}
+                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                  {renderAppIcon(app)}
                 </div>
                 <div className="min-w-0">
                   <div className="font-medium text-sm text-foreground truncate flex items-center gap-2">
@@ -300,12 +316,12 @@ export function AppStoreManagement() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="clinical">{getCategoryEmoji('clinical')} {t('Clinical')}</SelectItem>
-                        <SelectItem value="administrative">{getCategoryEmoji('admin')} {t('Administrative')}</SelectItem>
-                        <SelectItem value="patient">{getCategoryEmoji('patient')} {t('Patient')}</SelectItem>
-                        <SelectItem value="imaging">{getCategoryEmoji('imaging')} {t('Imaging')}</SelectItem>
-                        <SelectItem value="genomics">{getCategoryEmoji('genomics')} {t('Genomics')}</SelectItem>
-                        <SelectItem value="other">{getCategoryEmoji('other')} {t('Other')}</SelectItem>
+                        <SelectItem value="clinical"><span className="inline-flex items-center gap-1.5"><HeartPulse className="w-3.5 h-3.5" /> {t('Clinical')}</span></SelectItem>
+                        <SelectItem value="administrative"><span className="inline-flex items-center gap-1.5"><Settings className="w-3.5 h-3.5" /> {t('Administrative')}</span></SelectItem>
+                        <SelectItem value="patient"><span className="inline-flex items-center gap-1.5"><UserRound className="w-3.5 h-3.5" /> {t('Patient')}</span></SelectItem>
+                        <SelectItem value="imaging"><span className="inline-flex items-center gap-1.5"><Scan className="w-3.5 h-3.5" /> {t('Imaging')}</span></SelectItem>
+                        <SelectItem value="genomics"><span className="inline-flex items-center gap-1.5"><Dna className="w-3.5 h-3.5" /> {t('Genomics')}</span></SelectItem>
+                        <SelectItem value="other"><span className="inline-flex items-center gap-1.5"><AppWindow className="w-3.5 h-3.5" /> {t('Other')}</span></SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -315,22 +331,22 @@ export function AppStoreManagement() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" className="w-full justify-start gap-2 font-normal">
-                        <span className="text-lg">{publishForm.logoUri || getCategoryEmoji(publishForm.category || 'clinical')}</span>
+                        {renderIcon(publishForm.logoUri || getDefaultIconKey(publishForm.category || 'clinical'), 'w-5 h-5')}
                         <span className="text-muted-foreground text-sm">{t('Choose an icon')}</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64 p-3" align="start">
-                      <div className="grid grid-cols-5 gap-1">
-                        {ICON_OPTIONS.map(({ emoji, label }) => (
+                    <DropdownMenuContent className="w-72 p-3" align="start">
+                      <div className="grid grid-cols-6 gap-1">
+                        {ICON_OPTIONS.map(({ key, Icon, label }) => (
                           <Button
-                            key={label}
-                            variant={publishForm.logoUri === emoji ? 'default' : 'ghost'}
+                            key={key}
+                            variant={publishForm.logoUri === key ? 'default' : 'ghost'}
                             size="sm"
-                            className="h-9 w-9 p-0 text-lg"
+                            className="h-9 w-9 p-0"
                             title={label}
-                            onClick={() => setPublishForm(prev => ({ ...prev, logoUri: emoji }))}
+                            onClick={() => setPublishForm(prev => ({ ...prev, logoUri: key }))}
                           >
-                            {emoji}
+                            <Icon className="w-4 h-4" />
                           </Button>
                         ))}
                       </div>
@@ -374,21 +390,28 @@ export function AppStoreManagement() {
   );
 }
 
-function getCategoryEmoji(category: string): string {
+/** Get the default icon key for a category */
+function getDefaultIconKey(category: string): string {
   switch (category) {
-    case 'clinical': return '\u{1F3E5}';
-    case 'genomics': return '\u{1F9EC}';
-    case 'imaging': return '\u{1F4F7}';
-    case 'patient': return '\u{1F464}';
+    case 'clinical': return 'heart-pulse';
+    case 'genomics': return 'dna';
+    case 'imaging': return 'scan';
+    case 'patient': return 'user';
     case 'admin':
-    case 'administrative': return '\u2699\uFE0F';
-    case 'consent': return '\u{1F4CB}';
-    default: return '\u{1F4F1}';
+    case 'administrative': return 'settings';
+    case 'consent': return 'clipboard-list';
+    default: return 'app-window';
   }
 }
 
-/** Show custom icon if set, otherwise fall back to category emoji */
-function getAppIcon(app: AppStoreApp): string {
-  if (app.icon && app.icon !== 'app-window') return app.icon;
-  return getCategoryEmoji(app.category);
+/** Render a Lucide icon by key string */
+function renderIcon(iconKey: string, className = 'w-4 h-4'): ReactNode {
+  const Icon = ICON_MAP[iconKey] || ICON_MAP['app-window'];
+  return <Icon className={className} />;
+}
+
+/** Render the icon for an app in the list */
+function renderAppIcon(app: AppStoreApp): ReactNode {
+  const iconKey = (app.icon && app.icon !== 'app-window') ? app.icon : getDefaultIconKey(app.category);
+  return renderIcon(iconKey, 'w-4 h-4 text-muted-foreground');
 }
