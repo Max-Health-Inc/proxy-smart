@@ -32,7 +32,6 @@ import {
 import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
 import type { ToolMetadata, ResourceMetadata as ResourceMeta } from '../lib/ai/tool-registry'
 import { searchDocumentation } from '../lib/ai/rag-tools'
-import { registerFhirTools } from '../lib/ai/fhir-tools'
 import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { Value } from '@sinclair/typebox/value'
 import { createAdminClient } from '../lib/keycloak-plugin'
@@ -158,9 +157,6 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
   if (isToolExposed('read_resource')) {
     registerReadResourceTool(server, userRoles, tokenRef)
   }
-
-  // Register FHIR data tools (fhir_read, fhir_search, fhir_create, fhir_update, fhir_delete, fhir_capabilities)
-  registerFhirTools(server, tokenRef)
 }
 
 // ── Resource bridging ────────────────────────────────────────────────────────

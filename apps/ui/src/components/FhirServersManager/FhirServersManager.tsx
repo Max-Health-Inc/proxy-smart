@@ -334,6 +334,22 @@ export function FhirServersManager() {
     }
   }, [clientApis]);
 
+  const handleToggleMcpEnabled = useCallback(async (server: FhirServerWithState, enabled: boolean) => {
+    try {
+      await clientApis.servers.patchFhirServersByServerIdMcp({
+        serverId: server.id,
+        setMcpEnabledRequest: { enabled }
+      });
+      // Optimistic update
+      setServers(prev => prev.map(s =>
+        s.id === server.id ? { ...s, mcpEnabled: enabled } : s
+      ));
+    } catch (err) {
+      console.error('Failed to toggle MCP endpoint:', err);
+      setError(t('Failed to update MCP endpoint setting'));
+    }
+  }, [clientApis]);
+
   useEffect(() => {
     fetchServers();
   }, [fetchServers]);
@@ -412,6 +428,7 @@ export function FhirServersManager() {
               onEditServer={handleEditServer}
               onDeleteServer={handleDeleteServer}
               onToggleStrictCapabilities={handleToggleStrictCapabilities}
+              onToggleMcpEnabled={handleToggleMcpEnabled}
             />
           </TabsContent>
 
