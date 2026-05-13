@@ -13,6 +13,7 @@ interface ServerOverviewProps {
   onDeleteServer: (server: FhirServerWithState) => void;
   onAddServer?: () => void;
   onToggleStrictCapabilities?: (server: FhirServerWithState, strict: boolean) => void;
+  onToggleMcpEnabled?: (server: FhirServerWithState, enabled: boolean) => void;
 }
 
 export function ServerOverview({
@@ -24,7 +25,8 @@ export function ServerOverview({
   onEditServer,
   onDeleteServer,
   onAddServer,
-  onToggleStrictCapabilities
+  onToggleStrictCapabilities,
+  onToggleMcpEnabled
 }: ServerOverviewProps) {
   const { t } = useTranslation();
 
@@ -56,6 +58,7 @@ export function ServerOverview({
             onEditServer={onEditServer}
             onDeleteServer={onDeleteServer}
             onToggleStrictCapabilities={onToggleStrictCapabilities}
+            onToggleMcpEnabled={onToggleMcpEnabled}
           />
         ))}
       </div>

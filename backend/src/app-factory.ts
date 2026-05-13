@@ -24,6 +24,7 @@ import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { mcpMetadataRoutes } from './routes/auth/mcp-metadata'
 import { mcpEndpointRoutes } from './routes/mcp-endpoint'
+import { fhirMcpRoutes } from './routes/fhir-mcp'
 import { dicomwebRoutes } from './routes/dicomweb'
 import { docsRoutes } from './routes/docs'
 import { apiRoutes } from './routes/api'
@@ -266,6 +267,7 @@ export function createApp() {
         .use(emailMonitoringRoutes)
         .use(authMonitoringRoutes)
         .use(mcpEndpointRoutes)
+        .use(fhirMcpRoutes)
         .use(dicomwebRoutes)
         .use(fhirRoutes)
         .onError(({ code, set, request }) => {
