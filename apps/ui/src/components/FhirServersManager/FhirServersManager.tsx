@@ -202,7 +202,7 @@ export function FhirServersManager() {
       
       await clientApis.servers.putFhirServersByServerId({
         serverId: server.id,
-        addFhirServerRequest: {
+        updateFhirServerRequest: {
           url: newUrl
         }
       });
