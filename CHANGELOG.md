@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605131622.3716f6f9] - 2026-05-13
+
+- ✨ Features: 
+  - Per-server MCP exposure introduced (MCP toggle, UI elements in ServerCard/ServerOverview, and per-server MCP enable flag)
+  - MCP backend routes at /fhir/{server_id}/mcp with session management and tool registration helper
+- 🔧 Chores & Improvements:
+  - Wire MCPEnabled flag into server discovery/routes for visibility
+  - Plumbing for setMcpEnabled across server store and admin schema
+  - UI pass-through and toggle handling for MCP feature
+
+(Note: No breaking changes or documentation updates detected.)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/704
+
+
 ## [0.1.0-alpha.202605131506.c7806a64] - 2026-05-13
 
 - 🔧 Chores & Improvements: Version bump across all packages to 0.1.0-alpha.202605131506.c7806a64
