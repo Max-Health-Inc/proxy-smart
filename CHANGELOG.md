@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605131501.acc817f4] - 2026-05-13
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages to 0.1.0-alpha.202605131501.acc817f4
+- ⚠️ Breaking Changes: Backend default ROLE_BASED_FILTERING_MODE changed from 'enforce' to 'audit-only' (invalid values clamped to 'audit-only')
+- 🔧 Chores & Improvements: Backend refactor - removed Practitioner-specific role filtering; now only Patient-based filtering applies (tests updated accordingly)
+- 📚 Documentation: Tests updated to reflect default audit-only mode and new filtering behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/702
+
+
 ## [0.1.0-alpha.202605121710.8c4f2d1c] - 2026-05-12
 
 - 🔧 Chores & Improvements: Update versions across apps/packages/docs to 0.1.0-alpha.202605121710.8c4f2d1c
