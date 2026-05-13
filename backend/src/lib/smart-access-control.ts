@@ -14,7 +14,6 @@
 
 import { logger } from './logger'
 import { getRuntimeAccessControlConfig } from './runtime-config'
-import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -239,150 +238,11 @@ export async function enforceRoleBasedFiltering(
   const patientScopedResources = ac.patientScopedResources
   const isEnforce = ac.roleBasedFiltering === 'enforce'
 
-  if (fhirUser.startsWith('Practitioner/')) {
-    return enforcePractitionerFiltering(ctx, queryString, fhirUser, resourceType, patientScopedResources, isEnforce)
-  }
-
   if (fhirUser.startsWith('Patient/')) {
     return enforcePatientFiltering(ctx, queryString, fhirUser, resourceType, patientScopedResources, isEnforce)
   }
 
-  return { allowed: true, modifiedQueryString: queryString }
-}
-
-async function enforcePractitionerFiltering(
-  ctx: AccessControlContext,
-  queryString: string,
-  fhirUser: string,
-  resourceType: string,
-  patientScopedResources: string[],
-  isEnforce: boolean,
-): Promise<AccessControlResult> {
-  // Patient search: inject general-practitioner filter
-  if (ctx.method === 'GET' && /^Patient(\?|$)/.test(ctx.resourcePath)) {
-    const sep = queryString ? '&' : '?'
-    queryString += `${sep}general-practitioner=${encodeURIComponent(fhirUser)}`
-    return { allowed: true, modifiedQueryString: queryString }
-  }
-
-  // Direct Patient read by ID: verify assignment
-  const patientDirectMatch = ctx.resourcePath.match(/^Patient\/([^/]+)/)
-  if (ctx.method === 'GET' && patientDirectMatch) {
-    const patientId = patientDirectMatch[1]
-    if (patientId !== '$' && !patientId.startsWith('$')) {
-      const checkUrl = `${ctx.serverUrl}/Patient?_id=${encodeURIComponent(patientId)}&general-practitioner=${encodeURIComponent(fhirUser)}&_format=json`
-      const bundle = await upstreamFhirQuery(ctx, checkUrl, 'patient assignment check')
-
-      if (bundle === null) {
-        // Upstream failed — fail open in audit-only, fail closed in enforce
-        if (isEnforce) {
-          return {
-            allowed: false,
-            status: 502,
-            body: { error: 'upstream_error', message: 'Failed to validate patient assignment on upstream FHIR server' },
-          }
-        }
-      } else if (!bundle.entry?.length) {
-        const msg = `Patient ${patientId} is not assigned to ${fhirUser}`
-        logger.fhir.warn('Practitioner access denied to patient', { fhirUser, patientId, server: ctx.serverName })
-        if (isEnforce) {
-          return { allowed: false, status: 403, body: { error: 'access_denied', message: msg } }
-        }
-      }
-    }
-    return { allowed: true, modifiedQueryString: queryString }
-  }
-
-  // Patient-scoped resource search: inject patient filter
-  if (ctx.method === 'GET' && patientScopedResources.includes(resourceType) && !ctx.resourcePath.includes('/')) {
-    const patientsUrl = `${ctx.serverUrl}/Patient?general-practitioner=${encodeURIComponent(fhirUser)}&_elements=id&_format=json`
-    const bundle = await upstreamFhirQuery(ctx, patientsUrl, 'practitioner patient list lookup')
-
-    if (bundle === null) {
-      if (isEnforce) {
-        return {
-          allowed: false,
-          status: 502,
-          body: { error: 'upstream_error', message: 'Failed to resolve practitioner patient assignments on upstream FHIR server' },
-        }
-      }
-      // audit-only: proceed without filtering
-      return { allowed: true, modifiedQueryString: queryString }
-    }
-
-    const patientIds = (bundle.entry || []).map((e: { resource: { id: string } }) => e.resource.id)
-
-    if (patientIds.length === 0) {
-      return {
-        allowed: true,
-        modifiedQueryString: queryString,
-        status: 200,
-        body: { resourceType: 'Bundle', type: 'searchset' satisfies BundleTypeCode, total: 0, entry: [] },
-      }
-    }
-
-    const sep = queryString ? '&' : '?'
-    queryString += `${sep}patient=${patientIds.map((id: string) => `Patient/${id}`).join(',')}`
-    return { allowed: true, modifiedQueryString: queryString }
-  }
-
-  // Patient-scoped resource direct read by ID: verify patient assignment
-  if (ctx.method === 'GET' && patientScopedResources.includes(resourceType) && ctx.resourcePath.includes('/')) {
-    const idMatch = ctx.resourcePath.match(/^[^/]+\/([^/?]+)/)
-    const resourceId = idMatch?.[1]
-    if (resourceId && resourceId !== '$' && !resourceId.startsWith('$')) {
-      // First get assigned patients
-      const patientsUrl = `${ctx.serverUrl}/Patient?general-practitioner=${encodeURIComponent(fhirUser)}&_elements=id&_format=json`
-      const patientsBundle = await upstreamFhirQuery(ctx, patientsUrl, 'practitioner patient list for direct read')
-
-      if (patientsBundle === null) {
-        if (isEnforce) {
-          return {
-            allowed: false,
-            status: 502,
-            body: { error: 'upstream_error', message: 'Failed to validate practitioner assignment on upstream FHIR server' },
-          }
-        }
-      } else {
-        const patientIds = (patientsBundle.entry || []).map((e: { resource: { id: string } }) => e.resource.id)
-        if (patientIds.length === 0) {
-          logger.fhir.warn('Practitioner has no assigned patients, denying direct read', {
-            fhirUser, resourceType, resourceId, server: ctx.serverName,
-          })
-          if (isEnforce) {
-            return { allowed: false, status: 403, body: { error: 'access_denied', message: `Practitioner ${fhirUser} has no assigned patients` } }
-          }
-        } else {
-          // Verify the resource belongs to an assigned patient
-          const patientParam = patientIds.map((id: string) => `Patient/${id}`).join(',')
-          const checkUrl = `${ctx.serverUrl}/${resourceType}?_id=${encodeURIComponent(resourceId)}&patient=${encodeURIComponent(patientParam)}&_format=json`
-          const checkBundle = await upstreamFhirQuery(ctx, checkUrl, 'resource patient assignment check')
-
-          if (checkBundle === null) {
-            if (isEnforce) {
-              return {
-                allowed: false,
-                status: 502,
-                body: { error: 'upstream_error', message: 'Failed to validate resource patient assignment on upstream FHIR server' },
-              }
-            }
-          } else if (!checkBundle.entry?.length) {
-            logger.fhir.warn('Practitioner access denied to patient-scoped resource', {
-              fhirUser, resourceType, resourceId, server: ctx.serverName,
-            })
-            if (isEnforce) {
-              return {
-                allowed: false,
-                status: 403,
-                body: { error: 'access_denied', message: `${resourceType}/${resourceId} is not associated with a patient assigned to ${fhirUser}` },
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
+  // Practitioners and other user types pass through without compartment filtering
   return { allowed: true, modifiedQueryString: queryString }
 }
 

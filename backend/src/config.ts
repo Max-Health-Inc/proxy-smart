@@ -152,11 +152,11 @@ export const config = {
       return process.env.CONSENT_ENABLED === 'true'
     },
     get mode(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.CONSENT_MODE || 'disabled'
+      const mode = process.env.CONSENT_MODE || 'audit-only'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') {
         return mode
       }
-      return 'disabled'
+      return 'audit-only'
     },
     get cacheTtl() {
       return parseInt(process.env.CONSENT_CACHE_TTL || '60000', 10) // 1 minute default
