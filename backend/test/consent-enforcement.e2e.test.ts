@@ -864,11 +864,11 @@ describe('Consent Enforcement E2E', () => {
       expect(cfg.exemptClients).toContain('monitoring')
     })
 
-    it('should default to disabled when env vars are not set', () => {
+    it('should default to audit-only when env vars are not set', () => {
       clearConsentEnv()
       const cfg = getConsentConfig()
       expect(cfg.enabled).toBe(false)
-      expect(cfg.mode).toBe('disabled')
+      expect(cfg.mode).toBe('audit-only')
     })
   })
 

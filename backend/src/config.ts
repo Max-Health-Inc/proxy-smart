@@ -152,11 +152,11 @@ export const config = {
       return process.env.CONSENT_ENABLED === 'true'
     },
     get mode(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.CONSENT_MODE || 'disabled'
+      const mode = process.env.CONSENT_MODE || 'audit-only'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') {
         return mode
       }
-      return 'disabled'
+      return 'audit-only'
     },
     get cacheTtl() {
       return parseInt(process.env.CONSENT_CACHE_TTL || '60000', 10) // 1 minute default
@@ -221,9 +221,9 @@ export const config = {
     },
     // Role-based filtering using fhirUser claim (e.g. generalPractitioner-based isolation)
     get roleBasedFiltering(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'enforce'
+      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'audit-only'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
-      return 'enforce'
+      return 'audit-only'
     },
     // Clinical resource types subject to patient-scoped filtering
     get patientScopedResources(): string[] {

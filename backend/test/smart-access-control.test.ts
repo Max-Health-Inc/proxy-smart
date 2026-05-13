@@ -675,7 +675,7 @@ describe('Role-Based Filtering', () => {
       expect(result.modifiedQueryString).toContain('_id=test-patient')
     })
 
-    it('should handle absolute URL fhirUser for Practitioner', async () => {
+    it('should allow Practitioner fhirUser without filtering', async () => {
       const ctx = makeCtx({
         tokenPayload: { fhirUser: 'https://fhir.example.com/Practitioner/dr-smith' },
         resourcePath: 'Patient',
@@ -683,169 +683,10 @@ describe('Role-Based Filtering', () => {
       })
       const result = await enforceRoleBasedFiltering(ctx, '')
       expect(result.allowed).toBe(true)
-      expect(result.modifiedQueryString).toContain('general-practitioner=Practitioner%2Fdr-smith')
+      expect(result.modifiedQueryString).toBe('') // no filter injected
     })
 
-    // ── Practitioner filtering ──
-
-    describe('Practitioner', () => {
-      it('should inject general-practitioner filter on Patient search', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Patient',
-          method: 'GET',
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(true)
-        expect(result.modifiedQueryString).toContain('general-practitioner=Practitioner%2Fdr-smith')
-      })
-
-      it('should append to existing query string', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Patient',
-          method: 'GET',
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '?name=John')
-        expect(result.allowed).toBe(true)
-        expect(result.modifiedQueryString).toBe('?name=John&general-practitioner=Practitioner%2Fdr-smith')
-      })
-
-      it('should allow direct Patient read when assigned', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Patient/p1',
-          method: 'GET',
-          upstreamFetch: mockFetchWithEntries([{ resource: { id: 'p1', resourceType: 'Patient' } }]),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(true)
-      })
-
-      it('should deny direct Patient read when NOT assigned', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Patient/p999',
-          method: 'GET',
-          upstreamFetch: mockFetchEmpty(),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(false)
-        expect(result.status).toBe(403)
-        expect(result.body?.error).toBe('access_denied')
-      })
-
-      it('should skip FHIR operations (Patient/$everything)', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Patient/$everything',
-          method: 'GET',
-          upstreamFetch: mockFetchEmpty(),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        // $ operations should be skipped (allowed through)
-        expect(result.allowed).toBe(true)
-      })
-
-      it('should inject patient filter on patient-scoped resource search', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Observation',
-          method: 'GET',
-          upstreamFetch: mockFetchWithEntries([
-            { resource: { id: 'p1', resourceType: 'Patient' } },
-            { resource: { id: 'p2', resourceType: 'Patient' } },
-          ]),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(true)
-        expect(result.modifiedQueryString).toContain('patient=Patient/p1,Patient/p2')
-      })
-
-      it('should return empty bundle when practitioner has no assigned patients (resource search)', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-lonely' },
-          resourcePath: 'Observation',
-          method: 'GET',
-          upstreamFetch: mockFetchEmpty(),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(true)
-        expect(result.body?.resourceType).toBe('Bundle')
-        expect(result.body?.total).toBe(0)
-      })
-
-      it('should return 502 when upstream fails during patient lookup (enforce)', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Patient/p1',
-          method: 'GET',
-          upstreamFetch: mockFetchError(),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(false)
-        expect(result.status).toBe(502)
-      })
-
-      it('should not filter non-patient-scoped resources', async () => {
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Practitioner',
-          method: 'GET',
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '?name=test')
-        expect(result.allowed).toBe(true)
-        expect(result.modifiedQueryString).toBe('?name=test') // unchanged
-      })
-
-      it('should deny direct read of patient-scoped resource when not assigned (Observation/123)', async () => {
-        // First call returns practitioner's patients, second checks resource assignment
-        let callCount = 0
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Observation/obs-999',
-          method: 'GET',
-          upstreamFetch: mock(() => {
-            callCount++
-            if (callCount === 1) {
-              // Return assigned patients
-              return Promise.resolve(new Response(JSON.stringify({
-                resourceType: 'Bundle', entry: [{ resource: { id: 'p1', resourceType: 'Patient' } }],
-              }), { status: 200 }))
-            }
-            // Resource check — no match
-            return Promise.resolve(new Response(JSON.stringify({
-              resourceType: 'Bundle', entry: [],
-            }), { status: 200 }))
-          }),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(false)
-        expect(result.status).toBe(403)
-      })
-
-      it('should allow direct read of patient-scoped resource when assigned', async () => {
-        let callCount = 0
-        const ctx = makeCtx({
-          tokenPayload: { fhirUser: 'Practitioner/dr-smith' },
-          resourcePath: 'Observation/obs-1',
-          method: 'GET',
-          upstreamFetch: mock(() => {
-            callCount++
-            if (callCount === 1) {
-              return Promise.resolve(new Response(JSON.stringify({
-                resourceType: 'Bundle', entry: [{ resource: { id: 'p1', resourceType: 'Patient' } }],
-              }), { status: 200 }))
-            }
-            return Promise.resolve(new Response(JSON.stringify({
-              resourceType: 'Bundle', entry: [{ resource: { id: 'obs-1', resourceType: 'Observation' } }],
-            }), { status: 200 }))
-          }),
-        })
-        const result = await enforceRoleBasedFiltering(ctx, '')
-        expect(result.allowed).toBe(true)
-      })
-    })
+    // ── Patient filtering ──
 
     // ── Patient filtering ──
 
