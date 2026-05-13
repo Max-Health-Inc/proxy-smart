@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605131506.c7806a64] - 2026-05-13
+
+- 🔧 Chores & Improvements: Version bump across all packages to 0.1.0-alpha.202605131506.c7806a64
+- ✨ Features: UI asset updates with new SVG icon definitions (stethoscope, syringe, pill, test-tube, microscope, etc.)
+- 🔧 Chores & Improvements: Minor UI TS/JS import tweak (ReactNode type addition and expanded Lucide icon set imports)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/703
+
+
 ## [0.1.0-alpha.202605131501.acc817f4] - 2026-05-13
 
 - 🔧 Chores & Improvements: Version bumps across multiple packages to 0.1.0-alpha.202605131501.acc817f4
