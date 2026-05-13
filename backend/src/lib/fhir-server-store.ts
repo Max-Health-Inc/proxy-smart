@@ -3,6 +3,7 @@ import { getFHIRServerInfo, getServerIdentifier, clearMetadataCache, type FHIRVe
 import { logger } from './logger'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
+import { DATA_DIR } from './paths'
 
 export interface FHIRServerInfo {
   name: string
@@ -19,7 +20,7 @@ export interface FHIRServerInfo {
 
 interface PersistedServer { url: string; name?: string; strictCapabilities?: boolean; organizationIds?: string[]; mcpEnabled?: boolean }
 
-const SERVERS_JSON_PATH = join(process.cwd(), 'fhir-servers.json')
+const SERVERS_JSON_PATH = join(DATA_DIR, 'fhir-servers.json')
 
 function loadPersistedServers(): Map<string, PersistedServer> {
   try {

@@ -21,8 +21,9 @@ import {
   isToolExposed,
   isResourceExposed,
 } from '../src/lib/mcp-endpoint-config'
+import { DATA_DIR } from '../src/lib/paths'
 
-const CONFIG_PATH = join(process.cwd(), 'mcp-endpoint.json')
+const CONFIG_PATH = join(DATA_DIR, 'mcp-endpoint.json')
 
 // ── Backup / restore ─────────────────────────────────────────────────────────
 
