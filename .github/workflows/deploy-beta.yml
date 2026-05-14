@@ -234,10 +234,15 @@ jobs:
             # Log in to GHCR for pulling images
             echo '${GH_TOKEN}' | docker login ghcr.io -u '${GH_ACTOR}' --password-stdin
 
-            # Ensure shared Caddy proxy is running
+            # Ensure shared Caddy proxy is running (don't recreate if healthy — avoids downtime)
             docker network create caddy 2>/dev/null || true
-            docker rm -f caddy-proxy 2>/dev/null || true
-            docker compose -p caddy-proxy -f docker-compose.caddy.yml up -d
+            if docker inspect caddy-proxy >/dev/null 2>&1 && docker inspect -f '{{.State.Running}}' caddy-proxy 2>/dev/null | grep -q true; then
+              echo '✅ Caddy proxy already running — keeping it'
+            else
+              echo '🔄 Caddy proxy not running — starting it'
+              docker rm -f caddy-proxy 2>/dev/null || true
+              docker compose -p caddy-proxy -f docker-compose.caddy.yml up -d
+            fi
 
             echo '📦 Pulling pre-built images...'
             docker compose -f docker-compose.beta.yml --env-file .env.beta pull
