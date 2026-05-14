@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605142141.3f719102] - 2026-05-14
+
+- 🔧 Chores & Improvements: Update Docker setup and non-root execution
+  - Dockerfile: add data directory for /app/backend/data, declare VOLUME, run as non-root app user (app) with ownership fix
+  - Docker-related: healthcheck context updated to upstream 8445
+
+- 🔧 Chores & Improvements: CI/CD and environment updates
+  - docker-compose.beta.yml: extend Keycloak path filter to include broker endpoints: /auth/realms/*/broker/*
+
+- ⚠️ Breaking Changes: Version bumps across packages
+  - Bump version from 0.1.0-beta.202605142110.f2a50289 to 0.1.0-alpha.202605142130.6801ee2f in multiple packages (apps, libs, testing, eslint-config)
+
+- ✨ Features: Expanded Caddy and path routing scope
+  - Caddy path labels expanded to include a broad set of allowed backend paths (auth/*, admin/*, API, docs, OAuth/OpenID, fhir, dicomweb, apps, swagger, openapi, proxy-smart-backend, webapp, etc.)
+  - Removed separate caddy.3_reverse_proxy block; now using a single caddy.1_reverse_proxy
+
+- 🐛 Bug Fixes: Healthcheck alignment
+  - Healthcheck now targets upstream 8445 with existing health settings
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/713
+
+
 ## [0.1.0-beta.202605140839.bf478422] - 2026-05-14
 
 - ✨ Features
