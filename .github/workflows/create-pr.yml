@@ -180,31 +180,34 @@ jobs:
       - name: Wait for Alpha Release check
         run: |
           SHA="${{ github.sha }}"
-          CHECK_NAME="Alpha Release"
+          CHECK_PREFIX="Alpha Release"
           MAX_WAIT=600  # 10 min — Alpha Release typically finishes in ~3 min
           POLL_INTERVAL=15
           ELAPSED=0
 
-          echo "Waiting for '$CHECK_NAME' on $SHA..."
+          echo "Waiting for '$CHECK_PREFIX' on $SHA..."
 
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            RESULT=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" \
-              --jq "[.check_runs[] | select(.name == \"$CHECK_NAME\")] | sort_by(.started_at) | last // {}" \
-              2>/dev/null || echo "{}")
+            # Match any check run whose name starts with "Alpha Release"
+            # GitHub nests job names as "Workflow / Job / Nested Job"
+            CHECKS=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" \
+              --jq "[.check_runs[] | select(.name | startswith(\"$CHECK_PREFIX\"))]" \
+              2>/dev/null || echo "[]")
 
-            STATUS=$(echo "$RESULT" | jq -r '.status // "not_found"')
-            CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion // "pending"')
+            COUNT=$(echo "$CHECKS" | jq 'length')
+            COMPLETED=$(echo "$CHECKS" | jq '[.[] | select(.status == "completed")] | length')
+            FAILED=$(echo "$CHECKS" | jq '[.[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out")] | length')
 
-            echo "  [$CHECK_NAME] status=$STATUS conclusion=$CONCLUSION (${ELAPSED}s)"
+            echo "  [$CHECK_PREFIX] found=$COUNT completed=$COMPLETED failed=$FAILED (${ELAPSED}s)"
 
-            if [ "$STATUS" = "completed" ]; then
-              if [ "$CONCLUSION" = "failure" ] || [ "$CONCLUSION" = "cancelled" ] || [ "$CONCLUSION" = "timed_out" ]; then
-                echo "❌ Alpha Release failed (conclusion=$CONCLUSION) — aborting."
+            if [ "$COUNT" -gt 0 ] && [ "$COUNT" -eq "$COMPLETED" ]; then
+              if [ "$FAILED" -gt 0 ]; then
+                echo "❌ Alpha Release failed ($FAILED check(s) failed) — aborting."
                 echo "   A failing build must not be promoted to test."
                 exit 1
               fi
               # success or skipped — both are fine
-              echo "✅ Alpha Release completed (conclusion=$CONCLUSION) — proceeding."
+              echo "✅ Alpha Release completed ($COMPLETED checks passed) — proceeding."
               break
             fi
 

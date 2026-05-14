@@ -313,7 +313,7 @@ jobs:
 
             # Wait for canary to pass health check (max 60s)
             CANARY_OK=false
-            for i in \$(seq 1 12); do
+            for i in \$(seq 1 60); do
               # Check if container is still running (not crash-looping)
               if ! docker inspect -f '{{.State.Running}}' \$CANARY_NAME 2>/dev/null | grep -q true; then
                 echo '  ❌ Canary container crashed!'
@@ -325,12 +325,12 @@ jobs:
                 docker logs --tail 50 \$CANARY_NAME 2>&1 || true
                 break
               fi
-              if curl -s -o /dev/null -w '%{http_code}' http://localhost:9445/health | grep -qE '^(200|503)$'; then
+              if curl -sf --connect-timeout 5 --max-time 10 -o /dev/null -w '%{http_code}' http://localhost:9445/health 2>/dev/null | grep -qE '^(200|503)$'; then
                 CANARY_OK=true
                 echo '  ✅ Canary health check passed — safe to swap'
                 break
               fi
-              echo \"  ⏳ Canary not ready yet (attempt \$i/12)...\"
+              echo \"  ⏳ Canary not ready yet (attempt \$i/60)...\"
               sleep 5
             done
 
@@ -363,14 +363,26 @@ jobs:
               sleep 2
             done
 
-            # Wait for backend health check (Docker healthcheck + HTTP)
-            for i in \$(seq 1 60); do
-              if docker compose -f docker-compose.beta.yml --env-file .env.beta exec -T backend bun -e 'fetch(\"http://localhost:8445/health\").then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))' >/dev/null 2>&1; then
-                echo '  ✅ Backend ready'
+            # Wait for backend health check (Docker healthcheck status, like Keycloak)
+            echo '  ⏳ Waiting for backend...'
+            BACKEND_READY=false
+            for i in \$(seq 1 120); do
+              BE_HEALTH=\$(docker inspect --format='{{.State.Health.Status}}' proxy-smart-backend-beta 2>/dev/null || echo 'none')
+              if [ "\$BE_HEALTH" = 'healthy' ]; then
+                echo '  ✅ Backend ready (Docker healthcheck: healthy)'
+                BACKEND_READY=true
                 break
+              fi
+              if [ \$((i % 12)) -eq 0 ]; then
+                echo "  ⏳ Backend not ready yet (status: \$BE_HEALTH, \$((i * 5))s elapsed)..."
               fi
               sleep 5
             done
+            if [ "\$BACKEND_READY" != 'true' ]; then
+              echo "  ⚠️ Backend not healthy after 600s (status: \$BE_HEALTH) — continuing anyway"
+              echo '  📋 Backend container logs (last 40 lines):'
+              docker logs --tail 40 proxy-smart-backend-beta 2>&1 || true
+            fi
           "
 
           # Configure Keycloak SMTP (Resend) and enable password reset
@@ -393,7 +405,7 @@ jobs:
               # Wait for Keycloak to be ready
               KC_READY=false
               for i in \$(seq 1 20); do
-                if curl -sf \"http://\${KC_IP}:9000/auth/health/ready\" >/dev/null 2>&1; then
+                if curl -sf --connect-timeout 5 --max-time 10 "http://\${KC_IP}:9000/auth/health/ready" >/dev/null 2>&1; then
                   KC_READY=true
                   break
                 fi
@@ -467,7 +479,7 @@ jobs:
 
             # Wait for HAPI to be ready
             for i in \$(seq 1 30); do
-              if curl -sf \"\${HAPI_BASE}/metadata\" >/dev/null 2>&1; then
+              if curl -sf --connect-timeout 5 --max-time 10 \"\${HAPI_BASE}/metadata\" >/dev/null 2>&1; then
                 echo '  ✅ HAPI FHIR ready'
                 break
               fi
@@ -475,7 +487,7 @@ jobs:
             done
 
             # POST the seed bundle (transaction with PUT entries = idempotent)
-            SEED_RESP=\$(curl -s -w '\n%{http_code}' -X POST \"\${HAPI_BASE}\" \
+            SEED_RESP=\$(curl -s --connect-timeout 10 --max-time 60 -w '\n%{http_code}' -X POST \"\${HAPI_BASE}\" \
               -H 'Content-Type: application/fhir+json' \
               -d @fhir-seed-bundle.json)
             HTTP_CODE=\$(echo \"\$SEED_RESP\" | tail -1)
@@ -501,7 +513,7 @@ jobs:
           # External health check through Caddy
           echo "⏳ Verifying external access at ${VPS_URL}..."
           for i in $(seq 1 30); do
-            if curl -sf "${VPS_URL}/health" > /dev/null 2>&1; then
+            if curl -sf --connect-timeout 10 --max-time 15 "${VPS_URL}/health" > /dev/null 2>&1; then
               echo "✅ External health check passed"
               break
             fi

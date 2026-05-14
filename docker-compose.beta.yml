@@ -126,10 +126,10 @@ services:
       caddy.3_reverse_proxy.health_timeout: 5s
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:8445/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
     depends_on:
       - keycloak
     networks:
