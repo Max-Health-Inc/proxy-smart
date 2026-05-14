@@ -151,7 +151,12 @@ COPY prompts/ ./prompts/
 # Create non-root user for security
 RUN groupadd --gid 1001 app && \
     useradd --uid 1001 --gid app --no-create-home --shell /bin/false app && \
+    mkdir -p /app/backend/data && \
     chown -R app:app /app
+
+# Declare data volume so Docker initialises it with correct ownership (app:app)
+VOLUME /app/backend/data
+
 USER app
 
 # Expose backend port
