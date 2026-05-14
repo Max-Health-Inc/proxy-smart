@@ -1,7 +1,7 @@
 import { smartAuth, fhirBaseUrl } from "@/lib/smart-auth"
 import { config } from "@/config"
 import { createAuthFetch } from "@proxy-smart/shared-ui"
-import { FhirClient, type FhirResource as IpsFhirResource } from "hl7.fhir.uv.ips-generated/fhir-client"
+import { FhirClient, FhirResourceWriterImpl, type FhirResource as IpsFhirResource } from "hl7.fhir.uv.ips-generated/fhir-client"
 import { FhirClient as GenomicsFhirClient, type FhirResource as GenomicsFhirResource } from "hl7.fhir.uv.genomics-reporting-generated/fhir-client"
 import type {
   PatientUvIps,
@@ -125,19 +125,7 @@ export async function updatePatient(
   resource: PatientUvIps
 ): Promise<PatientUvIps> {
   const logicalId = id.replace(/^Patient\//, '')
-  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/Patient/${logicalId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/fhir+json",
-      Accept: "application/fhir+json",
-    },
-    body: JSON.stringify(resource),
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Patient update failed (${res.status}): ${text}`)
-  }
-  return res.json() as Promise<PatientUvIps>
+  return _activeClient.write().patientUvIps().update({ ...resource, id: logicalId }) as Promise<PatientUvIps>
 }
 
 // ── IPS: International Patient Summary ($summary operation) ──────────────────
@@ -448,50 +436,22 @@ export async function searchTherapeuticImplications(patientId: string): Promise<
 // ── Write operations ─────────────────────────────────────────────────────────
 
 /** Create a FHIR resource through the proxy (requires patient/*.write scope) */
-export async function createResource<T extends { resourceType: string }>(resource: T): Promise<T> {
-  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/${resource.resourceType}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/fhir+json',
-      Accept: 'application/fhir+json',
-    },
-    body: JSON.stringify(resource),
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Failed to create ${resource.resourceType} (${res.status}): ${text}`)
-  }
-  return res.json() as Promise<T>
+export async function createResource<T extends { resourceType: string }>(resource: T): Promise<T & { id: string }> {
+  const writer = new FhirResourceWriterImpl<T>(_activeFhirBaseUrl, resource.resourceType, _activeAuthFetch)
+  return writer.create(resource)
 }
 
 /** Update a FHIR resource via PUT (requires patient/*.write scope) */
-export async function updateResource<T extends { resourceType: string; id?: string }>(resource: T): Promise<T> {
+export async function updateResource<T extends { resourceType: string; id?: string }>(resource: T): Promise<T & { id: string }> {
   if (!resource.id) throw new Error('Cannot update a resource without an id')
-  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/${resource.resourceType}/${resource.id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/fhir+json',
-      Accept: 'application/fhir+json',
-    },
-    body: JSON.stringify(resource),
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Failed to update ${resource.resourceType}/${resource.id} (${res.status}): ${text}`)
-  }
-  return res.json() as Promise<T>
+  const writer = new FhirResourceWriterImpl<T>(_activeFhirBaseUrl, resource.resourceType, _activeAuthFetch)
+  return writer.update(resource as T & { id: string })
 }
 
 /** Delete a FHIR resource via DELETE (requires patient/*.write scope) */
 export async function deleteResource(resourceType: string, id: string): Promise<void> {
-  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/${resourceType}/${id}`, {
-    method: 'DELETE',
-    headers: { Accept: 'application/fhir+json' },
-  })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Failed to delete ${resourceType}/${id} (${res.status}): ${text}`)
-  }
+  const writer = new FhirResourceWriterImpl(_activeFhirBaseUrl, resourceType, _activeAuthFetch)
+  return writer.delete(id)
 }
 
 // ── Document Import ──────────────────────────────────────────────────────────
