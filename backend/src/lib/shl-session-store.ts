@@ -10,6 +10,7 @@ import { Database } from 'bun:sqlite'
 import { join } from 'path'
 import { mkdirSync } from 'fs'
 import { logger } from './logger'
+import { DATA_DIR } from './paths'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,7 +52,6 @@ interface ShlRow {
 
 // ── Database setup ───────────────────────────────────────────────────────────
 
-const DATA_DIR = join(process.cwd(), 'data')
 const DB_PATH = process.env.SHL_DB_PATH || join(DATA_DIR, 'shl-sessions.sqlite')
 
 function createDatabase(): Database {

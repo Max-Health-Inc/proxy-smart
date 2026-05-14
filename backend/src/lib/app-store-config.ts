@@ -1,12 +1,13 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { logger } from './logger'
+import { DATA_DIR } from './paths'
 
 /**
  * App-store visibility configuration.
  * Stores which discovered apps are hidden from the public /apps page,
  * and which registered (Keycloak) apps are published to the store.
- * Persisted in app-store-config.json at the project root.
+ * Persisted in data/app-store-config.json for volume-backed durability.
  */
 
 /** A registered app published to the public store */
@@ -33,7 +34,7 @@ export interface AppStoreConfig {
   updatedAt: string
 }
 
-const CONFIG_PATH = join(process.cwd(), 'app-store-config.json')
+const CONFIG_PATH = join(DATA_DIR, 'app-store-config.json')
 
 function loadConfig(): AppStoreConfig {
   try {

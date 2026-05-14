@@ -36,7 +36,9 @@ const TEST_LAUNCH_SECRET = 'test-launch-secret-32-bytes-long!'
 const TEST_CLIENT_ID = 'smart-app-client'
 const TEST_CLIENT_REDIRECT = 'http://localhost:3000/callback'
 const TEST_PATIENT_ID = 'Patient/test-patient-123'
+const TEST_PATIENT_LOGICAL_ID = 'test-patient-123' // What token response returns (spec: logical ID only)
 const TEST_ENCOUNTER_ID = 'Encounter/test-encounter-456'
+const TEST_ENCOUNTER_LOGICAL_ID = 'test-encounter-456' // What token response returns (spec: logical ID only)
 const TEST_FHIR_BASE = `${TEST_BASE_URL}/proxy-smart-backend/hapi-fhir-server/R4`
 
 // ─── Environment Setup ──────────────────────────────────────────────────────
@@ -673,7 +675,7 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.patient).toBe(TEST_PATIENT_ID)
+      expect(data.patient).toBe(TEST_PATIENT_LOGICAL_ID)
       expect(data.access_token).toBeTruthy()
     })
 
@@ -708,8 +710,8 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.patient).toBe(TEST_PATIENT_ID)
-      expect(data.encounter).toBe(TEST_ENCOUNTER_ID)
+      expect(data.patient).toBe(TEST_PATIENT_LOGICAL_ID)
+      expect(data.encounter).toBe(TEST_ENCOUNTER_LOGICAL_ID)
     })
 
     it.serial('does NOT emit patient when launch/patient scope is not granted', async () => {
@@ -775,7 +777,7 @@ describe('SMART Launch Flow Integration', () => {
       }))
       expect(res1.status).toBe(200)
       const data1 = await res1.json()
-      expect(data1.patient).toBe(TEST_PATIENT_ID)
+      expect(data1.patient).toBe(TEST_PATIENT_LOGICAL_ID)
 
       // Session should be consumed (deleted)
       expect(launchContextStore.get(sessionKey)).toBeNull()
@@ -956,7 +958,7 @@ describe('SMART Launch Flow Integration', () => {
         }).toString(),
       }))
       const dataA = await resA.json()
-      expect(dataA.patient).toBe('Patient/alice')
+      expect(dataA.patient).toBe('alice')
 
       // Token request for redirect B
       const resB = await authRoutes.handle(authRequest('/auth/token', {
@@ -970,7 +972,7 @@ describe('SMART Launch Flow Integration', () => {
         }).toString(),
       }))
       const dataB = await resB.json()
-      expect(dataB.patient).toBe('Patient/bob')
+      expect(dataB.patient).toBe('bob')
     })
 
     it.serial('two sessions for different clients with same redirect_uri resolve independently', async () => {
@@ -1004,7 +1006,7 @@ describe('SMART Launch Flow Integration', () => {
         }).toString(),
       }))
       const dataX = await resX.json()
-      expect(dataX.patient).toBe('Patient/x-patient')
+      expect(dataX.patient).toBe('x-patient')
 
       const resY = await authRoutes.handle(authRequest('/auth/token', {
         method: 'POST',
@@ -1017,7 +1019,7 @@ describe('SMART Launch Flow Integration', () => {
         }).toString(),
       }))
       const dataY = await resY.json()
-      expect(dataY.patient).toBe('Patient/y-patient')
+      expect(dataY.patient).toBe('y-patient')
     })
   })
 
@@ -1081,7 +1083,7 @@ describe('SMART Launch Flow Integration', () => {
       }))
       expect(tokenRes.status).toBe(200)
       const tokenData = await tokenRes.json()
-      expect(tokenData.patient).toBe(TEST_PATIENT_ID)
+      expect(tokenData.patient).toBe(TEST_PATIENT_LOGICAL_ID)
       expect(tokenData.access_token).toBeTruthy()
 
       // Session should be consumed
@@ -1141,8 +1143,8 @@ describe('SMART Launch Flow Integration', () => {
       }))
       expect(tokenRes.status).toBe(200)
       const tokenData = await tokenRes.json()
-      expect(tokenData.patient).toBe(TEST_PATIENT_ID)
-      expect(tokenData.encounter).toBe(TEST_ENCOUNTER_ID)
+      expect(tokenData.patient).toBe(TEST_PATIENT_LOGICAL_ID)
+      expect(tokenData.encounter).toBe(TEST_ENCOUNTER_LOGICAL_ID)
     })
   })
 
@@ -1272,7 +1274,7 @@ describe('SMART Launch Flow Integration', () => {
       expect(res.status).toBe(200)
       const data = await res.json()
       // "launch" scope should also allow patient emission
-      expect(data.patient).toBe(TEST_PATIENT_ID)
+      expect(data.patient).toBe(TEST_PATIENT_LOGICAL_ID)
     })
 
     it.serial('handles launch/encounter scope for EHR launch context', async () => {
@@ -1305,7 +1307,7 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(200)
       const data = await res.json()
-      expect(data.encounter).toBe(TEST_ENCOUNTER_ID)
+      expect(data.encounter).toBe(TEST_ENCOUNTER_LOGICAL_ID)
     })
 
     it.serial('intent, tenant, smart_style_url are passed through without scope gating', async () => {

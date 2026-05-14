@@ -112,6 +112,7 @@ services:
       PROXY_SIGNING_KEY_FILE: /run/secrets/proxy-signing-key.pem
     volumes:
       - ${PROXY_SIGNING_KEY_PATH:-./proxy-signing-key.pem}:/run/secrets/proxy-signing-key.pem:ro
+      - backend_data:/app/backend/data
     labels:
       caddy: beta.proxy-smart.com
       caddy.@backend.path: "/ /.well-known/* /health /status /auth/* /admin/* /api/* /monitoring/* /oauth/* /consent/* /fhir-servers /fhir-servers/* /dicomweb/* /docs /docs/* /docs-api /docs-api/* /mcp /mcp/* /proxy-smart-backend/* /apps /apps/ /apps/* /apps.json /swagger /swagger/* /openapi /openapi/* /openapi.json /proxy-smart.svg /webapp /webapp/*"
@@ -206,3 +207,4 @@ networks:
 volumes:
   postgres_data:
   orthanc_data:
+  backend_data:

@@ -80,10 +80,12 @@ export function enrichTokenResponse(
   // ── Apply session context (priority source) ───────────────────────────
   if (sessionContext) {
     if (sessionContext.patient && canReturnPatient(grantedScopes)) {
-      enrichment.patient = sessionContext.patient
+      // SMART STU 2.2 §2.0.13: patient context is the logical ID only (no resource type prefix)
+      enrichment.patient = sessionContext.patient.replace(/^Patient\//, '')
     }
     if (sessionContext.encounter && canReturnEncounter(grantedScopes)) {
-      enrichment.encounter = sessionContext.encounter
+      // SMART STU 2.2: encounter context is the logical ID only
+      enrichment.encounter = sessionContext.encounter.replace(/^Encounter\//, '')
     }
     if (sessionContext.intent) {
       enrichment.intent = sessionContext.intent
