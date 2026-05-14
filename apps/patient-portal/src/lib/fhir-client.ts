@@ -113,7 +113,9 @@ export function resetFhirClient() {
 // ── Patient ──────────────────────────────────────────────────────────────────
 
 export async function getPatient(id: string): Promise<PatientUvIps> {
-  return _activeClient.read().patientUvIps().read(id)
+  // Strip resource type prefix if present (token may contain "Patient/id" or just "id")
+  const logicalId = id.replace(/^Patient\//, '')
+  return _activeClient.read().patientUvIps().read(logicalId)
 }
 
 // ── Update Patient demographics ──────────────────────────────────────────────
@@ -122,7 +124,8 @@ export async function updatePatient(
   id: string,
   resource: PatientUvIps
 ): Promise<PatientUvIps> {
-  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/Patient/${id}`, {
+  const logicalId = id.replace(/^Patient\//, '')
+  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/Patient/${logicalId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/fhir+json",
@@ -140,7 +143,8 @@ export async function updatePatient(
 // ── IPS: International Patient Summary ($summary operation) ──────────────────
 
 export async function getPatientSummary(patientId: string): Promise<BundleUvIps> {
-  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/Patient/${patientId}/$summary`, {
+  const logicalId = patientId.replace(/^Patient\//, '')
+  const res = await _activeAuthFetch(`${_activeFhirBaseUrl}/Patient/${logicalId}/$summary`, {
     headers: { Accept: "application/fhir+json" },
   })
   if (!res.ok) {
