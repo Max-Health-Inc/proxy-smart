@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-beta.202605140839.bf478422] - 2026-05-14
+
+- ✨ Features
+  - Backend: per-server MCP features introduced (server-level mcpEnabled flag, new /fhir/{server_id}/mcp route, session management, tool registration helper, and UI support for per-server MCP exposure)
+  - UI: MCP toggle handling and per-server MCP UI elements (ServerCard, ServerOverview)
+
+- 🔧 Chores & Improvements
+  - CI/CD: gate step added to CI workflow to wait for required checks (Alpha Release + Build & Test) before auto-merge
+  - Versioning: bump across multiple packages/apps to 0.1.0-alpha.202605140839.bf478422
+
+- 🐛 Bug Fixes
+  - FHIR client: stop stripping resource type; use logical IDs and adopt FHIR-friendly PUT workflow
+  - Context enrichment: enforce logical IDs for Patient/Encounter in SMART STU 2.2
+
+- 📚 Documentation
+  - (None)
+
+- ⚠️ Breaking Changes
+  - (None)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/707
+
+
 ## [0.1.0-alpha.202605140839.bf478422] - 2026-05-14
 
 - ✨ Features
