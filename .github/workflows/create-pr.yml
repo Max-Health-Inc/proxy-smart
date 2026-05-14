@@ -172,6 +172,63 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      # Gate: wait for Alpha Release and Build & Test to complete on this commit.
+      # Both run in parallel with this workflow on the same push event.
+      # We must not create/enable auto-merge until they both succeed.
+      - name: Wait for required checks (Alpha Release + Build & Test)
+        run: |
+          SHA="${{ github.sha }}"
+          REQUIRED_CHECKS=("Alpha Release" "Build & Test")
+          MAX_WAIT=1800  # 30 min ceiling
+          POLL_INTERVAL=20
+          ELAPSED=0
+
+          echo "Waiting for required checks on $SHA..."
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            ALL_DONE=true
+            ANY_FAILED=false
+
+            for CHECK_NAME in "${REQUIRED_CHECKS[@]}"; do
+              # Query the GitHub Checks API for this run name on the commit
+              RESULT=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" \
+                --jq "[.check_runs[] | select(.name == \"$CHECK_NAME\")] | sort_by(.started_at) | last // {}" \
+                2>/dev/null || echo "{}")
+
+              STATUS=$(echo "$RESULT" | jq -r '.status // "not_found"')
+              CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion // "pending"')
+
+              echo "  [$CHECK_NAME] status=$STATUS conclusion=$CONCLUSION"
+
+              if [ "$STATUS" != "completed" ]; then
+                ALL_DONE=false
+              elif [ "$CONCLUSION" = "failure" ] || [ "$CONCLUSION" = "cancelled" ] || [ "$CONCLUSION" = "timed_out" ]; then
+                ANY_FAILED=true
+              fi
+            done
+
+            if [ "$ANY_FAILED" = "true" ]; then
+              echo "❌ A required check failed — aborting PR creation/update."
+              echo "   The failing build should not be promoted to test."
+              exit 1
+            fi
+
+            if [ "$ALL_DONE" = "true" ]; then
+              echo "✅ All required checks passed."
+              break
+            fi
+
+            echo "  Still waiting... ($ELAPSED s elapsed)"
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+            echo "⚠️ Timed out waiting for required checks after ${MAX_WAIT}s — proceeding anyway."
+          fi
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+
       - name: Check if PR already exists
         id: check-pr
         run: |
