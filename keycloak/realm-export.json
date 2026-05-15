@@ -1122,6 +1122,7 @@
       "linkOnly": false,
       "hideOnLogin": true,
       "config": {
+        "hideOnLoginPage": "true",
         "issuer": "http://localhost:8445",
         "tokenUrl": "http://localhost:8445/auth/token",
         "authorizationUrl": "http://localhost:8445/auth/authorize",

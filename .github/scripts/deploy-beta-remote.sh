@@ -223,7 +223,52 @@ else
   echo '⚠️ RESEND_API_KEY not set — skipping SMTP'
 fi
 
-# ── 10. Seed Data ──
+# ── 10. Keycloak IDP Reconciliation ──
+# realm-export.json uses IGNORE_EXISTING, so IDP settings drift after manual changes.
+# This step ensures proxy-smart-signing is always hidden on the login page.
+echo '🔧 Reconciling Keycloak IDP settings...'
+KC_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' \
+  proxy-smart-keycloak-beta 2>/dev/null)
+
+if [ -n "$KC_IP" ]; then
+  KC_BASE="http://${KC_IP}:8080/auth"
+  KC_PASS=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' .env.beta | cut -d= -f2)
+  KC_TOKEN=$(curl -sf -X POST "${KC_BASE}/realms/master/protocol/openid-connect/token" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=admin' \
+    -d "password=${KC_PASS}" \
+    -d 'grant_type=password' \
+    -d 'client_id=admin-cli' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+  if [ -n "$KC_TOKEN" ]; then
+    # Hide proxy-smart-signing IDP (used for backend token signing, not user login)
+    SIGNING_IDP=$(curl -sf "${KC_BASE}/admin/realms/proxy-smart/identity-provider/instances/proxy-smart-signing" \
+      -H "Authorization: Bearer $KC_TOKEN")
+
+    if [ -n "$SIGNING_IDP" ]; then
+      # Keycloak 26.x uses config.hideOnLoginPage (string "true"), not top-level hideOnLogin
+      UPDATED_IDP=$(echo "$SIGNING_IDP" | sed 's/"config":{/"config":{"hideOnLoginPage":"true",/')
+      HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X PUT \
+        "${KC_BASE}/admin/realms/proxy-smart/identity-provider/instances/proxy-smart-signing" \
+        -H "Authorization: Bearer $KC_TOKEN" \
+        -H 'Content-Type: application/json' \
+        -d "$UPDATED_IDP")
+      if [ "$HTTP_CODE" = '204' ]; then
+        echo '  ✅ proxy-smart-signing IDP hidden on login page'
+      else
+        echo "  ⚠️ Failed to hide proxy-smart-signing (HTTP $HTTP_CODE)"
+      fi
+    else
+      echo '  ℹ️ proxy-smart-signing IDP not found — skipping'
+    fi
+  else
+    echo '  ⚠️ Could not get Keycloak admin token — skipping IDP reconciliation'
+  fi
+else
+  echo '  ⚠️ Keycloak container not found — skipping IDP reconciliation'
+fi
+
+# ── 11. Seed Data ──
 echo '🏥 Seeding HAPI FHIR with sample data...'
 HAPI_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' \
   proxy-smart-hapi-fhir-beta 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
