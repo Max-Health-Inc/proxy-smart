@@ -19,11 +19,13 @@ import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
 import { brandingAdminRoutes } from './branding'
 import { scopeMappersRoutes } from './scope-mappers'
+import { smartScopesRoutes } from './smart-scopes'
 import { documentImportRoutes } from './document-import'
 import { organizationsRoutes } from './organizations'
 import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
 import { dicomServersAdminRoutes } from './dicom-servers'
+import { authFlowsRoutes } from './auth-flows'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -116,6 +118,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(userFederationRoutes)
   // SMART scope protocol mapper management
   .use(scopeMappersRoutes)
+  // SMART client scope CRUD management
+  .use(smartScopesRoutes)
   // Document import (PDF → AI → FHIR)
   .use(documentImportRoutes)
   // Keycloak Organizations management
@@ -126,6 +130,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(clientPoliciesRoutes)
   // DICOM/PACS server management
   .use(dicomServersAdminRoutes)
+  // Authentication flow management (client authenticators, federated-jwt)
+  .use(authFlowsRoutes)
   // AI assistant routes with internal tool execution
   .use(aiRoutes)
 

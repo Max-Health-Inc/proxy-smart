@@ -1,4 +1,4 @@
-import KeycloakAdminClient from '@keycloak/keycloak-admin-client'
+import type KeycloakAdminClient from '@keycloak/keycloak-admin-client'
 import type UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation.js'
 import { logger } from './logger'
 

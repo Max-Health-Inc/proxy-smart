@@ -6,7 +6,7 @@
  * capabilities: groups, members, events, sync.
  */
 
-import { KisiClient, KisiApiError } from '../../kisi/client'
+import { type KisiClient, KisiApiError } from '../../kisi/client'
 import type {
   KisiPlace, KisiLock, KisiGroup, KisiMember,
   KisiGroupLock, KisiEvent, KisiListParams

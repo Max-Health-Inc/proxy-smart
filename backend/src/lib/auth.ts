@@ -1,8 +1,17 @@
-import jwt, { JwtPayload } from 'jsonwebtoken'
-import jwksClient, { JwksClient } from 'jwks-rsa'
+import jwt, { type JwtPayload } from 'jsonwebtoken'
+import jwksClient, { type JwksClient } from 'jwks-rsa'
 import { config } from '../config'
 import { AuthenticationError, ConfigurationError } from './admin-utils'
 import { logger } from './logger'
+
+/** Keycloak-specific JWT payload with realm/resource access claims */
+export interface KeycloakJwtPayload extends JwtPayload {
+  realm_access?: { roles: string[] }
+  resource_access?: Record<string, { roles: string[] }>
+  preferred_username?: string
+  email?: string
+  name?: string
+}
 
 /**
  * Lazy JWKS client that re-creates itself when the configured JWKS URI changes.
@@ -131,10 +140,11 @@ export async function validateToken(token: string): Promise<JwtPayload> {
  */
 export async function validateAdminToken(token: string): Promise<JwtPayload> {
   const payload = await validateToken(token)
+  const keycloakPayload = payload as KeycloakJwtPayload
 
-  const realmRoles: string[] = (payload as any).realm_access?.roles || []
-  const clientRoles: string[] = (payload as any).resource_access?.['admin-ui']?.roles || []
-  const realmManagementRoles: string[] = (payload as any).resource_access?.['realm-management']?.roles || []
+  const realmRoles: string[] = keycloakPayload.realm_access?.roles || []
+  const clientRoles: string[] = keycloakPayload.resource_access?.['admin-ui']?.roles || []
+  const realmManagementRoles: string[] = keycloakPayload.resource_access?.['realm-management']?.roles || []
 
   // Exact role matching — do NOT use .includes() which allows substring matches
   const ADMIN_REALM_ROLES = new Set(['admin', 'realm-admin', 'manage-users', 'manage-realm', 'realm-management'])

@@ -20,6 +20,7 @@ import type {
   UpdateIdentityProviderRequest,
   CreateIdentityProviderRequest
 } from '@/lib/types/api';
+import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 const DEFAULT_NAME_ID_FORMAT = 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent';
@@ -85,7 +86,7 @@ const mapResponseToStats = (provider: IdentityProviderResponse): IdentityProvide
     config,
     vendorName: (provider as IdentityProviderWithStats).vendorName ?? config.displayName,
     status: provider.enabled === false ? 'inactive' : 'active',
-    userCount: 0,
+    userCount: provider.userCount ?? 0,
     lastUsed: new Date().toISOString(),
   };
 };
@@ -105,6 +106,7 @@ const formDataFromStats = (provider: IdentityProviderWithStats): IdentityProvide
   trustEmail: provider.trustEmail ?? false,
   linkOnly: provider.linkOnly ?? false,
   hideOnLogin: provider.hideOnLogin ?? false,
+  organizationId: provider.organizationId ?? undefined,
 });
 
 export function IdPManager() {
@@ -119,6 +121,7 @@ export function IdPManager() {
   const [connectionResults, setConnectionResults] = useState<Record<string, { success: boolean; message: string; testedAt?: string }>>({});
   const [showCertificates, setShowCertificates] = useState<string | null>(null);
   const [newIdp, setNewIdp] = useState<IdentityProviderFormData>(createEmptyFormData());
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
 
   const refreshIdps = useCallback(async () => {
     if (!isAuthenticated || !clientApis.identityProviders) {
@@ -139,6 +142,12 @@ export function IdPManager() {
   useEffect(() => {
     setLoading(true);
     refreshIdps().finally(() => setLoading(false));
+    // Also fetch organizations for the org selector
+    if (isAuthenticated && clientApis.organizations) {
+      clientApis.organizations.getAdminOrganizations({ limit: 100 })
+        .then(setOrganizations)
+        .catch(() => setOrganizations([]));
+    }
   }, [refreshIdps]);
 
   const handleAddIdp = async (formData: IdentityProviderFormData) => {
@@ -171,6 +180,7 @@ export function IdPManager() {
           trustEmail: formData.trustEmail,
           linkOnly: formData.linkOnly,
           hideOnLogin: formData.hideOnLogin,
+          organizationId: formData.organizationId || undefined,
         };
 
         await clientApis.identityProviders.postAdminIdps({
@@ -227,6 +237,7 @@ export function IdPManager() {
           trustEmail: updatedIdp.trustEmail,
           linkOnly: updatedIdp.linkOnly,
           hideOnLogin: updatedIdp.hideOnLogin,
+          organizationId: updatedIdp.organizationId || undefined,
         };
 
         await clientApis.identityProviders.putAdminIdpsByAlias({
@@ -399,6 +410,7 @@ export function IdPManager() {
         }}
         newIdp={newIdp}
         setNewIdp={setNewIdp}
+        organizations={organizations}
       />
 
       <IdPTable
@@ -418,6 +430,7 @@ export function IdPManager() {
         onUpdate={handleUpdateIdp}
         editingIdp={editingIdp}
         setEditingIdp={setEditingIdp}
+        organizations={organizations}
       />
 
       {Object.keys(connectionResults).length > 0 && (

@@ -10,25 +10,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
+import type { AddDicomServerRequest, AddDicomServerRequestAuthTypeEnum } from '@/lib/api-client'
+import { AUTH_TYPES } from './constants'
 
 interface AddDicomServerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onAdd: (body: { name: string; baseUrl: string; authType?: string; username?: string; password?: string; authHeader?: string; wadoRoot?: string; qidoRoot?: string; timeoutMs?: number; isDefault?: boolean }) => Promise<void>
+  onAdd: (body: AddDicomServerRequest) => Promise<void>
 }
-
-const AUTH_TYPES = [
-  { value: 'none', label: 'No Authentication' },
-  { value: 'basic', label: 'Basic Auth' },
-  { value: 'bearer', label: 'Bearer Token' },
-  { value: 'header', label: 'Custom Header' },
-] as const
 
 export function AddDicomServerDialog({ open, onOpenChange, onAdd }: AddDicomServerDialogProps) {
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [baseUrl, setBaseUrl] = useState('')
-  const [authType, setAuthType] = useState<string>('none')
+  const [authType, setAuthType] = useState<AddDicomServerRequestAuthTypeEnum>('none' as AddDicomServerRequestAuthTypeEnum)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [authHeader, setAuthHeader] = useState('')
@@ -95,7 +90,7 @@ export function AddDicomServerDialog({ open, onOpenChange, onAdd }: AddDicomServ
 
           <div className="space-y-2">
             <Label>{t('Authentication')}</Label>
-            <Select value={authType} onValueChange={setAuthType}>
+            <Select value={authType} onValueChange={v => setAuthType(v as AddDicomServerRequestAuthTypeEnum)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>

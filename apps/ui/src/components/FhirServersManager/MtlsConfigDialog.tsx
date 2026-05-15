@@ -71,8 +71,7 @@ export function MtlsConfigDialog({
             <span>{t('Configure Mutual TLS')}</span>
           </DialogTitle>
           <DialogDescription>
-            Configure mutual TLS authentication for "{server.serverName || server.name}". 
-            This ensures secure, authenticated communication between the proxy and FHIR server.
+            {t('Configure mutual TLS authentication for "{{name}}". This ensures secure, authenticated communication between the proxy and FHIR server.', { name: server.serverName || server.name })}
           </DialogDescription>
         </DialogHeader>
         
@@ -95,7 +94,7 @@ export function MtlsConfigDialog({
                 : "border-emerald-500/30 text-emerald-700 hover:bg-emerald-500/10"
               }
             >
-              {serverConfig.enabled ? 'Enabled' : 'Disabled'}
+              {serverConfig.enabled ? t('Enabled') : t('Disabled')}
             </Button>
           </div>
 

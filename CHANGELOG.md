@@ -6,6 +6,1297 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.0-alpha.202605142141.3f719102] - 2026-05-14
+
+- 🔧 Chores & Improvements: Update Docker setup and non-root execution
+  - Dockerfile: add data directory for /app/backend/data, declare VOLUME, run as non-root app user (app) with ownership fix
+  - Docker-related: healthcheck context updated to upstream 8445
+
+- 🔧 Chores & Improvements: CI/CD and environment updates
+  - docker-compose.beta.yml: extend Keycloak path filter to include broker endpoints: /auth/realms/*/broker/*
+
+- ⚠️ Breaking Changes: Version bumps across packages
+  - Bump version from 0.1.0-beta.202605142110.f2a50289 to 0.1.0-alpha.202605142130.6801ee2f in multiple packages (apps, libs, testing, eslint-config)
+
+- ✨ Features: Expanded Caddy and path routing scope
+  - Caddy path labels expanded to include a broad set of allowed backend paths (auth/*, admin/*, API, docs, OAuth/OpenID, fhir, dicomweb, apps, swagger, openapi, proxy-smart-backend, webapp, etc.)
+  - Removed separate caddy.3_reverse_proxy block; now using a single caddy.1_reverse_proxy
+
+- 🐛 Bug Fixes: Healthcheck alignment
+  - Healthcheck now targets upstream 8445 with existing health settings
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/713
+
+
+## [0.1.0-beta.202605140839.bf478422] - 2026-05-14
+
+- ✨ Features
+  - Backend: per-server MCP features introduced (server-level mcpEnabled flag, new /fhir/{server_id}/mcp route, session management, tool registration helper, and UI support for per-server MCP exposure)
+  - UI: MCP toggle handling and per-server MCP UI elements (ServerCard, ServerOverview)
+
+- 🔧 Chores & Improvements
+  - CI/CD: gate step added to CI workflow to wait for required checks (Alpha Release + Build & Test) before auto-merge
+  - Versioning: bump across multiple packages/apps to 0.1.0-alpha.202605140839.bf478422
+
+- 🐛 Bug Fixes
+  - FHIR client: stop stripping resource type; use logical IDs and adopt FHIR-friendly PUT workflow
+  - Context enrichment: enforce logical IDs for Patient/Encounter in SMART STU 2.2
+
+- 📚 Documentation
+  - (None)
+
+- ⚠️ Breaking Changes
+  - (None)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/707
+
+
+## [0.1.0-alpha.202605140839.bf478422] - 2026-05-14
+
+- ✨ Features
+  - UI: MCP toggle handling and per-server MCP exposure in ServerCard/ServerOverview
+  - Backend: per-server MCP feature groundwork (server-level mcpEnabled flag, MCP routes at /fhir/{server_id}/mcp, session management, tool registration helper)
+- 🔧 Chores & Improvements
+  - CI/CD: gate step added to wait for required checks (Alpha Release + Build & Test) before auto-merge
+  - Version bumps across multiple packages to 0.1.0-alpha.202605140839.bf478422
+
+- ⚠️ Breaking Changes
+  - None
+
+- 🐛 Bug Fixes
+  - FHIR client: stop stripping resource type; use logical IDs; adjust PUT/update strategy to FHIR-friendly payload
+  - Tests updated to reflect logical IDs (no resource prefixes) in responses
+
+- 📚 Documentation
+  - None
+
+- Note: Update commits and unrelated merge/metadata commits have been omitted per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/706
+
+
+## [0.1.0-alpha.202605132148.c3d57db3] - 2026-05-14
+
+- ✨ Features: 
+  - Add per-server MCP features and UI toggles (MCP enablement, per-server exposure, new /fhir/{server_id}/mcp route)
+  - UI: MCP toggle handling and MCP-related UI elements in ServerCard/ServerOverview
+- 🐛 Bug Fixes:
+  - Fix patient-portal FHIR client to use logical IDs and proper PUT/update flow
+  - Enforce logical IDs for context enrichment (strip resource prefixes) per SMART STU 2.2
+- 🔧 Chores & Improvements:
+  - Version bump to 0.1.0-alpha.202605131622.3716f6f9 across packages/apps
+  - Internal wiring: server discovery/routes updated to show mcpEnabled flag; plumbing for setMcpEnabled
+- 📚 Documentation: (none)
+- ⚠️ Breaking Changes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/705
+
+
+## [0.1.0-alpha.202605131622.3716f6f9] - 2026-05-13
+
+- ✨ Features: 
+  - Per-server MCP exposure introduced (MCP toggle, UI elements in ServerCard/ServerOverview, and per-server MCP enable flag)
+  - MCP backend routes at /fhir/{server_id}/mcp with session management and tool registration helper
+- 🔧 Chores & Improvements:
+  - Wire MCPEnabled flag into server discovery/routes for visibility
+  - Plumbing for setMcpEnabled across server store and admin schema
+  - UI pass-through and toggle handling for MCP feature
+
+(Note: No breaking changes or documentation updates detected.)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/704
+
+
+## [0.1.0-alpha.202605131506.c7806a64] - 2026-05-13
+
+- 🔧 Chores & Improvements: Version bump across all packages to 0.1.0-alpha.202605131506.c7806a64
+- ✨ Features: UI asset updates with new SVG icon definitions (stethoscope, syringe, pill, test-tube, microscope, etc.)
+- 🔧 Chores & Improvements: Minor UI TS/JS import tweak (ReactNode type addition and expanded Lucide icon set imports)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/703
+
+
+## [0.1.0-alpha.202605131501.acc817f4] - 2026-05-13
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages to 0.1.0-alpha.202605131501.acc817f4
+- ⚠️ Breaking Changes: Backend default ROLE_BASED_FILTERING_MODE changed from 'enforce' to 'audit-only' (invalid values clamped to 'audit-only')
+- 🔧 Chores & Improvements: Backend refactor - removed Practitioner-specific role filtering; now only Patient-based filtering applies (tests updated accordingly)
+- 📚 Documentation: Tests updated to reflect default audit-only mode and new filtering behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/702
+
+
+## [0.1.0-alpha.202605121710.8c4f2d1c] - 2026-05-12
+
+- 🔧 Chores & Improvements: Update versions across apps/packages/docs to 0.1.0-alpha.202605121710.8c4f2d1c
+- 🔧 Chores & Improvements: Backend: enable supportsClientAssertions: true check for proxy signing IdP configuration; tighten IdP existence criteria
+- ⚠️ Breaking Changes: None
+- 📚 Documentation: Add Federated JWT client authentication guide (new file)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/701
+
+
+## [0.1.0-alpha.202605121707.0600c9d4] - 2026-05-12
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - Backend: adjust Keycloak flow copy call to use newName (no functional behavior changes beyond parameter name).
+
+- 📚 Documentation
+  - None
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages/apps (alpha → next beta/alpha sequence).
+  - E2E/Smart-compliance workflow improvements: Playwright caching, install flow optimizations, and temporary directory usage.
+  - Keycloak admin-service: ensure admin-service has manage-identity-providers role via service account (realm-export updated). 
+
+- ⚠️ Breaking Changes
+  - None
+
+Note: Only changes since last release are included; no merge/metadata/update commits are listed as changes.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/700
+
+
+## [0.1.0-beta.202605121343.f6981e3a] - 2026-05-12
+
+- 🔧 Chores & Improvements: E2E workflow improvements (Playwright caching, conditional install, cache-hit flow) and Smart-compliance workflow refactor (setup in tmp, browser cache, global install, copy into workspace); CI/CD enhancements
+- 🔧 Chores & Improvements: Version bumps across multiple packages/apps from alpha to beta
+- ⚠️ Breaking Changes: Keycloak realm-export updated to include manage-identity-providers and view-identity-providers; init.ts ensures admin-service role via service account
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/699
+
+
+## [0.1.0-alpha.202605121209.44813356] - 2026-05-12
+
+- 🔧 Chores & Improvements: Bump package versions across apps/libs/tests to 0.1.0-alpha.202605121209.44813356
+- 🔧 Chores & Improvements: Update Keycloak config endpoints to localhost:8445 (issuer/tokenUrl/authorizationUrl/jwksUrl)
+- 🔧 Chores & Improvements: Add backend ensureProxySigningIdp() helper to support proxy-smart-signing IdP startup (handles missing admin creds)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/697
+
+
+## [0.1.0-beta.202605121120.bc164c98] - 2026-05-12
+
+- 🔧 Chores & Improvements: Bump versions across apps/libs/tests to 0.1.0-beta.202605121120.bc164c98
+- 🔧 Chores & Improvements: Update Keycloak configuration URLs to localhost:8445 (issuer, tokenUrl, authorizationUrl, jwksUrl)
+- 🔧 Chores & Improvements: Add ensureProxySigningIdp() helper to initialize proxy-smart-signing IdP during startup (handles missing admin creds)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/696
+
+
+## [0.1.0-alpha.202605092005.e8c13449] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605092005.e8c13449 across multiple packages/apps
+- 🔧 Chores & Improvements: Backend auth logic updated to treat all private_key_jwt usage as federated-jwt with proxy validation and re-signing; updated comments and global usage terms
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/692
+
+
+## [0.1.0-alpha.202605091906.cb646698] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump from 0.1.0-beta to 0.1.0-alpha across multiple apps/packages
+- ✨ Features: UI enhancements for smart flow cards in AuthFlowsManager (imports and state)
+- 🔧 Chores & Improvements: Backend refactor to introduce a unified read-resource tool replacing multiple GET route tools; update MCP endpoint tool list and tool registration flow to use the unified read tool
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/691
+
+
+## [0.1.0-alpha.202605091845.ecad3533] - 2026-05-09
+
+- 🔧 Chores & Improvements: CI: swap SSH-based HTTP probing for Docker healthcheck in Keycloak readiness; add explicit healthy status check and clearer timeout error logs
+- 🔧 Chores & Improvements: Update version bumps across apps, packages, and tests to 0.1.0-alpha.202605091845.ecad3533
+- 🐛 Bug Fixes: Improve Keycloak readiness messages with clearer success/failure logs
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/690
+
+
+## [0.1.0-alpha.202605091737.e7dae71a] - 2026-05-09
+
+- 🔧 Chores & Improvements: Update CI deploy-beta health check to use HTTP/1.0 to prevent keep-alive hang
+- 🔧 Chores & Improvements: Version bumps across apps/packages to 0.1.0-alpha.202605091737.e7dae71a
+- 🔧 Chores & Improvements: Minor CI log formatting tweaks in deploy-beta workflow
+- 🔧 Chores & Improvements: Version bumps across multiple components from 0.1.0-alpha.202605091133.d4798d2e to 0.1.0-beta.202605091527.c7e4e0f2 (note: includes apps, packages, and testing/e2e)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/689
+
+
+## [0.1.0-beta.202605091527.c7e4e0f2] - 2026-05-09
+
+- 🔧 Chores & Improvements: CI log quote fix in deploy-beta workflow; version bumps across apps, packages, and testing/e2e to v0.1.0-beta.202605091527.c7e4e0f2
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/688
+
+
+## [0.1.0-beta.202605090914.34723e6c] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump across packages to 0.1.0-beta.202605090914.34723e6c
+- 🔧 Chores & Improvements: UI refactor in AuthFlowsManager/SmartFlowsView to use Card components (Card, CardHeader, CardContent, CardTitle) and switch from viewMode to activeTab; update imports accordingly
+- 🔧 Chores & Improvements: Minor package.json updates to reflect new version across apps
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/686
+
+
+## [0.1.0-alpha.202605090009.02f9e031] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605090009.02f9e031 across multiple packages
+- ⚠️ Breaking Changes: Update to authentication flow
+  - Switch client-auth determination from client-jwt/none to federated-jwt for certain JWKS-based flows
+  - Adjust JWKS handling for federated-jwt and backend-service scenarios
+  - Add proxy-signing flow notes: federated-jwt path via proxy's signing identity
+  - Introduce jwt.credential metadata for federated-jwt in client registrations
+- 🔧 Chores & Improvements: Minor comments and documentation updates
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/683
+
+
+## [0.1.0-alpha.202605082250.e9054b2a] - 2026-05-09
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605082250.e9054b2a across multiple packages
+- ⚠️ Breaking Changes: Rename Keycloak realm-export.json field from hideOnLoginPage to hideOnLogin
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/682
+
+
+## [0.1.0-alpha.202605082226.dc9f9827] - 2026-05-08
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages/apps and testing config (no functional changes)
+- 🔧 Chores & Improvements: Dockerfile.keycloak tweak to enforce http-relative-path constraint, enable --optimized build, and include cimd, token-exchange, client-auth-federated features; start with optimized and realm import
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/681
+
+
+## [0.1.0-beta.202605082149.73713843] - 2026-05-08
+
+- 🔧 Chores & Improvements: CI/CD and build optimizations
+  - Dockerfile.keycloak: add http-relative-path constraint and --optimized flag; include features cimd, token-exchange, client-auth-federated; set path /auth to avoid feature-dropping rebuilds; start with optimized and realm import
+  - Version bumps across apps/packages/testing/eslint-config to 0.1.0-beta.202605082149.73713843
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/680
+
+
+## [0.1.0-alpha.202605081814.6aaf417a] - 2026-05-08
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605081814.6aaf417a; introduce backend client assertion types and error handling; add assertion resolution and validation flows; enhance OAuth path to validate private_key_jwt assertions; minor test updates for new validation APIs
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/676
+
+
+## [0.1.0-alpha.202605081332.adff1b56] - 2026-05-08
+
+- 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605081332.adff1b56 across multiple packages
+- ⚠️ Breaking Changes: Backend: refine isBackendServicesRequest logic to enforce client_credentials flow for backend services with proper client_assertion checks
+- 🐛 Bug Fixes: Backend: add tests for new edge cases (authorization_code reject, missing grant_type, wrong client_assertion_type, missing client_assertion)
+- 🔧 Chores & Improvements: Minor code comments/docs added for backend-services.ts clarification
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/675
+
+
+## [0.1.0-alpha.202605081235.d2514947] - 2026-05-08
+
+- 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605081235.d2514947; add eager runtime config loading on server init with Keycloak client credentials (loadRuntimeConfig) and error fallback.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/674
+
+
+## [0.1.0-alpha.202605081215.8e6b1dd5] - 2026-05-08
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements:
+  - CI/CD: Replace direct Keycloak realm checks with backend health status checks via /status; improved logging and error messages when unhealthy
+  - Versioning: Standardize version bumps to new alpha tag 0.1.0-alpha.202605081201.5d503150 across multiple packages
+- ⚠️ Breaking Changes: None
+
+Note: No user-facing feature or breaking changes detected; changes are primarily CI improvements and version updates.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/673
+
+
+## [0.1.0-alpha.202605081120.3cb9cd33] - 2026-05-08
+
+- 🔧 Chores & Improvements: Update version strings across apps/packages to 0.1.0-alpha.202605081120.3cb9cd33
+- 🔧 Chores & Improvements: Backend: add requestedScope to TokenContext, sanitize/store it; include in token context and introspection flow
+- 🔧 Chores & Improvements: Backend OAuth: persist and reflect granular requestedScope in scopes via filterScopes (preserves user-specific scopes vs wildcards)
+- 🔧 Chores & Improvements: ESLint config and related package.jsons updated for new alpha version
+- ⚠️ Breaking Changes: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/672
+
+
+## [0.1.0-alpha.202605081112.6bd7ebb8] - 2026-05-08
+
+- ✨ Features: SMART v2 scope expansion and wildcard delegation
+  - Introduced expandScopesToWildcards and integrated into authorize-interceptor to convert granular scopes to wildcard forms (e.g., user/*.read) with de-duplication and empty-input handling.
+  - Added SMART v2 scope regex, isScopeGranted logic, and filterScopes to enforce granted scopes against requested SMART v2 scopes.
+  - Token enricher supported new scope flow via input.requestedScope with filterScopes; fallback path preserved.
+
+- 🐛 Bug Fixes: Improved SMART v2 scope handling and compatibility
+  - Updated scope matching to support v2 operations (1-5 chars from cruds) and upmapping to v1 read/write via aliases.
+  - Removed legacy fallbacks that granted read-by-id or search via any v2 scope.
+
+- 📚 Documentation: CI/CD and config notes
+  - Metadata/config: OpenID responses include client_id_metadata_document_supported; CIMD metadata test added to validate discovery endpoints.
+
+- 🔧 Chores & Improvements: Version bumps and test coverage
+  - Global version bumps across multiple packages/apps; added tests for new scope expansion and delegation logic.
+  - Minor test/import cleanups to align with new expandScopesToWildcards.
+
+- ⚠️ Breaking Changes: None detected in user-facing behavior.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/671
+
+
+## [0.1.0-alpha.202605081100.bf771161] - 2026-05-08
+
+- ✨ Features
+  - SMART v2 scope expansion: add expandScopesToWildcards to convert granular scopes (e.g., user/Patient.read) to wildcard forms (user/*.read) and wire into authorize interceptor with de-duplication and empty input handling
+  - SMART v2 scope delegation: introduce regex and impact logic to enforce granted scopes against requested SMART v2 scopes; token enricher uses requestedScope with filterScopes when available
+
+- 🔧 Chores & Improvements
+  - Bump global version across multiple packages/apps (0.1.0-alpha.202605081100.bf771161)
+  - Minor test updates and imports adjustments to cover new scope expansion behavior
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None
+
+- 🐛 Bug Fixes
+  - None detected
+
+If nothing meaningful beyond version bumps and minor UX tweak, would be: - 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/670
+
+
+## [0.1.0-alpha.202605071424.5b35f4d6] - 2026-05-08
+
+- ✨ Features
+  - SMART v2 scope delegation support: add SMART_V2_SCOPE_RE, isScopeGranted logic (wildcard and alias handling), and filterScopes to enforce granted scopes against requested SMART v2 scopes.
+  - Token enricher enhancement: prefer input.requestedScope with filterScopes when available; fallback to smart_scope path.
+
+- 🐛 Bug Fixes
+  - OpenID config responses: advertise client_id_metadata_document_supported: true in both discovery and config sections.
+  - Improve login UX: Keycloak template tweak in error.ftl to show "Back to application" path when loginRestartFlowUrl is unavailable; remove old back-to-login flow.
+
+- 📚 Documentation
+  - Introduce CIMD metadata test file to validate discovery endpoint returns client_id_metadata_document_supported and proxy endpoints.
+
+- 🔧 Chores & Improvements
+  - Version bumps: update to 0.1.0-alpha.202605071418.acaba93 across multiple packages/apps.
+  - Minor Freemarker comment/UX tweak in login error template.
+
+- ⚠️ Breaking Changes
+  - None detected in this release.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/668
+
+
+## [0.1.0-alpha.202605062242.b30c5006] - 2026-05-07
+
+- 🔧 Chores & Improvements: Bump versions across apps/libs to 0.1.0-alpha.202605062242.b30c5006
+- 🔧 Chores & Improvements: API config updates in backend (renamed policies domains and updated CIMD config fields)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/667
+
+
+## [0.1.0-alpha.202605062212.19f7b90d] - 2026-05-06
+
+- 🔧 Chores & Improvements: Rename and normalize SMART launch context to patient_context/encounter_context; update token top-level claims and per-token context storage (TokenContextStore); adjust IAL/consent checks to reference patient instead of smart_patient; normalize fhir_user to fhirUser in introspection.
+
+- 🔧 Chores & Improvements: Rename interfaces/types from smart_patient/smart_encounter to patient/encounter; update IAL config descriptions and tests to reflect patient claim verification and fallback paths.
+
+- 🔧 Chores & Improvements: Update token context enrichment to derive per-token context from TokenContextStore; adjust introspection enricher to normalize fhir_user to fhirUser; remove KC-based approaches.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/666
+
+
+## [0.1.0-alpha.202605062203.d6c04537] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bump across frontend apps, backend tooling, ESLint config, packages, and tests
+
+- 🐛 Bug Fixes: TokenContextStore gains security-focused constants and input validation; oauth route passes introspectingClientId to tokenContextStore.get for tighter binding
+
+- 🐛 Bug Fixes: Tests extended to cover input validation, client binding, and PHI redaction; TTL/exp handling adjusted
+
+- 📚 Documentation: Minor test data tweaks to align with new TTL/exp handling
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/665
+
+
+## [0.1.0-alpha.202605061525.60d3a1a0] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bumps to 0.1.0-alpha.202605061525.60d3a1a0 across multiple apps/libs
+- 🔧 Chores & Improvements: Add backend token-context-store (TokenContextStore, interfaces) and unit tests
+- 🔧 Chores & Improvements: Persist token launch context by JTI into token-context-store for SMART STU 2.2 introspection
+- 🔧 Chores & Improvements: Integrate minimal oauth route updates to store context when jti and data exist
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/664
+
+
+## [0.1.0-alpha.202605061443.968d6bdd] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bump to 0.1.0-alpha.202605061443.968d6bdd across multiple packages/apps
+- ⚠️ Breaking Changes: None detected
+- 🐛 Bug Fixes: None detected
+- 📚 Documentation: Keycloak realm-export.json: add introspection.token.claim: "true" for two clients
+- ✨ Features: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/663
+
+
+## [0.1.0-alpha.202605061427.fa5b001e] - 2026-05-06
+
+- 🔧 Chores & Improvements: Bump versions across apps/packages to 0.1.0-alpha.202605061427.fa5b001e
+- ✨ Features: Add introspection enrichment to derive patient from fhirUser when patient is missing (with scope-aware fallback)
+- 🔧 Chores & Improvements: Minor code addition in introspection-enricher.ts to include scope field and new fallback behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/662
+
+
+## [0.1.0-alpha.202605042315.546a45f7] - 2026-05-06
+
+- 🔧 Chores & Improvements: Version bump across all apps/packages to 0.1.0-alpha.202605042315.546a45f7; minor logic/schema tweaks for backend smart-apps (isPublicClient handling; publicClient description); tighten Keycloak endpoints in docker-compose.beta.yml; minor doc/comment updates and formatting
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/661
+
+
+## [0.1.0-alpha.202605042239.042641ea] - 2026-05-04
+
+- ✨ Features: Stabilized patient selection flow with robust selector based on data-testid, improving test reliability
+- 🔧 Chores & Improvements: Minor UI/UX test accessibility improvements (data-testid additions for PatientRow and submit button)
+- 🔧 Chores & Improvements: Version bumps across apps, packages, eslint config, and testing to 0.1.0-alpha.202605042239.042641ea
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/660
+
+
+## [0.1.0-alpha.202605042113.61bf4e35] - 2026-05-04
+
+- 🔧 Chores & Improvements: Version bump across multiple packages
+- 🔧 Chores & Improvements: Backend session resolver now uses admin.getAccessToken() and updated test mock to include getAccessToken
+- 🔧 Chores & Improvements: Test suite updated to mock AdminClient with getAccessToken() for new auth flow
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/659
+
+
+## [0.1.0-alpha.202605042106.ee673668] - 2026-05-04
+
+- ✨ Features: Auto-select patient on Patient Picker page during OAuth flow; increased retry attempts (maxAttempts 3 → 5) for interstitial handling
+- 🔧 Chores & Improvements: Version bumps across multiple packages from beta to alpha; UI refactor: BackendServicesSettings.tsx removed; minor UI tweaks in SmartConfigManager (icon imports, tab layout)
+- 🔧 Chores & Improvements: Backend/Keycloak: enhanced direct session lookup in kc-session-resolver and updated session resolution flow; admin Keycloak config schema updated to remove frontend URL endpoints; related docs/tests adjusted for fast-path behavior
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/658
+
+
+## [0.1.0-beta.202605041920.0a9225e5] - 2026-05-04
+
+- ✨ Features
+  - 🧪 Introduced Kubernetes Admin client factory and dependency injection for admin interactions in kc-session-resolver (-admin factory, DI-based admin client retrieval, optional adminClientFactory parameter)  
+  - 🧰 Session handling enhancements: add session expiration handling in patient-picker (SessionExpiredError, onSessionExpired callback, automatic redirect and UI for "Session Expired")
+
+- 🔧 Chores & Improvements
+  - 🔧 Refactor: move admin client creation to kc-admin-factory and update tests to mock via factory; update imports and typing accordingly
+  - 🔧 Minor UI/logic tweaks in patient-picker (icon/log/icon usage adjustments, code cleanliness)
+  - 🔧 Version bumps across packages (0.1.0-alpha and related beta tag) to reflect pre-release changes
+  - 🔍 Logging improvements in kc-session-resolver (additional warnings/info about client not found, page scans, and session matches)
+
+- ⚠️ Breaking Changes
+  - None detected for end users; internal DI changes to admin client retrieval and test structure
+
+- 📚 Documentation
+  - None identified
+
+If you want a shorter version or a different grouping, tell me.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/657
+
+
+## [0.1.0-alpha.202605041920.0a9225e5] - 2026-05-04
+
+- ✨ Features
+  - Admin client integration via dependency injection: introduce AdminClientFactory and DI-based admin client retrieval in kc-session-resolver.ts (with default factory and updated usage). 
+  - Session management: add session expiration handling in fhir-client.ts and propagate session expiry through PatientList; UI supports “Session Expired” and automatic redirect after expiry.
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages to 0.1.0-alpha.202605041233.3ec8a557 (and related alpha bumps).
+  - Logging enhancements in kc-session-resolver.ts (warnings/info when client not found, start of scans, session match, and additional debug traces).
+  - UI/UX tweaks in patient-picker (icon and minor import/logic adjustments).
+
+- ⚠️ Breaking Changes
+  - None detected. (If admins client now provided via DI, ensure DI wiring is updated in consuming modules.)
+
+- 📚 Documentation
+  - None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/656
+
+
+## [0.1.0-alpha.202605041846.e4c9b30c] - 2026-05-04
+
+- ✨ Features
+  - Introduce AdminClientFactory and dependency-injected admin client retrieval in kc-session-resolver.ts; new kc-admin-factory.ts to create/authenticate admin client (getAdminClient).
+
+- 🔧 Chores & Improvements
+  - Refactor to use adminClientFactory for DI; update tests to inject admin client via DI.
+  - Bump versions across multiple packages to 0.1.0-alpha.202605041233.3ec8a557 / 0.1.0-alpha.202605040015.fa874161 as part of pre-release prep.
+  - Add and enhance session expiration handling in patient-picker: introduce SessionExpiredError, propagate onSessionExpired, and UI/state handling for automatic redirect and “Session Expired” notice.
+
+- 🐛 Bug Fixes
+  - Session expiration flow improvements and related UI/logic adjustments.
+  - Logging enhancements in kc-session-resolver.ts for better visibility when client is not found, scans start, and session matches occur.
+
+- 📚 Documentation
+  - None substantial beyond internal DI and test strategy notes (implicit in code changes).
+
+- ⚠️ Breaking Changes
+  - None identified for end users. Internal API changes to admin client retrieval via DI.
+
+If you want a shorter version, I can trim further.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/655
+
+
+## [0.1.0-alpha.202605041233.3ec8a557] - 2026-05-04
+
+- ✨ Features
+  - Session management: add session expiration handling in patient-picker with SessionExpiredError, onSessionExpired callback, and automatic redirect + UI for “Session Expired”.
+
+- 🔧 Chores & Improvements
+  - Version bumps: align versions across multiple packages/apps.
+  - Minor UI/logic tweaks in patient-picker (icon and hook usage refinements).
+  - Backend logging enhancements: add warnings/info when client not found, start scans, and log session match events for kc-session-resolver.
+  - Keycloak: update realm permissions in realm-export.json (view-users, query-users, manage-users, ensure manage-realm).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/653
+
+
+## [0.1.0-alpha.202605041031.b5f9cef6] - 2026-05-04
+
+- ✨ Features
+  - Minor log message enhancements and expanded diagnostics in backend kc-session-resolver.ts (warnings/info when client not found, page scans, session match; added debug traces)
+
+- ⚠️ Breaking Changes
+  - No breaking changes
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages/apps to 0.1.0-alpha.202605041031.b5f9cef6
+  - Updated Keycloak realm-export.json permissions (add view-users, query-users, manage-users; ensure manage-realm)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/652
+
+
+## [0.1.0-alpha.202605032340.faa198e5] - 2026-05-04
+
+- 🔧 Chores & Improvements: Bump version to 0.1.0-alpha.202605032340.faa198e5 across multiple apps/packages (consent-app, dtr-app, patient-picker, patient-portal, patient-portal/package, smart-dicom-template, ui, eslint-config, auth, testing/e2e)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/651
+
+
+## [0.1.0-alpha.202605032311.11fc5699] - 2026-05-03
+
+- ✨ Features
+  - UI/back-end: add favicon link in index.html
+  - Auth: fallback in callback-handler to resolve patient from session.fhirUser when auto-resolve fails
+
+- 🔧 Chores & Improvements
+  - Auth: update TS config to exclude test files from compilation
+  - Auth: added new test file for callback-handler (patient picker gate) with fallback scenarios
+
+- ⚠️ Breaking Changes
+  - (none)
+
+- 📚 Documentation
+  - (none)
+
+- 🐛 Bug Fixes
+  - KC-session-resolver: store session.fhirUser on session during auto-resolve
+
+Note: Version bumps across multiple packages applied (0.1.0-beta... to 0.1.0-alpha...).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/650
+
+
+## [0.1.0-alpha.202605032256.b5a9856f] - 2026-05-03
+
+- ✨ Features
+  - Patient picker: initialize on mount with loadPage(0) and improved resource type casting
+  - FHIR client: refactored to session-validated /auth/patient-search flow with getSearchUrl and fetchBundle
+  - Backend: added /patient-search OAuth-protected endpoint logic (session validation and aud parsing) to proxy to FHIR server
+
+- 🔧 Chores & Improvements
+  - Version bumps across multiple packages to 0.1.0-alpha.202605032256.b5a9856f
+  - Fix CSS import source paths to local node_modules for shared UI across several apps
+  - Update docs: Admin UI and Patient Picker docs; update docs/index.md with new features and Shared UI Library notes
+
+- 📚 Documentation
+  - Admin UI and Patient Picker docs added; docs/index.md updated with feature entries and Shared UI Library notes
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 🐛 Bug Fixes
+  - CSS path fixes to ensure local module imports work across apps
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/649
+
+
+## [0.1.0-alpha.202605032155.b401b02a] - 2026-05-03
+
+- ✨ Features: Global alias migration to @proxy-smart/shared-ui across apps/libs; updated UI component imports (Button, Card, Tabs, etc.) and docs/assets to reflect new shared-ui package. 
+- 🔧 Chores & Improvements: Dependency alignment and version bumps to alpha 0.1.0-alpha.202605032155.*; updates to bun.lock and test/import references to match new UI alias.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/648
+
+
+## [0.1.0-alpha.202605032120.8346c70b] - 2026-05-03
+
+- ✨ Features
+  - Patient Picker: add pagination state and listPatients fetch; fhir-client now exposes listPatients with offset-based pagination and Bundle type
+  - Backend auth: auto-inject proxy SMART callback URI into redirectUris to support proxy interception
+
+- 🔧 Chores & Improvements
+  - CI: add new build steps for smart-compliance-tests (Build Patient Picker (static), Copy Apps to Backend)
+  - Docker: copy shared config into image; restrict docker-workspaces subset; copy config/ into image
+  - Version bumps across multiple packages/apps/libs to 0.1.0-alpha.x (then prep for beta)
+
+- ⚠️ Breaking Changes
+  - Consent-app and DTR-app refactors to SmartAppShell; removal of previous header/auth flow wiring (affects auth flow usage)
+
+- 📚 Documentation
+  - (No explicit documentation changes detected)
+
+- 🐛 Bug Fixes
+  - (No user-facing bug fixes detected)
+
+Note: Merges, metadata-only updates, and non-meaningful “update” commits are skipped.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/647
+
+
+## [0.1.0-beta.202605032049.bd54d5fb] - 2026-05-03
+
+- ✨ Features
+  - Add listPatients with offset-based pagination in fhir-client and expose in UI PatientPicker (with pagination state and fetch listPatients)
+
+- 🔧 Chores & Improvements
+  - Bump all package.json versions from alpha to beta across apps, libs, and testing
+  - Add shared Vite config copy in Dockerfile
+  - Copy config/ into Docker image
+  - Restrict docker-workspaces to a smaller subset (remove shared-ui, patient-portal, etc.)
+  - Backend auth: auto-inject proxy SMART callback URI into redirectUris to support proxy interception
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None detected
+
+- 🔧 Other
+  - Version bumps for Consent, DTR, Patient Picker tests/apps
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/646
+
+
+## [0.1.0-alpha.202605031909.22b57f72] - 2026-05-03
+
+- ✨ Features: None detected
+
+- 🐛 Bug Fixes: None detected
+
+- 📚 Documentation: None detected
+
+- 🔧 Chores & Improvements:
+  - Bump all package.json versions to 0.1.0-alpha.202605031909.22b57f72 across multiple apps/packages
+  - Add/update devDeps in root: @tailwindcss/vite and @vitejs/plugin-react-swc
+  - Replace shared UI references: switch imports from @proxy-smart/shared-ui to @proxy-smart/shared-ui across apps
+  - Rewire app configuration imports to reference config/ instead of shared-ui paths
+  - Update deployment/test workflow logic: adjust stage mappings (alpha now dev-only), e2e/test inputs, and targeted deployment steps
+
+- ⚠️ Breaking Changes: None detected
+
+If you intended more granular grouping, I can adjust.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/644
+
+
+## [0.1.0-alpha.202605031824.bbd27301] - 2026-05-03
+
+- 🔧 Chores & Improvements: Update shared UI package references to forked version and adjust imports (several apps), plus rewire configuration paths and app config imports
+- 🔧 Chores & Improvements: Update deployment/test workflows for alpha/dev handling (alpha becomes dev-only) and adjust e2e/test inputs to run locally/dev for alpha
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/643
+
+
+## [0.1.0-alpha.202605031820.02615011] - 2026-05-03
+
+- ✨ Features
+  - Patient picker: add aud parameter support and propagate through UI, config, and FHIR fetch usage; require aud in App.tsx and pass to PatientList
+  - Picker params: extend to return aud; validation now requires session, code, and aud
+  - Backend: forward aud through OAuth flow to picker; smart-templates render with provided FHIR base URL and fetch against it
+- 🔧 Chores & Improvements
+  - Refactor: fhir-client.ts to create reader per base URL
+  - Types: LaunchSession augmented with aud field
+- 📚 Documentation
+  - (No explicit docs changes detected)
+- ⚠️ Breaking Changes
+  - (No breaking changes detected)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/642
+
+
+## [0.1.0-alpha.202605031802.6d2b954a] - 2026-05-03
+
+- ✨ Features: 
+  - Patient picker now supports aud parameter propagation through UI, config, and FHIR fetch usage; App.tsx and PatientList.tsx updated to pass and utilize fhirBaseUrl. 
+  - Picker params now return aud; validation requires session, code, and aud.
+  - OAuth flow updated to forward aud to picker; smart-templates render with provided FHIR base URL.
+
+- 🔧 Chores & Improvements:
+  - Refactor: fhir-client.ts updated to create reader per base URL; Types.LaunchSession augmented with aud.
+
+Note: Version bump included across repo.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/641
+
+
+## [0.1.0-alpha.202605031756.2732f9a0] - 2026-05-03
+
+- ✨ Features:
+  - Patient picker: add aud parameter support and propagate through UI, config, and FHIR fetch usage
+  - Picker params: return aud; require session, code, and aud for validation
+  - Backend: forward aud through OAuth flow to picker; smart-templates render with provided FHIR base
+  - Types: LaunchSession augmented with aud field
+
+- 🔧 Chores & Improvements:
+  - Refactor: fhir-client.ts to create reader per base URL
+  - App wiring: PatientList.tsx updated to accept fhirBaseUrl and use it for searches
+  - App wiring: Patient picker App.tsx updated to require aud and pass to PatientList
+
+- ⚠️ Breaking Changes:
+  - None detected
+
+- 📚 Documentation:
+  - None detected
+
+- 🐛 Bug Fixes:
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/640
+
+
+## [0.1.0-beta.202605031718.19041127] - 2026-05-03
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- ✨ Features
+  - Patient picker: add aud parameter support and propagate through UI, config, and FHIR fetch usage
+  - Picker: extended to return aud
+
+- 🐛 Bug Fixes
+  - None detected
+
+- 🔧 Chores & Improvements
+  - App.tsx now requires aud and passes it to PatientList; PatientList.tsx accepts fhirBaseUrl and uses it for searches
+  - fhir-client.ts refactored to create a reader per base URL
+  - Backend OAuth flow now forwards aud to picker
+  - Smart-templates render with provided FHIR base and fetch against it
+  - Types: LaunchSession augmented with aud field
+  - Version bump across repo
+
+- 📚 Documentation
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/639
+
+
+## [0.1.0-beta.202605031618.8061482e] - 2026-05-03
+
+- ✨ Features: 
+  - UI: Manage externalAudiences in AccessControlSettings (state and add/remove flows)
+  - Backend config: support externalAudiences in runtime config and config getters; OAuth audience validation updated for external audiences and subdomain wildcard
+
+- 🐛 Bug Fixes:
+  - Backend: OAuth audience validation updated to accommodate external audiences and wildcards
+
+- 🔧 Chores & Improvements:
+  - Dockerfile: include packages/auth in build and workspace pruning; copy auth package into build contexts; propagate auth in backend-build and openapi-gen stages
+  - Version bumps: bump multiple apps/packages from alpha to beta
+
+- 📚 Documentation:
+  - Schemas: SmartAccessControlConfig now includes externalAudiences with description
+
+- ⚠️ Breaking Changes:
+  - (none)
+
+- Note: Excludes update/merge/metadata commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/636
+
+
+## [0.1.0-beta.202605031204.060ce013] - 2026-05-03
+
+- ✨ Features: Add SMART launch context handling enhancements, including in-memory launch-context-store with TTL and Redis hint, and SMART client config cache with TTL and invalidation utilities
+- ✨ Features: Enrichment improvements to resolve patientFacing flag for fhirUser (true/false/undefined)
+- 🔧 Chores & Improvements: Admin UI/API updates to support fhirUser and patientFacing in smart apps schema; cache invalidation on update
+- 🔧 Chores & Improvements: OAuth callback updates to include SmartCallbackQuery schema and integrate launch-context-store and smart client in routes
+- 🧪 Features (testing): EHR launch tests note about pre-registered codes and context sourcing from signed launch code via POST /auth/launch
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/634
+
+
+## [0.1.0-beta.202605030722.9169611c] - 2026-05-03
+
+- 🔧 Chores & Improvements: Bump version fields across all packages to 0.1.0-beta.202605030722.9169611c; minor backend comment tweaks and JWKS handling clarifications (inline JWKS/PEM alg detection).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/631
+
+
+## [0.1.0-beta.202605021852.b4e1d881] - 2026-05-02
+
+- ✨ Features: Persist SHL sessions with SQLite, fix expiration, hide app store in shared view (quotentiroler)
+- 🔧 Chores & Improvements: Update all outdated packages (quotentiroler)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/628
+
+
+## [0.1.0-alpha.202605021846.96e0e538] - 2026-05-02
+
+- ✨ Features: 
+  - Add URL shortening opt-in for SHL QR flows (shortenUrl and maxUses support in frontend, payload, and backend; API schema updated)
+  - Dynamic CORS origins support derived from Keycloak webOrigins with 5-minute cache; isOriginAllowed uses merged static+dynamic origins
+
+- 🔧 Chores & Improvements:
+  - Wire refreshCorsOrigins() across app init and admin/user flows to keep origins up to date
+  - Minor workflow and docker-compose tweak removing maxhealth.tech from allowed CORS origins
+  - Integrate new cors-origins module across app factory, init, and routes (admin smart-apps, auth client-registration)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/626
+
+
+## [0.1.0-alpha.202605021839.15271362] - 2026-05-02
+
+- 🔧 Chores & Improvements: Introduce dynamic CORS origins from Keycloak webOrigins with 5-minute cache; replace static CORS_ORIGINS logic with isOriginAllowed based on merged static+dynamic origins; wire refreshCorsOrigins() into app init and admin/user flows; import/use new cors-origins module across app factory, init, and routes (admin smart-apps, auth client-registration); minor workflow/docker-compose tweak removing maxhealth.tech from allowed origins.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/625
+
+
+## [0.1.0-alpha.202605021830.ca96449b] - 2026-05-02
+
+- 🔧 Chores & Improvements: Update CORS origins to include maxhealth.tech in beta deployment (deploy-beta.yml, docker-compose.beta.yml)
+- 🐛 Bug Fixes: Improve viewer app selection logic:
+  - Default value now "__none__" when none chosen
+  - Empty string maps to "__none__" on change
+  - Include only enabled apps with non-empty clientId and render items by clientId
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/623
+
+
+## [0.0.9-alpha.202605021737.9eb9882b] - 2026-05-02
+
+- 🔧 Chores & Improvements: Bump version to 0.0.9-alpha.202605021737.9eb9882b across packages/apps
+- 🐛 Bug Fixes: Patient-portal DicomViewer.tsx fix — open in app when viewerApp is present and always show "open in app" label using viewerApp.name
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/622
+
+
+## [0.0.9-alpha.202605021730.c2652a64] - 2026-05-02
+
+- 🔧 Chores & Improvements: Version bump to 0.0.9-alpha.202605021730.c2652a64 across packages
+- 🔧 Chores & Improvements: Update ignore rules to allow DICOM files under deploy/dicom
+- ✨ Features: Add Keycloak realm client "dicom-viewer" with OpenID Connect settings and scopes
+- ✨ Features: Include new binary deploy/dicom/CTImage.dcm
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/621
+
+
+## [0.0.9-alpha.202605021709.cf0c5f80] - 2026-05-02
+
+- ✨ Features: Version bump to 0.0.9-alpha.202605021709.cf0c5f80 across multiple packages; updated repository URLs and homepage references
+- 🔧 Chores & Improvements: Deploy-beta workflow improvement for DICOM copy logic (copy all .dcm when directory exists and contains .dcm); seed-dicom.sh handles empty directory
+- 🔧 Chores & Improvements: OAuth /aud validation refactor to use faster prefix checks and MCP endpoint path, avoiding expensive server checks
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/620
+
+
+## [0.0.9-alpha.202605011807.e7d41bb1] - 2026-05-02
+
+- ✨ Features: 
+  - Add DICOM Viewer multi-server support hooks, including new ChartRenderer and lazy-loaded integration in HealthChartsCard
+  - Implement server-scoped DICOMweb client with serverId plumbing across ImagingStudyCard, DicomViewer, and Dicomweb routes
+  - DicomServers UI enhancements: new AUTH_TYPES constants, DicomServerDetails/Overview, extended DicomServerCard, lazy-loaded HealthChartsCard, onViewDetails with serverId propagation
+  - DicomServersManager refactor to lazy-load cards, add details/overview components, and improve server/client wiring
+  - SHL flow enhancement: optional shortUrl via URL shortener; SHL returns shortUrl when available
+  - DICOM viewer app wiring improvements to associate with serverId
+
+- 🔧 Chores & Improvements:
+  - Updated DICOM server thumbnail wiring to include serverId
+  - General lazy-loading and wiring optimizations across DICOM components
+
+Note: No breaking changes detected; no documentation or bug-fix items identified in provided diffs.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/619
+
+
+## [0.0.9-alpha.202605011803.e740003b] - 2026-05-01
+
+- 🔧 Chores & Improvements: Version bumps across multiple apps/configs (0.0.9-beta → 0.0.9-alpha) and 0.0.9-alpha → 0.0.9-beta.  
+- 🐛 Bug Fixes: Harden JWKS handling in backend to support isBackendService or client-jwt for jwksUri/jwksString, and ensure jwksString/jwksUri are included when publicKey/jwksString/jwksUri are present in body for backend services.  
+- 🔧 Chores & Improvements: Align client-registration and backend authentication flows to use client-secret where appropriate; minor JWKS handling adjustments.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/618
+
+
+## [0.0.9-alpha.202605011334.786d5900] - 2026-05-01
+
+- ✨ Features
+  - Add per-process EHR Launch support: default fallback, new launch code config (launchSecret, launchCodeTtlSeconds), and new launch-code.ts with payload/context and JWT signing/verification. Includes updated OAuth routes/schemas and EhrLaunchRequest/Response types. (backend; tests for EHR Launch flow)
+
+- 🔧 Chores & Improvements
+  - Bump version strings across multiple packages to 0.0.9-alpha.202605011334.786d5900 (and related prior bumps in 0.0.9-alpha.202605011236.25453c95 / df545ab1) ensuring consistency across consent-app, dtr-app, patient-portal, smart-dicom-template, ui, eslint-config, testing/e2e, and generated package.
+  - Switch Keycloak authentication: backend/admin now uses client_secret instead of client-jwt for Keycloak integration; backend/auth adjusted accordingly; Keycloak realm-export updated. Added secret for AI Assistant Agent.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/616
+
+
+## [0.0.9-alpha.202605011236.25453c95] - 2026-05-01
+
+- ✨ Features
+  - Introduce per-process EHR Launch code support: new launch code config (launchSecret, launchCodeTtlSeconds), LaunchCodePayload/Context, JWT signing/verification, and EHR Launch 2.2.0 schema/types.
+  - Add service-account admin
+
+- 🐛 Bug Fixes
+  - Adjust Keycloak authentication flow: switch from client_jwt to client-secret (backend/admin and backend/auth) and update tests accordingly.
+
+- 🔧 Chores & Improvements
+  - Bump version strings across multiple packages to 0.0.9-alpha.202605011236.25453c95.
+  - Update OAuth routes/schemas to include EhrLaunchRequest/Response types and related signing/verification imports.
+  - Update Keycloak realm-export.json to reflect clientAuthenticatorType change and add AI Assistant Agent secret; remove tokenEndpointUrl.
+
+Notes:
+- Excludes update/merge/metadata commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/615
+
+
+## [0.0.9-alpha.202604302305.da2c1b18] - 2026-05-01
+
+- 🔧 Chores & Improvements: Internal maintenance and refactoring across admin smart-apps, backend-services auth, oauth, and tests
+- 🐛 Bug Fixes: JWKS update logic now auto-sets jwtClientAuthentication.tokenEndpointUrl; ensure proper ClientMetadata cache handling
+- ✨ Features: Added ClientMetadata cache type and updated caches to store ClientMetadata; new warning log for non-backend-services requests containing client_assertion; backend services detection handler path
+- 📚 Documentation: Keycloak realm-export updated with jwtClientAuthentication.tokenEndpointUrl entry
+- ⚠️ Breaking Changes: None identified
+
+Note: No non-meaningful or purely update/merge commits included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/614
+
+
+## [0.0.9-alpha.202604302300.35715d6b] - 2026-04-30
+
+- ✨ Features
+  - ShlView.tsx: enhanced error UI for expired SHL with new icons and translations; additional lucide-react icons imported.
+- 🐛 Bug Fixes
+  - Backend: refined CORS origin logic to allow dicomweb paths directly and whitelist otherwise.
+  - Keycloak-config: improved error handling with try/catch and handleAdminError.
+  - auth/backend-services: added JWT replay protection.
+- 🔧 Chores & Improvements
+  - Bump and synchronize versions across multiple packages/apps/configs.
+  - Minor consistency: updated type annotation in app-factory.ts.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/613
+
+
+## [0.0.9-beta.202604302110.bc07682c] - 2026-04-30
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+- ✨ Features:
+  - DTR/Consent/Portal UI: enhanced error UI for expired SHL with new icons and translations; updated icon set usage.
+
+- 🐛 Bug Fixes:
+  - Backend:
+    - CORS: refined origin logic to allow dicomweb paths directly and otherwise whitelist origins.
+    - Keycloak-config: improved error handling by wrapping in try/catch and using handleAdminError.
+    - auth/backend-services: added JWT replay protection.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/612
+
+
+## [0.0.9-alpha.202604301738.a2ee7edc] - 2026-04-30
+
+- 🔧 Chores & Improvements: Bump all package.json versions to 0.0.9-alpha.202604301738.a2ee7edc across apps, UI, backend, and testing
+- 🔧 Chores & Improvements: Make updatedScopes immutable in backend/admin smart-apps.ts
+- 📚 Documentation: Add JsonObject/JsonValue types in sanitize-openapi.ts for OpenAPI parsing
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/610
+
+
+## [0.0.9-alpha.202604301056.b2972881] - 2026-04-30
+
+- ✨ Features: Frontend UI for BackendServicesSettings (URL management) with load/save flow and error handling
+- 🔧 Chores & Improvements: Adjust SmartConfigManager to support BackendServicesSettings and upgrade Tabs grid; minor UI import tweaks (Globe icon)
+- 🔧 Chores & Improvements: Extend admin API to support POST for admin calls
+- 🔧 Chores & Improvements: Backend: add Keycloak frontend URL endpoints and types (GET /frontend-url, related request/response schemas)
+- 🔧 Chores & Improvements: Backend: enhance frontend-url retrieval logic via Keycloak admin client with proper error handling (401/404)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/609
+
+
+## [0.0.9-beta.202604300242.fd141e34] - 2026-04-30
+
+- 🔧 Chores & Improvements: Dependency bumps and alignment
+  - Bump versions to 0.0.9-beta.202604300242.fd141e34 across apps/packages
+  - Add Vue 3 dependency (vue ^3.5.32) in bun.lock and root package.json; align related spread
+  - Remove stray @vue/server-renderer references from root and bun.lock
+  - Ensure vue dependency appears where previously missing in bun.lock/root package.json
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/607
+
+
+## [0.0.9-alpha.202604300208.b08206e4] - 2026-04-30
+
+- ✨ Features
+  - Backend: JWKS handling improvements with JwkKey interface and widened getClientJwks/JWKS types for better flexibility
+
+- 🔧 Chores & Improvements
+  - CI/CD: Bump Bun to 1.3.13 across actions and Dockerfiles (base, builder, runner) and update related images
+  - Code quality: minor TypeScript formatting and comments for JWKS handling
+
+- ⚠️ Breaking Changes
+  - None
+
+- 📚 Documentation
+  - None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/605
+
+
+## [0.0.9-alpha.202604300118.38a52ce6] - 2026-04-30
+
+- 🔧 Chores & Improvements: Improve OAuth token parsing by adding a custom body parser for application/x-www-form-urlencoded (URLSearchParams) to fix form-parser bug with base64url JWTs
+- ✨ Features: Add integration tests for form body parsing and JWT handling (preserve client_assertion_type when client_assertion is a real RS384 JWT)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/604
+
+
+## [0.0.9-alpha.202604300054.7d016d52] - 2026-04-30
+
+- 🔧 Chores & Improvements: Improve OAuth token endpoint to correctly parse application/x-www-form-urlencoded bodies using URLSearchParams; add integration tests validating form body parsing and preservation of client_assertion_type for RS384 JWTs.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/603
+
+
+## [0.0.9-alpha.202604300020.0341d81f] - 2026-04-30
+
+- 🔧 Chores & Improvements: Improve OAuth token parsing by adding a custom body parser for application/x-www-form-urlencoded using URLSearchParams; update tests to cover form body parsing and client_assertion preservation with RS384 JWTs
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/602
+
+
+## [0.0.9-alpha.202604291854.5d6050bc] - 2026-04-30
+
+- ✨ Features
+  - UI: RegisteredScopes component and SMART scope badges/UI integrated into ScopeManager
+  - Backend: SMART scopes feature with CRUD endpoints and admin routes
+  - Backend: Extended realm export to include SMART v2 scopes and related UI/config support
+
+- 🐛 Bug Fixes
+  - Backend: Replace jwks-rsa with built-in crypto for JWK→PEM conversion; add createPublicKey usage
+
+- 🔧 Chores & Improvements
+  - Tests: Scope backend config mocking scoped via Proxy; suppress logger in tests
+  - Minor UI/code imports: ScopeManager imports and translation/hooks adjustments
+  - Version/CI: Version bump across packages
+
+- ⚠️ Breaking Changes
+  - None detected
+
+- 📚 Documentation
+  - None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/601
+
+
+## [0.0.9-alpha.202604291410.81639e41] - 2026-04-29
+
+- ✨ Features
+  - 🧪 Auto-PR: Merge develop → test
+
+- 🐛 Bug Fixes
+  - Backend: Replace jwks-rsa with built-in crypto for JWK→PEM conversion; add createPublicKey usage and PEM export
+  - UI: Minor UI tweaks (Undo2 icon import in HealthcareUserEditForm; PendingIdP* types and related updates)
+
+- 🔧 Chores & Improvements
+  - Version bump across multiple packages for 0.0.9-alpha.202604291402.356eaf91
+  - Scope/Smart scopes: integrate RegisteredScopes into ScopeManager and admin smart-scopes support
+  - Backend: extend realm export to include SMART v2 scopes
+  - Tests: scope backend config mocking via Proxy; new backend test scaffolding for token flows
+
+- 📚 Documentation
+  - (No explicit docs changes identified)
+
+- ⚠️ Breaking Changes
+  - (No breaking changes detected)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/600
+
+
+## [0.0.9-alpha.202604291402.356eaf91] - 2026-04-29
+
+- 🔧 Chores & Improvements: CI/CD and maintenance across multiple packages
+  - Minor UI updates: added Undo2 icon import and pending IdP operation types; export and integrate PendingIdPOperation in HealthcareUserEditForm/UsersManager
+  - Backend: replace jwks-rsa with built-in crypto for JWK→PEM conversion; add createPublicKey usage and PEM export
+  - Tests: introduce backend-services test suite with RSA keys, JWKS mock, and fetch mocking to cover token flow
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/599
+
+
+## [0.0.9-alpha.202604282343.fd4ad718] - 2026-04-29
+
+- 🔧 Chores & Improvements: Replace jwks-rsa usage with built-in crypto for JWK→PEM conversion in verifyJwtSignature; add createPublicKey import and support for PEM export
+- 🧪 Features: Added backend tests for JWT/token flow with RSA keys and JWKS mock (backend/test/backend-services.test.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/598
+
+
+## [0.0.9-alpha.202604282337.e7f0fd37] - 2026-04-28
+
+- ✨ Features: 
+  - UI/admin: Support federated identities and IdP linking/unlinking; added federatedIdentities and onLinkIdP/onUnlink props.
+  - Admin/identity providers: Fetch and attach parallel userCounts to providers.
+
+- 🔧 Chores & Improvements:
+  - Metrics/logging: Introduced UTC-based sparse hourly bucketing and in-memory event utilities; added monitoring thresholds.
+  - General: Version bumps across multiple apps/components to 0.0.9-alpha.202604282337.e7f0fd37.
+
+- 🚧 Documentation:
+  - (No explicit docs changes detected.)
+
+- ⚠️ Breaking Changes:
+  - (No breaking changes detected.)
+
+- 🐛 Bug Fixes:
+  - (No specific user-facing bug fixes detected.)
+
+Note: Only changes since last release included; merge/update commits omitted.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/597
+
+
+## [0.0.9-alpha.202604280055.22eda139] - 2026-04-28
+
+- ✨ Features: Added federated identities support in UI admin forms with IdP linking/unlinking capabilities; IdP responses now include user counts and fetched in parallel. 
+- 🔧 Chores & Improvements: Refactored hourly metrics bucketing to UTC-based sparse buckets; introduced in-memory event utilities and monitoring thresholds for enhanced observability. 
+- 🔧 Chores & Improvements: Version bumps across multiple apps to 0.0.9-alpha → 0.0.9-beta in preparation for release. 
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/596
+
+
+## [0.0.9-alpha.202604272029.bb4d43c9] - 2026-04-27
+
+- 🧪 ⚠️ Breaking Changes: Runtime config now only syncs displayName with name; removed building of HTML badge/logo in realm displayNameHtml (affects KC realm export and display). Plain text displayName maintained.
+- 🔧 Chores & Improvements: Added proxy-smart brand.css and integrated into theme styles for login; new CSS to render a heart icon and customize realm name visuals.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/594
+
+
+## [0.0.9-alpha.202604272012.f4f1f7b3] - 2026-04-27
+
+- 🔧 Chores & Improvements: Remove service-account fallback flow; always use caller's Bearer token and drop service-account cache and admin logic. Update RBAC enforcement documentation to reflect direct token-based checks.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/593
+
+
+## [0.0.9-alpha.202604272007.ad815d0a] - 2026-04-27
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages to 0.0.9-alpha.202604271326.1163fe78
+- 🔧 Chores & Improvements: .dockerignore adjustments to preserve Keycloak themes directory while excluding other data; realm-export files remain unignored
+- ✨ Features: UI: BrandSettings exports new theme option "proxy-smart"
+- 🔧 Chores & Improvements: Various package.json updates to align with new alpha version
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/592
+
+
+## [0.0.9-alpha.202604271402.ef62ac9b] - 2026-04-27
+
+- ✨ Features: UI option added — BrandSettings now exports a new theme option "proxy-smart".
+- 🔧 Chores & Improvements: Adjusted .dockerignore to preserve Keycloak themes directory while excluding other Keycloak data; updated multiple package.json files to align with new alpha version.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/591
+
+
+## [0.0.9-alpha.202604260219.72c2f545] - 2026-04-27
+
+- ✨ Features: Custom Keycloak login theme support
+  - Add custom login theme files (proxy-smart), IdP icons infrastructure (idp-icons.css, social-providers.ftl), and theme.properties wiring for login styles.
+
+- 🔧 Chores & Improvements: Version bumps and packaging updates
+  - Bump versions across multiple packages/apps (consent-app, dtr-app, patient-portal, eslint-config, smart-dicom-template, ui, testing/e2e) to alpha with timestamped tag.
+
+- ⚠️ Breaking Changes: None detected
+
+Note: No user-facing changes beyond branding/theme customization and version updates.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/590
+
+
+## [0.0.9-alpha.202604260157.83fc33d8] - 2026-04-26
+
+- 🔧 Chores & Improvements: CI workflow tightened to run feature-branch tests only on dev/develop and alpha flows; prevent direct pushes to main/test/beta to avoid deployment race; alpha deploy via Northflank auto-deploy on push
+- 🔧 Chores & Improvements: Version bumps standardized to 0.0.9-alpha.202604260157.83fc33d8 across multiple packages (consent-app, dtr-app, patient-portal, ui, patient-portal package, eslint-config, testing/e2e, and several apps/templates)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/589
+
+
+## [0.0.9-alpha.202604260114.bfb2c188] - 2026-04-26
+
+- 🔧 Chores & Improvements: CI workflow cache key rename and new “Install Inferno Gems” step; remove DB setup cache-conditional logic
+- 🔧 Chores & Improvements: Bump versions across all packages (consent-app, dtr-app, patient-portal and nested package.jsons; eslint-config; testing/e2e) to 0.0.9-alpha.202604260114.bfb2c188
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/588
+
+
+## [0.0.9-alpha.202604260015.56fd77e4] - 2026-04-26
+
+- 🔧 Chores & Improvements: Remove Inferno PostgreSQL service and associated health config; pin Inferno version to v0.6.4 with notes on compatibility and future migration; clarify Redis usage for Sidekiq (dedicated service)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/587
+
+
+## [0.0.9-alpha.202604252254.403d4d46] - 2026-04-26
+
+- 🔧 Chores & Improvements: Version bumps across packages to 0.0.9-alpha.202604252202.6b15be32; general typings hardening and null-safety improvements; safer optional chaining; broader/stricter typing in UI, backend, Keycloak, and DICOM routes; ESLint no-explicit-any raised to error; minor refactors in app discovery and organization representations.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/586
+
+
+## [0.0.9-alpha.202604252202.6b15be32] - 2026-04-25
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages; minor typings tightening and null-safety refinements
+  - UI: strengthen Dicom server add/update types and import paths
+  - Backend: broaden types, safer optional chaining, and refactors in auth, org-branding, runtime-config, smart-scope-mappers, and admin routes
+  - Keycloak: stricter typing on token payloads/responses and adjusted error handling
+  - Dicom/DICOM routes: tightened parameter handling types
+  - ESLint: elevate no-explicit-any to error
+  - Misc: small refactors in app discovery and organization representations
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/585
+
+
+## [0.0.8-alpha.202604251656.4c9a01c0] - 2026-04-25
+
+- 🔧 Chores & Improvements: Add onOpenDetail callbacks to Dashboard, ImagingStudyCard, and GenomicsCard to enable opening detailed views (passed through from Dashboard to card components).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/583
+
+
 ## [0.0.8-alpha.202604251649.1dd04e7c] - 2026-04-25
 
 - ⚠️ Breaking Changes: None detected

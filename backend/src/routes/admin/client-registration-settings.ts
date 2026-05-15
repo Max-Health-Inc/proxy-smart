@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import { ErrorResponse, SuccessResponse } from '@/schemas'
 import { ClientRegistrationSettings, type ClientRegistrationSettingsType } from '@/schemas/auth/client-registration'
 import { logger } from '@/lib/logger'
@@ -124,8 +125,7 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
       return settings
     } catch (error) {
       logger.admin.error('Failed to get client registration settings', { error })
-      set.status = 500
-      return { error: 'Failed to get client registration settings', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -174,8 +174,7 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
       return { success: true, message: 'Client registration settings updated successfully' }
     } catch (error) {
       logger.admin.error('Failed to update client registration settings', { error })
-      set.status = 500
-      return { error: 'Failed to update client registration settings', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: ClientRegistrationSettings,
@@ -209,8 +208,7 @@ export const clientRegistrationSettingsRoutes = new Elysia({ prefix: '/client-re
       return { success: true, message: 'Client registration settings reset to defaults' }
     } catch (error) {
       logger.admin.error('Failed to reset client registration settings', { error })
-      set.status = 500
-      return { error: 'Failed to reset client registration settings', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {

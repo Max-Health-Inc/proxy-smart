@@ -8,6 +8,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
 import { logger } from './logger'
+import { DATA_DIR } from './paths'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,7 +27,7 @@ export interface McpEndpointConfig {
 
 // ── File persistence ─────────────────────────────────────────────────────────
 
-const CONFIG_PATH = join(process.cwd(), 'mcp-endpoint.json')
+const CONFIG_PATH = join(DATA_DIR, 'mcp-endpoint.json')
 
 const DEFAULT_CONFIG: McpEndpointConfig = {
   enabled: true,

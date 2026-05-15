@@ -5,7 +5,7 @@
  * for user sync, access group mapping, and audit log correlation.
  */
 
-import { KisiClient, KisiApiError } from './client'
+import { type KisiClient, KisiApiError } from './client'
 import type { KisiMember, KisiGroup, KisiEvent, KisiPaginatedResponse, KisiPlace, KisiLock, KisiListParams, KisiGroupLock } from './client'
 import { logger } from '../logger'
 

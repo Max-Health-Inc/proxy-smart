@@ -1,0 +1,34 @@
+/*
+ * Custom IdP button styling for the Keycloak login page.
+ *
+ * Targets social provider buttons by their element id: #social-<alias>.
+ * Keycloak 26.x renders: <a id="social-maxhealth" class="pf-v5-c-button ...">
+ *
+ * To add a new IdP style:
+ *   1. Copy the #social-<alias> block below
+ *   2. Set alias and brand colors
+ */
+
+/* ── Max Health ────────────────────────────────────────────────── */
+
+#social-maxhealth {
+  background-color: #0a0a0a !important;
+  color: #ffffff !important;
+  border-color: #0a0a0a !important;
+}
+
+#social-maxhealth:hover {
+  background-color: #1a1a1a !important;
+  border-color: #1a1a1a !important;
+}
+
+#social-maxhealth span {
+  color: #ffffff !important;
+}
+
+/* Give the inline SVG icon consistent sizing inside the button */
+#social-maxhealth svg {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}

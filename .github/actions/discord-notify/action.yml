@@ -52,7 +52,7 @@ inputs:
     required: false
     default: ''
   deployment-target:
-    description: 'Deployment target (local, northflank, vps)'
+    description: 'Deployment target (local, vps)'
     required: false
     default: ''
   fhir-server-url:

@@ -65,7 +65,7 @@ describe('Route modules integration (mounted into test Elysia app)', () => {
     expect(data).toHaveProperty('keycloak')
     expect(data.keycloak).toHaveProperty('isConfigured')
     expect(typeof data.keycloak.isConfigured).toBe('boolean')
-    if (data.keycloak.clientId != null) {
+    if (data.keycloak.clientId !== undefined && data.keycloak.clientId !== null) {
       expect(typeof data.keycloak.clientId).toBe('string')
     }
   })

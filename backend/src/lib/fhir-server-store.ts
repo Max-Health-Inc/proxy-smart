@@ -3,6 +3,7 @@ import { getFHIRServerInfo, getServerIdentifier, clearMetadataCache, type FHIRVe
 import { logger } from './logger'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { join } from 'path'
+import { DATA_DIR } from './paths'
 
 export interface FHIRServerInfo {
   name: string
@@ -12,13 +13,14 @@ export interface FHIRServerInfo {
   lastUpdated: number
   strictCapabilities?: boolean
   organizationIds?: string[]
+  mcpEnabled?: boolean
 }
 
 // ── File-backed persistence for dynamically added servers ────────────────────
 
-interface PersistedServer { url: string; name?: string; strictCapabilities?: boolean; organizationIds?: string[] }
+interface PersistedServer { url: string; name?: string; strictCapabilities?: boolean; organizationIds?: string[]; mcpEnabled?: boolean }
 
-const SERVERS_JSON_PATH = join(process.cwd(), 'fhir-servers.json')
+const SERVERS_JSON_PATH = join(DATA_DIR, 'fhir-servers.json')
 
 function loadPersistedServers(): Map<string, PersistedServer> {
   try {
@@ -125,7 +127,8 @@ class FHIRServerStore {
             metadata,
             lastUpdated: Date.now(),
             strictCapabilities: persisted.strictCapabilities,
-            organizationIds: persisted.organizationIds
+            organizationIds: persisted.organizationIds,
+            mcpEnabled: persisted.mcpEnabled
           }
           serverInfos.set(identifier, serverInfo)
           logger.fhir.info(`Loaded persisted FHIR server: ${serverInfo.name}`, {
@@ -142,7 +145,8 @@ class FHIRServerStore {
             metadata: { fhirVersion: 'Unknown', serverName: 'Unknown FHIR Server', supported: false },
             lastUpdated: Date.now(),
             strictCapabilities: persisted.strictCapabilities,
-            organizationIds: persisted.organizationIds
+            organizationIds: persisted.organizationIds,
+            mcpEnabled: persisted.mcpEnabled
           })
         }
       }
@@ -488,6 +492,27 @@ export async function setServerOrganizations(serverIdentifier: string, organizat
   savePersistedServers(dynamicServers)
 
   logger.fhir.info(`Set organizationIds for server ${server.name}`, { identifier: serverIdentifier, organizationIds: ids })
+  return updated
+}
+
+// Toggle MCP endpoint exposure for a server
+export async function setMcpEnabled(serverIdentifier: string, enabled: boolean): Promise<FHIRServerInfo> {
+  await ensureServersInitialized()
+
+  const server = fhirServerStore.getServerByName(serverIdentifier)
+  if (!server) {
+    throw new Error(`Server '${serverIdentifier}' not found`)
+  }
+
+  const updated: FHIRServerInfo = { ...server, mcpEnabled: enabled }
+  fhirServerStore.updateServer(serverIdentifier, updated)
+
+  // Persist the setting
+  const persisted = dynamicServers.get(serverIdentifier) || { url: server.url, name: server.name }
+  dynamicServers.set(serverIdentifier, { ...persisted, mcpEnabled: enabled })
+  savePersistedServers(dynamicServers)
+
+  logger.fhir.info(`Set mcpEnabled=${enabled} for server ${server.name}`, { identifier: serverIdentifier })
   return updated
 }
 

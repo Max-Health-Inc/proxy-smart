@@ -1,9 +1,10 @@
 import { Elysia, t } from 'elysia'
 import { config } from '../config'
-import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities } from '../lib/fhir-server-store'
+import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities, setMcpEnabled } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
 import { validateToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
+import { handleAdminError } from '../lib/admin-error-handler'
 import { validateExternalUrl } from '../lib/url-validation'
 import { mtlsStore } from '../lib/mtls-store'
 import * as forge from 'node-forge'
@@ -22,9 +23,9 @@ import {
   UpdateMtlsConfigRequest,
   UploadCertificateRequest,
   CommonErrorResponses,
-  FhirServerInfoResponseType,
-  FhirServerListResponseType,
-  ErrorResponseType,
+  type FhirServerInfoResponseType,
+  type FhirServerListResponseType,
+  type ErrorResponseType,
   type MtlsConfig,
   FhirServerListResponse
 } from '@/schemas'
@@ -288,6 +289,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           supported: serverInfo.metadata.supported,
           smartCapabilities: serverInfo.metadata.smartCapabilities,
           strictCapabilities: serverInfo.strictCapabilities ?? false,
+          mcpEnabled: serverInfo.mcpEnabled ?? false,
           organizationIds: serverInfo.organizationIds,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
@@ -311,8 +313,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         }
       }
 
-      set.status = 500
-      return { error: 'Failed to add FHIR server', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     body: AddFhirServerRequest,
@@ -368,6 +369,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
           supported: serverInfo.metadata.supported,
           smartCapabilities: serverInfo.metadata.smartCapabilities,
           strictCapabilities: serverInfo.strictCapabilities ?? false,
+          mcpEnabled: serverInfo.mcpEnabled ?? false,
           organizationIds: serverInfo.organizationIds,
           endpoints: {
             base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
@@ -391,8 +393,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         }
       }
 
-      set.status = 500
-      return { error: 'Failed to update FHIR server', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -435,6 +436,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         supported: serverInfo.metadata.supported,
         smartCapabilities: serverInfo.metadata.smartCapabilities,
         strictCapabilities: serverInfo.strictCapabilities ?? false,
+        mcpEnabled: serverInfo.mcpEnabled ?? false,
         organizationIds: serverInfo.organizationIds,
         endpoints: {
           base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
@@ -449,8 +451,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
     } catch (error) {
       logger.fhir.error('Failed to list FHIR servers', { error })
-      set.status = 500
-      return { error: 'Failed to list FHIR servers', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -491,6 +492,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         supported: serverInfo.metadata.supported,
         smartCapabilities: serverInfo.metadata.smartCapabilities,
         strictCapabilities: serverInfo.strictCapabilities ?? false,
+        mcpEnabled: serverInfo.mcpEnabled ?? false,
         endpoints: {
           // Proxy's FHIR endpoints
           base: proxyBase,
@@ -508,8 +510,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       }
     } catch (error) {
       logger.fhir.error('Failed to get server information', { serverId: params.server_id, error })
-      set.status = 500
-      return { error: 'Failed to get server information', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -726,8 +727,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: error.message }
       }
       logger.fhir.error('Failed to update strict capabilities', { error, serverId: params.server_id })
-      set.status = 500
-      return { error: 'Failed to update strict capabilities setting', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -745,6 +745,53 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
     detail: {
       summary: 'Toggle Strict Capability Enforcement',
       description: 'Enable or disable strict CapabilityStatement enforcement on the FHIR proxy for this server. When strict, the proxy rejects requests for interactions/operations not declared in the server\'s CapabilityStatement.',
+      tags: ['servers'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  // Toggle MCP endpoint for a server
+  .patch('/:server_id/mcp', async ({ params, body, set, headers }) => {
+    try {
+      const auth = extractBearerToken(headers)
+      if (!auth) {
+        set.status = 401
+        return { error: 'Authentication required' }
+      }
+
+      await validateToken(auth)
+
+      const updated = await setMcpEnabled(params.server_id, body.enabled)
+
+      return {
+        success: true,
+        message: `MCP endpoint ${body.enabled ? 'enabled' : 'disabled'} for server '${params.server_id}'`,
+        mcpEnabled: updated.mcpEnabled ?? false
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('not found')) {
+        set.status = 404
+        return { error: error.message }
+      }
+      logger.fhir.error('Failed to update MCP setting', { error, serverId: params.server_id })
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: ServerIdParam,
+    body: t.Object({
+      enabled: t.Boolean({ description: 'Whether to enable the per-server MCP endpoint' })
+    }, { title: 'SetMcpEnabledRequest' }),
+    response: {
+      200: t.Object({
+        success: t.Boolean(),
+        message: t.String(),
+        mcpEnabled: t.Boolean()
+      }, { title: 'SetMcpEnabledResponse' }),
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Toggle MCP Endpoint',
+      description: 'Enable or disable the per-server MCP endpoint at /fhir/{server_id}/mcp. When enabled, AI agents can use FHIR tools scoped to this server via the MCP protocol.',
       tags: ['servers'],
       security: [{ BearerAuth: [] }]
     }
@@ -773,8 +820,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: error.message }
       }
       logger.fhir.error('Failed to delete FHIR server', { error, serverId: params.server_id })
-      set.status = 500
-      return { error: 'Failed to delete FHIR server', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,
@@ -824,8 +870,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: error.message }
       }
       logger.fhir.error('Failed to refresh FHIR server metadata', { error, serverId: params.server_id })
-      set.status = 500
-      return { error: 'Failed to refresh server metadata', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: ServerIdParam,

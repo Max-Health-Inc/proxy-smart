@@ -1,6 +1,9 @@
 import { config } from './config'
 import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
+import { refreshCorsOrigins } from './lib/cors-origins'
+import { loadRuntimeConfig } from './lib/runtime-config'
+import { resolveKcRealmIssuer, getProxyJwks, PROXY_SIGNING_ALG } from './lib/proxy-signing'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -434,14 +437,14 @@ async function ensureOrganizationsEnabled(): Promise<void> {
       return
     }
 
-    if ((realm as any).organizationsEnabled) {
+    if (realm.organizationsEnabled) {
       logger.keycloak.info('✅ Keycloak Organizations already enabled')
       return
     }
 
     await admin.realms.update(
       { realm: config.keycloak.realm! },
-      { organizationsEnabled: true } as any,
+      { organizationsEnabled: true },
     )
 
     logger.keycloak.info('✅ Keycloak Organizations enabled on realm')
@@ -459,8 +462,8 @@ async function ensureOrganizationsEnabled(): Promise<void> {
  */
 const REQUIRED_USER_ATTRIBUTES = [
   { name: 'fhirUser', displayName: 'FHIR User Reference', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
-  { name: 'smart_patient', displayName: 'SMART Patient Context', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
-  { name: 'smart_encounter', displayName: 'SMART Encounter Context', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'patient_context', displayName: 'Patient Context (Admin)', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
+  { name: 'encounter_context', displayName: 'Encounter Context (Admin)', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
   { name: 'fhir_persons', displayName: 'FHIR Person Associations', permissions: { view: ['admin'], edit: ['admin'] }, multivalued: false },
   { name: 'organization', displayName: 'Organization', permissions: { view: ['admin', 'user'], edit: ['admin'] }, multivalued: false },
   { name: 'lastLogin', displayName: 'Last Login', permissions: { view: ['admin'], edit: ['admin'] }, multivalued: false },
@@ -537,42 +540,312 @@ async function ensureUserProfileAttributes(): Promise<void> {
 }
 
 /**
- * Sync brand name → Keycloak realm displayName + displayNameHtml.
- * Keycloak renders displayName as the login page heading instead of
- * the default Keycloak logo. Idempotent — skips update if already matching.
+ * Ensure the 'proxy-smart-signing' Identity Provider exists in Keycloak.
+ *
+ * KC's --import-realm is a no-op when the realm already exists (persistent DB).
+ * New IdPs/clients added to realm-export.json after initial deployment won't
+ * appear until manually created.  This function reconciles the IdP state at
+ * startup so federated-jwt client authentication works regardless of when
+ * the proxy-smart-signing IdP was introduced.
+ *
+ * The IdP's JWKS URL points to the backend's /.well-known/jwks.json so
+ * Keycloak can verify proxy-signed assertions for the federated-jwt flow.
  */
-async function ensureRealmDisplayName(): Promise<void> {
-  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) return
+async function ensureProxySigningIdp(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping proxy-signing IdP check — no admin credentials configured')
+    return
+  }
 
   try {
     const admin = new KcAdminClient({
       baseUrl: config.keycloak.baseUrl!,
       realmName: config.keycloak.realm!,
     })
+
     await admin.auth({
       grantType: 'client_credentials',
       clientId: config.keycloak.adminClientId,
       clientSecret: config.keycloak.adminClientSecret,
     })
 
-    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
-    if (!realm) return
-
-    const brandName = config.brand.name
-    const expectedHtml = `<div class="kc-logo-text"><span>${brandName}</span></div>`
-
-    if (realm.displayName === brandName && realm.displayNameHtml === expectedHtml) {
-      logger.keycloak.info('✅ Realm displayName already matches brand')
-      return
+    // ── Ensure admin-service has manage-identity-providers role ──
+    // Existing deployments may lack this role (added after initial import).
+    // The admin-service already has manage-users which allows role assignment.
+    try {
+      const adminClients = await admin.clients.find({ clientId: 'realm-management' })
+      const realmMgmt = adminClients?.[0]
+      if (realmMgmt?.id) {
+        // Find the admin-service's service account user
+        const svcClients = await admin.clients.find({ clientId: config.keycloak.adminClientId })
+        const svcClient = svcClients?.[0]
+        if (svcClient?.id) {
+          const svcUser = await admin.clients.getServiceAccountUser({ id: svcClient.id })
+          if (svcUser?.id) {
+            // Check current role assignments
+            const currentRoles = await admin.users.listClientRoleMappings({
+              id: svcUser.id,
+              clientUniqueId: realmMgmt.id,
+            })
+            const hasIdpRole = currentRoles.some(r => r.name === 'manage-identity-providers')
+            if (!hasIdpRole) {
+              // Find and assign the role
+              const availableRoles = await admin.clients.listRoles({ id: realmMgmt.id })
+              const idpRole = availableRoles.find(r => r.name === 'manage-identity-providers')
+              if (idpRole?.id) {
+                await admin.users.addClientRoleMappings({
+                  id: svcUser.id,
+                  clientUniqueId: realmMgmt.id,
+                  roles: [{ id: idpRole.id, name: 'manage-identity-providers' }],
+                })
+                logger.keycloak.info('Assigned manage-identity-providers role to admin-service')
+                // Re-authenticate to get a token with the new role
+                await admin.auth({
+                  grantType: 'client_credentials',
+                  clientId: config.keycloak.adminClientId,
+                  clientSecret: config.keycloak.adminClientSecret,
+                })
+              }
+            }
+          }
+        }
+      }
+    } catch (roleErr) {
+      logger.keycloak.debug('Could not self-assign IdP role (may already have it)', {
+        error: roleErr instanceof Error ? roleErr.message : String(roleErr),
+      })
     }
 
-    await admin.realms.update(
-      { realm: config.keycloak.realm! },
-      { displayName: brandName, displayNameHtml: expectedHtml }
-    )
-    logger.keycloak.info(`✅ Realm displayName synced to "${brandName}"`)
+    const IDP_ALIAS = 'proxy-smart-signing'
+    const token = await admin.getAccessToken()
+    const idpUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances/${IDP_ALIAS}`
+
+    // Compute the internal JWKS URL (how KC reaches the backend within Docker)
+    // If KEYCLOAK_BASE_URL has an internal hostname (e.g., http://keycloak:8080/auth),
+    // we know we're in Docker and the backend is at http://backend:PORT.
+    // Otherwise (localhost), the backend is also on localhost.
+    const kcHost = new URL(config.keycloak.baseUrl!).hostname
+    const internalBackendHost = (kcHost !== 'localhost' && kcHost !== '127.0.0.1')
+      ? 'backend'
+      : 'localhost'
+    const jwksUrl = `http://${internalBackendHost}:${config.port}/.well-known/jwks.json`
+
+    // Check if the IdP already exists
+    const getRes = await fetch(idpUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    const expectedConfig = {
+      issuer: config.baseUrl,
+      tokenUrl: `${config.baseUrl}/auth/token`,
+      authorizationUrl: `${config.baseUrl}/auth/authorize`,
+      clientId: 'keycloak',
+      clientSecret: 'unused',
+      useJwksUrl: 'true',
+      jwksUrl,
+      validateSignature: 'true',
+      clientAuthMethod: 'client_secret_post',
+      supportsClientAssertions: 'true',
+    }
+
+    if (getRes.ok) {
+      // IdP exists — check if jwksUrl needs updating
+      const existing = await getRes.json() as { config?: Record<string, string> }
+      if (existing.config?.jwksUrl === jwksUrl
+        && existing.config?.issuer === config.baseUrl
+        && existing.config?.supportsClientAssertions === 'true') {
+        logger.keycloak.info('✅ proxy-smart-signing IdP already configured correctly')
+      } else {
+
+      // Update IdP config
+      const putRes = await fetch(idpUrl, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alias: IDP_ALIAS,
+          displayName: 'Proxy Smart Signing',
+          providerId: 'oidc',
+          enabled: true,
+          trustEmail: false,
+          storeToken: false,
+          linkOnly: false,
+          config: expectedConfig,
+        }),
+      })
+
+      if (putRes.ok) {
+        logger.keycloak.info('✅ proxy-smart-signing IdP updated (jwksUrl/issuer synced)')
+      } else {
+        const body = await putRes.text()
+        logger.keycloak.warn(`Failed to update proxy-smart-signing IdP (${putRes.status}): ${body}`)
+      }
+      }
+    } else if (getRes.status === 404 || getRes.status === 403) {
+      // IdP doesn't exist (404) or we lacked permission on first check (403).
+      // After self-assigning manage-identity-providers, try to create it.
+      if (getRes.status === 403) {
+        logger.keycloak.info('Got 403 checking IdP — retrying after role self-assignment')
+      }
+      const createUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances`
+      const postRes = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          alias: IDP_ALIAS,
+          displayName: 'Proxy Smart Signing',
+          providerId: 'oidc',
+          enabled: true,
+          trustEmail: false,
+          storeToken: false,
+          linkOnly: false,
+          hideOnLogin: true,
+          config: expectedConfig,
+        }),
+      })
+
+      if (postRes.ok || postRes.status === 201) {
+        logger.keycloak.info('✅ proxy-smart-signing IdP created')
+      } else {
+        const body = await postRes.text()
+        logger.keycloak.warn(`Failed to create proxy-smart-signing IdP (${postRes.status}): ${body}`)
+      }
+    } else {
+      logger.keycloak.warn(`Unexpected response checking proxy-smart-signing IdP: ${getRes.status}`)
+    }
+
+    // ── Ensure the client auth flow includes federated-jwt execution ──
+    // When the realm was created before --features=client-auth-federated was enabled,
+    // the built-in "clients" flow won't have the "Signed JWT - Federated" execution.
+    // KC needs this execution to authenticate clients with clientAuthenticatorType=federated-jwt.
+    // Built-in flows can't be modified, so we copy and bind a new flow if needed.
+    try {
+      const CUSTOM_FLOW_ALIAS = 'clients with federated-jwt'
+      const flows = await admin.authenticationManagement.getFlows()
+      const realmInfo = await admin.realms.findOne({ realm: config.keycloak.realm! })
+      const currentFlowAlias = realmInfo?.clientAuthenticationFlow || 'clients'
+
+      // Check if the current flow already has federated-jwt
+      let needsFlowSetup = true
+      try {
+        const execs = await admin.authenticationManagement.getExecutions({ flow: currentFlowAlias })
+        if (execs.some((e: { providerId?: string }) => e.providerId === 'federated-jwt')) {
+          needsFlowSetup = false
+          logger.keycloak.debug('Client auth flow already has federated-jwt execution')
+        }
+      } catch { /* flow not found — will create */ }
+
+      if (needsFlowSetup) {
+        // Check if the custom flow already exists (from a previous run that failed to bind)
+        let customFlow = flows.find(f => f.alias === CUSTOM_FLOW_ALIAS)
+
+        if (!customFlow) {
+          // Copy the built-in "clients" flow
+          await admin.authenticationManagement.copyFlow({
+            flow: 'clients',
+            newName: CUSTOM_FLOW_ALIAS,
+          })
+          logger.keycloak.info('Copied built-in "clients" flow')
+        }
+
+        // Add federated-jwt execution to the custom flow (idempotent check)
+        const customExecs = await admin.authenticationManagement.getExecutions({ flow: CUSTOM_FLOW_ALIAS })
+        const hasFederated = customExecs.some((e: { providerId?: string }) => e.providerId === 'federated-jwt')
+
+        if (!hasFederated) {
+          await admin.authenticationManagement.addExecutionToFlow({
+            flow: CUSTOM_FLOW_ALIAS,
+            provider: 'federated-jwt',
+          })
+          logger.keycloak.info('Added federated-jwt execution to client auth flow')
+
+          // Enable the execution (it's added as DISABLED by default)
+          const updatedExecs = await admin.authenticationManagement.getExecutions({ flow: CUSTOM_FLOW_ALIAS })
+          const fedExec = updatedExecs.find((e: { providerId?: string }) => e.providerId === 'federated-jwt')
+          if (fedExec?.id) {
+            await admin.authenticationManagement.updateExecution(
+              { flow: CUSTOM_FLOW_ALIAS },
+              { ...fedExec, requirement: 'ALTERNATIVE' },
+            )
+            logger.keycloak.info('Set federated-jwt execution to ALTERNATIVE')
+          }
+        }
+
+        // Bind the custom flow as the realm's client authentication flow
+        if (currentFlowAlias !== CUSTOM_FLOW_ALIAS) {
+          await admin.realms.update({ realm: config.keycloak.realm! }, {
+            ...realmInfo,
+            clientAuthenticationFlow: CUSTOM_FLOW_ALIAS,
+          })
+          logger.keycloak.info('✅ Bound "clients with federated-jwt" as client authentication flow')
+        }
+      }
+    } catch (flowErr) {
+      logger.keycloak.warn('Could not ensure federated-jwt client auth flow', {
+        error: flowErr instanceof Error ? flowErr.message : String(flowErr),
+      })
+    }
+
+    // ── Ensure private_key_jwt clients use federated-jwt authenticator ──
+    // KC's --import-realm doesn't update existing clients. If a client was
+    // originally imported with clientAuthenticatorType "client-jwt" and later
+    // changed to "federated-jwt" in realm-export.json, the old value persists.
+    // Also, the jwt.credential.* attributes needed for federated auth may be
+    // missing entirely.  Detect affected clients by their JWKS registration
+    // (use.jwks.string=true) and migrate them.
+    // IMPORTANT: use the full client representation in the PUT to avoid
+    // resetting other fields (serviceAccountsEnabled, scopes, etc.).
+    const allClients = await admin.clients.find()
+    let migratedCount = 0
+    for (const client of allClients) {
+      if (!client.id || !client.clientId) continue
+
+      const attrs = (client.attributes ?? {}) as Record<string, string>
+      // Only touch clients with registered JWKS (private_key_jwt pattern)
+      if (attrs['use.jwks.string'] !== 'true') continue
+
+      // Check if anything needs fixing
+      const needsAuthType = client.clientAuthenticatorType !== 'federated-jwt'
+      const needsCredAttrs = attrs['jwt.credential.issuer'] !== IDP_ALIAS
+          || attrs['jwt.credential.sub'] !== client.clientId
+      const needsServiceAccount = !client.serviceAccountsEnabled
+
+      if (!needsAuthType && !needsCredAttrs && !needsServiceAccount) continue
+
+      try {
+        await admin.clients.update({ id: client.id }, {
+          ...client,
+          clientAuthenticatorType: 'federated-jwt',
+          serviceAccountsEnabled: true,
+          attributes: {
+            ...attrs,
+            'jwt.credential.issuer': IDP_ALIAS,
+            'jwt.credential.sub': client.clientId,
+          },
+        })
+        migratedCount++
+        logger.keycloak.info(`Migrated client "${client.clientId}" to federated-jwt auth`, {
+          fixedAuthType: needsAuthType,
+          fixedCredAttrs: needsCredAttrs,
+          fixedServiceAccount: needsServiceAccount,
+        })
+      } catch (err) {
+        logger.keycloak.warn(`Failed to migrate client "${client.clientId}" to federated-jwt`, {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+
+    if (migratedCount > 0) {
+      logger.keycloak.info(`✅ Migrated ${migratedCount} client(s) to federated-jwt`)
+    }
   } catch (error) {
-    logger.keycloak.warn('Could not sync realm displayName', {
+    logger.keycloak.warn('Could not ensure proxy-smart-signing IdP exists', {
       error: error instanceof Error ? error.message : String(error),
     })
   }
@@ -594,6 +867,12 @@ export async function initializeServer(): Promise<void> {
       
       // Check Keycloak connection before proceeding
       await checkKeycloakConnection()
+
+      // Resolve the canonical KC realm issuer (respects KC_HOSTNAME if set)
+      await resolveKcRealmIssuer()
+
+      // Ensure the proxy-smart-signing IdP exists (required for federated-jwt client auth)
+      await ensureProxySigningIdp()
       
       // Ensure Keycloak event logging is enabled (idempotent, non-fatal)
       await ensureKeycloakEventLogging()
@@ -604,14 +883,39 @@ export async function initializeServer(): Promise<void> {
       // Ensure all clients have post.logout.redirect.uris (Keycloak 25+ requirement)
       await ensurePostLogoutRedirectUris()
 
+      // Populate CORS origins cache from Keycloak client webOrigins
+      await refreshCorsOrigins()
+
+      // Eagerly load runtime config (consent, access-control, brand, etc.) from
+      // Keycloak realm attributes so externalAudiences and other settings are
+      // available immediately — without waiting for the first admin UI request.
+      try {
+        const runtimeAdmin = new KcAdminClient({
+          baseUrl: config.keycloak.baseUrl!,
+          realmName: config.keycloak.realm!,
+        })
+        await runtimeAdmin.auth({
+          grantType: 'client_credentials',
+          clientId: config.keycloak.adminClientId!,
+          clientSecret: config.keycloak.adminClientSecret!,
+        })
+        await loadRuntimeConfig(runtimeAdmin)
+        logger.keycloak.info('✅ Runtime config loaded from Keycloak realm attributes')
+      } catch (err) {
+        logger.keycloak.warn('Could not eagerly load runtime config — will load on first admin request', {
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+
       // Ensure Keycloak Organizations feature is enabled on the realm
       await ensureOrganizationsEnabled()
 
       // Ensure User Profile has all custom SMART attributes declared (KC 26+ requirement)
       await ensureUserProfileAttributes()
 
-      // Sync brand name → Keycloak realm displayName (login page heading)
-      await ensureRealmDisplayName()
+      // Brand display name is managed via the admin branding API (PUT /admin/branding).
+      // No longer overwritten on startup — the API calls saveBrandConfig() which syncs
+      // displayName + displayNameHtml to the Keycloak realm.
     } else {
       logger.keycloak.warn('Keycloak not configured - authentication features will be limited')
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')

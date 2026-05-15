@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       deployment_target:
-        description: "Where the application is deployed: local, northflank, or vps"
+        description: "Where the application is deployed: local or vps"
         required: false
         type: string
         default: "local"

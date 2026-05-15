@@ -1,12 +1,16 @@
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
+import type ProtocolMapperRepresentation from '@keycloak/keycloak-admin-client/lib/defs/protocolMapperRepresentation'
 import { logger } from './logger'
 
 /**
  * SMART on FHIR scope-to-protocol-mapper definitions.
  *
  * These mappers ensure Keycloak user attributes are emitted as JWT claims
- * so the proxy's token endpoint can inject SMART launch context (patient,
- * encounter, fhirUser, etc.) into the token response.
+ * so the proxy's token endpoint can inject SMART launch context (fhirUser)
+ * into the token response.
+ *
+ * NOTE: patient and encounter context is now handled by the TokenContextStore
+ * (session-based, per-token) rather than KC user attributes + protocol mappers.
  */
 
 export interface SmartMapperDefinition {
@@ -26,32 +30,11 @@ export interface SmartMapperDefinition {
  * When a scope is assigned to a client, each listed mapper must exist on
  * that scope in Keycloak so the corresponding user attribute flows into
  * the issued token.
+ *
+ * NOTE: launch/patient and launch/encounter no longer use KC protocol mappers.
+ * Patient and encounter context is stored per-token via TokenContextStore.
  */
 export const SMART_SCOPE_MAPPERS: Record<string, SmartMapperDefinition[]> = {
-  'launch/patient': [
-    {
-      name: 'smart_patient-mapper',
-      userAttribute: 'smart_patient',
-      claimName: 'smart_patient',
-      jsonType: 'String',
-    },
-  ],
-  'launch': [
-    {
-      name: 'smart_patient-mapper',
-      userAttribute: 'smart_patient',
-      claimName: 'smart_patient',
-      jsonType: 'String',
-    },
-  ],
-  'launch/encounter': [
-    {
-      name: 'smart_encounter-mapper',
-      userAttribute: 'smart_encounter',
-      claimName: 'smart_encounter',
-      jsonType: 'String',
-    },
-  ],
   'fhirUser': [
     {
       name: 'fhirUser-mapper',
@@ -198,14 +181,14 @@ export async function getSmartMapperStatus(
   for (const scope of allScopes) {
     if (!scope.name || !SMART_SCOPE_MAPPERS[scope.name]) continue
 
-    let mappers: any[] = []
+    let mappers: ProtocolMapperRepresentation[] = []
     try {
       mappers = await admin.clientScopes.listProtocolMappers({ id: scope.id! })
     } catch {
       // No mappers
     }
 
-    const existingMapperNames = new Set(mappers.map((m: any) => m.name))
+    const existingMapperNames = new Set(mappers.map((m) => m.name))
     const requiredMappers = SMART_SCOPE_MAPPERS[scope.name] || []
     const missingMappers = requiredMappers
       .filter((def) => !existingMapperNames.has(def.name))
@@ -215,10 +198,10 @@ export async function getSmartMapperStatus(
       scopeId: scope.id!,
       scopeName: scope.name,
       mappers: mappers
-        .filter((m: any) => m.protocolMapper === 'oidc-usermodel-attribute-mapper')
-        .map((m: any) => ({
+        .filter((m) => m.protocolMapper === 'oidc-usermodel-attribute-mapper')
+        .map((m) => ({
           id: m.id,
-          name: m.name,
+          name: m.name ?? '',
           claimName: m.config?.['claim.name'] ?? '',
           userAttribute: m.config?.['user.attribute'] ?? '',
           accessTokenClaim: m.config?.['access.token.claim'] === 'true',

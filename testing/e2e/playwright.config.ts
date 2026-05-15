@@ -5,20 +5,15 @@ import { defineConfig, devices } from "@playwright/test"
  *
  * Environments (set via E2E_TARGET):
  *   local  → docker-compose dev stack on localhost:8445
- *   alpha  → https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run
  *   beta   → https://beta.proxy-smart.com
  */
 
-const target = (process.env.E2E_TARGET ?? "beta") as "local" | "alpha" | "beta"
+const target = (process.env.E2E_TARGET ?? "beta") as "local" | "beta"
 
 const envMap = {
   local: {
     baseURL: "http://localhost:8445",
     keycloakURL: "http://localhost:8080",
-  },
-  alpha: {
-    baseURL: "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
-    keycloakURL: "https://p01--keycloak-alpha--776jg9nwd8rw.code.run",
   },
   beta: {
     baseURL: "https://beta.proxy-smart.com",

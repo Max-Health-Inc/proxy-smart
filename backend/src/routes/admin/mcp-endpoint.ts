@@ -147,6 +147,21 @@ function buildToolList(cfg: McpEndpointConfig) {
     readOnly: false,
   })
 
+  // Include the unified read_resource tool (replaces individual GET route tools)
+  const readResourceName = 'read_resource'
+  let readResourceExposed: boolean
+  if (cfg.enabledTools !== null) {
+    readResourceExposed = cfg.enabledTools.includes(readResourceName)
+  } else {
+    readResourceExposed = !cfg.disabledTools.includes(readResourceName)
+  }
+  tools.push({
+    name: readResourceName,
+    description: 'Unified read tool — reads data from any available GET endpoint by path.',
+    exposed: readResourceExposed,
+    readOnly: true,
+  })
+
   return tools
 }
 

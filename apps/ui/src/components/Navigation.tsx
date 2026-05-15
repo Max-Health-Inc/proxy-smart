@@ -34,6 +34,7 @@ import {
   DoorOpen,
   Building2,
   Landmark,
+  Workflow,
   Eye,
   EyeOff,
 } from 'lucide-react';
@@ -176,11 +177,18 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       description: t('Multi-Tenancy'),
       icon: Landmark
     },
+    { 
+      id: 'auth-flows', 
+      label: t('Auth Flows'), 
+      description: t('Client Authentication'),
+      icon: Workflow
+    },
 
   ];
 
   // Tabs that can be toggled on/off in preferences
   const togglableTabs = [
+    { id: 'auth-flows', label: t('Auth Flows'), icon: Workflow },
     { id: 'ai-tools', label: t('AI Tools'), icon: Sparkles },
     { id: 'branding', label: t('Branding'), icon: Building2 },
     { id: 'door-management', label: t('Door Management'), icon: DoorOpen },

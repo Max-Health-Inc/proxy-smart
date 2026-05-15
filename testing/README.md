@@ -5,7 +5,7 @@
 | Branch | Version | Deploys To | Infrastructure |
 |--------|---------|------------|----------------|
 | `dev/*`, `develop/*` | - | - | Local CI stack |
-| `develop` | alpha | Northflank | Mono container |
+| `develop` | alpha | - (dev-only release) | - |
 | `test` | beta | VPS | Multiple containers |
 | `main` | production | AWS | Production infra |
 
@@ -55,7 +55,6 @@ Run tests against deployed instances instead of local stack:
 
 | Branch | Test Against | Config |
 |--------|--------------|--------|
-| `develop` | Northflank (alpha) | `testing/develop/` |
 | `test` | VPS (beta) | `testing/beta/` |
 | `main` | AWS (production) | `testing/production/` |
 
@@ -78,14 +77,14 @@ New runs on the same branch wait or skip if one is already running. Different br
 | Folder | Branch | Target |
 |--------|--------|--------|
 | `dev/` | `dev/*`, `develop/*` | Local CI stack |
-| `alpha/` | `develop` | Northflank (deployed) |
+| `alpha/` | `develop` | Local CI stack (dev-only release) |
 | `beta/` | `test` | VPS (deployed) |
 | `production/` | `main` | AWS (deployed) |
 
 ## TODO
 
 - [x] Add `testing/dev/inferno-config.json` for local CI
-- [x] Update `testing/alpha/inferno-config.json` with Northflank URL
+- [x] Update `testing/alpha/inferno-config.json` for local CI testing
 - [x] Update `testing/beta/inferno-config.json` with VPS URL (placeholder)
 - [x] Update `testing/production/inferno-config.json` with AWS URL (placeholder)
 - [x] Update workflow to trigger on `dev/*`, `develop/*` branches (local stack)

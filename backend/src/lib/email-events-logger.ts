@@ -324,7 +324,7 @@ class EmailEventsLogger {
         .map(([hour, s]) => ({ hour, ...s, total: s.success + s.failure }))
         .sort((a, b) => a.hour.localeCompare(b.hour))
 
-      const recentErrors = this.events.filter(e => !e.success).slice(0, 20)
+      const recentErrors = recent.filter(e => !e.success).slice(0, 20)
 
       this.analytics = {
         totalEvents: recent.length,

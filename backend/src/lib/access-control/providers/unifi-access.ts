@@ -20,6 +20,7 @@
 import { AccessApi } from 'unifi-access'
 import type { AccessDoorConfig, AccessFloorConfig, AccessDeviceConfig } from 'unifi-access'
 import { logger } from '../../logger'
+import { DATA_DIR } from '../../paths'
 import fs from 'fs'
 import path from 'path'
 import type {
@@ -130,7 +131,7 @@ export class UnifiAccessProvider implements AccessControlProvider {
 
   constructor(config: UnifiAccessConfig) {
     this.config = config
-    this.stateFilePath = path.join(process.cwd(), 'logs', 'access-control', 'unifi-provider-state.json')
+    this.stateFilePath = path.join(DATA_DIR, 'access-control', 'unifi-provider-state.json')
     this.state = this.loadState()
 
     // Wire library logging to our logger

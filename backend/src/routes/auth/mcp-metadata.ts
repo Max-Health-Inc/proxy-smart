@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+import { getProxyJwks } from '@/lib/proxy-signing'
 import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
 
 /**
@@ -132,9 +133,11 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         // acts as AS from MCP clients' perspective (it owns the registration_endpoint
         // and proxies authorization/token endpoints), so use baseUrl, not Keycloak's issuer.
         issuer: baseUrl,
-        authorization_endpoint: oidcConfig.authorization_endpoint,
-        token_endpoint: oidcConfig.token_endpoint,
-        jwks_uri: oidcConfig.jwks_uri,
+        // Point to proxy endpoints so MCP clients go through our auth layer
+        // (SMART launch context enrichment, Backend Services JWT validation, aud enforcement)
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         // Point to our own DCR endpoint instead of Keycloak's native one
         // (Keycloak's requires initial access tokens / trusted host policy)
         registration_endpoint: `${baseUrl}/auth/register`,
@@ -186,10 +189,18 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       }
       
       const oidcConfig = await response.json()
-      
-      // Return Keycloak's metadata as-is
-      // The issuer will be Keycloak's realm URL (the real token issuer)
-      return oidcConfig
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      // Rewrite endpoints to proxy URLs so MCP clients go through our auth layer
+      return {
+        ...oidcConfig,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
+        registration_endpoint: `${baseUrl}/auth/register`,
+        introspection_endpoint: `${baseUrl}/auth/introspect`,
+        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+      }
     } catch {
       set.status = 500
       return {
@@ -231,8 +242,17 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       }
       
       const oidcConfig = await response.json()
-      
-      return oidcConfig
+      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
+
+      return {
+        ...oidcConfig,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
+        registration_endpoint: `${baseUrl}/auth/register`,
+        introspection_endpoint: `${baseUrl}/auth/introspect`,
+        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+      }
     } catch {
       set.status = 500
       return {
@@ -284,12 +304,12 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         authMethods.push('none')
       }
       
-      // Return OAuth 2.0 AS Metadata format (subset of OIDC)
+      // Return OAuth 2.0 AS Metadata format — point to proxy endpoints
       return {
         issuer: baseUrl,
-        authorization_endpoint: oidcConfig.authorization_endpoint,
-        token_endpoint: oidcConfig.token_endpoint,
-        jwks_uri: oidcConfig.jwks_uri,
+        authorization_endpoint: `${baseUrl}/auth/authorize`,
+        token_endpoint: `${baseUrl}/auth/token`,
+        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         client_registration_types_supported: ['client_id_metadata_document', 'dynamic_client_registration'],
         scopes_supported: oidcConfig.scopes_supported,
@@ -322,7 +342,8 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
    * Proxies to Keycloak's JWKS endpoint so clients (including MCP servers)
    * can validate tokens without knowing about Keycloak directly.
    */
-  .get('/jwks.json', async ({ set }) => {
+  .get('/jwks.json', async () => {
+    const proxyJwks = getProxyJwks()
     try {
       const keycloakBase = config.keycloak.publicUrl || config.keycloak.baseUrl
       const realm = config.keycloak.realm
@@ -331,32 +352,21 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       const response = await fetch(jwksUrl)
       
       if (!response.ok) {
-        logger.auth.error('Failed to fetch JWKS from Keycloak', {
+        logger.auth.warn('Failed to fetch JWKS from Keycloak, serving proxy keys only', {
           status: response.status,
           statusText: response.statusText,
           jwksUrl
         })
-        set.status = 502
-        return {
-          error: 'bad_gateway',
-          error_description: 'Failed to fetch JWKS from authorization server'
-        }
+        return proxyJwks
       }
       
-      const jwks = await response.json()
+      const kcJwks = await response.json()
       
-      logger.auth.debug('Successfully proxied JWKS from well-known endpoint', {
-        keyCount: jwks.keys?.length || 0
-      })
-      
-      return jwks
+      // Merge Keycloak keys (token validation) with proxy signing key (federated client auth)
+      return { keys: [...(kcJwks.keys || []), ...proxyJwks.keys] }
     } catch (error) {
-      logger.auth.error('Error proxying JWKS from well-known endpoint', { error })
-      set.status = 500
-      return {
-        error: 'server_error',
-        error_description: 'Internal server error while fetching JWKS'
-      }
+      logger.auth.warn('Error fetching JWKS from Keycloak, serving proxy keys only', { error })
+      return proxyJwks
     }
   }, {
     detail: {

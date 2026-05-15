@@ -16,8 +16,6 @@ interface AddServerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddServer: (url: string) => Promise<void>;
-  loading: boolean;
-  error?: string | null;
   urlError?: string | null;
 }
 
@@ -25,13 +23,12 @@ export function AddServerDialog({
   open,
   onOpenChange,
   onAddServer,
-  loading,
-  error,
   urlError
 }: AddServerDialogProps) {
   const { t } = useTranslation();
   const [newServerUrl, setNewServerUrl] = useState('');
   const [localUrlError, setLocalUrlError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const isValidUrl = (url: string) => {
     try {
@@ -46,17 +43,24 @@ export function AddServerDialog({
     const trimmedUrl = newServerUrl.trim();
     
     if (!trimmedUrl) {
-      setLocalUrlError('Server URL is required');
+      setLocalUrlError(t('Server URL is required'));
       return;
     }
 
     if (!isValidUrl(trimmedUrl)) {
-      setLocalUrlError('Please enter a valid URL (e.g., https://hapi.fhir.org/baseR4)');
+      setLocalUrlError(t('Please enter a valid URL (e.g., https://hapi.fhir.org/baseR4)'));
       return;
     }
 
     setLocalUrlError(null);
-    await onAddServer(trimmedUrl);
+    setSubmitting(true);
+    try {
+      await onAddServer(trimmedUrl);
+    } catch {
+      // Error handled by parent
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -93,13 +97,8 @@ export function AddServerDialog({
             />
           </div>
           {displayError && (
-            <div className="col-span-4 text-red-600 text-sm mt-2">
+            <div className="col-span-4 text-sm text-destructive mt-2">
               {displayError}
-            </div>
-          )}
-          {error && (
-            <div className="col-span-4 text-red-600 text-sm mt-2">
-              {error}
             </div>
           )}
         </div>
@@ -108,14 +107,14 @@ export function AddServerDialog({
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={loading}
+            disabled={submitting}
           >
             {t('Cancel')}
           </Button>
           <LoadingButton
             type="button"
             onClick={handleSubmit}
-            loading={loading}
+            loading={submitting}
             loadingText={t('Adding Server...')}
             disabled={!newServerUrl.trim()}
             className="bg-green-600 hover:bg-green-700"

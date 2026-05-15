@@ -71,7 +71,7 @@ describe('Auth Config Route Edge Cases', () => {
     // If implementation exposes fields, ensure they are strings when present
     const optionalStringProps = ['baseUrl', 'realm', 'clientId', 'redirectUri', 'scope'] as const
     for (const p of optionalStringProps) {
-      if (p in data.keycloak && data.keycloak[p] != null) {
+      if (p in data.keycloak && data.keycloak[p] !== undefined && data.keycloak[p] !== null) {
         expect(typeof data.keycloak[p]).toBe('string')
       }
     }

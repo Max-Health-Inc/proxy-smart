@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import { validateToken } from '@/lib/auth'
 import { CommonErrorResponses, ScopeMapperStatusResponse, ScopeMapperFixResponse, SuccessResponse } from '@/schemas'
 import { getSmartMapperStatus, ensureAllSmartMappers } from '@/lib/smart-scope-mappers'
@@ -34,8 +35,7 @@ export const scopeMappersRoutes = new Elysia({ prefix: '/scope-mappers', tags: [
       }
     } catch (error) {
       logger.admin.error('Failed to get scope mapper status', { error })
-      set.status = 500
-      return { error: 'Failed to get scope mapper status', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -79,8 +79,7 @@ export const scopeMappersRoutes = new Elysia({ prefix: '/scope-mappers', tags: [
       }
     } catch (error) {
       logger.admin.error('Failed to fix scope mappers', { error })
-      set.status = 500
-      return { error: 'Failed to fix scope mappers', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {
@@ -123,8 +122,7 @@ export const scopeMappersRoutes = new Elysia({ prefix: '/scope-mappers', tags: [
       }
     } catch (error) {
       logger.admin.error('Failed to delete protocol mapper', { error, ...params })
-      set.status = 500
-      return { error: 'Failed to delete protocol mapper', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     params: t.Object({

@@ -21,8 +21,8 @@ Client → /auth/token (code + PKCE) → Backend proxies to Keycloak → access_
 Client → /auth/introspect (token) → Backend adds admin-service Basic auth → Keycloak introspect
 ```
 
-The backend enriches introspection responses with SMART launch context:
-`smart_patient` → `patient`, `smart_encounter` → `encounter`, `fhir_user` → `fhirUser`.
+The backend enriches introspection responses with SMART launch context from the TokenContextStore (session-based, per-token JTI):
+`patient`, `encounter`, `fhirUser` are applied from the store and `fhir_user` → `fhirUser` normalization is done.
 
 ## Key Files
 
@@ -83,7 +83,7 @@ The file `deploy/fhir-seed-bundle.json` is a FHIR transaction bundle:
 | Branch | Stage | Target |
 |--------|-------|--------|
 | `dev/*`, `develop/*` | dev | Local CI (services as containers) |
-| `develop` | alpha | Deployed (Northflank) |
+| `develop` | alpha | Dev-only release (no live deployment) |
 | `test` | beta | Deployed (VPS) |
 | `main` | production | Deployed (AWS) |
 

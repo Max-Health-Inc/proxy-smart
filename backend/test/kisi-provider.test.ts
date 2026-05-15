@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { KisiAccessProvider } from '../src/lib/access-control/providers/kisi'
-import { KisiClient } from '../src/lib/kisi/client'
+import { type KisiClient } from '../src/lib/kisi/client'
 
 // ==================== Mock Client ====================
 

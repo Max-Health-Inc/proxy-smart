@@ -1,21 +1,5 @@
 #!/bin/bash
 set -euo pipefail
 
-COMMIT_MSG_FILE="$1"
-COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
-
-# Don't add [skip northflank] if it's already there
-if echo "$COMMIT_MSG" | grep -qF "[skip northflank]"; then
-  exit 0
-fi
-
-# Don't modify merge commits
-if echo "$COMMIT_MSG" | head -1 | grep -qE "^Merge "; then
-  exit 0
-fi
-
-# Append [skip northflank] so Northflank only builds on CI version-bump commits
-echo "" >> "$COMMIT_MSG_FILE"
-echo "[skip northflank]" >> "$COMMIT_MSG_FILE"
-
+# No-op commit-msg hook. Kept as a placeholder for future use.
 exit 0

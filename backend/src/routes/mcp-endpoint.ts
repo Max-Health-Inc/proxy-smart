@@ -32,7 +32,7 @@ import {
 import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
 import type { ToolMetadata, ResourceMetadata as ResourceMeta } from '../lib/ai/tool-registry'
 import { searchDocumentation } from '../lib/ai/rag-tools'
-import { registerFhirTools } from '../lib/ai/fhir-tools'
+import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { Value } from '@sinclair/typebox/value'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
@@ -73,19 +73,20 @@ if (sessionCleanupInterval.unref) sessionCleanupInterval.unref()
 
 /**
  * Register all exposed tools from the tool-registry onto an McpServer instance.
+ * Mutation tools (POST/PUT/DELETE) are registered individually.
+ * GET (read-only) tools are collapsed into a single `read_resource` tool.
  */
 function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   // Register route-based tools from the tool registry (if initialized)
   if (isToolRegistryInitialized()) {
     const registry = getToolRegistry()
-    const cfg = loadMcpEndpointConfig()
 
     for (const [toolName, meta] of registry) {
       // Respect admin MCP-endpoint tool config
       if (!isToolExposed(toolName)) continue
 
-      // Skip readOnly (GET) tools when exposeResourcesAsTools is disabled
-      if (meta.readOnly && !cfg.exposeResourcesAsTools) continue
+      // Skip ALL read-only (GET) tools — they're handled by the unified read_resource tool
+      if (meta.readOnly) continue
 
       // Permission: skip admin-only tools when caller has no admin role
       if (!meta.public && !userRoles.includes('admin')) continue
@@ -94,18 +95,12 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       const inputSchema = getMergedInputSchema(meta)
       const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
 
-      // Add readOnlyHint annotation for GET routes so clients skip confirmation
-      const annotations = meta.readOnly
-        ? { readOnlyHint: true, idempotentHint: true } as const
-        : undefined
-
       if (zodSchema) {
         server.registerTool(
           toolName,
           {
             description: generateDescription(toolName, meta),
             inputSchema: zodSchema,
-            ...(annotations && { annotations }),
           },
           async (args: unknown) => {
             return executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current)
@@ -116,7 +111,6 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
           toolName,
           {
             description: generateDescription(toolName, meta),
-            ...(annotations && { annotations }),
           },
           async () => {
             return executeTool(toolName, meta, {}, tokenRef.current)
@@ -134,10 +128,10 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
     {
       description:
         'Search the platform documentation knowledge base using semantic similarity. Use this when asked about platform features, configuration, SMART on FHIR concepts, admin UI, OAuth flows, or anything the docs might cover.',
-      inputSchema: z.object({
+      inputSchema: {
         query: z.string().describe('The search query to find relevant documentation'),
         limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
-      }),
+      },
     },
     async ({ query, limit }) => {
       try {
@@ -159,8 +153,10 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
   )
   }
 
-  // Register FHIR data tools (fhir_read, fhir_search, fhir_create, fhir_update, fhir_delete, fhir_capabilities)
-  registerFhirTools(server, tokenRef)
+  // Register unified read_resource tool — collapses all GET route tools into one
+  if (isToolExposed('read_resource')) {
+    registerReadResourceTool(server, userRoles, tokenRef)
+  }
 }
 
 // ── Resource bridging ────────────────────────────────────────────────────────
@@ -283,11 +279,31 @@ function generateDescription(toolName: string, meta: ToolMetadata): string {
  * TypeBox schemas ARE JSON Schema (with extra Symbol metadata) — strip Symbols
  * then use Zod v4's built-in z.fromJSONSchema() for a proper Zod type the MCP SDK understands.
  */
-function typeboxToZod(schema: unknown): z.ZodType | undefined {
+function typeboxToZod(schema: unknown): Record<string, z.ZodType> | undefined {
   try {
     const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
     if (jsonSchema.type !== 'object') return undefined
-    return z.fromJSONSchema(jsonSchema)
+
+    // Build a raw shape from JSON Schema properties — the MCP SDK accepts
+    // Record<string, AnySchema> (ZodRawShapeCompat) and wraps it internally.
+    const properties = jsonSchema.properties as Record<string, Record<string, unknown>> | undefined
+    if (!properties) return undefined
+
+    const required = new Set((jsonSchema.required as string[] | undefined) ?? [])
+    const shape: Record<string, z.ZodType> = {}
+
+    for (const [key, propSchema] of Object.entries(properties)) {
+      let fieldSchema = z.fromJSONSchema(propSchema)
+      if (!required.has(key)) {
+        fieldSchema = fieldSchema.optional()
+      }
+      if (propSchema.description && typeof propSchema.description === 'string') {
+        fieldSchema = fieldSchema.describe(propSchema.description)
+      }
+      shape[key] = fieldSchema
+    }
+
+    return shape
   } catch (err) {
     logger.warn('Failed to convert TypeBox schema to Zod:', err instanceof Error ? err.message : String(err))
     return undefined
@@ -457,7 +473,7 @@ function unauthorized(): Response {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource"`,
+        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="openid profile email"`,
       },
     },
   )

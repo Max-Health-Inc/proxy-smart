@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { validateToken } from '@/lib/auth'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
@@ -6,6 +6,8 @@ import { logger } from '@/lib/logger'
 import {
   getRuntimeDicomServers,
   saveDicomServers,
+  getDicomViewerAppClientId,
+  saveDicomViewerApp,
 } from '@/lib/runtime-config'
 import {
   DicomServerConfig,
@@ -279,6 +281,45 @@ export const dicomServersAdminRoutes = new Elysia({ prefix: '/dicom-servers', ta
     detail: {
       summary: 'DICOM Server Status',
       description: 'Probe a DICOM server for reachability',
+      tags: ['admin'],
+    },
+  })
+
+  // ── Get DICOM viewer app setting ────────────────────────────────────
+  .get('/viewer-app', async () => {
+    const clientId = getDicomViewerAppClientId()
+    return { viewerAppClientId: clientId }
+  }, {
+    response: {
+      200: t.Object({ viewerAppClientId: t.Union([t.String(), t.Null()]) }),
+    },
+    detail: {
+      summary: 'Get DICOM Viewer App',
+      description: 'Get the globally configured SMART app used as DICOM viewer',
+      tags: ['admin'],
+    },
+  })
+
+  // ── Set DICOM viewer app setting ────────────────────────────────────
+  .put('/viewer-app', async ({ body, set, headers, getAdmin }) => {
+    try {
+      const token = extractBearerToken(headers)
+      await validateToken(token!)
+      const admin = await getAdmin(token!)
+      await saveDicomViewerApp(admin, body.viewerAppClientId || null)
+      return { success: true, message: 'DICOM viewer app updated', viewerAppClientId: body.viewerAppClientId || null }
+    } catch (err) {
+      logger.admin.error('Failed to update DICOM viewer app', { error: err })
+      set.status = 500
+      return { error: 'Failed to update DICOM viewer app', details: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }, {
+    body: t.Object({
+      viewerAppClientId: t.Optional(t.Union([t.String(), t.Null()], { description: 'Client ID of the SMART app to use as DICOM viewer, or null to clear' })),
+    }),
+    detail: {
+      summary: 'Set DICOM Viewer App',
+      description: 'Set the globally configured SMART app used as DICOM viewer',
       tags: ['admin'],
     },
   })

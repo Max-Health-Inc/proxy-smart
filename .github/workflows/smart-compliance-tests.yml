@@ -49,19 +49,21 @@ on:
         value: ${{ jobs.smart-compliance-test.outputs.status }}
   
   # Feature branches - test with local CI stack
+  # NOTE: 'test' and 'main' are intentionally excluded here because their
+  # release workflows (release-beta.yml, release-production.yml) call
+  # testing-strategy.yml → smart-compliance-tests.yml AFTER deployment.
+  # Running compliance tests directly on push would race against deployment
+  # and hit a 503 because the new code isn't deployed yet.
+  # NOTE: 'develop' is excluded because alpha is a dev-only release with no live deployment.
   push:
     branches:
       - 'dev/*'
       - 'develop/*'
-      - 'develop'  # Alpha deployed
-      - 'test'     # Beta deployed
-      - 'main'     # Production deployed
     tags:
       - 'v*'
     paths:
       - 'backend/**'
       - 'lib/**'
-      - 'shared-ui/**'
       - 'apps/**'
       - 'Dockerfile'
       - 'Dockerfile.keycloak'
@@ -85,12 +87,10 @@ permissions:
 env:
   # Determine test stage based on branch
   # dev/* and develop/* -> dev (local)
-  # develop -> alpha (Northflank)
   # test -> beta (VPS)
   # main -> production (AWS)
   TEST_STAGE: ${{ 
     (startsWith(github.ref, 'refs/heads/dev/') || startsWith(github.ref, 'refs/heads/develop/')) && 'dev' ||
-    github.ref == 'refs/heads/develop' && 'alpha' ||
     github.ref == 'refs/heads/test' && 'beta' ||
     github.ref == 'refs/heads/main' && 'production' ||
     inputs.test_stage || 'dev' }}
@@ -123,22 +123,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       
-      # Inferno's postgres
-      inferno-db:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: inferno
-          POSTGRES_PASSWORD: inferno
-          POSTGRES_DB: inferno
-        ports:
-          - 5433:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-      
-      # Redis for Inferno
+      # Redis for Inferno (Sidekiq job queue)
       redis:
         image: redis:8-alpine
         ports:
@@ -267,11 +252,19 @@ jobs:
         if: steps.config.outputs.target != 'deployed'
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: '1.3.13'
 
       - name: Install dependencies
         if: steps.config.outputs.target != 'deployed'
         run: bun install
+
+      - name: Build Patient Picker
+        if: steps.config.outputs.target != 'deployed'
+        run: bun run build:patient-picker:static
+
+      - name: Copy Apps to Backend
+        if: steps.config.outputs.target != 'deployed'
+        run: bun run copy:apps-to-backend
 
       - name: Build Backend
         if: steps.config.outputs.target != 'deployed'
@@ -301,7 +294,7 @@ jobs:
             -e KC_HTTP_ENABLED=true \
             -e KC_HOSTNAME_STRICT=false \
             quay.io/keycloak/keycloak:26.6.1 \
-            start-dev --import-realm
+            start-dev --import-realm --features=cimd,token-exchange,client-auth-federated
           
           # Wait for Keycloak to be ready
           # Note: Health endpoints return 404 in dev mode, check the realm endpoint instead
@@ -449,7 +442,7 @@ jobs:
           echo "Keycloak: $KC_URL"
           echo "Realm: $KC_REALM"
           
-          # Check backend health (with retries — Northflank may be cold-starting)
+          # Check backend health (with retries — deployed service may be cold-starting)
           echo "Checking backend health..."
           BACKEND_OK=false
           for i in $(seq 1 20); do
@@ -463,25 +456,26 @@ jobs:
           done
           if [ "$BACKEND_OK" = "false" ]; then
             echo "ERROR: Backend not reachable at $BACKEND_URL/health after 20 attempts"
-            echo "Make sure the service is scaled up on Northflank"
+            echo "Make sure the deployed service is running"
             exit 1
           fi
           
-          # Check Keycloak realm (with retries)
-          echo "Checking Keycloak realm..."
+          # Check Keycloak health via the backend's /status endpoint (avoids direct Keycloak exposure)
+          echo "Checking Keycloak health via backend /status..."
           KC_OK=false
           for i in $(seq 1 20); do
-            if curl -sf --max-time 10 "$KC_URL/realms/$KC_REALM" > /dev/null 2>&1; then
-              echo "✓ Keycloak realm $KC_REALM is accessible (attempt $i)"
+            KC_STATUS=$(curl -sf --max-time 10 "$BACKEND_URL/status" 2>/dev/null | jq -r '.keycloak.status' 2>/dev/null || echo "error")
+            if [ "$KC_STATUS" = "healthy" ]; then
+              echo "✓ Keycloak is healthy (attempt $i)"
               KC_OK=true
               break
             fi
-            echo "  Attempt $i/20 — not ready, waiting 10s..."
+            echo "  Attempt $i/20 — Keycloak status: $KC_STATUS, waiting 10s..."
             sleep 10
           done
           if [ "$KC_OK" = "false" ]; then
-            echo "ERROR: Keycloak realm not reachable at $KC_URL/realms/$KC_REALM after 20 attempts"
-            echo "Make sure Keycloak is scaled up and realm exists"
+            echo "ERROR: Keycloak not healthy after 20 attempts (last status: $KC_STATUS)"
+            echo "Make sure Keycloak is scaled up and the realm exists"
             exit 1
           fi
           
@@ -710,17 +704,39 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Playwright
+      - name: Install Playwright package
         run: |
           # Install Playwright in a separate directory to avoid workspace package.json issues
           mkdir -p /tmp/playwright-setup
           cd /tmp/playwright-setup
           npm init -y
           npm install playwright
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-chromium-${{ hashFiles('/tmp/playwright-setup/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-chromium-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: |
+          cd /tmp/playwright-setup
           npx playwright install chromium --with-deps
-          # Copy playwright to workspace node_modules for script access
+
+      - name: Install Playwright system deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: |
+          cd /tmp/playwright-setup
+          npx playwright install-deps chromium
+
+      - name: Copy Playwright to workspace
+        run: |
           mkdir -p $GITHUB_WORKSPACE/node_modules
-          cp -r node_modules/playwright* $GITHUB_WORKSPACE/node_modules/ || true
+          cp -r /tmp/playwright-setup/node_modules/playwright* $GITHUB_WORKSPACE/node_modules/ || true
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -731,13 +747,12 @@ jobs:
       - name: Resolve Inferno Version
         id: inferno-version
         run: |
-          LATEST_TAG=$(curl -sf https://api.github.com/repos/inferno-framework/smart-app-launch-test-kit/releases/latest | jq -r '.tag_name')
-          if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-            echo "WARNING: Could not fetch latest release, falling back to main"
-            LATEST_TAG="main"
-          fi
-          echo "Inferno version: $LATEST_TAG"
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          # Pin to v0.6.4 — last known working release.
+          # v1.0.0 (inferno_core 1.0.2) changed DB/migration internals and breaks our setup.
+          # TODO: Test and migrate to v1.0.0+ (uses `bundle exec inferno migrate` instead of rake)
+          PINNED_TAG="v0.6.4"
+          echo "Inferno version: $PINNED_TAG (pinned)"
+          echo "tag=$PINNED_TAG" >> $GITHUB_OUTPUT
 
       - name: Cache Inferno
         id: inferno-cache
@@ -745,38 +760,32 @@ jobs:
         with:
           path: |
             inferno
-            ~/.bundle
-          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3
+          key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3-v2
 
       - name: Setup Inferno
         if: steps.inferno-cache.outputs.cache-hit != 'true'
         run: |
           TAG="${{ steps.inferno-version.outputs.tag }}"
-          if [ "$TAG" = "main" ]; then
-            git clone https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          else
-            git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
-          fi
-          cd inferno
-          bundle install
-          
-          # Setup database
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
-          export REDIS_URL="redis://localhost:6379"
-          bundle exec rake db:migrate || bundle exec rake db:setup || true
+          git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
 
-      - name: Setup Inferno DB (cached)
-        if: steps.inferno-cache.outputs.cache-hit == 'true'
+      # Always run bundle install — the cache only stores the git clone, not installed gems.
+      # bundle install is fast (~5s) when Gemfile.lock hasn't changed.
+      - name: Install Inferno Gems
         run: |
           cd inferno
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4
+
+      - name: Setup Inferno DB
+        run: |
+          cd inferno
           export REDIS_URL="redis://localhost:6379"
           bundle exec rake db:migrate || bundle exec rake db:setup || true
 
       - name: Start Inferno
         run: |
           cd inferno
-          export DATABASE_URL="postgresql://inferno:inferno@localhost:5433/inferno"
+          # Inferno uses SQLite internally — do NOT set DATABASE_URL
           export REDIS_URL="redis://localhost:6379"
           
           # Disable TLS tests in local CI (no HTTPS) — TLS is validated on deployed environments
@@ -798,14 +807,23 @@ jobs:
           
           # Wait for Inferno to be ready
           echo "Waiting for Inferno..."
+          INFERNO_READY=false
           for i in {1..60}; do
             if curl -sf http://localhost:4567 > /dev/null 2>&1; then
               echo "Inferno is ready!"
+              INFERNO_READY=true
               break
             fi
             echo "Attempt $i/60..."
             sleep 5
           done
+          
+          if [ "$INFERNO_READY" = "false" ]; then
+            echo "ERROR: Inferno failed to start after 300 seconds"
+            echo "Puma logs:"
+            jobs -l || true
+            exit 1
+          fi
 
       # Register test client in Keycloak (only for local targets - deployed already configured)
       - name: Verify Keycloak Setup
@@ -1008,15 +1026,15 @@ jobs:
             sleep 5
           done
           
-          # Step 2: Wait for Keycloak
+          # Step 2: Wait for Keycloak (via backend /status — avoids direct Keycloak exposure)
           echo "Step 2: Waiting for Keycloak..."
           for i in $(seq 1 40); do
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$KC_URL/realms/$KC_REALM" 2>/dev/null || echo "000")
-            if [ "$HTTP_CODE" = "200" ]; then
-              echo "✓ Keycloak realm is up (attempt $i)"
+            KC_STATUS=$(curl -s --max-time 10 "$BACKEND_URL/status" 2>/dev/null | jq -r '.keycloak.status' 2>/dev/null || echo "error")
+            if [ "$KC_STATUS" = "healthy" ]; then
+              echo "✓ Keycloak is healthy (attempt $i)"
               break
             fi
-            echo "  Attempt $i/40 — HTTP $HTTP_CODE, waiting 5s..."
+            echo "  Attempt $i/40 — Keycloak status: $KC_STATUS, waiting 5s..."
             sleep 5
           done
           

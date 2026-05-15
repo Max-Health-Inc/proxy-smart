@@ -3,6 +3,7 @@ import { smartConfigService } from '@/lib/smart-config'
 import { brandBundleService } from '@/lib/brand-bundle'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { handleAdminError } from '@/lib/admin-error-handler'
 import { CommonErrorResponses, SmartConfigRefreshResponse, type SmartConfigurationResponseType } from '@/schemas'
 
 /**
@@ -31,8 +32,7 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
         config: freshConfig as SmartConfigurationResponseType
       }
     } catch (error) {
-      set.status = 500
-      return { error: 'Failed to refresh SMART configuration cache', details: error }
+      return handleAdminError(error, set)
     }
   }, {
     response: {

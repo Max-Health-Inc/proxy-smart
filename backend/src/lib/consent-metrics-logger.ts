@@ -229,21 +229,18 @@ class ConsentMetricsLogger {
         .sort((a, b) => b.denyCount - a.denyCount)
         .slice(0, 10)
 
-      // Hourly stats (24 buckets)
-      const hourlyStats = Array.from({ length: 24 }, (_, i) => {
-        const hour = new Date()
-        hour.setHours(hour.getHours() - (23 - i), 0, 0, 0)
-        const hourEvents = recent.filter(e => {
-          const et = new Date(e.timestamp)
-          return et.getHours() === hour.getHours() && et.getDate() === hour.getDate()
-        })
-        return {
-          hour: hour.toISOString(),
-          permit: hourEvents.filter(e => e.decision === 'permit').length,
-          deny: hourEvents.filter(e => e.decision === 'deny').length,
-          total: hourEvents.length,
-        }
-      })
+      // Hourly stats — sparse UTC-based bucketing (consistent with auth/email/fhir-proxy)
+      const hourBuckets = new Map<string, { permit: number; deny: number }>()
+      for (const e of recent) {
+        const hourKey = e.timestamp.slice(0, 13) + ':00:00.000Z'
+        let bucket = hourBuckets.get(hourKey)
+        if (!bucket) { bucket = { permit: 0, deny: 0 }; hourBuckets.set(hourKey, bucket) }
+        if (e.decision === 'permit') bucket.permit++
+        else bucket.deny++
+      }
+      const hourlyStats = Array.from(hourBuckets.entries())
+        .map(([hour, b]) => ({ hour, permit: b.permit, deny: b.deny, total: b.permit + b.deny }))
+        .sort((a, b) => a.hour.localeCompare(b.hour))
 
       this.analytics = {
         totalDecisions,

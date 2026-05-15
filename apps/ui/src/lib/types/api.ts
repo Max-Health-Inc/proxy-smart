@@ -143,4 +143,5 @@ export interface IdentityProviderWithStats extends IdentityProviderResponse {
 export interface IdentityProviderFormData extends CreateIdentityProviderRequest {
   config: IdentityProviderConfig;
   vendorName?: string;
+  organizationId?: string;
 }

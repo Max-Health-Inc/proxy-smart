@@ -184,6 +184,29 @@ class OAuthMetricsLogger {
   }
 
   /**
+   * Get the number of events currently held in memory.
+   */
+  getEventCount(): number {
+    return this.events.length;
+  }
+
+  /**
+   * Max events the in-memory ring buffer keeps.
+   */
+  getEventCapacity(): number {
+    return 1000;
+  }
+
+  /**
+   * Compute requests-per-minute from events in the last 60 seconds.
+   */
+  getThroughputPerMinute(): number {
+    const cutoff = Date.now() - 60_000;
+    const count = this.events.filter(e => new Date(e.timestamp).getTime() >= cutoff).length;
+    return count;
+  }
+
+  /**
    * Calculate analytics from recent events
    */
   private async calculateAnalytics(): Promise<void> {
@@ -245,23 +268,18 @@ class OAuthMetricsLogger {
           return acc;
         }, {} as Record<string, number>);
 
-      // Hourly stats for the last 24 hours
-      const hourlyStats = Array.from({ length: 24 }, (_, i) => {
-        const hour = new Date();
-        hour.setHours(hour.getHours() - (23 - i), 0, 0, 0);
-        const hourEvents = recentEvents.filter(e => {
-          const eventTime = new Date(e.timestamp);
-          return eventTime.getHours() === hour.getHours() && 
-                 eventTime.getDate() === hour.getDate();
-        });
-        
-        return {
-          hour: hour.toISOString(),
-          success: hourEvents.filter(e => e.status === 'success').length,
-          error: hourEvents.filter(e => e.status === 'error').length,
-          total: hourEvents.length
-        };
-      });
+      // Hourly stats — sparse UTC-based bucketing (consistent with auth/email/fhir-proxy)
+      const hourBuckets = new Map<string, { success: number; error: number }>();
+      for (const e of recentEvents) {
+        const hourKey = e.timestamp.slice(0, 13) + ':00:00.000Z';
+        let bucket = hourBuckets.get(hourKey);
+        if (!bucket) { bucket = { success: 0, error: 0 }; hourBuckets.set(hourKey, bucket); }
+        if (e.status === 'success') bucket.success++;
+        else bucket.error++;
+      }
+      const hourlyStats = Array.from(hourBuckets.entries())
+        .map(([hour, b]) => ({ hour, success: b.success, error: b.error, total: b.success + b.error }))
+        .sort((a, b) => a.hour.localeCompare(b.hour));
 
       const predictiveInsights = this.calculatePredictiveInsights({
         hourlyStats,
@@ -478,26 +496,30 @@ class OAuthMetricsLogger {
   }
 
   /**
-   * Log system health metrics
+   * Log system health metrics (derived from actual analytics)
    */
   async logSystemHealth(): Promise<void> {
     try {
+      const analytics = this.analytics;
+      const storagePercent = Math.round((this.events.length / this.getEventCapacity()) * 100);
+      const throughput = this.getThroughputPerMinute();
+
       const healthMetrics = {
         timestamp: new Date().toISOString(),
         oauthServer: {
           status: 'healthy',
           uptime: process.uptime(),
-          responseTime: await this.measureResponseTime(),
+          responseTime: analytics?.averageResponseTime || 0,
         },
         tokenStore: {
           status: 'healthy',
-          activeTokens: this.analytics?.activeTokens || 0,
-          storageUsed: 68, // This would be calculated based on actual storage
+          activeTokens: analytics?.activeTokens || 0,
+          storageUsed: storagePercent,
         },
         network: {
           status: 'healthy',
-          throughput: '1.2k req/min', // This would be calculated from actual metrics
-          errorRate: this.analytics ? (100 - this.analytics.successRate) : 0,
+          throughput,
+          errorRate: analytics ? (100 - analytics.successRate) : 0,
         }
       };
 
@@ -506,14 +528,6 @@ class OAuthMetricsLogger {
     } catch (error) {
       logger.auth.error('Failed to log system health metrics', { error });
     }
-  }
-
-  /**
-   * Measure OAuth server response time
-   */
-  private async measureResponseTime(): Promise<number> {
-    // This is a placeholder - in production you'd ping your actual OAuth endpoints
-    return Math.random() * 200 + 100; // 100-300ms
   }
 
   private calculateWeekdayInsights(events: OAuthFlowEvent[]): OAuthWeekdayInsight[] | null {

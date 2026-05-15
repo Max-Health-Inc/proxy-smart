@@ -10,6 +10,10 @@ import { emailEventsLogger } from './lib/email-events-logger'
 import { authEventsLogger } from './lib/auth-events-logger'
 import { createApp } from './app-factory'
 import { existsSync, readFileSync } from 'fs'
+import { ensureDataDir } from './lib/paths'
+
+// Ensure persistent data directory exists before any stores load
+ensureDataDir()
 
 // Security guard: refuse to start with dev auth bypass in production
 if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true') {
@@ -56,7 +60,7 @@ initializeServer()
     try {
       // In containerized environments (Docker), listen on all interfaces
       // In local development, default to localhost only
-      const listenOptions: Record<string, any> = process.env.NODE_ENV === 'production' || process.env.DOCKER
+      const listenOptions: Record<string, unknown> = process.env.NODE_ENV === 'production' || process.env.DOCKER
         ? { port: config.port, hostname: '0.0.0.0' }
         : { port: config.port };
 

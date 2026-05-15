@@ -170,7 +170,9 @@
     "loadFailed": "DICOM-Betrachter konnte nicht geladen werden",
     "controlWL": "🖱️ L: F/H",
     "controlZoom": "🖱️ R: Zoom",
-    "controlScroll": "⚙️ Scrollen: Schicht"
+    "controlScroll": "⚙️ Scrollen: Schicht",
+    "openInViewer": "Im Viewer öffnen",
+    "openInApp": "In {{name}} öffnen"
   },
   "imagingStudy": {
     "title": "Bildgebungsstudien",
@@ -185,7 +187,8 @@
     "viewImages": "Bilder anzeigen",
     "viewSeries": "Serien anzeigen",
     "nSeries": "{{n}} Serien",
-    "nImages": "{{n}} Bilder"
+    "nImages": "{{n}} Bilder",
+    "dataWarning": "Das Anzeigen von Bildstudien kann viel Datenvolumen verbrauchen. Nutzen Sie wenn möglich WLAN."
   },
   "healthCharts": {
     "title": "Gesundheitsdiagramme",

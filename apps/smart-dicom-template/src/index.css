@@ -2,8 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@source "../../../shared-ui/src";
-@import "../../../shared-ui/src/theme.css";
+@source "../node_modules/@proxy-smart/shared-ui/src";
+@import "@proxy-smart/shared-ui/theme.css";
 
 @custom-variant dark (&:is(.dark *));
 

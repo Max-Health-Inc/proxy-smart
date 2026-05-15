@@ -63,6 +63,8 @@ services:
       FHIR_SERVER_BASE: https://hapi.fhir.org/baseR4,https://server.fire.ly # Multiple FHIR servers can be specified, separated by commas
     ports:
       - "8445:8445"
+    volumes:
+      - backend_data:/app/backend/data
     depends_on:
       - keycloak
     networks:
@@ -75,3 +77,4 @@ networks:
 
 volumes:
   postgres_data:
+  backend_data:

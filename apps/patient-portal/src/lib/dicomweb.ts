@@ -54,10 +54,13 @@ let activeDw = defaultDw
 // -- Cornerstone-integrated client (lazy) --
 
 let activeCsDw: CornerstoneDicomweb | null = null
+let cachedImageLoader: import("@babelfhir-ts/dicomweb/cornerstone").DicomImageLoaderLike | null = null
+const serverCsDwClients = new Map<string, CornerstoneDicomweb>()
 
 export function initCornerstoneDicomweb(
   dicomImageLoader: import("@babelfhir-ts/dicomweb/cornerstone").DicomImageLoaderLike,
 ) {
+  cachedImageLoader = dicomImageLoader
   if (activeCsDw) return activeCsDw
   const base = shlOverride?.baseUrl ?? dicomwebBase
   activeCsDw = createCornerstoneDicomweb({
@@ -73,18 +76,56 @@ export function getCornerstoneDicomweb(): CornerstoneDicomweb {
   return activeCsDw
 }
 
+/** Get a Cornerstone DICOMweb client scoped to a specific server (created lazily) */
+export function getServerCornerstoneDicomweb(serverId: string): CornerstoneDicomweb {
+  let client = serverCsDwClients.get(serverId)
+  if (!client) {
+    if (!cachedImageLoader) throw new Error("Cornerstone DICOMweb client not initialized — call initCornerstoneDicomweb first")
+    client = createCornerstoneDicomweb({
+      baseUrl: getDicomwebBaseUrl(serverId),
+      getAccessToken: () => getEffectiveToken(),
+      cornerstone: { dicomImageLoader: cachedImageLoader },
+    })
+    serverCsDwClients.set(serverId, client)
+  }
+  return client
+}
+
 // -- Re-exports --
 
 export { getStudyInstanceUID, getPrimaryModality, getStudyTitle, getModalityInfo }
 
-// -- URL builder wrappers --
+// -- Server-scoped client cache --
 
-export function getStudyThumbnailUrl(studyUID: string): string {
-  return activeDw.studyThumbnailUrl(studyUID)
+const serverScopedClients = new Map<string, ReturnType<typeof createDicomwebClient>>()
+
+/** Get (or create) a DICOMweb client scoped to a specific DICOM server by ID */
+function getServerClient(serverId: string) {
+  let client = serverScopedClients.get(serverId)
+  if (!client) {
+    const base = `${config.proxyBase || window.location.origin}/dicomweb/servers/${encodeURIComponent(serverId)}`
+    client = createDicomwebClient({
+      baseUrl: base,
+      getAccessToken: () => getEffectiveToken(),
+    })
+    serverScopedClients.set(serverId, client)
+  }
+  return client
 }
 
-export function getSeriesThumbnailUrl(studyUID: string, seriesUID: string): string {
-  return activeDw.seriesThumbnailUrl(studyUID, seriesUID)
+/** Resolve the effective DICOMweb client — server-scoped if serverId given, else active default */
+function resolveClient(serverId?: string) {
+  return serverId ? getServerClient(serverId) : activeDw
+}
+
+// -- URL builder wrappers --
+
+export function getStudyThumbnailUrl(studyUID: string, serverId?: string): string {
+  return resolveClient(serverId).studyThumbnailUrl(studyUID)
+}
+
+export function getSeriesThumbnailUrl(studyUID: string, seriesUID: string, serverId?: string): string {
+  return resolveClient(serverId).seriesThumbnailUrl(studyUID, seriesUID)
 }
 
 export function getDicomwebAuthHeaders(): HeadersInit {
@@ -93,6 +134,31 @@ export function getDicomwebAuthHeaders(): HeadersInit {
 
 export function getAccessToken(): string | null {
   return getEffectiveToken()
+}
+
+/**
+ * Get the DICOMweb base URL for a specific server (for Cornerstone integration).
+ * Returns the default base when no serverId is specified.
+ */
+export function getDicomwebBaseUrl(serverId?: string): string {
+  if (serverId) {
+    return `${config.proxyBase || window.location.origin}/dicomweb/servers/${encodeURIComponent(serverId)}`
+  }
+  return shlOverride?.baseUrl ?? dicomwebBase
+}
+
+/**
+ * Extract a DICOM server ID from an ImagingStudy.endpoint reference.
+ * Convention: The Endpoint resource ID = the Proxy Smart DICOM server config ID.
+ * e.g. "Endpoint/orthanc-1" → "orthanc-1"
+ */
+export function extractServerIdFromEndpoint(
+  endpoints?: Array<{ reference?: string }>,
+): string | undefined {
+  if (!endpoints?.length) return undefined
+  const ref = endpoints[0].reference
+  if (!ref?.startsWith('Endpoint/')) return undefined
+  return ref.replace('Endpoint/', '')
 }
 
 // -- PACS Status --

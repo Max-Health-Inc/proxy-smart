@@ -196,12 +196,12 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
         description:
           'Read a single FHIR resource by type and ID (e.g. Patient/123). ' +
           'Returns the full JSON resource.',
-        inputSchema: z.object({
+        inputSchema: {
           resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation", "MedicationRequest")'),
           id: z.string().describe('Logical ID of the resource'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
-        }),
+        },
         annotations: { readOnlyHint: true, idempotentHint: true },
       },
       async ({ resourceType, id, serverName, fhirVersion }) => {
@@ -235,12 +235,12 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
           'Returns a Bundle of matching resources. ' +
           'Example queryParams: "name=John&birthdate=gt1990-01-01" for Patient, ' +
           '"patient=Patient/123&code=http://loinc.org|8867-4" for Observation.',
-        inputSchema: z.object({
+        inputSchema: {
           resourceType: z.string().describe('FHIR resource type to search (e.g. "Patient", "Observation")'),
           queryParams: z.string().optional().describe('FHIR search parameters as a query string (e.g. "name=John&birthdate=gt1990-01-01"). Omit for unfiltered search.'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
-        }),
+        },
         annotations: { readOnlyHint: true, idempotentHint: true },
       },
       async ({ resourceType, queryParams, serverName, fhirVersion }) => {
@@ -272,12 +272,12 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
         description:
           'Create a new FHIR resource. Provide the full resource JSON including resourceType. ' +
           'Returns the created resource with server-assigned ID.',
-        inputSchema: z.object({
+        inputSchema: {
           resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
           resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON to create'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
-        }),
+        },
       },
       async ({ resourceType, resource, serverName, fhirVersion }) => {
         if (!tokenRef.current) {
@@ -309,13 +309,13 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
           'Update an existing FHIR resource by type and ID. ' +
           'Provide the full resource JSON (PUT semantics — replaces the entire resource). ' +
           'The resource JSON must include the "id" field matching the provided id parameter.',
-        inputSchema: z.object({
+        inputSchema: {
           resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
           id: z.string().describe('Logical ID of the resource to update'),
           resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON (must include id)'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
-        }),
+        },
       },
       async ({ resourceType, id, resource, serverName, fhirVersion }) => {
         if (!tokenRef.current) {
@@ -347,12 +347,12 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
         description:
           'Delete a FHIR resource by type and ID. ' +
           'Returns the server\'s response (usually an OperationOutcome).',
-        inputSchema: z.object({
+        inputSchema: {
           resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
           id: z.string().describe('Logical ID of the resource to delete'),
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
-        }),
+        },
       },
       async ({ resourceType, id, serverName, fhirVersion }) => {
         if (!tokenRef.current) {
@@ -384,10 +384,10 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
           'Get the CapabilityStatement (metadata) of a FHIR server. ' +
           'Shows supported resource types, search parameters, and operations. ' +
           'Use this before searching to discover what parameters are available.',
-        inputSchema: z.object({
+        inputSchema: {
           serverName: z.string().optional().describe(serverNameDescription),
           fhirVersion: z.string().optional().describe(fhirVersionDescription),
-        }),
+        },
         annotations: { readOnlyHint: true, idempotentHint: true },
       },
       async ({ serverName, fhirVersion }) => {
@@ -410,4 +410,185 @@ export function registerFhirTools(server: McpServer, tokenRef: { current?: strin
       },
     )
   }
+}
+
+/**
+ * Register FHIR tools scoped to a specific server.
+ * Used by per-server MCP endpoints (/fhir/{server_id}/mcp).
+ * The serverName is hardcoded — tools don't accept a serverName parameter.
+ */
+export function registerFhirToolsForServer(server: McpServer, tokenRef: { current?: string }, serverName: string): void {
+  const fhirVersionDescription = 'FHIR version (e.g. "R4"). Defaults to the server\'s primary version.'
+
+  // fhir_read
+  server.registerTool(
+    'fhir_read',
+    {
+      description:
+        'Read a single FHIR resource by type and ID (e.g. Patient/123). Returns the full JSON resource.',
+      inputSchema: {
+        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation", "MedicationRequest")'),
+        id: z.string().describe('Logical ID of the resource'),
+        fhirVersion: z.string().optional().describe(fhirVersionDescription),
+      },
+      annotations: { readOnlyHint: true, idempotentHint: true },
+    },
+    async ({ resourceType, id, fhirVersion }) => {
+      if (!tokenRef.current) {
+        return { content: [{ type: 'text' as const, text: 'Authentication required' }], isError: true }
+      }
+      const result = await proxyFhirRequest({
+        method: 'GET',
+        resourceType: resourceType as string,
+        resourceId: id as string,
+        serverName,
+        fhirVersion: fhirVersion as string | undefined,
+        authToken: tokenRef.current,
+      })
+      const text = typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+      return { content: [{ type: 'text' as const, text }], ...(result.status >= 400 && { isError: true }) }
+    },
+  )
+
+  // fhir_search
+  server.registerTool(
+    'fhir_search',
+    {
+      description:
+        'Search FHIR resources using standard FHIR search parameters. Returns a Bundle of matching resources.',
+      inputSchema: {
+        resourceType: z.string().describe('FHIR resource type to search (e.g. "Patient", "Observation")'),
+        queryParams: z.string().optional().describe('FHIR search parameters as a query string (e.g. "name=John&birthdate=gt1990-01-01")'),
+        fhirVersion: z.string().optional().describe(fhirVersionDescription),
+      },
+      annotations: { readOnlyHint: true, idempotentHint: true },
+    },
+    async ({ resourceType, queryParams, fhirVersion }) => {
+      if (!tokenRef.current) {
+        return { content: [{ type: 'text' as const, text: 'Authentication required' }], isError: true }
+      }
+      const result = await proxyFhirRequest({
+        method: 'GET',
+        resourceType: resourceType as string,
+        queryParams: queryParams as string | undefined,
+        serverName,
+        fhirVersion: fhirVersion as string | undefined,
+        authToken: tokenRef.current,
+      })
+      const text = typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+      return { content: [{ type: 'text' as const, text }], ...(result.status >= 400 && { isError: true }) }
+    },
+  )
+
+  // fhir_create
+  server.registerTool(
+    'fhir_create',
+    {
+      description: 'Create a new FHIR resource. Provide the full resource JSON including resourceType.',
+      inputSchema: {
+        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
+        resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON to create'),
+        fhirVersion: z.string().optional().describe(fhirVersionDescription),
+      },
+    },
+    async ({ resourceType, resource, fhirVersion }) => {
+      if (!tokenRef.current) {
+        return { content: [{ type: 'text' as const, text: 'Authentication required' }], isError: true }
+      }
+      const result = await proxyFhirRequest({
+        method: 'POST',
+        resourceType: resourceType as string,
+        body: resource,
+        serverName,
+        fhirVersion: fhirVersion as string | undefined,
+        authToken: tokenRef.current,
+      })
+      const text = typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+      return { content: [{ type: 'text' as const, text }], ...(result.status >= 400 && { isError: true }) }
+    },
+  )
+
+  // fhir_update
+  server.registerTool(
+    'fhir_update',
+    {
+      description: 'Update an existing FHIR resource by type and ID (PUT semantics).',
+      inputSchema: {
+        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
+        id: z.string().describe('Logical ID of the resource to update'),
+        resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON (must include id)'),
+        fhirVersion: z.string().optional().describe(fhirVersionDescription),
+      },
+    },
+    async ({ resourceType, id, resource, fhirVersion }) => {
+      if (!tokenRef.current) {
+        return { content: [{ type: 'text' as const, text: 'Authentication required' }], isError: true }
+      }
+      const result = await proxyFhirRequest({
+        method: 'PUT',
+        resourceType: resourceType as string,
+        resourceId: id as string,
+        body: resource,
+        serverName,
+        fhirVersion: fhirVersion as string | undefined,
+        authToken: tokenRef.current,
+      })
+      const text = typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+      return { content: [{ type: 'text' as const, text }], ...(result.status >= 400 && { isError: true }) }
+    },
+  )
+
+  // fhir_delete
+  server.registerTool(
+    'fhir_delete',
+    {
+      description: 'Delete a FHIR resource by type and ID.',
+      inputSchema: {
+        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
+        id: z.string().describe('Logical ID of the resource to delete'),
+        fhirVersion: z.string().optional().describe(fhirVersionDescription),
+      },
+    },
+    async ({ resourceType, id, fhirVersion }) => {
+      if (!tokenRef.current) {
+        return { content: [{ type: 'text' as const, text: 'Authentication required' }], isError: true }
+      }
+      const result = await proxyFhirRequest({
+        method: 'DELETE',
+        resourceType: resourceType as string,
+        resourceId: id as string,
+        serverName,
+        fhirVersion: fhirVersion as string | undefined,
+        authToken: tokenRef.current,
+      })
+      const text = typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+      return { content: [{ type: 'text' as const, text }], ...(result.status >= 400 && { isError: true }) }
+    },
+  )
+
+  // fhir_capabilities
+  server.registerTool(
+    'fhir_capabilities',
+    {
+      description: 'Get the CapabilityStatement (metadata) of this FHIR server.',
+      inputSchema: {
+        fhirVersion: z.string().optional().describe(fhirVersionDescription),
+      },
+      annotations: { readOnlyHint: true, idempotentHint: true },
+    },
+    async ({ fhirVersion }) => {
+      if (!tokenRef.current) {
+        return { content: [{ type: 'text' as const, text: 'Authentication required' }], isError: true }
+      }
+      const result = await proxyFhirRequest({
+        method: 'GET',
+        resourceType: 'metadata',
+        serverName,
+        fhirVersion: fhirVersion as string | undefined,
+        authToken: tokenRef.current,
+      })
+      const text = typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2)
+      return { content: [{ type: 'text' as const, text }], ...(result.status >= 400 && { isError: true }) }
+    },
+  )
 }

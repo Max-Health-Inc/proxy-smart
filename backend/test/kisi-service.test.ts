@@ -7,7 +7,7 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test'
 import { KisiService } from '../src/lib/kisi/service'
 import type { KeycloakUserIdentity } from '../src/lib/kisi/service'
-import { KisiClient } from '../src/lib/kisi/client'
+import { type KisiClient } from '../src/lib/kisi/client'
 
 // ==================== Mock Client ====================
 

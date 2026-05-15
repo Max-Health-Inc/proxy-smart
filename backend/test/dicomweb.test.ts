@@ -11,7 +11,7 @@ import { dicomwebRoutes } from '../src/routes/dicomweb'
 const ORIGINAL_FETCH = globalThis.fetch
 
 // Helper: create a mock fetch that resolves with a given response
-function mockFetchWith(body: any, init?: ResponseInit) {
+function mockFetchWith(body: unknown, init?: ResponseInit) {
   const mockFn = Object.assign(
     async (_url: string | URL | Request, _opts?: RequestInit) =>
       new Response(

@@ -26,6 +26,7 @@ let ialOverrides: Partial<IalConfig> | null = null
 let brandOverrides: Partial<BrandConfigType> | null = null
 let accessControlOverrides: Partial<SmartAccessControlConfigType> | null = null
 let dicomServersCache: DicomServerConfigType[] | null = null
+let dicomViewerAppClientId: string | null = null
 let loaded = false
 
 // ─── Consent ─────────────────────────────────────────────────────────
@@ -138,6 +139,9 @@ function parseAccessControlFromAttributes(attrs: Record<string, string>): Partia
   if (get('patient_scoped_resources') !== undefined) {
     result.patientScopedResources = get('patient_scoped_resources').split(',').map(s => s.trim()).filter(Boolean)
   }
+  if (get('external_audiences') !== undefined) {
+    result.externalAudiences = get('external_audiences').split(',').map(s => s.trim()).filter(Boolean)
+  }
 
   return result
 }
@@ -147,6 +151,7 @@ function accessControlToAttributes(settings: SmartAccessControlConfigType): Reco
     [`${AC_PREFIX}scope_enforcement`]: settings.scopeEnforcement,
     [`${AC_PREFIX}role_based_filtering`]: settings.roleBasedFiltering,
     [`${AC_PREFIX}patient_scoped_resources`]: settings.patientScopedResources.join(','),
+    [`${AC_PREFIX}external_audiences`]: settings.externalAudiences.join(','),
   }
 }
 
@@ -166,11 +171,12 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
     brandOverrides = parseBrandFromAttributes(attrs)
     accessControlOverrides = parseAccessControlFromAttributes(attrs)
     dicomServersCache = parseDicomServersFromAttributes(attrs)
+    dicomViewerAppClientId = attrs['dicom_viewer_app'] || null
     // loginTheme is a top-level realm property, not an attribute
     if (brandOverrides) {
-      brandOverrides.loginTheme = (realm as any)?.loginTheme || null
-    } else if ((realm as any)?.loginTheme) {
-      brandOverrides = { loginTheme: (realm as any).loginTheme }
+      brandOverrides.loginTheme = realm?.loginTheme || null
+    } else if (realm?.loginTheme) {
+      brandOverrides = { loginTheme: realm.loginTheme }
     }
     loaded = true
 
@@ -183,6 +189,7 @@ export async function loadRuntimeConfig(admin: KcAdminClient): Promise<void> {
       brandOverrides: !!brandOverrides,
       accessControlOverrides: !!accessControlOverrides,
       dicomServers: dicomServersCache?.length ?? 0,
+      dicomViewerApp: dicomViewerAppClientId,
     })
   } catch (error) {
     logger.admin.warn('Failed to load runtime config from Keycloak, using env var defaults', { error })
@@ -278,6 +285,7 @@ export function getRuntimeAccessControlConfig(): SmartAccessControlConfigType {
     scopeEnforcement: config.accessControl.scopeEnforcement,
     roleBasedFiltering: config.accessControl.roleBasedFiltering,
     patientScopedResources: config.accessControl.patientScopedResources,
+    externalAudiences: config.accessControl.externalAudiences,
   }
 
   if (!accessControlOverrides) return envDefaults
@@ -354,6 +362,12 @@ export function getDefaultDicomServer(): DicomServerConfigType | null {
   return servers.find(s => s.isDefault) ?? servers[0] ?? null
 }
 
+/** Look up a specific DICOM server by its config ID (e.g. for /dicomweb/servers/:serverId routes) */
+export function getDicomServerById(id: string): DicomServerConfigType | null {
+  const servers = getRuntimeDicomServers()
+  return servers.find(s => s.id === id) ?? null
+}
+
 /** Save DICOM servers list to Keycloak realm attributes */
 export async function saveDicomServers(admin: KcAdminClient, servers: DicomServerConfigType[]): Promise<void> {
   const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
@@ -371,6 +385,34 @@ export async function saveDicomServers(admin: KcAdminClient, servers: DicomServe
 
   dicomServersCache = [...servers]
   logger.admin.info('DICOM servers config saved to Keycloak realm attributes', { count: servers.length })
+}
+
+// ─── DICOM Viewer App ────────────────────────────────────────────────
+
+/** Get the globally configured DICOM viewer SMART app client ID */
+export function getDicomViewerAppClientId(): string | null {
+  return dicomViewerAppClientId
+}
+
+/** Save the global DICOM viewer app client ID to Keycloak realm attributes */
+export async function saveDicomViewerApp(admin: KcAdminClient, clientId: string | null): Promise<void> {
+  const realm = await admin.realms.findOne({ realm: process.env.KEYCLOAK_REALM! })
+  const existingAttrs = (realm?.attributes || {}) as Record<string, string>
+
+  const attributes = { ...existingAttrs }
+  if (clientId) {
+    attributes['dicom_viewer_app'] = clientId
+  } else {
+    delete attributes['dicom_viewer_app']
+  }
+
+  await admin.realms.update(
+    { realm: process.env.KEYCLOAK_REALM! },
+    { attributes }
+  )
+
+  dicomViewerAppClientId = clientId
+  logger.admin.info('DICOM viewer app setting saved', { clientId })
 }
 
 /** Whether runtime config has been loaded from Keycloak at least once */
@@ -519,13 +561,12 @@ export async function saveBrandConfig(admin: KcAdminClient, settings: BrandConfi
 
   const realmUpdate: Record<string, unknown> = { attributes }
 
-  // Sync brand name + logo → Keycloak login page heading (displayName + displayNameHtml)
+  // Sync brand name → Keycloak login page heading (displayName + displayNameHtml)
+  // Note: kcSanitize() in keycloak.v2 template.ftl strips <img>/<svg> tags,
+  // so we only use plain text. The login theme CSS handles visual branding.
   if (settings.name) {
     realmUpdate.displayName = settings.name
-    const logoHtml = settings.logoUrl
-      ? `<img src="${settings.logoUrl}" alt="${settings.name}" style="height:32px;margin-right:8px;vertical-align:middle" />`
-      : ''
-    realmUpdate.displayNameHtml = `<div class="kc-logo-text">${logoHtml}<span>${settings.name}</span></div>`
+    realmUpdate.displayNameHtml = settings.name
   }
 
   // Sync loginTheme → Keycloak realm login theme

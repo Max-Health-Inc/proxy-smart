@@ -13,7 +13,7 @@ import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerDetails } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
 
-export function ServerDetails(server: FhirServerDetails) {
+export function ServerDetails({ server }: { server: FhirServerDetails }) {
   const { t } = useTranslation();
 
   return (

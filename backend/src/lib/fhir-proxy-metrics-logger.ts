@@ -128,7 +128,7 @@ class FhirProxyMetricsLogger {
     statusCode?: number
     since?: Date
   }): FhirProxyEvent[] {
-    let result = this.events
+    let result = [...this.events]
     if (opts?.serverName) result = result.filter(e => e.serverName === opts.serverName)
     if (opts?.statusCode) result = result.filter(e => e.statusCode === opts.statusCode)
     if (opts?.since) {

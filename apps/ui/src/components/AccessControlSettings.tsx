@@ -4,6 +4,7 @@ import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Shield,
+  Globe,
   CheckCircle,
   AlertCircle,
   RefreshCw,
@@ -23,6 +24,7 @@ const DEFAULT_CONFIG: SmartAccessControlConfig = {
   scopeEnforcement: 'enforce',
   roleBasedFiltering: 'enforce',
   patientScopedResources: ['Observation', 'Condition', 'Procedure', 'MedicationRequest', 'MedicationStatement', 'DiagnosticReport', 'Encounter', 'AllergyIntolerance', 'ImagingStudy', 'CarePlan', 'Consent'],
+  externalAudiences: [],
 };
 
 // ─── Component ───────────────────────────────────────────────────────
@@ -34,6 +36,7 @@ export function AccessControlSettings() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [newResource, setNewResource] = useState('');
+  const [newAudience, setNewAudience] = useState('');
 
   const loadSettings = useCallback(async () => {
     try {
@@ -90,6 +93,17 @@ export function AccessControlSettings() {
 
   const removeResource = (value: string) => {
     setConfig(prev => ({ ...prev, patientScopedResources: prev.patientScopedResources.filter(v => v !== value) }));
+  };
+
+  const addAudience = () => {
+    const trimmed = newAudience.trim();
+    if (!trimmed || config.externalAudiences.includes(trimmed)) return;
+    setConfig(prev => ({ ...prev, externalAudiences: [...prev.externalAudiences, trimmed] }));
+    setNewAudience('');
+  };
+
+  const removeAudience = (value: string) => {
+    setConfig(prev => ({ ...prev, externalAudiences: prev.externalAudiences.filter(v => v !== value) }));
   };
 
   if (loading) {
@@ -206,6 +220,50 @@ export function AccessControlSettings() {
               className="max-w-xs"
             />
             <Button variant="outline" size="sm" onClick={addResource} disabled={!newResource.trim()}>
+              <Plus className="w-4 h-4 mr-1" />
+              {t('Add')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* External Audiences */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Globe className="w-4 h-4" />
+            {t('External Audiences')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {t('External resource servers that use this proxy as their authorization server (e.g. third-party MCP servers). Entries starting with \'.\' match all subdomains (e.g. \'.maxhealth.tech\' matches dicom.maxhealth.tech).')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {config.externalAudiences.map(a => (
+              <Badge key={a} variant="secondary" className="flex items-center gap-1 pl-2.5 pr-1 py-1">
+                {a}
+                <button
+                  onClick={() => removeAudience(a)}
+                  className="ml-1 rounded-full p-0.5 hover:bg-destructive/20 transition-colors"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+            {config.externalAudiences.length === 0 && (
+              <span className="text-xs text-muted-foreground italic">{t('No external audiences configured')}</span>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Input
+              value={newAudience}
+              onChange={e => setNewAudience(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addAudience())}
+              placeholder={t('e.g. .maxhealth.tech or https://mcp.example.com')}
+              className="max-w-md"
+            />
+            <Button variant="outline" size="sm" onClick={addAudience} disabled={!newAudience.trim()}>
               <Plus className="w-4 h-4 mr-1" />
               {t('Add')}
             </Button>

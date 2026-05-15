@@ -147,7 +147,7 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
       expect(isAuthenticated || noContext || isOnPage).toBe(true)
     })
 
-    test("practitioner should see patient context data (if smart_patient is set)", async ({ page }) => {
+    test("practitioner should see patient context data (if patient context is set)", async ({ page }) => {
       await page.goto(env.patientPortalURL, { waitUntil: "domcontentloaded" })
 
       const signOutButton = page.getByRole("button", { name: "Sign Out" })
@@ -183,7 +183,7 @@ test.describe("Patient Portal — Access Control & Multi-Role", () => {
         return
       }
 
-      // Doctor user has smart_patient: test-patient
+      // Doctor user has patient context: test-patient
       // Should either show dashboard or "No patient context" message
       const hasDashboard = await page
         .getByText("Active Conditions")

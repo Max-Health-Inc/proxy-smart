@@ -170,7 +170,9 @@
     "loadFailed": "Failed to load DICOM viewer",
     "controlWL": "🖱️ L: W/L",
     "controlZoom": "🖱️ R: Zoom",
-    "controlScroll": "⚙️ Scroll: Slice"
+    "controlScroll": "⚙️ Scroll: Slice",
+    "openInViewer": "Open in Viewer",
+    "openInApp": "Open in {{name}}"
   },
   "imagingStudy": {
     "title": "Imaging Studies",
@@ -185,7 +187,8 @@
     "viewImages": "View images",
     "viewSeries": "View series",
     "nSeries": "{{n}} series",
-    "nImages": "{{n}} images"
+    "nImages": "{{n}} images",
+    "dataWarning": "Viewing imaging studies may use significant data. Use Wi-Fi when possible."
   },
   "healthCharts": {
     "title": "Health Charts",

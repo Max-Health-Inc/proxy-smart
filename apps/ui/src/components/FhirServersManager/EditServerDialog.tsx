@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Edit } from 'lucide-react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
@@ -18,8 +18,6 @@ interface EditServerDialogProps {
   onOpenChange: (open: boolean) => void;
   server: FhirServerWithState | null;
   onUpdateServer: (server: FhirServerWithState, newUrl: string) => Promise<void>;
-  loading: boolean;
-  error?: string | null;
   urlError?: string | null;
 }
 
@@ -28,19 +26,19 @@ export function EditServerDialog({
   onOpenChange,
   server,
   onUpdateServer,
-  loading,
-  error,
   urlError
 }: EditServerDialogProps) {
   const { t } = useTranslation();
   const [editServerUrl, setEditServerUrl] = useState(server?.url || '');
   const [localUrlError, setLocalUrlError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Sync editServerUrl when server changes
-  const serverUrl = server?.url;
-  if (serverUrl !== undefined && editServerUrl !== serverUrl && editServerUrl === '') {
-    setEditServerUrl(serverUrl);
-  }
+  useEffect(() => {
+    if (server?.url) {
+      setEditServerUrl(server.url);
+    }
+  }, [server?.url]);
 
   const isValidUrl = (url: string) => {
     try {
@@ -57,12 +55,12 @@ export function EditServerDialog({
     const trimmedUrl = editServerUrl.trim();
     
     if (!trimmedUrl) {
-      setLocalUrlError('Server URL is required');
+      setLocalUrlError(t('Server URL is required'));
       return;
     }
 
     if (!isValidUrl(trimmedUrl)) {
-      setLocalUrlError('Please enter a valid URL (e.g., https://hapi.fhir.org/baseR4)');
+      setLocalUrlError(t('Please enter a valid URL (e.g., https://hapi.fhir.org/baseR4)'));
       return;
     }
 
@@ -73,7 +71,14 @@ export function EditServerDialog({
     }
 
     setLocalUrlError(null);
-    await onUpdateServer(server, trimmedUrl);
+    setSubmitting(true);
+    try {
+      await onUpdateServer(server, trimmedUrl);
+    } catch {
+      // Error handled by parent
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -90,7 +95,7 @@ export function EditServerDialog({
         <DialogHeader>
           <DialogTitle>{t('Fix Server URL')}</DialogTitle>
           <DialogDescription>
-            Update the URL for "{server?.serverName || server?.name}". The server name and details will be automatically retrieved from the server's metadata.
+            {t('Update the URL for "{{name}}". The server name and details will be automatically retrieved from the server\'s metadata.', { name: server?.serverName || server?.name })}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -110,13 +115,8 @@ export function EditServerDialog({
             />
           </div>
           {displayError && (
-            <div className="col-span-4 text-red-600 text-sm mt-2">
+            <div className="col-span-4 text-sm text-destructive mt-2">
               {displayError}
-            </div>
-          )}
-          {error && (
-            <div className="col-span-4 text-red-600 text-sm mt-2">
-              {error}
             </div>
           )}
         </div>
@@ -125,14 +125,14 @@ export function EditServerDialog({
             type="button"
             variant="outline"
             onClick={handleClose}
-            disabled={loading}
+            disabled={submitting}
           >
             {t('Cancel')}
           </Button>
           <LoadingButton
             type="button"
             onClick={handleSubmit}
-            loading={loading}
+            loading={submitting}
             loadingText={t('Updating...')}
             disabled={!editServerUrl.trim()}
             className="bg-orange-600 hover:bg-orange-700"

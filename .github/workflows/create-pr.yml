@@ -172,6 +172,57 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
 
+      # Gate: wait for Alpha Release to complete on this commit.
+      # Alpha Release runs in parallel with this workflow on the same push event.
+      # It internally calls Build & Test as a nested job.
+      # We must not enable auto-merge if the release/build FAILED.
+      # "skipped" is acceptable (version bump commits are excluded by design).
+      - name: Wait for Alpha Release check
+        run: |
+          SHA="${{ github.sha }}"
+          CHECK_PREFIX="Alpha Release"
+          MAX_WAIT=600  # 10 min — Alpha Release typically finishes in ~3 min
+          POLL_INTERVAL=15
+          ELAPSED=0
+
+          echo "Waiting for '$CHECK_PREFIX' on $SHA..."
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            # Match any check run whose name starts with "Alpha Release"
+            # GitHub nests job names as "Workflow / Job / Nested Job"
+            CHECKS=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" \
+              --jq "[.check_runs[] | select(.name | startswith(\"$CHECK_PREFIX\"))]" \
+              2>/dev/null || echo "[]")
+
+            COUNT=$(echo "$CHECKS" | jq 'length')
+            COMPLETED=$(echo "$CHECKS" | jq '[.[] | select(.status == "completed")] | length')
+            FAILED=$(echo "$CHECKS" | jq '[.[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out")] | length')
+
+            echo "  [$CHECK_PREFIX] found=$COUNT completed=$COMPLETED failed=$FAILED (${ELAPSED}s)"
+
+            if [ "$COUNT" -gt 0 ] && [ "$COUNT" -eq "$COMPLETED" ]; then
+              if [ "$FAILED" -gt 0 ]; then
+                echo "❌ Alpha Release failed ($FAILED check(s) failed) — aborting."
+                echo "   A failing build must not be promoted to test."
+                exit 1
+              fi
+              # success or skipped — both are fine
+              echo "✅ Alpha Release completed ($COMPLETED checks passed) — proceeding."
+              break
+            fi
+
+            # If check doesn't exist yet (not_found), keep waiting — it may not have registered yet
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+            echo "⚠️ Timed out after ${MAX_WAIT}s — Alpha Release still not completed."
+            echo "   Proceeding with PR creation (auto-merge requires branch protection checks anyway)."
+          fi
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+
       - name: Check if PR already exists
         id: check-pr
         run: |

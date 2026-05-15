@@ -3,7 +3,7 @@
  * Resolves URLs based on E2E_TARGET (local | alpha | beta).
  */
 
-export type TargetEnv = "local" | "alpha" | "beta"
+export type TargetEnv = "local" | "beta"
 
 export interface E2EEnv {
   target: TargetEnv
@@ -25,10 +25,6 @@ const envMap: Record<TargetEnv, Omit<E2EEnv, "target" | "patientPortalURL" | "co
   local: {
     baseURL: "http://localhost:8445",
     keycloakURL: "http://localhost:8080",
-  },
-  alpha: {
-    baseURL: "https://p02--proxy-smart-alpha--776jg9nwd8rw.code.run",
-    keycloakURL: "https://p01--keycloak-alpha--776jg9nwd8rw.code.run",
   },
   beta: {
     baseURL: "https://beta.proxy-smart.com",

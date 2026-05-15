@@ -94,9 +94,6 @@ export const LaunchContextUser = t.Object({
   smartStyleUrl: t.Optional(t.String({ description: 'URL to CSS stylesheet for styling' })),
   tenant: t.Optional(t.String({ description: 'Tenant identifier' })),
   needPatientBanner: t.Optional(t.Boolean({ description: 'Whether patient banner is required' })),
-  // Legacy support
-  launchPatient: t.Optional(t.String({ description: 'Legacy patient context' })),
-  launchEncounter: t.Optional(t.String({ description: 'Legacy encounter context' }))
 }, { title: 'LaunchContextUser' })
 
 // TypeScript type inference helpers

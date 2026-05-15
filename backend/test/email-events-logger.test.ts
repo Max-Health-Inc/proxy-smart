@@ -118,7 +118,7 @@ describe('Email Events Logger — Unit Tests', () => {
     })
 
     it('should return 100% success rate when no events', () => {
-      const events: any[] = []
+      const events: unknown[] = []
       const rate = events.length > 0 ? Math.round((0 / events.length) * 10000) / 100 : 100
       expect(rate).toBe(100)
     })

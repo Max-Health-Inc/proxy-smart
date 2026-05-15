@@ -16,7 +16,8 @@ export const SmartApp = t.Object({
   redirectUris: t.Optional(t.Array(t.String(), { description: 'Allowed redirect URIs' })),
   webOrigins: t.Optional(t.Array(t.String(), { description: 'Allowed web origins (CORS)' })),
   attributes: t.Optional(AttributesMap),
-  clientAuthenticatorType: t.Optional(t.String({ description: 'Client authentication method' })),
+  clientAuthenticatorType: t.Optional(t.String({ description: 'Keycloak internal auth type (use tokenEndpointAuthMethod instead)' })),
+  tokenEndpointAuthMethod: t.Optional(t.UnionEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' })),
   serviceAccountsEnabled: t.Optional(t.Boolean({ description: 'Enable service accounts' })),
   standardFlowEnabled: t.Optional(t.Boolean({ description: 'Enable authorization code flow' })),
   implicitFlowEnabled: t.Optional(t.Boolean({ description: 'Enable implicit flow' })),
@@ -58,6 +59,9 @@ export const SmartApp = t.Object({
   allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
   requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
   
+  // fhirUser resolution
+  patientFacing: t.Optional(t.Boolean({ description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. If undefined, uses raw fhirUser as-is (backward compat).' })),
+  
   // Consent & scope settings
   consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
   fullScopeAllowed: t.Optional(t.Boolean({ description: 'If true, all realm and client roles are added to the token. If false, only assigned roles.' })),
@@ -75,7 +79,7 @@ export const CreateSmartAppRequest = t.Object({
   clientId: t.String({ description: 'OAuth2 client ID (must be unique)' }),
   name: t.String({ description: 'Application name' }),
   description: t.Optional(t.String({ description: 'Application description' })),
-  publicClient: t.Optional(t.Boolean({ description: 'Whether this is a public client', default: true })),
+  publicClient: t.Optional(t.Boolean({ description: 'Whether this is a public client (ignored for backend-service type)' })),
   redirectUris: t.Optional(t.Array(t.String(), { description: 'Allowed redirect URIs' })),
   webOrigins: t.Optional(t.Array(t.String(), { description: 'Allowed web origins' })),
   defaultClientScopes: t.Optional(t.Array(t.String(), { description: 'Default SMART scopes' })),
@@ -84,6 +88,7 @@ export const CreateSmartAppRequest = t.Object({
   fhirVersion: t.Optional(t.String({ description: 'FHIR version' })),
   appType: t.Optional(AppTypeLiteral),
   clientType: t.Optional(ClientTypeLiteral),
+  tokenEndpointAuthMethod: t.Optional(t.UnionEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' })),
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   publicKey: t.Optional(t.String({ description: 'Public key for JWT authentication (PEM format)' })),
   jwksUri: t.Optional(t.String({ description: 'JWKS URI for JWT authentication' })),
@@ -120,6 +125,9 @@ export const CreateSmartAppRequest = t.Object({
   allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
   requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
   
+  // fhirUser resolution
+  patientFacing: t.Optional(t.Boolean({ description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. If undefined, uses raw fhirUser as-is (backward compat).' })),
+  
   // Consent & scope settings
   consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
   fullScopeAllowed: t.Optional(t.Boolean({ description: 'If true, all realm and client roles are added to the token. If false, only assigned roles.' })),
@@ -146,6 +154,7 @@ export const UpdateSmartAppRequest = t.Object({
   fhirVersion: t.Optional(t.String({ description: 'FHIR version' })),
   appType: t.Optional(AppTypeLiteral),
   clientType: t.Optional(ClientTypeLiteral),
+  tokenEndpointAuthMethod: t.Optional(t.UnionEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' })),
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   publicKey: t.Optional(t.String({ description: 'Public key for JWT authentication (PEM format)' })),
   jwksUri: t.Optional(t.String({ description: 'JWKS URI for JWT authentication' })),
@@ -181,6 +190,9 @@ export const UpdateSmartAppRequest = t.Object({
   // User type & role restrictions
   allowedFhirUserTypes: t.Optional(t.Array(t.String(), { description: 'Restrict access to specific FHIR user types (e.g. Practitioner, Patient). Empty means no restriction.' })),
   requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
+  
+  // fhirUser resolution
+  patientFacing: t.Optional(t.Boolean({ description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. If undefined, uses raw fhirUser as-is (backward compat).' })),
   
   // Consent & scope settings
   consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),

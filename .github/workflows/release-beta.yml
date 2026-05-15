@@ -5,6 +5,11 @@ on:
     branches: [test]
     paths-ignore:
       - 'apps/ui/src/lib/api-client/**'
+      - '.github/workflows/deploy-beta.yml'
+      - '.github/scripts/deploy-beta-remote.sh'
+      - 'docker-compose.beta.yml'
+      - 'docker-compose.caddy.yml'
+      - 'deploy/**'
   workflow_dispatch:
 
 permissions:

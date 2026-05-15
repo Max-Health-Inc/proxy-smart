@@ -16,7 +16,7 @@ import { getRuntimeBrandConfig } from './runtime-config'
 import { getAllOrgBrands } from './org-branding'
 import { logger } from './logger'
 import type { UserAccessBrandBundleType } from '../schemas'
-import type { UserAccessEndpoint, UserAccessBrand, UserAccessEndpointConnectionType, UserAccessEndpointPayloadTypeCoding, EndpointFhirVersion, OrganizationBrand, OrganizationPortal } from 'hl7.fhir.uv.smart-app-launch-generated'
+import type { UserAccessEndpoint, UserAccessBrand, UserAccessBrandsBundle, UserAccessEndpointConnectionType, UserAccessEndpointPayloadTypeCoding, EndpointFhirVersion, OrganizationBrand, OrganizationPortal } from 'hl7.fhir.uv.smart-app-launch-generated'
 import { ValueSetRegistry, validateUserAccessBrandsBundle, validateUserAccessBrand, validateUserAccessEndpoint, validateOrganizationBrand, validateOrganizationPortal, validateEndpointFhirVersion } from 'hl7.fhir.uv.smart-app-launch-generated'
 import type { ContactPointSystemCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-ContactPointSystem'
 import type { BundleTypeCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-BundleType'
@@ -114,7 +114,7 @@ class BrandBundleService {
 
   /** Validate the brand bundle and its entries against SMART App Launch IG FHIRPath constraints */
   private async validateBundle(bundle: UserAccessBrandBundleType, entries: UserAccessBrandBundleType['entry']): Promise<void> {
-    const { errors, warnings } = await validateUserAccessBrandsBundle(bundle as any)
+    const { errors, warnings } = await validateUserAccessBrandsBundle(bundle as unknown as UserAccessBrandsBundle)
     for (const w of warnings) logger.debug('brand-bundle', `validation warning: ${w}`)
     if (errors.length > 0) {
       logger.warn('brand-bundle', `bundle validation errors: ${errors.join('; ')}`)
@@ -123,7 +123,7 @@ class BrandBundleService {
     for (const entry of entries) {
       const resource = entry.resource as Record<string, unknown>
       if (resource.resourceType === 'Endpoint') {
-        const result = await validateUserAccessEndpoint(resource as any)
+        const result = await validateUserAccessEndpoint(resource as unknown as UserAccessEndpoint)
         for (const w of result.warnings) logger.debug('brand-bundle', `Endpoint validation warning: ${w}`)
         if (result.errors.length > 0) {
           logger.warn('brand-bundle', `Endpoint ${resource.id} validation errors: ${result.errors.join('; ')}`)
@@ -141,7 +141,7 @@ class BrandBundleService {
           }
         }
       } else if (resource.resourceType === 'Organization') {
-        const result = await validateUserAccessBrand(resource as any)
+        const result = await validateUserAccessBrand(resource as unknown as UserAccessBrand)
         for (const w of result.warnings) logger.debug('brand-bundle', `Organization validation warning: ${w}`)
         if (result.errors.length > 0) {
           logger.warn('brand-bundle', `Organization ${resource.id} validation errors: ${result.errors.join('; ')}`)

@@ -1,6 +1,11 @@
 import { readFileSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
+import { randomBytes } from 'crypto'
+
+// Per-process fallback secret for EHR Launch codes when SMART_LAUNCH_SECRET is not set.
+// WARNING: This is NOT safe for multi-node deployments — set SMART_LAUNCH_SECRET env var.
+const _defaultLaunchSecret = randomBytes(32).toString('hex')
 
 // Get package.json path - try multiple strategies for robustness
 let packageJson: { name: string; displayName?: string; version: string }
@@ -95,6 +100,15 @@ export const config = {
     configCacheTtl: parseInt(process.env.SMART_CONFIG_CACHE_TTL || '300000'), // 5 minutes
     scopesSupported: process.env.SMART_SCOPES_SUPPORTED?.split(',').map(s => s.trim()),
     capabilities: process.env.SMART_CAPABILITIES?.split(',').map(s => s.trim()),
+    // HMAC secret for signing EHR Launch codes (stateless JWT).
+    // Auto-generated per process if not set — multi-node deployments MUST set this.
+    get launchSecret(): string {
+      return process.env.SMART_LAUNCH_SECRET || _defaultLaunchSecret
+    },
+    // Launch code TTL in seconds (default 5 minutes)
+    get launchCodeTtlSeconds(): number {
+      return parseInt(process.env.SMART_LAUNCH_CODE_TTL || '300', 10)
+    },
   },
 
   // User-Access Brands (SMART App Launch 2.2.0 Section 8)
@@ -138,11 +152,11 @@ export const config = {
       return process.env.CONSENT_ENABLED === 'true'
     },
     get mode(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.CONSENT_MODE || 'disabled'
+      const mode = process.env.CONSENT_MODE || 'audit-only'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') {
         return mode
       }
-      return 'disabled'
+      return 'audit-only'
     },
     get cacheTtl() {
       return parseInt(process.env.CONSENT_CACHE_TTL || '60000', 10) // 1 minute default
@@ -185,7 +199,7 @@ export const config = {
       return 'level3'
     },
     get verifyPatientLink() {
-      // Verify that token's smart_patient matches Person.link[]. Default true.
+      // Verify that token's patient claim matches Person.link[]. Default true.
       return process.env.IAL_VERIFY_PATIENT_LINK !== 'false'
     },
     get allowOnPersonLookupFailure() {
@@ -207,15 +221,20 @@ export const config = {
     },
     // Role-based filtering using fhirUser claim (e.g. generalPractitioner-based isolation)
     get roleBasedFiltering(): 'enforce' | 'audit-only' | 'disabled' {
-      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'enforce'
+      const mode = process.env.ROLE_BASED_FILTERING_MODE || 'audit-only'
       if (mode === 'enforce' || mode === 'audit-only' || mode === 'disabled') return mode
-      return 'enforce'
+      return 'audit-only'
     },
     // Clinical resource types subject to patient-scoped filtering
     get patientScopedResources(): string[] {
       const defaults = ['Observation', 'Condition', 'Procedure', 'MedicationRequest', 'MedicationStatement', 'DiagnosticReport', 'Encounter', 'AllergyIntolerance', 'ImagingStudy', 'CarePlan', 'Consent']
       const env = process.env.PATIENT_SCOPED_RESOURCES?.split(',').map(s => s.trim()).filter(Boolean)
       return env && env.length > 0 ? env : defaults
+    },
+    // External resource servers allowed as aud/resource in authorize requests.
+    // Entries starting with '.' match all subdomains (e.g. '.maxhealth.tech').
+    get externalAudiences(): string[] {
+      return (process.env.ALLOWED_EXTERNAL_AUDIENCES || '').split(',').map(s => s.trim()).filter(Boolean)
     },
   },
 
@@ -294,6 +313,15 @@ export const config = {
     },
   },
 
+  urlShortener: {
+    get baseUrl() {
+      return process.env.URL_SHORTENER_BASE || 'https://go.maxhealth.tech'
+    },
+    get enabled() {
+      return process.env.URL_SHORTENER_ENABLED !== 'false'
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins
@@ -302,6 +330,7 @@ export const config = {
         'http://localhost:5173', // Vite dev server (admin UI)
         'http://localhost:5174', // Vite dev server (consent app)
         'http://localhost:5175', // Vite dev server (DTR app)
+        'http://localhost:5176', // Vite dev server (patient picker)
         'http://localhost:3000', // React dev server  
         'http://localhost:4567', // Inferno SMART compliance test runner
         'http://localhost:8445', // App server

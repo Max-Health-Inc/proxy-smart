@@ -4,7 +4,7 @@ import { getStoredToken } from '@/lib/apiClient';
 /** @deprecated Use `getStoredToken` from `@/lib/apiClient` directly. */
 export const getAdminToken = getStoredToken;
 
-export async function adminApiCall<T>(path: string, method: 'GET' | 'PUT' = 'GET', body?: unknown): Promise<T> {
+export async function adminApiCall<T>(path: string, method: 'GET' | 'PUT' | 'POST' = 'GET', body?: unknown): Promise<T> {
   const token = await getStoredToken();
   const res = await fetch(`${config.api.baseUrl}${path}`, {
     method,

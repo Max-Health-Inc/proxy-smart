@@ -93,7 +93,7 @@ export function ConfigureProviderPanel({ onSuccess }: ConfigureProviderPanelProp
 
     try {
       const result = await clientApis.admin.postAdminAccessControlConfigConfigure({
-        testAccessControlConfigRequest: buildPayload(),
+        saveAccessControlConfigRequest: buildPayload(),
       });
 
       if (result.success) {
