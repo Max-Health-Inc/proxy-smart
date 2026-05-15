@@ -1,8 +1,9 @@
 import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Plus, Landmark } from 'lucide-react';
 import type { IdentityProviderFormData } from '@/lib/types/api';
+import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 interface IdPAddFormProps {
@@ -15,9 +16,10 @@ interface IdPAddFormProps {
       | IdentityProviderFormData
       | ((previous: IdentityProviderFormData) => IdentityProviderFormData)
   ) => void;
+  organizations?: Organization[];
 }
 
-export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdPAddFormProps) {
+export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp, organizations = [] }: IdPAddFormProps) {
   const { t } = useTranslation();
   if (!isOpen) return null;
 
@@ -412,6 +414,36 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp }: IdP
             </div>
           </div>
         </div>
+
+        {/* Organization Linking */}
+        {organizations.length > 0 && (
+          <div className="bg-card/70 p-6 rounded-xl border border-border/50">
+            <h4 className="text-lg font-semibold text-foreground mb-2 flex items-center space-x-2">
+              <Landmark className="w-5 h-5" />
+              <span>{t('Organization')}</span>
+            </h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t('Link this identity provider to an organization. Users authenticating through this IdP will be associated with the selected organization.')}
+            </p>
+            <Select
+              value={newIdp.organizationId ?? '__none__'}
+              onValueChange={(value) => setNewIdp((prev) => ({ ...prev, organizationId: value === '__none__' ? undefined : value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('No organization linked')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">{t('No organization linked')}</SelectItem>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id!} value={org.id!}>
+                    {org.name} {org.alias ? `(${org.alias})` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
         <div className="flex gap-4 pt-4">
           <Button 
             type="submit"

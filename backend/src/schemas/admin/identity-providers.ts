@@ -64,7 +64,9 @@ export const CreateIdentityProviderRequest = t.Object({
   postBrokerLoginFlowAlias: t.Optional(t.String({ description: 'Authentication flow to run after broker login' })),
   trustEmail: t.Optional(t.Boolean({ description: 'Trust email provided by this identity provider for automatic account linking' })),
   linkOnly: t.Optional(t.Boolean({ description: 'If true, users cannot log in through this provider, only link existing accounts' })),
-  hideOnLogin: t.Optional(t.Boolean({ description: 'Hide this provider from the login page' }))
+  hideOnLogin: t.Optional(t.Boolean({ description: 'Hide this provider from the login page' })),
+  // Organization linking
+  organizationId: t.Optional(t.String({ description: 'Link this IdP to a Keycloak organization (users brokered through it auto-join the org)' }))
 }, { title: 'CreateIdentityProviderRequest' })
 
 export const UpdateIdentityProviderRequest = t.Object({
@@ -76,7 +78,9 @@ export const UpdateIdentityProviderRequest = t.Object({
   postBrokerLoginFlowAlias: t.Optional(t.String({ description: 'Authentication flow to run after broker login' })),
   trustEmail: t.Optional(t.Boolean({ description: 'Trust email provided by this identity provider for automatic account linking' })),
   linkOnly: t.Optional(t.Boolean({ description: 'If true, users cannot log in through this provider, only link existing accounts' })),
-  hideOnLogin: t.Optional(t.Boolean({ description: 'Hide this provider from the login page' }))
+  hideOnLogin: t.Optional(t.Boolean({ description: 'Hide this provider from the login page' })),
+  // Organization linking
+  organizationId: t.Optional(t.String({ description: 'Link this IdP to a Keycloak organization (users brokered through it auto-join the org)' }))
 }, { title: 'UpdateIdentityProviderRequest' })
 
 // ==================== Response Schemas ====================
