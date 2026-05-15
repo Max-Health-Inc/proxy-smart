@@ -188,6 +188,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
 
   // Tabs that can be toggled on/off in preferences
   const togglableTabs = [
+    { id: 'auth-flows', label: t('Auth Flows'), icon: Workflow },
     { id: 'ai-tools', label: t('AI Tools'), icon: Sparkles },
     { id: 'branding', label: t('Branding'), icon: Building2 },
     { id: 'door-management', label: t('Door Management'), icon: DoorOpen },

@@ -8,11 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Edit, X, Palette, Settings } from 'lucide-react';
+import { Edit, X, Palette, Settings, Shield } from 'lucide-react';
 import { useState } from 'react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 import { OrgBrandingTab } from './OrgBrandingTab';
+import { OrgIdPsTab } from './OrgIdPsTab';
 
 interface OrgEditDialogProps {
   isOpen: boolean;
@@ -84,9 +85,12 @@ export function OrgEditDialog({ isOpen, onClose, onUpdate, org }: OrgEditDialogP
         </DialogHeader>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="w-full grid grid-cols-2 mb-4">
+          <TabsList className="w-full grid grid-cols-3 mb-4">
             <TabsTrigger value="general" className="gap-2">
               <Settings className="w-4 h-4" /> {t('General')}
+            </TabsTrigger>
+            <TabsTrigger value="idps" className="gap-2">
+              <Shield className="w-4 h-4" /> {t('Identity Providers')}
             </TabsTrigger>
             <TabsTrigger value="branding" className="gap-2">
               <Palette className="w-4 h-4" /> {t('Branding')}
@@ -181,6 +185,10 @@ export function OrgEditDialog({ isOpen, onClose, onUpdate, org }: OrgEditDialogP
 
           <TabsContent value="branding">
             <OrgBrandingTab orgId={org.id!} orgName={org.name ?? ''} />
+          </TabsContent>
+
+          <TabsContent value="idps">
+            <OrgIdPsTab orgId={org.id!} orgName={org.name ?? ''} />
           </TabsContent>
         </Tabs>
       </DialogContent>
