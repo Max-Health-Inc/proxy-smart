@@ -58,6 +58,7 @@ import { PatientScribe } from "@/components/PatientScribe"
 import { DicomUpload } from "@/components/DicomUpload"
 import { PrescriptionsCard, DevicesCard } from "@/components/PrescriptionsDevicesCards"
 import { RecordDetailModal, isResourceVerified } from "@/components/RecordDetailModal"
+import { useUserRole } from "@/lib/use-user-role"
 import { ShareQRDialog } from "@/components/ShareQRDialog"
 import { MedicalTimeline } from "@/components/MedicalTimeline"
 import { checkPacsStatus } from "@/lib/dicomweb"
@@ -78,6 +79,7 @@ interface DashboardProps {
 export function Dashboard({ readOnly = false, patientId: overridePatientId }: DashboardProps) {
   const { t } = useTranslation()
   const { translateCoding } = useFhirTranslation()
+  const { isPractitioner } = useUserRole()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showImport, setShowImport] = useState(false)
@@ -781,6 +783,7 @@ export function Dashboard({ readOnly = false, patientId: overridePatientId }: Da
         title={detailTitle}
         resource={detailResource}
         documents={documents}
+        isPractitioner={isPractitioner}
         onResourceUpdated={readOnly ? undefined : refreshData}
         onResourceDeleted={readOnly ? undefined : refreshData}
       />

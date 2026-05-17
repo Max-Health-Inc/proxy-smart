@@ -2,7 +2,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Badge, Button,
 } from "@proxy-smart/shared-ui"
 import { useState } from "react"
-import { ShieldCheck, ShieldAlert, Pencil, Trash2, Undo2 } from "lucide-react"
+import { ShieldCheck, ShieldAlert, Pencil, Trash2, Undo2, CheckCircle2 } from "lucide-react"
 import type { DocumentReference, DynamicFhirResource } from "@/lib/fhir-client"
 import { deleteResource, updateResource } from "@/lib/fhir-client"
 import { isValidConditionVerStatusCode, type ConditionVerStatusCode } from "hl7.fhir.uv.ips-generated/valuesets/ValueSet-ConditionVerStatus"
@@ -24,6 +24,8 @@ export interface RecordDetailModalProps {
   documents?: DocumentReference[]
   onResourceUpdated?: (updated: FhirResource) => void
   onResourceDeleted?: () => void
+  /** When true, enables practitioner-only actions (approve, unrestricted delete) */
+  isPractitioner?: boolean
 }
 
 // ── Verification helpers ─────────────────────────────────────────────────────
@@ -54,11 +56,12 @@ const EDITABLE_TYPES = new Set([
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function RecordDetailModal({
-  open, onOpenChange, title, resource, documents, onResourceUpdated, onResourceDeleted,
+  open, onOpenChange, title, resource, documents, onResourceUpdated, onResourceDeleted, isPractitioner = false,
 }: RecordDetailModalProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [approving, setApproving] = useState(false)
   const { t } = useTranslation()
   if (!resource) return null
 
@@ -66,10 +69,42 @@ export function RecordDetailModal({
   const resourceType = resource.resourceType as string | undefined
   const resourceId = resource.id as string | undefined
   const canEdit = onResourceUpdated && resourceType && EDITABLE_TYPES.has(resourceType)
+  // Patients can only delete unverified resources; practitioners can delete any editable resource
   const canDelete = onResourceDeleted && resourceType && resourceId
-    && EDITABLE_TYPES.has(resourceType) && (!verification || !verification.verified)
+    && EDITABLE_TYPES.has(resourceType)
+    && (isPractitioner || (!verification || !verification.verified))
+  // Practitioners can approve provisional resources
+  const canApprove = isPractitioner && onResourceUpdated && verification && !verification.verified
+    && resourceType && EDITABLE_TYPES.has(resourceType)
   const hasSnapshot = ((resource.extension as Array<{ url: string }>) ?? []).some(e => e.url === ORIGINAL_SNAPSHOT_EXT)
   const fields = buildDetailFields(resource, t, documents)
+
+  async function handleApprove() {
+    if (!resource || !onResourceUpdated) return
+    setApproving(true)
+    try {
+      // Upgrade verification status to confirmed and remove the snapshot extension
+      const updated = {
+        ...resource,
+        verificationStatus: {
+          coding: [{
+            system: resource.verificationStatus?.coding?.[0]?.system
+              ?? "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+            code: "confirmed",
+            display: "Confirmed",
+          }],
+          text: "Confirmed",
+        },
+        // Remove the original snapshot extension — changes are now approved
+        extension: ((resource.extension as Array<{ url: string }>) ?? [])
+          .filter(e => e.url !== ORIGINAL_SNAPSHOT_EXT),
+      }
+      const result = await updateResource(updated)
+      onResourceUpdated(result)
+      onOpenChange(false)
+    } catch { /* keep modal open */ }
+    finally { setApproving(false) }
+  }
 
   async function handleDelete() {
     if (!resource || !resourceType || !resourceId) return
@@ -114,10 +149,21 @@ export function RecordDetailModal({
               {resourceId && <span className="text-xs font-mono text-muted-foreground"> / {resourceId}</span>}
             </DialogDescription>
             {canEdit && (
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <Button variant="outline" size="sm" className="w-fit" onClick={() => setEditOpen(true)}>
                   <Pencil className="size-3.5 mr-1" />{t("recordDetail.editRecord")}
                 </Button>
+                {canApprove && (
+                  <Button
+                    variant="outline" size="sm"
+                    className="w-fit text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                    onClick={handleApprove}
+                    disabled={approving}
+                  >
+                    <CheckCircle2 className="size-3.5 mr-1" />
+                    {approving ? t("recordDetail.approving", "Approving…") : t("recordDetail.approve", "Approve")}
+                  </Button>
+                )}
                 {canDelete && !confirmDelete && (
                   <Button variant="outline" size="sm" className="w-fit text-destructive hover:bg-destructive/10" onClick={() => setConfirmDelete(true)}>
                     {hasSnapshot
@@ -158,6 +204,7 @@ export function RecordDetailModal({
           open={editOpen}
           onOpenChange={setEditOpen}
           resource={resource}
+          isPractitioner={isPractitioner}
           onSaved={(updated) => {
             onResourceUpdated(updated)
             setEditOpen(false)
