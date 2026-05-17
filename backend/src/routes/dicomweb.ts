@@ -462,7 +462,7 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
     const wildcard = (params as Record<string, string>)['*'] || ''
     return proxyDicomWeb(request, `/studies/${params.studyUID}/series/${params.seriesUID}/instances/${params.sopUID}/bulkdata/${wildcard}`, set)
   }, {
-    params: t.Object({ studyUID: UidParam, seriesUID: UidParam, sopUID: UidParam }),
+    params: t.Object({ studyUID: UidParam, seriesUID: UidParam, sopUID: UidParam, '*': t.String() }),
     detail: dicomwebDetail('Retrieve Bulkdata (WADO-RS)', 'Retrieve bulkdata for an instance (e.g. pixel data by tag)'),
   })
 
@@ -556,7 +556,7 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
     const subPath = `/${(params as Record<string, string>)['*'] || ''}`
     return proxyDicomWeb(request, subPath, set, server)
   }, {
-    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
+    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }), '*': t.String() }),
     detail: dicomwebDetail('Server-scoped DICOMweb (GET)', 'Proxy any DICOMweb GET request to a specific DICOM server (QIDO-RS, WADO-RS).'),
   })
 
@@ -569,6 +569,6 @@ export const dicomwebRoutes = new Elysia({ prefix: '/dicomweb', tags: ['dicomweb
     const subPath = `/${(params as Record<string, string>)['*'] || ''}`
     return proxyDicomWebPost(request, subPath, set, server)
   }, {
-    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }) }),
+    params: t.Object({ serverId: t.String({ description: 'DICOM server config ID' }), '*': t.String() }),
     detail: dicomwebDetail('Server-scoped STOW-RS (POST)', 'Proxy any DICOMweb POST request to a specific DICOM server (STOW-RS).'),
   })
