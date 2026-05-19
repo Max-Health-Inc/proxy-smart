@@ -10,6 +10,7 @@ import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig } from '../lib/consent'
 import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../lib/smart-access-control'
+import { enforceTenantIsolation } from '../lib/tenant-isolation'
 import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
 import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, isHistorySupported, isOperationSupported, isPatchFormatSupported, parseFhirPath } from '../lib/fhir-capabilities'
 
@@ -75,6 +76,22 @@ async function proxyFHIR({ params, request, set }: any) {
     const parts = requestUrl.pathname.split('/').filter(Boolean)
     const resourcePath = parts.slice(3).join('/')
     let queryString = requestUrl.search
+
+    // 2.5) Multi-tenant isolation — verify org access and inject query filters
+    let tenantOrgId: string | null = null
+    if (tokenPayload) {
+      const tenantResult = enforceTenantIsolation(
+        serverInfo, tokenPayload, resourcePath, request.method, queryString,
+      )
+      if (!tenantResult.allowed) {
+        set.status = tenantResult.status
+        return tenantResult.body
+      }
+      tenantOrgId = tenantResult.tenant.organizationId
+      if (tenantResult.modifiedQueryString !== undefined) {
+        queryString = tenantResult.modifiedQueryString
+      }
+    }
 
     // Resolve mTLS config once per request (used by both access control and proxy fetch)
     const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
@@ -249,6 +266,7 @@ async function proxyFHIR({ params, request, set }: any) {
       clientId: tokenPayload?.azp || tokenPayload?.client_id,
       userId: tokenPayload?.sub,
       username: tokenPayload?.preferred_username,
+      organizationId: tenantOrgId ?? undefined,
       error: resp.status >= 400 ? `HTTP ${resp.status}` : undefined,
     })
 

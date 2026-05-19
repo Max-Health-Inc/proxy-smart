@@ -18,6 +18,7 @@ import { getAllServers, getServerInfoByName } from '../fhir-server-store'
 import { validateToken } from '../auth'
 import { checkConsentWithIal, getConsentConfig } from '../consent'
 import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../smart-access-control'
+import { enforceTenantIsolation } from '../tenant-isolation'
 import { getServerCapabilities, normalizeSearchParams, parseFhirPath, isInteractionSupported } from '../fhir-capabilities'
 import { fetchWithMtls, getMtlsConfig } from '../../routes/fhir-servers'
 import { fhirProxyMetricsLogger } from '../fhir-proxy-metrics-logger'
@@ -98,6 +99,15 @@ async function proxyFhirRequest(opts: FhirProxyOptions): Promise<{ status: numbe
 
   // Build query string
   let qs = queryParams ? `?${queryParams}` : ''
+
+  // Tenant isolation — verify org access and inject query filters
+  const tenantResult = enforceTenantIsolation(
+    serverInfo, tokenPayload, resourcePath, method, qs,
+  )
+  if (!tenantResult.allowed) {
+    return { status: tenantResult.status ?? 403, data: tenantResult.body }
+  }
+  qs = tenantResult.modifiedQueryString ?? qs
 
   // SMART scope enforcement + role-based filtering
   const acCtx: AccessControlContext = {

@@ -505,49 +505,6 @@
     "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/TaskRole/Resource"
    }
   },
-  "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6": {
-   "Type": "AWS::IAM::Policy",
-   "Properties": {
-    "PolicyDocument": {
-     "Statement": [
-      {
-       "Action": [
-        "ssmmessages:CreateControlChannel",
-        "ssmmessages:CreateDataChannel",
-        "ssmmessages:OpenControlChannel",
-        "ssmmessages:OpenDataChannel"
-       ],
-       "Effect": "Allow",
-       "Resource": "*"
-      },
-      {
-       "Action": "logs:DescribeLogGroups",
-       "Effect": "Allow",
-       "Resource": "*"
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:DescribeLogStreams",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": "*"
-      }
-     ],
-     "Version": "2012-10-17"
-    },
-    "PolicyName": "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
-    "Roles": [
-     {
-      "Ref": "BackendServiceTaskDefTaskRoleD63B95BB"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "ProxySmartBackend/BackendService/TaskDef/TaskRole/DefaultPolicy/Resource"
-   }
-  },
   "BackendServiceTaskDef9F97F56B": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -557,10 +514,6 @@
        {
         "Name": "NODE_ENV",
         "Value": "production"
-       },
-       {
-        "Name": "MONO_MODE",
-        "Value": "true"
        },
        {
         "Name": "BASE_URL",
@@ -636,7 +589,7 @@
          "Ref": "BackendServiceTaskDefwebLogGroup614D1BFF"
         },
         "awslogs-stream-prefix": "BackendService",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "eu-central-1"
        }
       },
       "Name": "web",
@@ -868,7 +821,7 @@
     },
     "DesiredCount": 1,
     "EnableECSManagedTags": false,
-    "EnableExecuteCommand": true,
+    "EnableExecuteCommand": false,
     "HealthCheckGracePeriodSeconds": 60,
     "LaunchType": "FARGATE",
     "LoadBalancers": [
@@ -927,7 +880,6 @@
    "DependsOn": [
     "BackendServiceLBPublicListenerECSGroupD43CD2AB",
     "BackendServiceLBPublicListener2FA7FC98",
-    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
     "BackendServiceTaskDefTaskRoleD63B95BB"
    ],
    "Metadata": {
@@ -968,7 +920,6 @@
     }
    },
    "DependsOn": [
-    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
     "BackendServiceTaskDefTaskRoleD63B95BB"
    ],
    "Metadata": {
@@ -996,7 +947,6 @@
     "ToPort": 8445
    },
    "DependsOn": [
-    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
     "BackendServiceTaskDefTaskRoleD63B95BB"
    ],
    "Metadata": {
@@ -1034,11 +984,7 @@
        {
         "Ref": "AWS::Partition"
        },
-       ":iam::",
-       {
-        "Ref": "AWS::AccountId"
-       },
-       ":role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+       ":iam::579201838740:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
       ]
      ]
     },
@@ -1046,7 +992,6 @@
     "ServiceNamespace": "ecs"
    },
    "DependsOn": [
-    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
     "BackendServiceTaskDefTaskRoleD63B95BB"
    ],
    "Metadata": {
@@ -1071,7 +1016,6 @@
     }
    },
    "DependsOn": [
-    "BackendServiceTaskDefTaskRoleDefaultPolicy3BCDB2C6",
     "BackendServiceTaskDefTaskRoleD63B95BB"
    ],
    "Metadata": {
@@ -1284,7 +1228,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtM7F9u55HygQoIMdYI8FI9MeG0UyJCpBIei/D5JTO+mGPfF4OlI8iZWsHj7L+zs4+43qDxtNexk7BnUQcPbPEZWTscXJemLrXkUzmDVLwqNyyP4IBkZ0MnYlz6oZJaHQMQ2kgHFRNSuXpVdpEmcYTpWMzWB+4b5utmJBtfdWETBZkwQqL2Ojg2d0pccFfgc3AuMO/OErDmQoy7PgPWMNAxl0V9yltkN3IoWziRl2CjTsdWnb2GC4DPA8ATM642U9TTrPT9ZsLfRfQINR2L9riBo8k9IW+n1RkBmz139XF1s3+bWOPKO5aN7w1fkO3Ij8w9kwzeaXNE9elY8Kjvh1kfyf+DY69P4v+tEUPglnA+OnBxnrFpV1/bwnGXV5CQiOMrZWl0ct8afVpMo6zSgJbUcv49aOywRvOAlYnUFg6xVoMqOM679kf2W8W2YOOwfqQGbs5rr17hsiCaVt6M/A6reMtQZ3zJoCUsrwKfAUWLTobXAKkzC2R/niP5yqSn6s5P3diyfauGCYjijbOf4BpJOLE2MDAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31Ty47bMAz8lt4VtXWxH+C6DxQI0MIO0OOCkRmXG0UyKCrBQtC/F5KzeWyLPXE4HtIciWp089DoD+/gFFZm3K8sbXUaBMxewSk8JjSsU4+zDySen1W3c9csq4CGUcIBHEzIOg01L6oFZWWQhXZkQPCi6q5ckd6kWZ1gd2x06nbuN27bbq0uqA3BGwIh77JCE3TqbAyCXHuc4TfgCQQ3EPZfcEeOirwIXjPeCZBDvuHOtQPykQwuJhY4GLCwtbVt56OTOsDjDCLILuh2nm2Zn7xbexg/gwVncHzVEC0EIWM9jNuqIDcVr/+vrrbu8lsdBUF31rzgm+8b4AnlO/s4L+YvaZm8qRcVmeT5Inmb+DoxhvAP/cNVPiv2UfDhk05tj8bzuOxJQUNZAoKDTr239VBr/OUtmbpOC8rK+inotPbTZYIXnBVcnUEUHwxYcpNO13sp/up498wSNgxmT24alrrrv++IrIz1cTyBmD86tRb4UDQV5FzgzyhzFNVj8JENZuX8iPopvD82jf5YntFTIFpxdEIH1P0S/wLWlxy8YwMAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartBackend/CDKMetadata/Default"

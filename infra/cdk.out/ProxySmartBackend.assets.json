@@ -1,18 +1,18 @@
 {
-  "version": "48.0.0",
+  "version": "53.0.0",
   "files": {
-    "fb1a3d1b239a136c9c7200a0326fd71082696c7b7eeeef6e965affa982300a5f": {
+    "7040f11645581329d0cb71e10eca2e829a03863771805fd9fdd31c67bfb0d721": {
       "displayName": "ProxySmartBackend Template",
       "source": {
         "path": "ProxySmartBackend.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "current_account-us-east-1-d8373742": {
-          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
-          "objectKey": "fb1a3d1b239a136c9c7200a0326fd71082696c7b7eeeef6e965affa982300a5f.json",
-          "region": "us-east-1",
-          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        "579201838740-eu-central-1-f40e000e": {
+          "bucketName": "cdk-hnb659fds-assets-579201838740-eu-central-1",
+          "objectKey": "7040f11645581329d0cb71e10eca2e829a03863771805fd9fdd31c67bfb0d721.json",
+          "region": "eu-central-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-file-publishing-role-579201838740-eu-central-1"
         }
       }
     }
