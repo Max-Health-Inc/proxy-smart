@@ -17,44 +17,14 @@
     "SecurityGroupIngress": [
      {
       "CidrIp": "10.0.2.0/24",
-      "Description": {
-       "Fn::Join": [
-        "",
-        [
-         "Allow PostgreSQL from private subnet ",
-         {
-          "Fn::Select": [
-           0,
-           {
-            "Fn::GetAZs": ""
-           }
-          ]
-         }
-        ]
-       ]
-      },
+      "Description": "Allow PostgreSQL from private subnet eu-central-1a",
       "FromPort": 5432,
       "IpProtocol": "tcp",
       "ToPort": 5432
      },
      {
       "CidrIp": "10.0.3.0/24",
-      "Description": {
-       "Fn::Join": [
-        "",
-        [
-         "Allow PostgreSQL from private subnet ",
-         {
-          "Fn::Select": [
-           1,
-           {
-            "Fn::GetAZs": ""
-           }
-          ]
-         }
-        ]
-       ]
-      },
+      "Description": "Allow PostgreSQL from private subnet eu-central-1b",
       "FromPort": 5432,
       "IpProtocol": "tcp",
       "ToPort": 5432
@@ -297,7 +267,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOywrCMBBFv8V9OmoE9z5AXAnWvUzTUaM2lczEIiH/LrUqPlbncu9ZXA16NIZBDxvOTHnKzraAmAuak8KGt5GMhpiTCd7KbeHrcFGznfsqkmIynoQrdLgn//A9yVNsU4cN+j3JRATNoSL3IfwuSfmSIc5RsECmpWNBZ0jloXAk7xvz6V/xUpOyWEFc12dqh5YptWkV5BIkKVeXBEfuX7WGoYZB78jWZj44sRXBuuMdtz3qcB4BAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WQywoCMQxFv8V9J2rBD/AB4kpw3EumE7U605EmVaT036W+8LE6l3vPIkSDHmkY9PDChamPRWMriKWgOSq88CaS0RBLMsFbuc59F05qunVfRVJMxpNwiw535O++J3mKOT2wRr8jGYug2bfkPoTfJSlfM8QZClbItHAs6AypMlSO5H3GbPJXvNSkLLYQV11DechMKadlkFOQpFxXExy4f9YahvkDB7a28MGJbQlWD94A87ulxh4BAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartDatabase/CDKMetadata/Default"

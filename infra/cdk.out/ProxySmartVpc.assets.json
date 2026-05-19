@@ -1,18 +1,18 @@
 {
-  "version": "48.0.0",
+  "version": "53.0.0",
   "files": {
-    "25e7087262d6a78b9649afc2fa5a2fe8a5bba6e2d494ccb01a476c6d2633f3eb": {
+    "ea545cb9cf6700852799140ae71887c67c3e5df565178d155e6bad64536d3129": {
       "displayName": "ProxySmartVpc Template",
       "source": {
         "path": "ProxySmartVpc.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "current_account-us-east-1-bc731d9d": {
-          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
-          "objectKey": "25e7087262d6a78b9649afc2fa5a2fe8a5bba6e2d494ccb01a476c6d2633f3eb.json",
-          "region": "us-east-1",
-          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        "579201838740-eu-central-1-e49d334d": {
+          "bucketName": "cdk-hnb659fds-assets-579201838740-eu-central-1",
+          "objectKey": "ea545cb9cf6700852799140ae71887c67c3e5df565178d155e6bad64536d3129.json",
+          "region": "eu-central-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-file-publishing-role-579201838740-eu-central-1"
         }
       }
     }
