@@ -25,6 +25,8 @@ export interface RecordEditModalProps {
   resource: FhirResource | null
   /** Called after successful save with the updated resource from the server */
   onSaved: (updated: FhirResource) => void
+  /** When true, edits bypass the provisional downgrade (practitioner workflow) */
+  isPractitioner?: boolean
 }
 
 // ── Editable field definitions per resource type ─────────────────────────────
@@ -79,7 +81,7 @@ const EDITABLE_FIELDS: Record<string, EditableField[]> = {
 
 function getByPath(obj: unknown, path: string): unknown {
   return path.split(".").reduce<unknown>((acc, key) => {
-    if (acc == null || typeof acc !== "object") return undefined
+    if (acc === null || acc === undefined || typeof acc !== "object") return undefined
     return (acc as Record<string, unknown>)[key]
   }, obj)
 }
@@ -90,15 +92,15 @@ function setByPath(obj: FhirResource, path: string, value: unknown): FhirResourc
   let current: unknown = clone
   for (let i = 0; i < keys.length - 1; i++) {
     const k = keys[i]
-    if (current == null || typeof current !== "object") return clone
+    if (current === null || current === undefined || typeof current !== "object") return clone
     const next = (current as FhirResource)[k]
-    if (next == null || typeof next !== "object") {
+    if (next === null || next === undefined || typeof next !== "object") {
       const nextKey = keys[i + 1]
       ;(current as FhirResource)[k] = /^\d+$/.test(nextKey) ? [] : {}
     }
     current = (current as FhirResource)[k]
   }
-  if (current != null && typeof current === "object") {
+  if (current !== null && current !== undefined && typeof current === "object") {
     (current as FhirResource)[keys[keys.length - 1]] = value
   }
   return clone
@@ -146,7 +148,7 @@ function markAsPendingReview(resource: FhirResource, originalResource: FhirResou
 
 // ── Component ────────────────────────────────────────────────────────────────
 
-export function RecordEditModal({ open, onOpenChange, resource, onSaved }: RecordEditModalProps) {
+export function RecordEditModal({ open, onOpenChange, resource, onSaved, isPractitioner = false }: RecordEditModalProps) {
   const [editValues, setEditValues] = useState<Record<string, string>>(() => {
     if (!resource) return {}
     const rt = resource.resourceType as string | undefined
@@ -155,7 +157,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
     const vals: Record<string, string> = {}
     for (const f of flds) {
       const current = getByPath(resource, f.path)
-      vals[f.path] = current != null ? String(current) : ""
+      vals[f.path] = current !== null && current !== undefined ? String(current) : ""
     }
     return vals
   })
@@ -165,6 +167,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
   const resourceType = resource?.resourceType as string | undefined
   const fields = resourceType ? (EDITABLE_FIELDS[resourceType] ?? []) : []
   const wasVerified = resource ? isVerified(resource) : false
+  const willDowngrade = wasVerified && !isPractitioner
   const { t } = useTranslation()
 
   const handleSave = useCallback(async () => {
@@ -183,8 +186,9 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         updated = setByPath(updated, f.path, coerced)
       }
 
-      // If the resource was verified, mark as provisional (pending review)
-      if (wasVerified) {
+      // Patient edits to verified resources → mark as provisional (pending review)
+      // Practitioner edits keep the resource verified (no approval needed)
+      if (willDowngrade) {
         updated = markAsPendingReview(updated, resource)
       }
 
@@ -196,7 +200,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
     } finally {
       setSaving(false)
     }
-  }, [resource, fields, editValues, wasVerified, onSaved, onOpenChange])
+  }, [resource, fields, editValues, willDowngrade, onSaved, onOpenChange])
 
   if (!resource || !fields.length) return null
 
@@ -209,7 +213,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
             {t("recordEdit.editTitle", { resourceType })}
           </DialogTitle>
           <DialogDescription>
-            {wasVerified && (
+            {willDowngrade && (
               <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 mt-1">
                 <AlertTriangle className="size-3.5" />
                 {t("recordEdit.verifiedWarning")}
@@ -219,7 +223,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
         </DialogHeader>
 
         <div className="space-y-4 py-2 max-h-[60vh] overflow-y-auto">
-          {wasVerified && (
+          {willDowngrade && (
             <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
               {t("recordEdit.pendingReview")}
             </Badge>
@@ -254,7 +258,7 @@ export function RecordEditModal({ open, onOpenChange, resource, onSaved }: Recor
             ) : (
               <>
                 <Save className="size-4 mr-1" />
-                {wasVerified ? t("recordEdit.saveAsProvisional") : t("recordEdit.saveChanges")}
+                {willDowngrade ? t("recordEdit.saveAsProvisional") : t("recordEdit.saveChanges")}
               </>
             )}
           </Button>

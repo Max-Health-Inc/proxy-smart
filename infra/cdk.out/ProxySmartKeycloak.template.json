@@ -470,49 +470,6 @@
     "aws:cdk:path": "ProxySmartKeycloak/KeycloakService/TaskDef/TaskRole/Resource"
    }
   },
-  "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4": {
-   "Type": "AWS::IAM::Policy",
-   "Properties": {
-    "PolicyDocument": {
-     "Statement": [
-      {
-       "Action": [
-        "ssmmessages:CreateControlChannel",
-        "ssmmessages:CreateDataChannel",
-        "ssmmessages:OpenControlChannel",
-        "ssmmessages:OpenDataChannel"
-       ],
-       "Effect": "Allow",
-       "Resource": "*"
-      },
-      {
-       "Action": "logs:DescribeLogGroups",
-       "Effect": "Allow",
-       "Resource": "*"
-      },
-      {
-       "Action": [
-        "logs:CreateLogStream",
-        "logs:DescribeLogStreams",
-        "logs:PutLogEvents"
-       ],
-       "Effect": "Allow",
-       "Resource": "*"
-      }
-     ],
-     "Version": "2012-10-17"
-    },
-    "PolicyName": "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
-    "Roles": [
-     {
-      "Ref": "KeycloakServiceTaskDefTaskRole86519850"
-     }
-    ]
-   },
-   "Metadata": {
-    "aws:cdk:path": "ProxySmartKeycloak/KeycloakService/TaskDef/TaskRole/DefaultPolicy/Resource"
-   }
-  },
   "KeycloakServiceTaskDef778B54C2": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
@@ -582,7 +539,7 @@
          "Ref": "KeycloakServiceTaskDefwebLogGroupCB61FCD4"
         },
         "awslogs-stream-prefix": "KeycloakService",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "eu-central-1"
        }
       },
       "Name": "web",
@@ -833,7 +790,7 @@
     },
     "DesiredCount": 1,
     "EnableECSManagedTags": false,
-    "EnableExecuteCommand": true,
+    "EnableExecuteCommand": false,
     "HealthCheckGracePeriodSeconds": 60,
     "LaunchType": "FARGATE",
     "LoadBalancers": [
@@ -892,7 +849,6 @@
    "DependsOn": [
     "KeycloakServiceLBPublicListenerECSGroup7008E672",
     "KeycloakServiceLBPublicListenerF1BD9FFE",
-    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -933,7 +889,6 @@
     }
    },
    "DependsOn": [
-    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -961,7 +916,6 @@
     "ToPort": 8080
    },
    "DependsOn": [
-    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -999,11 +953,7 @@
        {
         "Ref": "AWS::Partition"
        },
-       ":iam::",
-       {
-        "Ref": "AWS::AccountId"
-       },
-       ":role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
+       ":iam::579201838740:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
       ]
      ]
     },
@@ -1011,7 +961,6 @@
     "ServiceNamespace": "ecs"
    },
    "DependsOn": [
-    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -1036,7 +985,6 @@
     }
    },
    "DependsOn": [
-    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -1249,7 +1197,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtM7F9u55HygQoEMcYI8FI9MaG0UyJCpBIei/D5JTJ+mGPfHufKR5khrZPHyW93dwCis17FeGdjL1DGov4BSeU0DlkcMBLGj0MvWVi260M8pCoWcaSQHj4uouWrFe0SxOMB4bmbrR/sJd263FgtoQnCJgcjYLVEGmzsTA6OuMM/wOXgPjFsL+K45kqdiL4b3iLANZ9FfaubdHfySFc4gZ9goM7Ewd27louS7wPAEzehtkO02m7E/Orh0MX8CAVTi8G4gGApMyDoZddZDVJeu/u2usG37to8Boz543fPV9C14j//AuTnP4hZbNm3pR0RO/Lpb/C9+0xxD+kh9t1bPwLjJ+epCp3aByfijOGfXlERAcZNo4Uw+11p/OkHotdEZZGKeDTGunlw3ecBZwSQaRXVBgyGqZLvdS8tX1bpW5bD2oPVndz32Xf98IWSjj4nACVr9lag34Q/FUkHOBT5GnyGKDwUWvMAvrBpQv4cOxaeTHRt7fvQSilY+W6YByM9c/8Dwhe0QDAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31Ty47bMAz8lt4VtXWxH+C6DxQI0CIO0OOCkRmXG0UyRCrBQtC/F5KzTrIt9sSZ8ZDiWHajm4dGf3gHZ16Z4bCytNOpFzAHBWd+TIwmoPARHIwYdOorV93ezSgrg0FoTwYEF1d31Yr1hmZ1hv2p0anbu9+4a7u1WlDL7A2BkHdZoWGdOhtZMNQZF/gNwgiCW+DDF9yTo2IvhteKdwLkMNxol94ew4kMziFm2BuwsLN1bOejk7rA4wQiGBzrdpps2Z+8W3sYPoMFZ3B4NRAtsJCxHoZddZAbS9b/d9dYd/zWRyzoLp4XfPN8C2FE+R58nObwCy2bN/WiYiB5XixvC1/HgMz/yD9c1bMKPgo+fNKp3aDxYSjOGfXlIyA46rTxtr7UWn95S+a50BllZf3IOq39uGzwgrOCazKI4tmAJTfqdL2Xkq+ud6/MZRvAHMiN/dx3PftOyMpYH4cziPmjU2shHIungpwL/BlliqI2yD4Gg1k5P6B+4venptEfy3/yxESrEJ3QEfVmrn8BoxDAG0QDAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartKeycloak/CDKMetadata/Default"

@@ -38,14 +38,7 @@
   "ProxySmartVpcPublicSubnet1Subnet8F6B16CA": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      0,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "eu-central-1a",
     "CidrBlock": "10.0.0.0/24",
     "MapPublicIpOnLaunch": true,
     "Tags": [
@@ -228,14 +221,7 @@
   "ProxySmartVpcPublicSubnet2Subnet45BA1AEA": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      1,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "eu-central-1b",
     "CidrBlock": "10.0.1.0/24",
     "MapPublicIpOnLaunch": true,
     "Tags": [
@@ -344,14 +330,7 @@
   "ProxySmartVpcPrivateSubnet1SubnetF39FDD5A": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      0,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "eu-central-1a",
     "CidrBlock": "10.0.2.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -457,14 +436,7 @@
   "ProxySmartVpcPrivateSubnet2SubnetB84177BE": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      1,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "eu-central-1b",
     "CidrBlock": "10.0.3.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -570,14 +542,7 @@
   "ProxySmartVpcIsolatedSubnet1SubnetF7961167": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      0,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "eu-central-1a",
     "CidrBlock": "10.0.4.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -668,14 +633,7 @@
   "ProxySmartVpcIsolatedSubnet2Subnet8AC08863": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      1,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "eu-central-1b",
     "CidrBlock": "10.0.5.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -963,7 +921,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WOQW/CMAyFfwv3NGNB4o7QhpDQFpWJ6+QGrwTSuEocqqnqf5/SMnp6n5+fn6ykWq3lcgFdLMz5Vjhbyf7IYG4Cuvjdo1GyP7VGbH/8SW+FTpWz5pgqj5y9mUpKjF9QOZz92dvESMYCW/LPcIa3vc7yAbwDxg5+hQ72Doxz8d4zBo/PwPTJY9owg7k06Fm8O+oOVOf9AwdhoZF9SdNPo2py1owlEw3CUR1lf6B6Fyi1efPPwyBKjJSCGe8/E7eJB+HpjPIaX+5KyVcll4trtLYIybNtUJaT/gHcokUBWQEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WQ0WrDMAxFv2XvjrcZ9gGlbKVQNpOWvg7F1TK3jhViuaEY//tw0jVP9+hKuggpqd6UfHmCMVTmdKmcbWTaM5iLgDF8JzRKpmNvxPrHH/Va6Ng4a/ax8cjFW6imyHiAxuHiL94qBDIW2JJ/DBd43+oin8AbYBzhJvRgr8C4BG894+DxMTBfcq9WzGB+O/QsPhyNO2pL/45ZWOhkqmm+aVJNzpopZKYsHLVBph21m4FiXzr/nLOoMVAczLT/FbmPnIWnE8pzeL4qJV/L887B2mqInm2Hsp71D2Qqe9dZAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartVpc/CDKMetadata/Default"

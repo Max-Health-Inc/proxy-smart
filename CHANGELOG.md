@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1-beta.202605171634.2925aa76] - 2026-05-17
+
+- 🔧 Chores & Improvements: Improve Keycloak path matching in docker-compose.beta.yml (broaden /auth/realms/*/broker/* to /auth/realms/*/broker/** with clarifying comment).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/719
+
+
 ## [0.1.0-alpha.202605142141.3f719102] - 2026-05-14
 
 - 🔧 Chores & Improvements: Update Docker setup and non-root execution

@@ -25,6 +25,7 @@ export interface FhirProxyEvent {
   clientId?: string
   userId?: string
   username?: string
+  organizationId?: string
   error?: string
 }
 
