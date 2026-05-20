@@ -1267,7 +1267,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31Ty47bMAz8lt4VtXWxH+C6DxQI0CIO0OOCkRmXG0UyRCrBQtC/F5KzTrIt9sSZ8ZDiWHajm4dGf3gHZ16Z4bCytNOpFzAHBWd+TIwmoPARHIwYdOorV93ezSgrg0FoTwYEF1d31Yr1hmZ1hv2p0anbu9+4a7u1WlDL7A2BkHdZoWGdOhtZMNQZF/gNwgiCW+DDF9yTo2IvhteKdwLkMNxol94ew4kMziFm2BuwsLN1bOejk7rA4wQiGBzrdpps2Z+8W3sYPoMFZ3B4NRAtsJCxHoZddZAbS9b/d9dYd/zWRyzoLp4XfPN8C2FE+R58nObwCy2bN/WiYiB5XixvC1/HgMz/yD9c1bMKPgo+fNKp3aDxYSjOGfXlIyA46rTxtr7UWn95S+a50BllZf3IOq39uGzwgrOCazKI4tmAJTfqdL2Xkq+ud6/MZRvAHMiN/dx3PftOyMpYH4cziPmjU2shHIungpwL/BlliqI2yD4Gg1k5P6B+4venptEfy3/yxESrEJ3QEfVmrn8BoxDAG0QDAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtNVF9+55HygQYEMcYI8FI9MaG0UyJCpBIei/D5JTJ+mGPfHufKR5khrZPH6S93dwCis17FeGdjL1DGov4BSeU0DlkcMBLGj0MvWVi260M8pCoWcaSQHj4uouWrFe0SxOMB4bmbrR/sJd263FgtoQnCJgcjYLVEGmzsTA6OuMM/wGXgPjFsL+C45kqdiL4b3iLANZ9FfaubdHfySFc4gZ9goM7Ewd27louS7wPAEzehtkO02m7E/Orh0Mn8GAVTi8G4gGApMyDoZddZDVJeu/u2usG37to8Boz543fPV9C14jf/cuTnP4hZbNm3pR0RO/Lpb/C1+1xxD+kp9s1bPwLjI+PsjUblA5PxTnjPryCAgOMm2cqYda609nSL0WOqMsjNNBprXTywZvOAu4JIPILigwZLVMl3sp+ep6t8pcth7Unqzu577Lv2+ELJRxcTgBq98ytQb8oXgqyLnAH5GnyGKDwUWvMAvrBpQv4cOxaeR9Iz/evQSilY+W6YByM9c/ok0cs0QDAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartKeycloak/CDKMetadata/Default"

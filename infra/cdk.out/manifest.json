@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/ea545cb9cf6700852799140ae71887c67c3e5df565178d155e6bad64536d3129.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/ccb4e71f87f7614b768d3deb7e928b69782ba72c3a008d7c4e4296373a8db648.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -61,7 +61,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/7fcccd53760769e09b9684db39711512730e18b42c1caa55173b9b1da41829e9.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/ddb651529e5701c951d047da1cefafeff4d907be6f1778c8e99bb1a5de9c3698.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -103,7 +103,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/1bd6b453e6767dc965989c788a6fb716bf47260da96f71e184d268b5a5bdf864.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/d8694f98a4d140850d2a64e66774957a66dbc8a9cf0d9fbac23220fef9089baf.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -146,7 +146,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/d23e0020ed50637b036c84c881e82009167fae4042c11acb6c7ec1cb6df12576.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/b497a8ee8aa03744ca6e4e135538d6b81cb24dd4da55bfd38d0ad556141709ca.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -189,7 +189,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/bd026b7215bb7fbd420d64c5cf02ad236a7934a90565c35abd3319917b1f914e.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/110b35ed98ae90f57ef4ee117fa0b5abc1d8a2835cb78f5a29bd9f2245ae135e.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -658,10 +658,21 @@
           "@aws-cdk/aws-batch:defaultToAL2023": {
             "recommendedValue": true,
             "explanation": "Use AL2023 as the default imageType for EC2 Batch compute environments instead of the deprecated AL2"
+          },
+          "@aws-cdk/core:annotationsInValidationReport": {
+            "recommendedValue": true,
+            "explanation": "Include construct annotations (warnings and errors) in the policy validation report"
+          },
+          "@aws-cdk/core:defaultCrossStackReferences": {
+            "recommendedValue": "strong",
+            "explanation": "Controls whether cross-region stack references are strong, weak, or both",
+            "unconfiguredBehavesLike": {
+              "v2": "strong"
+            }
           }
         }
       }
     }
   },
-  "minimumCliVersion": "2.1120.0"
+  "minimumCliVersion": "2.1124.1"
 }
