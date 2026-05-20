@@ -74,14 +74,13 @@ export class DatabaseStack extends cdk.Stack {
       databaseName: 'keycloak',
       allocatedStorage: 20,
       maxAllocatedStorage: 100, // Auto-scaling storage
-      backupRetention: cdk.Duration.days(7),
+      backupRetention: cdk.Duration.days(1), // Free tier limit: 1 day
       deletionProtection: true, // Prevent accidental deletion
-      // ⚠️ HIPAA Requirement: Enable Multi-AZ for production
-      multiAz: props.multiAz ?? true,
+      // ⚠️ HIPAA Requirement: Enable Multi-AZ for production (disabled for free tier)
+      multiAz: props.multiAz ?? false,
       storageEncrypted: true, // Encryption at rest
       monitoringInterval: cdk.Duration.seconds(60), // Enhanced monitoring
-      enablePerformanceInsights: true,
-      performanceInsightRetention: rds.PerformanceInsightRetention.DEFAULT, // 7 days
+      enablePerformanceInsights: false, // Disabled for free tier
       // Auto minor version upgrades
       autoMinorVersionUpgrade: true,
     });

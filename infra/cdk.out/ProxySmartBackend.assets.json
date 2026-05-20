@@ -1,16 +1,16 @@
 {
   "version": "53.0.0",
   "files": {
-    "7040f11645581329d0cb71e10eca2e829a03863771805fd9fdd31c67bfb0d721": {
+    "d23e0020ed50637b036c84c881e82009167fae4042c11acb6c7ec1cb6df12576": {
       "displayName": "ProxySmartBackend Template",
       "source": {
         "path": "ProxySmartBackend.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "579201838740-eu-central-1-f40e000e": {
+        "579201838740-eu-central-1-85134ec2": {
           "bucketName": "cdk-hnb659fds-assets-579201838740-eu-central-1",
-          "objectKey": "7040f11645581329d0cb71e10eca2e829a03863771805fd9fdd31c67bfb0d721.json",
+          "objectKey": "d23e0020ed50637b036c84c881e82009167fae4042c11acb6c7ec1cb6df12576.json",
           "region": "eu-central-1",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-file-publishing-role-579201838740-eu-central-1"
         }

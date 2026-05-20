@@ -30,22 +30,32 @@ export function createSmartViteConfig(
   /** Absolute __dirname of the consuming app */
   appDir: string,
 ) {
-  return defineConfig({
-    base: opts.base,
-    plugins: [react(), tailwindcss(), ...(opts.plugins ?? [])],
-    server: {
-      port: opts.port,
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(appDir, './src'),
+  return defineConfig(({ command, mode }) => {
+    // In production builds, force VITE_PROXY_BASE to empty string (same-origin).
+    // Apps served from the backend use relative URLs in production.
+    // Only apply when building and not in development mode.
+    const prodDefines = command === 'build' && mode === 'production'
+      ? { 'import.meta.env.VITE_PROXY_BASE': JSON.stringify('') }
+      : {}
+
+    return {
+      base: opts.base,
+      plugins: [react(), tailwindcss(), ...(opts.plugins ?? [])],
+      server: {
+        port: opts.port,
       },
-    },
-    ...(opts.optimizeDeps ? { optimizeDeps: opts.optimizeDeps } : {}),
-    ...(opts.worker ? { worker: opts.worker } : {}),
-    build: {
-      sourcemap: false,
-      reportCompressedSize: false,
-    },
+      resolve: {
+        alias: {
+          '@': path.resolve(appDir, './src'),
+        },
+      },
+      define: prodDefines,
+      ...(opts.optimizeDeps ? { optimizeDeps: opts.optimizeDeps } : {}),
+      ...(opts.worker ? { worker: opts.worker } : {}),
+      build: {
+        sourcemap: false,
+        reportCompressedSize: false,
+      },
+    }
   })
 }

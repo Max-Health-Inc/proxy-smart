@@ -13,3 +13,6 @@ export type { BackendStackProps } from './backend-stack.js';
 
 export { BackupStack } from './backup-stack.js';
 export type { BackupStackProps } from './backup-stack.js';
+
+export { FhirStack } from './fhir-stack.js';
+export type { FhirStackProps } from './fhir-stack.js';

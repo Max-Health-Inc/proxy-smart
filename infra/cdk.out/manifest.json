@@ -61,7 +61,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/2b570d9063c98c3d19c9b9c00b9f0a00908f3c0909a0161c94d93613f94547c8.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/7fcccd53760769e09b9684db39711512730e18b42c1caa55173b9b1da41829e9.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -103,7 +103,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/fa25ffd01e8868bc9eca01e9ad4e33f270ff8764c245fbe338dc15b63b0641e3.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/1bd6b453e6767dc965989c788a6fb716bf47260da96f71e184d268b5a5bdf864.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -146,7 +146,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/7040f11645581329d0cb71e10eca2e829a03863771805fd9fdd31c67bfb0d721.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/d23e0020ed50637b036c84c881e82009167fae4042c11acb6c7ec1cb6df12576.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -165,6 +165,49 @@
       ],
       "additionalMetadataFile": "ProxySmartBackend.metadata.json",
       "displayName": "ProxySmartBackend"
+    },
+    "ProxySmartFhir.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "ProxySmartFhir.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "ProxySmartFhir": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://579201838740/eu-central-1",
+      "properties": {
+        "templateFile": "ProxySmartFhir.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Application": "proxy-smart",
+          "Component": "fhir-server",
+          "ManagedBy": "cdk",
+          "Project": "proxy-smart"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/bd026b7215bb7fbd420d64c5cf02ad236a7934a90565c35abd3319917b1f914e.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "ProxySmartFhir.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-eu-central-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "ProxySmartBackend",
+        "ProxySmartVpc",
+        "ProxySmartFhir.assets"
+      ],
+      "additionalMetadataFile": "ProxySmartFhir.metadata.json",
+      "displayName": "ProxySmartFhir"
     },
     "Tree": {
       "type": "cdk:tree",

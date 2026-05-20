@@ -79,6 +79,11 @@ export class KeycloakStack extends cdk.Stack {
             managedRuleGroupStatement: {
               vendorName: 'AWS',
               name: 'AWSManagedRulesCommonRuleSet',
+              excludedRules: [
+                { name: 'SizeRestrictions_BODY' },
+                { name: 'CrossSiteScripting_BODY' },
+                { name: 'GenericRFI_BODY' }, // Required for Keycloak admin API (client redirect URIs contain URLs)
+              ],
             },
           },
           visibilityConfig: {
@@ -124,6 +129,9 @@ export class KeycloakStack extends cdk.Stack {
         memoryLimitMiB: 2048,  // 2 GB RAM
         desiredCount: 1,
         
+        // Place tasks in private subnets (required for DB access — DB SG allows private CIDR)
+        taskSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+        
         // HTTPS configuration
         certificate,
         domainName: props.domainName,
@@ -136,12 +144,15 @@ export class KeycloakStack extends cdk.Stack {
           containerPort: 8080,
           environment: {
             KC_HOSTNAME: props.domainName,
+            KC_HOSTNAME_STRICT: 'false',
             KC_HTTP_ENABLED: 'true',
             KC_PROXY_HEADERS: 'xforwarded',
             KC_HEALTH_ENABLED: 'true',
             KC_METRICS_ENABLED: 'true',
             KC_DB: 'postgres',
             KC_DB_URL: `jdbc:postgresql://${props.database.instanceEndpoint.hostname}:5432/keycloak`,
+            // Limit JVM heap for Fargate memory
+            JAVA_OPTS_KC_HEAP: '-Xms256m -Xmx1024m',
           },
           secrets: {
             KC_DB_USERNAME: ecs.Secret.fromSecretsManager(props.dbSecret, 'username'),
@@ -150,32 +161,39 @@ export class KeycloakStack extends cdk.Stack {
             KC_BOOTSTRAP_ADMIN_USERNAME: ecs.Secret.fromSecretsManager(adminSecret, 'username'),
             KC_BOOTSTRAP_ADMIN_PASSWORD: ecs.Secret.fromSecretsManager(adminSecret, 'password'),
           },
-          command: ['start', '--optimized'],
+          // Stock image needs 'start' (not '--optimized' which requires pre-build)
+          command: ['start'],
         },
         
-        // Health check
+        // Health check — check management port 9000 where KC26 serves /health/ready
         healthCheck: {
-          command: ['CMD-SHELL', 'curl -f http://localhost:8080/health/ready || exit 1'],
+          command: ['CMD-SHELL', 'exec 3<>/dev/tcp/localhost/9000 && echo -e "GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n" >&3 && cat <&3 | grep -q UP'],
           interval: cdk.Duration.seconds(30),
           timeout: cdk.Duration.seconds(10),
-          retries: 3,
-          startPeriod: cdk.Duration.seconds(120),
+          retries: 5,
+          // Keycloak without --optimized does runtime build on first start (~2-3 min)
+          startPeriod: cdk.Duration.seconds(300),
         },
         
         // Circuit breaker for auto-rollback
         circuitBreaker: { rollback: true },
         
-        // Enable ECS Exec for debugging (opt-in via context flag)
-        enableExecuteCommand: this.node.tryGetContext('enableEcsExec') === 'true',
+        // Enable ECS Exec for debugging
+        enableExecuteCommand: true,
         
         minHealthyPercent: 100,
       }
     );
 
-    // Configure ALB health check path
+    // Configure ALB health check — use /realms/master (port 8080) since
+    // KC26 serves /health/ready on management port 9000 which ALB can't reach
     this.service.targetGroup.configureHealthCheck({
-      path: '/health/ready',
+      path: '/realms/master',
       healthyHttpCodes: '200',
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(10),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 5,
     });
 
     // Associate WAF with ALB

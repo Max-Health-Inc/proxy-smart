@@ -183,7 +183,7 @@
    "Properties": {
     "AllocatedStorage": "20",
     "AutoMinorVersionUpgrade": true,
-    "BackupRetentionPeriod": 7,
+    "BackupRetentionPeriod": 1,
     "CopyTagsToSnapshot": true,
     "DBInstanceClass": "db.t4g.micro",
     "DBName": "keycloak",
@@ -191,7 +191,7 @@
      "Ref": "KeycloakDbSubnetGroup0DDBB8E0"
     },
     "DeletionProtection": true,
-    "EnablePerformanceInsights": true,
+    "EnablePerformanceInsights": false,
     "Engine": "postgres",
     "EngineVersion": "16",
     "MasterUserPassword": {
@@ -227,7 +227,6 @@
      ]
     },
     "MultiAZ": true,
-    "PerformanceInsightsRetentionPeriod": 7,
     "PubliclyAccessible": false,
     "StorageEncrypted": true,
     "StorageType": "gp2",

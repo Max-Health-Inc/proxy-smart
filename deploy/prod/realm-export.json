@@ -8,6 +8,19 @@
   },
   "displayNameHtml": "Proxy Smart",
   "resetPasswordAllowed": true,
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "verifyEmail": true,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
   "smtpServer": {
     "host": "smtp.resend.dev",
     "port": "465",
@@ -511,14 +524,10 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:*",
-        "https://beta.proxy-smart.com/*",
         "https://api.proxy-smart.com/*",
         "https://proxy-smart.com/*"
       ],
       "webOrigins": [
-        "http://localhost:*",
-        "https://beta.proxy-smart.com",
         "https://api.proxy-smart.com",
         "https://proxy-smart.com"
       ],
@@ -560,7 +569,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "http://localhost:8445/mcp",
+            "included.client.audience": "https://api.proxy-smart.com/mcp",
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
@@ -625,7 +634,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "http://localhost:8445/mcp",
+            "included.client.audience": "https://api.proxy-smart.com/mcp",
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
@@ -638,7 +647,7 @@
       "description": "Service account for backend administrative operations including dynamic client registration",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "admin-service-secret",
+      "secret": "REPLACE_AT_DEPLOY_TIME",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,
@@ -671,7 +680,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "http://localhost:8445/mcp",
+            "included.client.audience": "https://api.proxy-smart.com/mcp",
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
@@ -729,7 +738,7 @@
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": false,
           "config": {
-            "included.client.audience": "http://localhost:8445/mcp",
+            "included.client.audience": "https://api.proxy-smart.com/mcp",
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
@@ -743,20 +752,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:5176/*",
-        "http://localhost:8445/apps/patient-portal/*",
-        "http://localhost:8445/auth/smart-callback",
-        "https://beta.proxy-smart.com/apps/patient-portal/*",
-        "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/apps/patient-portal/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "http://localhost:5176",
-        "http://localhost:8445",
-        "https://beta.proxy-smart.com",
-        "https://proxy-smart.com",
-        "*"
+        "https://proxy-smart.com"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -808,18 +808,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:5181/*",
-        "http://localhost:8445/auth/smart-callback",
         "https://dicom.maxhealth.tech/*",
-        "https://dicom-viewer-3yz.pages.dev/*",
-        "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "http://localhost:5181",
-        "https://dicom.maxhealth.tech",
-        "https://dicom-viewer-3yz.pages.dev",
-        "*"
+        "https://dicom.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -861,22 +854,12 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:5174/*",
-        "http://localhost:8445/apps/consent/*",
-        "http://localhost:8445/auth/smart-callback",
-        "https://beta.proxy-smart.com/apps/consent/*",
-        "https://beta.proxy-smart.com/apps/consent-app/*",
-        "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/apps/consent/*",
         "https://proxy-smart.com/apps/consent-app/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "http://localhost:5174",
-        "http://localhost:8445",
-        "https://beta.proxy-smart.com",
-        "https://proxy-smart.com",
-        "*"
+        "https://proxy-smart.com"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -928,20 +911,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "http://localhost:5175/*",
-        "http://localhost:8445/apps/dtr/*",
-        "http://localhost:8445/auth/smart-callback",
-        "https://beta.proxy-smart.com/apps/dtr/*",
-        "https://beta.proxy-smart.com/auth/smart-callback",
         "https://proxy-smart.com/apps/dtr/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "http://localhost:5175",
-        "http://localhost:8445",
-        "https://beta.proxy-smart.com",
-        "https://proxy-smart.com",
-        "*"
+        "https://proxy-smart.com"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -990,70 +964,10 @@
       }
     },
     {
-      "clientId": "inferno-test-client",
-      "name": "Inferno Test Client",
-      "description": "SMART on FHIR test client for Inferno compliance testing",
-      "enabled": true,
-      "clientAuthenticatorType": "client-dummy",
-      "redirectUris": [
-        "http://localhost:4567/*",
-        "http://localhost:4567/custom/smart_stu2_2/redirect",
-        "http://localhost:4567/custom/smart_stu2/redirect",
-        "http://localhost:8445/auth/smart-callback"
-      ],
-      "webOrigins": [
-        "http://localhost:4567",
-        "*"
-      ],
-      "protocol": "openid-connect",
-      "publicClient": true,
-      "bearerOnly": false,
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": true,
-      "serviceAccountsEnabled": false,
-      "authorizationServicesEnabled": false,
-      "fullScopeAllowed": true,
-      "consentRequired": false,
-      "defaultClientScopes": [
-        "web-origins",
-        "acr",
-        "profile",
-        "roles",
-        "email",
-        "openid"
-      ],
-      "optionalClientScopes": [
-        "address",
-        "phone",
-        "offline_access",
-        "microprofile-jwt",
-        "launch/patient",
-        "launch/encounter",
-        "launch",
-        "fhirUser",
-        "online_access",
-        "patient/*.read",
-        "patient/*.write",
-        "patient/*.*",
-        "user/*.read",
-        "user/*.write",
-        "user/*.*"
-      ],
-      "attributes": {
-        "pkce.code.challenge.method": "S256",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "oidc.ciba.grant.enabled": "false",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false",
-        "use.refresh.tokens": "true"
-      }
-    },
-    {
       "clientId": "inferno-backend-services",
       "name": "Inferno Backend Services Client",
       "description": "Confidential SMART Backend Services client for Inferno compliance testing. Uses asymmetric JWT (RS384) for client authentication via the proxy (private_key_jwt), with federated client auth for Keycloak token issuance.",
-      "enabled": true,
+      "enabled": false,
       "clientAuthenticatorType": "federated-jwt",
       "protocol": "openid-connect",
       "publicClient": false,
@@ -1092,7 +1006,7 @@
       "description": "Service account for SMART Health Link token exchange (RFC 8693). Mints scoped, short-lived tokens for QR-based patient data sharing.",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "shl-exchange-dev-secret",
+      "secret": "REPLACE_AT_DEPLOY_TIME",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,
@@ -1127,98 +1041,19 @@
       "hideOnLogin": true,
       "config": {
         "hideOnLoginPage": "true",
-        "issuer": "http://localhost:8445",
-        "tokenUrl": "http://localhost:8445/auth/token",
-        "authorizationUrl": "http://localhost:8445/auth/authorize",
+        "issuer": "https://api.proxy-smart.com",
+        "tokenUrl": "https://api.proxy-smart.com/auth/token",
+        "authorizationUrl": "https://api.proxy-smart.com/auth/authorize",
         "clientId": "keycloak",
         "clientSecret": "unused",
         "useJwksUrl": "true",
-        "jwksUrl": "http://localhost:8445/.well-known/jwks.json",
+        "jwksUrl": "https://api.proxy-smart.com/.well-known/jwks.json",
         "validateSignature": "true",
         "clientAuthMethod": "client_secret_post"
       }
     }
   ],
   "users": [
-    {
-      "username": "testuser",
-      "enabled": true,
-      "firstName": "Test",
-      "lastName": "User",
-      "email": "testuser@example.com",
-      "emailVerified": true,
-      "attributes": {
-        "fhirUser": ["Patient/test-patient"]
-      },
-      "credentials": [
-        {
-          "type": "password",
-          "value": "DevT3st!Pass",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "user",
-        "offline_access"
-      ]
-    },
-    {
-      "username": "admin",
-      "enabled": true,
-      "firstName": "Admin",
-      "lastName": "User",
-      "email": "admin@example.com",
-      "emailVerified": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "DevAdm!n2024",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "user",
-        "admin",
-        "realm-admin"
-      ],
-      "clientRoles": {
-        "admin-ui": [
-          "admin",
-          "manage",
-          "realm-admin"
-        ],
-        "realm-management": [
-          "realm-admin"
-        ]
-      }
-    },
-    {
-      "username": "doctor",
-      "enabled": true,
-      "firstName": "Dr. Jane",
-      "lastName": "Smith",
-      "email": "doctor@example.com",
-      "emailVerified": true,
-      "attributes": {
-        "fhirUser": ["Practitioner/example-practitioner"]
-      },
-      "credentials": [
-        {
-          "type": "password",
-          "value": "DevD0c!2024",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "user",
-        "offline_access"
-      ],
-      "clientRoles": {
-        "admin-ui": [
-          "practitioner"
-        ]
-      }
-    },
     {
       "username": "service-account-admin-service",
       "enabled": true,

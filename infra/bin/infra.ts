@@ -6,6 +6,7 @@ import {
   DatabaseStack, 
   KeycloakStack, 
   BackendStack,
+  FhirStack,
 } from '../lib/index.js';
 
 const app = new cdk.App();
@@ -19,11 +20,11 @@ const env = {
 // Application configuration
 // These can be overridden via CDK context: cdk deploy -c keycloakDomain=auth.example.com
 const config = {
-  keycloakDomain: app.node.tryGetContext('keycloakDomain') || 'auth.maxhealth.tech',
-  backendDomain: app.node.tryGetContext('backendDomain') || 'api.auth.maxhealth.tech',
-  hostedZoneId: app.node.tryGetContext('hostedZoneId') || 'REPLACE_WITH_HOSTED_ZONE_ID',
-  hostedZoneName: app.node.tryGetContext('hostedZoneName') || 'maxhealth.tech',
-  // FHIR server (optional)
+  keycloakDomain: app.node.tryGetContext('keycloakDomain') || 'auth.proxy-smart.com',
+  backendDomain: app.node.tryGetContext('backendDomain') || 'api.proxy-smart.com',
+  hostedZoneId: app.node.tryGetContext('hostedZoneId') || 'Z023389060QW09IU3L29',
+  hostedZoneName: app.node.tryGetContext('hostedZoneName') || 'proxy-smart.com',
+  // FHIR server (optional override — defaults to internal service discovery)
   fhirServerBase: app.node.tryGetContext('fhirServerBase'),
   // Door management (optional) - enable per provider
   kisiEnabled: app.node.tryGetContext('kisiEnabled') === 'true',
@@ -95,15 +96,26 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   vpc: vpcStack.vpc,
   keycloakUrl: `https://${config.keycloakDomain}`,
   domainName: config.backendDomain,
+  apexDomain: config.hostedZoneName,
   hostedZone,
-  fhirServerBase: config.fhirServerBase,
+  // FHIR URL is resolved after FHIR stack deploys — use internal service discovery
+  fhirServerBase: config.fhirServerBase || 'http://hapi-fhir.proxy-smart.internal:8080/fhir',
   kisiEnabled: config.kisiEnabled,
   kisiBaseUrl: config.kisiBaseUrl,
   unifiAccessEnabled: config.unifiAccessEnabled,
 });
 backendStack.addDependency(keycloakStack);
 
-// 5. Backup Stack (optional - enable when Keycloak is running)
+// 5. FHIR Stack (internal only — no public ALB, uses Cloud Map service discovery)
+const fhirStack = new FhirStack(app, 'ProxySmartFhir', {
+  env,
+  description: 'Proxy Smart - HAPI FHIR R4 server (internal, VPC-only access via Cloud Map)',
+  vpc: vpcStack.vpc,
+  cluster: backendStack.cluster,
+});
+fhirStack.addDependency(backendStack);
+
+// 6. Backup Stack (optional - enable when Keycloak is running)
 // Uncomment after initial deployment:
 /*
 const backupStack = new BackupStack(app, 'ProxySmartBackup', {

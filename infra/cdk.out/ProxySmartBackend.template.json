@@ -1,41 +1,6 @@
 {
  "Description": "Proxy Smart - Backend API on ECS Fargate",
  "Resources": {
-  "BackendRepo7FFBAD06": {
-   "Type": "AWS::ECR::Repository",
-   "Properties": {
-    "ImageScanningConfiguration": {
-     "ScanOnPush": true
-    },
-    "LifecyclePolicy": {
-     "LifecyclePolicyText": "{\"rules\":[{\"rulePriority\":1,\"description\":\"Keep last 10 images\",\"selection\":{\"tagStatus\":\"any\",\"countType\":\"imageCountMoreThan\",\"countNumber\":10},\"action\":{\"type\":\"expire\"}}]}"
-    },
-    "RepositoryName": "proxy-smart-backend",
-    "Tags": [
-     {
-      "Key": "Application",
-      "Value": "proxy-smart"
-     },
-     {
-      "Key": "Component",
-      "Value": "backend"
-     },
-     {
-      "Key": "ManagedBy",
-      "Value": "cdk"
-     },
-     {
-      "Key": "Project",
-      "Value": "proxy-smart"
-     }
-    ]
-   },
-   "UpdateReplacePolicy": "Retain",
-   "DeletionPolicy": "Retain",
-   "Metadata": {
-    "aws:cdk:path": "ProxySmartBackend/BackendRepo/Resource"
-   }
-  },
   "KeycloakAdminSecret02FB07E0": {
    "Type": "AWS::SecretsManager::Secret",
    "Properties": {
@@ -75,12 +40,19 @@
   "Certificate4E7ABB08": {
    "Type": "AWS::CertificateManager::Certificate",
    "Properties": {
-    "DomainName": "api.auth.maxhealth.tech",
+    "DomainName": "api.proxy-smart.com",
     "DomainValidationOptions": [
      {
-      "DomainName": "api.auth.maxhealth.tech",
-      "HostedZoneId": "REPLACE_WITH_HOSTED_ZONE_ID"
+      "DomainName": "api.proxy-smart.com",
+      "HostedZoneId": "Z023389060QW09IU3L29"
+     },
+     {
+      "DomainName": "proxy-smart.com",
+      "HostedZoneId": "Z023389060QW09IU3L29"
      }
+    ],
+    "SubjectAlternativeNames": [
+     "proxy-smart.com"
     ],
     "Tags": [
      {
@@ -368,7 +340,10 @@
   "BackendServiceLBPublicListenerECSGroupD43CD2AB": {
    "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
    "Properties": {
+    "HealthCheckIntervalSeconds": 30,
     "HealthCheckPath": "/health",
+    "HealthCheckTimeoutSeconds": 10,
+    "HealthyThresholdCount": 2,
     "Matcher": {
      "HttpCode": "200"
     },
@@ -399,6 +374,7 @@
      }
     ],
     "TargetType": "ip",
+    "UnhealthyThresholdCount": 5,
     "VpcId": {
      "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
     }
@@ -459,8 +435,8 @@
       ]
      }
     },
-    "HostedZoneId": "REPLACE_WITH_HOSTED_ZONE_ID",
-    "Name": "api.auth.maxhealth.tech.",
+    "HostedZoneId": "Z023389060QW09IU3L29",
+    "Name": "api.proxy-smart.com.",
     "Type": "A"
    },
    "Metadata": {
@@ -517,7 +493,7 @@
        },
        {
         "Name": "BASE_URL",
-        "Value": "https://api.auth.maxhealth.tech"
+        "Value": "https://api.proxy-smart.com"
        },
        {
         "Name": "PORT",
@@ -525,11 +501,15 @@
        },
        {
         "Name": "KEYCLOAK_BASE_URL",
-        "Value": "https://auth.maxhealth.tech"
+        "Value": "https://auth.proxy-smart.com"
        },
        {
         "Name": "KEYCLOAK_REALM",
         "Value": "proxy-smart"
+       },
+       {
+        "Name": "FHIR_SERVER_BASE",
+        "Value": "http://hapi-fhir.proxy-smart.internal:8080/fhir"
        }
       ],
       "Essential": true,
@@ -537,48 +517,11 @@
        "Fn::Join": [
         "",
         [
-         {
-          "Fn::Select": [
-           4,
-           {
-            "Fn::Split": [
-             ":",
-             {
-              "Fn::GetAtt": [
-               "BackendRepo7FFBAD06",
-               "Arn"
-              ]
-             }
-            ]
-           }
-          ]
-         },
-         ".dkr.ecr.",
-         {
-          "Fn::Select": [
-           3,
-           {
-            "Fn::Split": [
-             ":",
-             {
-              "Fn::GetAtt": [
-               "BackendRepo7FFBAD06",
-               "Arn"
-              ]
-             }
-            ]
-           }
-          ]
-         },
-         ".",
+         "579201838740.dkr.ecr.eu-central-1.",
          {
           "Ref": "AWS::URLSuffix"
          },
-         "/",
-         {
-          "Ref": "BackendRepo7FFBAD06"
-         },
-         ":latest"
+         "/proxy-smart-backend:latest"
         ]
        ]
       },
@@ -639,7 +582,7 @@
      ]
     },
     "Family": "ProxySmartBackendBackendServiceTaskDefCD1092CA",
-    "Memory": "1024",
+    "Memory": "2048",
     "NetworkMode": "awsvpc",
     "RequiresCompatibilities": [
      "FARGATE"
@@ -752,9 +695,15 @@
        ],
        "Effect": "Allow",
        "Resource": {
-        "Fn::GetAtt": [
-         "BackendRepo7FFBAD06",
-         "Arn"
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-central-1:579201838740:repository/proxy-smart-backend"
+         ]
         ]
        }
       },
@@ -1039,6 +988,39 @@
     "aws:cdk:path": "ProxySmartBackend/BackendWafAssociation"
    }
   },
+  "ApexDomainRecord7AA74770": {
+   "Type": "AWS::Route53::RecordSet",
+   "Properties": {
+    "AliasTarget": {
+     "DNSName": {
+      "Fn::Join": [
+       "",
+       [
+        "dualstack.",
+        {
+         "Fn::GetAtt": [
+          "BackendServiceLB09608E98",
+          "DNSName"
+         ]
+        }
+       ]
+      ]
+     },
+     "HostedZoneId": {
+      "Fn::GetAtt": [
+       "BackendServiceLB09608E98",
+       "CanonicalHostedZoneID"
+      ]
+     }
+    },
+    "HostedZoneId": "Z023389060QW09IU3L29",
+    "Name": "proxy-smart.com.",
+    "Type": "A"
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartBackend/ApexDomainRecord/Resource"
+   }
+  },
   "LatencyAlarm5394FC57": {
    "Type": "AWS::CloudWatch::Alarm",
    "Properties": {
@@ -1228,7 +1210,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31Ty47bMAz8lt4VtXWxH+C6DxQI0MIO0OOCkRmXG0UyKCrBQtC/F5KzeWyLPXE4HtIciWp089DoD+/gFFZm3K8sbXUaBMxewSk8JjSsU4+zDySen1W3c9csq4CGUcIBHEzIOg01L6oFZWWQhXZkQPCi6q5ckd6kWZ1gd2x06nbuN27bbq0uqA3BGwIh77JCE3TqbAyCXHuc4TfgCQQ3EPZfcEeOirwIXjPeCZBDvuHOtQPykQwuJhY4GLCwtbVt56OTOsDjDCLILuh2nm2Zn7xbexg/gwVncHzVEC0EIWM9jNuqIDcVr/+vrrbu8lsdBUF31rzgm+8b4AnlO/s4L+YvaZm8qRcVmeT5Inmb+DoxhvAP/cNVPiv2UfDhk05tj8bzuOxJQUNZAoKDTr239VBr/OUtmbpOC8rK+inotPbTZYIXnBVcnUEUHwxYcpNO13sp/up498wSNgxmT24alrrrv++IrIz1cTyBmD86tRb4UDQV5FzgzyhzFNVj8JENZuX8iPopvD82jf5YntFTIFpxdEIH1P0S/wLWlxy8YwMAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31TXW/bMAz8LXtXtM1Ff4DrfaBAgA12gD0WjMx4bBTJEKkEgaH/PkhOnaQb9sS785HiWXalq8dKf/oAJ16Zfr+ytNVTJ2D2Ck78MqEJusXRM4kP5ydgVIwmoPABHAwY9NQVrpqdm1FSBoPQjgwILq7mqmXrDU3qBLtjpadm537htm7WakE1szcEQt4lhYb11NjIgqHMuMBvEAYQ3ADvv+COHGV7NrxXvBMgh+FGu/R2GI5kcA4xw86Aha0tYxsfnZQFXkYQweBY1+No8/7k3dpD/wQWnMH+3UC0wELGeui3xUFuyFn/3V1i3fFbH7Ggu3je8M3zDYQB5XvwcZzDLzRvXpWLioHkvFj+L3wdAjL/JT+7oicVfBR8fNBT3aLxoc/OGXX5IyA46Kn1trzUUn96S+ac6YySsn5gPa39sGzwhpOCazKI4tmAJTfo6XovOV9Z716ZyyaA2ZMburnvevadkJSxPvYnEPNbT7WFcMieAlLK8EeUMYpqkX0MBpNyvkf9yh+PVaU/51/nlYlWITqhA+p2rn8AxpxYQ1cDAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartBackend/CDKMetadata/Default"
@@ -1259,7 +1241,7 @@
   },
   "BackendUrl": {
    "Description": "Backend API URL",
-   "Value": "https://api.auth.maxhealth.tech",
+   "Value": "https://api.proxy-smart.com",
    "Export": {
     "Name": "ProxySmartBackendUrl"
    }
@@ -1270,47 +1252,11 @@
     "Fn::Join": [
      "",
      [
-      {
-       "Fn::Select": [
-        4,
-        {
-         "Fn::Split": [
-          ":",
-          {
-           "Fn::GetAtt": [
-            "BackendRepo7FFBAD06",
-            "Arn"
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      ".dkr.ecr.",
-      {
-       "Fn::Select": [
-        3,
-        {
-         "Fn::Split": [
-          ":",
-          {
-           "Fn::GetAtt": [
-            "BackendRepo7FFBAD06",
-            "Arn"
-           ]
-          }
-         ]
-        }
-       ]
-      },
-      ".",
+      "579201838740.dkr.ecr.eu-central-1.",
       {
        "Ref": "AWS::URLSuffix"
       },
-      "/",
-      {
-       "Ref": "BackendRepo7FFBAD06"
-      }
+      "/proxy-smart-backend"
      ]
     ]
    },
@@ -1346,6 +1292,14 @@
      "BackendServiceLB09608E98",
      "DNSName"
     ]
+   }
+  },
+  "ExportsOutputRefClusterEB0386A796A0E3FE": {
+   "Value": {
+    "Ref": "ClusterEB0386A7"
+   },
+   "Export": {
+    "Name": "ProxySmartBackend:ExportsOutputRefClusterEB0386A796A0E3FE"
    }
   }
  },
