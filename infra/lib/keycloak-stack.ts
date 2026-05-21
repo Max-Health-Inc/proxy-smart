@@ -61,16 +61,74 @@ export class KeycloakStack extends cdk.Stack {
       validation: acm.CertificateValidation.fromDns(props.hostedZone),
     });
 
-    // WAF Web ACL for OWASP protection
+    // WAF Web ACL — default BLOCK with path allowlist (like beta's Caddy path restriction)
+    // Only browser-interactive Keycloak endpoints are exposed publicly.
+    // Token, introspection, userinfo, and admin MUST go through the backend proxy.
     const webAcl = new wafv2.CfnWebACL(this, 'KeycloakWaf', {
       scope: 'REGIONAL',
-      defaultAction: { allow: {} },
+      defaultAction: { block: {} },
       visibilityConfig: {
         cloudWatchMetricsEnabled: true,
         metricName: 'KeycloakWafMetrics',
         sampledRequestsEnabled: true,
       },
       rules: [
+        // Priority 0: Explicitly block sensitive server-to-server endpoints
+        // (defense-in-depth — these would also be blocked by default, but explicit block
+        //  ensures they can't slip through if AllowBrowserPaths is too broad)
+        {
+          name: 'BlockSensitiveEndpoints',
+          priority: 0,
+          action: { block: {} },
+          statement: {
+            orStatement: {
+              statements: [
+                // Token endpoint (also catches /token/introspect)
+                {
+                  byteMatchStatement: {
+                    searchString: '/protocol/openid-connect/token',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+                    positionalConstraint: 'CONTAINS',
+                  },
+                },
+                // Userinfo endpoint
+                {
+                  byteMatchStatement: {
+                    searchString: '/protocol/openid-connect/userinfo',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+                    positionalConstraint: 'CONTAINS',
+                  },
+                },
+                // Admin console & admin REST API
+                {
+                  byteMatchStatement: {
+                    searchString: '/admin/',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+                    positionalConstraint: 'STARTS_WITH',
+                  },
+                },
+                // Native client registration (must use backend's /auth/register)
+                {
+                  byteMatchStatement: {
+                    searchString: '/clients-registrations/',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+                    positionalConstraint: 'CONTAINS',
+                  },
+                },
+              ],
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'BlockSensitiveEndpointsMetrics',
+            sampledRequestsEnabled: true,
+          },
+        },
+        // Priority 1-2: OWASP managed rules — filter malicious requests on allowed paths
         {
           name: 'AWSManagedRulesCommonRuleSet',
           priority: 1,
@@ -80,9 +138,9 @@ export class KeycloakStack extends cdk.Stack {
               vendorName: 'AWS',
               name: 'AWSManagedRulesCommonRuleSet',
               excludedRules: [
+                // Keycloak login forms can trigger these on legitimate form POSTs
                 { name: 'SizeRestrictions_BODY' },
                 { name: 'CrossSiteScripting_BODY' },
-                { name: 'GenericRFI_BODY' }, // Required for Keycloak admin API (client redirect URIs contain URLs)
               ],
             },
           },
@@ -105,6 +163,51 @@ export class KeycloakStack extends cdk.Stack {
           visibilityConfig: {
             cloudWatchMetricsEnabled: true,
             metricName: 'KnownBadInputsMetrics',
+            sampledRequestsEnabled: true,
+          },
+        },
+        // Priority 10: Allow only browser-facing paths (matches beta Caddy config)
+        // Allowed: login page, logout, certs, broker, login-actions, discovery, theme assets
+        {
+          name: 'AllowBrowserFacingPaths',
+          priority: 10,
+          action: { allow: {} },
+          statement: {
+            orStatement: {
+              statements: [
+                // /realms/* — login, logout, certs, broker, login-actions, .well-known
+                {
+                  byteMatchStatement: {
+                    searchString: '/realms/',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'NONE' }],
+                    positionalConstraint: 'STARTS_WITH',
+                  },
+                },
+                // /resources/* — Keycloak theme static assets (CSS, images, fonts)
+                {
+                  byteMatchStatement: {
+                    searchString: '/resources/',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'NONE' }],
+                    positionalConstraint: 'STARTS_WITH',
+                  },
+                },
+                // /js/* — Keycloak JavaScript adapter
+                {
+                  byteMatchStatement: {
+                    searchString: '/js/',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'NONE' }],
+                    positionalConstraint: 'STARTS_WITH',
+                  },
+                },
+              ],
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AllowBrowserFacingPathsMetrics',
             sampledRequestsEnabled: true,
           },
         },
