@@ -85,7 +85,18 @@ async function proxyFhirRequest(opts: FhirProxyOptions): Promise<{ status: numbe
     `Bearer ${authToken}`,
   )
   if (consentResult.decision === 'deny' && getConsentConfig().mode === 'enforce') {
-    return { status: 403, data: { error: 'consent_denied', message: consentResult.reason } }
+    const consentAppUrl = getConsentConfig().appUrl
+    return {
+      status: 403,
+      data: {
+        error: 'consent_denied',
+        message: consentResult.reason,
+        ...(consentAppUrl && {
+          consentRequestUrl: consentAppUrl,
+          hint: 'The patient has not granted consent for this access. You may request consent via the consent management app.',
+        }),
+      },
+    }
   }
 
   // mTLS config

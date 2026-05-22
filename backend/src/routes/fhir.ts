@@ -60,13 +60,18 @@ async function proxyFHIR({ params, request, set }: any) {
       // If consent or IAL denied and mode is 'enforce', block the request
       if (consentResult.decision === 'deny' && getConsentConfig().mode === 'enforce') {
         set.status = 403
+        const consentAppUrl = getConsentConfig().appUrl
         return {
           error: consentResult.ialCheck && !consentResult.ialCheck.allowed ? 'ial_verification_failed' : 'consent_denied',
           message: consentResult.reason,
           consentId: consentResult.consentId,
           patientId: consentResult.context.patientId,
           clientId: consentResult.context.clientId,
-          resourceType: consentResult.context.resourceType
+          resourceType: consentResult.context.resourceType,
+          ...(consentAppUrl && {
+            consentRequestUrl: consentAppUrl,
+            hint: 'The patient has not granted consent for this access. You may request consent via the consent management app.',
+          }),
         }
       }
     }
