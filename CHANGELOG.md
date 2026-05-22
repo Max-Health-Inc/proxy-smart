@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1-alpha.202605221222.79711d615] - 2026-05-22
+
+- 🔧 Chores & Improvements: CI/CD tweaks and package version sync
+  - Sync package versions across multiple commits
+  - Update version to 0.1.1-alpha.202605221222.79711d615 (alpha)
+  - Update version to 0.1.1-alpha.202605221215.8cd1ff9b2 (alpha)
+  - Update version to 0.1.1-alpha.202605221150.2bb2cb8d0 (alpha)
+  - Update version to 0.1.1-alpha.202605221146.630e13ae (alpha)
+  - Update version to 0.1.1-alpha.202605221042.3bc3a665 (alpha)
+  - Update version to 0.1.1-alpha.202605221034.4f769c71 (alpha)
+  - Update version to 0.1.1-beta.202605191043.72318795 (beta)
+  - Add id-token:write permission for AWS OIDC deployment
+  - Remove orphaned AI assistant system prompt
+  - Move refactors and reorganizations (AI assistant, seed data, configs, infra)
+  - Remove unused monorepo components (genomics-reporting-generated.tgz, patient-portal, dtr-app, consent-app)
+- ✨ Features (new functionality)
+  - feat: centralized auth error handling via shared-ui bus
+  - feat(consent): nudge users to consent app on 403 denial
+  - feat(infra): add FHIR stack + restrict Keycloak WAF to browser paths
+  - fix(admin-ui): add appUrl to ConsentConfig default
+  - fix(admin-ui): add Save button to scope management dialog
+  - refactor: extract AI assistant to max-health-inc/ai-assistant
+  - refactor: move patient-picker to dedicated location
+  - refactor: move eslint-config/configs and infra reorganizations
+- 🐛 Bug Fixes
+  - fix(ci): patient-picker not served — copy script fixed
+  - fix: update hardcoded app URLs for subdomain hosting
+  - fix(keycloak): update redirect URIs for subdomain hosting
+  - fix: remove ChatResponse re-export from types/api.ts
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #722
+- ⚠️ Breaking Changes
+  - none observed in these changes
+
+Note: Some commits are purely maintenance or version bumps; where no user-facing impact, they are grouped under Chores & Improvements.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/723
+
+
 ## [0.1.1-alpha.202605221215.8cd1ff9b2] - 2026-05-22
 
 - 🔧 Chores & Improvements: Sync package versions across modules
