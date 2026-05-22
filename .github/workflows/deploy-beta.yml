@@ -147,6 +147,7 @@ jobs:
       - name: Inject app builds into backend/public/apps
         run: |
           rm -rf backend/public/apps/consent backend/public/apps/dtr backend/public/apps/patient-portal
+          mkdir -p backend/public/apps
           cp -r _standalone/consent-app/dist backend/public/apps/consent
           cp -r _standalone/dtr-app/dist backend/public/apps/dtr
           cp -r _standalone/patient-portal/dist backend/public/apps/patient-portal
