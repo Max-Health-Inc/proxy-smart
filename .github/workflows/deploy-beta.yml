@@ -50,6 +50,10 @@ on:
         required: false
       RESEND_API_KEY:
         required: false
+      APP_ID:
+        required: true
+      APP_PRIVATE_KEY:
+        required: true
 
   workflow_dispatch:
     inputs:
@@ -82,6 +86,14 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: Max-Health-Inc
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -96,6 +108,59 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      # ── Build standalone apps from private repos ──
+      - name: Checkout consent-app
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/consent-app
+          token: ${{ steps.app-token.outputs.token }}
+          path: _standalone/consent-app
+
+      - name: Checkout dtr-app
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/dtr-app
+          token: ${{ steps.app-token.outputs.token }}
+          path: _standalone/dtr-app
+
+      - name: Checkout patient-portal
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/patient-portal
+          token: ${{ steps.app-token.outputs.token }}
+          path: _standalone/patient-portal
+
+      - name: Build standalone apps (same-origin for VPS)
+        run: |
+          for app in consent-app dtr-app patient-portal; do
+            echo "🔨 Building ${app}..."
+            cd _standalone/${app}
+            bun install
+            VITE_PROXY_BASE='' bun run build
+            cd ../..
+          done
+
+      - name: Inject app builds into backend/public/apps
+        run: |
+          rm -rf backend/public/apps/consent backend/public/apps/dtr backend/public/apps/patient-portal
+          mkdir -p backend/public/apps
+          cp -r _standalone/consent-app/dist backend/public/apps/consent
+          cp -r _standalone/dtr-app/dist backend/public/apps/dtr
+          cp -r _standalone/patient-portal/dist backend/public/apps/patient-portal
+          # Preserve smart-manifest.json if not in dist
+          for app in consent-app dtr-app patient-portal; do
+            target=$(echo $app | sed 's/-app//')
+            [ "$app" = "patient-portal" ] && target="patient-portal"
+            if [ -f "_standalone/${app}/smart-manifest.json" ] && [ ! -f "backend/public/apps/${target}/smart-manifest.json" ]; then
+              cp "_standalone/${app}/smart-manifest.json" "backend/public/apps/${target}/"
+            fi
+          done
+          echo "✅ Standalone apps built and injected"
+          ls -la backend/public/apps/
 
       - name: Compute image prefix (GHCR requires lowercase)
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
@@ -202,14 +267,14 @@ jobs:
           # Copy deploy files to VPS
           ${SCP_CMD} docker-compose.beta.yml ${VPS_TARGET}:${DEPLOY_DIR}/
           ${SCP_CMD} docker-compose.caddy.yml ${VPS_TARGET}:${DEPLOY_DIR}/
-          ${SCP_CMD} deploy/fhir-seed-bundle.json ${VPS_TARGET}:${DEPLOY_DIR}/fhir-seed-bundle.json
-          ${SCP_CMD} deploy/seed-dicom.sh ${VPS_TARGET}:${DEPLOY_DIR}/seed-dicom.sh
+          ${SCP_CMD} scripts/seed/fhir-seed-bundle.json ${VPS_TARGET}:${DEPLOY_DIR}/fhir-seed-bundle.json
+          ${SCP_CMD} scripts/seed/seed-dicom.sh ${VPS_TARGET}:${DEPLOY_DIR}/seed-dicom.sh
           ${SCP_CMD} .github/scripts/deploy-beta-remote.sh ${VPS_TARGET}:${DEPLOY_DIR}/deploy-beta-remote.sh
           ${SSH_CMD} "chmod +x ${DEPLOY_DIR}/seed-dicom.sh ${DEPLOY_DIR}/deploy-beta-remote.sh && mkdir -p ${DEPLOY_DIR}/dicom"
 
           # Copy DICOM files if present
-          if [ -d deploy/dicom ] && ls deploy/dicom/*.dcm 1>/dev/null 2>&1; then
-            ${SCP_CMD} deploy/dicom/*.dcm ${VPS_TARGET}:${DEPLOY_DIR}/dicom/
+          if [ -d scripts/seed/dicom ] && ls scripts/seed/dicom/*.dcm 1>/dev/null 2>&1; then
+            ${SCP_CMD} scripts/seed/dicom/*.dcm ${VPS_TARGET}:${DEPLOY_DIR}/dicom/
           fi
 
           ${SSH_CMD} "mkdir -p ${DEPLOY_DIR}/keycloak/database"

@@ -1,0 +1,21 @@
+{
+  "version": "53.0.0",
+  "files": {
+    "d8694f98a4d140850d2a64e66774957a66dbc8a9cf0d9fbac23220fef9089baf": {
+      "displayName": "ProxySmartKeycloak Template",
+      "source": {
+        "path": "ProxySmartKeycloak.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "579201838740-eu-central-1-b9751621": {
+          "bucketName": "cdk-hnb659fds-assets-579201838740-eu-central-1",
+          "objectKey": "d8694f98a4d140850d2a64e66774957a66dbc8a9cf0d9fbac23220fef9089baf.json",
+          "region": "eu-central-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-file-publishing-role-579201838740-eu-central-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

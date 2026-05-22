@@ -17,7 +17,6 @@ import { authMonitoringRoutes } from './routes/auth-monitoring'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'
 import { apiRoutes } from './routes/api'
-import { aiRoutes, aiPublicRoutes } from './routes/admin/ai'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
@@ -178,8 +177,6 @@ const app = new Elysia({
   .use(emailMonitoringRoutes)
   .use(authMonitoringRoutes)
   .use(apiRoutes)
-  .use(aiPublicRoutes) // Public AI health checks (no auth)
-  .use(aiRoutes) // Protected AI routes (with auth)
   .use(fhirRoutes)
 
 // The OpenAPI plugin doesn't expose the spec directly, so we need to start a server

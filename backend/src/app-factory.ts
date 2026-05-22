@@ -47,6 +47,16 @@ export interface DiscoveredApp {
     source: 'filesystem' | 'registered'
 }
 
+/** Serve app store UI, optionally injecting config globals (e.g. hide admin link) */
+function serveAppStoreUi(): Response {
+    const html = readFileSync(require.resolve('@proxy-smart/app-store/ui'), 'utf-8')
+    if (process.env.APP_STORE_HIDE_ADMIN === 'true') {
+        const injected = html.replace('<head>', '<head><script>window.__APP_STORE_HIDE_ADMIN__=true</script>')
+        return new Response(injected, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+    }
+    return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+}
+
 /** Scan public/apps/ for sub-apps with smart-manifest.json, merge published registered apps, and return discovery list */
 function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
@@ -186,10 +196,39 @@ export function createApp() {
             set.redirect = '/proxy-smart.svg'
         })
         // SMART apps directory
-        .get('/apps', () => Bun.file('public/apps/index.html'))
-        .get('/apps/', () => Bun.file('public/apps/index.html'))
-        // Public SMART app discovery endpoint
         .get('/apps.json', () => ({ apps: discoverApps() }))
+        // App Store UI — served from package in non-production; in production, hosted on maxhealth.tech/apps
+        .get('/apps', ({ set }) => {
+            if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
+            return serveAppStoreUi()
+        })
+        .get('/apps/', ({ set }) => {
+            if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
+            return serveAppStoreUi()
+        })
+        // Patient Picker SPA fallback
+        .get('/patient-picker', () => Bun.file('public/patient-picker/index.html'))
+        .get('/patient-picker/', () => Bun.file('public/patient-picker/index.html'))
+        .get('/patient-picker/*', () => Bun.file('public/patient-picker/index.html'))
+        // SMART app SPA fallback (serves apps from public/apps/ on VPS beta deployments)
+        .get('/apps/:app', ({ params }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            return index.exists().then(exists => exists ? index : new Response('Not Found', { status: 404 }))
+        })
+        .get('/apps/:app/', ({ params }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            return index.exists().then(exists => exists ? index : new Response('Not Found', { status: 404 }))
+        })
+        .get('/apps/:app/*', ({ params, path }) => {
+            // Serve static assets directly if they exist, otherwise SPA fallback
+            const staticFile = Bun.file(`public${path}`)
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            return staticFile.exists().then(exists =>
+                exists ? staticFile : index.exists().then(idxExists =>
+                    idxExists ? index : new Response('Not Found', { status: 404 })
+                )
+            )
+        })
         // User-Access Brand Bundle (SMART 2.2.0 Section 8)
         .get('/branding.json', async ({ set, headers }) => {
             const { bundle, etag } = await brandBundleService.getBrandBundle()
@@ -209,27 +248,6 @@ export function createApp() {
                 description: 'FHIR Bundle (collection) of Organization and Endpoint resources for User-Access Brands (SMART 2.2.0 Section 8)',
                 tags: ['smart-apps']
             }
-        })
-        // Dynamic SPA fallback for all sub-apps under /apps/<name>/*
-        .get('/apps/:app', async ({ params, set }) => {
-            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
-                set.status = 400
-                return { error: 'Invalid app name' }
-            }
-            const index = Bun.file(`public/apps/${params.app}/index.html`)
-            if (await index.exists()) return index
-            set.status = 404
-            return { error: 'Not Found' }
-        })
-        .get('/apps/:app/*', async ({ params, set }) => {
-            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
-                set.status = 400
-                return { error: 'Invalid app name' }
-            }
-            const index = Bun.file(`public/apps/${params.app}/index.html`)
-            if (await index.exists()) return index
-            set.status = 404
-            return { error: 'Not Found' }
         })
         // VitePress docs SPA fallback
         .get('/docs', () => Bun.file('public/docs/index.html'))

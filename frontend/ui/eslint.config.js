@@ -1,0 +1,16 @@
+/**
+ * Admin UI ESLint config — extends shared React config.
+ */
+import { defineConfig } from 'eslint/config'
+import { reactConfig } from '../../config/eslint/react.js'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+export default defineConfig(
+  ...reactConfig({
+    tsconfigRootDir: __dirname,
+    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+  }),
+)

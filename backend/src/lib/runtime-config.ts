@@ -57,6 +57,9 @@ function parseConsentFromAttributes(attrs: Record<string, string>): Partial<Cons
   if (get('exempt_resource_types') !== undefined) {
     result.exemptResourceTypes = get('exempt_resource_types').split(',').map(s => s.trim()).filter(Boolean)
   }
+  if (get('app_url') !== undefined) {
+    result.appUrl = get('app_url') || null
+  }
 
   return result
 }
@@ -69,6 +72,7 @@ function consentToAttributes(settings: ConsentConfig): Record<string, string> {
     [`${CONSENT_PREFIX}exempt_clients`]: settings.exemptClients.join(','),
     [`${CONSENT_PREFIX}required_resource_types`]: settings.requiredForResourceTypes.join(','),
     [`${CONSENT_PREFIX}exempt_resource_types`]: settings.exemptResourceTypes.join(','),
+    [`${CONSENT_PREFIX}app_url`]: settings.appUrl || '',
   }
 }
 
@@ -207,6 +211,7 @@ export function getRuntimeConsentConfig(): ConsentConfig {
     exemptClients: config.consent.exemptClients,
     requiredForResourceTypes: config.consent.requiredForResourceTypes,
     exemptResourceTypes: config.consent.exemptResourceTypes,
+    appUrl: config.consent.appUrl,
   }
 
   if (!consentOverrides) return envDefaults

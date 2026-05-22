@@ -9,8 +9,13 @@ import { getAppStoreConfig, hideApp, showApp, publishApp, unpublishApp } from '@
  * Lets admins list all discovered + published apps and toggle visibility.
  */
 
+type AppStoreAppType = {
+  id: string; launch_url: string; client_id: string; client_name: string;
+  description: string; category: string; icon: string; hidden: boolean; source: 'filesystem' | 'registered'
+}
+
 /** Discover all filesystem apps (unfiltered) */
-function discoverAllApps() {
+function discoverAllApps(): AppStoreAppType[] {
   const appsDir = join(process.cwd(), 'public', 'apps')
   if (!existsSync(appsDir)) return []
 
@@ -37,11 +42,6 @@ function discoverAllApps() {
       } catch { return null }
     })
     .filter(Boolean) as AppStoreAppType[]
-}
-
-type AppStoreAppType = {
-  id: string; launch_url: string; client_id: string; client_name: string;
-  description: string; category: string; icon: string; hidden: boolean; source: 'filesystem' | 'registered'
 }
 
 /** Merge filesystem-discovered apps with published registered apps */

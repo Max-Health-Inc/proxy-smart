@@ -4,7 +4,7 @@ on:
   push:
     branches: [test]
     paths-ignore:
-      - 'apps/ui/src/lib/api-client/**'
+      - 'frontend/ui/src/lib/api-client/**'
       - '.github/workflows/deploy-beta.yml'
       - '.github/scripts/deploy-beta-remote.sh'
       - 'docker-compose.beta.yml'
@@ -16,6 +16,7 @@ permissions:
   contents: write
   pull-requests: read
   packages: write
+  id-token: write
 
 concurrency:
   group: releases-beta

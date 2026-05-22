@@ -38,13 +38,9 @@ on:
         required: false
       VPS_USER:
         required: false
-      AZURE_CREDENTIALS:
-        required: false
       AWS_ACCESS_KEY_ID:
         required: false
       AWS_SECRET_ACCESS_KEY:
-        required: false
-      AWS_REGION:
         required: false
       AWS_ACCOUNT_ID:
         required: false
@@ -64,6 +60,15 @@ on:
         required: false
       RESEND_API_KEY:
         required: false
+      APP_ID:
+        required: false
+      APP_PRIVATE_KEY:
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
 
 jobs:
   deploy-beta:
@@ -85,19 +90,19 @@ jobs:
       BETA_ORTHANC_PASSWORD: ${{ secrets.BETA_ORTHANC_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
   deploy-production:
-    name: Deploy Production (Azure/AWS)
+    name: Deploy Production (AWS)
     if: inputs.deployment_stage == 'production'
     uses: ./.github/workflows/deploy-production.yml
     with:
       app_version: ${{ inputs.app_version }}
       source_branch: ${{ inputs.source_branch }}
     secrets:
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
 

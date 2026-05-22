@@ -921,13 +921,6 @@ export async function initializeServer(): Promise<void> {
       logger.keycloak.warn('Configure Keycloak settings in the admin UI to enable full functionality')
     }
     
-    // Log AI configuration status
-    if (config.ai.enabled) {
-      logger.server.info('✅ AI assistant enabled with internal tool execution')
-    } else {
-      logger.server.warn('⚠️  AI assistant disabled - OPENAI_API_KEY not configured')
-    }
-    
     // Initialize FHIR servers
     await initializeFhirServers()
     
@@ -988,11 +981,6 @@ export async function displayServerEndpoints(): Promise<void> {
   logger.server.info(`Health check available at ${config.baseUrl}/health`)
   logger.server.info(`API Documentation available at ${config.baseUrl}/swagger`)
   logger.server.info(`Server Discovery available at ${config.baseUrl}/fhir-servers`)
-
-  // Display AI endpoint
-  if (config.ai.enabled) {
-    logger.server.info(`AI Assistant available at ${config.baseUrl}/admin/ai/chat`)
-  }
 
   // Display MCP endpoint status
   if (config.mcp.enabled) {

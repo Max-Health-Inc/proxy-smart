@@ -296,6 +296,8 @@ export interface ConsentConfig {
   requiredForResourceTypes: string[]
   /** Resource types exempt from consent checks */
   exemptResourceTypes: string[]
+  /** URL to the consent management app (shown in 403 responses) */
+  appUrl: string | null
 }
 
 // =============================================================================

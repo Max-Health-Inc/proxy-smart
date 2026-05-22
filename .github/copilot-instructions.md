@@ -33,7 +33,7 @@ The backend enriches introspection responses with SMART launch context from the 
 | `.github/workflows/smart-compliance-tests.yml` | CI env vars, service containers, test orchestration |
 | `.github/scripts/inferno-oauth-automation.js` | Playwright-based OAuth flow for Inferno tests |
 | `backend/src/routes/auth/oauth.ts` | Token proxy, introspection, authorize redirect |
-| `deploy/fhir-seed-bundle.json` | FHIR transaction bundle for test data |
+| `scripts/seed/fhir-seed-bundle.json` | FHIR transaction bundle for test data |
 | `docker-compose.development.yml` | Local dev stack config |
 
 ## Keycloak Realm Import Gotchas
@@ -59,7 +59,7 @@ These values MUST match across files:
 
 ## FHIR Seed Bundle Rules
 
-The file `deploy/fhir-seed-bundle.json` is a FHIR transaction bundle:
+The file `scripts/seed/fhir-seed-bundle.json` is a FHIR transaction bundle:
 
 - All entries use `PUT` method (idempotent upsert)
 - **`fullUrl` MUST match `request.url`** for PUT entries (e.g., `"fullUrl": "Patient/test-patient"`)
@@ -72,7 +72,7 @@ The file `deploy/fhir-seed-bundle.json` is a FHIR transaction bundle:
 |----------------|-----------|-------------|
 | `"Invalid username or password"` | realm-export password ≠ test config password | `keycloak/realm-export.json` credentials + `testing/*/inferno-config.json` |
 | Introspection `401 Authentication failed` | admin-service client secret mismatch | `keycloak/realm-export.json` client secret + CI workflow env |
-| FHIR seed `400` | `fullUrl` uses `urn:uuid:` with PUT method | `deploy/fhir-seed-bundle.json` |
+| FHIR seed `400` | `fullUrl` uses `urn:uuid:` with PUT method | `scripts/seed/fhir-seed-bundle.json` |
 | Token exchange `400` | redirect_uri or client_id mismatch | `keycloak/realm-export.json` redirectUris + `inferno-config.json` |
 | `"Account is not fully set up"` | Keycloak requires user action (e.g., email verify) | `keycloak/realm-export.json` user `requiredActions` must be empty |
 | CORS errors on token endpoint | webOrigins missing for client | `keycloak/realm-export.json` client `webOrigins` |

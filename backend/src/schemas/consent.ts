@@ -67,7 +67,8 @@ export const ConsentConfig = t.Object({
   cacheTtl: t.Number({ description: 'Cache TTL in milliseconds' }),
   exemptClients: t.Array(t.String(), { description: 'Client IDs exempt from consent checks' }),
   requiredForResourceTypes: t.Array(t.String(), { description: 'Resource types that require consent' }),
-  exemptResourceTypes: t.Array(t.String(), { description: 'Resource types exempt from consent checks' })
+  exemptResourceTypes: t.Array(t.String(), { description: 'Resource types exempt from consent checks' }),
+  appUrl: t.Union([t.String(), t.Null()], { description: 'URL to the consent management app (shown in 403 responses when consent is denied)' })
 }, { title: 'ConsentConfig' })
 
 export type ConsentConfigType = Static<typeof ConsentConfig>

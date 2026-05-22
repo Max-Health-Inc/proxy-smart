@@ -142,7 +142,7 @@ export const config = {
       return process.env.OPENAI_API_KEY || null;
     },
     get timeoutMs() {
-      return Number.parseInt(process.env.AI_TIMEOUT_MS || '30000', 10); // 30 seconds for reasoning models
+      return Number.parseInt(process.env.AI_TIMEOUT_MS || '30000', 10);
     }
   },
 
@@ -172,6 +172,10 @@ export const config = {
       const defaults = ['CapabilityStatement', 'metadata']
       const env = process.env.CONSENT_EXEMPT_RESOURCE_TYPES?.split(',').map(s => s.trim()).filter(Boolean) || []
       return [...new Set([...defaults, ...env])]
+    },
+    /** URL to the consent management app (shown in 403 responses when consent is denied) */
+    get appUrl(): string | null {
+      return process.env.CONSENT_APP_URL || null
     }
   },
 

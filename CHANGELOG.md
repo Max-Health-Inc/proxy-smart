@@ -6,6 +6,81 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0-alpha.202605221345.9f0067627] - 2026-05-22
+
+- 🔧 Chores & Improvements: Conditional App Store UI serving and UI hiding
+  - Backend: serveAppStoreUi() added to inject global flag and serve App Store UI HTML
+  - Routing: /apps and /apps/ now use serveAppStoreUi() instead of Bun.file
+  - Client: App Store UI hides Admin link when APP_STORE_HIDE_ADMIN is true
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/728
+
+
+## [0.1.1-beta.202605221222.79711d615] - 2026-05-22
+
+- 🔧 Chores & Improvements: CI/CD updates
+  - Replace GH_PAT with GitHub App token flow in deploy-beta: add APP_ID and APP_PRIVATE_KEY, generate and use app token for private repo checkouts; deployment-strategy updated to stop requiring GH_PAT and pass APP_ID/APP_PRIVATE_KEY to jobs.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/724
+
+
+## [0.1.1-alpha.202605221222.79711d615] - 2026-05-22
+
+- 🔧 Chores & Improvements: CI/CD tweaks and package version sync
+  - Sync package versions across multiple commits
+  - Update version to 0.1.1-alpha.202605221222.79711d615 (alpha)
+  - Update version to 0.1.1-alpha.202605221215.8cd1ff9b2 (alpha)
+  - Update version to 0.1.1-alpha.202605221150.2bb2cb8d0 (alpha)
+  - Update version to 0.1.1-alpha.202605221146.630e13ae (alpha)
+  - Update version to 0.1.1-alpha.202605221042.3bc3a665 (alpha)
+  - Update version to 0.1.1-alpha.202605221034.4f769c71 (alpha)
+  - Update version to 0.1.1-beta.202605191043.72318795 (beta)
+  - Add id-token:write permission for AWS OIDC deployment
+  - Remove orphaned AI assistant system prompt
+  - Move refactors and reorganizations (AI assistant, seed data, configs, infra)
+  - Remove unused monorepo components (genomics-reporting-generated.tgz, patient-portal, dtr-app, consent-app)
+- ✨ Features (new functionality)
+  - feat: centralized auth error handling via shared-ui bus
+  - feat(consent): nudge users to consent app on 403 denial
+  - feat(infra): add FHIR stack + restrict Keycloak WAF to browser paths
+  - fix(admin-ui): add appUrl to ConsentConfig default
+  - fix(admin-ui): add Save button to scope management dialog
+  - refactor: extract AI assistant to max-health-inc/ai-assistant
+  - refactor: move patient-picker to dedicated location
+  - refactor: move eslint-config/configs and infra reorganizations
+- 🐛 Bug Fixes
+  - fix(ci): patient-picker not served — copy script fixed
+  - fix: update hardcoded app URLs for subdomain hosting
+  - fix(keycloak): update redirect URIs for subdomain hosting
+  - fix: remove ChatResponse re-export from types/api.ts
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #722
+- ⚠️ Breaking Changes
+  - none observed in these changes
+
+Note: Some commits are purely maintenance or version bumps; where no user-facing impact, they are grouped under Chores & Improvements.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/723
+
+
+## [0.1.1-alpha.202605221215.8cd1ff9b2] - 2026-05-22
+
+- 🔧 Chores & Improvements: Sync package versions across modules
+- 🐛 Bug Fixes: Fix CI script paths for patient-picker; update admin-ui ConsentConfig default; fix admin-ui Save button in scope management; update hardcoded app URLs and Keycloak redirect URIs for subdomain hosting
+- ✨ Features: Centralized auth error handling via shared-ui bus; FHIR stack integration and Keycloak WAF restrictions
+- 📚 Documentation: Remove orphaned AI assistant system prompt; move AI assistant refactor to new repo path
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/722
+
+
+## [0.1.1-beta.202605171634.2925aa76] - 2026-05-17
+
+- 🔧 Chores & Improvements: Improve Keycloak path matching in docker-compose.beta.yml (broaden /auth/realms/*/broker/* to /auth/realms/*/broker/** with clarifying comment).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/719
+
+
 ## [0.1.0-alpha.202605142141.3f719102] - 2026-05-14
 
 - 🔧 Chores & Improvements: Update Docker setup and non-root execution

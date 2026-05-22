@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.1.0-RELEASE.202605151033.0e17e030",
+  "version": "0.2.0-beta.202605221530.9c762f223",
   "type": "module",
   "scripts": {
     "test": "bun test",
@@ -25,6 +25,7 @@
     "@keycloak/keycloak-admin-client": "^26.6.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@opendataloader/pdf": "^2.4.1",
+    "@proxy-smart/app-store": "workspace:*",
     "@proxy-smart/auth": "workspace:*",
     "@sinclair/typebox": "^0.34.49",
     "ai": "^6.0.174",

@@ -2,7 +2,7 @@
  * Backend ESLint config — extends shared base (Node.js).
  */
 import { defineConfig } from 'eslint/config'
-import { baseConfig } from '../eslint-config/base.js'
+import { baseConfig } from '../config/eslint/base.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
