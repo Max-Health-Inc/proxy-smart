@@ -50,8 +50,9 @@ on:
         required: false
       RESEND_API_KEY:
         required: false
-      GH_PAT:
-        description: 'PAT with repo scope for checking out private app repos'
+      APP_ID:
+        required: true
+      APP_PRIVATE_KEY:
         required: true
 
   workflow_dispatch:
@@ -85,6 +86,14 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: Max-Health-Inc
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:
@@ -108,21 +117,21 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: Max-Health-Inc/consent-app
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
           path: _standalone/consent-app
 
       - name: Checkout dtr-app
         uses: actions/checkout@v6
         with:
           repository: Max-Health-Inc/dtr-app
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
           path: _standalone/dtr-app
 
       - name: Checkout patient-portal
         uses: actions/checkout@v6
         with:
           repository: Max-Health-Inc/patient-portal
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
           path: _standalone/patient-portal
 
       - name: Build standalone apps (same-origin for VPS)
