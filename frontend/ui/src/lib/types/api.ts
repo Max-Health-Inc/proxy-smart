@@ -30,7 +30,6 @@ export type {
   PublicIdentityProvider,
   OAuthEvent,
   UserInfoResponse as UserProfile,
-  ChatResponse,
   TokenResponse,
   CreateSmartAppRequest,
   UpdateSmartAppRequest,
