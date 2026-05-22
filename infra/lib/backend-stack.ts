@@ -5,6 +5,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
@@ -14,7 +15,8 @@ import type { Construct } from 'constructs';
 export interface BackendStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
   keycloakUrl: string;
-  domainName: string;  // e.g., api.auth.maxhealth.tech
+  domainName: string;  // e.g., api.proxy-smart.com
+  apexDomain?: string; // e.g., proxy-smart.com (landing page on root domain)
   hostedZone: route53.IHostedZone;
   /**
    * Optional FHIR server URL
@@ -45,27 +47,18 @@ export interface BackendStackProps extends cdk.StackProps {
  * - Auto-scaling configuration
  */
 export class BackendStack extends cdk.Stack {
-  public readonly repository: ecr.Repository;
+  public readonly repository: ecr.IRepository;
   public readonly service: ecsPatterns.ApplicationLoadBalancedFargateService;
   public readonly cluster: ecs.Cluster;
 
   constructor(scope: Construct, id: string, props: BackendStackProps) {
     super(scope, id, props);
 
-    // ECR repository for mono container (backend + UI)
-    // Image is built from Dockerfile in CI/CD pipeline
-    this.repository = new ecr.Repository(this, 'BackendRepo', {
-      repositoryName: 'proxy-smart-backend',
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      imageScanOnPush: true, // Enable vulnerability scanning
-      lifecycleRules: [
-        {
-          description: 'Keep last 10 images',
-          maxImageCount: 10,
-          rulePriority: 1,
-        },
-      ],
-    });
+    // ECR repository — created externally, imported here
+    // Allows build+push before CDK deploy (avoids chicken-and-egg)
+    this.repository = ecr.Repository.fromRepositoryName(
+      this, 'BackendRepo', 'proxy-smart-backend'
+    );
 
     // Keycloak admin credentials for backend to manage clients/users
     const keycloakAdminSecret = new secretsmanager.Secret(this, 'KeycloakAdminSecret', {
@@ -106,9 +99,10 @@ export class BackendStack extends cdk.Stack {
         })
       : undefined;
 
-    // SSL Certificate
+    // SSL Certificate (includes apex domain if configured)
     const certificate = new acm.Certificate(this, 'Certificate', {
       domainName: props.domainName,
+      subjectAlternativeNames: props.apexDomain ? [props.apexDomain] : undefined,
       validation: acm.CertificateValidation.fromDns(props.hostedZone),
     });
 
@@ -211,7 +205,7 @@ export class BackendStack extends cdk.Stack {
         cluster: this.cluster,
         serviceName: 'proxy-smart-backend',
         cpu: 512,
-        memoryLimitMiB: 1024,
+        memoryLimitMiB: 2048,
         desiredCount: 1,
         
         certificate,
@@ -221,7 +215,7 @@ export class BackendStack extends cdk.Stack {
         sslPolicy: elbv2.SslPolicy.TLS13_RES,
         
         taskImageOptions: {
-          // Built from Dockerfile (backend + UI in single container)
+          // Image built and pushed externally (CI/CD or manual)
           image: ecs.ContainerImage.fromEcrRepository(this.repository, 'latest'),
           containerPort: 8445,
           environment,
@@ -231,6 +225,7 @@ export class BackendStack extends cdk.Stack {
         circuitBreaker: { rollback: true },
         enableExecuteCommand: this.node.tryGetContext('enableEcsExec') === 'true',
         minHealthyPercent: 100,
+        healthCheckGracePeriod: cdk.Duration.seconds(60),
       }
     );
 
@@ -238,6 +233,10 @@ export class BackendStack extends cdk.Stack {
     this.service.targetGroup.configureHealthCheck({
       path: '/health',
       healthyHttpCodes: '200',
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(10),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 5,
     });
 
     // Associate WAF with ALB
@@ -245,6 +244,17 @@ export class BackendStack extends cdk.Stack {
       resourceArn: this.service.loadBalancer.loadBalancerArn,
       webAclArn: webAcl.attrArn,
     });
+
+    // Apex domain (proxy-smart.com) → ALB alias record
+    if (props.apexDomain) {
+      new route53.ARecord(this, 'ApexDomainRecord', {
+        zone: props.hostedZone,
+        recordName: props.apexDomain,
+        target: route53.RecordTarget.fromAlias(
+          new route53Targets.LoadBalancerTarget(this.service.loadBalancer)
+        ),
+      });
+    }
 
     // Auto-scaling
     const scaling = this.service.service.autoScaleTaskCount({

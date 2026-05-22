@@ -28,139 +28,144 @@ on:
         description: "Target platform where app was deployed"
         value: ${{ jobs.deploy.outputs.deployment_target }}
     secrets:
-      AZURE_CREDENTIALS:
-        required: false
       AWS_ACCESS_KEY_ID:
-        required: false
+        required: true
       AWS_SECRET_ACCESS_KEY:
-        required: false
-      AWS_REGION:
-        required: false
+        required: true
       AWS_ACCOUNT_ID:
-        required: false
+        required: true
       VITE_ENCRYPTION_SECRET:
+        required: true
+
+  workflow_dispatch:
+    inputs:
+      app_version:
+        description: 'Version to deploy (defaults to latest)'
         required: false
+        default: 'latest'
+      source_branch:
+        description: 'Branch to deploy from'
+        required: false
+        default: 'main'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REPOSITORY: proxy-smart-backend
+  ECS_CLUSTER: proxy-smart-production
+  ECS_SERVICE: proxy-smart-backend
+  PRODUCTION_URL: https://proxy-smart.com
+  API_URL: https://api.proxy-smart.com
+  KEYCLOAK_URL: https://auth.proxy-smart.com
 
 jobs:
   deploy:
-    name: Deploy Production (Azure/AWS)
+    name: Build, Push & Deploy to AWS ECS
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     outputs:
-      fhir_server_url: ${{ steps.deploy.outputs.fhir_server_url }}
-      keycloak_url: ${{ steps.deploy.outputs.keycloak_url }}
-      app_url: ${{ steps.deploy.outputs.app_url }}
-      deployment_status: ${{ steps.deploy.outputs.deployment_status }}
-      deployment_target: ${{ steps.deploy.outputs.deployment_target }}
-    
+      fhir_server_url: ${{ steps.outputs.outputs.fhir_server_url }}
+      keycloak_url: ${{ steps.outputs.outputs.keycloak_url }}
+      app_url: ${{ steps.outputs.outputs.app_url }}
+      deployment_status: ${{ steps.outputs.outputs.deployment_status }}
+      deployment_target: ${{ steps.outputs.outputs.deployment_target }}
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_branch }}
-      
-      - name: Setup Bun
-        uses: ./.github/actions/setup-bun-version
-      
-      - name: Setup Cloud CLI (Azure/AWS)
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ inputs.app_version }}
+          build-args: |
+            VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Force new ECS deployment
         run: |
-          # Install Azure CLI
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-          
-          # Install AWS CLI
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-      
-      - name: Deploy Production (Azure/AWS)
-        id: deploy
-        env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
+          echo "🚀 Forcing new deployment on ECS service..."
+          aws ecs update-service \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --service ${{ env.ECS_SERVICE }} \
+            --force-new-deployment \
+            --query 'service.deployments[0].id' \
+            --output text
+
+      - name: Wait for ECS service stability
         run: |
-          echo "🚀 Deploying Production version ${{ inputs.app_version }} to Azure/AWS..."
-          
-          # Determine deployment target based on available credentials
-          if [ -n "$AZURE_CREDENTIALS" ]; then
-            echo "📱 Using Azure for production deployment..."
-            DEPLOYMENT_TARGET="azure"
-            
-            # Login to Azure
-            echo "$AZURE_CREDENTIALS" | az login --service-principal -u "$(echo "$AZURE_CREDENTIALS" | jq -r .clientId)" -p "$(echo "$AZURE_CREDENTIALS" | jq -r .clientSecret)" --tenant "$(echo "$AZURE_CREDENTIALS" | jq -r .tenantId)"
-            
-            # Deploy to Azure Container Apps or Azure App Service
-            RESOURCE_GROUP="proxy-smart-production"
-            APP_NAME="proxy-smart-prod"
-            
-            # Build and push container image to Azure Container Registry
-            az acr build --registry proxysmartregistry --image proxy-smart:${{ inputs.app_version }} --build-arg VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }} .
-            
-            # Deploy to Azure Container Apps
-            az containerapp update \
-              --name $APP_NAME \
-              --resource-group $RESOURCE_GROUP \
-              --image proxysmartregistry.azurecr.io/proxy-smart:${{ inputs.app_version }} \
-              --set-env-vars \
-                NODE_ENV=production \
-                VERSION=${{ inputs.app_version }} \
-                BASE_URL=https://proxy-smart.your-production-domain.com \
-                FHIR_SERVER_BASE=https://hapi.fhir.org/baseR4 \
-                KEYCLOAK_BASE_URL=https://auth.your-production-domain.com
-            
-            PRODUCTION_URL="https://proxy-smart.your-production-domain.com"
-            KEYCLOAK_URL="https://auth.your-production-domain.com"
-            
-          elif [ -n "$AWS_ACCESS_KEY_ID" ]; then
-            echo "☁️ Using AWS for production deployment..."
-            DEPLOYMENT_TARGET="aws"
-            
-            # Configure AWS CLI
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set default.region $AWS_REGION
-            
-            # Deploy to AWS ECS or AWS App Runner
-            CLUSTER_NAME="proxy-smart-production"
-            SERVICE_NAME="proxy-smart-prod"
-            
-            # Build and push to ECR
-            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com
-            
-            docker build --build-arg VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }} -t proxy-smart:${{ inputs.app_version }} .
-            docker tag proxy-smart:${{ inputs.app_version }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/proxy-smart:${{ inputs.app_version }}
-            docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.$AWS_REGION.amazonaws.com/proxy-smart:${{ inputs.app_version }}
-            
-            # Update ECS service
-            aws ecs update-service \
-              --cluster $CLUSTER_NAME \
-              --service $SERVICE_NAME \
-              --force-new-deployment
-            
-            # Wait for deployment to complete
-            aws ecs wait services-stable --cluster $CLUSTER_NAME --services $SERVICE_NAME
-            
-            PRODUCTION_URL="https://proxy-smart.your-production-domain.com"
-            KEYCLOAK_URL="https://auth.your-production-domain.com"
-            
+          echo "⏳ Waiting for ECS service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --services ${{ env.ECS_SERVICE }}
+          echo "✅ ECS service is stable"
+
+      - name: Verify deployment health
+        run: |
+          echo "🏥 Checking deployment health..."
+          MAX_RETRIES=10
+          RETRY_DELAY=15
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ env.API_URL }}/health" || echo "000")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "✅ Health check passed (attempt $i)"
+              HEALTH_RESPONSE=$(curl -s "${{ env.API_URL }}/health")
+              echo "Response: $HEALTH_RESPONSE"
+              exit 0
+            fi
+            echo "⏳ Health check returned $HTTP_STATUS, retrying in ${RETRY_DELAY}s... (attempt $i/$MAX_RETRIES)"
+            sleep $RETRY_DELAY
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Set deployment outputs
+        id: outputs
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "fhir_server_url=${{ env.API_URL }}/proxy-smart-backend/hapi-fhir-server/R4" >> $GITHUB_OUTPUT
+            echo "keycloak_url=${{ env.KEYCLOAK_URL }}" >> $GITHUB_OUTPUT
+            echo "app_url=${{ env.PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+            echo "deployment_status=success" >> $GITHUB_OUTPUT
+            echo "deployment_target=aws" >> $GITHUB_OUTPUT
           else
-            echo "❌ No cloud credentials found for production deployment"
-            exit 1
+            echo "fhir_server_url=" >> $GITHUB_OUTPUT
+            echo "keycloak_url=${{ env.KEYCLOAK_URL }}" >> $GITHUB_OUTPUT
+            echo "app_url=${{ env.PRODUCTION_URL }}" >> $GITHUB_OUTPUT
+            echo "deployment_status=failed" >> $GITHUB_OUTPUT
+            echo "deployment_target=aws" >> $GITHUB_OUTPUT
           fi
-          
-          # Wait for deployment to be ready
-          echo "⏳ Waiting for production deployment to be ready..."
-          timeout 300s bash -c "until curl -f $PRODUCTION_URL/health; do sleep 10; done"
-          
-          # Set outputs
-          echo "fhir_server_url=$PRODUCTION_URL/proxy-smart-backend/hapi-fhir-server/R4" >> $GITHUB_OUTPUT
-          echo "keycloak_url=$KEYCLOAK_URL" >> $GITHUB_OUTPUT
-          echo "app_url=$PRODUCTION_URL" >> $GITHUB_OUTPUT
-          echo "deployment_status=success" >> $GITHUB_OUTPUT
-          echo "deployment_target=$DEPLOYMENT_TARGET" >> $GITHUB_OUTPUT
-          
-          echo "✅ Production deployment completed successfully"
-          echo "📍 App: $PRODUCTION_URL"
-          echo "📍 FHIR Server (Proxied): $PRODUCTION_URL/proxy-smart-backend/hapi-fhir-server/R4"
-          echo "📍 Keycloak: $KEYCLOAK_URL"
-          echo "🎯 Deployment Target: $DEPLOYMENT_TARGET"
+

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "apps/ui/src/lib/api-client/**"
+      - "frontend/ui/src/lib/api-client/**"
       - ".github/workflows/**"
   workflow_dispatch:
 
@@ -76,7 +76,7 @@ jobs:
 
   # Deploy after successful release
   deploy-production:
-    name: Deploy Production to AWS/Azure
+    name: Deploy Production to AWS
     needs: [production-release]
     uses: ./.github/workflows/deployment-strategy.yml
     with:

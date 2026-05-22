@@ -45,14 +45,7 @@ export default defineConfig({
   },
 
   projects: [
-    {
-      name: "patient-portal",
-      testMatch: /patient-portal\/.+\.spec\.ts$/,
-    },
-    {
-      name: "consent-app",
-      testMatch: /consent-app\/.+\.spec\.ts$/,
-    },
+    // Projects removed — consent-app and patient-portal moved to standalone repos
   ],
 
   // Make environment info available to tests

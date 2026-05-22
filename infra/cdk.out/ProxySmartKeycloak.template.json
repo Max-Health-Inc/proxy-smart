@@ -40,11 +40,11 @@
   "Certificate4E7ABB08": {
    "Type": "AWS::CertificateManager::Certificate",
    "Properties": {
-    "DomainName": "auth.maxhealth.tech",
+    "DomainName": "auth.proxy-smart.com",
     "DomainValidationOptions": [
      {
-      "DomainName": "auth.maxhealth.tech",
-      "HostedZoneId": "REPLACE_WITH_HOSTED_ZONE_ID"
+      "DomainName": "auth.proxy-smart.com",
+      "HostedZoneId": "Z023389060QW09IU3L29"
      }
     ],
     "Tags": [
@@ -90,6 +90,17 @@
       "Priority": 1,
       "Statement": {
        "ManagedRuleGroupStatement": {
+        "ExcludedRules": [
+         {
+          "Name": "SizeRestrictions_BODY"
+         },
+         {
+          "Name": "CrossSiteScripting_BODY"
+         },
+         {
+          "Name": "GenericRFI_BODY"
+         }
+        ],
         "Name": "AWSManagedRulesCommonRuleSet",
         "VendorName": "AWS"
        }
@@ -333,7 +344,10 @@
   "KeycloakServiceLBPublicListenerECSGroup7008E672": {
    "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
    "Properties": {
-    "HealthCheckPath": "/health/ready",
+    "HealthCheckIntervalSeconds": 30,
+    "HealthCheckPath": "/realms/master",
+    "HealthCheckTimeoutSeconds": 10,
+    "HealthyThresholdCount": 2,
     "Matcher": {
      "HttpCode": "200"
     },
@@ -364,6 +378,7 @@
      }
     ],
     "TargetType": "ip",
+    "UnhealthyThresholdCount": 5,
     "VpcId": {
      "Fn::ImportValue": "ProxySmartVpc:ExportsOutputRefProxySmartVpc5E0F3CCCC9505E6F"
     }
@@ -424,8 +439,8 @@
       ]
      }
     },
-    "HostedZoneId": "REPLACE_WITH_HOSTED_ZONE_ID",
-    "Name": "auth.maxhealth.tech.",
+    "HostedZoneId": "Z023389060QW09IU3L29",
+    "Name": "auth.proxy-smart.com.",
     "Type": "A"
    },
    "Metadata": {
@@ -470,19 +485,65 @@
     "aws:cdk:path": "ProxySmartKeycloak/KeycloakService/TaskDef/TaskRole/Resource"
    }
   },
+  "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ssmmessages:CreateControlChannel",
+        "ssmmessages:CreateDataChannel",
+        "ssmmessages:OpenControlChannel",
+        "ssmmessages:OpenDataChannel"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "logs:DescribeLogGroups",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
+    "Roles": [
+     {
+      "Ref": "KeycloakServiceTaskDefTaskRole86519850"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "ProxySmartKeycloak/KeycloakService/TaskDef/TaskRole/DefaultPolicy/Resource"
+   }
+  },
   "KeycloakServiceTaskDef778B54C2": {
    "Type": "AWS::ECS::TaskDefinition",
    "Properties": {
     "ContainerDefinitions": [
      {
       "Command": [
-       "start",
-       "--optimized"
+       "start"
       ],
       "Environment": [
        {
         "Name": "KC_HOSTNAME",
-        "Value": "auth.maxhealth.tech"
+        "Value": "auth.proxy-smart.com"
+       },
+       {
+        "Name": "KC_HOSTNAME_STRICT",
+        "Value": "false"
        },
        {
         "Name": "KC_HTTP_ENABLED",
@@ -518,17 +579,21 @@
           ]
          ]
         }
+       },
+       {
+        "Name": "JAVA_OPTS_KC_HEAP",
+        "Value": "-Xms256m -Xmx1024m"
        }
       ],
       "Essential": true,
       "HealthCheck": {
        "Command": [
         "CMD-SHELL",
-        "curl -f http://localhost:8080/health/ready || exit 1"
+        "exec 3<>/dev/tcp/localhost/9000 && echo -e \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && cat <&3 | grep -q UP"
        ],
        "Interval": 30,
-       "Retries": 3,
-       "StartPeriod": 120,
+       "Retries": 5,
+       "StartPeriod": 300,
        "Timeout": 10
       },
       "Image": "quay.io/keycloak/keycloak:26.0",
@@ -790,7 +855,7 @@
     },
     "DesiredCount": 1,
     "EnableECSManagedTags": false,
-    "EnableExecuteCommand": false,
+    "EnableExecuteCommand": true,
     "HealthCheckGracePeriodSeconds": 60,
     "LaunchType": "FARGATE",
     "LoadBalancers": [
@@ -849,6 +914,7 @@
    "DependsOn": [
     "KeycloakServiceLBPublicListenerECSGroup7008E672",
     "KeycloakServiceLBPublicListenerF1BD9FFE",
+    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -889,6 +955,7 @@
     }
    },
    "DependsOn": [
+    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -916,6 +983,7 @@
     "ToPort": 8080
    },
    "DependsOn": [
+    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -961,6 +1029,7 @@
     "ServiceNamespace": "ecs"
    },
    "DependsOn": [
+    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -985,6 +1054,7 @@
     }
    },
    "DependsOn": [
+    "KeycloakServiceTaskDefTaskRoleDefaultPolicy8AB363E4",
     "KeycloakServiceTaskDefTaskRole86519850"
    ],
    "Metadata": {
@@ -1197,7 +1267,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31Ty47bMAz8lt4VtXWxH+C6DxQI0CIO0OOCkRmXG0UyRCrBQtC/F5KzTrIt9sSZ8ZDiWHajm4dGf3gHZ16Z4bCytNOpFzAHBWd+TIwmoPARHIwYdOorV93ezSgrg0FoTwYEF1d31Yr1hmZ1hv2p0anbu9+4a7u1WlDL7A2BkHdZoWGdOhtZMNQZF/gNwgiCW+DDF9yTo2IvhteKdwLkMNxol94ew4kMziFm2BuwsLN1bOejk7rA4wQiGBzrdpps2Z+8W3sYPoMFZ3B4NRAtsJCxHoZddZAbS9b/d9dYd/zWRyzoLp4XfPN8C2FE+R58nObwCy2bN/WiYiB5XixvC1/HgMz/yD9c1bMKPgo+fNKp3aDxYSjOGfXlIyA46rTxtr7UWn95S+a50BllZf3IOq39uGzwgrOCazKI4tmAJTfqdL2Xkq+ud6/MZRvAHMiN/dx3PftOyMpYH4cziPmjU2shHIungpwL/BlliqI2yD4Gg1k5P6B+4venptEfy3/yxESrEJ3QEfVmrn8BoxDAG0QDAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtNVF9+55HygQYEMcYI8FI9MaG0UyJCpBIei/D5JTJ+mGPfHufKR5khrZPH6S93dwCis17FeGdjL1DGov4BSeU0DlkcMBLGj0MvWVi260M8pCoWcaSQHj4uouWrFe0SxOMB4bmbrR/sJd263FgtoQnCJgcjYLVEGmzsTA6OuMM/wGXgPjFsL+C45kqdiL4b3iLANZ9FfaubdHfySFc4gZ9goM7Ewd27louS7wPAEzehtkO02m7E/Orh0Mn8GAVTi8G4gGApMyDoZddZDVJeu/u2usG37to8Boz543fPV9C14jf/cuTnP4hZbNm3pR0RO/Lpb/C1+1xxD+kp9s1bPwLjI+PsjUblA5PxTnjPryCAgOMm2cqYda609nSL0WOqMsjNNBprXTywZvOAu4JIPILigwZLVMl3sp+ep6t8pcth7Unqzu577Lv2+ELJRxcTgBq98ytQb8oXgqyLnAH5GnyGKDwUWvMAvrBpQv4cOxaeR9Iz/evQSilY+W6YByM9c/ok0cs0QDAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartKeycloak/CDKMetadata/Default"
@@ -1228,7 +1298,7 @@
   },
   "KeycloakUrl": {
    "Description": "Keycloak URL",
-   "Value": "https://auth.maxhealth.tech",
+   "Value": "https://auth.proxy-smart.com",
    "Export": {
     "Name": "ProxySmartKeycloakUrl"
    }

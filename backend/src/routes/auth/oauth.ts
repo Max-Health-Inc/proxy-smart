@@ -233,21 +233,25 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     detail: { summary: 'SMART Launch Callback', description: 'Receives Keycloak callback during SMART launch flows.', tags: ['authentication'] }
   })
 
-  // ── Patient picker redirect (→ React app at /apps/patient-picker/) ──
+  // ── Patient picker redirect (→ React app at /patient-picker/) ──
   .get('/patient-select', async ({ query, redirect, set }) => {
     const sessionKey = query.session as string | undefined
     const code = query.code as string | undefined
 
     if (!sessionKey || !code) {
-      set.status = 400
-      return { error: 'invalid_request', error_description: 'Missing session or code parameter' }
+      const errorUrl = new URL(`${config.baseUrl}/patient-picker/`)
+      errorUrl.searchParams.set('error', 'invalid_request')
+      errorUrl.searchParams.set('error_description', 'Missing session or code parameter')
+      return redirect(errorUrl.href)
     }
     const session = smartStore.get(sessionKey)
     if (!session) {
-      set.status = 400
-      return { error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
+      const errorUrl = new URL(`${config.baseUrl}/patient-picker/`)
+      errorUrl.searchParams.set('error', 'session_expired')
+      errorUrl.searchParams.set('error_description', 'Session expired. Please restart the authorization flow.')
+      return redirect(errorUrl.href)
     }
-    const pickerUrl = new URL(`${config.baseUrl}/apps/patient-picker/`)
+    const pickerUrl = new URL(`${config.baseUrl}/patient-picker/`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)
     if (session.aud) pickerUrl.searchParams.set('aud', session.aud)
@@ -257,15 +261,22 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   })
 
   // ── Patient picker submission (delegates to @proxy-smart/auth) ────────
-  .post('/patient-select', async ({ body, redirect, set }) => {
+  .post('/patient-select', async ({ body, redirect, set, headers }) => {
     const { session, code, patient } = body as { session?: string; code?: string; patient?: string }
     const result = handlePatientSelect(
       { session, code, patient },
       { config: smartProxyConfig, store: smartStore, logger: smartLogger },
     )
 
+    const isJsonRequest = headers['content-type']?.includes('application/json')
+
     switch (result.type) {
       case 'redirect':
+        // JSON clients get the URL in the body; form submissions get a 302
+        if (isJsonRequest) {
+          set.status = 200
+          return { redirect_url: result.url }
+        }
         return redirect(result.url)
       case 'error':
         set.status = result.status

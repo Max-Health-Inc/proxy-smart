@@ -70,7 +70,7 @@ jobs:
           pip install --break-system-packages openapi-ts-fetch==0.2.2
           bun install
           cd backend && bun install && cd ..
-          cd apps/ui && bun install && cd ../..
+          cd frontend/ui && bun install && cd ../..
           bun run generate:ui:normalized
           
           git config --global user.name 'github-actions[bot]'
@@ -89,7 +89,7 @@ jobs:
           TAILWIND_DISABLE_LIGHTNINGCSS: "1"
         run: |
           echo "=== Building Frontend ==="
-          cd apps/ui
+          cd frontend/ui
           bun install
           bun run build 2>&1 | tee ../../frontend-build.log
 
@@ -103,7 +103,7 @@ jobs:
           component: frontend
           app-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          retry-command: 'cd apps/ui && bun run build'
+          retry-command: 'cd frontend/ui && bun run build'
 
       - name: Fail if Frontend Build Unresolved
         if: ${{ steps.frontend-build.outcome == 'failure' && steps.build-heal.outputs.fixed != 'true' }}
@@ -122,7 +122,7 @@ jobs:
           CI: true
         run: |
           echo "=== Running Frontend Tests ==="
-          cd apps/ui
+          cd frontend/ui
           bun run test --run 2>&1 | tee ../../frontend-test.log
 
       - name: 🤖 Copilot Self-Heal (Frontend Tests)
@@ -135,7 +135,7 @@ jobs:
           component: frontend
           app-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          retry-command: 'cd apps/ui && bun run test --run'
+          retry-command: 'cd frontend/ui && bun run test --run'
 
       - name: Fail if Frontend Tests Unresolved
         if: ${{ inputs.run_tests && steps.test-frontend.outcome == 'failure' && steps.test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}

@@ -15,6 +15,7 @@ import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
+import { getConsentConfig } from '@/lib/consent'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -149,7 +150,7 @@ export const consentNotifyRoutes = new Elysia({ prefix: '/consent', tags: ['cons
       }
 
       // Build the consent app URL
-      const consentAppUrl = `${config.baseUrl}/consent-app/`
+      const consentAppUrl = getConsentConfig().appUrl || `${config.baseUrl}/consent-app/`
 
       const sent = await sendEmail({
         to: patientEmail,

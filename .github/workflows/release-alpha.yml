@@ -4,7 +4,7 @@ on:
   push:
     branches: [develop]
     paths-ignore:
-      - 'apps/ui/src/lib/api-client/**'
+      - 'frontend/ui/src/lib/api-client/**'
       - '.github/workflows/deploy-beta.yml'
       - '.github/scripts/deploy-beta-remote.sh'
       - 'docker-compose.beta.yml'
