@@ -465,9 +465,6 @@ With this configuration, when an MCP client sends `client_id=https://vscode.dev/
 | Client ID | Type | Flow | Use Case |
 |-----------|------|------|----------|
 | `mcp-client` | Public | Authorization Code + PKCE | VS Code, Claude Desktop, browser-based MCP clients |
-| `ai-assistant-agent` | Confidential (client-jwt) | Service Account (client_credentials) | Machine-to-machine backend integrations |
-
-**Important:** `ai-assistant-agent` has `standardFlowEnabled: false` and requires client-jwt authentication. It **cannot** be used with VS Code or any browser-based OAuth flow that needs Authorization Code + PKCE.
 
 ### VS Code MCP Configuration
 
@@ -505,7 +502,6 @@ DCR is confirmed working on all environments. Existing dynamically registered VS
 | Grant Type | Client | When Used |
 |-----------|--------|-----------|
 | `authorization_code` + PKCE | `mcp-client`, DCR clients | Interactive (VS Code, Claude Desktop, browsers) |
-| `client_credentials` | `ai-assistant-agent` | M2M backend calls (requires client-jwt assertion) |
 | `urn:ietf:params:oauth:grant-type:token-exchange` | Backend internal | Token exchange for downstream FHIR calls |
 
 ## Security Considerations

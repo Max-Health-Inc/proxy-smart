@@ -1,5 +1,7 @@
 # Patient Portal
 
+> **Note:** This app has been extracted to a separate repository: [max-health-inc/patient-portal](https://github.com/Max-Health-Inc/patient-portal). The documentation below describes the app's role within the Proxy Smart ecosystem.
+
 International Patient Portal built on IPS (International Patient Summary) and IPA (International Patient Access) standards. Patients can view their health summary, medical imaging, and clinical documents through a SMART on FHIR interface.
 
 ## Overview
@@ -34,16 +36,11 @@ The Patient Portal launches via SMART App Launch, authenticates the patient, and
 
 ## Development
 
-```bash
-# From the monorepo root
-cd apps/patient-portal
-bun run dev
-# -> http://localhost:5176/apps/patient-portal/
-```
+See the [patient-portal repository](https://github.com/Max-Health-Inc/patient-portal) for development instructions.
 
 | Command | Description |
 |---|---|
-| `bun run dev` | Start dev server on port 5176 |
+| `bun run dev` | Start dev server on port 5173 |
 | `bun run build` | Production build |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
@@ -82,6 +79,4 @@ The IPS Bundle is parsed into sections (allergies, medications, conditions, immu
 | UI | shadcn/ui (via shared-ui) |
 | FHIR | `hl7.fhir.uv.ips-generated` (IPS 2.0.0 types) |
 | Imaging | Cornerstone3D, `@babelfhir-ts/dicomweb` |
-| Auth | SMART on FHIR (custom `smart-auth.ts`) |
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*
+| Auth | SMART on FHIR (`SmartAppShell`) |

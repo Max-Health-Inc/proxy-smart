@@ -84,10 +84,6 @@ Full implementation of the [SMART App Launch](http://hl7.org/fhir/smart-app-laun
 
 Built-in React admin UI for managing SMART apps, FHIR server connections, users, and scopes — no manual config editing required.
 
-### 🤖 AI Assistant & MCP Server
-
-Built-in AI assistant with RAG for documentation queries, exposed via an [MCP server](docs/MCP_HTTP_SERVER.md) for programmatic integration with AI tools.
-
 ### 🐳 Docker-Ready
 
 One-command development and production deployments with Docker Compose, including mono-container and multi-container options.
@@ -111,7 +107,6 @@ graph TB
         D[FHIR Proxy]
         E[OAuth Endpoints]
         F[WebSocket]
-        G[AI Assistant]
     end
   
     subgraph Identity
@@ -144,13 +139,13 @@ graph TB
 | Workspace | Description |
 |---|---|
 | `backend/` | Elysia API server, FHIR proxy, OAuth endpoints |
-| `apps/ui/` | React admin dashboard |
-| `apps/consent-app/` | Patient consent management UI |
-| `apps/dtr-app/` | Documentation, Templates & Rules (DTR) app |
-| `apps/patient-portal/` | International Patient Portal (IPS/IPA) |
-| `apps/smart-dicom-template/` | Starter kit for imaging AI SMART apps |
-| `shared-ui/` | Shared React components and utilities |
-| `infra/` | AWS CDK infrastructure |
+| `frontend/ui/` | React admin dashboard |
+| `frontend/smart-dicom-template/` | Starter kit for imaging AI SMART apps |
+| `packages/patient-picker/` | Patient selection UI for standalone SMART launch |
+| `packages/auth/` | Shared auth utilities |
+| `packages/app-store/` | App store catalog UI |
+| `deploy/infra/` | AWS CDK infrastructure |
+| `config/eslint/` | Shared ESLint configuration |
 
 ### Tech Stack
 
@@ -321,7 +316,6 @@ See [LICENSE-DUAL.md](LICENSE-DUAL.md) for details.
 
 ## Support
 
-- 🤖 AI Assistant (built-in)
 - 💬 [Discord](https://discord.gg/FshSApM7)
 - 📖 [Documentation](docs/)
 - 🐛 [GitHub Issues](https://github.com/max-health-inc/proxy-smart/issues)
