@@ -187,6 +187,15 @@ export function createApp() {
         })
         // SMART apps directory
         .get('/apps.json', () => ({ apps: discoverApps() }))
+        // App Store UI — served from package in non-production; in production, hosted on maxhealth.tech/apps
+        .get('/apps', ({ set }) => {
+            if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
+            return Bun.file(require.resolve('@proxy-smart/app-store/ui'))
+        })
+        .get('/apps/', ({ set }) => {
+            if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
+            return Bun.file(require.resolve('@proxy-smart/app-store/ui'))
+        })
         // Patient Picker SPA fallback
         .get('/patient-picker', () => Bun.file('public/patient-picker/index.html'))
         .get('/patient-picker/', () => Bun.file('public/patient-picker/index.html'))

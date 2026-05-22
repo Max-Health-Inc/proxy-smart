@@ -1,25 +1,25 @@
 {
-  "name": "@proxy-smart/auth",
+  "name": "@proxy-smart/app-store",
   "version": "0.2.0",
   "private": false,
   "type": "module",
-  "description": "SMART on FHIR STU 2.2.0 server-side authorization proxy — launch context, session management, token enrichment. Framework-agnostic, IdP-pluggable.",
+  "description": "SMART on FHIR app store — manifest discovery, visibility configuration, and registry CRUD. Framework-agnostic.",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
-    "directory": "packages/auth"
+    "directory": "packages/app-store"
   },
   "license": "AGPL-3.0-or-later",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./stores": "./src/stores/index.ts",
-    "./idp": "./src/idp/index.ts",
-    "./idp/keycloak": "./src/idp/keycloak.ts"
+    "./store": "./src/config-store.ts",
+    "./types": "./src/types.ts",
+    "./ui": "./public/index.html"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -28,12 +28,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
-  "peerDependencies": {
-    "jsonwebtoken": "^9.0.0"
-  },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.10",
-    "jsonwebtoken": "^9.0.3",
+    "@types/node": "^22.0.0",
     "typescript": "6.0.3"
   }
 }
