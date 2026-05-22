@@ -1,201 +1,76 @@
-# FHIR Servers Management
+# FHIR Servers
 
-The FHIR Servers section provides comprehensive tools for managing FHIR server connections, monitoring health status, configuring endpoints, and maintaining secure communication with healthcare data repositories.
+Configure upstream FHIR servers that the proxy routes requests to. Each registered server gets a proxy path at `/proxy-smart-backend/{server_name}/{fhir_version}/`.
 
-## 🏥 FHIR Server Overview
+## API Endpoints
 
-### Server Types
-The platform supports various FHIR server implementations:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/fhir-servers/` | List all registered FHIR servers |
+| POST | `/fhir-servers/` | Add a new FHIR server |
+| GET | `/fhir-servers/:server_id` | Get server details + proxy URLs |
+| PUT | `/fhir-servers/:server_id` | Update server name/URL |
+| DELETE | `/fhir-servers/:server_id` | Remove a FHIR server |
+| POST | `/fhir-servers/:server_id/refresh` | Re-fetch server metadata |
+| PATCH | `/fhir-servers/:server_id/strict-capabilities` | Toggle strict CapabilityStatement enforcement |
+| PATCH | `/fhir-servers/:server_id/mcp` | Toggle per-server MCP endpoint |
 
-- **🏥 EHR Systems**: Epic, Cerner, AllScripts, athenahealth
-- **☁️ Cloud FHIR**: Microsoft FHIR Service, Google Healthcare API, AWS HealthLake
-- **🔓 Open Source**: HAPI FHIR, IBM FHIR, Firely Server
-- **🧪 Test Servers**: Reference implementations and sandbox environments
-- **🔗 Proxy Servers**: Gateway servers and federation endpoints
+## mTLS Configuration
 
-### Server Status
-- **🟢 Healthy**: Server responding normally within thresholds
-- **🟡 Warning**: Slow response times or minor issues
-- **🔴 Critical**: Server down or failing health checks
-- **⚪ Unknown**: Status not yet determined or connectivity issues
+For servers that require mutual TLS (client certificates):
 
-## 🔧 Server Configuration
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/fhir-servers/:server_id/mtls` | Get current mTLS config |
+| PUT | `/fhir-servers/:server_id/mtls` | Enable/disable mTLS |
+| POST | `/fhir-servers/:server_id/mtls/certificates` | Upload client certificate |
 
-### Basic Server Setup
+## Adding a Server
 
-#### Server Information
-- **📛 Server Name**: Human-readable identifier
-- **🌐 Base URL**: FHIR server base endpoint (e.g., https://fhir.example.com/R4)
-- **📋 Description**: Purpose and usage description
-- **🏢 Organization**: Owning organization or department
-- **📞 Contact**: Technical contact information
+Minimum required fields:
 
-#### FHIR Configuration
-- **📊 FHIR Version**: R4, R5, STU3 version support
-- **🔍 Conformance**: Server capability statement validation
-- **📦 Resource Types**: Supported FHIR resource types
-- **🔄 Operations**: Supported FHIR operations (read, search, create, update, delete)
-- **📈 Extensions**: Custom extensions and profiles
+- **Name** — unique identifier used in proxy URLs (e.g., `hapi-fhir`)
+- **Base URL** — upstream FHIR server endpoint (e.g., `http://hapi-fhir:8080/fhir`)
+- **FHIR Version** — `R4`, `R5`, etc.
 
-### Authentication and Security
+On creation, the backend fetches the server's `CapabilityStatement` to discover supported resources and operations.
 
-#### Authentication Methods
-- **🔑 API Key**: Simple API key authentication
-- **🎫 OAuth 2.0**: OAuth 2.0 bearer token authentication
-- **📜 Client Certificates**: Mutual TLS certificate authentication
-- **🔐 Basic Auth**: Username/password authentication (discouraged)
-- **🎯 Custom Headers**: Custom authentication headers
+## Proxy URL Structure
 
-#### Security Settings
-- **🔒 TLS Configuration**: Certificate validation and pinning
-- **🛡️ IP Restrictions**: Allowed source IP addresses
-- **⏰ Rate Limiting**: Request throttling configuration
-- **📋 Audit Logging**: Access logging and monitoring
+Once registered, the server is accessible through the proxy at:
 
-### Advanced Configuration
+```
+/{backend-name}/{server_name}/{fhir_version}/{resource}
+```
 
-#### Performance Settings
-- **⚡ Connection Pool**: Concurrent connection limits
-- **⏱️ Timeouts**: Read, write, and connection timeouts
-- **🔄 Retry Policy**: Failed request retry configuration
-- **💾 Caching**: Response caching strategies
+Example: `/proxy-smart-backend/hapi-fhir/R4/Patient/123`
 
-#### Data Format Support
-- **📋 JSON**: FHIR JSON format support
-- **📄 XML**: FHIR XML format support
-- **🗜️ Compression**: Request/response compression
-- **📊 Bulk Data**: FHIR Bulk Data API support
+All requests through the proxy pass through the authorization pipeline (token validation, scope enforcement, consent checks).
 
-## 📊 Health Monitoring
+## Strict Capabilities
 
-### Health Check Configuration
+When enabled, the proxy rejects requests for resources or interactions not declared in the server's `CapabilityStatement`. Toggle via `PATCH /fhir-servers/:server_id/strict-capabilities`.
 
-#### Endpoint Monitoring
-- **🎯 Health Endpoint**: Dedicated health check URLs
-- **📋 Metadata Check**: FHIR CapabilityStatement validation
-- **🔍 Search Test**: Sample search operation testing
-- **📊 Resource Check**: Basic resource read operations
+## DICOM Servers
 
-#### Monitoring Frequency
-- **⚡ Real-time**: Continuous monitoring for critical servers
-- **⏰ Scheduled**: Regular interval health checks (1-60 minutes)
-- **🎯 On-demand**: Manual health check triggers
-- **📈 Event-driven**: Monitor on specific events or alerts
+PACS/DICOMweb servers are managed separately:
 
-### Performance Metrics
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/admin/dicom-servers/` | List DICOM servers |
+| POST | `/admin/dicom-servers/` | Add DICOM server |
+| GET | `/admin/dicom-servers/:server_id` | Get details |
+| PUT | `/admin/dicom-servers/:server_id` | Update |
+| DELETE | `/admin/dicom-servers/:server_id` | Remove |
+| GET | `/admin/dicom-servers/:server_id/status` | Probe reachability |
+| GET | `/admin/dicom-servers/viewer-app` | Get configured viewer app |
+| PUT | `/admin/dicom-servers/viewer-app` | Set viewer app |
 
-#### Response Time Tracking
-- **⚡ Average Response**: Mean response time over time periods
-- **📊 Percentiles**: 50th, 95th, 99th percentile response times
-- **📈 Trends**: Historical performance trending
-- **🚨 Thresholds**: Configurable performance alerts
+## Related
 
-#### Availability Monitoring
-- **✅ Uptime Percentage**: Server availability metrics
-- **❌ Error Rates**: HTTP error and FHIR operation failures
-- **🔄 Recovery Time**: Time to recover from outages
-- **📊 SLA Tracking**: Service level agreement monitoring
-
-### Alert Configuration
-
-#### Alert Types
-- **🚨 Server Down**: Complete server unavailability
-- **⚠️ Performance Degraded**: Response time threshold breaches
-- **❌ Error Rate High**: Elevated error rate alerts
-- **🔒 Security Issues**: Authentication or authorization failures
-
-#### Notification Methods
-- **📧 Email Alerts**: Email notification to administrators
-- **📱 SMS/Push**: Mobile push notifications
-- **🔔 In-App**: Dashboard notifications and alerts
-- **🔗 Webhook**: External system integration alerts
-
-## 🔗 Integration Capabilities
-
-### SMART on FHIR Integration
-
-#### Launch Context Support
-- **🚀 App Launch**: Support for SMART app launching
-- **👤 Patient Context**: Patient selection and context injection
-- **👨‍⚕️ User Context**: Practitioner and user context support
-- **🏥 Encounter Context**: Clinical encounter context
-
-#### OAuth Integration
-- **🔐 Authorization Server**: OAuth 2.0 authorization endpoint
-- **🎫 Token Endpoint**: Token exchange and refresh endpoints
-- **🔍 Scopes**: Supported FHIR scopes and permissions
-- **📋 Conformance**: SMART conformance statement validation
-
-### Data Synchronization
-
-#### Bulk Data Operations
-- **📦 Export**: FHIR Bulk Data export operations
-- **📥 Import**: Bulk data import capabilities
-- **🔄 Sync**: Incremental data synchronization
-- **📊 Monitoring**: Bulk operation progress tracking
-
-#### Real-time Updates
-- **🔔 Subscriptions**: FHIR Subscription support
-- **📡 WebHooks**: Real-time change notifications
-- **🔄 Event Streaming**: Live data change streams
-- **📊 Change Logs**: Audit trail of data modifications
-
-## 🛠️ Server Management
-
-### Lifecycle Management
-
-#### Server Registration
-- **➕ Add Server**: New server registration process
-- **✅ Validation**: Server endpoint and capability validation
-- **🧪 Testing**: Connection and functionality testing
-- **🚀 Activation**: Bringing server online for use
-
-#### Configuration Updates
-- **⚙️ Settings**: Update server configuration parameters
-- **🔄 Rotation**: Certificate and credential rotation
-- **📋 Validation**: Configuration change validation
-- **📊 Testing**: Post-change functionality testing
-
-#### Maintenance and Decommission
-- **🔄 Maintenance Mode**: Temporary server maintenance status
-- **📋 Migration**: Data migration to new servers
-- **🗄️ Archival**: Historical data preservation
-- **🗑️ Decommission**: Safe server removal process
-
-### Backup and Recovery
-
-#### Data Protection
-- **💾 Backup**: Automated server configuration backup
-- **🔄 Replication**: Configuration replication across environments
-- **📋 Validation**: Backup integrity verification
-- **🛡️ Encryption**: Secure backup storage
-
-#### Disaster Recovery
-- **🔄 Failover**: Automatic failover to backup servers
-- **📊 Recovery**: Recovery time and point objectives
-- **🧪 Testing**: Regular disaster recovery testing
-- **📋 Documentation**: Recovery procedure documentation
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### Connection Problems
-- **🌐 Network**: Network connectivity and DNS resolution
-- **🔒 TLS/SSL**: Certificate and encryption issues
-- **🔑 Authentication**: Credential and token problems
-- **🛡️ Firewall**: Network security and access controls
-
-#### Performance Issues
-- **⚡ Slow Response**: Server performance degradation
-- **💾 Memory**: Server resource constraints
-- **📊 Load**: High traffic and capacity issues
-- **🔄 Timeout**: Request timeout problems
-
-#### Data Issues
-- **📋 Format**: FHIR format and validation errors
-- **🔍 Search**: Search operation failures
-- **📊 Resource**: Resource access and availability
+- [FHIR Proxy](../fhir-proxy.md) — the request pipeline that processes proxied requests
+- [SMART Apps](./smart-apps.md) — apps that access FHIR servers through the proxy
+- [Scope Management](./scope-management.md) — scopes enforced at the proxy layer
 - **🔄 Sync**: Data synchronization problems
 
 ### Diagnostic Tools

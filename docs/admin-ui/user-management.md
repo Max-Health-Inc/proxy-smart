@@ -1,185 +1,81 @@
-# User Management
+# Healthcare Users
 
-The User Management section provides comprehensive tools for managing healthcare users within the SMART on FHIR platform. This includes user registration, FHIR resource associations, permissions, and lifecycle management.
+Manage Keycloak users that participate in SMART on FHIR flows. Users created here get Keycloak accounts and can optionally be linked to FHIR Person/Practitioner resources and external identity providers.
 
-## 👥 User Overview
+## API Endpoints
 
-### Healthcare User Types
-The platform supports different types of healthcare users:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/admin/healthcare-users/` | List users (paginated, searchable) |
+| POST | `/admin/healthcare-users/` | Create a new user |
+| GET | `/admin/healthcare-users/:userId` | Get user details |
+| PUT | `/admin/healthcare-users/:userId` | Update user |
+| DELETE | `/admin/healthcare-users/:userId` | Delete user |
+| GET | `/admin/healthcare-users/:userId/federated-identities` | List linked IdPs |
+| POST | `/admin/healthcare-users/:userId/federated-identities/:provider` | Link external IdP |
+| DELETE | `/admin/healthcare-users/:userId/federated-identities/:provider` | Unlink external IdP |
 
-- **👨‍⚕️ Practitioners**: Doctors, nurses, clinicians
-- **👨‍💼 Administrative Staff**: Hospital administrators, IT staff
-- **🤖 System Users**: Service accounts for automated processes
-- **👤 External Users**: Vendors, partners with limited access
+## Creating a User
 
-### User States
-- **🟢 Active**: User can authenticate and access systems
-- **🟡 Pending**: Account created but not yet activated
-- **🔴 Inactive**: Account disabled or suspended
-- **⚪ Archived**: Historical record, no longer active
+Required fields:
 
-## 📝 User Registration
+- **Username** — Keycloak login name
+- **First name / Last name**
+- **Email** — used for password resets and notifications
+- **Enabled** — whether the account is active immediately
+- **Credentials** — initial password (can be marked temporary)
 
-### Adding New Users
+Optional fields:
 
-#### Basic Information
-- **Personal Details**: First name, last name, email address
-- **Professional Info**: Title, department, organization
-- **Contact Information**: Phone, office location, extension
-- **Authentication**: Username, temporary password settings
+- **Attributes** — key-value pairs stored on the Keycloak user (e.g., `fhirUser`, department)
+- **Realm roles** — assign roles like `clinician`, `admin`, etc.
+- **Groups** — Keycloak group membership
 
-#### Account Configuration
-- **Status**: Set initial account state (active/pending)
-- **Permissions**: Assign role-based access levels
-- **Expiration**: Set account validity period if needed
-- **Notifications**: Configure email and system notifications
+## Federated Identity Links
 
-### Bulk User Import
-- **CSV Upload**: Import multiple users from spreadsheet
-- **LDAP Integration**: Sync with existing directory services
-- **API Import**: Programmatic user creation via REST API
-- **Template Based**: Use predefined user templates
+A user can be linked to external identity providers (SAML, OIDC, LDAP). This allows them to log in via those providers while maintaining a single Keycloak identity.
 
-## 🏥 FHIR Person Associations
+Use the federated-identities endpoints to:
+- List which providers a user is linked to
+- Link a new provider (requires the external user ID and username)
+- Unlink a provider
 
-### Understanding FHIR Person Resources
-Each healthcare user can be associated with FHIR Person resources across multiple FHIR servers. This enables:
-- Clinical data attribution
-- Cross-server identity linking
-- Audit trail maintenance
-- Consistent user representation
+## Launch Contexts
 
-### Managing Associations
+Per-user SMART launch context is managed via the [Launch Contexts](./launch-contexts.md) API. This controls what `patient`, `encounter`, `fhirUser`, and other context values are injected into tokens for that user.
 
-#### Adding FHIR Associations
-1. **Select User**: Choose user from the management table
-2. **Choose Server**: Select target FHIR server
-3. **Search/Create**: Find existing Person or create new
-4. **Validate**: Confirm Person resource details
-5. **Associate**: Link user to FHIR Person resource
+## Roles
 
-#### Association Details
-- **Person ID**: FHIR resource identifier
-- **Server**: Which FHIR server hosts the resource
-- **Created Date**: When association was established
-- **Last Verified**: Last validation check
-- **Status**: Active, pending, or error state
+Roles are managed separately via `/admin/roles/`:
 
-#### Multi-Server Support
-Users can have Person resources on multiple FHIR servers:
-- Primary association for main clinical data
-- Secondary associations for specialized systems
-- Cross-reference capabilities for data correlation
-- Unified identity across healthcare ecosystem
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/admin/roles/` | List all realm roles |
+| POST | `/admin/roles/` | Create role |
+| GET | `/admin/roles/:roleName` | Get role details |
+| PUT | `/admin/roles/:roleName` | Update role |
+| DELETE | `/admin/roles/:roleName` | Delete role |
+| GET | `/admin/roles/clients/:clientId` | List client-specific roles |
 
-## 🔐 User Permissions and Roles
+## Organizations
 
-### Role-Based Access Control (RBAC)
-The platform implements comprehensive RBAC:
+Users can be members of organizations (Keycloak Organizations feature):
 
-#### Administrator Roles
-- **🔑 Super Admin**: Full platform access and configuration
-- **👨‍💼 System Admin**: User and system management
-- **🏥 Clinical Admin**: Healthcare-specific administration
-- **📊 Analytics Admin**: Reporting and monitoring access
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/admin/organizations/` | List organizations |
+| POST | `/admin/organizations/` | Create organization |
+| GET | `/admin/organizations/:orgId/members` | List members |
+| POST | `/admin/organizations/:orgId/members` | Add member |
+| DELETE | `/admin/organizations/:orgId/members/:userId` | Remove member |
 
-#### User Roles
-- **👨‍⚕️ Clinician**: Clinical application access
-- **📝 Data Entry**: Limited data input permissions
-- **👁️ Read Only**: View-only access to specific resources
-- **🔍 Auditor**: Audit trail and compliance review access
+Organizations support per-org branding overrides via the `/:orgId/branding` endpoints.
 
-#### Custom Roles
-- Create organization-specific roles
-- Define granular permissions per role
-- Assign multiple roles to single user
-- Time-based role assignments
+## Related
 
-### Permission Matrix
-Detailed permissions grid covering:
-- **FHIR Resources**: Patient, Observation, etc.
-- **Operations**: Create, Read, Update, Delete, Search
-- **Scopes**: System, user, patient context access
-- **Administrative**: User management, configuration
-
-## 📊 User Analytics and Monitoring
-
-### User Activity Tracking
-- **Login History**: Authentication logs and patterns
-- **Application Usage**: Which SMART apps users access
-- **Data Access**: FHIR resource interactions
-- **Session Management**: Active sessions and timeouts
-
-### Compliance Reporting
-- **Access Logs**: Detailed audit trails
-- **Permission Changes**: History of role modifications
-- **Data Downloads**: Tracking of sensitive data access
-- **Violation Alerts**: Unauthorized access attempts
-
-### Performance Metrics
-- **Login Success Rates**: Authentication failure analysis
-- **Session Duration**: Average user session lengths
-- **Feature Usage**: Most/least used platform features
-- **Error Patterns**: Common user error scenarios
-
-## 🔄 User Lifecycle Management
-
-### Account Activation
-- **Email Verification**: Secure account activation process
-- **Temporary Passwords**: System-generated secure passwords
-- **First Login Setup**: Mandatory password change
-- **Profile Completion**: Required information gathering
-
-### Password Management
-- **Policy Enforcement**: Strong password requirements
-- **Reset Capabilities**: Self-service password reset
-- **Expiration Handling**: Automatic password aging
-- **Multi-Factor Authentication**: 2FA/MFA integration
-
-### Account Maintenance
-- **Profile Updates**: Self-service profile management
-- **Permission Reviews**: Regular access certification
-- **Account Cleanup**: Automated inactive account handling
-- **Data Retention**: Compliance with retention policies
-
-### Account Termination
-- **Graceful Deactivation**: Preserving audit trails
-- **Data Archival**: Secure historical data retention
-- **Access Revocation**: Immediate permission removal
-- **Cleanup Procedures**: System-wide account cleanup
-
-## 🔍 Search and Filtering
-
-### Advanced Search Capabilities
-- **Text Search**: Name, email, username matching
-- **Filter Options**: Status, role, department, creation date
-- **FHIR Associations**: Search by server or Person ID
-- **Activity Filters**: Last login, recent activity patterns
-
-### Sorting and Organization
-- **Column Sorting**: Sortable by any user attribute
-- **Custom Views**: Save frequently used filter combinations
-- **Export Options**: CSV, PDF report generation
-- **Bulk Operations**: Multi-user actions
-
-## 🚨 Security and Compliance
-
-### Security Features
-- **Account Lockout**: Brute force protection
-- **IP Restrictions**: Geographic and network-based limits
-- **Device Management**: Trusted device registration
-- **Session Security**: Secure session handling
-
-### Compliance Support
-- **HIPAA Compliance**: Healthcare data protection
-- **GDPR Support**: Data privacy and right to erasure
-- **Audit Requirements**: Comprehensive logging
-- **Access Certification**: Regular permission reviews
-
-### Data Protection
-- **Encryption**: All user data encrypted at rest
-- **Secure Transmission**: TLS for all communications
-- **Data Minimization**: Collect only necessary information
+- [Identity Providers](./identity-providers.md) — configure the external IdPs users can link to
+- [Scope Management](./scope-management.md) — what scopes apps can request on behalf of users
+- [Launch Contexts](./launch-contexts.md) — per-user SMART context attributes
 - **Anonymization**: Privacy-preserving analytics
 
 ## 🛠️ Integration Capabilities

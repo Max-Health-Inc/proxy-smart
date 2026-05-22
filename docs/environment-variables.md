@@ -89,12 +89,11 @@ Complete reference for all environment variables used by Proxy Smart.
 | `BRAND_ADDRESS_COUNTRY` | Address country | — |
 | `BRAND_IDENTIFIER` | Brand identifier URI | `BRAND_WEBSITE` or `BASE_URL` |
 
-## AI / MCP
+## MCP
 
 | Variable | Description | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | API key for AI model access | — |
-| `AI_TIMEOUT_MS` | AI request timeout (ms) | `30000` |
+| `OPENAI_API_KEY` | API key for embeddings and semantic search | — |
 | `MCP_ENDPOINT_ENABLED` | Enable built-in MCP endpoint | `true` |
 | `MCP_ENDPOINT_PATH` | MCP endpoint URL path | `/mcp` |
 

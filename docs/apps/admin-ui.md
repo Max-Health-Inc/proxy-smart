@@ -100,7 +100,3 @@ See the [Admin UI section](../admin-ui/dashboard.md) for per-feature documentati
 - [Scope Management](../admin-ui/scope-management.md)
 - [Access Control](../admin-ui/access-control.md)
 - [Monitoring](../admin-ui/monitoring.md)
-
----
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*
