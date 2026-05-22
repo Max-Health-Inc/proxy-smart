@@ -1,5 +1,7 @@
 # DTR App
 
+> **Note:** This app has been extracted to a separate repository: [max-health-inc/dtr-app](https://github.com/Max-Health-Inc/dtr-app). The documentation below describes the app's role within the Proxy Smart ecosystem.
+
 Da Vinci Documentation Templates & Rules (DTR) application. A SMART on FHIR app for prior authorization documentation, questionnaire rendering, and CQL-based auto-population.
 
 ## Overview
@@ -34,12 +36,7 @@ The DTR App implements the [Da Vinci DTR IG](http://hl7.org/fhir/us/davinci-dtr/
 
 ## Development
 
-```bash
-# From the monorepo root
-cd apps/dtr-app
-bun run dev
-# -> http://localhost:5175/apps/dtr/
-```
+See the [dtr-app repository](https://github.com/Max-Health-Inc/dtr-app) for development instructions.
 
 | Command | Description |
 |---|---|
@@ -81,6 +78,4 @@ The DTR App detects its launch mode from URL parameters:
 | UI | shadcn/ui (via shared-ui) |
 | Forms | `@aehrc/smart-forms-renderer` |
 | FHIR | `@types/fhir`, Da Vinci PAS types |
-| Auth | SMART on FHIR (custom `smart-auth.ts`) |
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*
+| Auth | SMART on FHIR (`SmartAppShell`) |

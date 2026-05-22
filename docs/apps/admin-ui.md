@@ -50,18 +50,19 @@ The Admin UI is a single-page application that communicates with the backend's a
 ## Development
 
 ```bash
-cd apps/ui
+cd frontend/ui
 bun run dev
-# -> http://localhost:5177/apps/ui/
+# -> http://localhost:5173/
 ```
 
 | Command | Description |
 |---|---|
-| `bun run dev` | Start dev server on port 5177 |
+| `bun run dev` | Start Vite dev server (default port 5173) |
 | `bun run build` | Production build |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
 | `bun run test` | Vitest unit tests |
+| `bun run generate` | Regenerate API client from backend OpenAPI spec |
 
 ## Tech Stack
 

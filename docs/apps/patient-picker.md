@@ -24,7 +24,7 @@ The Patient Picker is **not a standalone SMART app** — it's rendered by the ba
 
 1. User initiates a standalone SMART launch from a client app
 2. Backend detects `launch/patient` scope but no patient context
-3. Backend redirects to `/apps/patient-picker/?session=...&code=...&aud=...`
+3. Backend redirects to `/patient-picker/?session=...&code=...&aud=...`
 4. Patient Picker renders a searchable patient list from the FHIR server
 5. User selects a patient and clicks "Continue"
 6. Patient Picker POSTs to `/auth/patient-select` with `{ session, code, patient }`
@@ -48,9 +48,9 @@ The Patient Picker is **not a standalone SMART app** — it's rendered by the ba
 ## Development
 
 ```bash
-cd apps/patient-picker
+cd packages/patient-picker
 bun run dev
-# -> http://localhost:5176/apps/patient-picker/
+# -> http://localhost:5176/patient-picker/
 ```
 
 | Command | Description |
@@ -81,7 +81,3 @@ bun run dev
 - This app does **not** use `SmartAppShell` because it's not a SMART app itself — it has no authentication flow
 - It receives its FHIR base URL from the `aud` parameter (set by the backend during redirect)
 - The patient list queries the FHIR server directly using the backend's service token (proxied through the backend)
-
----
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*

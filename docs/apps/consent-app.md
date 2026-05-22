@@ -1,5 +1,7 @@
 # Consent App
 
+> **Note:** This app has been extracted to a separate repository: [max-health-inc/consent-app](https://github.com/Max-Health-Inc/consent-app). The documentation below describes the app's role within the Proxy Smart ecosystem.
+
 SMART on FHIR application for managing patient consent. Practitioners can create, review, and revoke FHIR Consent resources linked to Patient records.
 
 ## Overview
@@ -34,15 +36,7 @@ The Consent App launches via SMART App Launch (standalone or EHR launch), authen
 
 ## Development
 
-```bash
-# From the monorepo root
-bun run dev:consent
-
-# Or directly
-cd apps/consent-app
-bun run dev
-# -> http://localhost:5174/apps/consent/
-```
+See the [consent-app repository](https://github.com/Max-Health-Inc/consent-app) for development instructions.
 
 | Command | Description |
 |---|---|
@@ -71,6 +65,4 @@ bun run dev
 | Build | Vite, Tailwind CSS |
 | UI | shadcn/ui (via shared-ui) |
 | FHIR | `@types/fhir`, Da Vinci PAS types |
-| Auth | SMART on FHIR (custom `smart-auth.ts`) |
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*
+| Auth | SMART on FHIR (`SmartAppShell`) |

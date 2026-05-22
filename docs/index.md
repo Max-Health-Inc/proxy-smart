@@ -62,14 +62,19 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 
 ### Apps
 
-| App | Port | Purpose |
-|-----|------|---------|
-| [Patient Portal](./apps/patient-portal.md) | 5173 | Patient-facing health records, imaging, SHL sharing |
-| [Consent Manager](./apps/consent-app.md) | 5174 | FHIR Consent resource management |
-| [DTR / Prior Auth](./apps/dtr-app.md) | 5175 | Da Vinci DTR questionnaires and PA workflow |
-| [Patient Picker](./apps/patient-picker.md) | 5176 | Patient selection during standalone SMART launch |
-| [Admin UI](./apps/admin-ui.md) | 5177 | Platform administration dashboard |
-| [SMART DICOM Template](./apps/smart-dicom-template.md) | 5180 | Starter kit for imaging algorithm SMART apps |
+| App | Port | Location | Purpose |
+|-----|------|----------|---------|
+| [Admin UI](./apps/admin-ui.md) | 5173 | `frontend/ui/` | Platform administration dashboard |
+| [Patient Picker](./apps/patient-picker.md) | 5176 | `packages/patient-picker/` | Patient selection during standalone SMART launch |
+| [SMART DICOM Template](./apps/smart-dicom-template.md) | 5180 | `frontend/smart-dicom-template/` | Starter kit for imaging algorithm SMART apps |
+
+#### External Apps (separate repositories)
+
+| App | Port | Repository | Purpose |
+|-----|------|------------|---------|
+| [Patient Portal](./apps/patient-portal.md) | 5173 | [max-health-inc/patient-portal](https://github.com/Max-Health-Inc/patient-portal) | Patient-facing health records, imaging, IPS |
+| [Consent Manager](./apps/consent-app.md) | 5174 | [max-health-inc/consent-app](https://github.com/Max-Health-Inc/consent-app) | FHIR Consent resource management |
+| [DTR / Prior Auth](./apps/dtr-app.md) | 5175 | [max-health-inc/dtr-app](https://github.com/Max-Health-Inc/dtr-app) | Da Vinci DTR questionnaires and PA workflow |
 
 ### Key Features
 
@@ -86,14 +91,17 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 
 ## Documentation
 
-### Apps
+### Apps (in this repo)
 
-- [Patient Portal](./apps/patient-portal.md) — Health records, imaging, SHL viewer
+- [Admin UI](./apps/admin-ui.md) — Platform administration
+- [Patient Picker](./apps/patient-picker.md) — Patient selection for standalone launch
+- [SMART DICOM Template](./apps/smart-dicom-template.md) — Imaging algorithm starter kit
+
+### Apps (external repositories)
+
+- [Patient Portal](./apps/patient-portal.md) — Health records, imaging, IPS viewer
 - [Consent Manager](./apps/consent-app.md) — FHIR Consent resource management
 - [DTR / Prior Auth](./apps/dtr-app.md) — Da Vinci DTR workflow
-- [Patient Picker](./apps/patient-picker.md) — Patient selection for standalone launch
-- [Admin UI](./apps/admin-ui.md) — Platform administration
-- [SMART DICOM Template](./apps/smart-dicom-template.md) — Imaging algorithm starter kit
 
 ### Shared UI
 

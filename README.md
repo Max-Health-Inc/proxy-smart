@@ -139,13 +139,13 @@ graph TB
 | Workspace | Description |
 |---|---|
 | `backend/` | Elysia API server, FHIR proxy, OAuth endpoints |
-| `apps/ui/` | React admin dashboard |
-| `apps/consent-app/` | Patient consent management UI |
-| `apps/dtr-app/` | Documentation, Templates & Rules (DTR) app |
-| `apps/patient-portal/` | International Patient Portal (IPS/IPA) |
-| `apps/smart-dicom-template/` | Starter kit for imaging AI SMART apps |
-| `shared-ui/` | Shared React components and utilities |
-| `infra/` | AWS CDK infrastructure |
+| `frontend/ui/` | React admin dashboard |
+| `frontend/smart-dicom-template/` | Starter kit for imaging AI SMART apps |
+| `packages/patient-picker/` | Patient selection UI for standalone SMART launch |
+| `packages/auth/` | Shared auth utilities |
+| `packages/app-store/` | App store catalog UI |
+| `deploy/infra/` | AWS CDK infrastructure |
+| `config/eslint/` | Shared ESLint configuration |
 
 ### Tech Stack
 
