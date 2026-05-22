@@ -60,7 +60,9 @@ on:
         required: false
       RESEND_API_KEY:
         required: false
-      GH_PAT:
+      APP_ID:
+        required: false
+      APP_PRIVATE_KEY:
         required: false
 
 permissions:
@@ -88,7 +90,8 @@ jobs:
       BETA_ORTHANC_PASSWORD: ${{ secrets.BETA_ORTHANC_PASSWORD }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-      GH_PAT: ${{ secrets.GH_PAT }}
+      APP_ID: ${{ secrets.APP_ID }}
+      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
 
   deploy-production:
     name: Deploy Production (AWS)
