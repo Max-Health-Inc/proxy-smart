@@ -1,85 +1,73 @@
-import { useState, useMemo, useCallback } from "react"
-import { getPickerParams } from "@/lib/picker-params"
+import { useState, useMemo, useEffect } from "react"
+import { getPickerParams, getPickerError } from "@/lib/picker-params"
+import { submitPatientSelection } from "@/lib/api-client"
 import { PatientList } from "@/components/PatientList"
-import { formatHumanName, AppHeader, Button } from "@proxy-smart/shared-ui"
+import { formatHumanName, AppHeader, Button, onAuthError } from "@proxy-smart/shared-ui"
 import { UserSearch, AlertTriangle, CheckCircle2, LogIn } from "lucide-react"
-import type { Patient } from "@/lib/fhir-client"
+import type { Patient } from "@/lib/api-client"
 import "./index.css"
 
 export default function App() {
   const params = useMemo(() => getPickerParams(), [])
+  const pickerError = useMemo(() => getPickerError(), [])
   const [selected, setSelected] = useState<Patient | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [sessionExpired, setSessionExpired] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
-  const handleSessionExpired = useCallback(() => {
-    setSessionExpired(true)
-    // Auto-redirect after a short delay so user sees the message
-    setTimeout(() => {
-      window.location.href = window.location.origin
-    }, 3000)
+  // Subscribe to shared-ui's centralized auth-error bus
+  useEffect(() => {
+    onAuthError((message) => {
+      setAuthError(message)
+      setTimeout(() => { window.location.href = window.location.origin }, 4000)
+    })
   }, [])
 
-  if (!params) {
+  // ── Error from URL params (backend redirected here with ?error=...) ────
+  if (pickerError) {
+    const isSessionExpired = pickerError.error === "session_expired"
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader title="Patient Picker" icon={UserSearch} authenticated={false} maxWidth="max-w-2xl" />
-        <main className="max-w-2xl mx-auto px-4 py-12">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <AlertTriangle className="h-12 w-12 text-destructive" />
-            <h2 className="text-xl font-semibold">Invalid Request</h2>
-            <p className="text-muted-foreground">
-              Missing session, code, or aud parameter. This page should only be accessed during a SMART authorization flow.
-            </p>
-          </div>
-        </main>
-      </div>
+      <ErrorScreen
+        title={isSessionExpired ? "Session Expired" : "Request Error"}
+        message={pickerError.errorDescription}
+        variant={isSessionExpired ? "warning" : "destructive"}
+      />
     )
   }
 
-  if (sessionExpired) {
+  // ── Auth error caught by shared-ui bus (API returned session_expired) ──
+  if (authError) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader title="Session Expired" icon={UserSearch} authenticated={false} maxWidth="max-w-2xl" />
-        <main className="max-w-2xl mx-auto px-4 py-12">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <AlertTriangle className="h-12 w-12 text-warning" />
-            <h2 className="text-xl font-semibold">Session Expired</h2>
-            <p className="text-muted-foreground">
-              Your authorization session has expired. Redirecting you to restart the login flow...
-            </p>
-            <Button
-              variant="default"
-              size="lg"
-              onClick={() => { window.location.href = window.location.origin }}
-              className="mt-2"
-            >
-              <LogIn className="h-4 w-4 mr-2" />
-              Return to Login
-            </Button>
-          </div>
-        </main>
-      </div>
+      <ErrorScreen
+        title="Session Expired"
+        message={authError}
+        variant="warning"
+        showRedirectHint
+      />
+    )
+  }
+
+  // ── Missing URL params (direct navigation without SMART flow) ──────────
+  if (!params) {
+    return (
+      <ErrorScreen
+        title="Invalid Request"
+        message="Missing session, code, or aud parameter. This page should only be accessed during a SMART authorization flow."
+        variant="destructive"
+        showReturnButton={false}
+      />
     )
   }
 
   const handleSubmit = async () => {
     if (!selected?.id) return
     setSubmitting(true)
-    // POST to the backend patient-select endpoint via form submission
-    const form = document.createElement("form")
-    form.method = "POST"
-    form.action = "/auth/patient-select"
-    const fields = { session: params.session, code: params.code, patient: selected.id }
-    for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement("input")
-      input.type = "hidden"
-      input.name = key
-      input.value = value
-      form.appendChild(input)
+    try {
+      const redirectUrl = await submitPatientSelection(params.session, params.code, selected.id)
+      window.location.href = redirectUrl
+    } catch {
+      // Error already reported via reportAuthError → onAuthError bus
+      setSubmitting(false)
     }
-    document.body.appendChild(form)
-    form.submit()
   }
 
   return (
@@ -93,7 +81,7 @@ export default function App() {
           </p>
         </div>
 
-        <PatientList fhirBaseUrl={params.aud} onSelect={setSelected} selected={selected} onSessionExpired={handleSessionExpired} />
+        <PatientList onSelect={setSelected} selected={selected} />
 
         {selected && (
           <div className="mt-6 flex flex-col gap-3">
@@ -115,6 +103,38 @@ export default function App() {
             </Button>
           </div>
         )}
+      </main>
+    </div>
+  )
+}
+
+// ── Reusable Error Screen ───────────────────────────────────────────────────
+
+function ErrorScreen({ title, message, variant, showReturnButton = true, showRedirectHint = false }: {
+  title: string
+  message: string
+  variant: "warning" | "destructive"
+  showReturnButton?: boolean
+  showRedirectHint?: boolean
+}) {
+  return (
+    <div className="min-h-screen bg-background">
+      <AppHeader title={title} icon={UserSearch} authenticated={false} maxWidth="max-w-2xl" />
+      <main className="max-w-2xl mx-auto px-4 py-12">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <AlertTriangle className={`h-12 w-12 text-${variant}`} />
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <p className="text-muted-foreground">{message}</p>
+          {showReturnButton && (
+            <Button variant="default" size="lg" onClick={() => { window.location.href = window.location.origin }} className="mt-2">
+              <LogIn className="h-4 w-4 mr-2" />
+              Return to Login
+            </Button>
+          )}
+          {showRedirectHint && (
+            <p className="text-xs text-muted-foreground">Redirecting automatically...</p>
+          )}
+        </div>
       </main>
     </div>
   )

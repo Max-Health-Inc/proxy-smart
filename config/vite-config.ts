@@ -31,10 +31,10 @@ export function createSmartViteConfig(
   appDir: string,
 ) {
   return defineConfig(({ command, mode }) => {
-    // In production builds, force VITE_PROXY_BASE to empty string (same-origin).
-    // Apps served from the backend use relative URLs in production.
-    // Only apply when building and not in development mode.
-    const prodDefines = command === 'build' && mode === 'production'
+    // In production builds, default VITE_PROXY_BASE to empty string (same-origin)
+    // for apps co-hosted with the backend. Standalone deployments (e.g. Cloudflare Pages)
+    // must set VITE_PROXY_BASE via their build environment — we don't override it then.
+    const prodDefines = command === 'build' && mode === 'production' && !process.env.VITE_PROXY_BASE
       ? { 'import.meta.env.VITE_PROXY_BASE': JSON.stringify('') }
       : {}
 

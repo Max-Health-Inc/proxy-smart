@@ -191,6 +191,25 @@ export function createApp() {
         .get('/patient-picker', () => Bun.file('public/patient-picker/index.html'))
         .get('/patient-picker/', () => Bun.file('public/patient-picker/index.html'))
         .get('/patient-picker/*', () => Bun.file('public/patient-picker/index.html'))
+        // SMART app SPA fallback (serves apps from public/apps/ on VPS beta deployments)
+        .get('/apps/:app', ({ params }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            return index.exists().then(exists => exists ? index : new Response('Not Found', { status: 404 }))
+        })
+        .get('/apps/:app/', ({ params }) => {
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            return index.exists().then(exists => exists ? index : new Response('Not Found', { status: 404 }))
+        })
+        .get('/apps/:app/*', ({ params, path }) => {
+            // Serve static assets directly if they exist, otherwise SPA fallback
+            const staticFile = Bun.file(`public${path}`)
+            const index = Bun.file(`public/apps/${params.app}/index.html`)
+            return staticFile.exists().then(exists =>
+                exists ? staticFile : index.exists().then(idxExists =>
+                    idxExists ? index : new Response('Not Found', { status: 404 })
+                )
+            )
+        })
         // User-Access Brand Bundle (SMART 2.2.0 Section 8)
         .get('/branding.json', async ({ set, headers }) => {
             const { bundle, etag } = await brandBundleService.getBrandBundle()

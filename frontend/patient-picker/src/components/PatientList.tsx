@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react"
 import { toast } from "sonner"
-import { searchPatients, listPatients, SessionExpiredError, type Patient } from "@/lib/fhir-client"
+import { searchPatients, listPatients, type Patient } from "@/lib/api-client"
 import { formatHumanName } from "@proxy-smart/shared-ui"
 import { Input, Button, Card, CardContent, Spinner, Badge, ScrollArea } from "@proxy-smart/shared-ui"
 import { Search, User, Calendar, Hash, ChevronLeft, ChevronRight } from "lucide-react"
@@ -8,13 +8,11 @@ import { Search, User, Calendar, Hash, ChevronLeft, ChevronRight } from "lucide-
 const PAGE_SIZE = 10
 
 interface PatientListProps {
-  fhirBaseUrl: string
   onSelect: (patient: Patient) => void
   selected: Patient | null
-  onSessionExpired?: () => void
 }
 
-export function PatientList({ fhirBaseUrl, onSelect, selected, onSessionExpired }: PatientListProps) {
+export function PatientList({ onSelect, selected }: PatientListProps) {
   const [query, setQuery] = useState("")
   const [searchResults, setSearchResults] = useState<Patient[]>([])
   const [loading, setLoading] = useState(false)
@@ -29,7 +27,7 @@ export function PatientList({ fhirBaseUrl, onSelect, selected, onSessionExpired 
   const loadPage = useCallback(async (offset: number) => {
     setBrowseLoading(true)
     try {
-      const bundle = await listPatients(fhirBaseUrl, offset, PAGE_SIZE)
+      const bundle = await listPatients(offset, PAGE_SIZE)
       const patients = (bundle.entry ?? [])
         .map(e => e.resource as Patient | undefined)
         .filter((r): r is Patient => r !== undefined && r !== null)
@@ -37,23 +35,20 @@ export function PatientList({ fhirBaseUrl, onSelect, selected, onSessionExpired 
       setBrowseTotal(bundle.total ?? null)
       setBrowseOffset(offset)
     } catch (err) {
-      if (err instanceof SessionExpiredError) {
-        onSessionExpired?.()
-        return
-      }
+      // Auth errors are already reported via shared-ui bus; only toast non-auth errors
       toast.error("Failed to load patients", {
         description: err instanceof Error ? err.message : "Unknown error"
       })
     } finally {
       setBrowseLoading(false)
     }
-  }, [fhirBaseUrl, onSessionExpired])
+  }, [])
 
   // Load initial patient list on mount
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching on mount is valid
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetching on mount
     loadPage(0)
-  }, [fhirBaseUrl, loadPage])
+  }, [loadPage])
 
   const doSearch = useCallback(async () => {
     const q = query.trim()
@@ -64,21 +59,18 @@ export function PatientList({ fhirBaseUrl, onSelect, selected, onSessionExpired 
     }
     setLoading(true)
     try {
-      const results = await searchPatients(fhirBaseUrl, q)
+      const results = await searchPatients(q)
       setSearchResults(results)
       setSearched(true)
     } catch (err) {
-      if (err instanceof SessionExpiredError) {
-        onSessionExpired?.()
-        return
-      }
+      // Auth errors already routed globally; toast the rest
       const msg = err instanceof Error ? err.message : "Search failed"
       setSearchResults([])
       toast.error("Patient search failed", { description: msg })
     } finally {
       setLoading(false)
     }
-  }, [query, fhirBaseUrl, onSessionExpired])
+  }, [query])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {

@@ -50,6 +50,9 @@ on:
         required: false
       RESEND_API_KEY:
         required: false
+      GH_PAT:
+        description: 'PAT with repo scope for checking out private app repos'
+        required: true
 
   workflow_dispatch:
     inputs:
@@ -96,6 +99,58 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      # ── Build standalone apps from private repos ──
+      - name: Checkout consent-app
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/consent-app
+          token: ${{ secrets.GH_PAT }}
+          path: _standalone/consent-app
+
+      - name: Checkout dtr-app
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/dtr-app
+          token: ${{ secrets.GH_PAT }}
+          path: _standalone/dtr-app
+
+      - name: Checkout patient-portal
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/patient-portal
+          token: ${{ secrets.GH_PAT }}
+          path: _standalone/patient-portal
+
+      - name: Build standalone apps (same-origin for VPS)
+        run: |
+          for app in consent-app dtr-app patient-portal; do
+            echo "🔨 Building ${app}..."
+            cd _standalone/${app}
+            bun install
+            VITE_PROXY_BASE='' bun run build
+            cd ../..
+          done
+
+      - name: Inject app builds into backend/public/apps
+        run: |
+          rm -rf backend/public/apps/consent backend/public/apps/dtr backend/public/apps/patient-portal
+          cp -r _standalone/consent-app/dist backend/public/apps/consent
+          cp -r _standalone/dtr-app/dist backend/public/apps/dtr
+          cp -r _standalone/patient-portal/dist backend/public/apps/patient-portal
+          # Preserve smart-manifest.json if not in dist
+          for app in consent-app dtr-app patient-portal; do
+            target=$(echo $app | sed 's/-app//')
+            [ "$app" = "patient-portal" ] && target="patient-portal"
+            if [ -f "_standalone/${app}/smart-manifest.json" ] && [ ! -f "backend/public/apps/${target}/smart-manifest.json" ]; then
+              cp "_standalone/${app}/smart-manifest.json" "backend/public/apps/${target}/"
+            fi
+          done
+          echo "✅ Standalone apps built and injected"
+          ls -la backend/public/apps/
 
       - name: Compute image prefix (GHCR requires lowercase)
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV

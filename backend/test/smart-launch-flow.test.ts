@@ -533,33 +533,37 @@ describe('SMART Launch Flow Integration', () => {
       expect(location.searchParams.get('aud')).toBe(TEST_FHIR_BASE)
     })
 
-    it('GET returns 400 when session param is missing', async () => {
+    it('GET redirects to patient-picker with error when session param is missing', async () => {
       const res = await authRoutes.handle(authRequest('/auth/patient-select?code=abc'))
 
-      expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error).toBe('invalid_request')
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/patient-picker/')
+      expect(location.searchParams.get('error')).toBe('invalid_request')
     })
 
-    it('GET returns 400 when code param is missing', async () => {
+    it('GET redirects to patient-picker with error when code param is missing', async () => {
       const [sessionKey] = createTestSession()
       const res = await authRoutes.handle(authRequest(
         `/auth/patient-select?session=${sessionKey}`
       ))
 
-      expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error).toBe('invalid_request')
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/patient-picker/')
+      expect(location.searchParams.get('error')).toBe('invalid_request')
     })
 
-    it('GET returns 400 when session is expired/invalid', async () => {
+    it('GET redirects to patient-picker with error when session is expired/invalid', async () => {
       const res = await authRoutes.handle(authRequest(
         '/auth/patient-select?session=invalid-key&code=abc'
       ))
 
-      expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error_description).toContain('expired')
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.pathname).toBe('/patient-picker/')
+      expect(location.searchParams.get('error')).toBe('session_expired')
+      expect(location.searchParams.get('error_description')).toContain('expired')
     })
 
     it('POST updates session with patient and redirects to client', async () => {
