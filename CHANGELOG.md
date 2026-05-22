@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1-alpha.202605221215.8cd1ff9b2] - 2026-05-22
+
+- 🔧 Chores & Improvements: Sync package versions across modules
+- 🐛 Bug Fixes: Fix CI script paths for patient-picker; update admin-ui ConsentConfig default; fix admin-ui Save button in scope management; update hardcoded app URLs and Keycloak redirect URIs for subdomain hosting
+- ✨ Features: Centralized auth error handling via shared-ui bus; FHIR stack integration and Keycloak WAF restrictions
+- 📚 Documentation: Remove orphaned AI assistant system prompt; move AI assistant refactor to new repo path
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/722
+
+
 ## [0.1.1-beta.202605171634.2925aa76] - 2026-05-17
 
 - 🔧 Chores & Improvements: Improve Keycloak path matching in docker-compose.beta.yml (broaden /auth/realms/*/broker/* to /auth/realms/*/broker/** with clarifying comment).
