@@ -5,8 +5,6 @@ import {
     Heart,
     RotateCcw,
     Power,
-    Bot,
-    AlertCircle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SystemHealthState } from './useDashboardData';
@@ -48,48 +46,6 @@ export function DashboardHeader({
                         })}
                     </div>
 
-                    {/* AI Agent Status */}
-                    <div className="mt-3 flex items-center space-x-3 p-2 bg-muted/20 border border-border/30">
-                        {systemHealth.aiAgentStatus === 'connected' ? (
-                            <Bot className="w-5 h-5 text-foreground" />
-                        ) : systemHealth.aiAgentStatus === 'not_configured' ? (
-                            <Bot className="w-5 h-5 text-muted-foreground" />
-                        ) : systemHealth.aiAgentStatus === 'checking' ? (
-                            <Bot className="w-5 h-5 text-muted-foreground animate-pulse" />
-                        ) : (
-                            <AlertCircle className="w-5 h-5 text-destructive" />
-                        )}
-                        <div>
-                            <span className={`font-semibold text-sm ${
-                                systemHealth.aiAgentStatus === 'connected'
-                                    ? 'text-foreground'
-                                    : systemHealth.aiAgentStatus === 'not_configured'
-                                        ? 'text-muted-foreground'
-                                        : systemHealth.aiAgentStatus === 'checking'
-                                            ? 'text-muted-foreground'
-                                            : 'text-destructive'
-                            }`}>
-                                {systemHealth.aiAgentStatus === 'connected'
-                                    ? t('AI Assistant: Backend Connected')
-                                    : systemHealth.aiAgentStatus === 'not_configured'
-                                        ? t('AI Assistant: Not Configured')
-                                        : systemHealth.aiAgentStatus === 'checking'
-                                            ? t('AI Assistant: Checking...')
-                                            : t('AI Assistant: Disconnected')
-                                }
-                            </span>
-                            <div className="text-xs text-muted-foreground">
-                                {systemHealth.aiAgentSearchType === 'openai_powered'
-                                    ? t('Using backend AI with OpenAI GPT')
-                                    : systemHealth.aiAgentSearchType === 'not_configured'
-                                        ? t('Set OPENAI_API_KEY to enable AI features')
-                                        : systemHealth.aiAgentSearchType === 'checking'
-                                            ? t('...')
-                                            : t('No AI assistance available')
-                                }
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <div className="flex flex-wrap gap-3">
                     <Button onClick={onRefresh}>

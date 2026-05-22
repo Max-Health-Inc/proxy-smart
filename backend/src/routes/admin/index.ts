@@ -11,7 +11,6 @@ import { identityProvidersRoutes } from './identity-providers'
 import { smartConfigAdminRoutes } from './smart-config'
 import { clientRegistrationSettingsRoutes } from './client-registration-settings'
 import { keycloakConfigRoutes } from './keycloak-config'
-import { aiRoutes, aiPublicRoutes } from './ai'
 import { mcpEndpointAdminRoutes } from './mcp-endpoint'
 import { consentAdminRoutes } from './consent'
 import { smartAccessControlAdminRoutes } from './smart-access-control'
@@ -35,8 +34,6 @@ import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 export const adminRoutes = new Elysia({ prefix: '/admin' })
   // Audit middleware — logs every admin mutation with actor identity
   .use(adminAuditPlugin)
-  // Add public AI health check routes first (no auth required)
-  .use(aiPublicRoutes)
   // Then add authentication guard for protected routes
   .guard({
     detail: {
@@ -132,8 +129,6 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(dicomServersAdminRoutes)
   // Authentication flow management (client authenticators, federated-jwt)
   .use(authFlowsRoutes)
-  // AI assistant routes with internal tool execution
-  .use(aiRoutes)
 
 // Initialize the tool registry once at startup
 initializeToolRegistry(adminRoutes, {

@@ -2,7 +2,7 @@
  * SMART DICOM Template ESLint config — extends shared React config.
  */
 import { defineConfig } from 'eslint/config'
-import { reactConfig } from '../../eslint-config/react.js'
+import { reactConfig } from '../../config/eslint/react.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 

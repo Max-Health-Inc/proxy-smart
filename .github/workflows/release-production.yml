@@ -12,6 +12,7 @@ permissions:
   contents: write
   pull-requests: read
   packages: write
+  id-token: write
 
 concurrency:
   group: releases-production

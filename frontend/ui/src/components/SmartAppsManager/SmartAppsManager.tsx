@@ -36,7 +36,7 @@ import { useTranslation } from 'react-i18next';
 
 export function SmartAppsManager() {
   const { t } = useTranslation();
-  const { smartAppsManagerTab, setSmartAppsManagerTab, setIsAIAssistantEnabled } = useAppStore();
+  const { smartAppsManagerTab, setSmartAppsManagerTab } = useAppStore();
   const { clientApis } = useAuth();
   const [apps, setApps] = useState<SmartApp[]>([]);
   const [loading, setLoading] = useState(true);
@@ -194,11 +194,6 @@ export function SmartAppsManager() {
           webOrigins: app.webOrigins || []
         }
       });
-
-      // Update AI Assistant enabled state if this is the AI Assistant
-      if (clientId === 'ai-assistant-agent') {
-        setIsAIAssistantEnabled(newEnabled);
-      }
 
       notify({
         type: 'success',

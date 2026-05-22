@@ -2,7 +2,7 @@
  * Root-level ESLint config — only applies to root scripts/config files.
  */
 import { defineConfig } from 'eslint/config'
-import { baseConfig } from './eslint-config/base.js'
+import { baseConfig } from './config/eslint/base.js'
 import path from 'path'
 import { fileURLToPath } from 'url'
 

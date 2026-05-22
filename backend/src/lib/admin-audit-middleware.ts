@@ -42,7 +42,6 @@ function classifyAction(method: string): AdminAuditEvent['action'] {
  *   /admin/smart-apps/my-client    → { resource: 'smart-apps', resourceId: 'my-client' }
  *   /admin/healthcare-users/u1     → { resource: 'healthcare-users', resourceId: 'u1' }
  *   /admin/shutdown                → { resource: 'server', resourceId: undefined }
- *   /admin/ai/chat                 → { resource: 'ai', resourceId: undefined }
  */
 function parseResource(path: string): { resource: string; resourceId?: string } {
   // Strip query string

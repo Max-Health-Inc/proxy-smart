@@ -12,7 +12,6 @@ import { LoginForm } from './LoginForm';
 import { cn } from '../lib/utils';
 import { AlertDialogs } from './AlertDialogs';
 import { NotificationToasts } from './ui/NotificationToast';
-import { AIChatOverlay } from './ai/AIChatOverlay';
 import { Panel } from './ui/panel';
 import { Button, Spinner } from '@proxy-smart/shared-ui';
 import { ADMIN_TABS, type AdminTab } from '@/lib/admin-tabs';
@@ -41,33 +40,13 @@ function setTabInHash(tab: string) {
 export function AdminApp() {
     const [currentView, setCurrentView] = useState<string>(() => getTabFromHash());
     const { isAuthenticated, loading, profile, clientApis } = useAuth();
-    const { activeTab, setActiveTab, isAIAssistantEnabled, setIsAIAssistantEnabled } = useAppStore();
+    const { activeTab, setActiveTab } = useAppStore();
     const { t } = useTranslation();
     const [bootstrapBannerDismissed, setBootstrapBannerDismissed] = useState(false);
 
     const isBootstrapAdmin = profile?.username === 'admin';
 
-    // Check AI Assistant status
-    useEffect(() => {
-        const checkAIAssistantStatus = async () => {
-            // Only check if authenticated, not loading, has profile, and has clientApis
-            if (!isAuthenticated || loading || !profile || !clientApis) {
-                return;
-            }
-            
-            try {
-                const apps = await clientApis.smartApps.getAdminSmartApps();
-                const aiAssistant = apps.find(app => app.clientId === 'ai-assistant-agent');
-                setIsAIAssistantEnabled(aiAssistant?.enabled ?? false);
-            } catch (error) {
-                console.error('Failed to check AI Assistant status:', error);
-                // Default to false if we can't fetch the status
-                setIsAIAssistantEnabled(false);
-            }
-        };
 
-        checkAIAssistantStatus();
-    }, [isAuthenticated, loading, profile, clientApis, setIsAIAssistantEnabled]);
 
     // Sync with URL hash on mount and when hash changes
     useEffect(() => {
@@ -183,8 +162,7 @@ export function AdminApp() {
             {/* Global toast notifications */}
             <NotificationToasts />
 
-            {/* AI Chat Overlay - only show if AI Assistant is enabled */}
-            {isAIAssistantEnabled && <AIChatOverlay />}
+
         </div>
     );
 }

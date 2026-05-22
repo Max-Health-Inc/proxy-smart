@@ -28,7 +28,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.1.1-beta.202605171634.2925aa76",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.58",
         "@elysiajs/cors": "^1.4.2",
@@ -72,9 +72,9 @@
         "typescript-eslint": "^8.59.1",
       },
     },
-    "eslint-config": {
+    "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.1.1-beta.202605171634.2925aa76",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -83,9 +83,27 @@
         "typescript-eslint": "^8.59.1",
       },
     },
+    "deploy/infra": {
+      "name": "proxy-smart-infra",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
+      "dependencies": {
+        "aws-cdk-lib": "^2.252.0",
+        "constructs": "^10.6.0",
+      },
+      "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/node": "^25.6.0",
+        "aws-cdk": "^2.1120.0",
+        "eslint": "^10.3.0",
+        "globals": "^17.6.0",
+        "tsx": "^4.21.0",
+        "typescript": "6.0.3",
+        "typescript-eslint": "^8.59.1",
+      },
+    },
     "frontend/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.1.1-beta.202605171634.2925aa76",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.8",
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
@@ -118,7 +136,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.1.1-beta.202605171634.2925aa76",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.2",
         "@cornerstonejs/core": "^4.22.3",
@@ -159,7 +177,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.1.1-beta.202605171634.2925aa76",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
       "dependencies": {
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -224,27 +242,9 @@
         "lightningcss-linux-x64-gnu": "^1.32.0",
       },
     },
-    "infra": {
-      "name": "proxy-smart-infra",
-      "version": "0.1.1-beta.202605171634.2925aa76",
-      "dependencies": {
-        "aws-cdk-lib": "^2.252.0",
-        "constructs": "^10.6.0",
-      },
-      "devDependencies": {
-        "@eslint/js": "^10.0.1",
-        "@types/node": "^25.6.0",
-        "aws-cdk": "^2.1120.0",
-        "eslint": "^10.3.0",
-        "globals": "^17.6.0",
-        "tsx": "^4.21.0",
-        "typescript": "6.0.3",
-        "typescript-eslint": "^8.59.1",
-      },
-    },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.1.1-beta.202605171634.2925aa76",
+      "version": "0.1.1-alpha.202605221034.4f769c71",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -826,7 +826,7 @@
 
     "@proxy-smart/auth": ["@proxy-smart/auth@workspace:packages/auth"],
 
-    "@proxy-smart/eslint-config": ["@proxy-smart/eslint-config@workspace:eslint-config"],
+    "@proxy-smart/eslint-config": ["@proxy-smart/eslint-config@workspace:config/eslint"],
 
     "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@github:Max-Health-Inc/shared-ui#1436214", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "Max-Health-Inc-shared-ui-1436214", "sha512-uxdcxs7XPc5aHG3IKIs30TPkTtkP0w8/B433Ljej6rAF8w5pHgQyZkI6fcbNEkjK4vzqvTouzax7jmPBFh7xQA=="],
 
@@ -2410,7 +2410,7 @@
 
     "proxy-smart-backend": ["proxy-smart-backend@workspace:backend"],
 
-    "proxy-smart-infra": ["proxy-smart-infra@workspace:infra"],
+    "proxy-smart-infra": ["proxy-smart-infra@workspace:deploy/infra"],
 
     "proxy-smart-patient-picker": ["proxy-smart-patient-picker@workspace:frontend/patient-picker"],
 

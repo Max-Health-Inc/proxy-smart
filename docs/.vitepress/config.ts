@@ -79,18 +79,13 @@ export default defineConfig({
         ],
       },
       {
-        text: 'AI & MCP',
+        text: 'MCP',
         collapsed: false,
         items: [
           { text: 'MCP HTTP Server', link: '/MCP_HTTP_SERVER' },
-          { text: 'AI MCP Integration', link: '/AI_MCP_INTEGRATION' },
           { text: 'Backend API Tools', link: '/BACKEND_API_TOOLS' },
           { text: 'MCP HTTP Client', link: '/BACKEND_MCP_HTTP_CLIENT' },
           { text: 'MCP Streamable Client', link: '/BACKEND_MCP_STREAMABLE_CLIENT' },
-          { text: 'AI Interactive Actions', link: '/AI_INTERACTIVE_ACTIONS' },
-          { text: 'Adding Custom Tools', link: '/ai/ADDING_CUSTOM_TOOLS' },
-          { text: 'Action Quick Reference', link: '/ai/action-quick-reference' },
-          { text: 'Interactive Actions', link: '/ai/interactive-actions' },
         ],
       },
       {

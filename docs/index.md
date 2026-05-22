@@ -112,17 +112,12 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - [Access Control](./admin-ui/access-control.md) — Physical door management (Kisi, UniFi Access)
 - [Monitoring & Observability](./admin-ui/monitoring.md) — OAuth, FHIR health, consent, and audit monitoring
 
-### AI & MCP
+### MCP
 
 - [MCP HTTP Server](./MCP_HTTP_SERVER.md) — Streamable HTTP endpoint architecture and usage
-- [AI MCP Integration](./AI_MCP_INTEGRATION.md) — How the AI assistant connects to MCP servers
 - [Backend API Tools](./BACKEND_API_TOOLS.md) — Auto-generated tools from Elysia routes
 - [Backend MCP HTTP Client](./BACKEND_MCP_HTTP_CLIENT.md) — HTTP-based MCP client
 - [Backend MCP Streamable Client](./BACKEND_MCP_STREAMABLE_CLIENT.md) — Streamable HTTP MCP client
-- [AI Interactive Actions](./AI_INTERACTIVE_ACTIONS.md) — Interactive action system
-- [Adding Custom Tools](./ai/ADDING_CUSTOM_TOOLS.md) — Guide for adding custom AI tools
-- [Action Quick Reference](./ai/action-quick-reference.md) — AI action reference card
-- [Interactive Actions Guide](./ai/interactive-actions.md) — Detailed interactive actions docs
 
 ### Imaging & DICOMweb
 
