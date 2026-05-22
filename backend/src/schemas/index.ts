@@ -7,9 +7,6 @@ export * from './admin'
 // Authentication schemas (OAuth, tokens, client registration)
 export * from './auth'
 
-// AI Assistant schemas (chat, documentation)
-export * from './ai-assistant'
-
 // Documentation schemas (public doc routes)
 export * from './docs'
 

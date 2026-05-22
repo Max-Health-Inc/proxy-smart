@@ -142,7 +142,7 @@ export const config = {
       return process.env.OPENAI_API_KEY || null;
     },
     get timeoutMs() {
-      return Number.parseInt(process.env.AI_TIMEOUT_MS || '30000', 10); // 30 seconds for reasoning models
+      return Number.parseInt(process.env.AI_TIMEOUT_MS || '30000', 10);
     }
   },
 

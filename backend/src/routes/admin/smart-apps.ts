@@ -819,12 +819,6 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         return { error: 'Authorization header required' }
       }
 
-      // Prevent deleting the AI Assistant Agent - it's a system application
-      if (params.clientId === 'ai-assistant-agent') {
-        set.status = 403
-        return { error: 'Cannot delete AI Assistant Agent - it is a protected system application' }
-      }
-
       const admin = await getAdmin(token)
       const clients = await admin.clients.find({ clientId: params.clientId })
       if (!clients[0]) {

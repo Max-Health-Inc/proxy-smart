@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../stores/authStore';
 import { useTranslation } from 'react-i18next';
 import { alert, confirm, confirmInput } from '../../stores/alertStore';
-import { aiAssistant } from '../../lib/ai-assistant';
 import type {
     DashboardData,
     FhirServersListResponse,
@@ -51,8 +50,6 @@ export interface SystemHealthState {
     keycloakStatus: string;
     keycloakLastConnected: string;
     memoryUsage: string;
-    aiAgentStatus: string;
-    aiAgentSearchType: string;
 }
 
 export type KeycloakConfigState = KeycloakConfigResponse & {
@@ -133,8 +130,6 @@ export function useDashboardData() {
         keycloakStatus: 'checking',
         keycloakLastConnected: 'unknown',
         memoryUsage: 'unknown',
-        aiAgentStatus: 'checking',
-        aiAgentSearchType: 'checking',
     });
 
     const [doorHealth, setDoorHealth] = useState<AccessHealthResponse | null>(null);
@@ -143,17 +138,6 @@ export function useDashboardData() {
 
     useEffect(() => {
         const fetchDashboardData = async () => {
-            // Set initial AI Agent status
-            const aiStatus = await aiAssistant.getAvailabilityStatus();
-            const aiAgentStatus = aiStatus === 'connected' ? 'connected'
-                : aiStatus === 'not_configured' ? 'not_configured'
-                : 'disconnected';
-            const aiAgentSearchType = aiStatus === 'connected' ? 'openai_powered'
-                : aiStatus === 'not_configured' ? 'not_configured'
-                : 'none';
-
-            setSystemHealth(prev => ({ ...prev, aiAgentStatus, aiAgentSearchType }));
-
             try {
                 setDashboardData(prev => ({ ...prev, loading: true, error: null }));
                 setOauthAnalytics(prev => ({ ...prev, loading: true, error: null }));
@@ -225,14 +209,6 @@ export function useDashboardData() {
                     const uptimeHours = Math.floor(uptimeSeconds / 3600);
                     const uptimeFormatted = uptimeHours > 0 ? `${uptimeHours}h` : `${Math.floor(uptimeSeconds / 60)}m`;
 
-                    const aiStatus = await aiAssistant.getAvailabilityStatus();
-                    const aiAgentStatus = aiStatus === 'connected' ? 'connected'
-                        : aiStatus === 'not_configured' ? 'not_configured'
-                        : 'disconnected';
-                    const aiAgentSearchType = aiStatus === 'connected' ? 'openai_powered'
-                        : aiStatus === 'not_configured' ? 'not_configured'
-                        : 'none';
-
                     let memoryUsage = 'unknown';
                     if (statusData.memory) {
                         memoryUsage = `${statusData.memory.used}MB / ${statusData.memory.total}MB`;
@@ -263,25 +239,13 @@ export function useDashboardData() {
                         keycloakStatus: statusData.keycloak?.status || 'unknown',
                         keycloakLastConnected,
                         memoryUsage,
-                        aiAgentStatus,
-                        aiAgentSearchType,
                     }));
                 } else {
-                    const aiStatus = await aiAssistant.getAvailabilityStatus();
-                    const aiAgentStatus = aiStatus === 'connected' ? 'connected'
-                        : aiStatus === 'not_configured' ? 'not_configured'
-                        : 'disconnected';
-                    const aiAgentSearchType = aiStatus === 'connected' ? 'openai_powered'
-                        : aiStatus === 'not_configured' ? 'not_configured'
-                        : 'none';
-
                     setSystemHealth(prev => ({
                         ...prev,
                         databaseStatus: 'error',
                         keycloakStatus: 'error',
                         keycloakLastConnected: 'unknown',
-                        aiAgentStatus,
-                        aiAgentSearchType,
                     }));
                 }
 
@@ -338,8 +302,6 @@ export function useDashboardData() {
         setDashboardData(prev => ({ ...prev, loading: true }));
         setSystemHealth(prev => ({
             ...prev,
-            aiAgentStatus: 'checking',
-            aiAgentSearchType: 'checking',
             keycloakLastConnected: 'checking...',
         }));
     };
