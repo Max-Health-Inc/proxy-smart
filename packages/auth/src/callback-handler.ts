@@ -21,7 +21,7 @@ export interface CallbackHandlerDeps {
   config: SmartProxyConfig
   store: ILaunchContextStore
   logger?: SmartProxyLogger
-  /** Path for the patient picker page (default: "/apps/patient-picker/") */
+  /** Path for the patient picker page (default: "/patient-picker/") */
   patientPickerPath?: string
   /**
    * Optional hook to auto-resolve the patient before showing the picker.
@@ -53,7 +53,7 @@ export async function handleCallback(
   deps: CallbackHandlerDeps,
 ): Promise<CallbackResult> {
   const { config, store, logger } = deps
-  const patientPickerPath = deps.patientPickerPath ?? '/apps/patient-picker/'
+  const patientPickerPath = deps.patientPickerPath ?? '/patient-picker/'
 
   const sessionKey = params.state
   const code = params.code

@@ -101,7 +101,7 @@ COPY --from=backend-build /app/backend/public ./backend/public
 COPY --from=ui-build /app/frontend/ui/dist ./backend/public/webapp
 
 # Copy built SMART apps into backend public
-COPY --from=patient-picker-build /app/frontend/patient-picker/dist ./backend/public/frontend/patient-picker
+COPY --from=patient-picker-build /app/frontend/patient-picker/dist ./backend/public/patient-picker
 
 # Verify no localhost URLs leaked into production bundles
 RUN grep -rn 'localhost:8445' /app/backend/public/apps/ 2>/dev/null | head -5 || true

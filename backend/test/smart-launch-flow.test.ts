@@ -434,7 +434,7 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(302)
       const location = new URL(res.headers.get('location')!)
-      expect(location.pathname).toBe('/apps/patient-picker/')
+      expect(location.pathname).toBe('/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
       expect(location.searchParams.get('code')).toBe('picker-code')
       expect(location.searchParams.get('aud')).toBe(TEST_FHIR_BASE)
@@ -508,7 +508,7 @@ describe('SMART Launch Flow Integration', () => {
       // Practitioner → still needs picker
       expect(res.status).toBe(302)
       const location = new URL(res.headers.get('location')!)
-      expect(location.pathname).toBe('/apps/patient-picker/')
+      expect(location.pathname).toBe('/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
     })
   })
@@ -527,7 +527,7 @@ describe('SMART Launch Flow Integration', () => {
 
       expect(res.status).toBe(302)
       const location = new URL(res.headers.get('location')!)
-      expect(location.pathname).toBe('/apps/patient-picker/')
+      expect(location.pathname).toBe('/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
       expect(location.searchParams.get('code')).toBe('the-code')
       expect(location.searchParams.get('aud')).toBe(TEST_FHIR_BASE)
@@ -1043,7 +1043,7 @@ describe('SMART Launch Flow Integration', () => {
       ))
       expect(callbackRes.status).toBe(302)
       const pickerUrl = new URL(callbackRes.headers.get('location')!)
-      expect(pickerUrl.pathname).toBe('/apps/patient-picker/')
+      expect(pickerUrl.pathname).toBe('/patient-picker/')
       expect(pickerUrl.searchParams.get('session')).toBe(sessionKey)
 
       // Step 3: Patient picker submission

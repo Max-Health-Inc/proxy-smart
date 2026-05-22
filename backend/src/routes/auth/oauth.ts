@@ -233,7 +233,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     detail: { summary: 'SMART Launch Callback', description: 'Receives Keycloak callback during SMART launch flows.', tags: ['authentication'] }
   })
 
-  // ── Patient picker redirect (→ React app at /apps/patient-picker/) ──
+  // ── Patient picker redirect (→ React app at /patient-picker/) ──
   .get('/patient-select', async ({ query, redirect, set }) => {
     const sessionKey = query.session as string | undefined
     const code = query.code as string | undefined
@@ -247,7 +247,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       set.status = 400
       return { error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
     }
-    const pickerUrl = new URL(`${config.baseUrl}/apps/patient-picker/`)
+    const pickerUrl = new URL(`${config.baseUrl}/patient-picker/`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)
     if (session.aud) pickerUrl.searchParams.set('aud', session.aud)

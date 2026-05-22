@@ -186,10 +186,11 @@ export function createApp() {
             set.redirect = '/proxy-smart.svg'
         })
         // SMART apps directory
-        .get('/apps', () => Bun.file('public/apps/index.html'))
-        .get('/apps/', () => Bun.file('public/apps/index.html'))
-        // Public SMART app discovery endpoint
         .get('/apps.json', () => ({ apps: discoverApps() }))
+        // Patient Picker SPA fallback
+        .get('/patient-picker', () => Bun.file('public/patient-picker/index.html'))
+        .get('/patient-picker/', () => Bun.file('public/patient-picker/index.html'))
+        .get('/patient-picker/*', () => Bun.file('public/patient-picker/index.html'))
         // User-Access Brand Bundle (SMART 2.2.0 Section 8)
         .get('/branding.json', async ({ set, headers }) => {
             const { bundle, etag } = await brandBundleService.getBrandBundle()
@@ -209,27 +210,6 @@ export function createApp() {
                 description: 'FHIR Bundle (collection) of Organization and Endpoint resources for User-Access Brands (SMART 2.2.0 Section 8)',
                 tags: ['smart-apps']
             }
-        })
-        // Dynamic SPA fallback for all sub-apps under /apps/<name>/*
-        .get('/apps/:app', async ({ params, set }) => {
-            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
-                set.status = 400
-                return { error: 'Invalid app name' }
-            }
-            const index = Bun.file(`public/apps/${params.app}/index.html`)
-            if (await index.exists()) return index
-            set.status = 404
-            return { error: 'Not Found' }
-        })
-        .get('/apps/:app/*', async ({ params, set }) => {
-            if (!/^[a-zA-Z0-9_-]+$/.test(params.app)) {
-                set.status = 400
-                return { error: 'Invalid app name' }
-            }
-            const index = Bun.file(`public/apps/${params.app}/index.html`)
-            if (await index.exists()) return index
-            set.status = 404
-            return { error: 'Not Found' }
         })
         // VitePress docs SPA fallback
         .get('/docs', () => Bun.file('public/docs/index.html'))

@@ -13,7 +13,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export interface SmartViteOptions {
-  /** Base URL path, e.g. '/apps/patient-picker/' */
+  /** Base URL path, e.g. '/patient-picker/' */
   base: string
   /** Dev server port */
   port: number
