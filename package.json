@@ -129,6 +129,7 @@
   "type": "module",
   "workspaces": [
     "packages/auth",
+    "packages/app-store",
     "config/eslint",
     "backend",
     "deploy/infra",
