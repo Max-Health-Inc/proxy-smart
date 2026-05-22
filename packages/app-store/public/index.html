@@ -163,8 +163,9 @@
       <a href="/" class="brand"><img src="/proxy-smart.svg" alt="Proxy Smart"><span>Proxy Smart</span></a>
       <div class="links">
         <a href="/">Home</a>
-        <a href="/webapp/">Admin</a>
+        <a href="/webapp/" id="adminLink">Admin</a>
       </div>
+      <script>if(window.__APP_STORE_HIDE_ADMIN__)document.getElementById('adminLink').style.display='none'</script>
     </div>
   </header>
 
