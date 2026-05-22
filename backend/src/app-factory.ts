@@ -187,6 +187,9 @@ export function createApp() {
         })
         // SMART apps directory
         .get('/apps.json', () => ({ apps: discoverApps() }))
+        // App Store UI (served from @proxy-smart/app-store package)
+        .get('/apps', () => Bun.file(require.resolve('@proxy-smart/app-store/ui')))
+        .get('/apps/', () => Bun.file(require.resolve('@proxy-smart/app-store/ui')))
         // Patient Picker SPA fallback
         .get('/patient-picker', () => Bun.file('public/patient-picker/index.html'))
         .get('/patient-picker/', () => Bun.file('public/patient-picker/index.html'))

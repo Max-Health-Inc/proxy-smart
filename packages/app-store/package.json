@@ -18,7 +18,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./store": "./src/config-store.ts",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./ui": "./public/index.html"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

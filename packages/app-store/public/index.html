@@ -290,7 +290,8 @@
     });
 
     /* ── Load apps ────────────────────────────────── */
-    fetch('/apps.json')
+    const API_BASE = window.__APP_STORE_API_BASE__ || '';
+    fetch(`${API_BASE}/apps.json`)
       .then(r => r.json())
       .then(({ apps }) => {
         if (!apps || !apps.length) {
