@@ -75,70 +75,16 @@ These scopes are typically needed for SMART STU2 compliance:
 | `patient/Observation.read` | Read clinical observations |
 | `user/Patient.read` | Practitioner access to patients |
 
+## Admin UI Sub-Tabs
+
+The **SMART Config** page in the admin UI contains three sub-tabs:
+
+- **Scopes** — scope CRUD (documented above)
+- **Launch Context** — per-user SMART launch context management; see [Launch Contexts](./launch-contexts.md)
+- **Protocol Mappers** — diagnostic view showing mapper health + one-click fix via `POST /admin/scope-mappers/fix`
+
 ## Related
 
 - [SMART Apps](./smart-apps.md) — assign allowed scopes to app registrations
 - [User Management](./user-management.md) — users whose tokens carry these scopes
-- **📋 Requirements**: Minimum permission validation
-- **🛡️ Security**: Security policy compliance
-
-## 🔍 Troubleshooting
-
-### Common Scope Issues
-
-#### Permission Conflicts
-- **🚨 Overlapping Scopes**: Conflicting permission combinations
-- **❌ Insufficient Access**: Missing required permissions
-- **🔒 Over-Privileged**: Excessive permission grants
-- **🎯 Misaligned Context**: Incorrect context prefix usage
-
-#### Application Integration
-- **📱 App Registration**: Application scope configuration
-- **🔐 OAuth Flow**: Authorization scope handling
-- **🎯 Launch Context**: Context-scope alignment
-- **📊 Resource Access**: FHIR resource accessibility
-
-### Diagnostic Tools
-
-#### Scope Validators
-- **✅ Syntax Check**: Scope syntax validation
-- **🔍 Compatibility**: FHIR version compatibility
-- **📋 Standards**: SMART specification compliance
-- **🛡️ Security**: Security best practice validation
-
-#### Access Simulators
-- **🧪 User Simulation**: Simulate user access scenarios
-- **📱 App Testing**: Test application access patterns
-- **🎯 Context Testing**: Launch context simulation
-- **📊 Permission Testing**: Effective permission verification
-
-## 📈 Best Practices
-
-### Scope Design Principles
-1. **🎯 Least Privilege**: Grant minimum necessary permissions
-2. **🔒 Defense in Depth**: Multiple permission layers
-3. **📋 Clear Documentation**: Document scope purposes
-4. **🧪 Regular Testing**: Validate scope effectiveness
-
-### Template Management
-1. **🎯 Role Alignment**: Align templates with job functions
-2. **🔄 Regular Review**: Periodic template review and updates
-3. **📊 Usage Monitoring**: Track template utilization
-4. **🛡️ Security Focus**: Prioritize security in template design
-
-### Compliance Management
-1. **📋 Documentation**: Maintain comprehensive documentation
-2. **🔍 Regular Audits**: Conduct permission audits
-3. **📊 Reporting**: Generate compliance reports
-4. **🔄 Continuous Improvement**: Iteratively improve processes
-
-The Scope Management system provides the foundation for secure, compliant, and efficient data access control within the SMART on FHIR healthcare ecosystem.
-
-## Related Sub-Tabs
-
-The **SMART Config** page in the admin UI contains three sub-tabs:
-
-- **Scopes** — Scope configuration (documented above)
-- **Launch Context** — Per-user SMART launch context management. See the dedicated [Launch Context](launch-context) page.
-- **Protocol Mappers** — Diagnostic view and repair tool for SMART scope protocol mappers in Keycloak. Lists all configured mappers, detects issues, and provides a one-click fix action via `POST /admin/scope-mappers/fix`.
 
