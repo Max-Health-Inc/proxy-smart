@@ -47,10 +47,6 @@ The Admin UI is a single-page application that communicates with the backend's a
 - **Auth Monitoring** — Login attempts, failures, session tracking
 - **Audit Dashboard** — Full admin action audit trail
 
-### AI Assistant
-- **AI Chat** — Built-in assistant with RAG-powered documentation search
-- **Interactive Actions** — AI-proposed actions with human approval
-
 ## Development
 
 ```bash

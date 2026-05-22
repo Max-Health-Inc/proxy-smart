@@ -84,10 +84,6 @@ Full implementation of the [SMART App Launch](http://hl7.org/fhir/smart-app-laun
 
 Built-in React admin UI for managing SMART apps, FHIR server connections, users, and scopes — no manual config editing required.
 
-### 🤖 AI Assistant & MCP Server
-
-Built-in AI assistant with RAG for documentation queries, exposed via an [MCP server](docs/MCP_HTTP_SERVER.md) for programmatic integration with AI tools.
-
 ### 🐳 Docker-Ready
 
 One-command development and production deployments with Docker Compose, including mono-container and multi-container options.
@@ -111,7 +107,6 @@ graph TB
         D[FHIR Proxy]
         E[OAuth Endpoints]
         F[WebSocket]
-        G[AI Assistant]
     end
   
     subgraph Identity
@@ -321,7 +316,6 @@ See [LICENSE-DUAL.md](LICENSE-DUAL.md) for details.
 
 ## Support
 
-- 🤖 AI Assistant (built-in)
 - 💬 [Discord](https://discord.gg/FshSApM7)
 - 📖 [Documentation](docs/)
 - 🐛 [GitHub Issues](https://github.com/max-health-inc/proxy-smart/issues)

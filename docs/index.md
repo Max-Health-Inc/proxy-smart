@@ -26,8 +26,6 @@ features:
     details: "@proxy-smart/shared-ui — reusable components, SmartAppShell, hooks, and MaxHealth design system."
   - title: Medical Imaging
     details: DICOMweb proxy with QIDO-RS & WADO-RS, Cornerstone3D viewer, and SMART DICOM algorithm template.
-  - title: AI Assistant & RAG
-    details: Built-in assistant with semantic documentation search powered by OpenAI embeddings.
   - title: Docker & AWS CDK
     details: Docker Compose for dev/staging. AWS CDK (ECS Fargate, RDS, WAF, ALB) for production.
 ---
@@ -38,7 +36,7 @@ Comprehensive documentation for the Proxy Smart platform: a stateless FHIR proxy
 
 ## Platform Overview
 
-Proxy Smart sits between SMART apps and FHIR servers, handling authentication and authorization without storing clinical data. The platform includes 6 frontend apps, an AI assistant, MCP server, and a shared component library.
+Proxy Smart sits between SMART apps and FHIR servers, handling authentication and authorization without storing clinical data. The platform includes 6 frontend apps, an MCP server, and a shared component library.
 
 ### Architecture
 
@@ -53,7 +51,7 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
                            │ SMART App Launch 2.2.0
 ┌──────────────────────────▼──────────────────────────────────┐
 │                    Proxy Smart Backend                        │
-│  Elysia/Bun │ OAuth Proxy │ FHIR Proxy │ MCP Server │ AI    │
+│  Elysia/Bun │ OAuth Proxy │ FHIR Proxy │ MCP Server          │
 └──────────┬──────────┬──────────┬────────────────────────────┘
            │          │          │
      ┌─────▼───┐ ┌────▼────┐ ┌──▼───────┐
@@ -79,7 +77,6 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - **Stateless FHIR Proxy** — No clinical data stored; requests pass through to your FHIR servers
 - **Shared UI Library** — `@proxy-smart/shared-ui` with `SmartAppShell`, design system, hooks
 - **Admin Dashboard** — React UI for managing apps, users, servers, scopes, and identity providers
-- **AI Assistant & RAG** — Built-in assistant with semantic documentation search
 - **MCP Server** — Streamable HTTP endpoint at `/mcp` exposing all admin tools
 - **Consent Management** — Patient consent app for authorization flows
 - **DTR App** — Da Vinci Documentation, Templates & Rules
@@ -133,16 +130,6 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - [Deployment](./deployment.md) — Docker Compose, production, AWS CDK
 - [Environment Variables](./environment-variables.md) — Configuration reference
 - [Version Management](./tutorials/version-management.md) — Branching, versioning, and releases
-
-## AI Assistant
-
-The platform includes an AI assistant powered by RAG (Retrieval Augmented Generation). It indexes all documentation in this `docs/` directory using OpenAI embeddings and serves relevant context via:
-
-- **AI chat tool** — `search_documentation` called by the assistant during conversations
-- **MCP endpoint** — Available to external MCP clients at `/mcp`
-- **Public HTTP API** — `GET /docs/search/semantic?q=...` for direct access
-
-The assistant can answer questions about SMART on FHIR, platform configuration, OAuth flows, and admin operations using up-to-date documentation.
 
 ## Additional Resources
 

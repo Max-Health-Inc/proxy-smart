@@ -1,6 +1,6 @@
 # AI Tools
 
-The AI Tools page manages MCP (Model Context Protocol) servers, the built-in MCP endpoint, and AI skill packages. These tools power the admin AI chat assistant and can be exposed to external MCP clients.
+The AI Tools page manages MCP (Model Context Protocol) servers, the built-in MCP endpoint, and skill packages. These tools are exposed to external MCP clients for programmatic integration.
 
 ## Accessing
 
@@ -8,7 +8,7 @@ Navigate to **AI Tools** in the admin sidebar. The page has three tabs:
 
 ## MCP Servers Tab
 
-Manages connections to external MCP servers that provide additional tools to the AI assistant.
+Manages connections to external MCP servers that provide additional tools to MCP clients.
 
 ### Server List
 
@@ -61,7 +61,7 @@ See [MCP HTTP Server](../MCP_HTTP_SERVER) for protocol details.
 
 ## Skills Tab
 
-Manages AI skill packages — structured prompts and tool configurations that enhance the AI assistant's capabilities.
+Manages skill packages — structured prompts and tool configurations that extend platform capabilities.
 
 ### Installed Skills
 
@@ -120,7 +120,6 @@ Remove installed skills that are no longer needed. Built-in default skills can b
 
 | Variable | Description | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | API key for AI model access (enables AI features) | — |
-| `AI_TIMEOUT_MS` | AI request timeout in milliseconds | `30000` |
+| `OPENAI_API_KEY` | API key for embeddings and semantic search | — |
 | `MCP_ENDPOINT_ENABLED` | Enable/disable MCP endpoint | `true` |
 | `MCP_ENDPOINT_PATH` | URL path for MCP endpoint | `/mcp` |
