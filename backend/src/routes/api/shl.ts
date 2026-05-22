@@ -415,7 +415,8 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       // Build the SHL URI and viewer URL
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
-      const viewerUrl = `${config.baseUrl}/apps/patient-portal/#${shlinkURI}`
+      const portalBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
+      const viewerUrl = `${portalBase.replace(/\/$/, '')}/#${shlinkURI}`
 
       // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)
       const shortUrl = body.shortenUrl

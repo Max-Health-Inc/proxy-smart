@@ -748,14 +748,14 @@
         "http://localhost:8445/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/patient-portal/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
-        "https://proxy-smart.com/apps/patient-portal/*",
+        "https://patient.maxhealth.tech/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5176",
         "http://localhost:8445",
         "https://beta.proxy-smart.com",
-        "https://proxy-smart.com",
+        "https://patient.maxhealth.tech",
         "*"
       ],
       "protocol": "openid-connect",
@@ -867,15 +867,14 @@
         "https://beta.proxy-smart.com/apps/consent/*",
         "https://beta.proxy-smart.com/apps/consent-app/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
-        "https://proxy-smart.com/apps/consent/*",
-        "https://proxy-smart.com/apps/consent-app/*",
+        "https://consent.maxhealth.tech/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5174",
         "http://localhost:8445",
         "https://beta.proxy-smart.com",
-        "https://proxy-smart.com",
+        "https://consent.maxhealth.tech",
         "*"
       ],
       "protocol": "openid-connect",
@@ -933,14 +932,14 @@
         "http://localhost:8445/auth/smart-callback",
         "https://beta.proxy-smart.com/apps/dtr/*",
         "https://beta.proxy-smart.com/auth/smart-callback",
-        "https://proxy-smart.com/apps/dtr/*",
+        "https://dtr.maxhealth.tech/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
         "http://localhost:5175",
         "http://localhost:8445",
         "https://beta.proxy-smart.com",
-        "https://proxy-smart.com",
+        "https://dtr.maxhealth.tech",
         "*"
       ],
       "protocol": "openid-connect",
