@@ -23,9 +23,10 @@ COPY backend/package.json ./backend/
 COPY frontend/ui/package.json ./frontend/ui/
 COPY frontend/patient-picker/package.json ./frontend/patient-picker/
 COPY packages/auth/package.json ./packages/auth/
+COPY packages/app-store/package.json ./packages/app-store/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","frontend/ui","frontend/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","frontend/ui","frontend/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -36,6 +37,7 @@ COPY config/ ./config/
 # Backend build stage (just the JS bundle)
 FROM build-deps AS backend-build
 COPY packages/auth/ ./packages/auth/
+COPY packages/app-store/ ./packages/app-store/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run build
@@ -44,6 +46,7 @@ RUN bun run build
 # export-openapi imports TypeScript source directly, doesn't need dist/
 FROM build-deps AS openapi-gen
 COPY packages/auth/ ./packages/auth/
+COPY packages/app-store/ ./packages/app-store/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run export-openapi
@@ -117,6 +120,10 @@ COPY --from=docs-build /app/docs ./docs
 
 # Copy root node_modules (monorepo structure)
 COPY --from=backend-build /app/node_modules ./node_modules
+
+# Copy workspace packages needed at runtime (resolved via node_modules symlinks)
+COPY --from=backend-build /app/packages/auth ./packages/auth
+COPY --from=backend-build /app/packages/app-store ./packages/app-store
 
 # Create non-root user for security
 RUN groupadd --gid 1001 app && \
