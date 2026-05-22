@@ -53,6 +53,6 @@ docs/.vitepress/dist
 
 # DICOM data files
 *.dcm
-!deploy/dicom/*.dcm
+!scripts/seed/dicom/*.dcm
 
 backend/test_output.txt
