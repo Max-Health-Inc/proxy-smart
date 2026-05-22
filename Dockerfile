@@ -20,12 +20,12 @@ COPY lib/ ./lib/
 
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
-COPY apps/ui/package.json ./apps/ui/
-COPY apps/patient-picker/package.json ./apps/patient-picker/
+COPY frontend/ui/package.json ./frontend/ui/
+COPY frontend/patient-picker/package.json ./frontend/patient-picker/
 COPY packages/auth/package.json ./packages/auth/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","apps/ui","apps/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","frontend/ui","frontend/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -54,8 +54,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 RUN uv tool install openapi-ts-fetch==0.2.2
 ENV PATH="/root/.local/bin:$PATH"
 COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
-RUN mkdir -p apps/ui/src/lib/api-client && \
-    openapi-ts-fetch backend/dist/openapi.json apps/ui/src/lib/api-client
+RUN mkdir -p frontend/ui/src/lib/api-client && \
+    openapi-ts-fetch backend/dist/openapi.json frontend/ui/src/lib/api-client
 
 # Admin UI build stage — always built with /webapp/ base path
 FROM build-deps AS ui-build
@@ -63,15 +63,15 @@ ARG VITE_ENCRYPTION_SECRET
 RUN test -n "$VITE_ENCRYPTION_SECRET" || (echo "ERROR: VITE_ENCRYPTION_SECRET build arg is required" && exit 1)
 ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
 ENV VITE_BASE=/webapp/
-COPY apps/ui/ ./apps/ui/
-COPY --from=api-client-gen /app/apps/ui/src/lib/api-client ./apps/ui/src/lib/api-client/
-WORKDIR /app/apps/ui
+COPY frontend/ui/ ./frontend/ui/
+COPY --from=api-client-gen /app/frontend/ui/src/lib/api-client ./frontend/ui/src/lib/api-client/
+WORKDIR /app/frontend/ui
 RUN bun run build
 
 # Patient Picker build stage
 FROM build-deps AS patient-picker-build
-COPY apps/patient-picker/ ./apps/patient-picker/
-WORKDIR /app/apps/patient-picker
+COPY frontend/patient-picker/ ./frontend/patient-picker/
+WORKDIR /app/frontend/patient-picker
 RUN bun run build
 
 # Docs build stage (VitePress)
@@ -98,10 +98,10 @@ COPY --from=backend-build /app/backend/package.json ./backend/package.json
 COPY --from=backend-build /app/backend/public ./backend/public
 
 # Copy Admin UI into backend public (served at /webapp/)
-COPY --from=ui-build /app/apps/ui/dist ./backend/public/webapp
+COPY --from=ui-build /app/frontend/ui/dist ./backend/public/webapp
 
 # Copy built SMART apps into backend public
-COPY --from=patient-picker-build /app/apps/patient-picker/dist ./backend/public/apps/patient-picker
+COPY --from=patient-picker-build /app/frontend/patient-picker/dist ./backend/public/frontend/patient-picker
 
 # Verify no localhost URLs leaked into production bundles
 RUN grep -rn 'localhost:8445' /app/backend/public/apps/ 2>/dev/null | head -5 || true
