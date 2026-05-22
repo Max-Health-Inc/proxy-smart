@@ -141,29 +141,6 @@ export function SmartAppsManager() {
   };
 
 
-  const updateAppScopes = (appId: string | undefined, scopeSetId: string | null, additionalScopes: string[]) => {
-    if (!appId) return;
-    
-    setApps(prevApps => prevApps.map(app => {
-      if (app.id === appId) {
-        let finalDefaultScopes = [...additionalScopes];
-        if (scopeSetId) {
-          const selectedScopeSet = scopeSets.find(set => set.id === scopeSetId);
-          if (selectedScopeSet) {
-            finalDefaultScopes = [...selectedScopeSet.scopes, ...additionalScopes];
-          }
-        }
-        return {
-          ...app,
-          scopeSetId: scopeSetId || undefined,
-          defaultClientScopes: finalDefaultScopes,
-          optionalClientScopes: app.optionalClientScopes || []
-        };
-      }
-      return app;
-    }));
-  };
-
   const openScopeEditor = (app: SmartApp) => {
     setEditingApp(app);
     setShowScopeDialog(true);
@@ -476,14 +453,13 @@ export function SmartAppsManager() {
                         value={editingApp.scopeSetId || '__custom__'}
                         onValueChange={(value) => {
                           const scopeSetId = value === '__custom__' ? null : value;
-                          const additionalScopes = editingApp.optionalClientScopes || [];
-                          updateAppScopes(editingApp.id, scopeSetId, additionalScopes);
+                          const optionalScopes = editingApp.optionalClientScopes || [];
                           setEditingApp({
                             ...editingApp,
                             scopeSetId: scopeSetId || undefined,
                             defaultClientScopes: scopeSetId 
-                              ? [...(scopeSets.find(set => set.id === scopeSetId)?.scopes || []), ...additionalScopes]
-                              : additionalScopes
+                              ? [...(scopeSets.find(set => set.id === scopeSetId)?.scopes || []), ...optionalScopes]
+                              : editingApp.defaultClientScopes || []
                           });
                         }}
                       >
@@ -506,13 +482,9 @@ export function SmartAppsManager() {
                         value={(editingApp.optionalClientScopes || []).join('\n')}
                         onChange={(e) => {
                           const optionalScopes = e.target.value.split('\n').filter(scope => scope.trim());
-                          updateAppScopes(editingApp.id, editingApp.scopeSetId || null, []);
                           setEditingApp({
                             ...editingApp,
                             optionalClientScopes: optionalScopes,
-                            defaultClientScopes: editingApp.scopeSetId 
-                              ? [...(scopeSets.find(set => set.id === editingApp.scopeSetId)?.scopes || [])]
-                              : (editingApp.defaultClientScopes || [])
                           });
                         }}
                         rows={5}
@@ -526,7 +498,47 @@ export function SmartAppsManager() {
 
               <div className="flex justify-end space-x-4 pt-4">
                 <Button variant="outline" onClick={() => setShowScopeDialog(false)} className="px-8 py-3 rounded-xl">
-                  {t('Close')}
+                  {t('Cancel')}
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if (!editingApp?.clientId) return;
+                    try {
+                      await clientApis.smartApps.putAdminSmartAppsByClientId({
+                        clientId: editingApp.clientId,
+                        updateSmartAppRequest: {
+                          name: editingApp.name,
+                          description: editingApp.description,
+                          enabled: editingApp.enabled,
+                          redirectUris: editingApp.redirectUris,
+                          webOrigins: editingApp.webOrigins || [],
+                          defaultClientScopes: editingApp.defaultClientScopes,
+                          optionalClientScopes: editingApp.optionalClientScopes,
+                        }
+                      });
+                      // Refresh apps list
+                      const updatedApps = await clientApis.smartApps.getAdminSmartApps();
+                      if (Array.isArray(updatedApps)) {
+                        setBackendApps(updatedApps);
+                        setApps(updatedApps.map((app: SmartApp) => ({
+                          ...app,
+                          status: app.enabled ? 'active' : 'inactive',
+                          lastUsed: new Date().toISOString().split('T')[0],
+                          appType: app.appType || (app.serviceAccountsEnabled ? 'backend-service' : 'standalone-app'),
+                          serverAccessType: 'all-servers',
+                        })));
+                      }
+                      notify({ type: 'success', message: t('Scopes updated successfully') });
+                      setShowScopeDialog(false);
+                    } catch (error) {
+                      console.error('Failed to update scopes:', error);
+                      notify({ type: 'error', message: t('Failed to update scopes') });
+                    }
+                  }}
+                  className="px-8 py-3 rounded-xl"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  {t('Save Scopes')}
                 </Button>
               </div>
             </div>
