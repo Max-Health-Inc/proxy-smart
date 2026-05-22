@@ -164,6 +164,15 @@ export class BackendStack extends cdk.Stack {
       NODE_ENV: 'production',
       BASE_URL: `https://${props.domainName}`,
       PORT: '8445',
+      // CORS: standalone app domains hosted on Cloudflare Pages
+      CORS_ORIGINS: [
+        `https://${props.domainName}`,
+        'https://patient.maxhealth.tech',
+        'https://consent.maxhealth.tech',
+        'https://dtr.maxhealth.tech',
+        'https://dicom.maxhealth.tech',
+        'https://maxhealth.tech',
+      ].join(','),
       // Keycloak config
       KEYCLOAK_BASE_URL: props.keycloakUrl,
       KEYCLOAK_REALM: 'proxy-smart',
