@@ -29,6 +29,7 @@ const DEFAULT_CONSENT: ConsentConfig = {
   exemptClients: [],
   requiredForResourceTypes: [],
   exemptResourceTypes: ['CapabilityStatement', 'metadata'],
+  appUrl: null,
 };
 
 // ─── Component ───────────────────────────────────────────────────────
