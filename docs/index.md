@@ -145,7 +145,3 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 - [FHIR R4 Specification](https://hl7.org/fhir/R4/)
 - [OAuth 2.0 RFC](https://tools.ietf.org/html/rfc6749)
 - [OpenID Connect](https://openid.net/connect/)
-
----
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*

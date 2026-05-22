@@ -1,230 +1,64 @@
-# SMART Apps Management
+# SMART Apps
 
-The SMART Apps section provides comprehensive tools for registering, configuring, and managing SMART on FHIR applications within your healthcare ecosystem. This includes application registration, scope configuration, launch context setup, and ongoing management.
+Register and manage SMART on FHIR OAuth clients. Each SMART app corresponds to a Keycloak client with SMART-specific attributes.
 
-## 📱 SMART Application Overview
+## API Endpoints
 
-### Application Types
-The platform supports various SMART application types:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/admin/smart-apps/` | List all registered SMART apps |
+| POST | `/admin/smart-apps/` | Register a new SMART app |
+| GET | `/admin/smart-apps/:clientId` | Get app details |
+| PUT | `/admin/smart-apps/:clientId` | Update app configuration |
+| DELETE | `/admin/smart-apps/:clientId` | Remove app registration |
 
-- **📱 Patient-Facing Apps**: Consumer health applications
-- **👨‍⚕️ Provider Apps**: Clinical decision support tools
-- **🏥 EHR Integrated Apps**: Deeply integrated clinical tools
-- **🔬 Research Apps**: Clinical research and analytics tools
-- **🤖 Agent Apps**: Autonomous AI-powered applications
-- **🔧 Backend Services**: Server-to-server integrations
+## App Registration
 
-### Launch Types
-- **📋 EHR Launch**: Applications launched from within EHR
-- **🌐 Standalone Launch**: Independent application launch
-- **🔗 Backend Services**: Server-to-server authentication
-- **🤖 Agent Launch**: Autonomous agent initialization
+When creating a SMART app, you provide:
 
-## 📝 Application Registration
+- **Client ID** — unique identifier used in OAuth flows
+- **App Name** — human-readable display name
+- **Redirect URIs** — allowed OAuth callback URLs
+- **Launch URI** — the URL opened when the app is launched from an EHR context
+- **Client Type** — `public` (SPA, native) or `confidential` (backend service)
+- **Grant Types** — `authorization_code`, `client_credentials`, etc.
+- **Scopes** — which SMART scopes the app is allowed to request
 
-### Basic Application Information
+## Launch Types
 
-#### Application Details
-- **📛 App Name**: Human-readable application name
-- **🔗 Client ID**: Unique application identifier
-- **📄 Description**: Detailed application description
-- **🏢 Publisher**: Organization or individual publishing app
-- **📞 Contact**: Support contact information
-- **🌐 Homepage**: Application homepage URL
+| Type | Flow | Use Case |
+|------|------|----------|
+| EHR Launch | `ehr-launch` | App launched from within EHR context (patient already selected) |
+| Standalone Launch | `standalone-launch` | App launches independently and selects its own context |
+| Backend Service | `client_credentials` | Server-to-server with no user interaction |
 
-#### Technical Configuration
-- **🔄 Redirect URIs**: Valid OAuth callback URLs
-- **📡 Launch URIs**: SMART launch endpoint URLs
-- **🔐 Client Type**: Public, confidential, or backend service
-- **🎯 Grant Types**: Supported OAuth 2.0 grant types
-- **⏰ Token Lifetimes**: Access and refresh token durations
+## Client Configuration
 
-### Application Categories
+The backend stores the full Keycloak client configuration and adds SMART-specific metadata:
 
-#### Clinical Categories
-- **🫀 Cardiology**: Heart and cardiovascular applications
-- **🧠 Neurology**: Neurological and mental health tools
-- **🩺 Primary Care**: General practice and family medicine
-- **🏥 Emergency**: Emergency department and urgent care
-- **💊 Pharmacy**: Medication management and dispensing
-- **🔬 Laboratory**: Lab results and diagnostic tools
-- **📊 Analytics**: Population health and quality metrics
+- **PKCE enforcement** — required for public clients per SMART STU2
+- **Token lifetimes** — access token and refresh token expiry
+- **Allowed scopes** — restrict which scopes the app can request
+- **Web origins** — CORS origins for browser-based apps
+- **Logo URI** — displayed in consent screens and app store
 
-#### Functional Categories
-- **📊 Clinical Decision Support**: Evidence-based recommendations
-- **📱 Patient Engagement**: Patient portal and communication
-- **📈 Population Health**: Public health and epidemiology
-- **🔍 Quality Measurement**: Healthcare quality assessment
-- **📋 Documentation**: Clinical documentation and notes
-- **🏥 Workflow**: Clinical workflow optimization
+## App Store Integration
 
-## 🎯 Scope Configuration
+Published apps appear in the `/admin/app-store/` catalog:
 
-### FHIR Resource Scopes
-Configure granular access to FHIR resources:
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/admin/app-store/` | List all apps with visibility status |
+| POST | `/admin/app-store/publish` | Publish an app to the catalog |
+| POST | `/admin/app-store/:appId/hide` | Hide app from users |
+| POST | `/admin/app-store/:appId/show` | Make app visible again |
+| POST | `/admin/app-store/:appId/unpublish` | Remove from catalog |
 
-#### Patient Context Scopes (`patient/`)
-- **patient/Patient.read**: Read patient demographics
-- **patient/Observation.read**: Access patient observations
-- **patient/MedicationRequest.read**: View medication orders
-- **patient/DiagnosticReport.read**: Access diagnostic reports
-- **patient/Condition.read**: View patient conditions
-- **patient/Procedure.read**: Access procedure records
+## Related
 
-#### User Context Scopes (`user/`)
-- **user/Patient.read**: Read patients accessible to user
-- **user/Practitioner.read**: Access practitioner information
-- **user/Organization.read**: View organization details
-- **user/Location.read**: Access location information
-
-#### System Context Scopes (`system/`)
-- **system/Patient.read**: System-wide patient access
-- **system/Observation.cruds**: Full observation CRUD operations
-- **system/Bundle.read**: Access to FHIR bundles
-- **system/*.read**: Read access to all resources
-
-#### Agent Context Scopes (`agent/`)
-- **agent/Patient.read**: Autonomous patient data access
-- **agent/Observation.write**: AI-generated observations
-- **agent/ClinicalImpression.cruds**: AI clinical assessments
-- **agent/Device.read**: Access to device information
-
-### Custom Scope Templates
-
-#### Role-Based Templates
-- **👨‍⚕️ Clinician Template**: Standard clinical scopes
-- **👨‍💼 Administrator Template**: Administrative access scopes
-- **🔬 Researcher Template**: Research-appropriate data access
-- **📱 Patient Template**: Patient-facing application scopes
-
-#### Specialty Templates
-- **🫀 Cardiology Scopes**: Heart-specific resource access
-- **🧠 Mental Health Scopes**: Psychiatric and psychological data
-- **💊 Pharmacy Scopes**: Medication-related resources
-- **🩺 Primary Care Scopes**: General practice resource set
-
-## 🚀 Launch Context Configuration
-
-### Clinical Context Types
-
-#### Patient Context
-- **👤 Patient Selection**: Specific patient in context
-- **📊 Patient List**: Cohort or population context
-- **🏥 Encounter Context**: Current patient encounter
-- **📋 Episode Context**: Care episode or treatment period
-
-#### Provider Context
-- **👨‍⚕️ Practitioner**: Current authenticated provider
-- **👥 Care Team**: Multi-provider team context
-- **🏢 Organization**: Healthcare organization context
-- **🏥 Location**: Physical location or department
-
-#### Workflow Context
-- **📋 Order Entry**: Medication or diagnostic ordering
-- **📊 Results Review**: Lab or diagnostic result review
-- **📝 Documentation**: Clinical note and documentation
-- **🔍 Research**: Clinical research and analytics
-
-### Launch Context Templates
-
-#### Pre-configured Contexts
-- **🏥 Inpatient Workflow**: Hospital-based patient care
-- **🏠 Ambulatory Care**: Outpatient clinic workflow
-- **🚨 Emergency Department**: ED-specific rapid workflow
-- **💊 Pharmacy**: Medication management workflow
-- **🔬 Laboratory**: Lab-focused diagnostic workflow
-
-#### Custom Context Builder
-- **🎯 Context Parameters**: Define custom launch parameters
-- **📊 Data Elements**: Specify required context data
-- **🔗 Context Linking**: Link contexts across applications
-- **⚙️ Dynamic Context**: Runtime context resolution
-
-## 📊 Application Monitoring
-
-### Usage Analytics
-Track application performance and usage:
-
-#### Launch Metrics
-- **🚀 Launch Count**: Total application launches
-- **✅ Success Rate**: Successful launch percentage
-- **⏱️ Launch Time**: Average time to successful launch
-- **❌ Error Rate**: Failed launch analysis
-
-#### User Engagement
-- **👥 Active Users**: Unique users per time period
-- **⏰ Session Duration**: Average user session length
-- **🔄 Return Rate**: User retention metrics
-- **📊 Feature Usage**: Most/least used features
-
-#### Performance Metrics
-- **⚡ Response Time**: API response performance
-- **📈 Throughput**: Requests per second
-- **💾 Data Volume**: FHIR resource access volume
-- **🔄 Token Usage**: OAuth token refresh patterns
-
-### Error Tracking
-- **🚨 Authorization Errors**: OAuth flow failures
-- **🔐 Permission Errors**: Scope violation attempts
-- **🌐 Network Errors**: Connectivity issues
-- **⚙️ Application Errors**: App-specific error patterns
-
-## 🔐 Security and Compliance
-
-### Security Features
-
-#### OAuth 2.0 Security
-- **🔒 PKCE**: Proof Key for Code Exchange
-- **🛡️ State Parameter**: CSRF protection
-- **⏰ Token Expiration**: Configurable token lifetimes
-- **🔄 Refresh Tokens**: Secure token renewal
-
-#### Application Validation
-- **✅ URI Validation**: Redirect and launch URI verification
-- **🔐 Client Authentication**: Secure client credential management
-- **📱 App Attestation**: Mobile app integrity verification
-- **🛡️ Scope Validation**: Requested scope verification
-
-### Compliance Support
-- **📋 HIPAA Compliance**: Healthcare data protection
-- **🌍 GDPR Support**: Data privacy compliance
-- **📊 Audit Logging**: Comprehensive access logging
-- **🔍 Regular Reviews**: Periodic security assessments
-
-## 🔧 Application Management
-
-### Lifecycle Management
-
-#### Application States
-- **🟢 Active**: Application available for use
-- **🟡 Testing**: Development/testing phase
-- **🔴 Suspended**: Temporarily disabled
-- **⚪ Retired**: No longer available
-
-#### Version Management
-- **📊 Version Tracking**: Multiple application versions
-- **🔄 Update Management**: Controlled version updates
-- **📈 Migration Support**: Version transition assistance
-- **🔙 Rollback Capability**: Revert to previous versions
-
-### Configuration Management
-- **⚙️ Environment Config**: Dev, test, production settings
-- **🔧 Feature Flags**: Enable/disable application features
-- **🎛️ Parameter Tuning**: Runtime configuration changes
-- **📊 A/B Testing**: Feature testing and validation
-
-## 🔗 Integration Capabilities
-
-### EHR Integration
-- **🏥 Epic Integration**: Epic-specific launch configurations
-- **🔗 Cerner Integration**: Cerner-optimized settings
-- **⚕️ Allscripts**: Allscripts-compatible configuration
-- **🌐 Generic SMART**: Standards-compliant integration
-
-### Third-Party Services
-- **🔐 Identity Providers**: External authentication
-- **📊 Analytics Services**: Usage tracking integration
-- **☁️ Cloud Services**: Cloud platform integration
+- [Scope Management](./scope-management.md) — configure which scopes exist
+- [Launch Contexts](./launch-contexts.md) — set per-user launch context attributes
+- [FHIR Servers](./fhir-servers.md) — the upstream servers apps will access
 - **🔔 Notification Services**: Push notification support
 
 ## 📱 Mobile Application Support
