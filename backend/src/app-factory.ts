@@ -47,6 +47,16 @@ export interface DiscoveredApp {
     source: 'filesystem' | 'registered'
 }
 
+/** Serve app store UI, optionally injecting config globals (e.g. hide admin link) */
+function serveAppStoreUi(): Response {
+    const html = readFileSync(require.resolve('@proxy-smart/app-store/ui'), 'utf-8')
+    if (process.env.APP_STORE_HIDE_ADMIN === 'true') {
+        const injected = html.replace('<head>', '<head><script>window.__APP_STORE_HIDE_ADMIN__=true</script>')
+        return new Response(injected, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+    }
+    return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
+}
+
 /** Scan public/apps/ for sub-apps with smart-manifest.json, merge published registered apps, and return discovery list */
 function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
@@ -190,11 +200,11 @@ export function createApp() {
         // App Store UI — served from package in non-production; in production, hosted on maxhealth.tech/apps
         .get('/apps', ({ set }) => {
             if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
-            return Bun.file(require.resolve('@proxy-smart/app-store/ui'))
+            return serveAppStoreUi()
         })
         .get('/apps/', ({ set }) => {
             if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
-            return Bun.file(require.resolve('@proxy-smart/app-store/ui'))
+            return serveAppStoreUi()
         })
         // Patient Picker SPA fallback
         .get('/patient-picker', () => Bun.file('public/patient-picker/index.html'))
