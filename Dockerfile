@@ -21,12 +21,12 @@ COPY lib/ ./lib/
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
 COPY frontend/ui/package.json ./frontend/ui/
-COPY frontend/patient-picker/package.json ./frontend/patient-picker/
+COPY packages/patient-picker/package.json ./packages/patient-picker/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/app-store/package.json ./packages/app-store/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","frontend/ui","frontend/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/patient-picker","frontend/ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -73,8 +73,8 @@ RUN bun run build
 
 # Patient Picker build stage
 FROM build-deps AS patient-picker-build
-COPY frontend/patient-picker/ ./frontend/patient-picker/
-WORKDIR /app/frontend/patient-picker
+COPY packages/patient-picker/ ./packages/patient-picker/
+WORKDIR /app/packages/patient-picker
 RUN bun run build
 
 # Docs build stage (VitePress)
@@ -104,7 +104,7 @@ COPY --from=backend-build /app/backend/public ./backend/public
 COPY --from=ui-build /app/frontend/ui/dist ./backend/public/webapp
 
 # Copy built SMART apps into backend public
-COPY --from=patient-picker-build /app/frontend/patient-picker/dist ./backend/public/patient-picker
+COPY --from=patient-picker-build /app/packages/patient-picker/dist ./backend/public/patient-picker
 
 # Verify no localhost URLs leaked into production bundles
 RUN grep -rn 'localhost:8445' /app/backend/public/apps/ 2>/dev/null | head -5 || true
