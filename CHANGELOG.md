@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0-alpha.202605221345.9f0067627] - 2026-05-22
+
+- 🔧 Chores & Improvements: Conditional App Store UI serving and UI hiding
+  - Backend: serveAppStoreUi() added to inject global flag and serve App Store UI HTML
+  - Routing: /apps and /apps/ now use serveAppStoreUi() instead of Bun.file
+  - Client: App Store UI hides Admin link when APP_STORE_HIDE_ADMIN is true
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/728
+
+
 ## [0.1.1-beta.202605221222.79711d615] - 2026-05-22
 
 - 🔧 Chores & Improvements: CI/CD updates
