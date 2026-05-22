@@ -118,9 +118,6 @@ COPY --from=docs-build /app/docs ./docs
 # Copy root node_modules (monorepo structure)
 COPY --from=backend-build /app/node_modules ./node_modules
 
-# Copy system prompt for AI assistant
-COPY prompts/ ./prompts/
-
 # Create non-root user for security
 RUN groupadd --gid 1001 app && \
     useradd --uid 1001 --gid app --no-create-home --shell /bin/false app && \
