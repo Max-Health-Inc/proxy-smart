@@ -752,11 +752,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://proxy-smart.com/apps/patient-portal/*",
+        "https://patient.maxhealth.tech/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://proxy-smart.com"
+        "https://patient.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -854,12 +854,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://proxy-smart.com/apps/consent/*",
-        "https://proxy-smart.com/apps/consent-app/*",
+        "https://consent.maxhealth.tech/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://proxy-smart.com"
+        "https://consent.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -911,11 +910,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://proxy-smart.com/apps/dtr/*",
+        "https://dtr.maxhealth.tech/*",
         "https://proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://proxy-smart.com"
+        "https://dtr.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
