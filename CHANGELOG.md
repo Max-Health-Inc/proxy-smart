@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1-beta.202605221222.79711d615] - 2026-05-22
+
+- 🔧 Chores & Improvements: CI/CD updates
+  - Replace GH_PAT with GitHub App token flow in deploy-beta: add APP_ID and APP_PRIVATE_KEY, generate and use app token for private repo checkouts; deployment-strategy updated to stop requiring GH_PAT and pass APP_ID/APP_PRIVATE_KEY to jobs.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/724
+
+
 ## [0.1.1-alpha.202605221222.79711d615] - 2026-05-22
 
 - 🔧 Chores & Improvements: CI/CD tweaks and package version sync
