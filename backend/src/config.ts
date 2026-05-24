@@ -340,16 +340,25 @@ export const config = {
         'http://localhost:8445', // App server
         config.baseUrl // Fallback to base URL
       ];
+
+      // Production standalone app domains (fallback if Keycloak refresh fails)
+      const productionAppOrigins = process.env.NODE_ENV === 'production' ? [
+        'https://patient.maxhealth.tech',
+        'https://consent.maxhealth.tech',
+        'https://dtr.maxhealth.tech',
+        'https://dicom.maxhealth.tech',
+        'https://maxhealth.tech',
+      ] : [];
       
       const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) || [];
       
-      // In production with explicit CORS_ORIGINS, use only those
+      // In production with explicit CORS_ORIGINS, use those + production app origins
       if (process.env.NODE_ENV === 'production' && envOrigins.length > 0) {
-        return envOrigins;
+        return [...new Set([...envOrigins, ...productionAppOrigins])].filter(Boolean);
       }
       
-      // Otherwise include all default + env origins
-      const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+      // Otherwise include all default + env + production origins
+      const allOrigins = [...new Set([...defaultOrigins, ...envOrigins, ...productionAppOrigins])];
       return allOrigins.filter(Boolean);
     }
   }

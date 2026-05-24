@@ -101,10 +101,19 @@ export class KeycloakStack extends cdk.Stack {
                     positionalConstraint: 'CONTAINS',
                   },
                 },
-                // Admin console & admin REST API
+                // Admin console & admin REST API (no trailing slash — catches /admin and /admin/*)  
                 {
                   byteMatchStatement: {
-                    searchString: '/admin/',
+                    searchString: '/admin',
+                    fieldToMatch: { uriPath: {} },
+                    textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
+                    positionalConstraint: 'STARTS_WITH',
+                  },
+                },
+                // Block master realm entirely (only proxy-smart realm should be public)
+                {
+                  byteMatchStatement: {
+                    searchString: '/realms/master',
                     fieldToMatch: { uriPath: {} },
                     textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
                     positionalConstraint: 'STARTS_WITH',
@@ -113,7 +122,7 @@ export class KeycloakStack extends cdk.Stack {
                 // Native client registration (must use backend's /auth/register)
                 {
                   byteMatchStatement: {
-                    searchString: '/clients-registrations/',
+                    searchString: '/clients-registrations',
                     fieldToMatch: { uriPath: {} },
                     textTransformations: [{ priority: 0, type: 'LOWERCASE' }],
                     positionalConstraint: 'CONTAINS',
@@ -175,10 +184,10 @@ export class KeycloakStack extends cdk.Stack {
           statement: {
             orStatement: {
               statements: [
-                // /realms/* — login, logout, certs, broker, login-actions, .well-known
+                // /realms/proxy-smart/ — only the application realm is public
                 {
                   byteMatchStatement: {
-                    searchString: '/realms/',
+                    searchString: '/realms/proxy-smart/',
                     fieldToMatch: { uriPath: {} },
                     textTransformations: [{ priority: 0, type: 'NONE' }],
                     positionalConstraint: 'STARTS_WITH',

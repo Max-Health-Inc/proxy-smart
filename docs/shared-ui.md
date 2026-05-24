@@ -152,14 +152,10 @@ The shared-ui `exports` field exposes `"./src/*": "./src/*"` specifically for th
 
 ## Creating a New SMART App
 
-1. Copy `apps/smart-dicom-template` as a starting point
+1. Copy `frontend/smart-dicom-template` as a starting point
 2. Update `package.json` (name, port)
 3. Add `@proxy-smart/shared-ui` dependency
 4. Set up `index.css` with `@source` and `@import`
 5. Create `lib/smart-auth.ts` using `createSmartAuth()`
 6. Use `SmartAppShell` in `App.tsx`
 7. Register the app in Proxy Smart admin
-
----
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*

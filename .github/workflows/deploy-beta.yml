@@ -140,7 +140,11 @@ jobs:
             echo "🔨 Building ${app}..."
             cd _standalone/${app}
             bun install
-            VITE_PROXY_BASE='' bun run build
+            # Derive target directory name (consent-app→consent, dtr-app→dtr, patient-portal→patient-portal)
+            target=$(echo $app | sed 's/-app//')
+            [ "$app" = "patient-portal" ] && target="patient-portal"
+            # Build with correct base path for /apps/{name}/ hosting on VPS
+            VITE_PROXY_BASE='' bunx --bun vite build --base=/apps/${target}/
             cd ../..
           done
 

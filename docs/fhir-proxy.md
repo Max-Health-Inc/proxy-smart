@@ -7,17 +7,18 @@ The FHIR proxy is the core component of Proxy Smart. It sits between SMART apps 
 All proxied FHIR requests follow this URL pattern:
 
 ```
-{BASE_URL}/{app-name}/{server_name}/{fhir_version}/{resource_path}
+{BASE_URL}/proxy-smart-backend/{server_name}/{fhir_version}/{resource_path}
 ```
 
 For example:
 ```
-https://proxy.example.com/proxy-smart/hapi-fhir/R4/Patient/123
+https://api.proxy-smart.com/proxy-smart-backend/hapi-fhir/R4/Patient/123
 ```
 
 | Segment | Description |
 |---|---|
-| `server_name` | Identifier of a configured FHIR server (see [FHIR Servers](admin-ui/fhir-servers)) |
+| `proxy-smart-backend` | Fixed prefix (derived from the backend package name) |
+| `server_name` | Identifier of a registered FHIR server (see [FHIR Servers](admin-ui/fhir-servers)) |
 | `fhir_version` | FHIR version — `R4`, `R5`, etc. (configured via `FHIR_SUPPORTED_VERSIONS`) |
 | `resource_path` | Standard FHIR path — `Patient/123`, `Observation?patient=123`, etc. |
 

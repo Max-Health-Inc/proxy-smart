@@ -47,25 +47,22 @@ The Admin UI is a single-page application that communicates with the backend's a
 - **Auth Monitoring** — Login attempts, failures, session tracking
 - **Audit Dashboard** — Full admin action audit trail
 
-### AI Assistant
-- **AI Chat** — Built-in assistant with RAG-powered documentation search
-- **Interactive Actions** — AI-proposed actions with human approval
-
 ## Development
 
 ```bash
-cd apps/ui
+cd frontend/ui
 bun run dev
-# -> http://localhost:5177/apps/ui/
+# -> http://localhost:5173/
 ```
 
 | Command | Description |
 |---|---|
-| `bun run dev` | Start dev server on port 5177 |
+| `bun run dev` | Start Vite dev server (default port 5173) |
 | `bun run build` | Production build |
 | `bun run typecheck` | TypeScript type checking |
 | `bun run lint` | ESLint |
 | `bun run test` | Vitest unit tests |
+| `bun run generate` | Regenerate API client from backend OpenAPI spec |
 
 ## Tech Stack
 
@@ -103,7 +100,3 @@ See the [Admin UI section](../admin-ui/dashboard.md) for per-feature documentati
 - [Scope Management](../admin-ui/scope-management.md)
 - [Access Control](../admin-ui/access-control.md)
 - [Monitoring](../admin-ui/monitoring.md)
-
----
-
-*This documentation is indexed by the RAG knowledge base for AI-powered search.*
