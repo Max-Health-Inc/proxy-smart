@@ -17,8 +17,6 @@ import { logger } from './logger'
 
 /** Payload embedded in the launch code JWT */
 export interface LaunchCodePayload {
-  /** Keycloak user ID this launch context was prepared for */
-  userId?: string
   /** Patient ID in context (FHIR resource ID, e.g., "Patient/123" or just "123") */
   patient?: string
   /** Encounter ID in context */
@@ -98,7 +96,6 @@ export function verifyLaunchCode(code: string): LaunchCodeContext | null {
     const remainingTtl = decoded.exp ? decoded.exp - Math.floor(Date.now() / 1000) : 0
 
     const payload: LaunchCodePayload = {
-      ...(decoded.userId && { userId: decoded.userId }),
       ...(decoded.patient && { patient: decoded.patient }),
       ...(decoded.encounter && { encounter: decoded.encounter }),
       ...(decoded.fhirUser && { fhirUser: decoded.fhirUser }),

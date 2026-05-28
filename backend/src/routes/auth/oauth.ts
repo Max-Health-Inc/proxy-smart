@@ -159,7 +159,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     }
 
     const launchPayload: LaunchCodePayload = {
-      userId: body.userId,
       ...(body.patient && { patient: body.patient }),
       ...(body.encounter && { encounter: body.encounter }),
       ...(body.fhirUser && { fhirUser: body.fhirUser }),

@@ -51,8 +51,6 @@ export interface LaunchSession {
 
 /** Payload embedded in the launch code JWT */
 export interface LaunchCodePayload {
-  /** IdP user ID this launch context was prepared for */
-  userId?: string
   /** Patient ID in context (FHIR resource ID, e.g., "Patient/123" or just "123") */
   patient?: string
   /** Encounter ID in context */
