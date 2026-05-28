@@ -233,7 +233,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   })
 
   // ── Patient picker redirect (→ React app at /patient-picker/) ──
-  .get('/patient-select', async ({ query, redirect, set }) => {
+  .get('/patient-select', async ({ query, redirect, set: _set }) => {
     const sessionKey = query.session as string | undefined
     const code = query.code as string | undefined
 
