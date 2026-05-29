@@ -156,8 +156,6 @@ export type TokenResponseType = Static<typeof TokenResponse>
 // ==================== EHR Launch Schemas (SMART App Launch 2.2.0) ====================
 
 export const EhrLaunchRequest = t.Object({
-  /** Required: Keycloak user ID (the user who will be launched into the app) */
-  userId: t.String({ description: 'Keycloak user ID of the user who will authenticate (required for setting launch context)' }),
   patient: t.Optional(t.String({ description: 'Patient ID in context (e.g., "123" or "Patient/123")' })),
   encounter: t.Optional(t.String({ description: 'Encounter ID in context (e.g., "456" or "Encounter/456")' })),
   fhirUser: t.Optional(t.String({ description: 'FHIR user reference (e.g., "Practitioner/789")' })),

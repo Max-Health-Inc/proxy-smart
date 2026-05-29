@@ -447,6 +447,16 @@
       }
     },
     {
+      "name": "user/*.cruds",
+      "description": "SMART on FHIR v2: Full CRUDS access to user's data",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Full read and write access to all your data"
+      }
+    },
+    {
       "name": "user/Claim.cud",
       "description": "SMART on FHIR v2: Create, update, delete Claims",
       "protocol": "openid-connect",
@@ -848,7 +858,7 @@
         "fhirUser",
         "online_access",
         "patient/*.read",
-        "patient/ImagingStudy.read"
+        "user/*.cruds"
       ],
       "attributes": {
         "post.logout.redirect.uris": "+"

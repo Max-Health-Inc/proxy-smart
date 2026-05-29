@@ -54,6 +54,9 @@ export const SMART_V2_SCOPE_RE = /^(user|patient|system)\/([\w*]+)\.([cruds]{1,5
  * the request, then restore the specific scopes in the token response.
  *
  * Non-SMART-v2 scopes (openid, fhirUser, launch, etc.) are passed through unchanged.
+ *
+ * @deprecated No longer used by the authorize interceptor — Keycloak now has granular
+ * scopes auto-created by the admin API. Kept for backward compatibility.
  */
 export function expandScopesToWildcards(scope: string | undefined): string {
   if (!scope) return ''

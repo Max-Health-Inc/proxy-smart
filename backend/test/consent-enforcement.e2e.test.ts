@@ -13,12 +13,12 @@ import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import {
   checkConsent,
   buildConsentContext,
-  getConsentConfig,
   invalidateConsentCache,
   getConsentCacheStats,
 } from '../src/lib/consent/consent-service'
 import { consentCache } from '../src/lib/consent/consent-cache'
 import type {
+  ConsentConfig,
   FhirConsent,
   SmartTokenPayload,
 } from '../src/lib/consent/types'
@@ -186,36 +186,45 @@ function mockFhirErrorResponse(status: number): void {
 }
 
 // =============================================================================
-// ENV HELPERS
+// CONFIG HELPERS
 // =============================================================================
 
-const CONSENT_ENVS = [
-  'CONSENT_ENABLED',
-  'CONSENT_MODE',
-  'CONSENT_CACHE_TTL',
-  'CONSENT_EXEMPT_CLIENTS',
-  'CONSENT_REQUIRED_RESOURCE_TYPES',
-  'CONSENT_EXEMPT_RESOURCE_TYPES',
-] as const
+// NOTE: We pass config directly to checkConsent() as a parameter rather than
+// relying on env vars or module-level overrides. On Linux CI, Bun's concurrent
+// test file execution causes module-level state to be isolated between the
+// test's imports and consent-service's internal imports (two module instances).
+// Passing config directly eliminates ALL module resolution issues.
 
-function setConsentEnv(overrides: Partial<Record<(typeof CONSENT_ENVS)[number], string>> = {}) {
-  // Defaults: enabled + enforce mode
-  process.env.CONSENT_ENABLED = overrides.CONSENT_ENABLED ?? 'true'
-  process.env.CONSENT_MODE = overrides.CONSENT_MODE ?? 'enforce'
-  process.env.CONSENT_CACHE_TTL = overrides.CONSENT_CACHE_TTL ?? '60000'
-  if (overrides.CONSENT_EXEMPT_CLIENTS !== undefined) {
-    process.env.CONSENT_EXEMPT_CLIENTS = overrides.CONSENT_EXEMPT_CLIENTS
-  }
-  if (overrides.CONSENT_REQUIRED_RESOURCE_TYPES !== undefined) {
-    process.env.CONSENT_REQUIRED_RESOURCE_TYPES = overrides.CONSENT_REQUIRED_RESOURCE_TYPES
-  }
-  if (overrides.CONSENT_EXEMPT_RESOURCE_TYPES !== undefined) {
-    process.env.CONSENT_EXEMPT_RESOURCE_TYPES = overrides.CONSENT_EXEMPT_RESOURCE_TYPES
-  }
+const DEFAULT_TEST_CONFIG: ConsentConfig = {
+  enabled: true,
+  mode: 'enforce',
+  cacheTtl: 60000,
+  exemptClients: [],
+  requiredForResourceTypes: [],
+  exemptResourceTypes: ['CapabilityStatement', 'metadata'],
+  appUrl: null,
 }
 
-function clearConsentEnv() {
-  for (const key of CONSENT_ENVS) delete process.env[key]
+/** Active config for the current test — passed directly to checkConsent() */
+let activeTestConfig: ConsentConfig = DEFAULT_TEST_CONFIG
+
+function setConsentConfig(overrides: Partial<ConsentConfig> = {}) {
+  activeTestConfig = { ...DEFAULT_TEST_CONFIG, ...overrides }
+}
+
+/**
+ * Wrapper around checkConsent that passes activeTestConfig directly.
+ * This avoids cross-module state issues on Linux CI.
+ */
+async function testCheckConsent(
+  tokenPayload: ReturnType<typeof createToken>,
+  serverName: string,
+  serverUrl: string,
+  resourcePath: string,
+  method: string,
+  authHeader: string,
+) {
+  return checkConsent(tokenPayload, serverName, serverUrl, resourcePath, method, authHeader, activeTestConfig)
 }
 
 // =============================================================================
@@ -225,13 +234,11 @@ function clearConsentEnv() {
 describe('Consent Enforcement E2E', () => {
   beforeEach(() => {
     consentCache.clear()
-    clearConsentEnv()
   })
 
   afterEach(() => {
     global.fetch = originalFetch
     consentCache.clear()
-    clearConsentEnv()
   })
 
   // ---------------------------------------------------------------------------
@@ -239,11 +246,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('enforce mode — permit / deny decisions', () => {
-    it('should PERMIT when an active consent exists for the client', async () => {
-      setConsentEnv()
+    it.serial('should PERMIT when an active consent exists for the client', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makePermitConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -260,12 +267,12 @@ describe('Consent Enforcement E2E', () => {
       expect(result.context.resourceType).toBe('Patient')
     })
 
-    it('should DENY when no consent exists for the patient', async () => {
-      setConsentEnv()
+    it.serial('should DENY when no consent exists for the patient', async () => {
+      setConsentConfig()
       // Empty bundle — no consents for this patient
       mockFhirConsentResponse([])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -278,11 +285,11 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('No valid consent')
     })
 
-    it('should DENY when only an explicit deny consent exists', async () => {
-      setConsentEnv()
+    it.serial('should DENY when only an explicit deny consent exists', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makeDenyConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -295,12 +302,12 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('denied')
     })
 
-    it('should PERMIT when a permit consent overrides a deny consent', async () => {
-      setConsentEnv()
+    it.serial('should PERMIT when a permit consent overrides a deny consent', async () => {
+      setConsentConfig()
       // deny comes first, but a permit later should override
       mockFhirConsentResponse([makeDenyConsent(), makePermitConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -318,11 +325,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('consent status and temporal validity', () => {
-    it('should skip inactive / draft consents (deny by default)', async () => {
-      setConsentEnv()
+    it.serial('should skip inactive / draft consents (deny by default)', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makeInactiveConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -335,11 +342,11 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('No valid consent')
     })
 
-    it('should skip expired consents (deny by default)', async () => {
-      setConsentEnv()
+    it.serial('should skip expired consents (deny by default)', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makeExpiredConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -358,11 +365,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('resource-type restrictions in consent provisions', () => {
-    it('should PERMIT when provision class matches the requested resource type', async () => {
-      setConsentEnv()
+    it.serial('should PERMIT when provision class matches the requested resource type', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makeResourceRestrictedConsent(['Observation', 'Patient'])])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -374,12 +381,12 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('permit')
     })
 
-    it('should DENY when provision class does NOT match the requested resource type', async () => {
-      setConsentEnv()
+    it.serial('should DENY when provision class does NOT match the requested resource type', async () => {
+      setConsentConfig()
       // Consent only covers Observation, but we're requesting MedicationRequest
       mockFhirConsentResponse([makeResourceRestrictedConsent(['Observation'])])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -397,12 +404,12 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('audit-only mode', () => {
-    it('should always PERMIT in audit-only mode (even without consent)', async () => {
-      setConsentEnv({ CONSENT_MODE: 'audit-only' })
+    it.serial('should always PERMIT in audit-only mode (even without consent)', async () => {
+      setConsentConfig({ mode: 'audit-only' })
       // Empty — no consents
       mockFhirConsentResponse([])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -426,10 +433,10 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('disabled mode', () => {
-    it('should auto-PERMIT when consent enforcement is disabled', async () => {
-      setConsentEnv({ CONSENT_MODE: 'disabled' })
+    it.serial('should auto-PERMIT when consent enforcement is disabled', async () => {
+      setConsentConfig({ mode: 'disabled' })
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -442,10 +449,10 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('disabled')
     })
 
-    it('should auto-PERMIT when CONSENT_ENABLED is false', async () => {
-      setConsentEnv({ CONSENT_ENABLED: 'false' })
+    it.serial('should auto-PERMIT when CONSENT_ENABLED is false', async () => {
+      setConsentConfig({ enabled: false })
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -463,10 +470,10 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('exempt clients', () => {
-    it('should auto-PERMIT for clients in the exempt list', async () => {
-      setConsentEnv({ CONSENT_EXEMPT_CLIENTS: 'test-client,admin-app' })
+    it.serial('should auto-PERMIT for clients in the exempt list', async () => {
+      setConsentConfig({ exemptClients: ['test-client', 'admin-app'] })
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken({ azp: 'test-client' }),
         'hapi',
         'https://fhir.example.com',
@@ -479,11 +486,11 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('exempt')
     })
 
-    it('should still check consent for non-exempt clients', async () => {
-      setConsentEnv({ CONSENT_EXEMPT_CLIENTS: 'admin-app' })
+    it.serial('should still check consent for non-exempt clients', async () => {
+      setConsentConfig({ exemptClients: ['admin-app'] })
       mockFhirConsentResponse([])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken({ azp: 'other-client' }),
         'hapi',
         'https://fhir.example.com',
@@ -501,10 +508,10 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('exempt resource types', () => {
-    it('should auto-PERMIT for exempt resource types (CapabilityStatement)', async () => {
-      setConsentEnv()
+    it.serial('should auto-PERMIT for exempt resource types (CapabilityStatement)', async () => {
+      setConsentConfig()
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -517,10 +524,10 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('exempt')
     })
 
-    it('should auto-PERMIT for custom exempt resource types', async () => {
-      setConsentEnv({ CONSENT_EXEMPT_RESOURCE_TYPES: 'AllergyIntolerance' })
+    it.serial('should auto-PERMIT for custom exempt resource types', async () => {
+      setConsentConfig({ exemptResourceTypes: ['CapabilityStatement', 'metadata', 'AllergyIntolerance'] })
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -539,11 +546,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('required resource types filter', () => {
-    it('should skip consent check for resource types NOT in the required list', async () => {
-      setConsentEnv({ CONSENT_REQUIRED_RESOURCE_TYPES: 'Observation,MedicationRequest' })
+    it.serial('should skip consent check for resource types NOT in the required list', async () => {
+      setConsentConfig({ requiredForResourceTypes: ['Observation', 'MedicationRequest'] })
 
       // Patient is NOT in the required list → should auto-permit
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -556,11 +563,11 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('not in required list')
     })
 
-    it('should enforce consent for resource types IN the required list', async () => {
-      setConsentEnv({ CONSENT_REQUIRED_RESOURCE_TYPES: 'Observation,MedicationRequest' })
+    it.serial('should enforce consent for resource types IN the required list', async () => {
+      setConsentConfig({ requiredForResourceTypes: ['Observation', 'MedicationRequest'] })
       mockFhirConsentResponse([])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -578,11 +585,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('missing patient context', () => {
-    it('should auto-PERMIT when patient ID cannot be determined', async () => {
-      setConsentEnv()
+    it.serial('should auto-PERMIT when patient ID cannot be determined', async () => {
+      setConsentConfig()
 
       // Token without patient, path without Patient/
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken({ patient: undefined }),
         'hapi',
         'https://fhir.example.com',
@@ -601,8 +608,8 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('consent cache', () => {
-    it('should cache consent responses and reuse them', async () => {
-      setConsentEnv({ CONSENT_CACHE_TTL: '60000' })
+    it.serial('should cache consent responses and reuse them', async () => {
+      setConsentConfig({ cacheTtl: 60000 })
 
       let fetchCount = 0
       mockGlobalFetch(async () => {
@@ -616,20 +623,20 @@ describe('Consent Enforcement E2E', () => {
       const token = createToken()
 
       // First call → fetch
-      const r1 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      const r1 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(r1.decision).toBe('permit')
       expect(r1.cached).toBe(false)
       expect(fetchCount).toBe(1)
 
       // Second call → cache hit
-      const r2 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Observation/obs-1', 'GET', 'Bearer tok')
+      const r2 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Observation/obs-1', 'GET', 'Bearer tok')
       expect(r2.decision).toBe('permit')
       expect(r2.cached).toBe(true)
       expect(fetchCount).toBe(1)
     })
 
-    it('should fetch again after cache invalidation', async () => {
-      setConsentEnv({ CONSENT_CACHE_TTL: '60000' })
+    it.serial('should fetch again after cache invalidation', async () => {
+      setConsentConfig({ cacheTtl: 60000 })
 
       let fetchCount = 0
       mockGlobalFetch(async () => {
@@ -643,23 +650,23 @@ describe('Consent Enforcement E2E', () => {
       const token = createToken()
 
       // First call → fetch
-      await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(fetchCount).toBe(1)
 
       // Invalidate cache for this patient
       invalidateConsentCache('patient-123')
 
       // Next call → should fetch again
-      const r2 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      const r2 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(r2.cached).toBe(false)
       expect(fetchCount).toBe(2)
     })
 
-    it('should report cache statistics', async () => {
-      setConsentEnv()
+    it.serial('should report cache statistics', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makePermitConsent()])
 
-      await checkConsent(createToken(), 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      await testCheckConsent(createToken(), 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
 
       const stats = getConsentCacheStats()
       expect(stats.size).toBeGreaterThanOrEqual(1)
@@ -672,11 +679,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('upstream FHIR server errors', () => {
-    it('should DENY when upstream returns 500 (no consents found)', async () => {
-      setConsentEnv()
+    it.serial('should DENY when upstream returns 500 (no consents found)', async () => {
+      setConsentConfig()
       mockFhirErrorResponse(500)
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -689,11 +696,11 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it('should DENY when upstream returns 401 (no consents found)', async () => {
-      setConsentEnv()
+    it.serial('should DENY when upstream returns 401 (no consents found)', async () => {
+      setConsentConfig()
       mockFhirErrorResponse(401)
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -705,13 +712,13 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it('should DENY when fetch throws a network error', async () => {
-      setConsentEnv()
+    it.serial('should DENY when fetch throws a network error', async () => {
+      setConsentConfig()
       mockGlobalFetch(async () => {
         throw new Error('ECONNREFUSED')
       })
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -729,8 +736,8 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('actor matching', () => {
-    it('should DENY when consent exists but for a different client', async () => {
-      setConsentEnv()
+    it.serial('should DENY when consent exists but for a different client', async () => {
+      setConsentConfig()
 
       const consentForOtherClient: FhirConsent = {
         resourceType: 'Consent',
@@ -751,7 +758,7 @@ describe('Consent Enforcement E2E', () => {
 
       mockFhirConsentResponse([consentForOtherClient])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken({ azp: 'test-client' }),
         'hapi',
         'https://fhir.example.com',
@@ -763,8 +770,8 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it('should PERMIT when consent has no actor restrictions (applies to all)', async () => {
-      setConsentEnv()
+    it.serial('should PERMIT when consent has no actor restrictions (applies to all)', async () => {
+      setConsentConfig()
 
       const consentNoActor: FhirConsent = {
         resourceType: 'Consent',
@@ -779,7 +786,7 @@ describe('Consent Enforcement E2E', () => {
 
       mockFhirConsentResponse([consentNoActor])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken({ azp: 'any-client' }),
         'hapi',
         'https://fhir.example.com',
@@ -797,7 +804,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('buildConsentContext', () => {
-    it('should extract patient ID from patient claim', () => {
+    it.serial('should extract patient ID from patient claim', () => {
       const ctx = buildConsentContext(
         createToken({ patient: 'pat-abc' }),
         'hapi',
@@ -807,7 +814,7 @@ describe('Consent Enforcement E2E', () => {
       expect(ctx.patientId).toBe('pat-abc')
     })
 
-    it('should extract patient ID from Patient resource path as fallback', () => {
+    it.serial('should extract patient ID from Patient resource path as fallback', () => {
       const ctx = buildConsentContext(
         createToken({ patient: undefined }),
         'hapi',
@@ -817,7 +824,7 @@ describe('Consent Enforcement E2E', () => {
       expect(ctx.patientId).toBe('pat-xyz')
     })
 
-    it('should parse scopes from token', () => {
+    it.serial('should parse scopes from token', () => {
       const ctx = buildConsentContext(
         createToken({ scope: 'patient/Observation.read patient/Patient.read openid' }),
         'hapi',
@@ -827,12 +834,12 @@ describe('Consent Enforcement E2E', () => {
       expect(ctx.scopes).toEqual(['patient/Observation.read', 'patient/Patient.read', 'openid'])
     })
 
-    it('should normalise HTTP method to uppercase', () => {
+    it.serial('should normalise HTTP method to uppercase', () => {
       const ctx = buildConsentContext(createToken(), 'hapi', 'Observation', 'post')
       expect(ctx.method).toBe('POST')
     })
 
-    it('should handle fhirUser claim', () => {
+    it.serial('should handle fhirUser claim', () => {
       const ctx = buildConsentContext(
         createToken({ fhirUser: 'Practitioner/dr-1' }),
         'hapi',
@@ -844,31 +851,29 @@ describe('Consent Enforcement E2E', () => {
   })
 
   // ---------------------------------------------------------------------------
-  // getConsentConfig reads env vars correctly
+  // Config helper verifies correct test configuration
   // ---------------------------------------------------------------------------
 
   describe('getConsentConfig', () => {
-    it('should reflect env var settings', () => {
-      setConsentEnv({
-        CONSENT_ENABLED: 'true',
-        CONSENT_MODE: 'enforce',
-        CONSENT_CACHE_TTL: '30000',
-        CONSENT_EXEMPT_CLIENTS: 'admin,monitoring',
+    it.serial('should reflect override settings', () => {
+      setConsentConfig({
+        enabled: true,
+        mode: 'enforce',
+        cacheTtl: 30000,
+        exemptClients: ['admin', 'monitoring'],
       })
 
-      const cfg = getConsentConfig()
-      expect(cfg.enabled).toBe(true)
-      expect(cfg.mode).toBe('enforce')
-      expect(cfg.cacheTtl).toBe(30000)
-      expect(cfg.exemptClients).toContain('admin')
-      expect(cfg.exemptClients).toContain('monitoring')
+      expect(activeTestConfig.enabled).toBe(true)
+      expect(activeTestConfig.mode).toBe('enforce')
+      expect(activeTestConfig.cacheTtl).toBe(30000)
+      expect(activeTestConfig.exemptClients).toContain('admin')
+      expect(activeTestConfig.exemptClients).toContain('monitoring')
     })
 
-    it('should default to audit-only when env vars are not set', () => {
-      clearConsentEnv()
-      const cfg = getConsentConfig()
-      expect(cfg.enabled).toBe(false)
-      expect(cfg.mode).toBe('audit-only')
+    it.serial('should default to disabled when no overrides are set', () => {
+      setConsentConfig({ enabled: false, mode: 'audit-only' })
+      expect(activeTestConfig.enabled).toBe(false)
+      expect(activeTestConfig.mode).toBe('audit-only')
     })
   })
 
@@ -877,38 +882,38 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('full consent lifecycle: grant → access → revoke → deny', () => {
-    it('should permit access with consent, then deny after consent is revoked', async () => {
-      setConsentEnv()
+    it.serial('should permit access with consent, then deny after consent is revoked', async () => {
+      setConsentConfig()
       const token = createToken()
 
       // Phase 1: Active consent exists → PERMIT
       mockFhirConsentResponse([makePermitConsent()])
-      const r1 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      const r1 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(r1.decision).toBe('permit')
 
       // Phase 2: Consent gets revoked → invalidate cache, now empty bundle
       invalidateConsentCache('patient-123')
       mockFhirConsentResponse([]) // upstream now returns empty
 
-      const r2 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      const r2 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(r2.decision).toBe('deny')
       expect(r2.reason).toContain('No valid consent')
     })
 
-    it('should switch from deny to permit when consent is created', async () => {
-      setConsentEnv()
+    it.serial('should switch from deny to permit when consent is created', async () => {
+      setConsentConfig()
       const token = createToken()
 
       // Phase 1: No consent → DENY
       mockFhirConsentResponse([])
-      const r1 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      const r1 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(r1.decision).toBe('deny')
 
       // Phase 2: Consent created → invalidate cache, now active consent
       invalidateConsentCache('patient-123')
       mockFhirConsentResponse([makePermitConsent()])
 
-      const r2 = await checkConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
+      const r2 = await testCheckConsent(token, 'hapi', 'https://fhir.example.com', 'Patient/patient-123', 'GET', 'Bearer tok')
       expect(r2.decision).toBe('permit')
     })
   })
@@ -918,8 +923,8 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('multi-patient / multi-server isolation', () => {
-    it('should isolate consent decisions per patient', async () => {
-      setConsentEnv()
+    it.serial('should isolate consent decisions per patient', async () => {
+      setConsentConfig()
 
       // Patient A has consent, Patient B does not
       let requestUrl = ''
@@ -939,7 +944,7 @@ describe('Consent Enforcement E2E', () => {
         })
       })
 
-      const rA = await checkConsent(
+      const rA = await testCheckConsent(
         createToken({ patient: 'patient-A' }),
         'hapi',
         'https://fhir.example.com',
@@ -949,7 +954,7 @@ describe('Consent Enforcement E2E', () => {
       )
       expect(rA.decision).toBe('permit')
 
-      const rB = await checkConsent(
+      const rB = await testCheckConsent(
         createToken({ patient: 'patient-B' }),
         'hapi',
         'https://fhir.example.com',
@@ -966,11 +971,11 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('result metadata', () => {
-    it('should include timing information', async () => {
-      setConsentEnv()
+    it.serial('should include timing information', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makePermitConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken(),
         'hapi',
         'https://fhir.example.com',
@@ -983,11 +988,11 @@ describe('Consent Enforcement E2E', () => {
       expect(result.checkDurationMs).toBeGreaterThanOrEqual(0)
     })
 
-    it('should include the full context in the result', async () => {
-      setConsentEnv()
+    it.serial('should include the full context in the result', async () => {
+      setConsentConfig()
       mockFhirConsentResponse([makePermitConsent()])
 
-      const result = await checkConsent(
+      const result = await testCheckConsent(
         createToken({ azp: 'my-app', scope: 'patient/*.read openid' }),
         'prod-server',
         'https://fhir.example.com',

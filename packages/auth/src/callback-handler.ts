@@ -181,6 +181,19 @@ export function handlePatientSelect(
     return { type: 'error', status: 400, error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
   }
 
+  // Guard: if a patient was already selected (e.g. user hit browser back), redirect idempotently
+  if (!session.needsPatientPicker && session.patient) {
+    logger?.info('Patient selection already completed (duplicate submission)', {
+      sessionKey: params.session.slice(0, 8) + '...',
+      patient: session.patient,
+      clientId: session.clientId,
+    })
+    const clientUrl = new URL(session.clientRedirectUri)
+    clientUrl.searchParams.set('code', params.code)
+    if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+    return { type: 'redirect', url: clientUrl.href }
+  }
+
   store.update(params.session, { patient: params.patient, needsPatientPicker: false })
 
   logger?.info('Patient selected in picker', {

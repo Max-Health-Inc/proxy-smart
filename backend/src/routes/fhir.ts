@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia'
-import fetch, { Headers } from 'cross-fetch'
+import fetch from 'cross-fetch'
 import { validateToken } from '../lib/auth'
 import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
 import { config } from '../config'

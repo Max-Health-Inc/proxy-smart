@@ -377,10 +377,11 @@ export async function checkConsent(
   serverUrl: string,
   resourcePath: string,
   method: string,
-  authHeader: string
+  authHeader: string,
+  configOverride?: ConsentConfig
 ): Promise<ConsentCheckResult> {
   const startTime = performance.now()
-  const consentConfig = getConsentConfig()
+  const consentConfig = configOverride ?? getConsentConfig()
   
   // Build context
   const context = buildConsentContext(

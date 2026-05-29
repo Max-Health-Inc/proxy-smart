@@ -19,7 +19,6 @@ import {
   handlePatientSelect,
   enrichTokenResponse,
   enrichIntrospection,
-  filterScopes,
   getRewrittenRedirectUri,
   signLaunchCode,
   toAbsoluteFhirUser,
@@ -159,7 +158,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     }
 
     const launchPayload: LaunchCodePayload = {
-      userId: body.userId,
       ...(body.patient && { patient: body.patient }),
       ...(body.encounter && { encounter: body.encounter }),
       ...(body.fhirUser && { fhirUser: body.fhirUser }),
@@ -234,7 +232,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   })
 
   // ── Patient picker redirect (→ React app at /patient-picker/) ──
-  .get('/patient-select', async ({ query, redirect, set }) => {
+  .get('/patient-select', async ({ query, redirect, set: _set }) => {
     const sessionKey = query.session as string | undefined
     const code = query.code as string | undefined
 
@@ -251,6 +249,15 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       errorUrl.searchParams.set('error_description', 'Session expired. Please restart the authorization flow.')
       return redirect(errorUrl.href)
     }
+
+    // Guard: if a patient was already selected (e.g. user hit browser back), skip the picker
+    if (!session.needsPatientPicker && session.patient) {
+      const clientUrl = new URL(session.clientRedirectUri)
+      clientUrl.searchParams.set('code', code)
+      if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+      return redirect(clientUrl.href)
+    }
+
     const pickerUrl = new URL(`${config.baseUrl}/patient-picker/`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)
@@ -544,7 +551,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
               clientId: clientIdForSession,
               redirectUri: clientRedirectUri,
               grantedScope: data.scope,
-              requestedScope,
             },
             { config: smartProxyConfig, store: smartStore, logger: smartLogger },
           )
@@ -605,9 +611,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
               need_patient_banner: data.need_patient_banner,
               clientId: clientIdForSession,
               exp: (tokenPayload as Record<string, unknown>).exp as number | undefined,
-              // Store the originally requested granular scope so introspection
-              // can echo back user/Patient.rs instead of Keycloak's user/*.rs
-              requestedScope: requestedScope || undefined,
             })
           }
         } catch (contextError) {
@@ -695,12 +698,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           }
           if (storedContext.intent && !data.intent) {
             data.intent = storedContext.intent
-          }
-          // Restore granular requested scope: Keycloak only stores wildcards
-          // (e.g. user/*.rs) but the client requested user/ImagingStudy.rs —
-          // introspection must reflect what was actually granted to the client.
-          if (storedContext.requestedScope && data.scope) {
-            data.scope = filterScopes(storedContext.requestedScope, data.scope)
           }
         }
       }
