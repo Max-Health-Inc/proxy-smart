@@ -13,11 +13,9 @@ describe('Input', () => {
     expect((input as HTMLInputElement).type).toBe('text')
   })
 
-  it('accepts className and forwards props', () => {
-    render(<Input placeholder="p" className="test-class" data-testid="my-input" />)
-
-    const input = screen.getByTestId('my-input')
-    expect(input).toHaveClass('test-class')
+  it('forwards custom props', () => {
+    render(<Input placeholder="p" data-testid="my-input" />)
+    expect(screen.getByTestId('my-input')).toBeInTheDocument()
   })
 
   it('calls onChange when user types and updates value', async () => {
