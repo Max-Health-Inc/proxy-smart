@@ -1,5 +1,4 @@
-import { Badge } from '@proxy-smart/shared-ui';
-import { StatCard } from '../ui/stat-card';
+import { Badge, StatCard } from '@proxy-smart/shared-ui';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   BarChart3,

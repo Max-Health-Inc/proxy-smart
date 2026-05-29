@@ -1,5 +1,4 @@
-import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@proxy-smart/shared-ui';
-import { StatCard } from '../ui/stat-card';
+import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, StatCard } from '@proxy-smart/shared-ui';
 import {
   Activity,
   BarChart3,
