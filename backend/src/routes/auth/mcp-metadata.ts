@@ -48,7 +48,8 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       scopes_supported: [
         'openid',
         'profile',
-        'email'
+        'email',
+        'offline_access'
       ]
     }
   }, {
@@ -78,7 +79,8 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       scopes_supported: [
         'openid',
         'profile',
-        'email'
+        'email',
+        'offline_access'
       ]
     }
   }, {

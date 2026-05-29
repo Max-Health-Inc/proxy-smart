@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS: ClientRegistrationSettingsType = {
     'openid',
     'profile',
     'email',
+    'offline_access',
     'fhirUser',
     'launch',
     'launch/patient',
