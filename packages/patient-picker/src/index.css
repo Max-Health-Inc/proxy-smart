@@ -4,8 +4,23 @@
 @import "@fontsource-variable/geist";
 @source "../node_modules/@proxy-smart/shared-ui/src";
 @import "@proxy-smart/shared-ui/theme.css";
+@import "@proxy-smart/shared-ui/scenes.css";
 
 @custom-variant dark (&:is(.dark *));
+
+html, body, #root {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Allow scene pseudo-elements to show through the shell background */
+body[data-scene]:not([data-scene="none"]) > #root > .bg-background {
+  background-color: transparent;
+}
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);

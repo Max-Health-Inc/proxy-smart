@@ -2,12 +2,13 @@ import { useState, useMemo, useEffect } from "react"
 import { getPickerParams, getPickerError } from "@/lib/picker-params"
 import { submitPatientSelection } from "@/lib/api-client"
 import { PatientList } from "@/components/PatientList"
-import { formatHumanName, AppHeader, Button, onAuthError } from "@proxy-smart/shared-ui"
+import { formatHumanName, AppHeader, Button, onAuthError, useScene } from "@proxy-smart/shared-ui"
 import { UserSearch, AlertTriangle, CheckCircle2, LogIn } from "lucide-react"
 import type { Patient } from "@/lib/api-client"
 import "./index.css"
 
 export default function App() {
+  useScene({ defaultScene: "perspective-grid" })
   const params = useMemo(() => getPickerParams(), [])
   const pickerError = useMemo(() => getPickerError(), [])
   const [selected, setSelected] = useState<Patient | null>(null)
