@@ -151,9 +151,9 @@
     "undici": "^8.3.0"
   },
   "overrides": {
-    "zod": "4.4.3"
+    "zod": "4.3.6"
   },
   "resolutions": {
-    "zod": "4.4.3"
+    "zod": "4.3.6"
   }
 }

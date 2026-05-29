@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.2-beta.202605291257.9974557c6] - 2026-05-29
+
+- ⚠️ Breaking Changes: None detected
+- ✨ Features: None detected
+- 🐛 Bug Fixes: None detected
+- 📚 Documentation: None detected
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+Note: No user-visible feature or bugfix changes found since last release.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/739
+
+
 ## [0.2.0-alpha.202605221345.9f0067627] - 2026-05-22
 
 - 🔧 Chores & Improvements: Conditional App Store UI serving and UI hiding
