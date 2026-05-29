@@ -11,3 +11,5 @@ mind that we use ui\src\i18n\translations
 if bun causes issues, use bun install --force 
 
 before push, ALWAYS lint and build.
+
+In this project we ONLY push into develop or develop/* branches!!!
