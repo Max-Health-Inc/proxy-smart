@@ -124,6 +124,8 @@ services:
       caddy.1_reverse_proxy.health_uri: /health
       caddy.1_reverse_proxy.health_interval: 10s
       caddy.1_reverse_proxy.health_timeout: 5s
+      # Catch-all: any path not matched above → backend handles it (serves styled 404)
+      caddy.2_reverse_proxy: "{{upstreams 8445}}"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:8445/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 15s
