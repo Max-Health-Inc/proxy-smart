@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/eslint-config",
-  "version": "0.2.2-alpha.202605292140.cae0ab822",
+  "version": "0.2.2-beta.202605292140.cae0ab822",
   "private": true,
   "type": "module",
   "exports": {
