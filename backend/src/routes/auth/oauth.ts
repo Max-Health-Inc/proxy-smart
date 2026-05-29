@@ -10,7 +10,7 @@ import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { tokenContextStore } from '@/lib/token-context-store'
 import { hasClientAssertion, translateClientAssertion, ClientAssertionError } from './backend-services'
-import { kcUnavailablePage } from './smart-templates'
+import { kcUnavailablePage, authErrorPage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
 import {
@@ -220,8 +220,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       case 'redirect':
         return redirect(result.url)
       case 'error':
-        set.status = result.status
-        return { error: result.error, error_description: result.error_description }
+        return authErrorPage({ status: result.status, error: result.error, errorDescription: result.error_description })
       case 'response':
         set.status = result.status
         return result.body
