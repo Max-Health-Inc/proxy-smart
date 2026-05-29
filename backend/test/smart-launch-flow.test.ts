@@ -391,9 +391,10 @@ describe('SMART Launch Flow Integration', () => {
       const res = await authRoutes.handle(authRequest('/auth/smart-callback?code=abc'))
 
       expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error).toBe('invalid_request')
-      expect(body.error_description).toContain('Missing state')
+      expect(res.headers.get('content-type')).toContain('text/html')
+      const html = await res.text()
+      expect(html).toContain('invalid_request')
+      expect(html).toContain('Missing state')
     })
 
     it('returns 400 when session expired or invalid key', async () => {
@@ -402,9 +403,10 @@ describe('SMART Launch Flow Integration', () => {
       ))
 
       expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error).toBe('invalid_request')
-      expect(body.error_description).toContain('expired')
+      expect(res.headers.get('content-type')).toContain('text/html')
+      const html = await res.text()
+      expect(html).toContain('invalid_request')
+      expect(html).toContain('expired')
     })
 
     it('forwards KC errors to client redirect_uri with original state', async () => {
@@ -465,9 +467,10 @@ describe('SMART Launch Flow Integration', () => {
       ))
 
       expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.error).toBe('invalid_request')
-      expect(body.error_description).toContain('Missing authorization code')
+      expect(res.headers.get('content-type')).toContain('text/html')
+      const html = await res.text()
+      expect(html).toContain('invalid_request')
+      expect(html).toContain('Missing authorization code')
     })
 
     it('auto-resolves patient and skips picker when fhirUser is Patient/*', async () => {
