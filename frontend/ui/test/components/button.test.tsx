@@ -16,22 +16,22 @@ describe('Button', () => {
     const { rerender } = render(<Button variant="destructive">Delete</Button>)
     
     let button = screen.getByRole('button', { name: /delete/i })
-    expect(button).toHaveClass('bg-destructive')
+    expect(button).toHaveClass('border-red-400/30', 'text-red-400/70')
     
     rerender(<Button variant="outline">Cancel</Button>)
     button = screen.getByRole('button', { name: /cancel/i })
-    expect(button).toHaveClass('border', 'bg-transparent')
+    expect(button).toHaveClass('border', 'border-foreground/20')
   })
 
   it('renders with different sizes', () => {
     const { rerender } = render(<Button size="sm">Small</Button>)
     
     let button = screen.getByRole('button', { name: /small/i })
-    expect(button).toHaveClass('h-8')
+    expect(button).toHaveClass('px-3', 'py-1', 'text-xs')
     
     rerender(<Button size="lg">Large</Button>)
     button = screen.getByRole('button', { name: /large/i })
-    expect(button).toHaveClass('h-10')
+    expect(button).toHaveClass('px-6', 'py-3')
   })
 
   it('handles click events', async () => {
