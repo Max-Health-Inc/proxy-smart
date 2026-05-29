@@ -28,7 +28,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.66",
         "@elysiajs/cors": "^1.4.2",
@@ -55,7 +55,7 @@
         "pg": "^8.21.0",
         "resend": "^6.12.4",
         "unifi-access": "^1.5.3",
-        "zod": "^4.4.3",
+        "zod": "4.3.6",
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -75,7 +75,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -86,7 +86,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "dependencies": {
         "aws-cdk-lib": "^2.257.0",
         "constructs": "^10.6.0",
@@ -104,7 +104,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.2",
         "@cornerstonejs/core": "^4.22.13",
@@ -145,7 +145,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "dependencies": {
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
         "@radix-ui/react-accordion": "^1.2.12",
@@ -212,7 +212,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "devDependencies": {
         "@types/node": "^22.0.0",
         "typescript": "6.0.3",
@@ -220,7 +220,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -232,7 +232,7 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.2.2-alpha.202605281210.8d62ab668",
+      "version": "0.2.2-alpha.202605291242.f290d08b9",
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
