@@ -1,6 +1,6 @@
 # Patient Portal
 
-> **Note:** This app has been extracted to a separate repository: [max-health-inc/patient-portal](https://github.com/Max-Health-Inc/patient-portal). The documentation below describes the app's role within the Proxy Smart ecosystem.
+> **Note:** This app lives in a separate repository: [max-health-inc/patient-portal](https://github.com/Max-Health-Inc/patient-portal). It deploys independently — its CI builds static assets and pushes them into the `apps_static` Docker volume on the target server. The backend serves it at `/apps/patient-portal/`.
 
 International Patient Portal built on IPS (International Patient Summary) and IPA (International Patient Access) standards. Patients can view their health summary, medical imaging, and clinical documents through a SMART on FHIR interface.
 

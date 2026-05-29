@@ -1,6 +1,6 @@
 # Consent App
 
-> **Note:** This app has been extracted to a separate repository: [max-health-inc/consent-app](https://github.com/Max-Health-Inc/consent-app). The documentation below describes the app's role within the Proxy Smart ecosystem.
+> **Note:** This app lives in a separate repository: [max-health-inc/consent-app](https://github.com/Max-Health-Inc/consent-app). It deploys independently — its CI builds static assets and pushes them into the `apps_static` Docker volume on the target server. The backend serves it at `/apps/consent-app/`.
 
 SMART on FHIR application for managing patient consent. Practitioners can create, review, and revoke FHIR Consent resources linked to Patient records.
 
