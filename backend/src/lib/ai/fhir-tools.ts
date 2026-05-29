@@ -22,7 +22,7 @@ import { enforceTenantIsolation } from '../tenant-isolation'
 import { getServerCapabilities, normalizeSearchParams, parseFhirPath, isInteractionSupported } from '../fhir-capabilities'
 import { fetchWithMtls, getMtlsConfig } from '../../routes/fhir-servers'
 import { fhirProxyMetricsLogger } from '../fhir-proxy-metrics-logger'
-import fetch, { Headers } from 'cross-fetch'
+import fetch from 'cross-fetch'
 
 // ── Internal proxy helper ────────────────────────────────────────────────────
 
