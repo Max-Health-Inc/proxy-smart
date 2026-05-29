@@ -20,7 +20,6 @@ import {
   canReturnEncounter,
   canReturnFhirUser,
   parseScopes,
-  filterScopes,
 } from './smart-scopes'
 import { extractPatientFromFhirUser } from './fhir-user'
 
@@ -39,8 +38,6 @@ export interface TokenEnrichInput {
   redirectUri?: string
   /** Granted scope string (from IdP response or request) */
   grantedScope?: string
-  /** Requested scope string (from the original token request) */
-  requestedScope?: string
 }
 
 /**
@@ -56,7 +53,7 @@ export function enrichTokenResponse(
   const { store, logger, config } = deps
   const enrichment: TokenEnrichment = {}
 
-  const grantedScopes = parseScopes(input.grantedScope || input.requestedScope)
+  const grantedScopes = parseScopes(input.grantedScope)
 
   // ── Session lookup by client_id + redirect_uri ────────────────────────
   let sessionContext: LaunchSession | null = null
@@ -115,10 +112,10 @@ export function enrichTokenResponse(
     }
   }
 
-  // ── Scope restoration ─────────────────────────────────────────────────
-  if (input.requestedScope) {
-    enrichment.scope = filterScopes(input.requestedScope, input.grantedScope || (input.tokenPayload.scope as string | undefined))
-  } else if (input.tokenPayload.smart_scope) {
+  // ── Scope passthrough ─────────────────────────────────────────────────
+  // Keycloak now has granular scopes registered (auto-created by admin API),
+  // so the token scope already matches what the client requested. No restoration needed.
+  if (input.tokenPayload.smart_scope) {
     enrichment.scope = input.tokenPayload.smart_scope
   }
 
