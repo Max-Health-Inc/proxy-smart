@@ -239,7 +239,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('enforce mode — permit / deny decisions', () => {
-    it('should PERMIT when an active consent exists for the client', async () => {
+    it.serial('should PERMIT when an active consent exists for the client', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makePermitConsent()])
 
@@ -260,7 +260,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.context.resourceType).toBe('Patient')
     })
 
-    it('should DENY when no consent exists for the patient', async () => {
+    it.serial('should DENY when no consent exists for the patient', async () => {
       setConsentEnv()
       // Empty bundle — no consents for this patient
       mockFhirConsentResponse([])
@@ -278,7 +278,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('No valid consent')
     })
 
-    it('should DENY when only an explicit deny consent exists', async () => {
+    it.serial('should DENY when only an explicit deny consent exists', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makeDenyConsent()])
 
@@ -295,7 +295,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('denied')
     })
 
-    it('should PERMIT when a permit consent overrides a deny consent', async () => {
+    it.serial('should PERMIT when a permit consent overrides a deny consent', async () => {
       setConsentEnv()
       // deny comes first, but a permit later should override
       mockFhirConsentResponse([makeDenyConsent(), makePermitConsent()])
@@ -318,7 +318,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('consent status and temporal validity', () => {
-    it('should skip inactive / draft consents (deny by default)', async () => {
+    it.serial('should skip inactive / draft consents (deny by default)', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makeInactiveConsent()])
 
@@ -335,7 +335,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('No valid consent')
     })
 
-    it('should skip expired consents (deny by default)', async () => {
+    it.serial('should skip expired consents (deny by default)', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makeExpiredConsent()])
 
@@ -358,7 +358,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('resource-type restrictions in consent provisions', () => {
-    it('should PERMIT when provision class matches the requested resource type', async () => {
+    it.serial('should PERMIT when provision class matches the requested resource type', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makeResourceRestrictedConsent(['Observation', 'Patient'])])
 
@@ -374,7 +374,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('permit')
     })
 
-    it('should DENY when provision class does NOT match the requested resource type', async () => {
+    it.serial('should DENY when provision class does NOT match the requested resource type', async () => {
       setConsentEnv()
       // Consent only covers Observation, but we're requesting MedicationRequest
       mockFhirConsentResponse([makeResourceRestrictedConsent(['Observation'])])
@@ -397,7 +397,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('audit-only mode', () => {
-    it('should always PERMIT in audit-only mode (even without consent)', async () => {
+    it.serial('should always PERMIT in audit-only mode (even without consent)', async () => {
       setConsentEnv({ CONSENT_MODE: 'audit-only' })
       // Empty — no consents
       mockFhirConsentResponse([])
@@ -426,7 +426,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('disabled mode', () => {
-    it('should auto-PERMIT when consent enforcement is disabled', async () => {
+    it.serial('should auto-PERMIT when consent enforcement is disabled', async () => {
       setConsentEnv({ CONSENT_MODE: 'disabled' })
 
       const result = await checkConsent(
@@ -442,7 +442,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('disabled')
     })
 
-    it('should auto-PERMIT when CONSENT_ENABLED is false', async () => {
+    it.serial('should auto-PERMIT when CONSENT_ENABLED is false', async () => {
       setConsentEnv({ CONSENT_ENABLED: 'false' })
 
       const result = await checkConsent(
@@ -463,7 +463,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('exempt clients', () => {
-    it('should auto-PERMIT for clients in the exempt list', async () => {
+    it.serial('should auto-PERMIT for clients in the exempt list', async () => {
       setConsentEnv({ CONSENT_EXEMPT_CLIENTS: 'test-client,admin-app' })
 
       const result = await checkConsent(
@@ -479,7 +479,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('exempt')
     })
 
-    it('should still check consent for non-exempt clients', async () => {
+    it.serial('should still check consent for non-exempt clients', async () => {
       setConsentEnv({ CONSENT_EXEMPT_CLIENTS: 'admin-app' })
       mockFhirConsentResponse([])
 
@@ -501,7 +501,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('exempt resource types', () => {
-    it('should auto-PERMIT for exempt resource types (CapabilityStatement)', async () => {
+    it.serial('should auto-PERMIT for exempt resource types (CapabilityStatement)', async () => {
       setConsentEnv()
 
       const result = await checkConsent(
@@ -517,7 +517,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('exempt')
     })
 
-    it('should auto-PERMIT for custom exempt resource types', async () => {
+    it.serial('should auto-PERMIT for custom exempt resource types', async () => {
       setConsentEnv({ CONSENT_EXEMPT_RESOURCE_TYPES: 'AllergyIntolerance' })
 
       const result = await checkConsent(
@@ -539,7 +539,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('required resource types filter', () => {
-    it('should skip consent check for resource types NOT in the required list', async () => {
+    it.serial('should skip consent check for resource types NOT in the required list', async () => {
       setConsentEnv({ CONSENT_REQUIRED_RESOURCE_TYPES: 'Observation,MedicationRequest' })
 
       // Patient is NOT in the required list → should auto-permit
@@ -556,7 +556,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.reason).toContain('not in required list')
     })
 
-    it('should enforce consent for resource types IN the required list', async () => {
+    it.serial('should enforce consent for resource types IN the required list', async () => {
       setConsentEnv({ CONSENT_REQUIRED_RESOURCE_TYPES: 'Observation,MedicationRequest' })
       mockFhirConsentResponse([])
 
@@ -578,7 +578,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('missing patient context', () => {
-    it('should auto-PERMIT when patient ID cannot be determined', async () => {
+    it.serial('should auto-PERMIT when patient ID cannot be determined', async () => {
       setConsentEnv()
 
       // Token without patient, path without Patient/
@@ -601,7 +601,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('consent cache', () => {
-    it('should cache consent responses and reuse them', async () => {
+    it.serial('should cache consent responses and reuse them', async () => {
       setConsentEnv({ CONSENT_CACHE_TTL: '60000' })
 
       let fetchCount = 0
@@ -628,7 +628,7 @@ describe('Consent Enforcement E2E', () => {
       expect(fetchCount).toBe(1)
     })
 
-    it('should fetch again after cache invalidation', async () => {
+    it.serial('should fetch again after cache invalidation', async () => {
       setConsentEnv({ CONSENT_CACHE_TTL: '60000' })
 
       let fetchCount = 0
@@ -655,7 +655,7 @@ describe('Consent Enforcement E2E', () => {
       expect(fetchCount).toBe(2)
     })
 
-    it('should report cache statistics', async () => {
+    it.serial('should report cache statistics', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makePermitConsent()])
 
@@ -672,7 +672,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('upstream FHIR server errors', () => {
-    it('should DENY when upstream returns 500 (no consents found)', async () => {
+    it.serial('should DENY when upstream returns 500 (no consents found)', async () => {
       setConsentEnv()
       mockFhirErrorResponse(500)
 
@@ -689,7 +689,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it('should DENY when upstream returns 401 (no consents found)', async () => {
+    it.serial('should DENY when upstream returns 401 (no consents found)', async () => {
       setConsentEnv()
       mockFhirErrorResponse(401)
 
@@ -705,7 +705,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it('should DENY when fetch throws a network error', async () => {
+    it.serial('should DENY when fetch throws a network error', async () => {
       setConsentEnv()
       mockGlobalFetch(async () => {
         throw new Error('ECONNREFUSED')
@@ -729,7 +729,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('actor matching', () => {
-    it('should DENY when consent exists but for a different client', async () => {
+    it.serial('should DENY when consent exists but for a different client', async () => {
       setConsentEnv()
 
       const consentForOtherClient: FhirConsent = {
@@ -763,7 +763,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it('should PERMIT when consent has no actor restrictions (applies to all)', async () => {
+    it.serial('should PERMIT when consent has no actor restrictions (applies to all)', async () => {
       setConsentEnv()
 
       const consentNoActor: FhirConsent = {
@@ -797,7 +797,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('buildConsentContext', () => {
-    it('should extract patient ID from patient claim', () => {
+    it.serial('should extract patient ID from patient claim', () => {
       const ctx = buildConsentContext(
         createToken({ patient: 'pat-abc' }),
         'hapi',
@@ -807,7 +807,7 @@ describe('Consent Enforcement E2E', () => {
       expect(ctx.patientId).toBe('pat-abc')
     })
 
-    it('should extract patient ID from Patient resource path as fallback', () => {
+    it.serial('should extract patient ID from Patient resource path as fallback', () => {
       const ctx = buildConsentContext(
         createToken({ patient: undefined }),
         'hapi',
@@ -817,7 +817,7 @@ describe('Consent Enforcement E2E', () => {
       expect(ctx.patientId).toBe('pat-xyz')
     })
 
-    it('should parse scopes from token', () => {
+    it.serial('should parse scopes from token', () => {
       const ctx = buildConsentContext(
         createToken({ scope: 'patient/Observation.read patient/Patient.read openid' }),
         'hapi',
@@ -827,12 +827,12 @@ describe('Consent Enforcement E2E', () => {
       expect(ctx.scopes).toEqual(['patient/Observation.read', 'patient/Patient.read', 'openid'])
     })
 
-    it('should normalise HTTP method to uppercase', () => {
+    it.serial('should normalise HTTP method to uppercase', () => {
       const ctx = buildConsentContext(createToken(), 'hapi', 'Observation', 'post')
       expect(ctx.method).toBe('POST')
     })
 
-    it('should handle fhirUser claim', () => {
+    it.serial('should handle fhirUser claim', () => {
       const ctx = buildConsentContext(
         createToken({ fhirUser: 'Practitioner/dr-1' }),
         'hapi',
@@ -848,7 +848,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('getConsentConfig', () => {
-    it('should reflect env var settings', () => {
+    it.serial('should reflect env var settings', () => {
       setConsentEnv({
         CONSENT_ENABLED: 'true',
         CONSENT_MODE: 'enforce',
@@ -864,7 +864,7 @@ describe('Consent Enforcement E2E', () => {
       expect(cfg.exemptClients).toContain('monitoring')
     })
 
-    it('should default to audit-only when env vars are not set', () => {
+    it.serial('should default to audit-only when env vars are not set', () => {
       clearConsentEnv()
       const cfg = getConsentConfig()
       expect(cfg.enabled).toBe(false)
@@ -877,7 +877,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('full consent lifecycle: grant → access → revoke → deny', () => {
-    it('should permit access with consent, then deny after consent is revoked', async () => {
+    it.serial('should permit access with consent, then deny after consent is revoked', async () => {
       setConsentEnv()
       const token = createToken()
 
@@ -895,7 +895,7 @@ describe('Consent Enforcement E2E', () => {
       expect(r2.reason).toContain('No valid consent')
     })
 
-    it('should switch from deny to permit when consent is created', async () => {
+    it.serial('should switch from deny to permit when consent is created', async () => {
       setConsentEnv()
       const token = createToken()
 
@@ -918,7 +918,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('multi-patient / multi-server isolation', () => {
-    it('should isolate consent decisions per patient', async () => {
+    it.serial('should isolate consent decisions per patient', async () => {
       setConsentEnv()
 
       // Patient A has consent, Patient B does not
@@ -966,7 +966,7 @@ describe('Consent Enforcement E2E', () => {
   // ---------------------------------------------------------------------------
 
   describe('result metadata', () => {
-    it('should include timing information', async () => {
+    it.serial('should include timing information', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makePermitConsent()])
 
@@ -983,7 +983,7 @@ describe('Consent Enforcement E2E', () => {
       expect(result.checkDurationMs).toBeGreaterThanOrEqual(0)
     })
 
-    it('should include the full context in the result', async () => {
+    it.serial('should include the full context in the result', async () => {
       setConsentEnv()
       mockFhirConsentResponse([makePermitConsent()])
 
