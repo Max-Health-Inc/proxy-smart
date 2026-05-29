@@ -149,5 +149,11 @@
   "dependencies": {
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
     "undici": "^8.3.0"
+  },
+  "overrides": {
+    "zod": "4.4.3"
+  },
+  "resolutions": {
+    "zod": "4.4.3"
   }
 }
