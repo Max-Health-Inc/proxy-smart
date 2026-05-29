@@ -249,6 +249,15 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       errorUrl.searchParams.set('error_description', 'Session expired. Please restart the authorization flow.')
       return redirect(errorUrl.href)
     }
+
+    // Guard: if a patient was already selected (e.g. user hit browser back), skip the picker
+    if (!session.needsPatientPicker && session.patient) {
+      const clientUrl = new URL(session.clientRedirectUri)
+      clientUrl.searchParams.set('code', code)
+      if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+      return redirect(clientUrl.href)
+    }
+
     const pickerUrl = new URL(`${config.baseUrl}/patient-picker/`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)

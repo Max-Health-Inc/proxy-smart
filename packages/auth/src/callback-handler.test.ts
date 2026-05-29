@@ -7,7 +7,7 @@
  */
 
 import { describe, test, expect } from 'bun:test'
-import { handleCallback, type CallbackParams, type CallbackHandlerDeps } from './callback-handler'
+import { handleCallback, handlePatientSelect, type CallbackParams, type CallbackHandlerDeps } from './callback-handler'
 import { MemoryStore } from './stores/memory'
 import type { LaunchSession, SmartProxyConfig } from './types'
 
@@ -152,5 +152,61 @@ describe('callback-handler: patient picker gate', () => {
     // No fhirUser → still needs picker
     expect(result.type).toBe('redirect')
     expect(result.type === 'redirect' && result.url).toContain('patient-picker')
+  })
+})
+
+describe('handlePatientSelect: duplicate submission guard', () => {
+  test('returns redirect idempotently when patient already selected', () => {
+    const store = new MemoryStore()
+    const session = makeSession({
+      needsPatientPicker: false,
+      patient: 'test-patient-123',
+    })
+    store.set('session-key', session)
+
+    const result = handlePatientSelect(
+      { session: 'session-key', code: 'auth-code-456', patient: 'different-patient' },
+      { config: BASE_CONFIG, store },
+    )
+
+    // Should redirect to client with original patient (not overwrite)
+    expect(result.type).toBe('redirect')
+    expect(result.type === 'redirect' && result.url).toContain('app.example.com/callback')
+    expect(result.type === 'redirect' && result.url).toContain('code=auth-code-456')
+    expect(result.type === 'redirect' && result.url).toContain('state=abc123')
+
+    // Patient should remain unchanged
+    const updated = store.get('session-key')
+    expect(updated?.patient).toBe('test-patient-123')
+  })
+
+  test('allows selection when patient has not been chosen yet', () => {
+    const store = new MemoryStore()
+    const session = makeSession({ needsPatientPicker: true })
+    store.set('session-key', session)
+
+    const result = handlePatientSelect(
+      { session: 'session-key', code: 'auth-code-789', patient: 'new-patient' },
+      { config: BASE_CONFIG, store },
+    )
+
+    expect(result.type).toBe('redirect')
+    expect(result.type === 'redirect' && result.url).toContain('app.example.com/callback')
+
+    const updated = store.get('session-key')
+    expect(updated?.patient).toBe('new-patient')
+    expect(updated?.needsPatientPicker).toBe(false)
+  })
+
+  test('returns error for expired session', () => {
+    const store = new MemoryStore()
+
+    const result = handlePatientSelect(
+      { session: 'nonexistent', code: 'auth-code', patient: 'patient-1' },
+      { config: BASE_CONFIG, store },
+    )
+
+    expect(result.type).toBe('error')
+    expect(result.type === 'error' && result.status).toBe(400)
   })
 })
