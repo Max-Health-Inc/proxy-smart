@@ -1,5 +1,5 @@
 import { Building2, CheckCircle2, XCircle, Users } from 'lucide-react';
-import { StatCard } from '@/components/ui/stat-card';
+import { StatCard } from '@proxy-smart/shared-ui';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 

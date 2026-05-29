@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@proxy-smart/shared-ui';
+import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, StatCard, Switch } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
-import { StatCard } from '@/components/ui/stat-card';
-import { Switch } from '@/components/ui/switch';
 import {
   Settings,
   Shield,

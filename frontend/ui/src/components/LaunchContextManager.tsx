@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Badge, Button, Label } from '@proxy-smart/shared-ui';
+import { Badge, Button, Label, StatCard } from '@proxy-smart/shared-ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
 import { LaunchContextSetBuilder } from './LaunchContextSetBuilder';
 import { useLaunchContextSets } from '../stores/smartStore';
 import { useAuth } from '@/stores/authStore';
 import type { ContextSet } from '@/lib/types/api';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
-import { StatCard } from '@/components/ui/stat-card';
 import {
   Plus,
   Edit,

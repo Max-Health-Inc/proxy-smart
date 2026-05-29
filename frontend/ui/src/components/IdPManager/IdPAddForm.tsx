@@ -1,6 +1,4 @@
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@proxy-smart/shared-ui';
 import { Plus, Landmark } from 'lucide-react';
 import type { IdentityProviderFormData } from '@/lib/types/api';
 import type { Organization } from '@/lib/api-client';

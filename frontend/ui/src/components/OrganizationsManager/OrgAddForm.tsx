@@ -1,6 +1,4 @@
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+import { Button, Checkbox, Input, Label, Textarea } from '@proxy-smart/shared-ui';
 import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';

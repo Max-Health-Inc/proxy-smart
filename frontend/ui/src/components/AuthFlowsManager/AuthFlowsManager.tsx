@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/stores/authStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { PageLoadingState } from '@/components/ui/page-loading-state'
-import { StatCard } from '@/components/ui/stat-card'
 import {
   Button,
   Badge,
@@ -11,6 +10,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  StatCard,
   Table,
   TableBody,
   TableCell,

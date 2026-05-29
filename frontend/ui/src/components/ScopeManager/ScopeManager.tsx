@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button, StatCard } from '@proxy-smart/shared-ui';
 import { getItem, storeItem } from '@/lib/storage';
-import { StatCard } from '@/components/ui/stat-card';
 import { Plus, Shield, Code, Database, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FHIR_RESOURCES, SCOPE_TEMPLATES } from './constants';
