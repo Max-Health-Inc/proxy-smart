@@ -76,6 +76,8 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 | [Consent Manager](./apps/consent-app.md) | 5174 | [max-health-inc/consent-app](https://github.com/Max-Health-Inc/consent-app) | FHIR Consent resource management |
 | [DTR / Prior Auth](./apps/dtr-app.md) | 5175 | [max-health-inc/dtr-app](https://github.com/Max-Health-Inc/dtr-app) | Da Vinci DTR questionnaires and PA workflow |
 
+> **Deployment**: External apps deploy independently from their own CI pipelines. Each app builds its static assets and pushes them into a shared `apps_static` Docker volume mounted at `/app/backend/public/apps`. The backend serves them at `/apps/{app-name}/`. This decouples app release cycles from the core platform.
+
 ### Key Features
 
 - **SMART App Launch 2.2.0** — Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation

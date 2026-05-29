@@ -60,7 +60,8 @@ Internet  ──►  Caddy (HTTPS)  ──►  Backend (:8445)  ──►  FHIR 
 ```
 
 The production compose builds the backend from `Dockerfile` and Keycloak from `Dockerfile.keycloak`:
-- Backend serves all frontend apps as static files
+- Backend image includes the Admin UI and Patient Picker as static files
+- External SMART apps are deployed independently into the `apps_static` Docker volume
 - Keycloak uses PostgreSQL for persistence
 - Realm configuration is imported from `keycloak/realm-export.json`
 
@@ -93,8 +94,11 @@ Caddy provides automatic TLS certificate provisioning via Let's Encrypt.
 
 - **Built from**: `Dockerfile` (multi-stage Bun build)
 - **Port**: 8445
-- **Serves**: Backend API + all frontend apps as static files
+- **Serves**: Backend API, Admin UI (`/webapp/`), Patient Picker (`/patient-picker/`), App Store (`/apps/`)
+- **Volume**: `apps_static` mounted at `/app/backend/public/apps` for externally deployed SMART apps
 - **Key env vars**: See [Environment Variables](environment-variables)
+
+> **App Deployment Model**: The backend Docker image includes only the Admin UI and Patient Picker (built in this repo). External SMART apps (Patient Portal, Consent App, DTR App) are deployed independently from their own repositories — each app's CI builds static assets and deploys them into the shared `apps_static` Docker volume. The backend serves them from `/apps/{app-name}/`.
 
 ### Orthanc (Development)
 
