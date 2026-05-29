@@ -17,8 +17,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Checkbox,
 } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Shield, Server, Database, Trash2, Link2, Unlink, Plus, Undo2 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';

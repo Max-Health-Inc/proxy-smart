@@ -1,5 +1,4 @@
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import {
   Dialog,
   DialogContent,

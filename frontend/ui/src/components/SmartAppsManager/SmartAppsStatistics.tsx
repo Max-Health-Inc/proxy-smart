@@ -1,5 +1,5 @@
 import { Activity, Shield, Settings } from 'lucide-react';
-import { StatCard } from '@/components/ui/stat-card';
+import { StatCard } from '@proxy-smart/shared-ui';
 import type { SmartApp } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
 

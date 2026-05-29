@@ -9,7 +9,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { StatCard } from '../ui/stat-card';
+import { StatCard } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';
 import type { AccessOverviewResponse } from '../../lib/api-client';

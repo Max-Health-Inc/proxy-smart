@@ -1,5 +1,5 @@
 import { Server, Shield, Globe, Key } from 'lucide-react';
-import { StatCard } from '@/components/ui/stat-card';
+import { StatCard } from '@proxy-smart/shared-ui';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
 

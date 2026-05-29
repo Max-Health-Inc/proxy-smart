@@ -19,9 +19,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Textarea,
+  Switch,
 } from '@proxy-smart/shared-ui';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import {
   Globe,
   Shield,

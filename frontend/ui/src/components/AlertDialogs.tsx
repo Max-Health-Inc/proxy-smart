@@ -8,8 +8,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from './ui/dialog';
-import { Button, Input, Label } from '@proxy-smart/shared-ui';
-import { Textarea } from './ui/textarea';
+import { Button, Input, Label, Textarea } from '@proxy-smart/shared-ui';
 import { useAlertStore } from '../stores/alertStore';
 import {
     AlertTriangle,
@@ -237,11 +236,11 @@ export function ConfirmInputDialog() {
                         <InputComponent
                             id="confirm-input"
                             value={inputValue}
-                            onChange={(e) => handleInputChange(e.target.value)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => handleInputChange(e.target.value)}
                             placeholder={currentConfirmInput.inputPlaceholder}
                             className={error ? 'border-red-500 focus:border-red-500' : ''}
                             disabled={isLoading}
-                            onKeyDown={(e) => {
+                            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
                                 if (e.key === 'Enter' && currentConfirmInput.inputType !== 'textarea') {
                                     e.preventDefault();
                                     handleConfirm();

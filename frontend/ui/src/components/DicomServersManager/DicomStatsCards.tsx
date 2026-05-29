@@ -1,5 +1,5 @@
 import { HardDrive, Check, X } from 'lucide-react'
-import { StatCard } from '@/components/ui/stat-card'
+import { StatCard } from '@proxy-smart/shared-ui'
 import type { DicomServerWithStatus } from './DicomServersManager'
 import { useTranslation } from 'react-i18next'
 
