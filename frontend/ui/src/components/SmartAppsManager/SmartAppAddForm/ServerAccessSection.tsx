@@ -1,5 +1,4 @@
-import { Badge, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Badge, Checkbox, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Server, Users, Globe, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SmartAppFormData } from '@/lib/types/api';

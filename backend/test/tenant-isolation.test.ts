@@ -5,7 +5,7 @@
  * and org resolution from token claims.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { describe, it, expect, afterEach } from 'bun:test'
 import {
   resolveOrganization,
   enforceOrgServerAccess,

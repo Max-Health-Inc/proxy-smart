@@ -4,7 +4,7 @@ React-based administration dashboard for managing the Proxy Smart platform. Prov
 
 ## Overview
 
-The Admin UI is a single-page application that communicates with the backend's admin REST API. It is served as static files from the backend at `/apps/ui/` and is protected by admin-level authentication.
+The Admin UI is a single-page application that communicates with the backend's admin REST API. It is served as static files from the backend at `/webapp/` and is protected by admin-level authentication.
 
 ```
 ┌────────────┐   Admin API   ┌──────────────┐

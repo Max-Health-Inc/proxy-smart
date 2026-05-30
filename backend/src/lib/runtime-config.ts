@@ -425,6 +425,14 @@ export function isRuntimeConfigLoaded(): boolean {
   return loaded
 }
 
+/**
+ * Set consent overrides directly (for testing).
+ * Bypasses env var getters which are unreliable in concurrent test environments.
+ */
+export function __setConsentOverridesForTesting(overrides: Partial<ConsentConfig> | null): void {
+  consentOverrides = overrides
+}
+
 // ─── Brand ───────────────────────────────────────────────────────────
 
 const BRAND_PREFIX = 'brand_settings.'

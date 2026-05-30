@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, StatCard } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { StatCard } from '@/components/ui/stat-card';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import {

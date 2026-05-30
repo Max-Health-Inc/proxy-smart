@@ -14,8 +14,7 @@ import {
   Trash2,
   Bot
 } from 'lucide-react';
-import { Badge, Button, Label } from '@proxy-smart/shared-ui';
-import { Switch } from '@/components/ui/switch';
+import { Badge, Button, Label, Switch } from '@proxy-smart/shared-ui';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerWithState } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';

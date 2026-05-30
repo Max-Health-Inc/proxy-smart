@@ -1,5 +1,4 @@
-import { Input, Label } from '@proxy-smart/shared-ui';
-import { Textarea } from '@/components/ui/textarea';
+import { Input, Label, Textarea } from '@proxy-smart/shared-ui';
 import { Shield, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SmartAppFormData } from '@/lib/types/api';

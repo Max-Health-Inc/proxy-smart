@@ -23,10 +23,8 @@ import {
   Database,
   ChevronDown,
 } from 'lucide-react';
-import { Badge, Button } from '@proxy-smart/shared-ui';
+import { Badge, Button, Checkbox, Switch } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
-import { Checkbox } from './ui/checkbox';
-import { Switch } from './ui/switch';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

@@ -69,12 +69,6 @@ export interface TokenContext {
   clientId?: string
   /** Token expiration timestamp (epoch seconds) */
   exp?: number
-  /**
-   * The originally requested granular scope (e.g. "user/ImagingStudy.rs").
-   * Keycloak only grants wildcard scopes (e.g. "user/*.rs"); this field lets
-   * introspection restore the specific scope the client actually asked for.
-   */
-  requestedScope?: string
 }
 
 export interface TokenContextStoreOptions {
@@ -132,8 +126,6 @@ function sanitizeContext(context: TokenContext): TokenContext | null {
   const smart_style_url = sanitizeStringField(context.smart_style_url, MAX_VALUE_LENGTH)
   const tenant = sanitizeStringField(context.tenant, 128)
   const clientId = sanitizeStringField(context.clientId, 256)
-  // Scope string: space-separated tokens, safe characters only (SMART scope syntax)
-  const requestedScope = sanitizeStringField(context.requestedScope, MAX_VALUE_LENGTH)
 
   // Validate FHIR IDs don't contain injection characters
   if (!isValidFhirId(patient) || !isValidFhirId(encounter)) {
@@ -156,7 +148,6 @@ function sanitizeContext(context: TokenContext): TokenContext | null {
     ...(context.need_patient_banner !== undefined && { need_patient_banner: !!context.need_patient_banner }),
     ...(clientId && { clientId }),
     ...(context.exp && { exp: context.exp }),
-    ...(requestedScope && { requestedScope }),
   }
 }
 

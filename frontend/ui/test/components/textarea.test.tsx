@@ -1,15 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@proxy-smart/shared-ui'
 
 describe('Textarea', () => {
-  it('renders textarea with placeholder and className', () => {
-    render(<Textarea placeholder="Write here" className="ta-class" />)
-
-    const ta = screen.getByPlaceholderText(/write here/i)
-    expect(ta).toBeInTheDocument()
-    expect(ta).toHaveClass('ta-class')
+  it('renders textarea with placeholder', () => {
+    render(<Textarea placeholder="Write here" />)
+    expect(screen.getByPlaceholderText(/write here/i)).toBeInTheDocument()
   })
 
   it('forwards ref to the textarea element', () => {

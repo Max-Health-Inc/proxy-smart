@@ -1,7 +1,7 @@
 /**
  * FHIR MCP Tools — Unit Tests
  *
- * Tests the registerFhirTools function and the proxyFhirRequest internal logic.
+ * Tests the registerFhirToolsForServer function and the proxyFhirRequest internal logic.
  * Mocks upstream FHIR server responses to test the full tool flow without
  * needing a real FHIR server.
  *
@@ -129,7 +129,7 @@ process.env.KEYCLOAK_REALM = 'proxy-smart'
 
 // ── Import after mocks ──────────────────────────────────────────────────────
 
-const { registerFhirTools } = await import('../src/lib/ai/fhir-tools')
+const { registerFhirToolsForServer } = await import('../src/lib/ai/fhir-tools')
 
 // ── Mock McpServer ──────────────────────────────────────────────────────────
 
@@ -189,9 +189,9 @@ describe('FHIR MCP Tools', () => {
     )
   })
 
-  describe('registerFhirTools', () => {
+  describe('registerFhirToolsForServer', () => {
     it('registers all 6 FHIR tools', () => {
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
 
       const names = server.tools.map((t) => t.name)
       expect(names).toContain('fhir_read')
@@ -203,7 +203,7 @@ describe('FHIR MCP Tools', () => {
     })
 
     it('marks read-only tools with readOnlyHint annotation', () => {
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
 
       const readTool = server.getTool('fhir_read')
       expect(readTool?.config.annotations).toEqual({ readOnlyHint: true, idempotentHint: true })
@@ -219,7 +219,7 @@ describe('FHIR MCP Tools', () => {
 
   describe('fhir_read', () => {
     it('reads a Patient by ID', async () => {
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_read')!
 
       const result = await tool.handler({ resourceType: 'Patient', id: '123' })
@@ -237,7 +237,7 @@ describe('FHIR MCP Tools', () => {
 
     it('returns error when no auth token', async () => {
       const noTokenRef = { current: undefined as string | undefined }
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], noTokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], noTokenRef, 'hapi')
       const tool = server.getTool('fhir_read')!
 
       const result = await tool.handler({ resourceType: 'Patient', id: '123' })
@@ -263,7 +263,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_search')!
 
       const result = await tool.handler({
@@ -289,7 +289,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_search')!
 
       const result = await tool.handler({ resourceType: 'Patient' })
@@ -306,7 +306,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_create')!
 
       const result = await tool.handler({
@@ -335,7 +335,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_update')!
 
       const result = await tool.handler({
@@ -361,7 +361,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_delete')!
 
       const result = await tool.handler({ resourceType: 'Patient', id: '123' })
@@ -386,7 +386,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_capabilities')!
 
       const result = await tool.handler({})
@@ -398,22 +398,13 @@ describe('FHIR MCP Tools', () => {
   })
 
   describe('server resolution', () => {
-    it('uses explicit server name when provided', async () => {
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+    it('uses the hardcoded server name', async () => {
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_read')!
 
-      await tool.handler({ resourceType: 'Patient', id: '123', serverName: 'hapi' })
+      await tool.handler({ resourceType: 'Patient', id: '123' })
       const callUrl = mockFetch.mock.calls[0][0] as string
       expect(callUrl).toStartWith('http://localhost:8081/fhir/')
-    })
-
-    it('returns error for unknown server', async () => {
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
-      const tool = server.getTool('fhir_read')!
-
-      const result = await tool.handler({ resourceType: 'Patient', id: '123', serverName: 'nonexistent' })
-      expect(result.isError).toBe(true)
-      expect(result.content[0].text).toContain('not found')
     })
   })
 
@@ -429,7 +420,7 @@ describe('FHIR MCP Tools', () => {
         ),
       )
 
-      registerFhirTools(server as unknown as Parameters<typeof registerFhirTools>[0], tokenRef)
+      registerFhirToolsForServer(server as unknown as Parameters<typeof registerFhirToolsForServer>[0], tokenRef, 'hapi')
       const tool = server.getTool('fhir_read')!
 
       const result = await tool.handler({ resourceType: 'Patient', id: '999' })

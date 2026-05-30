@@ -1,5 +1,4 @@
-import { Button } from '@proxy-smart/shared-ui';
-import { Textarea } from '@/components/ui/textarea';
+import { Button, Textarea } from '@proxy-smart/shared-ui';
 import {
   Dialog,
   DialogContent,

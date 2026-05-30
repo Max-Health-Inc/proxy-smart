@@ -1,6 +1,4 @@
-import { Button, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger } from '@proxy-smart/shared-ui';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+import { Button, Checkbox, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from '@proxy-smart/shared-ui';
 import {
   Dialog,
   DialogContent,

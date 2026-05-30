@@ -3,7 +3,7 @@ import { logger } from './lib/logger'
 import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store'
 import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
-import { resolveKcRealmIssuer, getProxyJwks, PROXY_SIGNING_ALG } from './lib/proxy-signing'
+import { resolveKcRealmIssuer } from './lib/proxy-signing'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -742,7 +742,7 @@ async function ensureProxySigningIdp(): Promise<void> {
 
       if (needsFlowSetup) {
         // Check if the custom flow already exists (from a previous run that failed to bind)
-        let customFlow = flows.find(f => f.alias === CUSTOM_FLOW_ALIAS)
+        const customFlow = flows.find(f => f.alias === CUSTOM_FLOW_ALIAS)
 
         if (!customFlow) {
           // Copy the built-in "clients" flow

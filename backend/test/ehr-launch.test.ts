@@ -14,7 +14,6 @@ import jwt from 'jsonwebtoken'
 
 const TEST_BASE_URL = 'http://localhost:8445'
 const TEST_LAUNCH_SECRET = 'test-launch-secret-32-bytes-long!'
-const TEST_USER_ID = 'user-uuid-1234'
 const TEST_PATIENT_ID = 'Patient/test-patient-123'
 const TEST_ENCOUNTER_ID = 'Encounter/test-encounter-456'
 const TEST_CLIENT_ID = 'smart-app-client'
@@ -82,7 +81,6 @@ describe('Launch Code Service', () => {
   describe('signLaunchCode', () => {
     it('signs a launch code with patient context', () => {
       const payload: LaunchCodePayload = {
-        userId: TEST_USER_ID,
         patient: TEST_PATIENT_ID,
       }
 
@@ -96,7 +94,6 @@ describe('Launch Code Service', () => {
 
     it('signs a launch code with full context', () => {
       const payload: LaunchCodePayload = {
-        userId: TEST_USER_ID,
         patient: TEST_PATIENT_ID,
         encounter: TEST_ENCOUNTER_ID,
         fhirUser: 'Practitioner/dr-smith',
@@ -137,7 +134,6 @@ describe('Launch Code Service', () => {
   describe('verifyLaunchCode', () => {
     it('verifies a valid launch code and returns payload', () => {
       const payload: LaunchCodePayload = {
-        userId: TEST_USER_ID,
         patient: TEST_PATIENT_ID,
         encounter: TEST_ENCOUNTER_ID,
         intent: 'reconcile-medications',
@@ -230,7 +226,6 @@ describe('Launch Code Service', () => {
   describe('roundtrip', () => {
     it('preserves all context fields through sign/verify cycle', () => {
       const original: LaunchCodePayload = {
-        userId: 'user-123',
         patient: 'Patient/abc',
         encounter: 'Encounter/def',
         fhirUser: 'Practitioner/ghi',

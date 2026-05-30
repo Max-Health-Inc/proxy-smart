@@ -8,7 +8,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { StatCard } from '@/components/ui/stat-card';
+import { StatCard } from '@proxy-smart/shared-ui';
 import type { DashboardData } from '../../lib/types/api';
 import type { OAuthAnalyticsState } from './useDashboardData';
 
