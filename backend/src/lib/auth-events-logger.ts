@@ -1,35 +1,13 @@
 /**
  * Auth Events Logger
  *
- * Periodically polls Keycloak's admin events API for authentication-related
- * events (LOGIN, LOGOUT, REGISTER, CODE_TO_TOKEN, etc.), persists them to
- * JSONL, and exposes an in-memory ring buffer + pub/sub so the monitoring
- * UI can subscribe to real-time updates.
- *
- * Uses client_credentials auth for background polling (no user token needed).
+ * Polls Keycloak for authentication-related events (LOGIN, LOGOUT, REGISTER,
+ * CODE_TO_TOKEN, etc.) using the shared BaseEventsLogger infrastructure.
  */
 
-import { appendFile, mkdir, readFile } from 'fs/promises'
-import { existsSync } from 'fs'
-import { join } from 'path'
-import { logger } from './logger'
-import { config } from '../config'
+import { BaseEventsLogger, type KeycloakEvent } from './base-events-logger'
 
 // ─── Types ───────────────────────────────────────────────────────
-
-/** Keycloak EventRepresentation shape */
-interface KeycloakEvent {
-  id?: string
-  time?: number
-  type?: string
-  realmId?: string
-  clientId?: string
-  userId?: string
-  sessionId?: string
-  ipAddress?: string
-  error?: string
-  details?: Record<string, string>
-}
 
 export interface AuthEvent {
   id: string
@@ -54,7 +32,8 @@ export interface AuthAnalytics {
   timestamp: string
 }
 
-// Auth event types we're interested in
+// ─── Event types ─────────────────────────────────────────────────
+
 const AUTH_EVENT_TYPES = [
   'LOGIN', 'LOGIN_ERROR',
   'LOGOUT', 'LOGOUT_ERROR',
@@ -68,209 +47,35 @@ const AUTH_EVENT_TYPES = [
   'REVOKE_GRANT', 'REVOKE_GRANT_ERROR',
 ]
 
-// ─── Logger class ────────────────────────────────────────────────
+// ─── Implementation ──────────────────────────────────────────────
 
-const RING_BUFFER_SIZE = 1000
-const DEFAULT_POLL_INTERVAL_MS = 60_000 // 1 minute
-
-class AuthEventsLogger {
-  private readonly logDir: string
-  private readonly eventsFile: string
-  private events: AuthEvent[] = []
-  private analytics: AuthAnalytics | null = null
-  private subscribers = new Set<(event: AuthEvent) => void>()
-  private analyticsSubscribers = new Set<(analytics: AuthAnalytics) => void>()
-  private timer: ReturnType<typeof setInterval> | null = null
-  private initialized = false
-  /** Epoch ms of the most recent event we've seen — used for incremental polling */
-  private lastPollTimestamp = 0
-
+class AuthEventsLogger extends BaseEventsLogger<AuthEvent, AuthAnalytics> {
   constructor() {
-    this.logDir = join(process.cwd(), 'logs', 'auth-events')
-    this.eventsFile = join(this.logDir, 'auth-events.jsonl')
+    super({
+      logSubdir: 'auth-events',
+      logFilename: 'auth-events.jsonl',
+      eventTypes: AUTH_EVENT_TYPES,
+      logChannel: 'auth',
+      idPrefix: 'auth',
+      mapEvent: (kc: KeycloakEvent): AuthEvent => {
+        const isError = kc.type?.endsWith('_ERROR') ?? false
+        return {
+          id: kc.id ?? `auth-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          timestamp: kc.time ? new Date(kc.time).toISOString() : new Date().toISOString(),
+          type: kc.type ?? 'UNKNOWN',
+          userId: kc.userId,
+          clientId: kc.clientId,
+          sessionId: kc.sessionId,
+          ipAddress: kc.ipAddress,
+          error: kc.error,
+          success: !isError && !kc.error,
+          details: kc.details,
+        }
+      },
+    })
   }
 
-  // ─── Lifecycle ──────────────────────────────────────────────
-
-  async initialize(): Promise<void> {
-    if (this.initialized) return
-
-    if (!existsSync(this.logDir)) {
-      await mkdir(this.logDir, { recursive: true })
-    }
-
-    await this.loadRecentEvents()
-    this.recalculateAnalytics()
-    this.initialized = true
-    logger.auth.info('Auth events logger initialized', { eventsLoaded: this.events.length })
-  }
-
-  start(intervalMs = DEFAULT_POLL_INTERVAL_MS): void {
-    if (this.timer) return
-    // Poll immediately then schedule
-    this.pollKeycloakEvents()
-    this.timer = setInterval(() => this.pollKeycloakEvents(), intervalMs)
-    logger.auth.info('Auth events poller started', { intervalMs })
-  }
-
-  stop(): void {
-    if (this.timer) {
-      clearInterval(this.timer)
-      this.timer = null
-    }
-  }
-
-  // ─── Keycloak polling ──────────────────────────────────────
-
-  private async pollKeycloakEvents(): Promise<void> {
-    if (!config.keycloak.isConfigured || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
-      return
-    }
-
-    try {
-      const token = await this.getAdminToken()
-      if (!token) return
-
-      // Build query params — only fetch auth-related event types since last poll
-      const params = new URLSearchParams()
-      for (const t of AUTH_EVENT_TYPES) {
-        params.append('type', t)
-      }
-      if (this.lastPollTimestamp > 0) {
-        params.set('dateFrom', String(this.lastPollTimestamp + 1))
-      }
-      params.set('max', '500')
-      params.set('direction', 'desc')
-
-      const url = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/events?${params.toString()}`
-      const res = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      if (!res.ok) {
-        logger.auth.warn('Failed to fetch Keycloak auth events', { status: res.status })
-        return
-      }
-
-      const kcEvents: KeycloakEvent[] = await res.json()
-      if (kcEvents.length === 0) return
-
-      // Process in chronological order (API returns desc, reverse to asc)
-      const sorted = [...kcEvents].reverse()
-      for (const kc of sorted) {
-        const event = this.mapKeycloakEvent(kc)
-        await this.persistEvent(event)
-      }
-
-      // Update poll cursor
-      const maxTime = Math.max(...kcEvents.map(e => e.time ?? 0))
-      if (maxTime > this.lastPollTimestamp) {
-        this.lastPollTimestamp = maxTime
-      }
-
-      this.recalculateAnalytics()
-
-      logger.auth.debug('Polled auth events from Keycloak', { count: kcEvents.length })
-    } catch (error) {
-      logger.auth.error('Error polling Keycloak auth events', {
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-  }
-
-  private async getAdminToken(): Promise<string | null> {
-    try {
-      const tokenUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
-      const res = await fetch(tokenUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'client_credentials',
-          client_id: config.keycloak.adminClientId!,
-          client_secret: config.keycloak.adminClientSecret!,
-        }),
-      })
-
-      if (!res.ok) {
-        logger.auth.warn('Failed to obtain admin token for auth events polling', { status: res.status })
-        return null
-      }
-
-      const data = await res.json() as { access_token: string }
-      return data.access_token
-    } catch (error) {
-      logger.auth.error('Error obtaining admin token', {
-        error: error instanceof Error ? error.message : String(error),
-      })
-      return null
-    }
-  }
-
-  private mapKeycloakEvent(kc: KeycloakEvent): AuthEvent {
-    const isError = kc.type?.endsWith('_ERROR') ?? false
-    return {
-      id: kc.id ?? `auth-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      timestamp: kc.time ? new Date(kc.time).toISOString() : new Date().toISOString(),
-      type: kc.type ?? 'UNKNOWN',
-      userId: kc.userId,
-      clientId: kc.clientId,
-      sessionId: kc.sessionId,
-      ipAddress: kc.ipAddress,
-      error: kc.error,
-      success: !isError && !kc.error,
-      details: kc.details,
-    }
-  }
-
-  // ─── Persistence ───────────────────────────────────────────
-
-  private async persistEvent(event: AuthEvent): Promise<void> {
-    // Deduplicate — skip if we already have this event id
-    if (this.events.some(e => e.id === event.id)) return
-
-    this.events.unshift(event)
-    if (this.events.length > RING_BUFFER_SIZE) {
-      this.events.length = RING_BUFFER_SIZE
-    }
-
-    try {
-      await appendFile(this.eventsFile, JSON.stringify(event) + '\n', 'utf8')
-    } catch (e) {
-      logger.auth.error('Failed to append auth event to log', { error: String(e) })
-    }
-
-    // Notify subscribers
-    for (const cb of this.subscribers) {
-      try { cb(event) } catch { /* swallow */ }
-    }
-  }
-
-  // ─── Load persisted data ───────────────────────────────────
-
-  private async loadRecentEvents(): Promise<void> {
-    if (!existsSync(this.eventsFile)) return
-    try {
-      const raw = await readFile(this.eventsFile, 'utf8')
-      const lines = raw.trim().split('\n').filter(Boolean)
-      const start = Math.max(0, lines.length - RING_BUFFER_SIZE)
-      for (let i = start; i < lines.length; i++) {
-        try {
-          this.events.push(JSON.parse(lines[i]))
-        } catch { /* skip corrupt lines */ }
-      }
-      // Most recent first
-      this.events.reverse()
-
-      // Set poll cursor to the most recent event
-      if (this.events.length > 0) {
-        const latest = new Date(this.events[0].timestamp).getTime()
-        if (latest > this.lastPollTimestamp) this.lastPollTimestamp = latest
-      }
-    } catch { /* file may not exist yet */ }
-  }
-
-  // ─── Query API ────────────────────────────────────────────
-
+  /** Additional filter options specific to auth events */
   getRecentEvents(opts?: {
     limit?: number
     type?: string
@@ -279,94 +84,33 @@ class AuthEventsLogger {
     clientId?: string
     userId?: string
   }): AuthEvent[] {
-    let result = [...this.events]
-    if (opts?.type && opts.type !== 'all') result = result.filter(e => e.type === opts.type)
-    if (opts?.success !== undefined) result = result.filter(e => e.success === opts.success)
+    let result = super.getRecentEvents(opts)
     if (opts?.clientId) result = result.filter(e => e.clientId === opts.clientId)
     if (opts?.userId) result = result.filter(e => e.userId === opts.userId)
-    if (opts?.since) {
-      const since = opts.since.getTime()
-      result = result.filter(e => new Date(e.timestamp).getTime() >= since)
-    }
-    if (opts?.limit) result = result.slice(0, opts.limit)
     return result
   }
 
-  getAnalytics(): AuthAnalytics | null {
-    return this.analytics
-  }
+  protected computeAnalytics(recent: AuthEvent[]): AuthAnalytics {
+    const base = this.computeBaseAnalytics(recent)
 
-  // ─── Subscriptions ────────────────────────────────────────
-
-  subscribe(cb: (event: AuthEvent) => void): () => void {
-    this.subscribers.add(cb)
-    return () => this.subscribers.delete(cb)
-  }
-
-  subscribeAnalytics(cb: (analytics: AuthAnalytics) => void): () => void {
-    this.analyticsSubscribers.add(cb)
-    return () => this.analyticsSubscribers.delete(cb)
-  }
-
-  // ─── Analytics calc ───────────────────────────────────────
-
-  private recalculateAnalytics(): void {
-    try {
-      const now = new Date()
-      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-      const recent = this.events.filter(e => new Date(e.timestamp) >= last24h)
-
-      const successful = recent.filter(e => e.success).length
-      const eventsByType: Record<string, number> = {}
-      for (const e of recent) {
-        eventsByType[e.type] = (eventsByType[e.type] ?? 0) + 1
+    // Top clients
+    const clientCounts = new Map<string, number>()
+    for (const e of recent) {
+      if (e.clientId) {
+        clientCounts.set(e.clientId, (clientCounts.get(e.clientId) ?? 0) + 1)
       }
+    }
+    const topClients = Array.from(clientCounts.entries())
+      .map(([clientId, count]) => ({ clientId, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
 
-      // Hourly stats
-      const hourBuckets = new Map<string, { success: number; failure: number }>()
-      for (const e of recent) {
-        const hour = new Date(e.timestamp).toISOString().slice(0, 13) + ':00:00.000Z'
-        let bucket = hourBuckets.get(hour)
-        if (!bucket) { bucket = { success: 0, failure: 0 }; hourBuckets.set(hour, bucket) }
-        if (e.success) bucket.success++
-        else bucket.failure++
-      }
-      const hourlyStats = Array.from(hourBuckets.entries())
-        .map(([hour, s]) => ({ hour, ...s, total: s.success + s.failure }))
-        .sort((a, b) => a.hour.localeCompare(b.hour))
+    const recentErrors = recent.filter(e => !e.success).slice(0, 20)
 
-      // Top clients
-      const clientCounts = new Map<string, number>()
-      for (const e of recent) {
-        if (e.clientId) {
-          clientCounts.set(e.clientId, (clientCounts.get(e.clientId) ?? 0) + 1)
-        }
-      }
-      const topClients = Array.from(clientCounts.entries())
-        .map(([clientId, count]) => ({ clientId, count }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10)
-
-      const recentErrors = recent.filter(e => !e.success).slice(0, 20)
-
-      this.analytics = {
-        totalEvents: recent.length,
-        successRate: recent.length > 0 ? Math.round((successful / recent.length) * 10000) / 100 : 100,
-        eventsByType,
-        recentErrors,
-        hourlyStats,
-        topClients,
-        timestamp: now.toISOString(),
-      }
-
-      // Notify analytics subscribers
-      for (const cb of this.analyticsSubscribers) {
-        try { cb(this.analytics) } catch { /* swallow */ }
-      }
-    } catch (error) {
-      logger.auth.error('Failed to recalculate auth analytics', {
-        error: error instanceof Error ? error.message : String(error),
-      })
+    return {
+      ...base,
+      recentErrors,
+      topClients,
     }
   }
 }
