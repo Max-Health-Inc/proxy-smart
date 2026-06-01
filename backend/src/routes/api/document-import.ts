@@ -10,16 +10,12 @@
  */
 
 import { Elysia, t } from 'elysia'
-import { writeFile, unlink, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { tmpdir } from 'os'
-import { randomUUID } from 'crypto'
 import { logger } from '@/lib/logger'
 import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ErrorResponse } from '@/schemas'
-import { importDocument } from '@/lib/document-import'
+import { processDocumentImport } from '@/lib/document-import-handler'
 
 export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-import' })
   .post(
@@ -61,45 +57,11 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         return { error: 'Invalid file type', details: 'Only PDF files are supported' }
       }
 
-      // Write to temp file for PDF extraction
-      const tempDir = join(tmpdir(), 'proxy-smart-doc-import')
-      await mkdir(tempDir, { recursive: true })
-      const tempPath = join(tempDir, `${randomUUID()}.pdf`)
-
       try {
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        await writeFile(tempPath, buffer)
-
-        const pdfBase64 = buffer.toString('base64')
-        const result = await importDocument(tempPath, file.name, pdfBase64, { patientId, engine })
-
-        return {
-          success: true,
-          fileName: result.fileName,
-          pagesProcessed: result.pagesProcessed,
-          engine: result.engine,
-          resources: result.resources.map(r => ({
-            resourceType: r.resourceType,
-            resource: r.resource,
-            retriesNeeded: r.retriesNeeded,
-            warnings: r.warnings,
-          })),
-          failed: result.failed.map(f => ({
-            resourceType: f.resourceType,
-            errors: f.errors,
-            warnings: f.warnings,
-            retriesAttempted: f.retriesAttempted,
-          })),
-          documentReference: result.documentReference,
-          processingTimeMs: result.processingTimeMs,
-        }
+        return await processDocumentImport({ file, patientId, engine })
       } catch (error) {
-        logger.server.error('Document import failed', { error })
         set.status = 500
         return { error: 'Document import failed', details: error instanceof Error ? error.message : String(error) }
-      } finally {
-        await unlink(tempPath).catch(() => {})
       }
     },
     {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@proxy-smart/shared-ui';
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Button, PageLayout, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
 import { ExportMenu } from './ui/export-menu';
@@ -361,7 +360,7 @@ export function OAuthMonitoringDashboard() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <PageLayout>
       {/* Header */}
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
@@ -468,6 +467,6 @@ export function OAuthMonitoringDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PageLayout>
   );
 }

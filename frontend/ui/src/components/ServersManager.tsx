@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui'
+import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, PageLayout } from '@proxy-smart/shared-ui'
 import { useState } from 'react'
 import { FhirServersManager } from '@/components/FhirServersManager'
 import { DicomServersManager } from '@/components/DicomServersManager'
@@ -9,7 +9,7 @@ export function ServersManager() {
   const [activeTab, setActiveTab] = useState('fhir')
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <PageLayout>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <ResponsiveTabsList>
           <TabsTrigger value="fhir">{t('FHIR Servers')}</TabsTrigger>
@@ -22,6 +22,6 @@ export function ServersManager() {
           <DicomServersManager />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageLayout>
   )
 }

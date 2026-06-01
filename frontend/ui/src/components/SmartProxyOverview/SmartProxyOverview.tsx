@@ -1,4 +1,4 @@
-import { Button } from '@proxy-smart/shared-ui';
+import { Button, PageLayout } from '@proxy-smart/shared-ui';
 import { Shield, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -43,7 +43,7 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
     } = useDashboardData();
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+        <PageLayout>
             {/* Notification Toast */}
             {notification && (
                 <div className={`fixed top-4 right-4 z-50 p-3 border ${notification.type === 'success'
@@ -137,6 +137,6 @@ export function SmartProxyOverview({ onNavigate }: SmartProxyOverviewProps) {
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </PageLayout>
     );
 }

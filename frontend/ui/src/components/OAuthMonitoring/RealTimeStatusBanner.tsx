@@ -10,11 +10,30 @@ interface RealTimeStatusBannerProps {
   onSwitchMode: (mode: 'websocket' | 'sse') => void;
 }
 
+const styles = {
+  active: {
+    heading: 'text-lg font-bold text-green-900 dark:text-green-300 mb-1',
+    description: 'text-green-800 dark:text-green-400 font-medium',
+    label: 'text-sm text-green-700 dark:text-green-400 mb-2',
+    selectedBtn: 'bg-green-500/30 hover:bg-green-500/40 text-green-900 dark:text-green-100 border-green-500/50 font-semibold shadow-sm',
+    unselectedBtn: 'bg-green-500/10 hover:bg-green-500/15 text-green-700/70 dark:text-green-400/70 border-green-500/20 font-medium',
+    badge: 'bg-green-500/20 text-green-800 dark:text-green-300 border-green-500/30 font-semibold',
+  },
+  paused: {
+    heading: 'text-lg font-bold text-orange-900 dark:text-orange-300 mb-1',
+    description: 'text-orange-800 dark:text-orange-400 font-medium',
+    label: 'text-sm text-orange-700 dark:text-orange-400 mb-2',
+    selectedBtn: 'bg-orange-500/30 hover:bg-orange-500/40 text-orange-900 dark:text-orange-100 border-orange-500/50 font-semibold shadow-sm',
+    unselectedBtn: 'bg-orange-500/10 hover:bg-orange-500/15 text-orange-700/70 dark:text-orange-400/70 border-orange-500/20 font-medium',
+    badge: 'bg-orange-500/20 text-orange-800 dark:text-orange-300 border-orange-500/30 font-semibold',
+  },
+} as const;
+
 export function RealTimeStatusBanner({ isActive, connectionMode, onToggle: _onToggle, onSwitchMode }: RealTimeStatusBannerProps) {
   const { t } = useTranslation();
   const isFallback = oauthWebSocketService.isUsingSSE && connectionMode === 'websocket';
   const actualMode = oauthWebSocketService.connectionMode;
-  const color = isActive ? 'green' : 'orange';
+  const s = isActive ? styles.active : styles.paused;
 
   return (
     <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
@@ -26,10 +45,10 @@ export function RealTimeStatusBanner({ isActive, connectionMode, onToggle: _onTo
               : <Pause className="h-5 w-5 text-orange-600" />}
           </div>
           <div>
-            <h3 className={`text-lg font-bold text-${color}-900 dark:text-${color}-300 mb-1`}>
+            <h3 className={s.heading}>
               {isActive ? t('Real-time Monitoring Active') : t('Real-time Monitoring Paused')}
             </h3>
-            <p className={`text-${color}-800 dark:text-${color}-400 font-medium`}>
+            <p className={s.description}>
               {isActive
                 ? t('OAuth events are pushed in real time as they occur.')
                 : t('Real-time updates are paused. Click Resume to continue monitoring.')}
@@ -38,7 +57,7 @@ export function RealTimeStatusBanner({ isActive, connectionMode, onToggle: _onTo
         </div>
         <div className="text-right space-y-3">
           <div>
-            <div className={`text-sm text-${color}-700 dark:text-${color}-400 mb-2`}>{t('Connection Mode')}</div>
+            <div className={s.label}>{t('Connection Mode')}</div>
             <div className="flex items-center gap-2">
               {(['websocket', 'sse'] as const).map((mode) => (
                 <Button
@@ -47,9 +66,7 @@ export function RealTimeStatusBanner({ isActive, connectionMode, onToggle: _onTo
                   onClick={() => onSwitchMode(mode)}
                   size="sm"
                   className={`text-xs px-3 py-1 h-8 border transition-all ${
-                    connectionMode === mode
-                      ? `bg-${color}-500/30 hover:bg-${color}-500/40 text-${color}-900 dark:text-${color}-100 border-${color}-500/50 font-semibold shadow-sm`
-                      : `bg-${color}-500/10 hover:bg-${color}-500/15 text-${color}-700/70 dark:text-${color}-400/70 border-${color}-500/20 font-medium`
+                    connectionMode === mode ? s.selectedBtn : s.unselectedBtn
                   }`}
                 >
                   {mode === 'websocket' ? 'WebSocket' : 'SSE'}
@@ -64,7 +81,7 @@ export function RealTimeStatusBanner({ isActive, connectionMode, onToggle: _onTo
             )}
           </div>
           <div>
-            <Badge className={`bg-${color}-500/20 text-${color}-800 dark:text-${color}-300 border-${color}-500/30 font-semibold`}>
+            <Badge className={s.badge}>
               {isActive ? '' : 'Paused ('}
               {actualMode === 'websocket' ? 'WebSocket Active' : actualMode === 'sse' ? 'SSE Active' : 'Disconnected'}
               {isActive ? '' : ')'}

@@ -10,6 +10,7 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  PageLayout,
   StatCard,
   Table,
   TableBody,
@@ -223,7 +224,7 @@ export function AuthFlowsManager() {
   if (loading) return <PageLoadingState message={t('Loading authentication flows...')} />
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <PageLayout>
       {/* Enhanced Header */}
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
@@ -337,7 +338,7 @@ export function AuthFlowsManager() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PageLayout>
   )
 }
 

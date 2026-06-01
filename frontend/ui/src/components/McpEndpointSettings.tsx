@@ -23,7 +23,7 @@ import {
   Database,
   ChevronDown,
 } from 'lucide-react';
-import { Badge, Button, Checkbox, Switch } from '@proxy-smart/shared-ui';
+import { Badge, Button, Checkbox, PageLayout, Switch } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -210,7 +210,7 @@ export function McpEndpointSettings() {
   const totalResourceCount = status.resources?.length ?? 0;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <PageLayout>
       {/* ── Endpoint Status Card ──────────────────────────────────────── */}
       <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
@@ -447,6 +447,6 @@ export function McpEndpointSettings() {
           </div>}
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

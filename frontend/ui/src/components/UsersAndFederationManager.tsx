@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, FolderSync, Plus } from 'lucide-react';
-import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Button, PageLayout, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { HealthcareUsersManager } from './HealthcareUsersManager/HealthcareUsersManager';
 import { UserFederationManager } from './UserFederationManager/UserFederationManager';
 
@@ -11,7 +11,7 @@ export function UsersAndFederationManager() {
     const [showAddUser, setShowAddUser] = useState(false);
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+        <PageLayout>
             {/* Header */}
             <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
@@ -58,6 +58,6 @@ export function UsersAndFederationManager() {
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
+        </PageLayout>
     );
 }
