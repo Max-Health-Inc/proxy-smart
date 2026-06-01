@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Textarea } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Dialog,
@@ -25,6 +25,7 @@ import { SmartAppsTable } from './SmartAppsTable';
 import { SmartAppsStatistics } from './SmartAppsStatistics';
 import { AppStoreManagement } from './AppStoreManagement';
 import { DynamicClientRegistrationSettings } from '../DynamicClientRegistrationSettings';
+import { ScopeTagInput } from '../ScopeManager/ScopeTagInput';
 import { useAuth } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
@@ -472,18 +473,15 @@ export function SmartAppsManager() {
                     </div>
                     <div className="space-y-3">
                       <div className="text-sm font-semibold text-muted-foreground">{t('Additional Optional Scopes')}</div>
-                      <Textarea
-                        value={(editingApp.optionalClientScopes || []).join('\n')}
-                        onChange={(e) => {
-                          const optionalScopes = e.target.value.split('\n').filter(scope => scope.trim());
+                      <ScopeTagInput
+                        value={editingApp.optionalClientScopes || []}
+                        onChange={(scopes) => {
                           setEditingApp({
                             ...editingApp,
-                            optionalClientScopes: optionalScopes,
+                            optionalClientScopes: scopes,
                           });
                         }}
-                        rows={5}
-                        className="font-mono"
-                        placeholder="patient/Patient.read&#10;patient/Observation.read&#10;openid profile"
+                        placeholder="Type a scope (e.g. patient/Observation.rs)"
                       />
                     </div>
                   </div>
