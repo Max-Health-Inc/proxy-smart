@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Button, StatCard } from '@proxy-smart/shared-ui';
-import { getItem, storeItem } from '@/lib/storage';
 import { Plus, Shield, Code, Database, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/stores/authStore';
 import { FHIR_RESOURCES, SCOPE_TEMPLATES } from './constants';
 import { ScopeBuilder } from './ScopeBuilder';
 import { ScopeSetsTable } from './ScopeSetsTable';
 import { RegisteredScopes } from './RegisteredScopes';
-import type { BuilderState, ScopeSet, ScopeTemplate, ScopeValidation } from './types';
+import type { BuilderState, ScopeTemplate, ScopeValidation } from './types';
+import type { ScopeSet } from '@/lib/types/api';
 
 const INITIAL_BUILDER_STATE: BuilderState = {
   context: 'patient',
@@ -20,8 +21,9 @@ const INITIAL_BUILDER_STATE: BuilderState = {
 
 export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
   const { t } = useTranslation();
+  const { clientApis } = useAuth();
   const [scopeSets, setScopeSets] = useState<ScopeSet[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingScope, setEditingScope] = useState<ScopeSet | null>(null);
 
@@ -31,43 +33,41 @@ export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
   /* ─── Data ─────────────────────────────────────────────────────── */
 
   useEffect(() => {
-    getItem<ScopeSet[]>('smart-scope-sets')
-      .then(async savedSets => {
-        const sets = savedSets || [];
-        const templatesWithIds = SCOPE_TEMPLATES.map((template) => ({
-          ...template,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isTemplate: true,
-        }));
-        const existingTemplateIds = sets.filter((s: ScopeSet) => s.isTemplate).map((s: ScopeSet) => s.id);
-        const newTemplates = templatesWithIds.filter((t) => !existingTemplateIds.includes(t.id));
-        const allSets = [...sets, ...newTemplates];
-        setScopeSets(allSets);
-        await storeItem('smart-scope-sets', allSets);
-      })
+    let cancelled = false;
+    clientApis.scopeSets.getAdminScopeSets()
+      .then(response => { if (!cancelled) setScopeSets(response?.scopeSets || []); })
       .catch(error => console.error('Failed to load scope sets:', error))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [clientApis.scopeSets]);
 
-  const saveScopeSet = async (scopeSet: Omit<ScopeSet, 'id' | 'createdAt' | 'updatedAt' | 'isTemplate'>) => {
-    const newSet: ScopeSet = {
-      ...scopeSet,
-      id: editingScope?.id || `scope-${crypto.randomUUID()}`,
-      createdAt: editingScope?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      isTemplate: false,
-    };
-    const updatedSets = editingScope ? scopeSets.map((s) => (s.id === editingScope.id ? newSet : s)) : [...scopeSets, newSet];
-    setScopeSets(updatedSets);
-    await storeItem('smart-scope-sets', updatedSets);
+  const saveScopeSet = async (scopeSet: { name: string; description?: string; scopes: string[] }) => {
+    try {
+      if (editingScope) {
+        const updated = await clientApis.scopeSets.putAdminScopeSetsById({
+          id: editingScope.id,
+          updateScopeSetRequest: scopeSet,
+        });
+        setScopeSets(prev => prev.map(s => s.id === editingScope.id ? updated : s));
+      } else {
+        const created = await clientApis.scopeSets.postAdminScopeSets({
+          createScopeSetRequest: scopeSet,
+        });
+        setScopeSets(prev => [...prev, created]);
+      }
+    } catch (error) {
+      console.error('Failed to save scope set:', error);
+    }
     resetBuilder();
   };
 
   const deleteScopeSet = async (id: string) => {
-    const updatedSets = scopeSets.filter((s) => s.id !== id);
-    setScopeSets(updatedSets);
-    await storeItem('smart-scope-sets', updatedSets);
+    try {
+      await clientApis.scopeSets.deleteAdminScopeSetsById({ id });
+      setScopeSets(prev => prev.filter(s => s.id !== id));
+    } catch (error) {
+      console.error('Failed to delete scope set:', error);
+    }
   };
 
   /* ─── Handlers ─────────────────────────────────────────────────── */
@@ -81,7 +81,7 @@ export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
 
   const editScopeSet = (scopeSet: ScopeSet) => {
     setEditingScope(scopeSet);
-    setNewScopeSet({ name: scopeSet.name, description: scopeSet.description, scopes: [...scopeSet.scopes] });
+    setNewScopeSet({ name: scopeSet.name, description: scopeSet.description || '', scopes: [...scopeSet.scopes] });
     setShowBuilder(true);
   };
 

@@ -25,6 +25,7 @@ import { appStoreAdminRoutes } from './app-store'
 import { clientPoliciesRoutes } from './client-policies'
 import { dicomServersAdminRoutes } from './dicom-servers'
 import { authFlowsRoutes } from './auth-flows'
+import { scopeSetsAdminRoutes } from './scope-sets'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -129,6 +130,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(dicomServersAdminRoutes)
   // Authentication flow management (client authenticators, federated-jwt)
   .use(authFlowsRoutes)
+  // Scope Sets — reusable named scope collections
+  .use(scopeSetsAdminRoutes)
 
 // Initialize the tool registry once at startup
 initializeToolRegistry(adminRoutes, {
