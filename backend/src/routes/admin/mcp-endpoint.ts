@@ -150,7 +150,10 @@ function buildToolList(cfg: McpEndpointConfig) {
   // Include the unified read_resource tool (replaces individual GET route tools)
   const readResourceName = 'read_resource'
   let readResourceExposed: boolean
-  if (cfg.enabledTools !== null) {
+  if (!cfg.exposeResourcesAsTools) {
+    // When exposeResourcesAsTools is off, read_resource is always disabled
+    readResourceExposed = false
+  } else if (cfg.enabledTools !== null) {
     readResourceExposed = cfg.enabledTools.includes(readResourceName)
   } else {
     readResourceExposed = !cfg.disabledTools.includes(readResourceName)
