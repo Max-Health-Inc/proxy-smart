@@ -210,7 +210,7 @@ export function McpEndpointSettings() {
   const totalResourceCount = status.resources?.length ?? 0;
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
       {/* ── Endpoint Status Card ──────────────────────────────────────── */}
       <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
