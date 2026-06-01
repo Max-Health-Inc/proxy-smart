@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.3-beta.202606011847.26652b925] - 2026-06-01
+
+- 🔧 Chores & Improvements: Sync package versions across monorepo
+- 🔧 Chores & Improvements: Update shared-ui to 1b06f6a (table header/body spacing fix)
+- 🐛 Bug Fixes: Remove accidental @max-health-inc/shared-ui npm dep from root
+- 🔧 Chores & Improvements: Update beta/dev SMART compliance reports for CI/CD
+- 🔧 Chores & Improvements: Version bump updates for pre-release tags (beta/alpha)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/755
+
+
 ## [0.2.2-beta.202605291257.9974557c6] - 2026-05-29
 
 - ⚠️ Breaking Changes: None detected

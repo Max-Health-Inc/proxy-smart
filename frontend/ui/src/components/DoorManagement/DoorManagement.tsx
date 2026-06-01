@@ -8,7 +8,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { Badge, Button, Spinner } from '@proxy-smart/shared-ui';
+import { Badge, Button, PageLayout, Spinner } from '@proxy-smart/shared-ui';
 import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import type {
   AccessHealthResponse,
@@ -62,18 +62,18 @@ export function DoorManagement() {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+      <PageLayout>
         <div className="flex items-center justify-center py-20">
           <Spinner size="lg" />
           <span className="ml-3 text-muted-foreground">{t('Checking door management status...')}</span>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (error || !health) {
     return (
-      <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+      <PageLayout>
         <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -93,18 +93,18 @@ export function DoorManagement() {
             {error || t('Could not reach the door management service. Please check your configuration.')}
           </p>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   if (!health.configured) {
     return (
-      <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+      <PageLayout>
         <ConfigureProviderPanel onSuccess={() => {
           setLoading(true);
           fetchHealth();
         }} />
-      </div>
+      </PageLayout>
     );
   }
 
@@ -115,7 +115,7 @@ export function DoorManagement() {
   const showEvents = capabilities?.events ?? false;
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <PageLayout>
       {/* Header */}
       <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -186,6 +186,6 @@ export function DoorManagement() {
         )}
       </Tabs>
       </div>
-    </div>
+    </PageLayout>
   );
 }

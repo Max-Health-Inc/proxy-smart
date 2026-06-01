@@ -14,7 +14,7 @@ import {
 } from '@proxy-smart/shared-ui';
 import { Copy, Database, Edit, Settings, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { ScopeSet } from './types';
+import type { ScopeSet } from '@/lib/types/api';
 
 interface ScopeSetsTableProps {
   scopeSets: ScopeSet[];
@@ -97,7 +97,7 @@ export function ScopeSetsTable({ scopeSets, loading, onEdit, onDelete }: ScopeSe
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(scopeSet.updatedAt).toLocaleDateString()}
+                      {scopeSet.updatedAt ? new Date(scopeSet.updatedAt).toLocaleDateString() : '—'}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

@@ -153,8 +153,11 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
   )
   }
 
-  // Register unified read_resource tool — collapses all GET route tools into one
-  if (isToolExposed('read_resource')) {
+  // Register unified read_resource tool — collapses all GET route tools into one.
+  // Gated by `exposeResourcesAsTools` config: when false, resources are only
+  // available as MCP resources (not as callable tools).
+  const cfg = loadMcpEndpointConfig()
+  if (cfg.exposeResourcesAsTools && isToolExposed('read_resource')) {
     registerReadResourceTool(server, userRoles, tokenRef)
   }
 }
@@ -482,10 +485,11 @@ function unauthorized(): Response {
 // ── Core request handler ─────────────────────────────────────────────────────
 
 async function handleMcpRequest(request: Request): Promise<Response> {
-  // Check master switch — file config (admin UI toggle) overrides env-based config.
-  // Either source being enabled is sufficient; this matches the admin status endpoint.
+  // Check master switch — env var takes absolute precedence, otherwise file config.
   const endpointCfg = loadMcpEndpointConfig()
-  if (!endpointCfg.enabled && !config.mcp.enabled) {
+  const envOverride = process.env.MCP_ENDPOINT_ENABLED
+  const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : endpointCfg.enabled
+  if (!effectiveEnabled) {
     return new Response(JSON.stringify({ error: 'MCP endpoint is disabled' }), {
       status: 404,
       headers: { 'Content-Type': 'application/json' },

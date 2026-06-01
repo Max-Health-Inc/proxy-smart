@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@proxy-smart/shared-ui';
+import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Building2,
@@ -144,7 +144,7 @@ export function BrandSettings() {
   }
 
   return (
-    <div className="space-y-6">
+    <PageLayout>
       {/* Header */}
       <div className="bg-card/70 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-lg">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-4 lg:space-y-0">
@@ -469,6 +469,6 @@ export function BrandSettings() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </PageLayout>
   );
 }

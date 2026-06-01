@@ -36,15 +36,13 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
     const resources = buildResourceList(cfg)
 
-    const configSource =
-      process.env.MCP_ENDPOINT_ENABLED !== undefined
-        ? 'env'
-        : cfg.updatedAt !== new Date(0).toISOString()
-          ? 'file'
-          : 'default'
+    // Env var takes absolute precedence (non-overridable); otherwise use file config
+    const envOverride = process.env.MCP_ENDPOINT_ENABLED
+    const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : cfg.enabled
+    const configSource = envOverride !== undefined ? 'env' : 'file'
 
     return {
-      enabled: cfg.enabled || config.mcp.enabled,
+      enabled: effectiveEnabled,
       configSource,
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
@@ -90,9 +88,13 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
     const resources = buildResourceList(cfg)
 
+    // Env var takes absolute precedence; otherwise use file config
+    const envOverride = process.env.MCP_ENDPOINT_ENABLED
+    const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : cfg.enabled
+
     return {
-      enabled: cfg.enabled || config.mcp.enabled,
-      configSource: 'file',
+      enabled: effectiveEnabled,
+      configSource: envOverride !== undefined ? 'env' : 'file',
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,
@@ -150,7 +152,10 @@ function buildToolList(cfg: McpEndpointConfig) {
   // Include the unified read_resource tool (replaces individual GET route tools)
   const readResourceName = 'read_resource'
   let readResourceExposed: boolean
-  if (cfg.enabledTools !== null) {
+  if (!cfg.exposeResourcesAsTools) {
+    // When exposeResourcesAsTools is off, read_resource is always disabled
+    readResourceExposed = false
+  } else if (cfg.enabledTools !== null) {
     readResourceExposed = cfg.enabledTools.includes(readResourceName)
   } else {
     readResourceExposed = !cfg.disabledTools.includes(readResourceName)

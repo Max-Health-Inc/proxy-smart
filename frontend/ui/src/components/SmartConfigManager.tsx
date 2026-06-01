@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, Play, Shield, Link, ShieldCheck, Lock } from 'lucide-react';
-import { Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { PageLayout, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { ScopeManager } from './ScopeManager';
 import { LaunchContextManager } from './LaunchContextManager';
 import { ProtocolMappersManager } from './ProtocolMappersManager';
@@ -13,7 +13,7 @@ export function SmartConfigManager() {
     const [activeTab, setActiveTab] = useState('scopes');
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+        <PageLayout>
             {/* Header */}
             <div className="bg-muted/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-border/50 shadow-lg">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between space-y-6 lg:space-y-0">
@@ -78,6 +78,6 @@ export function SmartConfigManager() {
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
+        </PageLayout>
     );
 }

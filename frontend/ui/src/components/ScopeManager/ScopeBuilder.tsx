@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { FHIR_RESOURCES, FHIR_PERMISSIONS, SCOPE_CONTEXTS, SCOPE_TEMPLATES } from './constants';
-import type { BuilderState, ScopeSet, ScopeTemplate, ScopeValidation } from './types';
+import type { BuilderState, ScopeTemplate, ScopeValidation } from './types';
+import type { ScopeSet } from '@/lib/types/api';
 
 interface ScopeBuilderProps {
   editingScope: ScopeSet | null;

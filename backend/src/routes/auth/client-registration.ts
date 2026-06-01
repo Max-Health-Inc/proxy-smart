@@ -223,6 +223,7 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         enabled: !settings.adminApprovalRequired, // Disable if approval required
         protocol: 'openid-connect',
         publicClient: !isConfidential,
+        fullScopeAllowed: true, // Include all user roles in the token (realm_access.roles)
         standardFlowEnabled: true, // Authorization code flow
         serviceAccountsEnabled: isBackendService, // Backend services
         redirectUris: allRedirectUris,

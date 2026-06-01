@@ -1,6 +1,7 @@
-import { Badge, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
+import { Badge, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ScopeTagInput } from '../../ScopeManager/ScopeTagInput';
 import type { SmartAppFormData, ScopeSet } from '@/lib/types/api';
 
 interface ScopeConfigSectionProps {
@@ -25,7 +26,7 @@ export function ScopeConfigSection({ newApp, updateApp, scopeSets, getScopeSetNa
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
                 <div className="space-y-3">
                     <Label htmlFor="scopeSet" className="text-sm font-semibold text-foreground">{t('Scope Template')}</Label>
                     <Select
@@ -43,15 +44,11 @@ export function ScopeConfigSection({ newApp, updateApp, scopeSets, getScopeSetNa
                 </div>
 
                 <div className="space-y-3">
-                    <Label htmlFor="customScopes" className="text-sm font-semibold text-foreground">{t('Additional Scopes')}</Label>
-                    <Input
-                        id="customScopes"
-                        placeholder="patient/Patient.read, user/Observation.read"
-                        value={(newApp.optionalClientScopes || []).join(', ')}
-                        onChange={(e) => updateApp({
-                            optionalClientScopes: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
-                        })}
-                        className="rounded-xl border-input focus:border-ring focus:ring-ring shadow-sm"
+                    <Label className="text-sm font-semibold text-foreground">{t('Additional Scopes')}</Label>
+                    <ScopeTagInput
+                        value={newApp.optionalClientScopes || []}
+                        onChange={(scopes) => updateApp({ optionalClientScopes: scopes })}
+                        placeholder="Type a scope (e.g. patient/Observation.rs)"
                     />
                 </div>
             </div>
