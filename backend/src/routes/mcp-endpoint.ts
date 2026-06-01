@@ -153,8 +153,11 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
   )
   }
 
-  // Register unified read_resource tool — collapses all GET route tools into one
-  if (isToolExposed('read_resource')) {
+  // Register unified read_resource tool — collapses all GET route tools into one.
+  // Gated by `exposeResourcesAsTools` config: when false, resources are only
+  // available as MCP resources (not as callable tools).
+  const cfg = loadMcpEndpointConfig()
+  if (cfg.exposeResourcesAsTools && isToolExposed('read_resource')) {
     registerReadResourceTool(server, userRoles, tokenRef)
   }
 }
