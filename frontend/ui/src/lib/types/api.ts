@@ -64,16 +64,6 @@ export interface SmartAppFormData extends CreateSmartAppRequest {
   authenticationType?: 'asymmetric' | 'symmetric' | 'none'; // UI-only field for form UX
 }
 
-export interface ScopeSet {
-  id: string;
-  name: string;
-  description?: string;
-  scopes: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  isTemplate?: boolean;
-}
-
 export interface ContextSet {
   id: string;
   name: string;

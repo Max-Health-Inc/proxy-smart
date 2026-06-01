@@ -29,7 +29,6 @@ import { ScopeTagInput } from '../ScopeManager/ScopeTagInput';
 import { useAuth } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
-import { getItem, storeItem } from '@/lib/storage';
 import { createAuthenticatedClientApis } from '@/lib/apiClient';
 import type { SmartApp, ScopeSet, SmartAppFormData, SmartAppClientTypeEnum } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
@@ -51,20 +50,20 @@ export function SmartAppsManager() {
   const [editingApp, setEditingApp] = useState<SmartApp | null>(null);
   const { notify } = useNotificationStore();
 
-  // Load scope sets from ScopeManager
+  // Load scope sets from backend
   useEffect(() => {
     const loadScopeSets = async () => {
       try {
-        const saved = await getItem<ScopeSet[]>('smart-scope-sets');
-        if (Array.isArray(saved)) {
-          setScopeSets(saved);
+        const response = await clientApis.scopeSets.getAdminScopeSets();
+        if (response?.scopeSets) {
+          setScopeSets(response.scopeSets);
         }
       } catch (error) {
         console.error('Failed to load scope sets:', error);
       }
     };
     loadScopeSets();
-  }, []);
+  }, [clientApis.scopeSets]);
 
   // Fetch SMART apps from backend
   useEffect(() => {
@@ -510,17 +509,21 @@ export function SmartAppsManager() {
                         onClick={async () => {
                           const name = prompt(t('Name for new scope set:'));
                           if (!name?.trim()) return;
-                          const newSet = {
-                            id: `scope-${crypto.randomUUID()}`,
-                            name: name.trim(),
-                            description: `Saved from ${editingApp.name}`,
-                            scopes: [...(editingApp.defaultClientScopes || [])],
-                          };
-                          const updatedSets = [...scopeSets, newSet];
-                          setScopeSets(updatedSets);
-                          await storeItem('smart-scope-sets', updatedSets);
-                          setEditingApp({ ...editingApp, scopeSetId: newSet.id });
-                          notify({ type: 'success', message: t('Scope set saved') });
+                          try {
+                            const created = await clientApis.scopeSets.postAdminScopeSets({
+                              createScopeSetRequest: {
+                                name: name.trim(),
+                                description: `Saved from ${editingApp.name}`,
+                                scopes: [...(editingApp.defaultClientScopes || [])],
+                              },
+                            });
+                            setScopeSets(prev => [...prev, created]);
+                            setEditingApp({ ...editingApp, scopeSetId: created.id });
+                            notify({ type: 'success', message: t('Scope set saved') });
+                          } catch (error) {
+                            console.error('Failed to save scope set:', error);
+                            notify({ type: 'error', message: t('Failed to save scope set') });
+                          }
                         }}
                         className="rounded-lg"
                       >
