@@ -9,17 +9,19 @@ export function ServersManager() {
   const [activeTab, setActiveTab] = useState('fhir')
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-      <ResponsiveTabsList>
-        <TabsTrigger value="fhir">{t('FHIR Servers')}</TabsTrigger>
-        <TabsTrigger value="dicom">{t('DICOM Servers')}</TabsTrigger>
-      </ResponsiveTabsList>
-      <TabsContent value="fhir">
-        <FhirServersManager />
-      </TabsContent>
-      <TabsContent value="dicom">
-        <DicomServersManager />
-      </TabsContent>
-    </Tabs>
+    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <ResponsiveTabsList>
+          <TabsTrigger value="fhir">{t('FHIR Servers')}</TabsTrigger>
+          <TabsTrigger value="dicom">{t('DICOM Servers')}</TabsTrigger>
+        </ResponsiveTabsList>
+        <TabsContent value="fhir">
+          <FhirServersManager />
+        </TabsContent>
+        <TabsContent value="dicom">
+          <DicomServersManager />
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }
