@@ -147,7 +147,6 @@
   },
   "homepage": "https://beta.proxy-smart.com",
   "dependencies": {
-    "@max-health-inc/shared-ui": "^0.3.11",
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
     "undici": "^8.3.0"
   },
