@@ -29,7 +29,7 @@ import { ScopeTagInput } from '../ScopeManager/ScopeTagInput';
 import { useAuth } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
-import { getItem } from '@/lib/storage';
+import { getItem, storeItem } from '@/lib/storage';
 import { createAuthenticatedClientApis } from '@/lib/apiClient';
 import type { SmartApp, ScopeSet, SmartAppFormData, SmartAppClientTypeEnum } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
@@ -441,50 +441,97 @@ export function SmartAppsManager() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold text-muted-foreground">{t('Select Scope Set')}</div>
+                    <Select
+                      value={editingApp.scopeSetId || '__custom__'}
+                      onValueChange={(value) => {
+                        const scopeSetId = value === '__custom__' ? null : value;
+                        setEditingApp({
+                          ...editingApp,
+                          scopeSetId: scopeSetId || undefined,
+                          defaultClientScopes: scopeSetId 
+                            ? (scopeSets.find(set => set.id === scopeSetId)?.scopes || [])
+                            : editingApp.defaultClientScopes || []
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__custom__">{t('Custom (editable)')}</SelectItem>
+                        {scopeSets.map((scopeSet) => (
+                          <SelectItem key={scopeSet.id} value={scopeSet.id}>
+                            {scopeSet.name} ({scopeSet.scopes.length} scopes)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Editable default scopes when Custom is selected */}
+                  {!editingApp.scopeSetId && (
                     <div className="space-y-3">
-                      <div className="text-sm font-semibold text-muted-foreground">{t('Select Scope Set')}</div>
-                      <Select
-                        value={editingApp.scopeSetId || '__custom__'}
-                        onValueChange={(value) => {
-                          const scopeSetId = value === '__custom__' ? null : value;
-                          const optionalScopes = editingApp.optionalClientScopes || [];
-                          setEditingApp({
-                            ...editingApp,
-                            scopeSetId: scopeSetId || undefined,
-                            defaultClientScopes: scopeSetId 
-                              ? [...(scopeSets.find(set => set.id === scopeSetId)?.scopes || []), ...optionalScopes]
-                              : editingApp.defaultClientScopes || []
-                          });
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__custom__">{t('Custom Scopes Only')}</SelectItem>
-                          {scopeSets.map((scopeSet) => (
-                            <SelectItem key={scopeSet.id} value={scopeSet.id}>
-                              {scopeSet.name} ({scopeSet.scopes.length} scopes)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="text-sm font-semibold text-muted-foreground">{t('Additional Optional Scopes')}</div>
+                      <div className="text-sm font-semibold text-muted-foreground">{t('Default Scopes')}</div>
                       <ScopeTagInput
-                        value={editingApp.optionalClientScopes || []}
+                        value={editingApp.defaultClientScopes || []}
                         onChange={(scopes) => {
                           setEditingApp({
                             ...editingApp,
-                            optionalClientScopes: scopes,
+                            defaultClientScopes: scopes,
                           });
                         }}
-                        placeholder="Type a scope (e.g. patient/Observation.rs)"
+                        placeholder="Type a scope (e.g. patient/Observation.rs, openid, fhirUser)"
                       />
                     </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="text-sm font-semibold text-muted-foreground">{t('Additional Optional Scopes')}</div>
+                    <ScopeTagInput
+                      value={editingApp.optionalClientScopes || []}
+                      onChange={(scopes) => {
+                        setEditingApp({
+                          ...editingApp,
+                          optionalClientScopes: scopes,
+                        });
+                      }}
+                      placeholder="Type an optional scope (e.g. offline_access)"
+                    />
                   </div>
+
+                  {/* Save as Scope Set */}
+                  {!editingApp.scopeSetId && (editingApp.defaultClientScopes?.length ?? 0) > 0 && (
+                    <div className="pt-2 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const name = prompt(t('Name for new scope set:'));
+                          if (!name?.trim()) return;
+                          const newSet = {
+                            id: `scope-${crypto.randomUUID()}`,
+                            name: name.trim(),
+                            description: `Saved from ${editingApp.name}`,
+                            scopes: [...(editingApp.defaultClientScopes || [])],
+                          };
+                          const updatedSets = [...scopeSets, newSet];
+                          setScopeSets(updatedSets);
+                          await storeItem('smart-scope-sets', updatedSets);
+                          setEditingApp({ ...editingApp, scopeSetId: newSet.id });
+                          notify({ type: 'success', message: t('Scope set saved') });
+                        }}
+                        className="rounded-lg"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        {t('Save as Scope Set')}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t('Save the current default scopes as a reusable scope set')}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

@@ -7,7 +7,8 @@ import { FHIR_RESOURCES, SCOPE_TEMPLATES } from './constants';
 import { ScopeBuilder } from './ScopeBuilder';
 import { ScopeSetsTable } from './ScopeSetsTable';
 import { RegisteredScopes } from './RegisteredScopes';
-import type { BuilderState, ScopeSet, ScopeTemplate, ScopeValidation } from './types';
+import type { BuilderState, ScopeTemplate, ScopeValidation } from './types';
+import type { ScopeSet } from '@/lib/types/api';
 
 const INITIAL_BUILDER_STATE: BuilderState = {
   context: 'patient',

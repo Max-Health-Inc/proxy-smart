@@ -69,6 +69,9 @@ export interface ScopeSet {
   name: string;
   description?: string;
   scopes: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  isTemplate?: boolean;
 }
 
 export interface ContextSet {

@@ -1,13 +1,3 @@
-export interface ScopeSet {
-  id: string;
-  name: string;
-  description: string;
-  scopes: string[];
-  createdAt: string;
-  updatedAt: string;
-  isTemplate: boolean;
-}
-
 export interface ScopeTemplate {
   id: string;
   name: string;
