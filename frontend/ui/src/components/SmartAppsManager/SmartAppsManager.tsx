@@ -1,4 +1,4 @@
-import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Dialog,
@@ -253,7 +253,7 @@ export function SmartAppsManager() {
   };
 
   return (
-    <div className="p-4 sm:p-6 space-y-6 bg-background min-h-full">
+    <PageLayout>
       {loading ? (
         <PageLoadingState message={t('Loading SMART applications...')} />
       ) : (
@@ -812,6 +812,6 @@ export function SmartAppsManager() {
           </div>
         </>
       )}
-    </div>
+    </PageLayout>
   );
 }
