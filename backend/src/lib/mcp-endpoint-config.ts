@@ -77,6 +77,7 @@ export function saveMcpEndpointConfig(cfg: McpEndpointConfig): void {
  */
 const PROTECTED_TOOLS = new Set([
   'update_admin_mcp-endpoint',
+  'update_admin_mcp-endpoint_tools_toolName',
   'get_admin_mcp-endpoint',
 ])
 
