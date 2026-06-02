@@ -51,13 +51,13 @@ jobs:
       # ── Setup ──────────────────────────────────────────────
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.BASE_BRANCH }}
           fetch-depth: 0
@@ -342,7 +342,7 @@ jobs:
       # ── Artifacts ──────────────────────────────────────────
       - name: Upload logs
         if: always() && steps.check-failures.outputs.needs_fix == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: copilot-auto-fix-logs
           path: /tmp/copilot-*.log
