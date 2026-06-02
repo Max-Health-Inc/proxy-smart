@@ -752,11 +752,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://patient.beta.proxy-smart.com/*",
+        "https://patient-beta.maxhealth.tech/*",
         "https://beta.proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://patient.beta.proxy-smart.com"
+        "https://patient-beta.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -808,11 +808,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://dicom.beta.proxy-smart.com/*",
+        "https://dicom-beta.maxhealth.tech/*",
         "https://beta.proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://dicom.beta.proxy-smart.com"
+        "https://dicom-beta.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -854,11 +854,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://consent.beta.proxy-smart.com/*",
+        "https://consent-beta.maxhealth.tech/*",
         "https://beta.proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://consent.beta.proxy-smart.com"
+        "https://consent-beta.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
@@ -910,11 +910,11 @@
       "enabled": true,
       "clientAuthenticatorType": "client-dummy",
       "redirectUris": [
-        "https://dtr.beta.proxy-smart.com/*",
+        "https://dtr-beta.maxhealth.tech/*",
         "https://beta.proxy-smart.com/auth/smart-callback"
       ],
       "webOrigins": [
-        "https://dtr.beta.proxy-smart.com"
+        "https://dtr-beta.maxhealth.tech"
       ],
       "protocol": "openid-connect",
       "publicClient": true,
