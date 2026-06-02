@@ -40,6 +40,9 @@ COPY packages/auth/ ./packages/auth/
 COPY packages/app-store/ ./packages/app-store/
 COPY backend/ ./backend/
 WORKDIR /app/backend
+# NODE_ENV=production ensures the bundler preserves production-only code paths
+# (e.g. CORS origins for production app domains) during dead-code elimination
+ENV NODE_ENV=production
 RUN bun run build
 
 # OpenAPI spec generation (runs in parallel with backend-build)
