@@ -1,11 +1,11 @@
 {
   "test_suite": "",
   "test_stage": "dev",
-  "timestamp": "2026-06-02T20:48:13Z",
-  "commit": "f06c666e8c36ad8a5f930d3e420d45f7bb36afb5",
-  "run_id": "26846915831",
-  "run_url": "https://github.com/Max-Health-Inc/proxy-smart/actions/runs/26846915831",
-  "passed": 62,
+  "timestamp": "2026-06-02T20:59:32Z",
+  "commit": "c0e80c8965c86760dfa629dfe9b35e5a0eb93754",
+  "run_id": "26847534334",
+  "run_url": "https://github.com/Max-Health-Inc/proxy-smart/actions/runs/26847534334",
+  "passed": 0,
   "failed": 0,
-  "status": "success"
+  "status": "skipped"
 }
