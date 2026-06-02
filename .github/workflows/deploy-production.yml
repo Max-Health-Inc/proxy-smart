@@ -102,6 +102,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ inputs.app_version }}
           build-args: |
             VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
+            DEPLOY_ENV=prod
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

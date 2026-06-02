@@ -1,12 +1,11 @@
 {
-  "_comment": "Dev/local default. Production/beta configs live in deploy/prod/ and deploy/beta/.",
   "hiddenAppIds": ["aihr-portal"],
   "publishedApps": [
     {
       "clientId": "consent-app",
       "name": "Consent Manager",
       "description": "Patient consent management — view, grant, and revoke consent directives",
-      "launchUrl": "http://localhost:5173/",
+      "launchUrl": "https://consent.beta.proxy-smart.com/",
       "category": "clinical",
       "logoUri": "shield-check"
     },
@@ -14,7 +13,7 @@
       "clientId": "dtr-app",
       "name": "Documentation, Templates & Rules",
       "description": "Prior authorization and clinical documentation workflow (Da Vinci DTR)",
-      "launchUrl": "http://localhost:5174/",
+      "launchUrl": "https://dtr.beta.proxy-smart.com/",
       "category": "administrative",
       "logoUri": "file-text"
     },
@@ -22,7 +21,7 @@
       "clientId": "patient-portal",
       "name": "Patient Portal",
       "description": "Patient-facing portal for health records, imaging, and shared health links",
-      "launchUrl": "http://localhost:5175/",
+      "launchUrl": "https://patient.beta.proxy-smart.com/",
       "category": "patient",
       "logoUri": "user-round"
     },
@@ -30,7 +29,7 @@
       "clientId": "dicom-viewer",
       "name": "DICOM Viewer",
       "description": "Medical imaging viewer with DICOMweb integration — view, annotate, and share studies",
-      "launchUrl": "http://localhost:5181/",
+      "launchUrl": "https://dicom.beta.proxy-smart.com/",
       "category": "clinical",
       "logoUri": "scan"
     },
@@ -38,7 +37,7 @@
       "clientId": "aihr-portal",
       "name": "AI Health Records",
       "description": "AI-powered health records analysis, clinical decision support, and documentation",
-      "launchUrl": "http://localhost:5182/",
+      "launchUrl": "https://aihr.beta.proxy-smart.com/",
       "category": "clinical",
       "logoUri": "brain"
     }
