@@ -1,7 +1,10 @@
 FROM quay.io/keycloak/keycloak:26.6.1
 
-# Copy the realm export file (will be overridden by docker-compose volume mount if needed)
+# Copy realm export — environment-specific (deploy/<env>/realm-export.json)
+# Falls back to keycloak/realm-export.json (dev/CI) if deploy env file missing.
+ARG DEPLOY_ENV=dev
 COPY keycloak/realm-export.json /opt/keycloak/data/import/realm-export.json
+COPY deploy/${DEPLOY_ENV}/realm-export.jso[n] /opt/keycloak/data/import/
 
 # Copy custom login theme (IdP button icons, branding overrides)
 COPY keycloak/themes/proxy-smart /opt/keycloak/themes/proxy-smart

@@ -1,5 +1,4 @@
 {
-  "hiddenAppIds": ["aihr-portal"],
   "publishedApps": [
     {
       "clientId": "consent-app",
@@ -32,14 +31,6 @@
       "launchUrl": "https://dicom.maxhealth.tech/",
       "category": "clinical",
       "logoUri": "scan"
-    },
-    {
-      "clientId": "aihr-portal",
-      "name": "AI Health Records",
-      "description": "AI-powered health records analysis, clinical decision support, and documentation",
-      "launchUrl": "https://aihr.maxhealth.tech/",
-      "category": "clinical",
-      "logoUri": "brain"
     }
   ],
   "updatedAt": "2026-06-02T12:00:00.000Z"

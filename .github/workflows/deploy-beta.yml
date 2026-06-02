@@ -125,6 +125,7 @@ jobs:
             ${{ env.IMAGE_PREFIX }}/backend:beta-latest
           build-args: |
             VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
+            DEPLOY_ENV=beta
           cache-from: type=gha,scope=beta-backend-v2
           cache-to: type=gha,mode=max,scope=beta-backend-v2
 
@@ -137,6 +138,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-latest
+          build-args: |
+            DEPLOY_ENV=beta
           cache-from: type=gha,scope=beta-keycloak
           cache-to: type=gha,mode=max,scope=beta-keycloak
 
@@ -217,7 +220,7 @@ jobs:
           ${SCP_CMD} scripts/seed/fhir-seed-bundle.json ${VPS_TARGET}:${DEPLOY_DIR}/fhir-seed-bundle.json
           ${SCP_CMD} scripts/seed/seed-dicom.sh ${VPS_TARGET}:${DEPLOY_DIR}/seed-dicom.sh
           ${SCP_CMD} .github/scripts/deploy-beta-remote.sh ${VPS_TARGET}:${DEPLOY_DIR}/deploy-beta-remote.sh
-          ${SSH_CMD} "chmod +x ${DEPLOY_DIR}/seed-dicom.sh ${DEPLOY_DIR}/deploy-beta-remote.sh && mkdir -p ${DEPLOY_DIR}/dicom ${DEPLOY_DIR}/apps"
+          ${SSH_CMD} "chmod +x ${DEPLOY_DIR}/seed-dicom.sh ${DEPLOY_DIR}/deploy-beta-remote.sh && mkdir -p ${DEPLOY_DIR}/dicom"
 
           # Copy DICOM files if present
           if [ -d scripts/seed/dicom ] && ls scripts/seed/dicom/*.dcm 1>/dev/null 2>&1; then
