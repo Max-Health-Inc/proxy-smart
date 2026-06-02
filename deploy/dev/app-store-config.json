@@ -1,5 +1,4 @@
 {
-  "_comment": "Dev/local default. Production/beta configs live in deploy/prod/ and deploy/beta/.",
   "hiddenAppIds": ["aihr-portal"],
   "publishedApps": [
     {

@@ -125,10 +125,9 @@ COPY --from=backend-build /app/node_modules ./node_modules
 COPY --from=backend-build /app/packages/auth ./packages/auth
 COPY --from=backend-build /app/packages/app-store ./packages/app-store
 
-# Copy seed data (app-store-config, mcp-endpoint) for first-run initialization
-# Start with default seed files from backend/data/
+# Copy seed data for first-run initialization
+# mcp-endpoint.json comes from backend/data/, app-store-config from deploy/<env>/
 COPY backend/data/ ./backend/data-seed/
-# Overlay environment-specific configs (deploy/<env>/ files override defaults)
 ARG DEPLOY_ENV=prod
 COPY deploy/${DEPLOY_ENV}/app-store-config.json ./backend/data-seed/app-store-config.json
 

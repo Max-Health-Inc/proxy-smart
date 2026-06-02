@@ -11,16 +11,21 @@ export const DATA_DIR = process.env.DATA_DIR || join(process.cwd(), 'data')
 /** Directory containing seed files baked into the Docker image */
 const SEED_DIR = join(process.cwd(), 'data-seed')
 
+/** Local dev fallback: deploy/dev/ at the repo root (when data-seed/ doesn't exist) */
+const DEV_SEED_DIR = join(process.cwd(), '..', 'deploy', 'dev')
+
 /** Ensure the data directory exists and seed missing config files from the image. */
 export function ensureDataDir(): void {
   mkdirSync(DATA_DIR, { recursive: true })
 
-  // Seed any missing files from data-seed/ (first-run initialization)
-  if (existsSync(SEED_DIR)) {
-    for (const file of readdirSync(SEED_DIR)) {
+  // Determine seed source: Docker image has data-seed/, local dev uses deploy/dev/
+  const seedDir = existsSync(SEED_DIR) ? SEED_DIR : existsSync(DEV_SEED_DIR) ? DEV_SEED_DIR : null
+
+  if (seedDir) {
+    for (const file of readdirSync(seedDir)) {
       const target = join(DATA_DIR, file)
       if (!existsSync(target)) {
-        copyFileSync(join(SEED_DIR, file), target)
+        copyFileSync(join(seedDir, file), target)
       }
     }
   }
