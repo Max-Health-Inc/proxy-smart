@@ -138,6 +138,8 @@ jobs:
           tags: |
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-latest
+          build-args: |
+            DEPLOY_ENV=beta
           cache-from: type=gha,scope=beta-keycloak
           cache-to: type=gha,mode=max,scope=beta-keycloak
 
