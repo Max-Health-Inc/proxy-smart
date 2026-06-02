@@ -72,9 +72,19 @@ export function saveMcpEndpointConfig(cfg: McpEndpointConfig): void {
 }
 
 /**
+ * Tools that must always remain exposed — prevents locking yourself out.
+ * The MCP config tool itself must always be reachable so admins can re-enable others.
+ */
+const PROTECTED_TOOLS = new Set([
+  'update_admin_mcp-endpoint',
+  'get_admin_mcp-endpoint',
+])
+
+/**
  * Check whether a specific tool should be exposed via the MCP endpoint.
  */
 export function isToolExposed(toolName: string): boolean {
+  if (PROTECTED_TOOLS.has(toolName)) return true
   const cfg = loadMcpEndpointConfig()
   // Allowlist mode takes priority
   if (cfg.enabledTools !== null) {
