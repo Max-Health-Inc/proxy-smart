@@ -32,7 +32,7 @@ const CONFIG_PATH = join(DATA_DIR, 'mcp-endpoint.json')
 const DEFAULT_CONFIG: McpEndpointConfig = {
   enabled: true,
   disabledTools: [],
-  enabledTools: null,
+  enabledTools: [],
   exposeResourcesAsTools: true,
   updatedAt: new Date().toISOString(),
 }
