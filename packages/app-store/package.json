@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/app-store",
-  "version": "0.2.6-alpha.202606021344.eaa0ac58d",
+  "version": "0.2.6-beta.202606021350.3ff714da8",
   "private": false,
   "type": "module",
   "description": "SMART on FHIR app store — manifest discovery, visibility configuration, and registry CRUD. Framework-agnostic.",

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.6-alpha.202606021350.3ff714da8] - 2026-06-02
+
+- 🔧 Chores & Improvements: Sync package versions; internal version bump to 0.2.6-alpha.202606021350.3ff714da8
+- 🐛 Bug Fixes: Use dot notation *.beta.maxhealth.tech (not dash) for beta domain
+- ⚠️ Breaking Changes: None
+- 📚 Documentation: None
+- ✨ Features: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/766
+
+
 ## [0.2.5-RELEASE.202606021010.e02c0b714] - 2026-06-02
 
 - ✨ Features: Seed data and config on first run
