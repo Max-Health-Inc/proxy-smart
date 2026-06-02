@@ -259,21 +259,35 @@ async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
   }
 
   const client = clients[0]
-  const jwksString = client.attributes?.['jwks.string'] || client.attributes?.['jwks.url']
-  if (!jwksString) {
+  const attrs = client.attributes ?? {}
+
+  // Respect Keycloak's use.jwks.url / use.jwks.string toggles.
+  // When use.jwks.url=true, fetch from jwks.url even if jwks.string exists.
+  const useJwksUrl = attrs['use.jwks.url'] === 'true'
+  const jwksUrl = attrs['jwks.url']
+  const jwksInline = attrs['jwks.string']
+
+  if (!useJwksUrl && !jwksInline && !jwksUrl) {
     throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
 
   let jwks: { keys: JwkKey[] }
 
-  // jwks.string is a JSON string of the JWKS
-  if (client.attributes?.['jwks.string']) {
-    jwks = JSON.parse(jwksString)
-  } else {
-    // jwks.url — fetch it
-    const jwksResp = await fetch(jwksString)
-    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksString}`)
+  if (useJwksUrl && jwksUrl) {
+    // Preferred: fetch from registered JWKS URL (supports key rotation)
+    const jwksResp = await fetch(jwksUrl)
+    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksUrl}`)
     jwks = await jwksResp.json()
+  } else if (jwksInline) {
+    // Fallback: inline JWKS string stored in client attributes
+    jwks = JSON.parse(jwksInline)
+  } else if (jwksUrl) {
+    // Legacy fallback: jwks.url without explicit toggle
+    const jwksResp = await fetch(jwksUrl)
+    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksUrl}`)
+    jwks = await jwksResp.json()
+  } else {
+    throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
 
   const result: ClientMetadata = {
