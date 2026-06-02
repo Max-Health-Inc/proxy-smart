@@ -1168,8 +1168,8 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "use.jwks.string": "true",
-        "jwks.string": "{\"keys\":[{\"kty\":\"EC\",\"x\":\"Wj7mgYg-HaD7W0o1ypKBJpYDo5U3DkJvYOB6ZJQOZ0KCApdZsQ_zti-JgsHhQhZE\",\"y\":\"7Zh4_k8oy57IKQIsRjuSIxC-LLOSaKG-ldjnKqSZNG5GjCIN1d6V70Kjnld5CI_9\",\"crv\":\"P-384\",\"kid\":\"aihr-portal-key-1\",\"use\":\"sig\",\"alg\":\"ES384\"}]}",
+        "use.jwks.url": "true",
+        "jwks.url": "https://aihr.maxhealth.tech/.well-known/jwks.json",
         "token.endpoint.auth.signing.alg": "ES384",
         "oauth2.device.authorization.grant.enabled": "false",
         "oidc.ciba.grant.enabled": "false",
