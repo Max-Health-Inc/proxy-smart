@@ -2,11 +2,12 @@
  * Admin routes for the built-in MCP endpoint configuration.
  *
  * Lets admins:
- *  - GET  /admin/mcp-endpoint          → current config + available tools
- *  - PATCH /admin/mcp-endpoint         → update enabled / tool lists
+ *  - GET  /admin/mcp-endpoint              → current config + available tools
+ *  - PATCH /admin/mcp-endpoint             → update enabled / tool lists
+ *  - PUT /admin/mcp-endpoint/tools/:name   → toggle a single tool on/off
  */
 
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { validateToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import { ErrorResponse, McpEndpointStatusResponse, McpEndpointUpdateBody } from '@/schemas'
@@ -112,6 +113,56 @@ export const mcpEndpointAdminRoutes = new Elysia({
       tags: ['mcp-management'],
     },
     response: { 200: McpEndpointStatusResponse, 401: ErrorResponse },
+  })
+
+  /**
+   * Toggle a single tool's exposure on/off.
+   * PUT /admin/mcp-endpoint/tools/:toolName { exposed: true/false }
+   */
+  .put('/tools/:toolName', async ({ headers, params, body }) => {
+    const authHeader = headers['authorization']
+    if (!authHeader?.startsWith('Bearer ')) throw new Error('Unauthorized')
+    await validateToken(authHeader.substring(7))
+
+    const { toolName } = params
+    const { exposed } = body as { exposed: boolean }
+    const cfg = loadMcpEndpointConfig()
+
+    if (cfg.enabledTools !== null) {
+      // Allowlist mode: add or remove from enabledTools
+      const set = new Set(cfg.enabledTools)
+      if (exposed) set.add(toolName)
+      else set.delete(toolName)
+      cfg.enabledTools = Array.from(set)
+    } else {
+      // Blocklist mode: add or remove from disabledTools
+      const set = new Set(cfg.disabledTools)
+      if (exposed) set.delete(toolName)
+      else set.add(toolName)
+      cfg.disabledTools = Array.from(set)
+    }
+
+    saveMcpEndpointConfig(cfg)
+    logger.server.info('MCP tool toggled', { toolName, exposed })
+
+    return { toolName, exposed, updatedAt: cfg.updatedAt }
+  }, {
+    body: t.Object({
+      exposed: t.Boolean({ description: 'Whether the tool should be exposed to MCP clients' }),
+    }),
+    detail: {
+      summary: 'Toggle a single MCP tool',
+      description: 'Enable or disable a specific tool by name without replacing the entire list.',
+      tags: ['mcp-management'],
+    },
+    response: {
+      200: t.Object({
+        toolName: t.String(),
+        exposed: t.Boolean(),
+        updatedAt: t.String(),
+      }),
+      401: ErrorResponse,
+    },
   })
 
 // ── helpers ──────────────────────────────────────────────────────────────────

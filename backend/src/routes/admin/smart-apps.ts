@@ -636,6 +636,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }),
           // fhirUser resolution mode
           ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
+          // Metadata fields
+          ...(body.launchUrl !== undefined && { 'launch_url': body.launchUrl }),
+          ...(body.logoUri !== undefined && { 'logo_uri': body.logoUri }),
+          ...(body.tosUri !== undefined && { 'tos_uri': body.tosUri }),
+          ...(body.policyUri !== undefined && { 'policy_uri': body.policyUri }),
+          ...(body.contacts !== undefined && { 'contacts': body.contacts.length > 0 ? body.contacts.join(',') : '' }),
           // Session timeout overrides
           ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
           ...(body.clientSessionMaxLifespan !== undefined && { 'client.session.max.lifespan': String(body.clientSessionMaxLifespan) }),

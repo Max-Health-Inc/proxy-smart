@@ -26,7 +26,6 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import { Badge, Button, Checkbox, PageLayout, Switch } from '@proxy-smart/shared-ui';
-import { LoadingButton } from '@/components/ui/loading-button';
 
 // ── Category extraction ──────────────────────────────────────────────────────
 
@@ -141,6 +140,17 @@ async function updateEndpointConfig(
   return res.json();
 }
 
+async function toggleSingleTool(toolName: string, exposed: boolean): Promise<{ toolName: string; exposed: boolean; updatedAt: string }> {
+  const token = await getStoredToken();
+  const res = await fetch(`${config.api.baseUrl}/admin/mcp-endpoint/tools/${encodeURIComponent(toolName)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ exposed }),
+  });
+  if (!res.ok) throw new Error(`Failed to toggle tool ${toolName}: ${res.status}`);
+  return res.json();
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function McpEndpointSettings() {
@@ -208,28 +218,37 @@ export function McpEndpointSettings() {
     }
   };
 
-  const toggleTool = (toolName: string) => {
+  const toggleTool = async (toolName: string) => {
+    const isCurrentlyDisabled = pendingDisabled.has(toolName);
+    const newExposed = isCurrentlyDisabled; // if disabled, we want to expose it
+
+    // Optimistic update
     setPendingDisabled((prev) => {
       const next = new Set(prev);
-      if (next.has(toolName)) {
-        next.delete(toolName);
-      } else {
-        next.add(toolName);
-      }
+      if (newExposed) next.delete(toolName);
+      else next.add(toolName);
       return next;
     });
-  };
 
-  const saveToolConfig = async () => {
-    setSaving(true);
     try {
-      const data = await updateEndpointConfig({ disabledTools: Array.from(pendingDisabled) });
-      setStatus(data);
-      setPendingDisabled(new Set(data.disabledTools));
+      await toggleSingleTool(toolName, newExposed);
+      // Update status disabledTools to reflect server state
+      setStatus((prev) => {
+        if (!prev) return prev;
+        const disabledTools = newExposed
+          ? prev.disabledTools.filter((t) => t !== toolName)
+          : [...prev.disabledTools, toolName];
+        return { ...prev, disabledTools };
+      });
     } catch (err) {
+      // Revert optimistic update
+      setPendingDisabled((prev) => {
+        const next = new Set(prev);
+        if (newExposed) next.add(toolName);
+        else next.delete(toolName);
+        return next;
+      });
       setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -240,11 +259,6 @@ export function McpEndpointSettings() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const hasToolChanges =
-    status &&
-    (pendingDisabled.size !== status.disabledTools.length ||
-      [...pendingDisabled].some((t) => !status.disabledTools.includes(t)));
-
   const toggleCategory = (categoryName: string) => {
     setExpandedCategories((prev) => {
       const next = new Set(prev);
@@ -254,15 +268,28 @@ export function McpEndpointSettings() {
     });
   };
 
-  const toggleAllInCategory = (tools: McpToolInfo[], enable: boolean) => {
-    setPendingDisabled((prev) => {
-      const next = new Set(prev);
-      for (const tool of tools) {
-        if (enable) next.delete(tool.name);
-        else next.add(tool.name);
-      }
-      return next;
-    });
+  const toggleAllInCategory = async (tools: McpToolInfo[], enable: boolean) => {
+    // Optimistic update
+    const prevDisabled = new Set(pendingDisabled);
+    const next = new Set(pendingDisabled);
+    for (const tool of tools) {
+      if (enable) next.delete(tool.name);
+      else next.add(tool.name);
+    }
+    setPendingDisabled(next);
+    setSaving(true);
+
+    try {
+      const data = await updateEndpointConfig({ disabledTools: Array.from(next) });
+      setStatus(data);
+      setPendingDisabled(new Set(data.disabledTools));
+    } catch (err) {
+      // Revert on failure
+      setPendingDisabled(prevDisabled);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -410,11 +437,7 @@ export function McpEndpointSettings() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {hasToolChanges && (
-                <LoadingButton size="sm" onClick={(e) => { e.stopPropagation(); saveToolConfig(); }} loading={saving}>
-                  {t('Save Changes')}
-                </LoadingButton>
-              )}
+              {saving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
               <ChevronDown
                 className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${toolsExpanded ? 'rotate-180' : ''}`}
               />
@@ -538,11 +561,7 @@ export function McpEndpointSettings() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {hasToolChanges && (
-                <LoadingButton size="sm" onClick={(e) => { e.stopPropagation(); saveToolConfig(); }} loading={saving}>
-                  {t('Save Changes')}
-                </LoadingButton>
-              )}
+              {saving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
               <ChevronDown
                 className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${resourcesExpanded ? 'rotate-180' : ''}`}
               />
