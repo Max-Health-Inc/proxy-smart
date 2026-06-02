@@ -22,9 +22,71 @@ import {
   ShieldCheck,
   Database,
   ChevronDown,
+  ChevronRight,
+  FolderOpen,
 } from 'lucide-react';
 import { Badge, Button, Checkbox, PageLayout, Switch } from '@proxy-smart/shared-ui';
-import { LoadingButton } from '@/components/ui/loading-button';
+
+// ── Category extraction ──────────────────────────────────────────────────────
+
+/** Extract a human-readable category from a tool name like `create_admin_smart-apps_` */
+function getToolCategory(toolName: string): string {
+  // Special standalone tools
+  if (toolName === 'search_documentation') return 'Documentation';
+  if (toolName === 'read_resource') return 'Documentation';
+
+  // Pattern: {action}_admin_{category}_{rest}
+  const match = toolName.match(/^(?:get|create|update|delete)_admin_([a-z-]+)/);
+  if (!match) return 'Other';
+
+  const raw = match[1];
+  // Normalize category names to human-readable labels
+  const categoryMap: Record<string, string> = {
+    'shutdown': 'Server Management',
+    'restart': 'Server Management',
+    'smart-apps': 'SMART Apps',
+    'healthcare-users': 'Healthcare Users',
+    'roles': 'Roles',
+    'launch-contexts': 'Launch Contexts',
+    'idps': 'Identity Providers',
+    'smart-config': 'SMART Config',
+    'branding': 'Branding',
+    'client-registration': 'Client Registration',
+    'keycloak-config': 'Keycloak Config',
+    'mcp-endpoint': 'MCP Endpoint',
+    'consent': 'Consent',
+    'smart-access-control': 'SMART Access Control',
+    'access-control': 'Access Control',
+    'user-federation': 'User Federation',
+    'scope-mappers': 'Scope Mappers',
+    'smart-scopes': 'SMART Scopes',
+    'document-import': 'Document Import',
+    'organizations': 'Organizations',
+    'app-store': 'App Store',
+    'client-policies': 'Client Policies',
+    'dicom-servers': 'DICOM Servers',
+    'auth-flows': 'Auth Flows',
+    'scope-sets': 'Scope Sets',
+  };
+  return categoryMap[raw] ?? raw.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+interface ToolCategory {
+  name: string;
+  tools: McpToolInfo[];
+}
+
+function groupToolsByCategory(tools: McpToolInfo[]): ToolCategory[] {
+  const map = new Map<string, McpToolInfo[]>();
+  for (const tool of tools) {
+    const cat = getToolCategory(tool.name);
+    if (!map.has(cat)) map.set(cat, []);
+    map.get(cat)!.push(tool);
+  }
+  return Array.from(map.entries())
+    .map(([name, tools]) => ({ name, tools }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +140,17 @@ async function updateEndpointConfig(
   return res.json();
 }
 
+async function toggleSingleTool(toolName: string, exposed: boolean): Promise<{ toolName: string; exposed: boolean; updatedAt: string }> {
+  const token = await getStoredToken();
+  const res = await fetch(`${config.api.baseUrl}/admin/mcp-endpoint/tools/${encodeURIComponent(toolName)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ exposed }),
+  });
+  if (!res.ok) throw new Error(`Failed to toggle tool ${toolName}: ${res.status}`);
+  return res.json();
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function McpEndpointSettings() {
@@ -92,6 +165,7 @@ export function McpEndpointSettings() {
   const [pendingDisabled, setPendingDisabled] = useState<Set<string>>(new Set());
   const [toolsExpanded, setToolsExpanded] = useState(false);
   const [resourcesExpanded, setResourcesExpanded] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
@@ -144,28 +218,37 @@ export function McpEndpointSettings() {
     }
   };
 
-  const toggleTool = (toolName: string) => {
+  const toggleTool = async (toolName: string) => {
+    const isCurrentlyDisabled = pendingDisabled.has(toolName);
+    const newExposed = isCurrentlyDisabled; // if disabled, we want to expose it
+
+    // Optimistic update
     setPendingDisabled((prev) => {
       const next = new Set(prev);
-      if (next.has(toolName)) {
-        next.delete(toolName);
-      } else {
-        next.add(toolName);
-      }
+      if (newExposed) next.delete(toolName);
+      else next.add(toolName);
       return next;
     });
-  };
 
-  const saveToolConfig = async () => {
-    setSaving(true);
     try {
-      const data = await updateEndpointConfig({ disabledTools: Array.from(pendingDisabled) });
-      setStatus(data);
-      setPendingDisabled(new Set(data.disabledTools));
+      await toggleSingleTool(toolName, newExposed);
+      // Update status disabledTools to reflect server state
+      setStatus((prev) => {
+        if (!prev) return prev;
+        const disabledTools = newExposed
+          ? prev.disabledTools.filter((t) => t !== toolName)
+          : [...prev.disabledTools, toolName];
+        return { ...prev, disabledTools };
+      });
     } catch (err) {
+      // Revert optimistic update
+      setPendingDisabled((prev) => {
+        const next = new Set(prev);
+        if (newExposed) next.add(toolName);
+        else next.delete(toolName);
+        return next;
+      });
       setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -176,10 +259,38 @@ export function McpEndpointSettings() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const hasToolChanges =
-    status &&
-    (pendingDisabled.size !== status.disabledTools.length ||
-      [...pendingDisabled].some((t) => !status.disabledTools.includes(t)));
+  const toggleCategory = (categoryName: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryName)) next.delete(categoryName);
+      else next.add(categoryName);
+      return next;
+    });
+  };
+
+  const toggleAllInCategory = async (tools: McpToolInfo[], enable: boolean) => {
+    // Optimistic update
+    const prevDisabled = new Set(pendingDisabled);
+    const next = new Set(pendingDisabled);
+    for (const tool of tools) {
+      if (enable) next.delete(tool.name);
+      else next.add(tool.name);
+    }
+    setPendingDisabled(next);
+    setSaving(true);
+
+    try {
+      const data = await updateEndpointConfig({ disabledTools: Array.from(next) });
+      setStatus(data);
+      setPendingDisabled(new Set(data.disabledTools));
+    } catch (err) {
+      // Revert on failure
+      setPendingDisabled(prevDisabled);
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -326,11 +437,7 @@ export function McpEndpointSettings() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {hasToolChanges && (
-                <LoadingButton size="sm" onClick={(e) => { e.stopPropagation(); saveToolConfig(); }} loading={saving}>
-                  {t('Save Changes')}
-                </LoadingButton>
-              )}
+              {saving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
               <ChevronDown
                 className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${toolsExpanded ? 'rotate-180' : ''}`}
               />
@@ -342,35 +449,88 @@ export function McpEndpointSettings() {
               {t('No tools available. The tool registry may not be initialized yet.')}
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
-              {status.tools.map((tool) => {
-                const isDisabled = pendingDisabled.has(tool.name);
+            <div className="space-y-2 mt-4">
+              {groupToolsByCategory(status.tools).map((category) => {
+                const isCatExpanded = expandedCategories.has(category.name);
+                const enabledInCat = category.tools.filter((tool) => !pendingDisabled.has(tool.name)).length;
+                const allEnabled = enabledInCat === category.tools.length;
+                const noneEnabled = enabledInCat === 0;
+
                 return (
-                  <label
-                    key={tool.name}
-                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
-                      isDisabled
-                        ? 'border-border/30 bg-muted/20 opacity-60'
-                        : 'border-primary/20 bg-primary/5 hover:bg-primary/10'
-                    }`}
-                  >
-                    <Checkbox
-                      checked={!isDisabled}
-                      onCheckedChange={() => toggleTool(tool.name)}
-                      className="mt-0.5"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium truncate">{tool.name}</span>
-                        {isDisabled ? (
-                          <EyeOff className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  <div key={category.name} className="border border-border/50 rounded-xl overflow-hidden">
+                    <div className="flex items-center justify-between p-3 bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <button
+                        type="button"
+                        onClick={() => toggleCategory(category.name)}
+                        className="flex items-center gap-2 cursor-pointer flex-1 text-left"
+                      >
+                        {isCatExpanded ? (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
                         ) : (
-                          <Eye className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         )}
+                        <FolderOpen className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-semibold text-foreground">{category.name}</span>
+                        <Badge variant="outline" className="text-xs ml-2">
+                          {enabledInCat}/{category.tools.length}
+                        </Badge>
+                      </button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={allEnabled}
+                          onClick={() => toggleAllInCategory(category.tools, true)}
+                        >
+                          {t('All')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          disabled={noneEnabled}
+                          onClick={() => toggleAllInCategory(category.tools, false)}
+                        >
+                          {t('None')}
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{tool.description}</p>
                     </div>
-                  </label>
+                    {isCatExpanded && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-3">
+                        {category.tools.map((tool) => {
+                          const isDisabled = pendingDisabled.has(tool.name);
+                          return (
+                            <label
+                              key={tool.name}
+                              className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                                isDisabled
+                                  ? 'border-border/30 bg-muted/20 opacity-60'
+                                  : 'border-primary/20 bg-primary/5 hover:bg-primary/10'
+                              }`}
+                            >
+                              <Checkbox
+                                checked={!isDisabled}
+                                onCheckedChange={() => toggleTool(tool.name)}
+                                className="mt-0.5"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium truncate">{tool.name}</span>
+                                  {isDisabled ? (
+                                    <EyeOff className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                  ) : (
+                                    <Eye className="w-3.5 h-3.5 text-green-600 shrink-0" />
+                                  )}
+                                </div>
+                                <p className="text-xs text-muted-foreground line-clamp-2">{tool.description}</p>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -401,11 +561,7 @@ export function McpEndpointSettings() {
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {hasToolChanges && (
-                <LoadingButton size="sm" onClick={(e) => { e.stopPropagation(); saveToolConfig(); }} loading={saving}>
-                  {t('Save Changes')}
-                </LoadingButton>
-              )}
+              {saving && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
               <ChevronDown
                 className={`w-5 h-5 text-muted-foreground transition-transform duration-200 ${resourcesExpanded ? 'rotate-180' : ''}`}
               />

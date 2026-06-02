@@ -500,14 +500,14 @@ function StringListField({
         </Button>
       </div>
       {values.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="space-y-1">
           {values.map((v, i) => (
-            <Badge key={i} variant="secondary" className="gap-1 pr-1">
-              <span className="max-w-[200px] truncate text-xs">{v}</span>
-              <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="hover:text-destructive">
-                <X className="size-3" />
+            <div key={i} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-border/50 bg-muted/30 group">
+              <span className="text-xs font-mono text-foreground break-all flex-1">{v}</span>
+              <button type="button" onClick={() => onChange(values.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive shrink-0">
+                <X className="size-3.5" />
               </button>
-            </Badge>
+            </div>
           ))}
         </div>
       )}

@@ -1,5 +1,4 @@
 {
-  "hiddenAppIds": [],
   "publishedApps": [
     {
       "clientId": "consent-app",
@@ -24,7 +23,15 @@
       "launchUrl": "https://patient.maxhealth.tech/",
       "category": "patient",
       "logoUri": "user-round"
+    },
+    {
+      "clientId": "dicom-viewer",
+      "name": "DICOM Viewer",
+      "description": "Medical imaging viewer with DICOMweb integration — view, annotate, and share studies",
+      "launchUrl": "https://dicom.maxhealth.tech/",
+      "category": "clinical",
+      "logoUri": "scan"
     }
   ],
-  "updatedAt": "2026-06-02T11:00:00.000Z"
+  "updatedAt": "2026-06-02T12:00:00.000Z"
 }
