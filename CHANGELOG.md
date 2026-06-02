@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.5-beta.202606021010.e02c0b714] - 2026-06-02
+
+- 🔧 Chores & Improvements: Version management updates not included in user-facing changes (ignore non-impactful metadata)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/760
+
+
 ## [0.2.3-beta.202606011847.26652b925] - 2026-06-01
 
 - 🔧 Chores & Improvements: Sync package versions across monorepo
