@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.7-beta.202606022042.f06c666e8] - 2026-06-02
+
+- 🔧 Chores & Improvements: Version bumps across multiple packages and configs; mcp-endpoint.json updated timestamp; mcp-endpoint-config.ts now initializes enabledTools to [] instead of null.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/777
+
+
 ## [0.2.7-alpha.202606021939.a056cbc8a] - 2026-06-02
 
 - 🔧 Chores & Improvements: Update JWKS configuration to use external URL in realm-export.json (remove embedded jwks, enable jwks.url)
