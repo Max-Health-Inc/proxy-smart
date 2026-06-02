@@ -1026,6 +1026,78 @@
       "attributes": {
         "access.token.lifespan": "3600"
       }
+    },
+    {
+      "clientId": "aihr-portal",
+      "name": "AIHR Portal",
+      "description": "AI Health Records Portal — confidential BFF using private_key_jwt (ES384) for token exchange. Standard OIDC Authorization Code + PKCE flow.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-jwt",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": true,
+      "consentRequired": false,
+      "redirectUris": [
+        "https://aihr.maxhealth.tech/api/auth/callback",
+        "https://aihr.beta.maxhealth.tech/api/auth/callback",
+        "http://localhost:5173/api/auth/callback"
+      ],
+      "webOrigins": [
+        "https://aihr.maxhealth.tech",
+        "https://aihr.beta.maxhealth.tech",
+        "http://localhost:5173"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email",
+        "openid"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "fhirUser",
+        "user/*.read",
+        "user/*.write",
+        "user/*.*"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "use.jwks.string": "true",
+        "jwks.string": "{\"keys\":[{\"kty\":\"EC\",\"x\":\"_QVTv84N73udZVyUn99fXMOj5LTZe0q62prIEv_jnK8N2emYKAyOxcL7a-vZ5Vm2\",\"y\":\"AlW1cug_Ij8VYaggQMum3_hb7012tdQ1hiHglXFNQe7594xAqT9H0IU7Zag8tCqC\",\"crv\":\"P-384\",\"kid\":\"aihr-portal-key-1\",\"use\":\"sig\",\"alg\":\"ES384\"}]}",
+        "token.endpoint.auth.signing.alg": "ES384",
+        "oauth2.device.authorization.grant.enabled": "false",
+        "oidc.ciba.grant.enabled": "false",
+        "backchannel.logout.session.required": "true",
+        "backchannel.logout.revoke.offline.tokens": "false",
+        "use.refresh.tokens": "true",
+        "access.token.lifespan": "3600"
+      },
+      "protocolMappers": [
+        {
+          "name": "fhirUser-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "fhirUser",
+            "claim.name": "fhirUser",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "identityProviders": [
