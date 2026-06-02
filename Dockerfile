@@ -125,6 +125,9 @@ COPY --from=backend-build /app/node_modules ./node_modules
 COPY --from=backend-build /app/packages/auth ./packages/auth
 COPY --from=backend-build /app/packages/app-store ./packages/app-store
 
+# Copy seed data (app-store-config, mcp-endpoint) for first-run initialization
+COPY backend/data/ ./backend/data-seed/
+
 # Create non-root user for security
 RUN groupadd --gid 1001 app && \
     useradd --uid 1001 --gid app --no-create-home --shell /bin/false app && \

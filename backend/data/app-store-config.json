@@ -1,0 +1,30 @@
+{
+  "hiddenAppIds": [],
+  "publishedApps": [
+    {
+      "clientId": "consent-app",
+      "name": "Consent Manager",
+      "description": "Patient consent management — view, grant, and revoke consent directives",
+      "launchUrl": "https://consent.maxhealth.tech/",
+      "category": "clinical",
+      "logoUri": "shield-check"
+    },
+    {
+      "clientId": "dtr-app",
+      "name": "Documentation, Templates & Rules",
+      "description": "Prior authorization and clinical documentation workflow (Da Vinci DTR)",
+      "launchUrl": "https://dtr.maxhealth.tech/",
+      "category": "administrative",
+      "logoUri": "file-text"
+    },
+    {
+      "clientId": "patient-portal",
+      "name": "Patient Portal",
+      "description": "Patient-facing portal for health records, imaging, and shared health links",
+      "launchUrl": "https://patient.maxhealth.tech/",
+      "category": "patient",
+      "logoUri": "user-round"
+    }
+  ],
+  "updatedAt": "2026-06-02T11:00:00.000Z"
+}
