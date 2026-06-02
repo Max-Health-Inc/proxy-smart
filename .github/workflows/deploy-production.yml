@@ -28,12 +28,6 @@ on:
         description: "Target platform where app was deployed"
         value: ${{ jobs.deploy.outputs.deployment_target }}
     secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-      AWS_ACCOUNT_ID:
-        required: true
       VITE_ENCRYPTION_SECRET:
         required: true
 
@@ -86,8 +80,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::579201838740:role/github-actions-deploy
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR

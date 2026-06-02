@@ -38,12 +38,6 @@ on:
         required: false
       VPS_USER:
         required: false
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_SECRET_ACCESS_KEY:
-        required: false
-      AWS_ACCOUNT_ID:
-        required: false
       DISCORD_WEBHOOK_URL:
         required: false
       VITE_ENCRYPTION_SECRET:
@@ -101,9 +95,6 @@ jobs:
       app_version: ${{ inputs.app_version }}
       source_branch: ${{ inputs.source_branch }}
     secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
 
   output-deployment-urls:
