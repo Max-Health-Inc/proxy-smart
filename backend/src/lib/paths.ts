@@ -25,3 +25,8 @@ export function ensureDataDir(): void {
     }
   }
 }
+
+// Run immediately on import so seed files are in place before any store constructors fire.
+// This is critical because module-level singletons (e.g. AppStoreConfigStore) read from
+// DATA_DIR during import-time construction, which happens before index.ts body executes.
+ensureDataDir()

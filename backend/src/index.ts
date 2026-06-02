@@ -1,3 +1,5 @@
+// Import paths first to trigger ensureDataDir() side-effect before any store constructors
+import './lib/paths'
 import { config } from './config'
 import { logger } from './lib/logger'
 import { initializeServer, displayServerEndpoints } from './init'
@@ -10,10 +12,6 @@ import { emailEventsLogger } from './lib/email-events-logger'
 import { authEventsLogger } from './lib/auth-events-logger'
 import { createApp } from './app-factory'
 import { existsSync, readFileSync } from 'fs'
-import { ensureDataDir } from './lib/paths'
-
-// Ensure persistent data directory exists before any stores load
-ensureDataDir()
 
 // Security guard: refuse to start with dev auth bypass in production
 if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_AUTH_BYPASS === 'true') {
