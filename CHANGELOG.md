@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.5-RELEASE.202606021010.e02c0b714] - 2026-06-02
+
+- ✨ Features: Seed data and config on first run
+  - Dockerfile now copies seed data into the image for initial setup
+  - Seeded app-store-config.json added (new config with published apps)
+  - Data initialization extends to seed missing config files from data-seed into DATA_DIR on startup (SEED_DIR handling)
+
+- 🔧 Chores & Improvements: Minor repo housekeeping for data files
+  - backend/.gitignore updated to track app-store-config.json and mcp-endpoint.json while still ignoring data directory contents
+  - Backend data init logic enhanced to copy missing seed files on startup
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/762
+
+
 ## [0.2.5-beta.202606021010.e02c0b714] - 2026-06-02
 
 - 🔧 Chores & Improvements: Version management updates not included in user-facing changes (ignore non-impactful metadata)
