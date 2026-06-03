@@ -470,6 +470,7 @@ function parseBrandFromAttributes(attrs: Record<string, string>): Partial<BrandC
   if (get('address_postal_code') !== undefined) result.addressPostalCode = get('address_postal_code') || null
   if (get('address_country') !== undefined) result.addressCountry = get('address_country') || null
   if (get('identifier') !== undefined) result.identifier = get('identifier')
+  if (get('app_store_url') !== undefined) result.appStoreUrl = get('app_store_url') || null
 
   return result
 }
@@ -492,6 +493,7 @@ function brandToAttributes(settings: BrandConfigType): Record<string, string> {
     [`${BRAND_PREFIX}address_postal_code`]: settings.addressPostalCode || '',
     [`${BRAND_PREFIX}address_country`]: settings.addressCountry || '',
     [`${BRAND_PREFIX}identifier`]: settings.identifier,
+    [`${BRAND_PREFIX}app_store_url`]: settings.appStoreUrl || '',
   }
 }
 
@@ -543,6 +545,7 @@ export function getRuntimeBrandConfig(): BrandConfigType {
     addressCountry: config.brand.addressCountry,
     identifier: config.brand.identifier,
     loginTheme: config.brand.loginTheme,
+    appStoreUrl: config.brand.appStoreUrl,
   }
 
   const merged = !brandOverrides ? envDefaults : { ...envDefaults, ...brandOverrides }
