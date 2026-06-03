@@ -9,7 +9,6 @@ import {
   FhirMonitoringApi,
   HealthcareUsersApi,
   IdentityProvidersApi,
-  LaunchContextsApi,
   OauthMonitoringApi,
   OrganizationsApi,
   RolesApi,
@@ -112,7 +111,6 @@ export const createAppStoreApi = (token?: string) => new AppStoreApi(createConfi
 export const createAuthApi = (token?: string) => new AuthenticationApi(createConfig(token));
 export const createHealthcareUsersApi = (token?: string) => new HealthcareUsersApi(createConfig(token));
 export const createIdentityProvidersApi = (token?: string) => new IdentityProvidersApi(createConfig(token));
-export const createLaunchContextsApi = (token?: string) => new LaunchContextsApi(createConfig(token));
 export const createOauthMonitoringApi = (token?: string) => new OauthMonitoringApi(createConfig(token));
 export const createRolesApi = (token?: string) => new RolesApi(createConfig(token));
 export const createSmartAppsApi = (token?: string) => new SmartAppsApi(createConfig(token));
@@ -170,7 +168,6 @@ export const createClientApis = (token?: string) => ({
   fhirMonitoring: wrapApiClient(createFhirMonitoringApi(token)),
   healthcareUsers: wrapApiClient(createHealthcareUsersApi(token)),
   identityProviders: wrapApiClient(createIdentityProvidersApi(token)),
-  launchContexts: wrapApiClient(createLaunchContextsApi(token)),
   oauthMonitoring: wrapApiClient(createOauthMonitoringApi(token)),
   roles: wrapApiClient(createRolesApi(token)),
   smartApps: wrapApiClient(createSmartAppsApi(token)),
