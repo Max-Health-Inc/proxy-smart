@@ -11,10 +11,14 @@ import {
   RefreshCw,
   RotateCcw,
   Save,
-  ExternalLink
+  ExternalLink,
+  Fingerprint,
+  Plus,
+  X,
 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import type { ClientRegistrationSettings } from '@/lib/types/api';
+import type { CimdStatusResponse } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 const DEFAULT_SCOPES = [
@@ -63,6 +67,14 @@ export function DynamicClientRegistrationSettings() {
   const [newScope, setNewScope] = useState('');
   const [newPattern, setNewPattern] = useState('');
 
+  // CIMD state
+  const [cimdStatus, setCimdStatus] = useState<CimdStatusResponse | null>(null);
+  const [cimdDomains, setCimdDomains] = useState<string[]>([]);
+  const [newCimdDomain, setNewCimdDomain] = useState('');
+  const [cimdSaving, setCimdSaving] = useState(false);
+  const [cimdAllowHttp, setCimdAllowHttp] = useState(false);
+  const [cimdRestrictSameDomain, setCimdRestrictSameDomain] = useState(false);
+
   const loadSettings = useCallback(async () => {
     try {
       const settingsData = await clientApis.admin.getAdminClientRegistrationSettings();
@@ -94,6 +106,19 @@ export function DynamicClientRegistrationSettings() {
         });
       })
       .finally(() => setLoading(false));
+
+    // Load CIMD status in parallel
+    clientApis.clientPolicies.getAdminClientPoliciesCimdStatus()
+      .then(status => {
+        setCimdStatus(status);
+        setCimdDomains(status.trustedDomains || []);
+        const execConfig = status.executorConfig || {};
+        setCimdAllowHttp(execConfig['cimd-allow-http-scheme'] === true);
+        setCimdRestrictSameDomain(execConfig['cimd-restrict-same-domain'] === true);
+      })
+      .catch(error => {
+        console.error('Failed to load CIMD status:', error);
+      });
   }, [clientApis]);
 
   const saveSettings = async () => {
@@ -170,6 +195,50 @@ export function DynamicClientRegistrationSettings() {
       ...prev,
       allowedRedirectUriPatterns: prev.allowedRedirectUriPatterns.filter(p => p !== pattern)
     }));
+  };
+
+  const addCimdDomain = () => {
+    const domain = newCimdDomain.trim();
+    if (domain && !cimdDomains.includes(domain)) {
+      setCimdDomains(prev => [...prev, domain]);
+      setNewCimdDomain('');
+    }
+  };
+
+  const removeCimdDomain = (domain: string) => {
+    setCimdDomains(prev => prev.filter(d => d !== domain));
+  };
+
+  const saveCimdConfig = async () => {
+    if (cimdDomains.length === 0) {
+      setMessage({ type: 'error', text: 'At least one trusted domain is required for CIMD' });
+      return;
+    }
+    try {
+      setCimdSaving(true);
+      setMessage(null);
+
+      await clientApis.clientPolicies.postAdminClientPoliciesCimdConfigure({
+        cimdSetupRequest: {
+          trustedDomains: cimdDomains,
+          allowHttpScheme: cimdAllowHttp,
+          restrictSameDomain: cimdRestrictSameDomain,
+        }
+      });
+
+      // Refresh status
+      const status = await clientApis.clientPolicies.getAdminClientPoliciesCimdStatus();
+      setCimdStatus(status);
+      setMessage({ type: 'success', text: 'CIMD configured successfully' });
+    } catch (error) {
+      console.error('Failed to configure CIMD:', error);
+      setMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to configure CIMD'
+      });
+    } finally {
+      setCimdSaving(false);
+    }
   };
 
   if (loading) {
@@ -254,6 +323,120 @@ export function DynamicClientRegistrationSettings() {
         <StatCard icon={Clock} label={t('Client Lifetime')} value={settings.maxClientLifetime || '∞'} subtitle={settings.maxClientLifetime ? t('days') : t('unlimited')} color="violet" />
         <StatCard icon={Globe} label={t('URI Patterns')} value={settings.allowedRedirectUriPatterns.length} color="orange" />
       </div>
+
+      {/* CIMD (Client ID Metadata Document) */}
+      <Card className="bg-card/70 backdrop-blur-sm border border-border/50 shadow-lg">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-cyan-500/10 dark:bg-cyan-400/20 rounded-xl flex items-center justify-center shadow-sm">
+                <Fingerprint className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">{t('Client ID Metadata Document (CIMD)')}</h3>
+                <p className="text-muted-foreground font-medium">{t('Allow MCP clients (VS Code, Claude) to use URL-based client IDs')}</p>
+              </div>
+            </div>
+            <Badge variant={cimdStatus?.enabled ? "default" : "secondary"} className="px-3 py-1">
+              {cimdStatus?.enabled ? t('Active') : t('Inactive')}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="bg-muted/30 p-4 rounded-lg text-sm text-muted-foreground space-y-2">
+            <p>
+              {t('CIMD allows OAuth clients to register by providing a URL as their client_id (e.g.')} <code className="bg-muted px-1.5 py-0.5 rounded">https://code.visualstudio.com/.well-known/oauth-client</code>{t('). The authorization server fetches metadata from that URL instead of requiring traditional Dynamic Client Registration.')}
+            </p>
+            <p className="font-medium text-foreground/80">
+              {t('Required for: VS Code MCP, Claude Desktop, and other MCP 2025-11-25 clients.')}
+            </p>
+          </div>
+
+          {/* Trusted Domains */}
+          <div className="space-y-3">
+            <Label>{t('Trusted Domains')}</Label>
+            <p className="text-sm text-muted-foreground">{t('Domains whose client_id metadata documents are accepted')}</p>
+            <div className="flex space-x-2">
+              <Input
+                value={newCimdDomain}
+                onChange={(e) => setNewCimdDomain(e.target.value)}
+                placeholder="e.g., code.visualstudio.com"
+                onKeyDown={(e) => e.key === 'Enter' && addCimdDomain()}
+              />
+              <Button onClick={addCimdDomain} size="sm" variant="outline">
+                <Plus className="w-4 h-4 mr-1" />
+                {t('Add')}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {cimdDomains.map((domain) => (
+                <Badge key={domain} variant="outline" className="px-3 py-1.5 text-sm font-mono">
+                  {domain}
+                  <button
+                    onClick={() => removeCimdDomain(domain)}
+                    className="ml-2 text-muted-foreground hover:text-destructive transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+              {cimdDomains.length === 0 && (
+                <p className="text-sm text-muted-foreground italic">{t('No trusted domains configured. Add domains to enable CIMD.')}</p>
+              )}
+            </div>
+          </div>
+
+          {/* CIMD Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="cimdAllowHttp" className="text-sm">{t('Allow HTTP Scheme')}</Label>
+                <p className="text-xs text-muted-foreground">{t('Dev only — allow http:// client IDs')}</p>
+              </div>
+              <Switch
+                id="cimdAllowHttp"
+                checked={cimdAllowHttp}
+                onCheckedChange={setCimdAllowHttp}
+              />
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="cimdRestrictSameDomain" className="text-sm">{t('Restrict Same Domain')}</Label>
+                <p className="text-xs text-muted-foreground">{t('Redirect URIs must match client_id domain')}</p>
+              </div>
+              <Switch
+                id="cimdRestrictSameDomain"
+                checked={cimdRestrictSameDomain}
+                onCheckedChange={setCimdRestrictSameDomain}
+              />
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            <div className="text-sm text-muted-foreground">
+              {cimdStatus?.profileName && (
+                <span>{t('Profile:')} <code className="bg-muted px-1.5 py-0.5 rounded">{cimdStatus.profileName}</code></span>
+              )}
+              {cimdStatus?.policyName && (
+                <span className="ml-4">{t('Policy:')} <code className="bg-muted px-1.5 py-0.5 rounded">{cimdStatus.policyName}</code></span>
+              )}
+            </div>
+            <Button
+              onClick={saveCimdConfig}
+              disabled={cimdSaving || cimdDomains.length === 0}
+              size="sm"
+            >
+              {cimdSaving ? (
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              {cimdStatus?.enabled ? t('Update CIMD') : t('Enable CIMD')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Settings */}
