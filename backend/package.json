@@ -23,6 +23,7 @@
     "@elysiajs/openapi": "^1.4.15",
     "@elysiajs/static": "^1.4.10",
     "@keycloak/keycloak-admin-client": "^26.6.2",
+    "@max-health-inc/elysia-mcp": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@opendataloader/pdf": "^2.4.7",
     "@proxy-smart/app-store": "workspace:*",
