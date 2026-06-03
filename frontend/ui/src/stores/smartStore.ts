@@ -7,8 +7,6 @@ import type {
   FhirServerListServersInner,
   HealthcareUser
 } from '@/lib/api-client';
-import type { ContextSet } from '@/lib/types/api';
-
 interface SmartState {
   // FHIR Servers
   servers: FhirServerListServersInner[];
@@ -22,10 +20,6 @@ interface SmartState {
   healthcareUsersError: string | null;
   healthcareUsersLastFetched: number | null;
   
-  // Launch Context Sets
-  launchContextSets: ContextSet[];
-  launchContextSetsLastUpdated: number | null;
-  
   // Actions
   fetchServers: () => Promise<void>;
   fetchHealthcareUsers: () => Promise<void>;
@@ -34,20 +28,12 @@ interface SmartState {
   refreshAll: () => Promise<void>;
   updateHealthcareUser: (userId: string, updatedUser: HealthcareUser) => void;
   
-  // Launch Context Actions
-  addLaunchContextSet: (contextSet: ContextSet) => void;
-  updateLaunchContextSet: (id: string, contextSet: ContextSet) => void;
-  deleteLaunchContextSet: (id: string) => void;
-  getLaunchContextSets: () => ContextSet[];
-  
   // Cache management
   invalidateServers: () => void;
   invalidateHealthcareUsers: () => void;
   isServersCacheValid: () => boolean;
   isHealthcareUsersCacheValid: () => boolean;
 }
-
-// ContextSet imported from @/lib/api-client
 
 // Cache duration: 5 minutes
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -65,9 +51,6 @@ export const useSmartStore = create<SmartState>()(
       healthcareUsersLoading: false,
       healthcareUsersError: null,
       healthcareUsersLastFetched: null,
-      
-      launchContextSets: [],
-      launchContextSetsLastUpdated: null,
 
       // Actions
       fetchServers: async () => {
@@ -154,41 +137,6 @@ export const useSmartStore = create<SmartState>()(
         console.debug('✅ Healthcare user updated in store:', { userId, username: updatedUser.username });
       },
 
-      // Launch Context Actions
-      addLaunchContextSet: (contextSet: ContextSet) => {
-        const { launchContextSets } = get();
-        const updated = [...launchContextSets, contextSet];
-        set({ 
-          launchContextSets: updated,
-          launchContextSetsLastUpdated: Date.now()
-        });
-        console.debug('✅ Launch context set added:', { id: contextSet.id, name: contextSet.name });
-      },
-
-      updateLaunchContextSet: (id: string, contextSet: ContextSet) => {
-        const { launchContextSets } = get();
-        const updated = launchContextSets.map(set => set.id === id ? contextSet : set);
-        set({ 
-          launchContextSets: updated,
-          launchContextSetsLastUpdated: Date.now()
-        });
-        console.debug('✅ Launch context set updated:', { id, name: contextSet.name });
-      },
-
-      deleteLaunchContextSet: (id: string) => {
-        const { launchContextSets } = get();
-        const updated = launchContextSets.filter(set => set.id !== id);
-        set({ 
-          launchContextSets: updated,
-          launchContextSetsLastUpdated: Date.now()
-        });
-        console.debug('✅ Launch context set deleted:', { id });
-      },
-
-      getLaunchContextSets: () => {
-        return get().launchContextSets;
-      },
-
       refreshAll: async () => {
         console.debug('🔄 Refreshing all FHIR data...');
         const promises = [
@@ -228,8 +176,6 @@ export const useSmartStore = create<SmartState>()(
         serversLastFetched: state.serversLastFetched,
         healthcareUsers: state.healthcareUsers,
         healthcareUsersLastFetched: state.healthcareUsersLastFetched,
-        launchContextSets: state.launchContextSets,
-        launchContextSetsLastUpdated: state.launchContextSetsLastUpdated,
       }),
     }
   )
@@ -276,16 +222,4 @@ export const useHealthcareUsers = () => {
   };
 };
 
-// Hook for launch context sets management
-export const useLaunchContextSets = () => {
-  const store = useSmartStore();
 
-  return {
-    contextSets: store.launchContextSets,
-    lastUpdated: store.launchContextSetsLastUpdated,
-    addContextSet: store.addLaunchContextSet,
-    updateContextSet: store.updateLaunchContextSet,
-    deleteContextSet: store.deleteLaunchContextSet,
-    getContextSets: store.getLaunchContextSets,
-  };
-};
