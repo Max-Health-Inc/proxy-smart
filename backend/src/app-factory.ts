@@ -29,6 +29,7 @@ import { dicomwebRoutes } from './routes/dicomweb'
 import { docsRoutes } from './routes/docs'
 import { apiRoutes } from './routes/api'
 import { brandBundleService } from './lib/brand-bundle'
+import { getRuntimeBrandConfig } from './lib/runtime-config'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
 
@@ -197,11 +198,13 @@ export function createApp() {
         .get('/apps.json', () => ({ apps: discoverApps() }))
         // App Store UI — served from package in non-production; in production, hosted on maxhealth.tech/apps
         .get('/apps', () => {
-            if (process.env.NODE_ENV === 'production') return Response.redirect('https://maxhealth.tech/apps', 302)
+            const brandConfig = getRuntimeBrandConfig()
+            if (brandConfig.appStoreUrl) return Response.redirect(brandConfig.appStoreUrl, 302)
             return serveAppStoreUi()
         })
         .get('/apps/', () => {
-            if (process.env.NODE_ENV === 'production') return Response.redirect('https://maxhealth.tech/apps', 302)
+            const brandConfig = getRuntimeBrandConfig()
+            if (brandConfig.appStoreUrl) return Response.redirect(brandConfig.appStoreUrl, 302)
             return serveAppStoreUi()
         })
         // Patient Picker SPA fallback

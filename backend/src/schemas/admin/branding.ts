@@ -43,6 +43,7 @@ export const BrandConfig = t.Object({
   addressCountry: t.Union([t.String(), t.Null()], { description: 'Organization country' }),
   identifier: t.String({ description: 'Brand identifier URI (typically the brand website URL)' }),
   loginTheme: t.Union([t.String(), t.Null()], { description: 'Keycloak login theme name (e.g. keycloak, keycloak.v2)' }),
+  appStoreUrl: t.Union([t.String(), t.Null()], { description: 'External App Store URL (e.g. https://apps.example.com). When set, /apps redirects here instead of serving locally.' }),
 }, { title: 'BrandConfig' })
 
 export type BrandConfigType = Omit<Static<typeof BrandConfig>, 'category'> & { category: BrandCategoryType }

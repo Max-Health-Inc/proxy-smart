@@ -24,9 +24,10 @@ COPY frontend/ui/package.json ./frontend/ui/
 COPY packages/patient-picker/package.json ./packages/patient-picker/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/app-store/package.json ./packages/app-store/
+COPY packages/elysia-mcp/package.json ./packages/elysia-mcp/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/patient-picker","frontend/ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/elysia-mcp","packages/patient-picker","frontend/ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only
 RUN bun install
@@ -38,6 +39,7 @@ COPY config/ ./config/
 FROM build-deps AS backend-build
 COPY packages/auth/ ./packages/auth/
 COPY packages/app-store/ ./packages/app-store/
+COPY packages/elysia-mcp/ ./packages/elysia-mcp/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 # NODE_ENV=production ensures the bundler preserves production-only code paths
@@ -50,6 +52,7 @@ RUN bun run build
 FROM build-deps AS openapi-gen
 COPY packages/auth/ ./packages/auth/
 COPY packages/app-store/ ./packages/app-store/
+COPY packages/elysia-mcp/ ./packages/elysia-mcp/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run export-openapi

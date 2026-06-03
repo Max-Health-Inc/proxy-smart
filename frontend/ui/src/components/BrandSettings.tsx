@@ -41,6 +41,7 @@ interface BrandConfig {
   addressCountry: string | null;
   identifier: string;
   loginTheme: string | null;
+  appStoreUrl: string | null;
 }
 
 const DEFAULT_BRAND: BrandConfig = {
@@ -61,6 +62,7 @@ const DEFAULT_BRAND: BrandConfig = {
   addressCountry: null,
   identifier: '',
   loginTheme: null,
+  appStoreUrl: null,
 };
 
 const CATEGORY_OPTIONS = UserAccessCategoryValueSetConcepts.map(c => ({
@@ -357,6 +359,22 @@ export function BrandSettings() {
               </Select>
               <p className="text-xs text-muted-foreground">
                 {t('Controls the theme used on the Keycloak login page. Requires the theme to be installed on the server.')}
+              </p>
+            </div>
+
+            {/* App Store URL */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <ExternalLink className="w-3.5 h-3.5" />
+                {t('App Store URL')}
+              </Label>
+              <Input
+                value={brand.appStoreUrl || ''}
+                onChange={(e) => updateField('appStoreUrl', e.target.value || null)}
+                placeholder="https://apps.example.com"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('External App Store URL. When set, /apps redirects here instead of serving the built-in App Store.')}
               </p>
             </div>
           </CardContent>

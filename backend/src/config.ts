@@ -132,6 +132,7 @@ export const config = {
     get addressCountry() { return process.env.BRAND_ADDRESS_COUNTRY || null },
     get identifier() { return process.env.BRAND_IDENTIFIER || process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
     get loginTheme(): string | null { return process.env.BRAND_LOGIN_THEME || null },
+    get appStoreUrl(): string | null { return process.env.BRAND_APP_STORE_URL || null },
   },
 
   ai: {
