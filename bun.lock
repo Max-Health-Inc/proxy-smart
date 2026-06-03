@@ -28,7 +28,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.66",
         "@elysiajs/cors": "^1.4.2",
@@ -36,6 +36,7 @@
         "@elysiajs/openapi": "^1.4.15",
         "@elysiajs/static": "^1.4.10",
         "@keycloak/keycloak-admin-client": "^26.6.2",
+        "@max-health-inc/elysia-mcp": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@opendataloader/pdf": "^2.4.7",
         "@proxy-smart/app-store": "workspace:*",
@@ -75,7 +76,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -86,7 +87,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "dependencies": {
         "aws-cdk-lib": "^2.257.0",
         "constructs": "^10.6.0",
@@ -104,7 +105,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.2",
         "@cornerstonejs/core": "^4.22.13",
@@ -145,7 +146,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "dependencies": {
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
         "@radix-ui/react-avatar": "^1.1.11",
@@ -203,7 +204,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "devDependencies": {
         "@types/node": "^22.0.0",
         "typescript": "6.0.3",
@@ -211,7 +212,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -221,9 +222,26 @@
         "jsonwebtoken": "^9.0.0",
       },
     },
+    "packages/elysia-mcp": {
+      "name": "@max-health-inc/elysia-mcp",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@modelcontextprotocol/sdk": "^1.29.0",
+        "@sinclair/typebox": "^0.34.49",
+        "elysia": "^1.4.28",
+        "typescript": "6.0.3",
+        "zod": "4.3.6",
+      },
+      "peerDependencies": {
+        "@modelcontextprotocol/sdk": ">=1.20.0",
+        "@sinclair/typebox": ">=0.34.0",
+        "elysia": ">=1.2.0",
+        "zod": ">=4.0.0",
+      },
+    },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.2.3-beta.202606011816.879ac5a08",
+      "version": "0.2.9-beta.202606031437.ac1617d86",
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
@@ -754,6 +772,8 @@
     "@lhncbc/ucum-lhc": ["@lhncbc/ucum-lhc@5.0.4", "", { "dependencies": { "coffeescript": "^2.7.0", "csv-parse": "^4.4.6", "csv-stringify": "^1.0.4", "escape-html": "^1.0.3", "is-integer": "^1.0.6", "jsonfile": "^2.2.3", "stream": "0.0.2", "stream-transform": "^0.1.1", "string-to-stream": "^1.1.0", "xmldoc": "^0.4.0" } }, "sha512-khuV9GV51DF80b0wJmhZTR5Bf23fhS6SSIWnyGT9X+Uvn0FsHFl2LKViQ2TTOuvwagUOUSq8/0SyoE2ZDGwrAA=="],
 
     "@loxjs/url-join": ["@loxjs/url-join@1.0.2", "", {}, "sha512-BqzK8+iHqxUbPRZV6NBum63CJzE0G6vGG3o+4dqeIzbywdoTg+xHJbksYDkk1P1w3Gj64U20Rgp44HHciLbRzg=="],
+
+    "@max-health-inc/elysia-mcp": ["@max-health-inc/elysia-mcp@workspace:packages/elysia-mcp"],
 
     "@microsoft/kiota-abstractions": ["@microsoft/kiota-abstractions@1.0.0-preview.102", "", { "dependencies": { "@opentelemetry/api": "^1.7.0", "@std-uritemplate/std-uritemplate": "^2.0.0", "tinyduration": "^3.3.0", "tslib": "^2.6.2" } }, "sha512-WL+S7X+W6zpDO6vFk+FClb5hoUJMV1ZcMHo1H52r2Q49xTuYx9esJqmwh/0EXsftmxKwOOIOoPfO7+Tp5QAddw=="],
 

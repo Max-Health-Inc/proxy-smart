@@ -17,10 +17,10 @@ The DICOMweb proxy enables SMART-authorized applications to query and retrieve m
 
 | Environment Variable | Default | Description |
 |---|---|---|
-| `DICOMWEB_BASE_URL` | — | DICOMweb root URL (e.g. `http://orthanc:8042/dicom-web`). Enables the proxy when set. |
+| `DICOMWEB_BASE_URL` | -- | DICOMweb root URL (e.g. `http://orthanc:8042/dicom-web`). Enables the proxy when set. |
 | `DICOMWEB_WADO_ROOT` | same as base | Override the WADO-RS root URL |
 | `DICOMWEB_QIDO_ROOT` | same as base | Override the QIDO-RS root URL |
-| `DICOMWEB_UPSTREAM_AUTH` | — | Authorization header for the upstream PACS (e.g. `Basic dXNlcjpwYXNz`) |
+| `DICOMWEB_UPSTREAM_AUTH` | -- | Authorization header for the upstream PACS (e.g. `Basic dXNlcjpwYXNz`) |
 | `DICOMWEB_TIMEOUT_MS` | `30000` | Upstream request timeout in milliseconds |
 
 ## Endpoints

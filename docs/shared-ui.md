@@ -14,7 +14,7 @@ Bun resolves this to the latest commit on `main` when `bun.lock` is regenerated.
 
 ## SmartAppShell
 
-The primary component — replaces ~60 lines of duplicated auth state rendering in every SMART app.
+The primary component -- replaces ~60 lines of duplicated auth state rendering in every SMART app.
 
 ```tsx
 import { SmartAppShell } from "@proxy-smart/shared-ui"

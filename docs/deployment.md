@@ -98,7 +98,7 @@ Caddy provides automatic TLS certificate provisioning via Let's Encrypt.
 - **Volume**: `apps_static` mounted at `/app/backend/public/apps` for externally deployed SMART apps
 - **Key env vars**: See [Environment Variables](environment-variables)
 
-> **App Deployment Model**: The backend Docker image includes only the Admin UI and Patient Picker (built in this repo). External SMART apps (Patient Portal, Consent App, DTR App) are deployed independently from their own repositories — each app's CI builds static assets and deploys them into the shared `apps_static` Docker volume. The backend serves them from `/apps/{app-name}/`.
+> **App Deployment Model**: The backend Docker image includes only the Admin UI and Patient Picker (built in this repo). External SMART apps (Patient Portal, Consent App, DTR App) are deployed independently from their own repositories -- each app's CI builds static assets and deploys them into the shared `apps_static` Docker volume. The backend serves them from `/apps/{app-name}/`.
 
 ### Orthanc (Development)
 

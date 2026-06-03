@@ -240,7 +240,7 @@ When code is pushed to `develop`, the `create-pr.yml` workflow automatically:
 2. Enables GitHub auto-merge on the PR
 3. The PR merges automatically once all required checks pass
 
-Similarly, when code merges to `test`, a PR from `test` → `main` is created — but this one requires manual review before merge.
+Similarly, when code merges to `test`, a PR from `test` → `main` is created -- but this one requires manual review before merge.
 
 ### Version Conflict Auto-Resolution
 
@@ -248,7 +248,7 @@ Because each branch has different version suffixes (alpha vs beta vs production)
 
 1. **Detection**: The workflow checks if the source branch is behind the target (`commits_behind != 0`)
 2. **Merge**: It merges the target branch into the source using `git merge -X ours` (keeping the source's versions)
-3. **Rationale**: The source's version strings are ephemeral anyway — `version-operations.yml` will immediately re-stamp the correct stage version after merge
+3. **Rationale**: The source's version strings are ephemeral anyway -- `version-operations.yml` will immediately re-stamp the correct stage version after merge
 4. **Bot commit**: The merge commit includes `[proxy-smart-releaser]` to prevent re-triggering release workflows
 
 Example flow for `develop` → `test`:

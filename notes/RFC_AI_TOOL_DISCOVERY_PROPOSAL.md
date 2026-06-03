@@ -9,7 +9,7 @@
 
 ## Abstract
 
-This document proposes extensions to existing OAuth 2.0 specifications (RFC 9728, RFC 8414, RFC 7591) that enable autonomous AI clients — including on-device LLMs, SMART on FHIR agents, and dynamically registered applications — to discover available AI tools (MCP servers, skill packages) through standard OAuth metadata mechanisms.
+This document proposes extensions to existing OAuth 2.0 specifications (RFC 9728, RFC 8414, RFC 7591) that enable autonomous AI clients -- including on-device LLMs, SMART on FHIR agents, and dynamically registered applications -- to discover available AI tools (MCP servers, skill packages) through standard OAuth metadata mechanisms.
 
 The proposal introduces no new protocols. It extends three existing RFCs with registered metadata fields and defines a new Well-Known URI (`/.well-known/ai-tools-configuration`) that follows the pattern established by SMART App Launch's `/.well-known/smart-configuration`.
 
@@ -55,7 +55,7 @@ Just as `.well-known/smart-configuration` tells a client which FHIR endpoints ex
 
 Enforcement remains at the token/scope level: if a client doesn't have the required scope (e.g., `tools:execute`), the MCP endpoint returns `403 Forbidden` regardless of what the LLM attempts.
 
-The discovery layer serves as a **curated recommendation** — an orchestration layer or system prompt can read it at startup to load the right tools. The LLM can still call whatever it wants; it just now knows what's available.
+The discovery layer serves as a **curated recommendation** -- an orchestration layer or system prompt can read it at startup to load the right tools. The LLM can still call whatever it wants; it just now knows what's available.
 
 ---
 
@@ -64,17 +64,17 @@ The discovery layer serves as a **curated recommendation** — an orchestration 
 | Standard | Relationship |
 |----------|-------------|
 | **RFC 9728** (Protected Resource Metadata) | Extended with `ai_tools_configuration` link |
-| **RFC 8414** (AS Metadata) | Unchanged — already discoverable via RFC 9728 |
+| **RFC 8414** (AS Metadata) | Unchanged -- already discoverable via RFC 9728 |
 | **RFC 7591** (Dynamic Client Registration) | Extended with AI capability negotiation fields |
 | **SMART App Launch 2.2** | Pattern followed: `.well-known/smart-configuration` → `.well-known/ai-tools-configuration` |
-| **MCP Specification** | Already uses RFC 9728 for auth discovery — tool discovery is the natural next step |
-| **RFC 8707** (Resource Indicators) | Complementary — `resource` parameter scopes tokens to specific tool servers |
+| **MCP Specification** | Already uses RFC 9728 for auth discovery -- tool discovery is the natural next step |
+| **RFC 8707** (Resource Indicators) | Complementary -- `resource` parameter scopes tokens to specific tool servers |
 
 ---
 
 ## 3. Specification
 
-### 3.1 Extension to RFC 9728 — Protected Resource Metadata
+### 3.1 Extension to RFC 9728 -- Protected Resource Metadata
 
 Add the following OPTIONAL metadata fields to the Protected Resource Metadata response at `/.well-known/oauth-protected-resource`:
 
@@ -105,7 +105,7 @@ This follows RFC 9728 Section 3: *"Additional metadata parameters MAY also be us
 
 #### 3.2.1 Public Access (No Token)
 
-When fetched without a Bearer token, the endpoint returns the **public tool catalog** — all tools that are publicly discoverable:
+When fetched without a Bearer token, the endpoint returns the **public tool catalog** -- all tools that are publicly discoverable:
 
 ```json
 {
@@ -149,7 +149,7 @@ When fetched without a Bearer token, the endpoint returns the **public tool cata
 
 #### 3.2.2 Authenticated Access (With Bearer Token)
 
-When fetched with a valid Bearer token, the endpoint returns a **client-scoped view** — filtered by the client's configured permissions (stored as Keycloak client attributes in this reference implementation):
+When fetched with a valid Bearer token, the endpoint returns a **client-scoped view** -- filtered by the client's configured permissions (stored as Keycloak client attributes in this reference implementation):
 
 ```json
 {
@@ -222,7 +222,7 @@ The `assigned` field indicates whether this tool/skill was explicitly assigned t
 | `source_url` | URI | OPTIONAL | Source repository or documentation URL |
 | `assigned` | Boolean | OPTIONAL | Whether this skill is assigned to the authenticated client |
 
-### 3.3 Extension to RFC 7591 — Dynamic Client Registration
+### 3.3 Extension to RFC 7591 -- Dynamic Client Registration
 
 Add OPTIONAL fields to the registration request and response.
 
@@ -329,7 +329,7 @@ Add OPTIONAL fields to the registration request and response.
 
 ### 4.2 Pre-Registered SMART App
 
-For apps already registered via the admin UI, the flow is simpler — skip steps ② and ③ since the client already has credentials:
+For apps already registered via the admin UI, the flow is simpler -- skip steps ② and ③ since the client already has credentials:
 
 ```
 ① GET /.well-known/oauth-protected-resource
@@ -437,7 +437,7 @@ The Model Context Protocol (MCP) already establishes:
 1. **Auth discovery** via RFC 9728 (`oauth-protected-resource` → `authorization_servers`)
 2. **Tool invocation** via MCP Streamable HTTP (`listTools`, `callTool`)
 
-This proposal fills the gap **between auth discovery and tool invocation** — the client knows how to authenticate but doesn't know what tools exist or where to find them until it connects to a specific MCP server URL. The `ai-tools-configuration` endpoint provides that catalog.
+This proposal fills the gap **between auth discovery and tool invocation** -- the client knows how to authenticate but doesn't know what tools exist or where to find them until it connects to a specific MCP server URL. The `ai-tools-configuration` endpoint provides that catalog.
 
 For MCP clients, this means they no longer need hardcoded server URLs. Instead:
 
@@ -487,7 +487,7 @@ A SMART on FHIR application that also uses AI tools would discover both configur
 
 ---
 
-## Appendix A: Full Example — Protected Resource Metadata
+## Appendix A: Full Example -- Protected Resource Metadata
 
 ```http
 GET /.well-known/oauth-protected-resource HTTP/1.1
@@ -522,7 +522,7 @@ Content-Type: application/json
 }
 ```
 
-## Appendix B: Full Example — Dynamic Client Registration
+## Appendix B: Full Example -- Dynamic Client Registration
 
 ```http
 POST /auth/register HTTP/1.1
@@ -562,7 +562,7 @@ Content-Type: application/json
 }
 ```
 
-## Appendix C: Full Example — AI Tools Configuration (Authenticated)
+## Appendix C: Full Example -- AI Tools Configuration (Authenticated)
 
 ```http
 GET /.well-known/ai-tools-configuration HTTP/1.1

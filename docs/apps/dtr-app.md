@@ -1,6 +1,6 @@
 # DTR App
 
-> **Note:** This app lives in a separate repository: [max-health-inc/dtr-app](https://github.com/Max-Health-Inc/dtr-app). It deploys independently — its CI builds static assets and pushes them into the `apps_static` Docker volume on the target server. The backend serves it at `/apps/dtr-app/`.
+> **Note:** This app lives in a separate repository: [max-health-inc/dtr-app](https://github.com/Max-Health-Inc/dtr-app). It deploys independently -- its CI builds static assets and pushes them into the `apps_static` Docker volume on the target server. The backend serves it at `/apps/dtr-app/`.
 
 Da Vinci Documentation Templates & Rules (DTR) application. A SMART on FHIR app for prior authorization documentation, questionnaire rendering, and CQL-based auto-population.
 

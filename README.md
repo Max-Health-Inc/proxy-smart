@@ -39,7 +39,7 @@
 
 ## What is Proxy Smart?
 
-Proxy Smart sits between your SMART apps and FHIR servers, handling authentication and authorization. It doesn't store any clinical data — requests pass through to your existing FHIR servers, and the proxy manages OAuth flows and access control.
+Proxy Smart sits between your SMART apps and FHIR servers, handling authentication and authorization. It doesn't store any clinical data -- requests pass through to your existing FHIR servers, and the proxy manages OAuth flows and access control.
 
 | You provide | Proxy Smart handles |
 |---|---|
@@ -78,11 +78,11 @@ No clinical data in the proxy means a smaller attack surface, simpler compliance
 
 ### 🏥 SMART App Launch 2.2.0
 
-Full implementation of the [SMART App Launch](http://hl7.org/fhir/smart-app-launch/) specification — apps that follow the standard work out of the box. OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation, and enterprise SSO via SAML 2.0 and OIDC.
+Full implementation of the [SMART App Launch](http://hl7.org/fhir/smart-app-launch/) specification -- apps that follow the standard work out of the box. OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation, and enterprise SSO via SAML 2.0 and OIDC.
 
 ### 🖥️ Admin Dashboard
 
-Built-in React admin UI for managing SMART apps, FHIR server connections, users, and scopes — no manual config editing required.
+Built-in React admin UI for managing SMART apps, FHIR server connections, users, and scopes -- no manual config editing required.
 
 ### 🐳 Docker-Ready
 
@@ -172,7 +172,7 @@ Request → JWT Validation → Consent + IAL → SMART Scopes → Role-Based Fil
 | **JWT Validation** | Verifies token signature, expiry, and issuer | Always active |
 | **Consent + IAL** | Enforces patient consent policies and identity assurance level | Configurable |
 | **SMART Scope Enforcement** | Checks the token's `scope` claim permits the requested resource type and operation (e.g., `patient/Observation.read` → allow GET on Observation). Supports SMART v1 and v2 scope syntax. | **Enforced** |
-| **Role-Based Filtering** | Narrows which data is returned based on `fhirUser` identity — Patients only see their own data, Practitioners only see assigned patients. | **Enforced** |
+| **Role-Based Filtering** | Narrows which data is returned based on `fhirUser` identity -- Patients only see their own data, Practitioners only see assigned patients. | **Enforced** |
 
 Each step can be configured independently via environment variables:
 
@@ -181,13 +181,13 @@ Each step can be configured independently via environment variables:
 | `SCOPE_ENFORCEMENT_MODE` | `enforce`, `audit-only`, `disabled` | `enforce` |
 | `ROLE_BASED_FILTERING_MODE` | `enforce`, `audit-only`, `disabled` | `enforce` |
 
-- **`enforce`** — blocks unauthorized requests with HTTP 403
-- **`audit-only`** — logs violations but allows the request through
-- **`disabled`** — skips the check entirely
+- **`enforce`** -- blocks unauthorized requests with HTTP 403
+- **`audit-only`** -- logs violations but allows the request through
+- **`disabled`** -- skips the check entirely
 
 ## Scalability
 
-Proxy Smart inherits Keycloak's proven horizontal scalability. The proxy layer is stateless — it adds no bottleneck on top of Keycloak's auth flows.
+Proxy Smart inherits Keycloak's proven horizontal scalability. The proxy layer is stateless -- it adds no bottleneck on top of Keycloak's auth flows.
 
 ### Official Keycloak Benchmarks ([source](https://www.keycloak.org/high-availability/single-cluster/introduction))
 
@@ -195,8 +195,8 @@ Proxy Smart inherits Keycloak's proven horizontal scalability. The proxy layer i
 |---|---|---|
 | **Users** | 1,000,000 | 30,000,000 |
 | **Password logins/sec** | 300 | 1,000 |
-| **Token refreshes/sec** | — | 20,000 |
-| **Client credential grants/sec** | — | 2,000 |
+| **Token refreshes/sec** | -- | 20,000 |
+| **Client credential grants/sec** | -- | 2,000 |
 
 ### CPU Sizing ([source](https://www.keycloak.org/high-availability/multi-cluster/concepts-memory-and-cpu-sizing))
 
@@ -210,7 +210,7 @@ Base memory per Keycloak pod: **1,250 MB** (includes caches for 10,000 sessions)
 
 ### Max Tested Setup
 
-6 Pods across 3 AWS availability zones, each with 40 vCPU / 8 GB RAM, backed by Aurora PostgreSQL multi-AZ — achieving **1,000 logins + 20,000 token refreshes per second**. CPU usage scales linearly with request count.
+6 Pods across 3 AWS availability zones, each with 40 vCPU / 8 GB RAM, backed by Aurora PostgreSQL multi-AZ -- achieving **1,000 logins + 20,000 token refreshes per second**. CPU usage scales linearly with request count.
 
 ## Documentation
 
@@ -277,7 +277,7 @@ bun run docker:prod
 
 ## Roadmap
 
-**Current**: `v0.0.2-alpha` — Working toward SMART App Launch 2.2.0 compliance.
+**Current**: `v0.0.2-alpha` -- Working toward SMART App Launch 2.2.0 compliance.
 
 | Milestone | Goal |
 |---|---|
@@ -309,8 +309,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Dual licensed:
 
-- **AGPL v3** — open source / non-commercial use
-- **Commercial license** — available for proprietary use
+- **AGPL v3** -- open source / non-commercial use
+- **Commercial license** -- available for proprietary use
 
 See [LICENSE-DUAL.md](LICENSE-DUAL.md) for details.
 

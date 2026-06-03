@@ -17,9 +17,9 @@ Displays all users who have launch context attributes configured, showing:
 ## Template Library
 
 Pre-built launch context templates for common clinical workflows:
-- **EHR Launch with Patient** — sets patient context for EHR-launched apps
-- **Standalone Patient Access** — configures patient self-access context
-- **Practitioner with Encounter** — sets both patient and encounter context
+- **EHR Launch with Patient** -- sets patient context for EHR-launched apps
+- **Standalone Patient Access** -- configures patient self-access context
+- **Practitioner with Encounter** -- sets both patient and encounter context
 - Custom templates for specific workflow needs
 
 ## User Contexts

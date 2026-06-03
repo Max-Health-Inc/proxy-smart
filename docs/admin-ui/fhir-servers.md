@@ -29,9 +29,9 @@ For servers that require mutual TLS (client certificates):
 
 Minimum required fields:
 
-- **Name** — unique identifier used in proxy URLs (e.g., `hapi-fhir`)
-- **Base URL** — upstream FHIR server endpoint (e.g., `http://hapi-fhir:8080/fhir`)
-- **FHIR Version** — `R4`, `R5`, etc.
+- **Name** -- unique identifier used in proxy URLs (e.g., `hapi-fhir`)
+- **Base URL** -- upstream FHIR server endpoint (e.g., `http://hapi-fhir:8080/fhir`)
+- **FHIR Version** -- `R4`, `R5`, etc.
 
 On creation, the backend fetches the server's `CapabilityStatement` to discover supported resources and operations.
 
@@ -68,9 +68,9 @@ PACS/DICOMweb servers are managed separately:
 
 ## Related
 
-- [FHIR Proxy](../fhir-proxy.md) — the request pipeline that processes proxied requests
-- [SMART Apps](./smart-apps.md) — apps that access FHIR servers through the proxy
-- [Scope Management](./scope-management.md) — scopes enforced at the proxy layer
+- [FHIR Proxy](../fhir-proxy.md) -- the request pipeline that processes proxied requests
+- [SMART Apps](./smart-apps.md) -- apps that access FHIR servers through the proxy
+- [Scope Management](./scope-management.md) -- scopes enforced at the proxy layer
 - **🔄 Sync**: Data synchronization problems
 
 ### Diagnostic Tools

@@ -19,17 +19,17 @@ Manage Keycloak users that participate in SMART on FHIR flows. Users created her
 
 Required fields:
 
-- **Username** — Keycloak login name
+- **Username** -- Keycloak login name
 - **First name / Last name**
-- **Email** — used for password resets and notifications
-- **Enabled** — whether the account is active immediately
-- **Credentials** — initial password (can be marked temporary)
+- **Email** -- used for password resets and notifications
+- **Enabled** -- whether the account is active immediately
+- **Credentials** -- initial password (can be marked temporary)
 
 Optional fields:
 
-- **Attributes** — key-value pairs stored on the Keycloak user (e.g., `fhirUser`, department)
-- **Realm roles** — assign roles like `clinician`, `admin`, etc.
-- **Groups** — Keycloak group membership
+- **Attributes** -- key-value pairs stored on the Keycloak user (e.g., `fhirUser`, department)
+- **Realm roles** -- assign roles like `clinician`, `admin`, etc.
+- **Groups** -- Keycloak group membership
 
 ## Federated Identity Links
 
@@ -73,9 +73,9 @@ Organizations support per-org branding overrides via the `/:orgId/branding` endp
 
 ## Related
 
-- [Identity Providers](./identity-providers.md) — configure the external IdPs users can link to
-- [Scope Management](./scope-management.md) — what scopes apps can request on behalf of users
-- [Launch Contexts](./launch-contexts.md) — per-user SMART context attributes
+- [Identity Providers](./identity-providers.md) -- configure the external IdPs users can link to
+- [Scope Management](./scope-management.md) -- what scopes apps can request on behalf of users
+- [Launch Contexts](./launch-contexts.md) -- per-user SMART context attributes
 - **Anonymization**: Privacy-preserving analytics
 
 ## 🛠️ Integration Capabilities

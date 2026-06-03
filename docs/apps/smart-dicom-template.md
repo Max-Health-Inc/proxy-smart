@@ -23,8 +23,8 @@ The SMART DICOM Template provides the full boilerplate for a SMART-launched imag
 - **SMART App Launch 2.2.0** with PKCE via `SmartAppShell`
 - **DICOMweb Integration** via `@babelfhir-ts/dicomweb` for study/series/instance retrieval
 - **Cornerstone3D** for WADO-RS pixel data loading with OAuth token injection
-- **Algorithm Runner UI** — study selector, run button, and result card display
-- **Pluggable Algorithm** — implement `runAlgorithm()` and get a complete UI
+- **Algorithm Runner UI** -- study selector, run button, and result card display
+- **Pluggable Algorithm** -- implement `runAlgorithm()` and get a complete UI
 - **Shared UI Components** from `@proxy-smart/shared-ui` (SmartAppShell, Card, Button, Spinner)
 
 ## Quick Start
@@ -118,12 +118,12 @@ export const config = createSmartAppConfig({
 
 ## How It Works
 
-1. **SMART Launch** — `SmartAppShell` handles OAuth 2.0 + PKCE flow via `createSmartAuth()`
-2. **Study Fetch** — `AlgorithmRunner` queries `GET /ImagingStudy?patient={id}` using the FHIR bearer token
-3. **Study Selection** — User picks a study from the card grid (with thumbnails via DICOMweb)
-4. **Image Loading** — Cornerstone3D initializes, then loads all series image IDs via `@babelfhir-ts/dicomweb/cornerstone`
-5. **Algorithm Execution** — `runAlgorithm()` receives image IDs and study metadata
-6. **Result Display** — Result card shows title, description, confidence, severity, and clinical code
+1. **SMART Launch** -- `SmartAppShell` handles OAuth 2.0 + PKCE flow via `createSmartAuth()`
+2. **Study Fetch** -- `AlgorithmRunner` queries `GET /ImagingStudy?patient={id}` using the FHIR bearer token
+3. **Study Selection** -- User picks a study from the card grid (with thumbnails via DICOMweb)
+4. **Image Loading** -- Cornerstone3D initializes, then loads all series image IDs via `@babelfhir-ts/dicomweb/cornerstone`
+5. **Algorithm Execution** -- `runAlgorithm()` receives image IDs and study metadata
+6. **Result Display** -- Result card shows title, description, confidence, severity, and clinical code
 
 ## Development
 

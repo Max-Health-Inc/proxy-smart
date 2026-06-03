@@ -19,8 +19,8 @@ https://api.proxy-smart.com/proxy-smart-backend/hapi-fhir/R4/Patient/123
 |---|---|
 | `proxy-smart-backend` | Fixed prefix (derived from the backend package name) |
 | `server_name` | Identifier of a registered FHIR server (see [FHIR Servers](admin-ui/fhir-servers)) |
-| `fhir_version` | FHIR version — `R4`, `R5`, etc. (configured via `FHIR_SUPPORTED_VERSIONS`) |
-| `resource_path` | Standard FHIR path — `Patient/123`, `Observation?patient=123`, etc. |
+| `fhir_version` | FHIR version -- `R4`, `R5`, etc. (configured via `FHIR_SUPPORTED_VERSIONS`) |
+| `resource_path` | Standard FHIR path -- `Patient/123`, `Observation?patient=123`, etc. |
 
 ## Request Pipeline
 
@@ -37,8 +37,8 @@ When consent enforcement is enabled (`CONSENT_MODE=enforce`), the proxy checks w
 - The consent service evaluates the request against FHIR Consent resources
 - Identity Assurance Level (IAL) checks verify the trust level of the Person→Patient link
 - If consent is denied, the proxy returns `403` with details:
-  - `consent_denied` — no active consent for this access
-  - `ial_verification_failed` — identity assurance level insufficient
+  - `consent_denied` -- no active consent for this access
+  - `ial_verification_failed` -- identity assurance level insufficient
 
 Consent enforcement has three modes:
 | Mode | Behavior |
@@ -60,8 +60,8 @@ When enabled (`SCOPE_ENFORCEMENT_MODE=enforce`), validates that the token's scop
 
 When enabled (`ROLE_BASED_FILTERING_MODE=enforce`), restricts data visibility based on the `fhirUser` token claim.
 
-- **Patient users** — can only access their own data; the proxy injects `patient={id}` search parameters
-- **Practitioner users** — see only patients assigned to them via `generalPractitioner` references; the proxy looks up assigned patients and injects compartment filters
+- **Patient users** -- can only access their own data; the proxy injects `patient={id}` search parameters
+- **Practitioner users** -- see only patients assigned to them via `generalPractitioner` references; the proxy looks up assigned patients and injects compartment filters
 - If a practitioner has no assigned patients, the proxy returns an empty Bundle rather than leaking data
 
 ### 5. Capability-Aware Normalization
@@ -72,10 +72,10 @@ The proxy fetches and caches each upstream server's `CapabilityStatement` to ena
 
 When `strictCapabilities` is enabled on a FHIR server:
 
-- **Interaction checks** — rejects unsupported CRUD operations with `405`
-- **History checks** — rejects `_history` requests if the server doesn't declare history support
-- **Operation checks** — rejects `$operation` calls not declared in the CapabilityStatement
-- **PATCH format checks** — rejects PATCH with unsupported content types with `415`
+- **Interaction checks** -- rejects unsupported CRUD operations with `405`
+- **History checks** -- rejects `_history` requests if the server doesn't declare history support
+- **Operation checks** -- rejects `$operation` calls not declared in the CapabilityStatement
+- **PATCH format checks** -- rejects PATCH with unsupported content types with `415`
 
 #### Search Parameter Normalization (always active)
 
@@ -106,12 +106,12 @@ All proxied requests are tracked with metrics including server name, HTTP method
 | `CONSENT_MODE` | Consent enforcement mode: `disabled`, `audit-only`, `enforce` | `disabled` |
 | `CONSENT_ENABLED` | Enable consent checks | `false` |
 | `CONSENT_CACHE_TTL` | Consent decision cache TTL (ms) | `60000` |
-| `CONSENT_EXEMPT_CLIENTS` | Comma-separated client IDs exempt from consent | — |
-| `CONSENT_REQUIRED_RESOURCE_TYPES` | Resource types that always require consent | — |
+| `CONSENT_EXEMPT_CLIENTS` | Comma-separated client IDs exempt from consent | -- |
+| `CONSENT_REQUIRED_RESOURCE_TYPES` | Resource types that always require consent | -- |
 | `CONSENT_EXEMPT_RESOURCE_TYPES` | Resource types exempt from consent | `CapabilityStatement,metadata` |
 | `IAL_ENABLED` | Enable Identity Assurance Level checks | `false` |
 | `IAL_MINIMUM_LEVEL` | Minimum IAL for general access | `level1` |
-| `IAL_SENSITIVE_RESOURCE_TYPES` | Resource types requiring elevated IAL | — |
+| `IAL_SENSITIVE_RESOURCE_TYPES` | Resource types requiring elevated IAL | -- |
 | `IAL_SENSITIVE_MINIMUM_LEVEL` | Minimum IAL for sensitive resources | `level3` |
 | `IAL_VERIFY_PATIENT_LINK` | Verify token patient matches Person.link[] | `true` |
 | `IAL_ALLOW_ON_PERSON_LOOKUP_FAILURE` | Allow access if Person lookup fails | `false` |
