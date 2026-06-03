@@ -72,7 +72,7 @@ function parseResource(path: string): { resource: string; resourceId?: string } 
  * Elysia plugin that automatically logs all admin mutations.
  */
 export const adminAuditPlugin = new Elysia({ name: 'admin-audit-plugin' })
-  .onAfterResponse(async (ctx) => {
+  .onAfterResponse({ as: 'scoped' }, async (ctx) => {
     const { request, set } = ctx as { request: Request; set: { status?: number } }
     const method = request.method.toUpperCase()
 
@@ -132,7 +132,7 @@ export const adminAuditPlugin = new Elysia({ name: 'admin-audit-plugin' })
       logger.admin.error('Audit log write failed', { error: err })
     })
   })
-  .onBeforeHandle((ctx) => {
+  .onBeforeHandle({ as: 'scoped' }, (ctx) => {
     // Stash the start time for duration measurement
     ;(ctx as Record<string, unknown>).__auditStart = performance.now()
   })

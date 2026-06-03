@@ -91,6 +91,10 @@ export abstract class BaseEventsLogger<
   private initialized = false
   private lastPollTimestamp = 0
 
+  /** Shared admin token cache — static so all logger instances reuse the same token */
+  private static cachedToken: string | null = null
+  private static cachedTokenExpiry = 0
+
   constructor(protected readonly cfg: EventLoggerConfig<TEvent>) {
     this.logDir = join(process.cwd(), 'logs', cfg.logSubdir)
     this.eventsFile = join(this.logDir, cfg.logFilename)
@@ -180,6 +184,12 @@ export abstract class BaseEventsLogger<
   }
 
   private async getAdminToken(): Promise<string | null> {
+    // Return cached token if still valid (with 30s safety margin)
+    const now = Date.now()
+    if (BaseEventsLogger.cachedToken && now < BaseEventsLogger.cachedTokenExpiry - 30_000) {
+      return BaseEventsLogger.cachedToken
+    }
+
     try {
       const tokenUrl = `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`
       const res = await fetch(tokenUrl, {
@@ -197,7 +207,10 @@ export abstract class BaseEventsLogger<
         return null
       }
 
-      const data = await res.json() as { access_token: string }
+      const data = await res.json() as { access_token: string; expires_in?: number }
+      BaseEventsLogger.cachedToken = data.access_token
+      // Default to 5 minutes if expires_in not provided
+      BaseEventsLogger.cachedTokenExpiry = now + (data.expires_in ?? 300) * 1000
       return data.access_token
     } catch (error) {
       this.log('error', 'Error obtaining admin token', {

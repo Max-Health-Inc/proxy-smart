@@ -49,9 +49,11 @@ function push(level: LogLevel, msg: string, data?: unknown) {
   if (buffer.length > MAX_BUFFER) buffer.splice(0, buffer.length - MAX_BUFFER);
   persist(buffer);
 
-  // Mirror to console for convenience
-   
-  (console[level] || console.log)(`[${entry.ts}] [${level}] ${msg}`, data ?? '');
+  // Only mirror debug/info to console when debug mode is active
+  const alwaysLog = level === 'warn' || level === 'error';
+  if (alwaysLog || window.__DEBUG_ENABLED__) {
+    (console[level] || console.log)(`[${entry.ts}] [${level}] ${msg}`, data ?? '');
+  }
 }
 
 export const logger = {
