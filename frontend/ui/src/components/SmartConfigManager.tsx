@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Target, Play, Shield, Link, ShieldCheck, Lock, Layers } from 'lucide-react';
+import { Target, Shield, Link, ShieldCheck, Lock, Layers } from 'lucide-react';
 import { PageLayout, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { ScopeManager, RegisteredScopes } from './ScopeManager';
-import { LaunchContextManager } from './LaunchContextManager';
 import { ProtocolMappersManager } from './ProtocolMappersManager';
 import { ConsentSettings } from './ConsentSettings';
 import { AccessControlSettings } from './AccessControlSettings';
@@ -34,7 +33,7 @@ export function SmartConfigManager() {
             {/* Tabs in card */}
             <div className="bg-card/70 backdrop-blur-sm rounded-2xl border border-border/50 shadow-lg">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <ResponsiveTabsList columns={6}>
+                    <ResponsiveTabsList columns={5}>
                         <TabsTrigger value="scopes" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Target className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('Scopes')}</span>
@@ -42,10 +41,6 @@ export function SmartConfigManager() {
                         <TabsTrigger value="scope-sets" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Layers className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('Scope Sets')}</span>
-                        </TabsTrigger>
-                        <TabsTrigger value="launch-context" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
-                            <Play className="w-4 h-4" />
-                            <span className="hidden sm:inline">{t('Launch Context')}</span>
                         </TabsTrigger>
                         <TabsTrigger value="mappers" className="flex items-center space-x-2 rounded-xl data-[state=active]:bg-background data-[state=active]:text-foreground">
                             <Link className="w-4 h-4" />
@@ -67,10 +62,6 @@ export function SmartConfigManager() {
 
                     <TabsContent value="scope-sets" className="p-6 space-y-6">
                         <ScopeManager embedded />
-                    </TabsContent>
-
-                    <TabsContent value="launch-context" className="p-6 space-y-6">
-                        <LaunchContextManager embedded />
                     </TabsContent>
 
                     <TabsContent value="mappers" className="p-6 space-y-6">

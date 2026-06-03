@@ -2,13 +2,12 @@ import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createAuthenticatedClientApis } from '@/lib/apiClient';
+import { logger } from '@/lib/logger';
 import type { 
   FhirServerList,
   FhirServerListServersInner,
   HealthcareUser
 } from '@/lib/api-client';
-import type { ContextSet } from '@/lib/types/api';
-
 interface SmartState {
   // FHIR Servers
   servers: FhirServerListServersInner[];
@@ -22,10 +21,6 @@ interface SmartState {
   healthcareUsersError: string | null;
   healthcareUsersLastFetched: number | null;
   
-  // Launch Context Sets
-  launchContextSets: ContextSet[];
-  launchContextSetsLastUpdated: number | null;
-  
   // Actions
   fetchServers: () => Promise<void>;
   fetchHealthcareUsers: () => Promise<void>;
@@ -34,20 +29,12 @@ interface SmartState {
   refreshAll: () => Promise<void>;
   updateHealthcareUser: (userId: string, updatedUser: HealthcareUser) => void;
   
-  // Launch Context Actions
-  addLaunchContextSet: (contextSet: ContextSet) => void;
-  updateLaunchContextSet: (id: string, contextSet: ContextSet) => void;
-  deleteLaunchContextSet: (id: string) => void;
-  getLaunchContextSets: () => ContextSet[];
-  
   // Cache management
   invalidateServers: () => void;
   invalidateHealthcareUsers: () => void;
   isServersCacheValid: () => boolean;
   isHealthcareUsersCacheValid: () => boolean;
 }
-
-// ContextSet imported from @/lib/api-client
 
 // Cache duration: 5 minutes
 const CACHE_DURATION = 5 * 60 * 1000;
@@ -65,26 +52,23 @@ export const useSmartStore = create<SmartState>()(
       healthcareUsersLoading: false,
       healthcareUsersError: null,
       healthcareUsersLastFetched: null,
-      
-      launchContextSets: [],
-      launchContextSetsLastUpdated: null,
 
       // Actions
       fetchServers: async () => {
         // Check cache validity first
         if (get().isServersCacheValid() && get().servers.length > 0) {
-          console.debug('🎯 Using cached FHIR servers data');
+          logger.debug('Using cached FHIR servers data');
           return;
         }
 
         set({ serversLoading: true, serversError: null });
 
         try {
-          console.debug('🔄 Fetching FHIR servers from API...');
+          logger.debug('Fetching FHIR servers from API');
           const { servers } = await createAuthenticatedClientApis();
           const response: FhirServerList = await servers.getFhirServers();
           
-          console.debug('✅ FHIR servers fetched successfully:', {
+          logger.debug('FHIR servers fetched', {
             totalServers: response.totalServers,
             servers: response.servers.map(s => ({ name: s.name, url: s.url, supported: s.supported }))
           });
@@ -96,7 +80,7 @@ export const useSmartStore = create<SmartState>()(
             serversLastFetched: Date.now()
           });
         } catch (error) {
-          console.error('❌ Failed to fetch FHIR servers:', error);
+          logger.error('Failed to fetch FHIR servers', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to fetch FHIR servers';
           set({ 
             serversLoading: false, 
@@ -109,18 +93,18 @@ export const useSmartStore = create<SmartState>()(
       fetchHealthcareUsers: async () => {
         // Check cache validity first
         if (get().isHealthcareUsersCacheValid() && get().healthcareUsers.length > 0) {
-          console.debug('🎯 Using cached healthcare users data');
+          logger.debug('Using cached healthcare users data');
           return;
         }
 
         set({ healthcareUsersLoading: true, healthcareUsersError: null });
 
         try {
-          console.debug('🔄 Fetching healthcare users from API...');
+          logger.debug('Fetching healthcare users from API');
           const { healthcareUsers } = await createAuthenticatedClientApis();
           const users = await healthcareUsers.getAdminHealthcareUsers();
           
-          console.debug('✅ Healthcare users fetched successfully:', {
+          logger.debug('Healthcare users fetched', {
             totalUsers: users.length,
             usernames: users.map((u: HealthcareUser) => u.username)
           });
@@ -132,7 +116,7 @@ export const useSmartStore = create<SmartState>()(
             healthcareUsersLastFetched: Date.now()
           });
         } catch (error) {
-          console.error('❌ Failed to fetch healthcare users:', error);
+          logger.error('Failed to fetch healthcare users', error);
           const errorMessage = error instanceof Error ? error.message : 'Failed to fetch healthcare users';
           set({ 
             healthcareUsersLoading: false, 
@@ -151,46 +135,11 @@ export const useSmartStore = create<SmartState>()(
           user.id === userId ? updatedUser : user
         );
         set({ healthcareUsers: updatedUsers });
-        console.debug('✅ Healthcare user updated in store:', { userId, username: updatedUser.username });
-      },
-
-      // Launch Context Actions
-      addLaunchContextSet: (contextSet: ContextSet) => {
-        const { launchContextSets } = get();
-        const updated = [...launchContextSets, contextSet];
-        set({ 
-          launchContextSets: updated,
-          launchContextSetsLastUpdated: Date.now()
-        });
-        console.debug('✅ Launch context set added:', { id: contextSet.id, name: contextSet.name });
-      },
-
-      updateLaunchContextSet: (id: string, contextSet: ContextSet) => {
-        const { launchContextSets } = get();
-        const updated = launchContextSets.map(set => set.id === id ? contextSet : set);
-        set({ 
-          launchContextSets: updated,
-          launchContextSetsLastUpdated: Date.now()
-        });
-        console.debug('✅ Launch context set updated:', { id, name: contextSet.name });
-      },
-
-      deleteLaunchContextSet: (id: string) => {
-        const { launchContextSets } = get();
-        const updated = launchContextSets.filter(set => set.id !== id);
-        set({ 
-          launchContextSets: updated,
-          launchContextSetsLastUpdated: Date.now()
-        });
-        console.debug('✅ Launch context set deleted:', { id });
-      },
-
-      getLaunchContextSets: () => {
-        return get().launchContextSets;
+        logger.debug('Healthcare user updated in store', { userId, username: updatedUser.username });
       },
 
       refreshAll: async () => {
-        console.debug('🔄 Refreshing all FHIR data...');
+        logger.debug('Refreshing all FHIR data');
         const promises = [
           get().fetchServers(),
           get().fetchHealthcareUsers()
@@ -198,9 +147,9 @@ export const useSmartStore = create<SmartState>()(
         
         try {
           await Promise.allSettled(promises);
-          console.debug('✅ All FHIR data refreshed');
+          logger.debug('All FHIR data refreshed');
         } catch (error) {
-          console.error('❌ Some data failed to refresh:', error);
+          logger.error('Some data failed to refresh', error);
         }
       },
 
@@ -228,8 +177,6 @@ export const useSmartStore = create<SmartState>()(
         serversLastFetched: state.serversLastFetched,
         healthcareUsers: state.healthcareUsers,
         healthcareUsersLastFetched: state.healthcareUsersLastFetched,
-        launchContextSets: state.launchContextSets,
-        launchContextSetsLastUpdated: state.launchContextSetsLastUpdated,
       }),
     }
   )
@@ -276,16 +223,4 @@ export const useHealthcareUsers = () => {
   };
 };
 
-// Hook for launch context sets management
-export const useLaunchContextSets = () => {
-  const store = useSmartStore();
 
-  return {
-    contextSets: store.launchContextSets,
-    lastUpdated: store.launchContextSetsLastUpdated,
-    addContextSet: store.addLaunchContextSet,
-    updateContextSet: store.updateLaunchContextSet,
-    deleteContextSet: store.deleteLaunchContextSet,
-    getContextSets: store.getLaunchContextSets,
-  };
-};
