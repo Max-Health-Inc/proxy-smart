@@ -47,7 +47,9 @@ export const SmartConfigurationResponse = t.Object({
   user_access_brand_identifier: t.Optional(t.Object({
     system: t.Optional(t.String({ description: 'Identifier system (RECOMMENDED: urn:ietf:rfc:3986)' })),
     value: t.String({ description: 'Identifier value (RECOMMENDED: HTTPS URL of brand primary web presence)' })
-  }, { description: 'FHIR Identifier for this server\'s primary Brand within the Bundle' }))
+  }, { description: 'FHIR Identifier for this server\'s primary Brand within the Bundle' })),
+  // App Store discovery (vendor extension)
+  app_store_url: t.Optional(t.String({ description: 'URL of the SMART App Store for this deployment (vendor extension)' })),
 }, { title: 'SmartConfigurationResponse' })
 
 export type SmartConfigurationResponseType = Static<typeof SmartConfigurationResponse>
