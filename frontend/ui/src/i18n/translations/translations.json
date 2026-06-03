@@ -12,10 +12,10 @@
     "1. Person Ressource auswählen"
   ],
   "2xx/3xx responses": [
-    null
+    "2xx/3xx Antworten"
   ],
   "429s": [
-    null
+    "429er"
   ],
   "A shared secret used for symmetric client authentication. Keep this secure and never expose it in client-side code.": [
     "Ein gemeinsames Geheimnis für symmetrische Client-Authentifizierung. Bewahren Sie dies sicher auf und exponieren Sie es niemals in clientseitigem Code."
@@ -39,16 +39,16 @@
     "API-Antwortzeit"
   ],
   "Access": [
-    null
+    "Zugriff"
   ],
   "Access Control": [
-    null
+    "Zugriffskontrolle"
   ],
   "Access Token Lifespan": [
-    null
+    "Access-Token-Lebensdauer"
   ],
   "Access control settings saved successfully": [
-    null
+    "Zugriffskontroll-Einstellungen erfolgreich gespeichert"
   ],
   "Accessible": [
     "Zugänglich"
@@ -57,25 +57,25 @@
     "Konto aktiviert"
   ],
   "Action": [
-    null
+    "Aktion"
   ],
   "Action:": [
-    null
+    "Aktion:"
   ],
   "Actions": [
-    null
+    "Aktionen"
   ],
   "Actions by Resource": [
-    null
+    "Aktionen nach Ressource"
   ],
   "Actions by Type": [
-    null
+    "Aktionen nach Typ"
   ],
   "Active": [
     "Aktiv"
   ],
   "Active Admins": [
-    null
+    "Aktive Admins"
   ],
   "Active Scopes": [
     "Aktive Bereiche"
@@ -84,19 +84,19 @@
     "Aktive Tokens"
   ],
   "Activity Trend (24h)": [
-    null
+    "Aktivitätstrend (24h)"
   ],
   "Actor": [
-    null
+    "Akteur"
   ],
   "Add": [
     "Hinzufügen"
   ],
   "Add DICOM Server": [
-    null
+    "DICOM-Server hinzufügen"
   ],
   "Add Execution": [
-    null
+    "Ausführung hinzufügen"
   ],
   "Add FHIR Person": [
     "FHIR-Person hinzufügen"
@@ -132,7 +132,7 @@
     "Neuen Identitätsanbieter hinzufügen"
   ],
   "Add New Organization": [
-    null
+    "Neue Organisation hinzufügen"
   ],
   "Add New Resource Link": [
     "Neue Ressourcenverknüpfung hinzufügen"
@@ -141,7 +141,7 @@
     "Neuen Benutzer hinzufügen"
   ],
   "Add Organization": [
-    null
+    "Organisation hinzufügen"
   ],
   "Add Pattern": [
     "Muster hinzufügen"
@@ -156,22 +156,22 @@
     "Diese Person hinzufügen"
   ],
   "Add a DICOMweb/PACS server to enable DICOM imaging features.": [
-    null
+    "DICOMweb/PACS-Server hinzufügen, um DICOM-Bildgebungsfunktionen zu aktivieren."
   ],
   "Add a FHIR server to manage connections and view metadata.": [
-    null
+    "FHIR-Server hinzufügen, um Verbindungen zu verwalten und Metadaten anzuzeigen."
   ],
   "Add a new healthcare application to your system": [
     "Neue Gesundheitsanwendung zu Ihrem System hinzufügen"
   ],
   "Add alternative name...": [
-    null
+    "Alternativnamen hinzufügen..."
   ],
   "Add an LDAP provider to start syncing users from an external directory": [
     "LDAP-Anbieter hinzufügen, um Benutzer aus einem externen Verzeichnis zu synchronisieren"
   ],
   "Add client ID...": [
-    null
+    "Client-ID hinzufügen..."
   ],
   "Add sensitive resource type…": [
     "Sensiblen Ressourcentyp hinzufügen…"
@@ -201,16 +201,16 @@
     "Zusätzliche Anmerkungen zu diesem Link..."
   ],
   "Address": [
-    null
+    "Adresse"
   ],
   "Admin Activity (24h)": [
-    null
+    "Admin-Aktivität (24h)"
   ],
   "Admin Approval Required": [
     "Administratorgenehmigung erforderlich"
   ],
   "Admin Audit Dashboard": [
-    null
+    "Admin-Audit-Dashboard"
   ],
   "Admin Client": [
     "Admin-Client"
@@ -228,46 +228,46 @@
     "Admin-Benutzeroberflächen-Rollen"
   ],
   "Admin actions over time": [
-    null
+    "Admin-Aktionen im Zeitverlauf"
   ],
   "Admin actions that returned error status codes": [
-    null
+    "Admin-Aktionen mit Fehler-Statuscodes"
   ],
   "Admin audit events are pushed in real time as they occur.": [
-    null
+    "Admin-Audit-Ereignisse werden in Echtzeit übermittelt."
   ],
   "Administrative": [
-    null
+    "Administrativ"
   ],
   "Administrator": [
-    null
+    "Administrator"
   ],
   "Agent": [
-    null
+    "Agent"
   ],
   "Agent Flow Characteristics": [
     "Agent-Flow-Merkmale"
   ],
   "Alias": [
-    null
+    "Alias"
   ],
   "Alias (immutable)": [
-    null
+    "Alias (unveränderlich)"
   ],
   "Alias (unique identifier)": [
     "Alias (eindeutiger Bezeichner)"
   ],
   "Alias cannot be changed after creation": [
-    null
+    "Alias kann nach der Erstellung nicht geändert werden"
   ],
   "Alias is required to update an Identity Provider.": [
-    null
+    "Alias ist erforderlich, um einen Identity Provider zu aktualisieren."
   ],
   "Alias or display name is required to create an Identity Provider.": [
-    null
+    "Alias oder Anzeigename ist erforderlich, um einen Identity Provider zu erstellen."
   ],
   "Aliases": [
-    null
+    "Aliase"
   ],
   "All": [
     "Alle"
@@ -276,7 +276,7 @@
     "Alle verfügbaren Server"
   ],
   "All Resources": [
-    null
+    "Alle Ressourcen"
   ],
   "All Roles": [
     "Alle Rollen"
@@ -285,7 +285,7 @@
     "Zugriff auf alle Server"
   ],
   "All Servers": [
-    null
+    "Alle Server"
   ],
   "All Servers Used": [
     "Alle Server verwendet"
@@ -297,7 +297,7 @@
     "Alle Typen"
   ],
   "All admin actions completed successfully": [
-    null
+    "Alle Admin-Aktionen erfolgreich abgeschlossen"
   ],
   "All clients are accessing resources within their consent scope": [
     "Alle Clients greifen auf Ressourcen innerhalb ihres Einwilligungsbereichs zu"
@@ -306,19 +306,19 @@
     "Alle Türen sind dieser Gruppe bereits zugewiesen"
   ],
   "All mappers healthy": [
-    null
+    "Alle Mapper funktionsfähig"
   ],
   "All patient data access has been within consent scope": [
     "Alle Patientendaten-Zugriffe lagen im Einwilligungsbereich"
   ],
   "All users are already members": [
-    null
+    "Alle Benutzer sind bereits Mitglieder"
   ],
   "Allow Offline Access": [
-    null
+    "Offline-Zugriff erlauben"
   ],
   "Allow RFC 8693 standard token exchange for this client": [
-    null
+    "RFC 8693 Standard-Token-Austausch für diesen Client erlauben"
   ],
   "Allow access when Person resource cannot be resolved (default: deny)": [
     "Zugriff erlauben, wenn Person-Ressource nicht aufgelöst werden kann (Standard: verweigern)"
@@ -333,7 +333,7 @@
     "Erlaubte Client-Typen"
   ],
   "Allowed FHIR User Types": [
-    null
+    "Erlaubte FHIR-Benutzertypen"
   ],
   "Allowed Redirect URI Patterns": [
     "Erlaubte Redirect-URI-Muster"
@@ -342,7 +342,7 @@
     "Erlaubte Bereiche"
   ],
   "Allowed Server IDs": [
-    null
+    "Erlaubte Server-IDs"
   ],
   "Allowed access requests": [
     "Erlaubte Zugriffsanfragen"
@@ -357,19 +357,19 @@
     "App-Verwaltung"
   ],
   "App Store": [
-    null
+    "App Store"
   ],
   "App Store Visibility": [
-    null
+    "App-Store-Sichtbarkeit"
   ],
   "App Type": [
-    null
+    "App-Typ"
   ],
   "Application": [
     "Anwendung"
   ],
   "Application \"{{name}}\" {{action}} successfully": [
-    null
+    "Anwendung \"{{name}}\" erfolgreich {{action}}"
   ],
   "Application Configuration": [
     "Anwendungskonfiguration"
@@ -381,739 +381,739 @@
     "Anwendungstyp"
   ],
   "Application updated successfully": [
-    null
+    "Anwendung erfolgreich aktualisiert"
   ],
   "Application:": [
-    null
+    "Anwendung:"
   ],
   "Apps must provide TOS URI": [
-    null
+    "Apps müssen eine AGB-URI angeben"
   ],
   "Apps must provide privacy policy URI": [
-    null
+    "Apps müssen eine Datenschutzrichtlinien-URI angeben"
   ],
   "Are you sure you want to delete \"{{name}}\"? Any SMART apps or launch contexts referencing this server will lose their FHIR connection. This action cannot be undone.": [
-    null
+    "Möchten Sie \"{{name}}\" wirklich löschen? Alle SMART-Apps oder Launch-Kontexte, die diesen Server referenzieren, verlieren ihre FHIR-Verbindung. Diese Aktion kann nicht rückgängig gemacht werden."
   ],
   "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.": [
-    null
+    "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
   ],
   "Are you sure you want to delete \"{{name}}\"? This cannot be undone.": [
-    null
+    "Möchten Sie \"{{name}}\" wirklich löschen? Dies kann nicht rückgängig gemacht werden."
   ],
   "Are you sure you want to delete this scope? It will be removed from all SMART apps that use it.": [
-    null
+    "Möchten Sie diesen Scope wirklich löschen? Er wird aus allen SMART-Apps entfernt, die ihn verwenden."
   ],
   "Are you sure you want to remove \"{{name}}\"? This action cannot be undone.": [
-    null
+    "Möchten Sie \"{{name}}\" wirklich entfernen? Diese Aktion kann nicht rückgängig gemacht werden."
   ],
   "Are you sure you want to restart the server? This will temporarily interrupt all services. Please provide a reason for this action:": [
-    null
+    "Möchten Sie den Server wirklich neu starten? Alle Dienste werden vorübergehend unterbrochen. Bitte geben Sie einen Grund an:"
   ],
   "Are you sure you want to shutdown the server? This will stop all services. Please provide a reason for this action:": [
-    null
+    "Möchten Sie den Server wirklich herunterfahren? Alle Dienste werden gestoppt. Bitte geben Sie einen Grund an:"
   ],
   "Assign": [
-    null
+    "Zuweisen"
   ],
   "Assign Door": [
-    null
+    "Tür zuweisen"
   ],
   "Assign Door to Group": [
-    null
+    "Tür einer Gruppe zuweisen"
   ],
   "Assign roles to control user permissions": [
-    null
+    "Rollen zuweisen, um Benutzerberechtigungen zu steuern"
   ],
   "Assigned Doors": [
-    null
+    "Zugewiesene Türen"
   ],
   "Assigning...": [
-    null
+    "Wird zugewiesen..."
   ],
   "Assurance Level": [
-    null
+    "Vertrauensstufe"
   ],
   "Assurance Levels": [
-    null
+    "Vertrauensstufen"
   ],
   "Asymmetric (Required)": [
-    null
+    "Asymmetrisch (Erforderlich)"
   ],
   "Asymmetric Authentication": [
-    null
+    "Asymmetrische Authentifizierung"
   ],
   "Asymmetric Client Authentication": [
-    null
+    "Asymmetrische Client-Authentifizierung"
   ],
   "Audience Clients": [
-    null
+    "Audience-Clients"
   ],
   "Audit Event Log": [
-    null
+    "Audit-Ereignisprotokoll"
   ],
   "Audit Log": [
-    null
+    "Audit-Protokoll"
   ],
   "Audit Only": [
-    null
+    "Nur Audit"
   ],
   "Audit Only — log decisions but allow all": [
-    null
+    "Nur Audit — Entscheidungen protokollieren, aber alles erlauben"
   ],
   "Auth": [
-    null
+    "Auth"
   ],
   "Auth Flows": [
-    null
+    "Auth-Flows"
   ],
   "Auth State:": [
-    null
+    "Auth-Status:"
   ],
   "Authenticating": [
-    null
+    "Authentifizierung läuft"
   ],
   "Authentication": [
-    null
+    "Authentifizierung"
   ],
   "Authentication Debug": [
-    null
+    "Authentifizierungs-Debug"
   ],
   "Authentication Flows": [
-    null
+    "Authentifizierungs-Flows"
   ],
   "Authentication Not Configured": [
-    null
+    "Authentifizierung nicht konfiguriert"
   ],
   "Authentication Options": [
-    null
+    "Authentifizierungsoptionen"
   ],
   "Authentication Settings": [
-    null
+    "Authentifizierungseinstellungen"
   ],
   "Authentication Type": [
-    null
+    "Authentifizierungstyp"
   ],
   "Authentication flow triggered after every broker login.": [
-    null
+    "Authentifizierungs-Flow, der nach jedem Broker-Login ausgeführt wird."
   ],
   "Authentication flow triggered on first login via this IdP.": [
-    null
+    "Authentifizierungs-Flow, der beim ersten Login über diesen IdP ausgeführt wird."
   ],
   "Authentication:": [
-    null
+    "Authentifizierung:"
   ],
   "Authenticator": [
-    null
+    "Authentifikator"
   ],
   "Authorization": [
-    null
+    "Autorisierung"
   ],
   "Authorization Header Value": [
-    null
+    "Authorization-Header-Wert"
   ],
   "Auto-refresh every 30s": [
-    null
+    "Automatische Aktualisierung alle 30s"
   ],
   "Auto-verify email from this IdP and use it for account linking.": [
-    null
+    "E-Mail von diesem IdP automatisch verifizieren und für Kontoverknüpfung verwenden."
   ],
   "Autonomous agents operate like backend services (no user login) but with non-deterministic, self-initiated behavior:": [
-    null
+    "Autonome Agenten arbeiten wie Backend-Dienste (kein Benutzer-Login), jedoch mit nicht-deterministischem, selbstinitiiertem Verhalten:"
   ],
   "Available Templates": [
-    null
+    "Verfügbare Vorlagen"
   ],
   "Average consent check": [
-    null
+    "Durchschnittliche Einwilligungsprüfung"
   ],
   "Average latency": [
-    null
+    "Durchschnittliche Latenz"
   ],
   "Average response time": [
-    null
+    "Durchschnittliche Antwortzeit"
   ],
   "Avg Check Time": [
-    null
+    "Durchschn. Prüfzeit"
   ],
   "Avg Response": [
-    null
+    "Durchschn. Antwort"
   ],
   "Avg Response Time": [
-    null
+    "Durchschn. Antwortzeit"
   ],
   "Avg Scopes": [
-    null
+    "Durchschn. Scopes"
   ],
   "Back": [
-    null
+    "Zurück"
   ],
   "Backchannel Logout URL": [
-    null
+    "Backchannel-Logout-URL"
   ],
   "Backend Service": [
-    null
+    "Backend-Dienst"
   ],
   "Backend Service (Non-interactive, Deterministic)": [
-    null
+    "Backend-Dienst (Nicht-interaktiv, Deterministisch)"
   ],
   "Backend Service Clients": [
-    null
+    "Backend-Dienst-Clients"
   ],
   "Backend Services": [
-    null
+    "Backend-Dienste"
   ],
   "Background health checks every 30 seconds": [
-    null
+    "Hintergrund-Gesundheitsprüfungen alle 30 Sekunden"
   ],
   "Base URL": [
-    null
+    "Basis-URL"
   ],
   "Base URL is required": [
-    null
+    "Basis-URL ist erforderlich"
   ],
   "Base URL:": [
-    null
+    "Basis-URL:"
   ],
   "Based on the user\\": [
-    null
+    "Basierend auf dem Benutzer\\"
   ],
   "Basic Auth": [
-    null
+    "Basic Auth"
   ],
   "Basic Configuration": [
-    null
+    "Grundkonfiguration"
   ],
   "Basic Information": [
-    null
+    "Grundinformationen"
   ],
   "Basic Settings": [
-    null
+    "Grundeinstellungen"
   ],
   "Basic connection settings for your Keycloak server": [
-    null
+    "Grundlegende Verbindungseinstellungen für Ihren Keycloak-Server"
   ],
   "Batch Size": [
-    null
+    "Stapelgröße"
   ],
   "Bearer Token": [
-    null
+    "Bearer-Token"
   ],
   "Bind Credential": [
-    null
+    "Bind-Anmeldedaten"
   ],
   "Bind DN": [
-    null
+    "Bind-DN"
   ],
   "Blocked access requests": [
-    null
+    "Blockierte Zugriffsanfragen"
   ],
   "Bootstrap Admin Account": [
-    null
+    "Bootstrap-Admin-Konto"
   ],
   "Brand Identifier": [
-    null
+    "Markenkennung"
   ],
   "Brand Identity": [
-    null
+    "Markenidentität"
   ],
   "Brand Logo URL": [
-    null
+    "Markenlogo-URL"
   ],
   "Brand Management": [
-    null
+    "Markenverwaltung"
   ],
   "Brand Name": [
-    null
+    "Markenname"
   ],
   "Brand Overrides": [
-    null
+    "Markenüberschreibungen"
   ],
   "Brand settings saved successfully": [
-    null
+    "Markeneinstellungen erfolgreich gespeichert"
   ],
   "Branding": [
-    null
+    "Branding"
   ],
   "Branding saved successfully!": [
-    null
+    "Branding erfolgreich gespeichert!"
   ],
   "Brief description of the app": [
-    null
+    "Kurze Beschreibung der App"
   ],
   "Brief description of the application": [
-    null
+    "Kurze Beschreibung der Anwendung"
   ],
   "Browser redirected here on logout (visible to user)": [
-    null
+    "Browser wird bei Abmeldung hierher umgeleitet (für Benutzer sichtbar)"
   ],
   "Build SMART on FHIR scopes visually or with templates": [
-    null
+    "SMART on FHIR Scopes visuell oder mit Vorlagen erstellen"
   ],
   "Build a scope...": [
-    null
+    "Scope erstellen..."
   ],
   "Build and manage FHIR resource access scopes": [
-    null
+    "FHIR-Ressourcen-Zugriffs-Scopes erstellen und verwalten"
   ],
   "Build scopes using the controls on the left or load a template": [
-    null
+    "Scopes mit den Steuerelementen links erstellen oder Vorlage laden"
   ],
   "Built-in": [
-    null
+    "Integriert"
   ],
   "Built-in MCP Endpoint": [
-    null
+    "Integrierter MCP-Endpunkt"
   ],
   "By Resource Type": [
-    null
+    "Nach Ressourcentyp"
   ],
   "CA Certificate": [
-    null
+    "CA-Zertifikat"
   ],
   "Cache Hit Rate": [
-    null
+    "Cache-Trefferquote"
   ],
   "Cache Status": [
-    null
+    "Cache-Status"
   ],
   "Cache TTL (ms)": [
-    null
+    "Cache-TTL (ms)"
   ],
   "Cancel": [
-    null
+    "Abbrechen"
   ],
   "Cannot test connection for providers without an alias.": [
-    null
+    "Verbindungstest ohne Alias nicht möglich."
   ],
   "Category": [
-    null
+    "Kategorie"
   ],
   "Certificate Authority to verify FHIR server certificate": [
-    null
+    "Zertifizierungsstelle zur Verifizierung des FHIR-Server-Zertifikats"
   ],
   "Certificate Details": [
-    null
+    "Zertifikatsdetails"
   ],
   "Certificate Details (PEM Format)": [
-    null
+    "Zertifikatsdetails (PEM-Format)"
   ],
   "Certificate Status": [
-    null
+    "Zertifikatsstatus"
   ],
   "Certificate for proxy to authenticate with FHIR server": [
-    null
+    "Zertifikat zur Proxy-Authentifizierung beim FHIR-Server"
   ],
   "Certificates & Keys": [
-    null
+    "Zertifikate & Schlüssel"
   ],
   "Certificates for": [
-    null
+    "Zertifikate für"
   ],
   "Changed Sync": [
-    null
+    "Geänderte Synchronisierung"
   ],
   "Changed Users Sync Period (seconds)": [
-    null
+    "Synchronisierungsintervall geänderter Benutzer (Sekunden)"
   ],
   "Changing authentication type requires re-registering the application to ensure proper key/secret generation. To change the auth method, delete this app and create a new one with the desired configuration.": [
-    null
+    "Die Änderung des Authentifizierungstyps erfordert eine Neuregistrierung der Anwendung. Löschen Sie diese App und erstellen Sie eine neue mit der gewünschten Konfiguration."
   ],
   "Check FHIR Consent resources before proxying requests": [
-    null
+    "FHIR-Consent-Ressourcen vor der Weiterleitung prüfen"
   ],
   "Check Security": [
-    null
+    "Sicherheit prüfen"
   ],
   "Check Status": [
-    null
+    "Status prüfen"
   ],
   "Checking door management status...": [
-    null
+    "Türverwaltungsstatus wird geprüft..."
   ],
   "Checking...": [
-    null
+    "Wird geprüft..."
   ],
   "Choose a Person resource above to manage its links to other FHIR resources": [
-    null
+    "Wählen Sie oben eine Person-Ressource, um deren Verknüpfungen zu verwalten"
   ],
   "Choose a registered SMART app to use as the DICOM image viewer across the platform.": [
-    null
+    "Wählen Sie eine registrierte SMART-App als DICOM-Bildbetrachter für die Plattform."
   ],
   "Choose an icon": [
-    null
+    "Symbol auswählen"
   ],
   "Choose which FHIR server to add the Person resource to": [
-    null
+    "Wählen Sie den FHIR-Server für die Person-Ressource"
   ],
   "Choose which Person resource to manage links for": [
-    null
+    "Wählen Sie die Person-Ressource zum Verwalten der Verknüpfungen"
   ],
   "Choose which tools are available to MCP clients. {{exposed}} of {{total}} enabled.": [
-    null
+    "Wählen Sie die verfügbaren Tools für MCP-Clients. {{exposed}} von {{total}} aktiviert."
   ],
   "City": [
-    null
+    "Stadt"
   ],
   "Claim": [
-    null
+    "Claim"
   ],
   "Clear All Caches": [
-    null
+    "Alle Caches leeren"
   ],
   "Clear All Overrides": [
-    null
+    "Alle Überschreibungen löschen"
   ],
   "Clear Session Data": [
-    null
+    "Sitzungsdaten löschen"
   ],
   "Click \"Sync Now\" to begin the synchronization process.": [
-    null
+    "Klicken Sie auf \"Jetzt synchronisieren\", um den Synchronisierungsprozess zu starten."
   ],
   "Client": [
-    null
+    "Client"
   ],
   "Client Authentication": [
-    null
+    "Client-Authentifizierung"
   ],
   "Client Certificate": [
-    null
+    "Client-Zertifikat"
   ],
   "Client Distribution": [
-    null
+    "Client-Verteilung"
   ],
   "Client ID": [
-    null
+    "Client-ID"
   ],
   "Client ID with admin permissions for dynamic registration": [
-    null
+    "Client-ID mit Admin-Berechtigungen für dynamische Registrierung"
   ],
   "Client ID:": [
-    null
+    "Client-ID:"
   ],
   "Client IDs included as audience in tokens (for token exchange)": [
-    null
+    "Client-IDs als Audience in Tokens (für Token-Austausch)"
   ],
   "Client IDs that skip consent checks": [
-    null
+    "Client-IDs, die Einwilligungsprüfungen überspringen"
   ],
   "Client Lifetime": [
-    null
+    "Client-Lebensdauer"
   ],
   "Client Lifetime (days)": [
-    null
+    "Client-Lebensdauer (Tage)"
   ],
   "Client Secret": [
-    null
+    "Client-Secret"
   ],
   "Client Type": [
-    null
+    "Client-Typ"
   ],
   "Client expiration and notification settings": [
-    null
+    "Client-Ablauf- und Benachrichtigungseinstellungen"
   ],
   "Clients": [
-    null
+    "Clients"
   ],
   "Clients with the most denied requests": [
-    null
+    "Clients mit den meisten abgelehnten Anfragen"
   ],
   "Clinical": [
-    null
+    "Klinisch"
   ],
   "Clinical resource types subject to patient-scoped filtering when role-based filtering is active.": [
-    null
+    "Klinische Ressourcentypen, die bei rollenbasierter Filterung patientenbezogen gefiltert werden."
   ],
   "Close": [
-    null
+    "Schließen"
   ],
   "Confidence": [
-    null
+    "Konfidenz"
   ],
   "Confidential Clients": [
-    null
+    "Vertrauliche Clients"
   ],
   "Config source: {{source}}. MCP endpoint is enabled by default. Override with MCP_ENDPOINT_ENABLED env var.": [
-    null
+    "Konfigurationsquelle: {{source}}. MCP-Endpunkt ist standardmäßig aktiviert. Überschreiben mit MCP_ENDPOINT_ENABLED Umgebungsvariable."
   ],
   "Configuration Error": [
-    null
+    "Konfigurationsfehler"
   ],
   "Configure Door Management": [
-    null
+    "Türverwaltung konfigurieren"
   ],
   "Configure FHIR servers first": [
-    null
+    "Zuerst FHIR-Server konfigurieren"
   ],
   "Configure Keycloak": [
-    null
+    "Keycloak konfigurieren"
   ],
   "Configure LDAP user federation to sync users from external directories": [
-    null
+    "LDAP-Benutzerföderation konfigurieren, um Benutzer aus externen Verzeichnissen zu synchronisieren"
   ],
   "Configure Mutual TLS": [
-    null
+    "Mutual TLS konfigurieren"
   ],
   "Configure RFC 7591 automated app registration settings": [
-    null
+    "RFC 7591 automatische App-Registrierungseinstellungen konfigurieren"
   ],
   "Configure SMART on FHIR scopes for this application": [
-    null
+    "SMART on FHIR Scopes für diese Anwendung konfigurieren"
   ],
   "Configure a door management provider (KISI or UniFi Access) to view access events.": [
-    null
+    "Türverwaltungsanbieter (KISI oder UniFi Access) konfigurieren, um Zugriffsereignisse anzuzeigen."
   ],
   "Configure a new DICOMweb/PACS server connection.": [
-    null
+    "Neue DICOMweb/PACS-Serververbindung konfigurieren."
   ],
   "Configure a new SMART on FHIR application": [
-    null
+    "Neue SMART on FHIR Anwendung konfigurieren"
   ],
   "Configure a new identity provider for healthcare system authentication": [
-    null
+    "Neuen Identity Provider für die Authentifizierung im Gesundheitswesen konfigurieren"
   ],
   "Configure and manage Keycloak organizations for multi-tenancy": [
-    null
+    "Keycloak-Organisationen für Multi-Tenancy konfigurieren und verwalten"
   ],
   "Configure and manage identity providers for healthcare system authentication": [
-    null
+    "Identity Provider für die Authentifizierung im Gesundheitswesen konfigurieren und verwalten"
   ],
   "Configure mTLS": [
-    null
+    "mTLS konfigurieren"
   ],
   "Configure mutual TLS authentication for \"{{name}}\". This ensures secure, authenticated communication between the proxy and FHIR server.": [
-    null
+    "Mutual TLS-Authentifizierung für \"{{name}}\" konfigurieren. Dies gewährleistet sichere, authentifizierte Kommunikation zwischen Proxy und FHIR-Server."
   ],
   "Configure your identity provider to enable secure authentication": [
-    null
+    "Konfigurieren Sie Ihren Identity Provider für sichere Authentifizierung"
   ],
   "Configured": [
-    null
+    "Konfiguriert"
   ],
   "Confirm": [
-    null
+    "Bestätigen"
   ],
   "Confirmed": [
-    null
+    "Bestätigt"
   ],
   "Connect a physical access control provider to manage doors": [
-    null
+    "Physischen Zutrittskontrollanbieter verbinden, um Türen zu verwalten"
   ],
   "Connected": [
-    null
+    "Verbunden"
   ],
   "Connection": [
-    null
+    "Verbindung"
   ],
   "Connection Error": [
-    null
+    "Verbindungsfehler"
   ],
   "Connection Failed": [
-    null
+    "Verbindung fehlgeschlagen"
   ],
   "Connection Mode": [
-    null
+    "Verbindungsmodus"
   ],
   "Connection Pooling": [
-    null
+    "Verbindungs-Pooling"
   ],
   "Connection Settings": [
-    null
+    "Verbindungseinstellungen"
   ],
   "Connection Successful": [
-    null
+    "Verbindung erfolgreich"
   ],
   "Connection Test Results": [
-    null
+    "Verbindungstest-Ergebnisse"
   ],
   "Connection URL": [
-    null
+    "Verbindungs-URL"
   ],
   "Consent": [
-    null
+    "Einwilligung"
   ],
   "Consent Activity (24h)": [
-    null
+    "Einwilligungs-Aktivität (24h)"
   ],
   "Consent Analytics Dashboard": [
-    null
+    "Einwilligungs-Analytics-Dashboard"
   ],
   "Consent Enforcement": [
-    null
+    "Einwilligungsdurchsetzung"
   ],
   "Consent Monitoring": [
-    null
+    "Einwilligungsüberwachung"
   ],
   "Consent Required": [
-    null
+    "Einwilligung erforderlich"
   ],
   "Consent Scoping": [
-    null
+    "Einwilligungs-Scoping"
   ],
   "Consent decisions are pushed in real time as they occur.": [
-    null
+    "Einwilligungsentscheidungen werden in Echtzeit übermittelt."
   ],
   "Consent decisions over time": [
-    null
+    "Einwilligungsentscheidungen im Zeitverlauf"
   ],
   "Consider mutual TLS (mTLS) between proxy and FHIR server for extra assurance.": [
-    null
+    "Erwägen Sie Mutual TLS (mTLS) zwischen Proxy und FHIR-Server für zusätzliche Sicherheit."
   ],
   "Contacts": [
-    null
+    "Kontakte"
   ],
   "Context": [
-    null
+    "Kontext"
   ],
   "Continue": [
-    null
+    "Weiter"
   ],
   "Control which FHIR servers this application can access": [
-    null
+    "Steuern Sie, auf welche FHIR-Server diese Anwendung zugreifen kann"
   ],
   "Control which apps appear on the public": [
-    null
+    "Steuern Sie, welche Apps öffentlich erscheinen"
   ],
   "Controller Host": [
-    null
+    "Controller-Host"
   ],
   "Controls how Keycloak links accounts when a user logs in via this provider for the first time.": [
-    null
+    "Steuert, wie Keycloak Konten verknüpft, wenn sich ein Benutzer erstmals über diesen Anbieter anmeldet."
   ],
   "Controls the theme used on the Keycloak login page. Requires the theme to be installed on the server.": [
-    null
+    "Steuert das Thema auf der Keycloak-Anmeldeseite. Das Thema muss auf dem Server installiert sein."
   ],
   "Copy Scopes": [
-    null
+    "Scopes kopieren"
   ],
   "Copy scope": [
-    null
+    "Scope kopieren"
   ],
   "Core configuration for dynamic client registration": [
-    null
+    "Grundkonfiguration für dynamische Client-Registrierung"
   ],
   "Could not reach the door management service. Please check your configuration.": [
-    null
+    "Türverwaltungsdienst nicht erreichbar. Bitte überprüfen Sie Ihre Konfiguration."
   ],
   "Country": [
-    null
+    "Land"
   ],
   "Create": [
-    null
+    "Erstellen"
   ],
   "Create Group": [
-    null
+    "Gruppe erstellen"
   ],
   "Create New Person": [
-    null
+    "Neue Person erstellen"
   ],
   "Create New Person Resource": [
-    null
+    "Neue Person-Ressource erstellen"
   ],
   "Create Organization": [
-    null
+    "Organisation erstellen"
   ],
   "Create Person Resource": [
-    null
+    "Person-Ressource erstellen"
   ],
   "Create Provider": [
-    null
+    "Anbieter erstellen"
   ],
   "Create SMART Scope": [
-    null
+    "SMART-Scope erstellen"
   ],
   "Create Scope": [
-    null
+    "Scope erstellen"
   ],
   "Create Scope Set": [
-    null
+    "Scope-Set erstellen"
   ],
   "Create a new Keycloak organization": [
-    null
+    "Neue Keycloak-Organisation erstellen"
   ],
   "Create a new door group": [
-    null
+    "Neue Türgruppe erstellen"
   ],
   "Create a new user account for healthcare professionals": [
-    null
+    "Neues Benutzerkonto für medizinisches Fachpersonal erstellen"
   ],
   "Create, Update, Delete distribution": [
-    null
+    "Verteilung von Erstellen, Aktualisieren, Löschen"
   ],
   "Created": [
-    null
+    "Erstellt"
   ],
   "Created: {{count}}": [
-    null
+    "Erstellt: {{count}}"
   ],
   "Creating Person Resource...": [
-    null
+    "Person-Ressource wird erstellt..."
   ],
   "Creating...": [
-    null
+    "Wird erstellt..."
   ],
   "Current Configuration": [
-    null
+    "Aktuelle Konfiguration"
   ],
   "Current Scope Preview": [
-    null
+    "Aktuelle Scope-Vorschau"
   ],
   "Current Scope Set": [
-    null
+    "Aktuelles Scope-Set"
   ],
   "Current Scopes": [
-    null
+    "Aktuelle Scopes"
   ],
   "Current Status": [
-    null
+    "Aktueller Status"
   ],
   "Current success rate": [
-    null
+    "Aktuelle Erfolgsrate"
   ],
   "Currently valid": [
-    null
+    "Derzeit gültig"
   ],
   "Custom": [
-    null
+    "Benutzerdefiniert"
   ],
   "Custom & templates": [
-    null
+    "Benutzerdefiniert & Vorlagen"
   ],
   "Custom (editable)": [
-    null
+    "Benutzerdefiniert (bearbeitbar)"
   ],
   "Custom Header": [
-    null
+    "Benutzerdefinierter Header"
   ],
   "Custom Scope Sets": [
-    null
+    "Benutzerdefinierte Scope-Sets"
   ],
   "Custom Scopes": [
-    null
+    "Benutzerdefinierte Scopes"
   ],
   "DICOM Server Management": [
-    null
+    "DICOM-Server-Verwaltung"
   ],
   "DICOM Servers": [
-    null
+    "DICOM-Server"
   ],
   "DICOM Viewer App": [
-    null
+    "DICOM-Viewer-App"
   ],
   "DICOM server added": [
-    null
+    "DICOM-Server hinzugefügt"
   ],
   "DICOM server deleted": [
-    null
+    "DICOM-Server gelöscht"
   ],
   "DICOM server updated": [
-    null
+    "DICOM-Server aktualisiert"
   ],
   "DICOM viewer app updated": [
-    null
+    "DICOM-Viewer-App aktualisiert"
   ],
   "DICOMweb Endpoints": [
-    null
+    "DICOMweb-Endpunkte"
   ],
   "Dark": [
     "Dunkel"
@@ -1122,745 +1122,745 @@
     "Übersicht"
   ],
   "Decision": [
-    null
+    "Entscheidung"
   ],
   "Decision Trend (24h)": [
-    null
+    "Entscheidungstrend (24h)"
   ],
   "Decision:": [
-    null
+    "Entscheidung:"
   ],
   "Decisions": [
-    null
+    "Entscheidungen"
   ],
   "Decisions by Mode": [
-    null
+    "Entscheidungen nach Modus"
   ],
   "Decisions by Resource Type": [
-    null
+    "Entscheidungen nach Ressourcentyp"
   ],
   "Decreasing": [
-    null
+    "Abnehmend"
   ],
   "Default": [
-    null
+    "Standard"
   ],
   "Default (30s)": [
-    null
+    "Standard (30s)"
   ],
   "Default DICOM server updated": [
-    null
+    "Standard-DICOM-Server aktualisiert"
   ],
   "Default Scopes": [
-    null
+    "Standard-Scopes"
   ],
   "Default Scopes:": [
-    null
+    "Standard-Scopes:"
   ],
   "Define what data this application can access": [
-    null
+    "Definieren Sie, auf welche Daten diese Anwendung zugreifen kann"
   ],
   "Delete": [
-    null
+    "Löschen"
   ],
   "Delete Application": [
-    null
+    "Anwendung löschen"
   ],
   "Delete DICOM Server": [
-    null
+    "DICOM-Server löschen"
   ],
   "Delete Group": [
-    null
+    "Gruppe löschen"
   ],
   "Delete Scope": [
-    null
+    "Scope löschen"
   ],
   "Delete Server": [
-    null
+    "Server löschen"
   ],
   "Delete User": [
-    null
+    "Benutzer löschen"
   ],
   "Delete failed": [
-    null
+    "Löschen fehlgeschlagen"
   ],
   "Delete scope": [
-    null
+    "Scope löschen"
   ],
   "Deleting this application will permanently remove it from Keycloak. Any active sessions and tokens for this application will be invalidated.": [
-    null
+    "Diese Anwendung wird dauerhaft aus Keycloak entfernt. Alle aktiven Sitzungen und Tokens werden ungültig."
   ],
   "Deleting...": [
-    null
+    "Wird gelöscht..."
   ],
   "Denied Access": [
-    null
+    "Zugriff verweigert"
   ],
   "Deny": [
-    null
+    "Ablehnen"
   ],
   "Deny Rate": [
-    null
+    "Ablehnungsrate"
   ],
   "Deploy apps to": [
-    null
+    "Apps bereitstellen auf"
   ],
   "Description": [
-    null
+    "Beschreibung"
   ],
   "Details": [
-    null
+    "Details"
   ],
   "Disable": [
-    null
+    "Deaktivieren"
   ],
   "Disabled": [
-    null
+    "Deaktiviert"
   ],
   "Disabled — no consent checking": [
-    null
+    "Deaktiviert — keine Einwilligungsprüfung"
   ],
   "Disconnected": [
-    null
+    "Getrennt"
   ],
   "Dismiss": [
-    null
+    "Verwerfen"
   ],
   "Display Name": [
-    null
+    "Anzeigename"
   ],
   "Display name (optional)": [
-    null
+    "Anzeigename (optional)"
   ],
   "Distinct actors (24h)": [
-    null
+    "Unterschiedliche Akteure (24h)"
   ],
   "Domains": [
-    null
+    "Domänen"
   ],
   "Door Access": [
-    null
+    "Türzugang"
   ],
   "Door Management": [
-    null
+    "Türverwaltung"
   ],
   "Door Status": [
-    null
+    "Türstatus"
   ],
   "Door access monitoring is not available": [
-    null
+    "Türzugangsüberwachung ist nicht verfügbar"
   ],
   "Door groups": [
-    null
+    "Türgruppen"
   ],
   "Doors": [
-    null
+    "Türen"
   ],
   "Download current dashboard analytics": [
-    null
+    "Aktuelle Dashboard-Analysen herunterladen"
   ],
   "Download events log from server": [
-    null
+    "Ereignisprotokoll vom Server herunterladen"
   ],
   "Download events log from server (JSONL)": [
-    null
+    "Ereignisprotokoll vom Server herunterladen (JSONL)"
   ],
   "Download filtered events as CSV": [
-    null
+    "Gefilterte Ereignisse als CSV herunterladen"
   ],
   "Download full audit log as newline-delimited JSON": [
-    null
+    "Vollständiges Audit-Protokoll als JSONL herunterladen"
   ],
   "Duration": [
-    null
+    "Dauer"
   ],
   "Dynamic Client Registration": [
-    null
+    "Dynamische Client-Registrierung"
   ],
   "Dynamic Client Registration Setup": [
-    null
+    "Einrichtung der dynamischen Client-Registrierung"
   ],
   "Dynamic Registration": [
-    null
+    "Dynamische Registrierung"
   ],
   "Dynamic identity": [
-    null
+    "Dynamische Identität"
   ],
   "ECDSA-SHA256": [
-    null
+    "ECDSA-SHA256"
   ],
   "ECDSA-SHA384": [
-    null
+    "ECDSA-SHA384"
   ],
   "ECDSA-SHA512": [
-    null
+    "ECDSA-SHA512"
   ],
   "EHR Launch": [
-    null
+    "EHR-Start"
   ],
   "EHR Launch App (Interactive)": [
-    null
+    "EHR-Start-App (Interaktiv)"
   ],
   "EHR Launch Clients": [
-    null
+    "EHR-Start-Clients"
   ],
   "Early warning indicators for OAuth reliability": [
-    null
+    "Frühwarnindikatoren für OAuth-Zuverlässigkeit"
   ],
   "Edit": [
-    null
+    "Bearbeiten"
   ],
   "Edit Configuration": [
-    null
+    "Konfiguration bearbeiten"
   ],
   "Edit DICOM Server": [
-    null
+    "DICOM-Server bearbeiten"
   ],
   "Edit Details": [
-    null
+    "Details bearbeiten"
   ],
   "Edit Healthcare User": [
-    null
+    "Gesundheitsbenutzer bearbeiten"
   ],
   "Edit Identity Provider": [
-    null
+    "Identity Provider bearbeiten"
   ],
   "Edit LDAP Provider": [
-    null
+    "LDAP-Anbieter bearbeiten"
   ],
   "Edit Mode": [
-    null
+    "Bearbeitungsmodus"
   ],
   "Edit Organization": [
-    null
+    "Organisation bearbeiten"
   ],
   "Edit Profile": [
-    null
+    "Profil bearbeiten"
   ],
   "Edit SMART Application": [
-    null
+    "SMART-Anwendung bearbeiten"
   ],
   "Edit Scope Set": [
-    null
+    "Scope-Set bearbeiten"
   ],
   "Email": [
-    null
+    "E-Mail"
   ],
   "Email Address": [
-    null
+    "E-Mail-Adresse"
   ],
   "Email Domains": [
-    null
+    "E-Mail-Domänen"
   ],
   "Email:": [
-    null
+    "E-Mail:"
   ],
   "Empty fields inherit from the main branding tab.": [
-    null
+    "Leere Felder erben die Werte vom Haupt-Branding-Tab."
   ],
   "Enable": [
-    null
+    "Aktivieren"
   ],
   "Enable Consent Enforcement": [
-    null
+    "Einwilligungsdurchsetzung aktivieren"
   ],
   "Enable Dynamic Registration": [
-    null
+    "Dynamische Registrierung aktivieren"
   ],
   "Enable IAL Verification": [
-    null
+    "IAL-Verifizierung aktivieren"
   ],
   "Enable Mutual TLS": [
-    null
+    "Mutual TLS aktivieren"
   ],
   "Enable Provider Immediately": [
-    null
+    "Anbieter sofort aktivieren"
   ],
   "Enable StartTLS": [
-    null
+    "StartTLS aktivieren"
   ],
   "Enable refresh tokens for this application": [
-    null
+    "Refresh-Tokens für diese Anwendung aktivieren"
   ],
   "Enabled": [
-    null
+    "Aktiviert"
   ],
   "Enforce": [
-    null
+    "Durchsetzen"
   ],
   "Enforce HTTPS for redirect URIs (localhost exempted)": [
-    null
+    "HTTPS für Redirect-URIs erzwingen (localhost ausgenommen)"
   ],
   "Enforce vs Audit-only vs Disabled": [
-    null
+    "Durchsetzen vs. Nur-Audit vs. Deaktiviert"
   ],
   "Enforce — block requests without valid consent": [
-    null
+    "Durchsetzen — Anfragen ohne gültige Einwilligung blockieren"
   ],
   "Enforcement": [
-    null
+    "Durchsetzung"
   ],
   "Enforcement Mode": [
-    null
+    "Durchsetzungsmodus"
   ],
   "Ensure private keys are never shared or transmitted over insecure channels": [
-    null
+    "Stellen Sie sicher, dass private Schlüssel niemals geteilt oder über unsichere Kanäle übertragen werden"
   ],
   "Ensure token's patient claim matches Person.link[]": [
     "Sicherstellen, dass der patient-Claim des Tokens mit Person.link[] übereinstimmt"
   ],
   "Enter client secret...": [
-    null
+    "Client-Secret eingeben..."
   ],
   "Enter password": [
-    null
+    "Passwort eingeben"
   ],
   "Enter shared secret": [
-    null
+    "Shared Secret eingeben"
   ],
   "Enter the Person resource ID to link to this user": [
-    null
+    "Person-Ressource-ID eingeben, um sie mit diesem Benutzer zu verknüpfen"
   ],
   "Enter the base URL of the FHIR server. The server name and details will be automatically retrieved from the server\\": [
-    null
+    "Geben Sie die Basis-URL des FHIR-Servers ein. Name und Details werden automatisch vom Server abgerufen\\"
   ],
   "Enter your Kisi API key": [
-    null
+    "Geben Sie Ihren Kisi-API-Schlüssel ein"
   ],
   "Enter your Kisi API key from the Kisi dashboard": [
-    null
+    "Geben Sie Ihren Kisi-API-Schlüssel aus dem Kisi-Dashboard ein"
   ],
   "Enter your UniFi Access controller details": [
-    null
+    "Geben Sie Ihre UniFi Access Controller-Details ein"
   ],
   "Entity ID / Client ID": [
-    null
+    "Entity-ID / Client-ID"
   ],
   "Entity identifier or client ID": [
-    null
+    "Entity-Kennung oder Client-ID"
   ],
   "Environment": [
     "Umgebung"
   ],
   "Error": [
-    null
+    "Fehler"
   ],
   "Error Loading Servers": [
-    null
+    "Fehler beim Laden der Server"
   ],
   "Errors": [
-    null
+    "Fehler"
   ],
   "Event Log": [
-    null
+    "Ereignisprotokoll"
   ],
   "Event Type": [
-    null
+    "Ereignistyp"
   ],
   "Events": [
-    null
+    "Ereignisse"
   ],
   "Execution added successfully": [
-    null
+    "Ausführung erfolgreich hinzugefügt"
   ],
   "Execution deleted": [
-    null
+    "Ausführung gelöscht"
   ],
   "Execution updated": [
-    null
+    "Ausführung aktualisiert"
   ],
   "Exempt Clients": [
-    null
+    "Ausgenommene Clients"
   ],
   "Exempt Resource Types": [
-    null
+    "Ausgenommene Ressourcentypen"
   ],
   "Exempt clients &amp; resource types": [
-    null
+    "Ausgenommene Clients & Ressourcentypen"
   ],
   "Existing Links": [
-    null
+    "Vorhandene Verknüpfungen"
   ],
   "Export": [
-    null
+    "Exportieren"
   ],
   "Export CSV": [
-    null
+    "CSV exportieren"
   ],
   "Export Current Data": [
-    null
+    "Aktuelle Daten exportieren"
   ],
   "Export JSONL": [
-    null
+    "JSONL exportieren"
   ],
   "Export Server Events": [
-    null
+    "Server-Ereignisse exportieren"
   ],
   "Expose FHIR tools via MCP for AI agents": [
-    null
+    "FHIR-Tools über MCP für KI-Agenten bereitstellen"
   ],
   "Expose Resources as Tools": [
-    null
+    "Ressourcen als Tools bereitstellen"
   ],
   "Expose backend tools to AI clients (Claude, IDE plugins) via the MCP Streamable HTTP protocol.": [
-    null
+    "Backend-Tools über das MCP Streamable HTTP-Protokoll für KI-Clients (Claude, IDE-Plugins) bereitstellen."
   ],
   "Exposed Resources": [
-    null
+    "Bereitgestellte Ressourcen"
   ],
   "Exposed Tools": [
-    null
+    "Bereitgestellte Tools"
   ],
   "External Audiences": [
-    null
+    "Externe Audiences"
   ],
   "External resource servers that use this proxy as their authorization server (e.g. third-party MCP servers). Entries starting with \\": [
-    null
+    "Externe Ressourcen-Server, die diesen Proxy als Autorisierungsserver verwenden (z.B. MCP-Server von Drittanbietern). Einträge beginnend mit \\"
   ],
   "FHIR & DICOM Server Management": [
-    null
+    "FHIR- & DICOM-Server-Verwaltung"
   ],
   "FHIR Associations": [
-    null
+    "FHIR-Verknüpfungen"
   ],
   "FHIR Compliant": [
-    null
+    "FHIR-konform"
   ],
   "FHIR Consent-based access control policy": [
-    null
+    "FHIR-Consent-basierte Zugriffskontrollrichtlinie"
   ],
   "FHIR Metadata Validator": [
-    null
+    "FHIR-Metadaten-Validator"
   ],
   "FHIR Person Associations": [
-    null
+    "FHIR-Person-Verknüpfungen"
   ],
   "FHIR Proxy": [
-    null
+    "FHIR-Proxy"
   ],
   "FHIR Resource": [
-    null
+    "FHIR-Ressource"
   ],
   "FHIR Server": [
-    null
+    "FHIR-Server"
   ],
   "FHIR Server Access": [
-    null
+    "FHIR-Server-Zugriff"
   ],
   "FHIR Server Association": [
-    null
+    "FHIR-Server-Verknüpfung"
   ],
   "FHIR Server Management": [
-    null
+    "FHIR-Server-Verwaltung"
   ],
   "FHIR Server Uptime": [
-    null
+    "FHIR-Server-Verfügbarkeit"
   ],
   "FHIR Servers": [
     "FHIR-Server"
   ],
   "FHIR Servers Health": [
-    null
+    "FHIR-Server-Zustand"
   ],
   "FHIR User Identity": [
-    null
+    "FHIR-Benutzeridentität"
   ],
   "FHIR Version": [
-    null
+    "FHIR-Version"
   ],
   "FHIR Version:": [
-    null
+    "FHIR-Version:"
   ],
   "FHIR server added": [
-    null
+    "FHIR-Server hinzugefügt"
   ],
   "FHIR server deleted": [
-    null
+    "FHIR-Server gelöscht"
   ],
   "FHIR server updated": [
-    null
+    "FHIR-Server aktualisiert"
   ],
   "Fail": [
-    null
+    "Fehlgeschlagen"
   ],
   "Failed": [
-    null
+    "Fehlgeschlagen"
   ],
   "Failed to Load Consent Monitoring": [
-    null
+    "Einwilligungsüberwachung konnte nicht geladen werden"
   ],
   "Failed to Load OAuth Monitoring Data": [
-    null
+    "OAuth-Überwachungsdaten konnten nicht geladen werden"
   ],
   "Failed to add FHIR server. Please check if the server is accessible and supports FHIR.": [
-    null
+    "FHIR-Server konnte nicht hinzugefügt werden. Bitte prüfen Sie, ob der Server erreichbar ist und FHIR unterstützt."
   ],
   "Failed to add Identity Provider. Please try again.": [
-    null
+    "Identity Provider konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
   ],
   "Failed to add execution": [
-    null
+    "Ausführung konnte nicht hinzugefügt werden"
   ],
   "Failed to add member.": [
-    null
+    "Mitglied konnte nicht hinzugefügt werden."
   ],
   "Failed to check door management status": [
-    null
+    "Türverwaltungsstatus konnte nicht geprüft werden"
   ],
   "Failed to create LDAP federation": [
-    null
+    "LDAP-Föderation konnte nicht erstellt werden"
   ],
   "Failed to create organization.": [
-    null
+    "Organisation konnte nicht erstellt werden."
   ],
   "Failed to delete Identity Provider. Please try again.": [
-    null
+    "Identity Provider konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
   ],
   "Failed to delete LDAP federation": [
-    null
+    "LDAP-Föderation konnte nicht gelöscht werden"
   ],
   "Failed to delete application: {{error}}": [
-    null
+    "Anwendung konnte nicht gelöscht werden: {{error}}"
   ],
   "Failed to delete execution": [
-    null
+    "Ausführung konnte nicht gelöscht werden"
   ],
   "Failed to delete mapper": [
-    null
+    "Mapper konnte nicht gelöscht werden"
   ],
   "Failed to delete organization.": [
-    null
+    "Organisation konnte nicht gelöscht werden."
   ],
   "Failed to fix mappers": [
-    null
+    "Mapper konnten nicht repariert werden"
   ],
   "Failed to load FHIR servers": [
-    null
+    "FHIR-Server konnten nicht geladen werden"
   ],
   "Failed to load IAL settings": [
     "Fehler beim Laden der IAL-Einstellungen"
   ],
   "Failed to load Identity Providers. Please try again.": [
-    null
+    "Identity Provider konnten nicht geladen werden. Bitte versuchen Sie es erneut."
   ],
   "Failed to load SMART flow mapping": [
-    null
+    "SMART-Flow-Zuordnung konnte nicht geladen werden"
   ],
   "Failed to load authentication flows": [
-    null
+    "Authentifizierungs-Flows konnten nicht geladen werden"
   ],
   "Failed to load branding overrides": [
-    null
+    "Branding-Überschreibungen konnten nicht geladen werden"
   ],
   "Failed to load doors": [
-    null
+    "Türen konnten nicht geladen werden"
   ],
   "Failed to load events": [
-    null
+    "Ereignisse konnten nicht geladen werden"
   ],
   "Failed to load flow executions": [
-    null
+    "Flow-Ausführungen konnten nicht geladen werden"
   ],
   "Failed to load groups": [
-    null
+    "Gruppen konnten nicht geladen werden"
   ],
   "Failed to load members": [
-    null
+    "Mitglieder konnten nicht geladen werden"
   ],
   "Failed to load organizations.": [
-    null
+    "Organisationen konnten nicht geladen werden."
   ],
   "Failed to load overview": [
-    null
+    "Übersicht konnte nicht geladen werden"
   ],
   "Failed to load overview data": [
     "Fehler beim Laden der Übersichtsdaten"
   ],
   "Failed to load scope mapper status": [
-    null
+    "Scope-Mapper-Status konnte nicht geladen werden"
   ],
   "Failed to load user federations": [
-    null
+    "Benutzerföderationen konnten nicht geladen werden"
   ],
   "Failed to perform health check: {{error}}": [
-    null
+    "Gesundheitsprüfung fehlgeschlagen: {{error}}"
   ],
   "Failed to refresh SMART flow mapping": [
-    null
+    "SMART-Flow-Zuordnung konnte nicht aktualisiert werden"
   ],
   "Failed to remove imported users": [
-    null
+    "Importierte Benutzer konnten nicht entfernt werden"
   ],
   "Failed to remove member": [
-    null
+    "Mitglied konnte nicht entfernt werden"
   ],
   "Failed to reorder execution": [
-    null
+    "Ausführung konnte nicht neu sortiert werden"
   ],
   "Failed to reset branding": [
-    null
+    "Branding konnte nicht zurückgesetzt werden"
   ],
   "Failed to restart server: {{error}}": [
-    null
+    "Server konnte nicht neu gestartet werden: {{error}}"
   ],
   "Failed to save IAL settings": [
     "Fehler beim Speichern der IAL-Einstellungen"
   ],
   "Failed to save branding overrides": [
-    null
+    "Branding-Überschreibungen konnten nicht gespeichert werden"
   ],
   "Failed to save scope set": [
-    null
+    "Scope-Set konnte nicht gespeichert werden"
   ],
   "Failed to shutdown server: {{error}}": [
-    null
+    "Server konnte nicht heruntergefahren werden: {{error}}"
   ],
   "Failed to unlink federated users": [
-    null
+    "Föderierte Benutzer konnten nicht getrennt werden"
   ],
   "Failed to update FHIR server. Please check if the server is accessible and supports FHIR.": [
-    null
+    "FHIR-Server konnte nicht aktualisiert werden. Bitte prüfen Sie die Erreichbarkeit und FHIR-Unterstützung."
   ],
   "Failed to update Identity Provider status. Please try again.": [
-    null
+    "Identity-Provider-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
   ],
   "Failed to update Identity Provider. Please try again.": [
-    null
+    "Identity Provider konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
   ],
   "Failed to update LDAP federation": [
-    null
+    "LDAP-Föderation konnte nicht aktualisiert werden"
   ],
   "Failed to update MCP endpoint setting": [
-    null
+    "MCP-Endpunkt-Einstellung konnte nicht aktualisiert werden"
   ],
   "Failed to update execution requirement": [
-    null
+    "Ausführungsanforderung konnte nicht aktualisiert werden"
   ],
   "Failed to update organization status.": [
-    null
+    "Organisationsstatus konnte nicht aktualisiert werden."
   ],
   "Failed to update organization.": [
-    null
+    "Organisation konnte nicht aktualisiert werden."
   ],
   "Failed to update scopes": [
-    null
+    "Scopes konnten nicht aktualisiert werden"
   ],
   "Failed to update strict capabilities setting": [
-    null
+    "Strict-Capabilities-Einstellung konnte nicht aktualisiert werden"
   ],
   "Failed to update viewer app": [
-    null
+    "Viewer-App konnte nicht aktualisiert werden"
   ],
   "Failed to {{action}} application: {{error}}": [
-    null
+    "{{action}} der Anwendung fehlgeschlagen: {{error}}"
   ],
   "Failed: {{count}}": [
-    null
+    "Fehlgeschlagen: {{count}}"
   ],
   "Failure": [
-    null
+    "Fehler"
   ],
   "Failures": [
-    null
+    "Fehler"
   ],
   "Federated users unlinked": [
-    null
+    "Föderierte Benutzer getrennt"
   ],
   "Filter Audit Events": [
-    null
+    "Audit-Ereignisse filtern"
   ],
   "Filter Consent Decisions": [
-    null
+    "Einwilligungsentscheidungen filtern"
   ],
   "Filter OAuth Flows": [
-    null
+    "OAuth-Flows filtern"
   ],
   "Filter scopes...": [
-    null
+    "Scopes filtern..."
   ],
   "Filtering Mode": [
-    null
+    "Filtermodus"
   ],
   "Find Existing Person Resource": [
-    null
+    "Vorhandene Person-Ressource suchen"
   ],
   "Fingerprint:": [
-    null
+    "Fingerabdruck:"
   ],
   "First Broker Login Flow": [
-    null
+    "Erster Broker-Login-Flow"
   ],
   "First Name": [
-    null
+    "Vorname"
   ],
   "Fix All": [
-    null
+    "Alle reparieren"
   ],
   "Fix Server URL": [
-    null
+    "Server-URL korrigieren"
   ],
   "Fix URL": [
-    null
+    "URL korrigieren"
   ],
   "Flow": [
-    null
+    "Flow"
   ],
   "Flow Activity (24h)": [
-    null
+    "Flow-Aktivität (24h)"
   ],
   "Flow Analytics": [
-    null
+    "Flow-Analytik"
   ],
   "Flow Steps": [
-    null
+    "Flow-Schritte"
   ],
   "For refresh tokens include offline_access. For patient context, prefer patient/Resource.access scopes.": [
-    null
+    "Für Refresh-Tokens offline_access einschließen. Für Patientenkontext patient/Resource.access Scopes bevorzugen."
   ],
   "Force Logout & Reset": [
-    null
+    "Abmeldung erzwingen & Zurücksetzen"
   ],
   "Forecast generated": [
-    null
+    "Prognose erstellt"
   ],
   "Friendly name for login screens": [
-    null
+    "Anzeigename für Anmeldeseiten"
   ],
   "Front-Channel Logout URL": [
-    null
+    "Front-Channel-Logout-URL"
   ],
   "Full Scope Allowed": [
-    null
+    "Vollständiger Scope erlaubt"
   ],
   "Full Sync": [
-    null
+    "Vollständige Synchronisierung"
   ],
   "Full Sync Period (seconds)": [
-    null
+    "Vollständiges Synchronisierungsintervall (Sekunden)"
   ],
   "Full reference:": [
-    null
+    "Vollständige Referenz:"
   ],
   "General": [
-    null
+    "Allgemein"
   ],
   "Genomics": [
-    null
+    "Genomik"
   ],
   "Get notified when new clients register": [
-    null
+    "Benachrichtigung bei neuen Client-Registrierungen"
   ],
   "Group name": [
-    null
+    "Gruppenname"
   ],
   "Groups": [
-    null
+    "Gruppen"
   ],
   "Health": [
-    null
+    "Zustand"
   ],
   "Health check completed: Server is {{status}}": [
-    null
+    "Gesundheitsprüfung abgeschlossen: Server ist {{status}}"
   ],
   "Healthcare Administration": [
     "Gesundheitsverwaltung"
@@ -1875,37 +1875,37 @@
     "Gesund"
   ],
   "Heap Used": [
-    null
+    "Heap belegt"
   ],
   "Help": [
-    null
+    "Hilfe"
   ],
   "Hide": [
-    null
+    "Ausblenden"
   ],
   "Hide on Login Page": [
-    null
+    "Auf Anmeldeseite ausblenden"
   ],
   "Hide this IdP from the Keycloak login page.": [
-    null
+    "Diesen IdP auf der Keycloak-Anmeldeseite ausblenden."
   ],
   "Highest success": [
-    null
+    "Höchste Erfolgsrate"
   ],
   "Hourly request breakdown over last 24 hours": [
-    null
+    "Stündliche Anfragenaufschlüsselung der letzten 24 Stunden"
   ],
   "How SMART on FHIR launch flows map to Keycloak authentication flows and which clients use each flow type.": [
-    null
+    "Zuordnung von SMART on FHIR Launch-Flows zu Keycloak-Authentifizierungs-Flows und welche Clients jeden Flow-Typ verwenden."
   ],
   "How long Person resources are cached. 300000 = 5 minutes.": [
-    null
+    "Wie lange Person-Ressourcen gecacht werden. 300000 = 5 Minuten."
   ],
   "How long consent decisions are cached. 60000 = 1 minute.": [
-    null
+    "Wie lange Einwilligungsentscheidungen gecacht werden. 60000 = 1 Minute."
   ],
   "Human-readable description": [
-    null
+    "Lesbare Beschreibung"
   ],
   "IAL Policies": [
     "IAL-Richtlinien"
@@ -1914,1057 +1914,1057 @@
     "IAL-Einstellungen erfolgreich gespeichert"
   ],
   "ID": [
-    null
+    "ID"
   ],
   "IP Address": [
-    null
+    "IP-Adresse"
   ],
   "Icon": [
-    null
+    "Symbol"
   ],
   "IdP Management": [
     "IdP-Verwaltung"
   ],
   "Identifier URI": [
-    null
+    "Identifier-URI"
   ],
   "Identity": [
-    null
+    "Identität"
   ],
   "Identity Assurance Level (IAL)": [
-    null
+    "Identitätssicherungsstufe (IAL)"
   ],
   "Identity Linking": [
-    null
+    "Identitätsverknüpfung"
   ],
   "Identity Provider": [
-    null
+    "Identity Provider"
   ],
   "Identity Provider Certificates": [
-    null
+    "Identity-Provider-Zertifikate"
   ],
   "Identity Provider Links": [
-    null
+    "Identity-Provider-Verknüpfungen"
   ],
   "Identity Provider Management": [
-    null
+    "Identity-Provider-Verwaltung"
   ],
   "Identity Provider added (local only).": [
-    null
+    "Identity Provider hinzugefügt (nur lokal)."
   ],
   "Identity Provider added successfully!": [
-    null
+    "Identity Provider erfolgreich hinzugefügt!"
   ],
   "Identity Provider deleted (local only).": [
-    null
+    "Identity Provider gelöscht (nur lokal)."
   ],
   "Identity Provider deleted successfully!": [
-    null
+    "Identity Provider erfolgreich gelöscht!"
   ],
   "Identity Provider updated (local only).": [
-    null
+    "Identity Provider aktualisiert (nur lokal)."
   ],
   "Identity Provider updated successfully!": [
-    null
+    "Identity Provider erfolgreich aktualisiert!"
   ],
   "Identity Providers": [
     "Identitätsanbieter"
   ],
   "Identity provider issuer URL": [
-    null
+    "Identity-Provider-Aussteller-URL"
   ],
   "Identity providers linked to {{orgName}}. Users authenticating through these IdPs will be associated with this organization.": [
-    null
+    "Mit {{orgName}} verknüpfte Identity Provider. Benutzer, die sich über diese IdPs authentifizieren, werden dieser Organisation zugeordnet."
   ],
   "Imaging": [
-    null
+    "Bildgebung"
   ],
   "Import Users": [
-    null
+    "Benutzer importieren"
   ],
   "Import users from LDAP into Keycloak database": [
-    null
+    "Benutzer aus LDAP in die Keycloak-Datenbank importieren"
   ],
   "Imported users removed": [
-    null
+    "Importierte Benutzer entfernt"
   ],
   "Inactive": [
-    null
+    "Inaktiv"
   ],
   "Include all realm/client roles in tokens (disable to restrict)": [
-    null
+    "Alle Realm-/Client-Rollen in Tokens einschließen (deaktivieren zum Einschränken)"
   ],
   "Increasing": [
-    null
+    "Zunehmend"
   ],
   "Inherit": [
-    null
+    "Erben"
   ],
   "Inherit from main": [
-    null
+    "Vom Haupt-Branding erben"
   ],
   "Insufficient scopes are logged but requests are allowed through.": [
-    null
+    "Unzureichende Scopes werden protokolliert, aber Anfragen werden durchgelassen."
   ],
   "Invalid URL format": [
-    null
+    "Ungültiges URL-Format"
   ],
   "Invalid server URL or server not accessible": [
-    null
+    "Ungültige Server-URL oder Server nicht erreichbar"
   ],
   "Issuer": [
-    null
+    "Aussteller"
   ],
   "Issuer:": [
-    null
+    "Aussteller:"
   ],
   "JWKS Configuration": [
-    null
+    "JWKS-Konfiguration"
   ],
   "JWKS String (inline JSON)": [
-    null
+    "JWKS-String (Inline-JSON)"
   ],
   "JWKS URI": [
-    null
+    "JWKS-URI"
   ],
   "KC Flows": [
-    null
+    "KC-Flows"
   ],
   "Key signals": [
-    null
+    "Schlüsselsignale"
   ],
   "Keycloak": [
-    null
+    "Keycloak"
   ],
   "Keycloak Base URL": [
-    null
+    "Keycloak-Basis-URL"
   ],
   "Keycloak Configuration": [
-    null
+    "Keycloak-Konfiguration"
   ],
   "Keycloak Database": [
-    null
+    "Keycloak-Datenbank"
   ],
   "Keycloak Flows": [
-    null
+    "Keycloak-Flows"
   ],
   "Keycloak Last Connected": [
-    null
+    "Keycloak zuletzt verbunden"
   ],
   "Keycloak Login Theme": [
-    null
+    "Keycloak-Login-Thema"
   ],
   "Keycloak Realm": [
-    null
+    "Keycloak-Realm"
   ],
   "Keycloak URL": [
-    null
+    "Keycloak-URL"
   ],
   "Keycloak client scopes available for SMART apps": [
-    null
+    "Keycloak-Client-Scopes verfügbar für SMART-Apps"
   ],
   "Keycloak configuration saved successfully": [
-    null
+    "Keycloak-Konfiguration erfolgreich gespeichert"
   ],
   "Keycloak is not yet configured on this server.": [
-    null
+    "Keycloak ist auf diesem Server noch nicht konfiguriert."
   ],
   "Kisi (Cloud)": [
-    null
+    "Kisi (Cloud)"
   ],
   "Kisi Credentials": [
-    null
+    "Kisi-Anmeldedaten"
   ],
   "LDAP Users": [
-    null
+    "LDAP-Benutzer"
   ],
   "LDAP Vendor": [
-    null
+    "LDAP-Anbieter"
   ],
   "LDAP connection test failed": [
-    null
+    "LDAP-Verbindungstest fehlgeschlagen"
   ],
   "LDAP connection test successful": [
-    null
+    "LDAP-Verbindungstest erfolgreich"
   ],
   "LDAP federation created successfully": [
-    null
+    "LDAP-Föderation erfolgreich erstellt"
   ],
   "LDAP federation deleted": [
-    null
+    "LDAP-Föderation gelöscht"
   ],
   "LDAP federation updated successfully": [
-    null
+    "LDAP-Föderation erfolgreich aktualisiert"
   ],
   "Language": [
     "Sprache"
   ],
   "Last 20 failed FHIR proxy requests": [
-    null
+    "Letzte 20 fehlgeschlagene FHIR-Proxy-Anfragen"
   ],
   "Last 24 hours": [
-    null
+    "Letzte 24 Stunden"
   ],
   "Last Connected": [
-    null
+    "Zuletzt verbunden"
   ],
   "Last Login": [
-    null
+    "Letzte Anmeldung"
   ],
   "Last Name": [
-    null
+    "Nachname"
   ],
   "Last Sync Result": [
-    null
+    "Letztes Synchronisierungsergebnis"
   ],
   "Last Used": [
-    null
+    "Zuletzt verwendet"
   ],
   "Last observed": [
-    null
+    "Zuletzt beobachtet"
   ],
   "Last updated": [
-    null
+    "Zuletzt aktualisiert"
   ],
   "Latency": [
-    null
+    "Latenz"
   ],
   "Launch URL": [
-    null
+    "Start-URL"
   ],
   "Leave blank for no password": [
-    null
+    "Leer lassen für kein Passwort"
   ],
   "Leave empty to keep current": [
-    null
+    "Leer lassen um aktuellen Wert beizubehalten"
   ],
   "Level 1 - Little confidence": [
-    null
+    "Stufe 1 – Wenig Vertrauen"
   ],
   "Level 2 - Some confidence": [
-    null
+    "Stufe 2 – Etwas Vertrauen"
   ],
   "Level 3 - High confidence": [
-    null
+    "Stufe 3 – Hohes Vertrauen"
   ],
   "Level 4 - Very high confidence": [
-    null
+    "Stufe 4 – Sehr hohes Vertrauen"
   ],
   "Lifetime & Notifications": [
-    null
+    "Gültigkeitsdauer & Benachrichtigungen"
   ],
   "Light": [
     "Hell"
   ],
   "Link": [
-    null
+    "Verknüpfen"
   ],
   "Link Existing Person": [
-    null
+    "Vorhandene Person verknüpfen"
   ],
   "Link IdP": [
-    null
+    "IdP verknüpfen"
   ],
   "Link New Identity Provider": [
-    null
+    "Neuen Identity Provider verknüpfen"
   ],
   "Link Only": [
-    null
+    "Nur verknüpfen"
   ],
   "Link Person resources to other FHIR resources on the same server": [
-    null
+    "Person-Ressourcen mit anderen FHIR-Ressourcen auf demselben Server verknüpfen"
   ],
   "Link this identity provider to an organization. Users authenticating through this IdP will be associated with the selected organization.": [
-    null
+    "Diesen Identity Provider mit einer Organisation verknüpfen. Benutzer, die sich über diesen IdP authentifizieren, werden der ausgewählten Organisation zugeordnet."
   ],
   "Linked Identity Providers": [
-    null
+    "Verknüpfte Identity Provider"
   ],
   "Loading Admin Panel...": [
-    null
+    "Admin-Panel wird geladen..."
   ],
   "Loading DICOM servers...": [
-    null
+    "DICOM-Server werden geladen..."
   ],
   "Loading FHIR Servers...": [
-    null
+    "FHIR-Server werden geladen..."
   ],
   "Loading FHIR servers...": [
-    null
+    "FHIR-Server werden geladen..."
   ],
   "Loading IAL settings...": [
     "IAL-Einstellungen werden geladen..."
   ],
   "Loading Identity Providers...": [
-    null
+    "Identity Provider werden geladen..."
   ],
   "Loading MCP endpoint settings...": [
-    null
+    "MCP-Endpunkt-Einstellungen werden geladen..."
   ],
   "Loading OAuth monitoring data...": [
-    null
+    "OAuth-Überwachungsdaten werden geladen..."
   ],
   "Loading Organizations...": [
-    null
+    "Organisationen werden geladen..."
   ],
   "Loading SMART applications...": [
-    null
+    "SMART-Anwendungen werden geladen..."
   ],
   "Loading SMART flow mapping...": [
-    null
+    "SMART-Flow-Zuordnung wird geladen..."
   ],
   "Loading User Federations...": [
-    null
+    "Benutzerföderationen werden geladen..."
   ],
   "Loading access control settings...": [
-    null
+    "Zugangssteuerungseinstellungen werden geladen..."
   ],
   "Loading admin audit data...": [
-    null
+    "Admin-Audit-Daten werden geladen..."
   ],
   "Loading apps...": [
-    null
+    "Apps werden geladen..."
   ],
   "Loading authentication flows...": [
-    null
+    "Authentifizierungs-Flows werden geladen..."
   ],
   "Loading authentication options...": [
-    null
+    "Authentifizierungsoptionen werden geladen..."
   ],
   "Loading available servers...": [
-    null
+    "Verfügbare Server werden geladen..."
   ],
   "Loading brand settings...": [
-    null
+    "Markeneinstellungen werden geladen..."
   ],
   "Loading branding...": [
-    null
+    "Branding wird geladen..."
   ],
   "Loading consent monitoring data...": [
-    null
+    "Einwilligungsüberwachungsdaten werden geladen..."
   ],
   "Loading consent settings...": [
-    null
+    "Einwilligungseinstellungen werden geladen..."
   ],
   "Loading doors...": [
-    null
+    "Türen werden geladen..."
   ],
   "Loading events...": [
-    null
+    "Ereignisse werden geladen..."
   ],
   "Loading groups...": [
-    null
+    "Gruppen werden geladen..."
   ],
   "Loading members...": [
-    null
+    "Mitglieder werden geladen..."
   ],
   "Loading overview...": [
-    null
+    "Übersicht wird geladen..."
   ],
   "Loading registration settings...": [
-    null
+    "Registrierungseinstellungen werden geladen..."
   ],
   "Loading users...": [
-    null
+    "Benutzer werden geladen..."
   ],
   "Loading...": [
-    null
+    "Wird geladen..."
   ],
   "Locations": [
-    null
+    "Standorte"
   ],
   "Lock down the FHIR server to only accept proxy IPs via a private subnet or VPN—avoid relying solely on public-IP ACLs.": [
-    null
+    "FHIR-Server absichern, sodass nur Proxy-IPs über ein privates Subnetz oder VPN akzeptiert werden – nicht nur auf öffentliche IP-ACLs vertrauen."
   ],
   "Locked": [
-    null
+    "Gesperrt"
   ],
   "Logo": [
-    null
+    "Logo"
   ],
   "Logo & Branding": [
-    null
+    "Logo & Branding"
   ],
   "Logo License URL": [
-    null
+    "Logo-Lizenz-URL"
   ],
   "Logo URI": [
-    null
+    "Logo-URI"
   ],
   "Logo URL": [
-    null
+    "Logo-URL"
   ],
   "Logout": [
-    null
+    "Abmelden"
   ],
   "Logout URL": [
-    null
+    "Abmelde-URL"
   ],
   "MCP Endpoint": [
-    null
+    "MCP-Endpunkt"
   ],
   "Manage DICOMweb/PACS server connections": [
-    null
+    "DICOMweb/PACS-Serververbindungen verwalten"
   ],
   "Manage FHIR resource scopes, protocol mappers, and access controls": [
-    null
+    "FHIR-Ressourcen-Scopes, Protokoll-Mapper und Zugriffssteuerungen verwalten"
   ],
   "Manage Links": [
-    null
+    "Verknüpfungen verwalten"
   ],
   "Manage Scopes": [
-    null
+    "Scopes verwalten"
   ],
   "Manage Servers": [
-    null
+    "Server verwalten"
   ],
   "Manage and monitor FHIR server connections": [
-    null
+    "FHIR-Serververbindungen verwalten und überwachen"
   ],
   "Manage authenticator executions for this flow": [
-    null
+    "Authenticator-Ausführungen für diesen Flow verwalten"
   ],
   "Manage healthcare professionals and administrative users": [
-    null
+    "Medizinische Fachkräfte und administrative Benutzer verwalten"
   ],
   "Manage healthcare professionals, administrative users, and identity federation": [
-    null
+    "Medizinische Fachkräfte, administrative Benutzer und Identitätsföderation verwalten"
   ],
   "Manage members for": [
-    null
+    "Mitglieder verwalten für"
   ],
   "Manage registered healthcare applications and their SMART on FHIR permissions": [
-    null
+    "Registrierte Gesundheitsanwendungen und ihre SMART on FHIR-Berechtigungen verwalten"
   ],
   "Manage your SMART scope configurations": [
-    null
+    "SMART-Scope-Konfigurationen verwalten"
   ],
   "Mapper": [
-    null
+    "Mapper"
   ],
   "Maps this user to a FHIR resource (used in SMART fhirUser claim)": [
-    null
+    "Ordnet diesen Benutzer einer FHIR-Ressource zu (verwendet im SMART fhirUser-Claim)"
   ],
   "Max Redirect URIs": [
-    null
+    "Maximale Redirect-URIs"
   ],
   "Max session duration in seconds": [
-    null
+    "Maximale Sitzungsdauer in Sekunden"
   ],
   "Members": [
-    null
+    "Mitglieder"
   ],
   "Memory": [
-    null
+    "Speicher"
   ],
   "Memory Usage": [
-    null
+    "Speicherauslastung"
   ],
   "Metadata": [
-    null
+    "Metadaten"
   ],
   "Metadata URL": [
-    null
+    "Metadaten-URL"
   ],
   "Method": [
-    null
+    "Methode"
   ],
   "Minimum Level (General)": [
-    null
+    "Mindeststufe (Allgemein)"
   ],
   "Minimum Level (Sensitive Resources)": [
-    null
+    "Mindeststufe (Sensible Ressourcen)"
   ],
   "Minimum identity verification requirements": [
-    null
+    "Mindestanforderungen an die Identitätsverifizierung"
   ],
   "Missing": [
-    null
+    "Fehlend"
   ],
   "Mode": [
-    null
+    "Modus"
   ],
   "Mode and caching": [
-    null
+    "Modus und Caching"
   ],
   "Modify": [
-    null
+    "Ändern"
   ],
   "Monitor certificate expiration dates and renew before expiry": [
-    null
+    "Zertifikatsablaufdaten überwachen und vor Ablauf erneuern"
   ],
   "Monitor consent decisions, denial patterns, and performance": [
-    null
+    "Einwilligungsentscheidungen, Ablehnungsmuster und Leistung überwachen"
   ],
   "Monitoring": [
-    null
+    "Überwachung"
   ],
   "Most active OAuth clients": [
-    null
+    "Aktivste OAuth-Clients"
   ],
   "Most active admin users": [
-    null
+    "Aktivste Admin-Benutzer"
   ],
   "Move Down": [
-    null
+    "Nach unten"
   ],
   "Move Up": [
-    null
+    "Nach oben"
   ],
   "Multi-Tenancy": [
-    null
+    "Mandantenfähigkeit"
   ],
   "Name": [
-    null
+    "Name"
   ],
   "Name for new scope set:": [
-    null
+    "Name für neues Scope-Set:"
   ],
   "Name, Connection URL, and Users DN are required": [
-    null
+    "Name, Verbindungs-URL und Benutzer-DN sind erforderlich"
   ],
   "Name:": [
-    null
+    "Name:"
   ],
   "NameID Format": [
-    null
+    "NameID-Format"
   ],
   "New clients need manual approval before activation": [
-    null
+    "Neue Clients benötigen manuelle Freigabe vor der Aktivierung"
   ],
   "Next": [
-    null
+    "Weiter"
   ],
   "No": [
-    null
+    "Nein"
   ],
   "No Auth": [
-    null
+    "Keine Authentifizierung"
   ],
   "No Authentication": [
-    null
+    "Keine Authentifizierung"
   ],
   "No Available Servers": [
-    null
+    "Keine verfügbaren Server"
   ],
   "No Certificate": [
-    null
+    "Kein Zertifikat"
   ],
   "No DICOM servers configured": [
-    null
+    "Keine DICOM-Server konfiguriert"
   ],
   "No FHIR Servers": [
-    null
+    "Keine FHIR-Server"
   ],
   "No FHIR proxy request data available": [
-    null
+    "Keine FHIR-Proxy-Anfragedaten verfügbar"
   ],
   "No FHIR servers available": [
-    null
+    "Keine FHIR-Server verfügbar"
   ],
   "No FHIR servers configured": [
-    null
+    "Keine FHIR-Server konfiguriert"
   ],
   "No FHIR servers have been configured yet. Click \"Manage Servers\" to add your first FHIR server.": [
-    null
+    "Es sind noch keine FHIR-Server konfiguriert. Klicken Sie auf „Server verwalten\", um Ihren ersten FHIR-Server hinzuzufügen."
   ],
   "No LDAP Federations Configured": [
-    null
+    "Keine LDAP-Föderationen konfiguriert"
   ],
   "No SMART flow data available": [
-    null
+    "Keine SMART-Flow-Daten verfügbar"
   ],
   "No SMART scopes found in Keycloak": [
-    null
+    "Keine SMART-Scopes in Keycloak gefunden"
   ],
   "No SMART scopes registered": [
-    null
+    "Keine SMART-Scopes registriert"
   ],
   "No Server Selected": [
-    null
+    "Kein Server ausgewählt"
   ],
   "No action distribution data": [
-    null
+    "Keine Aktionsverteilungsdaten"
   ],
   "No activity data available": [
-    null
+    "Keine Aktivitätsdaten verfügbar"
   ],
   "No actor data available": [
-    null
+    "Keine Akteursdaten verfügbar"
   ],
   "No apps in the store yet.": [
-    null
+    "Noch keine Apps im Store."
   ],
   "No associations": [
-    null
+    "Keine Zuordnungen"
   ],
   "No audit events match your filters": [
-    null
+    "Keine Audit-Ereignisse entsprechen Ihren Filtern"
   ],
   "No authentication flows found": [
-    null
+    "Keine Authentifizierungs-Flows gefunden"
   ],
   "No client activity data available": [
-    null
+    "Keine Client-Aktivitätsdaten verfügbar"
   ],
   "No client distribution data available": [
-    null
+    "Keine Client-Verteilungsdaten verfügbar"
   ],
   "No clients configured for this flow type": [
-    null
+    "Keine Clients für diesen Flow-Typ konfiguriert"
   ],
   "No consent activity data available": [
-    null
+    "Keine Einwilligungsaktivitätsdaten verfügbar"
   ],
   "No denied client requests": [
-    null
+    "Keine abgelehnten Client-Anfragen"
   ],
   "No denied patient requests": [
-    null
+    "Keine abgelehnten Patientenanfragen"
   ],
   "No doors assigned to this group": [
-    null
+    "Keine Türen dieser Gruppe zugewiesen"
   ],
   "No doors found": [
-    null
+    "Keine Türen gefunden"
   ],
   "No doors match your search": [
-    null
+    "Keine Türen entsprechen Ihrer Suche"
   ],
   "No errors": [
-    null
+    "Keine Fehler"
   ],
   "No event data available": [
-    null
+    "Keine Ereignisdaten verfügbar"
   ],
   "No events match your filters": [
-    null
+    "Keine Ereignisse entsprechen Ihren Filtern"
   ],
   "No events match your search": [
-    null
+    "Keine Ereignisse entsprechen Ihrer Suche"
   ],
   "No events recorded yet": [
-    null
+    "Noch keine Ereignisse aufgezeichnet"
   ],
   "No executions in this flow": [
-    null
+    "Keine Ausführungen in diesem Flow"
   ],
   "No external audiences configured": [
-    null
+    "Keine externen Zielgruppen konfiguriert"
   ],
   "No flow activity data available": [
-    null
+    "Keine Flow-Aktivitätsdaten verfügbar"
   ],
   "No groups found. Create one to get started.": [
-    null
+    "Keine Gruppen gefunden. Erstellen Sie eine, um zu beginnen."
   ],
   "No groups match your search": [
-    null
+    "Keine Gruppen entsprechen Ihrer Suche"
   ],
   "No identity providers are linked to this organization.": [
-    null
+    "Keine Identity Provider sind mit dieser Organisation verknüpft."
   ],
   "No identity providers linked to this user": [
-    null
+    "Keine Identity Provider mit diesem Benutzer verknüpft"
   ],
   "No interactive login": [
-    null
+    "Keine interaktive Anmeldung"
   ],
   "No links yet": [
-    null
+    "Noch keine Verknüpfungen"
   ],
   "No matching users found": [
-    null
+    "Keine passenden Benutzer gefunden"
   ],
   "No members found. Add one or sync from Keycloak.": [
-    null
+    "Keine Mitglieder gefunden. Fügen Sie welche hinzu oder synchronisieren Sie aus Keycloak."
   ],
   "No members match your search": [
-    null
+    "Keine Mitglieder entsprechen Ihrer Suche"
   ],
   "No members yet. Search and add users above.": [
-    null
+    "Noch keine Mitglieder. Suchen und fügen Sie Benutzer oben hinzu."
   ],
   "No mode distribution data available": [
-    null
+    "Keine Modusverteilungsdaten verfügbar"
   ],
   "No organization linked": [
-    null
+    "Keine Organisation verknüpft"
   ],
   "No organizations found. Create your first organization to get started.": [
-    null
+    "Keine Organisationen gefunden. Erstellen Sie Ihre erste Organisation, um zu beginnen."
   ],
   "No recent failures": [
-    null
+    "Keine aktuellen Fehler"
   ],
   "No redirect URIs configured": [
-    null
+    "Keine Redirect-URIs konfiguriert"
   ],
   "No resource data available": [
-    null
+    "Keine Ressourcendaten verfügbar"
   ],
   "No resource type data available": [
-    null
+    "Keine Ressourcentypdaten verfügbar"
   ],
   "No role-based filtering is applied.": [
-    null
+    "Keine rollenbasierte Filterung wird angewendet."
   ],
   "No scope checking is performed.": [
-    null
+    "Keine Scope-Prüfung wird durchgeführt."
   ],
   "No scopes added yet": [
-    null
+    "Noch keine Scopes hinzugefügt"
   ],
   "No scopes match your filter": [
-    null
+    "Keine Scopes entsprechen Ihrem Filter"
   ],
   "No signing certificate is configured for this identity provider.": [
-    null
+    "Kein Signaturzertifikat für diesen Identity Provider konfiguriert."
   ],
   "No status code data available": [
-    null
+    "Keine Statuscode-Daten verfügbar"
   ],
   "No success rate data available": [
-    null
+    "Keine Erfolgsraten-Daten verfügbar"
   ],
   "No tools available. The tool registry may not be initialized yet.": [
-    null
+    "Keine Tools verfügbar. Die Tool-Registry ist möglicherweise noch nicht initialisiert."
   ],
   "No trend data available": [
-    null
+    "Keine Trenddaten verfügbar"
   ],
   "Non-deterministic": [
-    null
+    "Nicht-deterministisch"
   ],
   "None": [
-    null
+    "Keine"
   ],
   "None (use built-in viewer)": [
-    null
+    "Keine (integrierten Viewer verwenden)"
   ],
   "Not Set": [
-    null
+    "Nicht gesetzt"
   ],
   "Not configured": [
-    null
+    "Nicht konfiguriert"
   ],
   "Not required": [
-    null
+    "Nicht erforderlich"
   ],
   "Note:": [
-    null
+    "Hinweis:"
   ],
   "Notes (Optional)": [
-    null
+    "Notizen (Optional)"
   ],
   "Notification Email": [
-    null
+    "Benachrichtigungs-E-Mail"
   ],
   "Nurse": [
-    null
+    "Pflegekraft"
   ],
   "OAuth": [
-    null
+    "OAuth"
   ],
   "OAuth 2.0": [
-    null
+    "OAuth 2.0"
   ],
   "OAuth Flow Monitoring": [
-    null
+    "OAuth-Flow-Überwachung"
   ],
   "OAuth Flows": [
-    null
+    "OAuth-Flows"
   ],
   "OAuth State:": [
-    null
+    "OAuth-Status:"
   ],
   "OAuth Success": [
-    null
+    "OAuth-Erfolg"
   ],
   "OAuth client statistics will appear here once data is collected": [
-    null
+    "OAuth-Client-Statistiken erscheinen hier, sobald Daten gesammelt werden"
   ],
   "OAuth clients by usage": [
-    null
+    "OAuth-Clients nach Nutzung"
   ],
   "OAuth events are pushed in real time as they occur.": [
-    null
+    "OAuth-Ereignisse werden in Echtzeit übertragen."
   ],
   "OAuth flow success over time": [
-    null
+    "OAuth-Flow-Erfolg im Zeitverlauf"
   ],
   "OAuth flows over time": [
-    null
+    "OAuth-Flows im Zeitverlauf"
   ],
   "OAuth protected — MCP clients will be prompted to log in via Keycloak. The access token is returned to the client (IDE, Claude Desktop, etc.) automatically via RFC 9728 discovery.": [
-    null
+    "OAuth-geschützt — MCP-Clients werden zur Anmeldung über Keycloak aufgefordert. Das Access-Token wird dem Client (IDE, Claude Desktop etc.) automatisch über RFC 9728 Discovery zurückgegeben."
   ],
   "OAuth2/OIDC client secret": [
-    null
+    "OAuth2/OIDC-Client-Secret"
   ],
   "OIDC": [
-    null
+    "OIDC"
   ],
   "OK": [
-    null
+    "OK"
   ],
   "Offline": [
-    null
+    "Offline"
   ],
   "Online": [
-    null
+    "Online"
   ],
   "Only available for interactive applications (not backend services)": [
-    null
+    "Nur für interaktive Anwendungen verfügbar (nicht für Backend-Services)"
   ],
   "Only link to existing accounts, never create new users.": [
-    null
+    "Nur mit bestehenden Konten verknüpfen, nie neue Benutzer erstellen."
   ],
   "Only these resource types need consent (empty = all types)": [
-    null
+    "Nur diese Ressourcentypen benötigen Einwilligung (leer = alle Typen)"
   ],
   "Open Store": [
-    null
+    "Store öffnen"
   ],
   "OpenID Connect": [
-    null
+    "OpenID Connect"
   ],
   "Optional": [
-    null
+    "Optional"
   ],
   "Optional Configuration": [
-    null
+    "Optionale Konfiguration"
   ],
   "Optional Scopes:": [
-    null
+    "Optionale Scopes:"
   ],
   "Optional description": [
-    null
+    "Optionale Beschreibung"
   ],
   "Optional description...": [
-    null
+    "Optionale Beschreibung..."
   ],
   "Or enter custom scope": [
-    null
+    "Oder benutzerdefinierten Scope eingeben"
   ],
   "Organization": [
-    null
+    "Organisation"
   ],
   "Organization Address": [
-    null
+    "Organisationsadresse"
   ],
   "Organization Category": [
-    null
+    "Organisationskategorie"
   ],
   "Organization Management": [
-    null
+    "Organisationsverwaltung"
   ],
   "Organization Members": [
-    null
+    "Organisationsmitglieder"
   ],
   "Organization created successfully!": [
-    null
+    "Organisation erfolgreich erstellt!"
   ],
   "Organization deleted successfully!": [
-    null
+    "Organisation erfolgreich gelöscht!"
   ],
   "Organization updated successfully!": [
-    null
+    "Organisation erfolgreich aktualisiert!"
   ],
   "Organization:": [
-    null
+    "Organisation:"
   ],
   "Organizations": [
-    null
+    "Organisationen"
   ],
   "Origin URL:": [
-    null
+    "Herkunfts-URL:"
   ],
   "Other": [
-    null
+    "Sonstige"
   ],
   "Override realm default (in seconds). Leave empty for realm default.": [
-    null
+    "Realm-Standard überschreiben (in Sekunden). Leer lassen für Realm-Standard."
   ],
   "Override realm-wide branding for": [
-    null
+    "Realm-weites Branding überschreiben für"
   ],
   "Overview": [
     "Überblick"
   ],
   "PKCE:": [
-    null
+    "PKCE:"
   ],
   "Page {{current}} of {{total}}": [
-    null
+    "Seite {{current}} von {{total}}"
   ],
   "Pagination": [
-    null
+    "Seitennavigation"
   ],
   "Password": [
-    null
+    "Passwort"
   ],
   "Password (Optional)": [
-    null
+    "Passwort (Optional)"
   ],
   "Path": [
-    null
+    "Pfad"
   ],
   "Patient": [
-    null
+    "Patient"
   ],
   "Patient Portal": [
-    null
+    "Patientenportal"
   ],
   "Patient link and failure behaviour": [
-    null
+    "Patientenverknüpfung und Fehlerverhalten"
   ],
   "Patient-Scoped Resources": [
-    null
+    "Patientenbezogene Ressourcen"
   ],
   "Patient-facing portal description (supports Markdown)": [
-    null
+    "Patientenportal-Beschreibung (unterstützt Markdown)"
   ],
   "Patients whose data was most frequently denied": [
-    null
+    "Patienten, deren Daten am häufigsten abgelehnt wurden"
   ],
   "Pause": [
-    null
+    "Pausieren"
   ],
   "Pending": [
-    null
+    "Ausstehend"
   ],
   "Per scope set": [
-    null
+    "Pro Scope-Set"
   ],
   "Performance": [
-    null
+    "Leistung"
   ],
   "Permission Matrix": [
-    null
+    "Berechtigungsmatrix"
   ],
   "Permissions": [
-    null
+    "Berechtigungen"
   ],
   "Permit": [
-    null
+    "Erlauben"
   ],
   "Permit / Deny per FHIR resource": [
-    null
+    "Erlauben / Verweigern pro FHIR-Ressource"
   ],
   "Permit Rate": [
-    null
+    "Erlaubnisrate"
   ],
   "Permit vs Deny over time": [
-    null
+    "Erlaubt vs. Verweigert im Zeitverlauf"
   ],
   "Persistent": [
-    null
+    "Persistent"
   ],
   "Person Cache TTL (ms)": [
-    null
+    "Person-Cache-TTL (ms)"
   ],
   "Person ID": [
-    null
+    "Person-ID"
   ],
   "Person ID:": [
-    null
+    "Person-ID:"
   ],
   "Person Resource Details": [
-    null
+    "Person-Ressourcen-Details"
   ],
   "Person Resource ID": [
-    null
+    "Person-Ressourcen-ID"
   ],
   "Person Resource Linker": [
-    null
+    "Person-Ressourcen-Verknüpfer"
   ],
   "Person→Patient link verification (NIST SP 800-63-3)": [
-    null
+    "Person→Patient-Verknüpfungsprüfung (NIST SP 800-63-3)"
   ],
   "Pharmacist": [
-    null
+    "Apotheker"
   ],
   "Physical Access": [
-    null
+    "Physischer Zugang"
   ],
   "Physician": [
-    null
+    "Arzt"
   ],
   "Platform (UI) Version": [
-    null
+    "Plattform (UI)-Version"
   ],
   "Please enter a valid URL (e.g., https://hapi.fhir.org/baseR4)": [
-    null
+    "Bitte geben Sie eine gültige URL ein (z.B. https://hapi.fhir.org/baseR4)"
   ],
   "Please wait while we initialize your workspace.": [
-    null
+    "Bitte warten Sie, während wir Ihren Arbeitsbereich initialisieren."
   ],
   "Please wait while we verify your credentials...": [
-    null
+    "Bitte warten Sie, während wir Ihre Anmeldedaten überprüfen..."
   ],
   "Portal Description": [
-    null
+    "Portal-Beschreibung"
   ],
   "Portal Description (Markdown)": [
-    null
+    "Portal-Beschreibung (Markdown)"
   ],
   "Portal Logo License": [
-    null
+    "Portal-Logo-Lizenz"
   ],
   "Portal Logo License URL": [
-    null
+    "Portal-Logo-Lizenz-URL"
   ],
   "Portal Logo URL": [
-    null
+    "Portal-Logo-URL"
   ],
   "Portal Name": [
-    null
+    "Portal-Name"
   ],
   "Portal URL": [
-    null
+    "Portal-URL"
   ],
   "Post Broker Login Flow": [
-    null
+    "Post-Broker-Login-Flow"
   ],
   "Postal Code": [
-    null
+    "Postleitzahl"
   ],
   "Practitioner": [
-    null
+    "Behandelnder"
   ],
   "Predictive Forecast": [
-    null
+    "Vorhersageprognose"
   ],
   "Predictive Insights": [
-    null
+    "Prädiktive Erkenntnisse"
   ],
   "Preferences": [
     "Einstellungen"
   ],
   "Preview": [
-    null
+    "Vorschau"
   ],
   "Previous": [
-    null
+    "Zurück"
   ],
   "Primary Role": [
-    null
+    "Primäre Rolle"
   ],
   "Privacy Policy URI": [
-    null
+    "Datenschutzrichtlinien-URI"
   ],
   "Private Key": [
-    null
+    "Privater Schlüssel"
   ],
   "Private key corresponding to the client certificate": [
-    null
+    "Privater Schlüssel zum Client-Zertifikat"
   ],
   "Processed": [
-    null
+    "Verarbeitet"
   ],
   "Processing...": [
-    null
+    "Verarbeitung..."
   ],
   "Profile": [
     "Profil"
@@ -2973,454 +2973,454 @@
     "Profileinstellungen"
   ],
   "Projected OAuth flows in the next hour": [
-    null
+    "Prognostizierte OAuth-Flows in der nächsten Stunde"
   ],
   "Projected busiest day for OAuth volume": [
-    null
+    "Prognostiziert geschäftigster Tag für OAuth-Volumen"
   ],
   "Proof Key for Code Exchange (recommended for public clients)": [
-    null
+    "Proof Key for Code Exchange (empfohlen für öffentliche Clients)"
   ],
   "Protocol Mappers": [
-    null
+    "Protokoll-Mapper"
   ],
   "Provide JWKS URI or public key for JWT signature verification": [
-    null
+    "JWKS-URI oder öffentlichen Schlüssel zur JWT-Signaturverifizierung angeben"
   ],
   "Provide a public key directly if not using JWKS URI. Supports PEM format (RSA, EC).": [
-    null
+    "Öffentlichen Schlüssel direkt angeben, wenn keine JWKS-URI verwendet wird. Unterstützt PEM-Format (RSA, EC)."
   ],
   "Provider": [
-    null
+    "Anbieter"
   ],
   "Provider Name": [
-    null
+    "Anbietername"
   ],
   "Provider Type": [
-    null
+    "Anbietertyp"
   ],
   "Provider Vendor": [
-    null
+    "Anbieter-Hersteller"
   ],
   "Provider:": [
-    null
+    "Anbieter:"
   ],
   "Provides automatic data governance and access control": [
-    null
+    "Bietet automatische Datensteuerung und Zugriffskontrolle"
   ],
   "Proxy Smart": [
-    null
+    "Proxy Smart"
   ],
   "Proxy Smart Dashboard": [
-    null
+    "Proxy Smart Dashboard"
   ],
   "Proxy URL:": [
-    null
+    "Proxy-URL:"
   ],
   "Public Brand Discovery": [
-    null
+    "Öffentliche Marken-Erkennung"
   ],
   "Public Client": [
-    null
+    "Öffentlicher Client"
   ],
   "Public Clients": [
-    null
+    "Öffentliche Clients"
   ],
   "Public Key (Alternative)": [
-    null
+    "Öffentlicher Schlüssel (Alternativ)"
   ],
   "Public Key (PEM)": [
-    null
+    "Öffentlicher Schlüssel (PEM)"
   ],
   "Public endpoint:": [
-    null
+    "Öffentlicher Endpunkt:"
   ],
   "Publish": [
-    null
+    "Veröffentlichen"
   ],
   "Publish App": [
-    null
+    "App veröffentlichen"
   ],
   "Publish App to Store": [
-    null
+    "App im Store veröffentlichen"
   ],
   "QIDO-RS Root:": [
-    null
+    "QIDO-RS-Root:"
   ],
   "Query parameters are injected to restrict results by role. Non-matching requests are blocked.": [
-    null
+    "Abfrageparameter werden eingefügt, um Ergebnisse nach Rolle einzuschränken. Nicht übereinstimmende Anfragen werden blockiert."
   ],
   "Quick Add": [
-    null
+    "Schnell hinzufügen"
   ],
   "RDN LDAP Attribute": [
-    null
+    "RDN-LDAP-Attribut"
   ],
   "RSA-SHA256": [
-    null
+    "RSA-SHA256"
   ],
   "RSA-SHA384": [
-    null
+    "RSA-SHA384"
   ],
   "RSA-SHA512": [
-    null
+    "RSA-SHA512"
   ],
   "RSS Total": [
-    null
+    "RSS gesamt"
   ],
   "Rate Limit (per minute)": [
-    null
+    "Ratenbegrenzung (pro Minute)"
   ],
   "Raw capability statement": [
-    null
+    "Rohe Capability-Anweisung"
   ],
   "Read-only GET endpoints are always available as MCP resources. Enable this to also register them as tools with readOnlyHint so AI models can invoke them directly.": [
-    null
+    "Schreibgeschützte GET-Endpunkte sind immer als MCP-Ressourcen verfügbar. Aktivieren Sie dies, um sie auch als Tools mit readOnlyHint zu registrieren, damit KI-Modelle sie direkt aufrufen können."
   ],
   "Read-only GET endpoints exposed as MCP resources. {{exposed}} of {{total}} enabled.": [
-    null
+    "Schreibgeschützte GET-Endpunkte als MCP-Ressourcen. {{exposed}} von {{total}} aktiviert."
   ],
   "Real-time": [
-    null
+    "Echtzeit"
   ],
   "Real-time Audit Monitoring Active": [
-    null
+    "Echtzeit-Audit-Überwachung aktiv"
   ],
   "Real-time Audit Monitoring Paused": [
-    null
+    "Echtzeit-Audit-Überwachung pausiert"
   ],
   "Real-time Monitoring Active": [
-    null
+    "Echtzeit-Überwachung aktiv"
   ],
   "Real-time Monitoring Paused": [
-    null
+    "Echtzeit-Überwachung pausiert"
   ],
   "Real-time consent decision monitoring and analytics": [
-    null
+    "Echtzeit-Einwilligungsüberwachung und -Analytik"
   ],
   "Real-time monitoring and analytics for OAuth 2.0 flows": [
-    null
+    "Echtzeit-Überwachung und -Analytik für OAuth 2.0 Flows"
   ],
   "Real-time updates are paused. Click Resume to continue monitoring.": [
-    null
+    "Echtzeit-Updates sind pausiert. Klicken Sie auf Fortsetzen, um die Überwachung fortzusetzen."
   ],
   "Realm": [
-    null
+    "Realm"
   ],
   "Realm Name": [
-    null
+    "Realm-Name"
   ],
   "Realm Roles": [
-    null
+    "Realm-Rollen"
   ],
   "Realm default": [
-    null
+    "Realm-Standard"
   ],
   "Reason": [
-    null
+    "Grund"
   ],
   "Reason must be at least 10 characters long": [
-    null
+    "Grund muss mindestens 10 Zeichen lang sein"
   ],
   "Recent": [
-    null
+    "Aktuell"
   ],
   "Recent Consent Decisions": [
-    null
+    "Aktuelle Einwilligungsentscheidungen"
   ],
   "Recent Errors": [
-    null
+    "Aktuelle Fehler"
   ],
   "Recent Events": [
-    null
+    "Aktuelle Ereignisse"
   ],
   "Recent Failures": [
-    null
+    "Aktuelle Fehler"
   ],
   "Recent OAuth Events": [
-    null
+    "Aktuelle OAuth-Ereignisse"
   ],
   "Recent failed actions": [
-    null
+    "Aktuelle fehlgeschlagene Aktionen"
   ],
   "Recommended action": [
-    null
+    "Empfohlene Aktion"
   ],
   "Redirect URI": [
-    null
+    "Redirect-URI"
   ],
   "Redirect URIs": [
-    null
+    "Redirect-URIs"
   ],
   "Redirect URL": [
-    null
+    "Redirect-URL"
   ],
   "Refresh": [
-    null
+    "Aktualisieren"
   ],
   "Refresh Status": [
-    null
+    "Status aktualisieren"
   ],
   "Register Application": [
-    null
+    "Anwendung registrieren"
   ],
   "Register New App": [
-    null
+    "Neue App registrieren"
   ],
   "Register New Application": [
-    null
+    "Neue Anwendung registrieren"
   ],
   "Register New SMART on FHIR Application": [
-    null
+    "Neue SMART on FHIR-Anwendung registrieren"
   ],
   "Register a new SMART on FHIR scope in Keycloak. Use the format context/Resource.permissions (e.g. user/Claim.cud).": [
-    null
+    "Neuen SMART on FHIR-Scope in Keycloak registrieren. Verwenden Sie das Format context/Resource.permissions (z.B. user/Claim.cud)."
   ],
   "Register a new member for door management": [
-    null
+    "Neues Mitglied für die Türverwaltung registrieren"
   ],
   "Registered": [
-    null
+    "Registriert"
   ],
   "Registered App": [
-    null
+    "Registrierte App"
   ],
   "Registered Applications": [
-    null
+    "Registrierte Anwendungen"
   ],
   "Registered Apps": [
-    null
+    "Registrierte Apps"
   ],
   "Registered Scopes": [
-    null
+    "Registrierte Scopes"
   ],
   "Registered members": [
-    null
+    "Registrierte Mitglieder"
   ],
   "Registration": [
-    null
+    "Registrierung"
   ],
   "Regular expression patterns for validating redirect URIs": [
-    null
+    "Reguläre Ausdrücke zur Validierung von Redirect-URIs"
   ],
   "Reject requests for unsupported FHIR interactions": [
-    null
+    "Anfragen für nicht unterstützte FHIR-Interaktionen ablehnen"
   ],
   "RelatedPerson": [
-    null
+    "RelatedPerson"
   ],
   "Reload": [
-    null
+    "Neu laden"
   ],
   "Remove": [
-    null
+    "Entfernen"
   ],
   "Remove Imported": [
-    null
+    "Importierte entfernen"
   ],
   "Remove Member": [
-    null
+    "Mitglied entfernen"
   ],
   "Remove Provider": [
-    null
+    "Anbieter entfernen"
   ],
   "Remove scope": [
-    null
+    "Scope entfernen"
   ],
   "Removed": [
-    null
+    "Entfernt"
   ],
   "Removing...": [
-    null
+    "Wird entfernt..."
   ],
   "Request Volume": [
-    null
+    "Anfragevolumen"
   ],
   "Requests without sufficient scopes are blocked with 403.": [
-    null
+    "Anfragen ohne ausreichende Scopes werden mit 403 blockiert."
   ],
   "Require HTTPS": [
-    null
+    "HTTPS erforderlich"
   ],
   "Require PKCE": [
-    null
+    "PKCE erforderlich"
   ],
   "Require Privacy Policy": [
-    null
+    "Datenschutzrichtlinie erforderlich"
   ],
   "Require Terms of Service": [
-    null
+    "Nutzungsbedingungen erforderlich"
   ],
   "Require client certificate authentication": [
-    null
+    "Client-Zertifikat-Authentifizierung erforderlich"
   ],
   "Required": [
-    null
+    "Erforderlich"
   ],
   "Required For Resource Types": [
-    null
+    "Erforderlich für Ressourcentypen"
   ],
   "Required Roles": [
-    null
+    "Erforderliche Rollen"
   ],
   "Required for dynamic client registration and advanced features": [
-    null
+    "Erforderlich für dynamische Client-Registrierung und erweiterte Funktionen"
   ],
   "Requirement": [
-    null
+    "Anforderung"
   ],
   "Researcher": [
-    null
+    "Forscher"
   ],
   "Reset Defaults": [
-    null
+    "Standardwerte zurücksetzen"
   ],
   "Resource": [
-    null
+    "Ressource"
   ],
   "Resource ID": [
-    null
+    "Ressourcen-ID"
   ],
   "Resource Type": [
-    null
+    "Ressourcentyp"
   ],
   "Resource types requiring elevated IAL (e.g. MedicationRequest, DiagnosticReport)": [
-    null
+    "Ressourcentypen mit erhöhter IAL-Anforderung (z.B. MedicationRequest, DiagnosticReport)"
   ],
   "Resource types that never require consent": [
-    null
+    "Ressourcentypen, die nie eine Einwilligung erfordern"
   ],
   "Resource:": [
-    null
+    "Ressource:"
   ],
   "Response": [
-    null
+    "Antwort"
   ],
   "Restart": [
-    null
+    "Neustart"
   ],
   "Restart Failed": [
-    null
+    "Neustart fehlgeschlagen"
   ],
   "Restart Reason": [
-    null
+    "Neustartgrund"
   ],
   "Restart Server": [
-    null
+    "Server neu starten"
   ],
   "Restrict which users can access this app based on their FHIR user type or assigned roles. Leave empty for no restrictions.": [
-    null
+    "Zugriff auf diese App basierend auf FHIR-Benutzertyp oder zugewiesenen Rollen einschränken. Leer lassen für keine Einschränkungen."
   ],
   "Restricts data visibility based on the fhirUser token claim. Patients only see their own data, Practitioners only see assigned patients.": [
-    null
+    "Schränkt die Datensichtbarkeit basierend auf dem fhirUser-Token-Claim ein. Patienten sehen nur ihre eigenen Daten, Behandelnde nur zugewiesene Patienten."
   ],
   "Results from testing identity provider connections": [
-    null
+    "Ergebnisse der Identity-Provider-Verbindungstests"
   ],
   "Resume": [
-    null
+    "Fortsetzen"
   ],
   "Retry": [
-    null
+    "Wiederholen"
   ],
   "Revoke": [
-    null
+    "Widerrufen"
   ],
   "Risk: High": [
-    null
+    "Risiko: Hoch"
   ],
   "Risk: Low": [
-    null
+    "Risiko: Niedrig"
   ],
   "Risk: Medium": [
-    null
+    "Risiko: Mittel"
   ],
   "Risk: Unknown": [
-    null
+    "Risiko: Unbekannt"
   ],
   "Role Management": [
-    null
+    "Rollenverwaltung"
   ],
   "Role violations are logged but data is not filtered.": [
-    null
+    "Rollenverstöße werden protokolliert, aber Daten werden nicht gefiltert."
   ],
   "Role-Based Data Filtering": [
-    null
+    "Rollenbasierte Datenfilterung"
   ],
   "Role-Based Templates": [
-    null
+    "Rollenbasierte Vorlagen"
   ],
   "Role-based": [
-    null
+    "Rollenbasiert"
   ],
   "SAML 2.0": [
-    null
+    "SAML 2.0"
   ],
   "SAML Providers": [
-    null
+    "SAML-Anbieter"
   ],
   "SMART App Launch 2.2.0 User-Access Brands": [
-    null
+    "SMART App Launch 2.2.0 User-Access Brands"
   ],
   "SMART Apps": [
-    null
+    "SMART-Apps"
   ],
   "SMART Capabilities": [
-    null
+    "SMART-Capabilities"
   ],
   "SMART Capabilities:": [
-    null
+    "SMART-Capabilities:"
   ],
   "SMART Config": [
-    null
+    "SMART-Konfiguration"
   ],
   "SMART Configuration": [
-    null
+    "SMART-Konfiguration"
   ],
   "SMART Flows": [
-    null
+    "SMART-Flows"
   ],
   "SMART Scope Enforcement": [
-    null
+    "SMART-Scope-Durchsetzung"
   ],
   "SMART Scope Management": [
-    null
+    "SMART-Scope-Verwaltung"
   ],
   "SMART Version": [
-    null
+    "SMART-Version"
   ],
   "SMART configuration": [
-    null
+    "SMART-Konfiguration"
   ],
   "SMART on FHIR": [
-    null
+    "SMART on FHIR"
   ],
   "SMART on FHIR Applications": [
-    null
+    "SMART on FHIR-Anwendungen"
   ],
   "SMART on FHIR flow types and Keycloak authentication flows": [
-    null
+    "SMART on FHIR-Flow-Typen und Keycloak-Authentifizierungs-Flows"
   ],
   "SMART scopes that can be requested during registration": [
-    null
+    "SMART-Scopes, die bei der Registrierung angefordert werden können"
   ],
   "SMART/Launch": [
-    null
+    "SMART/Launch"
   ],
   "SSO URL / Authorization Endpoint": [
-    null
+    "SSO-URL / Autorisierungsendpunkt"
   ],
   "SVG or 1024px PNG with transparent background recommended": [
-    null
+    "SVG oder 1024px PNG mit transparentem Hintergrund empfohlen"
   ],
   "Save": [
-    null
+    "Speichern"
   ],
   "Save & Connect": [
-    null
+    "Speichern & Verbinden"
   ],
   "Save Changes": [
-    null
+    "Änderungen speichern"
   ],
   "Save Configuration": [
     "Konfiguration speichern"
@@ -3429,451 +3429,451 @@
     "IAL-Einstellungen speichern"
   ],
   "Save Overrides": [
-    null
+    "Überschreibungen speichern"
   ],
   "Save Scopes": [
-    null
+    "Scopes speichern"
   ],
   "Save Settings": [
-    null
+    "Einstellungen speichern"
   ],
   "Save as Scope Set": [
-    null
+    "Als Scope-Set speichern"
   ],
   "Save the current default scopes as a reusable scope set": [
-    null
+    "Aktuelle Standard-Scopes als wiederverwendbares Scope-Set speichern"
   ],
   "Saving Configuration...": [
-    null
+    "Konfiguration wird gespeichert..."
   ],
   "Saving...": [
-    null
+    "Wird gespeichert..."
   ],
   "Saving…": [
-    null
+    "Wird gespeichert…"
   ],
   "Scope": [
-    null
+    "Scope"
   ],
   "Scope Configuration": [
-    null
+    "Scope-Konfiguration"
   ],
   "Scope Name": [
-    null
+    "Scope-Name"
   ],
   "Scope Preview": [
-    null
+    "Scope-Vorschau"
   ],
   "Scope Set": [
-    null
+    "Scope-Set"
   ],
   "Scope Set Details": [
-    null
+    "Scope-Set-Details"
   ],
   "Scope Sets": [
-    null
+    "Scope-Sets"
   ],
   "Scope Template": [
-    null
+    "Scope-Vorlage"
   ],
   "Scope set name": [
-    null
+    "Scope-Set-Name"
   ],
   "Scope set saved": [
-    null
+    "Scope-Set gespeichert"
   ],
   "Scopes": [
-    null
+    "Scopes"
   ],
   "Scopes & Launch Context": [
-    null
+    "Scopes & Launch-Kontext"
   ],
   "Scopes updated successfully": [
-    null
+    "Scopes erfolgreich aktualisiert"
   ],
   "Search": [
-    null
+    "Suchen"
   ],
   "Search Parameters (Optional)": [
-    null
+    "Suchparameter (Optional)"
   ],
   "Search Results": [
-    null
+    "Suchergebnisse"
   ],
   "Search Scope": [
-    null
+    "Suchbereich"
   ],
   "Search by actor, path, resource...": [
-    null
+    "Nach Akteur, Pfad, Ressource suchen..."
   ],
   "Search by client or user...": [
-    null
+    "Nach Client oder Benutzer suchen..."
   ],
   "Search by client, patient, path...": [
-    null
+    "Nach Client, Patient, Pfad suchen..."
   ],
   "Search doors...": [
-    null
+    "Türen suchen..."
   ],
   "Search events...": [
-    null
+    "Ereignisse suchen..."
   ],
   "Search groups...": [
-    null
+    "Gruppen suchen..."
   ],
   "Search members...": [
-    null
+    "Mitglieder suchen..."
   ],
   "Search users by name, email, or username...": [
-    null
+    "Benutzer nach Name, E-Mail oder Benutzername suchen..."
   ],
   "Search...": [
-    null
+    "Suchen..."
   ],
   "Searching...": [
-    null
+    "Suche läuft..."
   ],
   "Seconds before idle session expires": [
-    null
+    "Sekunden bis zur Sitzungszeitüberschreitung"
   ],
   "Secret for the admin client (keep this secure)": [
-    null
+    "Secret für den Admin-Client (sicher aufbewahren)"
   ],
   "Secure": [
-    null
+    "Sicher"
   ],
   "Secure authentication via OpenID Connect. Your credentials are never stored on this application.": [
-    null
+    "Sichere Authentifizierung über OpenID Connect. Ihre Anmeldedaten werden nie in dieser Anwendung gespeichert."
   ],
   "Security Best Practices:": [
-    null
+    "Sicherheits-Best-Practices:"
   ],
   "Security Options": [
-    null
+    "Sicherheitsoptionen"
   ],
   "Security Warning": [
-    null
+    "Sicherheitswarnung"
   ],
   "Select Allowed Servers": [
-    null
+    "Erlaubte Server auswählen"
   ],
   "Select FHIR Server": [
-    null
+    "FHIR-Server auswählen"
   ],
   "Select FHIR server": [
-    null
+    "FHIR-Server auswählen"
   ],
   "Select Scope Set": [
-    null
+    "Scope-Set auswählen"
   ],
   "Select a FHIR server": [
-    null
+    "FHIR-Server auswählen"
   ],
   "Select a Person Resource": [
-    null
+    "Person-Ressource auswählen"
   ],
   "Select a Person resource": [
-    null
+    "Person-Ressource auswählen"
   ],
   "Select a door to add to this group": [
-    null
+    "Tür auswählen, um sie dieser Gruppe hinzuzufügen"
   ],
   "Select a registered app to publish to the public app store.": [
-    null
+    "Registrierte App auswählen, um sie im öffentlichen App Store zu veröffentlichen."
   ],
   "Select a server from the overview tab to view detailed information": [
-    null
+    "Server aus der Übersicht auswählen, um Details anzuzeigen"
   ],
   "Select an app...": [
-    null
+    "App auswählen..."
   ],
   "Select authenticator provider": [
-    null
+    "Authenticator-Anbieter auswählen"
   ],
   "Select identity provider": [
-    null
+    "Identity Provider auswählen"
   ],
   "Select primary role...": [
-    null
+    "Primäre Rolle auswählen..."
   ],
   "Select resource type": [
-    null
+    "Ressourcentyp auswählen"
   ],
   "Select resource...": [
-    null
+    "Ressource auswählen..."
   ],
   "Select the access control system you want to connect": [
-    null
+    "Wählen Sie das Zutrittskontrollsystem, das Sie verbinden möchten"
   ],
   "Selected Servers": [
-    null
+    "Ausgewählte Server"
   ],
   "Self-initiated": [
-    null
+    "Selbst initiiert"
   ],
   "Sensitive Resource Types": [
-    null
+    "Sensible Ressourcentypen"
   ],
   "Served from cache": [
-    null
+    "Aus Cache bereitgestellt"
   ],
   "Server": [
-    null
+    "Server"
   ],
   "Server Access": [
-    null
+    "Serverzugang"
   ],
   "Server Access Configuration": [
-    null
+    "Serverzugangs-Konfiguration"
   ],
   "Server Access Type": [
-    null
+    "Serverzugangstyp"
   ],
   "Server Configuration": [
-    null
+    "Server-Konfiguration"
   ],
   "Server Details": [
-    null
+    "Server-Details"
   ],
   "Server ID:": [
-    null
+    "Server-ID:"
   ],
   "Server Information": [
-    null
+    "Server-Informationen"
   ],
   "Server Name": [
-    null
+    "Servername"
   ],
   "Server Name:": [
-    null
+    "Servername:"
   ],
   "Server Overview": [
-    null
+    "Server-Übersicht"
   ],
   "Server Restart Initiated": [
-    null
+    "Server-Neustart eingeleitet"
   ],
   "Server Shutdown Initiated": [
-    null
+    "Server-Herunterfahren eingeleitet"
   ],
   "Server Software": [
-    null
+    "Server-Software"
   ],
   "Server Status": [
-    null
+    "Server-Status"
   ],
   "Server URL": [
-    null
+    "Server-URL"
   ],
   "Server URL is required": [
-    null
+    "Server-URL ist erforderlich"
   ],
   "Server Version": [
-    null
+    "Server-Version"
   ],
   "Server Version:": [
-    null
+    "Server-Version:"
   ],
   "Server access is determined dynamically at runtime": [
-    null
+    "Serverzugang wird zur Laufzeit dynamisch bestimmt"
   ],
   "Server name is required": [
-    null
+    "Servername ist erforderlich"
   ],
   "Server receives a logout token when the session ends": [
-    null
+    "Server erhält ein Logout-Token bei Sitzungsende"
   ],
   "Server restart has been initiated successfully. Reason: {{reason}}": [
-    null
+    "Server-Neustart erfolgreich eingeleitet. Grund: {{reason}}"
   ],
   "Server shutdown has been initiated successfully. Reason: {{reason}}": [
-    null
+    "Server-Herunterfahren erfolgreich eingeleitet. Grund: {{reason}}"
   ],
   "Server-side apps with client secret": [
-    null
+    "Serverseitige Apps mit Client-Secret"
   ],
   "Server:": [
-    null
+    "Server:"
   ],
   "Servers": [
-    null
+    "Server"
   ],
   "Servers with User Person Records": [
-    null
+    "Server mit Benutzer-Person-Datensätzen"
   ],
   "Session Idle Timeout": [
-    null
+    "Sitzungs-Leerlauf-Zeitüberschreitung"
   ],
   "Session Max Lifespan": [
-    null
+    "Maximale Sitzungsdauer"
   ],
   "Session Timeouts": [
-    null
+    "Sitzungszeitüberschreitungen"
   ],
   "Set": [
-    null
+    "Festlegen"
   ],
   "Set Default": [
-    null
+    "Als Standard festlegen"
   ],
   "Setup Dynamic Registration": [
-    null
+    "Dynamische Registrierung einrichten"
   ],
   "Show": [
-    null
+    "Anzeigen"
   ],
   "Showing first 100 events of {{total}}": [
-    null
+    "Zeige die ersten 100 Ereignisse von {{total}}"
   ],
   "Showing first 50 events of {{total}}": [
-    null
+    "Zeige die ersten 50 Ereignisse von {{total}}"
   ],
   "Showing {{count}} of {{total}} events": [
-    null
+    "{{count}} von {{total}} Ereignissen angezeigt"
   ],
   "Shutdown Failed": [
-    null
+    "Herunterfahren fehlgeschlagen"
   ],
   "Shutdown Reason": [
-    null
+    "Grund für Herunterfahren"
   ],
   "Shutdown Server": [
-    null
+    "Server herunterfahren"
   ],
   "Sign out": [
     "Abmelden"
   ],
   "Signature Algorithm": [
-    null
+    "Signaturalgorithmus"
   ],
   "Signature Validation:": [
-    null
+    "Signaturvalidierung:"
   ],
   "Signed AuthN Requests:": [
-    null
+    "Signierte AuthN-Anfragen:"
   ],
   "Signing Certificate": [
-    null
+    "Signaturzertifikat"
   ],
   "Signing in...": [
-    null
+    "Anmeldung läuft..."
   ],
   "Skipped: {{count}}": [
-    null
+    "Übersprungen: {{count}}"
   ],
   "Something went wrong": [
-    null
+    "Etwas ist schiefgelaufen"
   ],
   "Specific Servers Only": [
-    null
+    "Nur bestimmte Server"
   ],
   "Stable": [
-    null
+    "Stabil"
   ],
   "Standalone": [
-    null
+    "Eigenständig"
   ],
   "Standalone App (Interactive)": [
-    null
+    "Eigenständige App (Interaktiv)"
   ],
   "Standalone Launch Clients": [
-    null
+    "Standalone-Launch-Clients"
   ],
   "State": [
-    null
+    "Status"
   ],
   "State / Province": [
-    null
+    "Bundesland / Kanton"
   ],
   "Status": [
-    null
+    "Status"
   ],
   "Status Code": [
-    null
+    "Statuscode"
   ],
   "Status Codes": [
-    null
+    "Statuscodes"
   ],
   "Status:": [
-    null
+    "Status:"
   ],
   "Store a shared secret for client authentication": [
-    null
+    "Shared Secret für Client-Authentifizierung speichern"
   ],
   "Strict Capabilities": [
-    null
+    "Strikte Capabilities"
   ],
   "Sub-flow": [
-    null
+    "Sub-Flow"
   ],
   "Subject:": [
-    null
+    "Betreff:"
   ],
   "Success": [
-    null
+    "Erfolg"
   ],
   "Success Rate": [
-    null
+    "Erfolgsrate"
   ],
   "Success rate": [
-    null
+    "Erfolgsrate"
   ],
   "Success vs Errors": [
-    null
+    "Erfolg vs. Fehler"
   ],
   "Success vs failure over time": [
-    null
+    "Erfolg vs. Fehler im Zeitverlauf"
   ],
   "Successful operations": [
-    null
+    "Erfolgreiche Operationen"
   ],
   "Successfully deleted application \"{{name}}\"": [
-    null
+    "Anwendung „{{name}}\" erfolgreich gelöscht"
   ],
   "Suggestions:": [
-    null
+    "Vorschläge:"
   ],
   "Supported": [
-    null
+    "Unterstützt"
   ],
   "Supported Servers": [
-    null
+    "Unterstützte Server"
   ],
   "Symmetric Authentication": [
-    null
+    "Symmetrische Authentifizierung"
   ],
   "Symmetric Client Authentication": [
-    null
+    "Symmetrische Client-Authentifizierung"
   ],
   "Symmetric authentication (client secrets) is less secure than asymmetric authentication (JWT with public/private keys). Use asymmetric authentication when possible, especially for production deployments.": [
-    null
+    "Symmetrische Authentifizierung (Client-Secrets) ist weniger sicher als asymmetrische Authentifizierung (JWT mit öffentlichen/privaten Schlüsseln). Verwenden Sie wenn möglich asymmetrische Authentifizierung, besonders in Produktionsumgebungen."
   ],
   "Sync Members from Keycloak": [
-    null
+    "Mitglieder aus Keycloak synchronisieren"
   ],
   "Sync Now": [
-    null
+    "Jetzt synchronisieren"
   ],
   "Sync Registrations": [
-    null
+    "Registrierungen synchronisieren"
   ],
   "Sync Settings": [
-    null
+    "Synchronisierungseinstellungen"
   ],
   "Sync completed: {{added}} added, {{updated}} updated, {{removed}} removed, {{failed}} failed": [
-    null
+    "Synchronisierung abgeschlossen: {{added}} hinzugefügt, {{updated}} aktualisiert, {{removed}} entfernt, {{failed}} fehlgeschlagen"
   ],
   "Sync from Keycloak": [
-    null
+    "Aus Keycloak synchronisieren"
   ],
   "Sync new Keycloak registrations to LDAP": [
-    null
+    "Neue Keycloak-Registrierungen nach LDAP synchronisieren"
   ],
   "Syncing...": [
-    null
+    "Synchronisierung..."
   ],
   "System": [
-    null
+    "System"
   ],
   "System Health": [
     "Systemstatus"
@@ -3882,624 +3882,624 @@
     "Systembetriebszeit"
   ],
   "System-to-system integrations (client_credentials)": [
-    null
+    "System-zu-System-Integrationen (client_credentials)"
   ],
   "TLS everywhere: secure client-to-proxy and proxy-to-FHIR connections.": [
-    null
+    "TLS überall: Client-zu-Proxy- und Proxy-zu-FHIR-Verbindungen absichern."
   ],
   "Template": [
-    null
+    "Vorlage"
   ],
   "Template:": [
-    null
+    "Vorlage:"
   ],
   "Temporary password": [
-    null
+    "Temporäres Passwort"
   ],
   "Terms of Service URI": [
-    null
+    "Nutzungsbedingungen-URI"
   ],
   "Test Connection": [
-    null
+    "Verbindung testen"
   ],
   "Test scope": [
-    null
+    "Scope testen"
   ],
   "Testing Connection...": [
-    null
+    "Verbindung wird getestet..."
   ],
   "Testing...": [
-    null
+    "Test läuft..."
   ],
   "The Keycloak realm that contains your users and clients": [
-    null
+    "Der Keycloak-Realm, der Ihre Benutzer und Clients enthält"
   ],
   "The brand bundle is published as a FHIR Bundle at the URL below and referenced from .well-known/smart-configuration.": [
-    null
+    "Das Brand-Bundle wird als FHIR-Bundle unter der untenstehenden URL veröffentlicht und von .well-known/smart-configuration referenziert."
   ],
   "The complete URL where your Keycloak server is running": [
-    null
+    "Die vollständige URL, unter der Ihr Keycloak-Server läuft"
   ],
   "Theme": [
     "Design"
   ],
   "Therapist": [
-    null
+    "Therapeut"
   ],
   "This FHIR server is publicly accessible and can be reached directly, bypassing the secure proxy. It should only accept traffic from the Proxy Server.": [
-    null
+    "Dieser FHIR-Server ist öffentlich zugänglich und kann direkt erreicht werden, ohne den sicheren Proxy. Er sollte nur Datenverkehr vom Proxy-Server akzeptieren."
   ],
   "This URL is already registered": [
-    null
+    "Diese URL ist bereits registriert"
   ],
   "This action cannot be undone": [
-    null
+    "Diese Aktion kann nicht rückgängig gemacht werden"
   ],
   "This app will have access to all FHIR servers configured behind the Proxy. Use this option for apps that need broad access across all healthcare data sources.": [
-    null
+    "Diese App hat Zugriff auf alle hinter dem Proxy konfigurierten FHIR-Server. Verwenden Sie diese Option für Apps, die breiten Zugriff auf alle Gesundheitsdatenquellen benötigen."
   ],
   "This app will only be able to access FHIR servers where the authenticated user has an associated Person resource.": [
-    null
+    "Diese App kann nur auf FHIR-Server zugreifen, auf denen der authentifizierte Benutzer eine zugehörige Person-Ressource hat."
   ],
   "This field is required": [
-    null
+    "Dieses Feld ist erforderlich"
   ],
   "This server cannot be reached or does not respond with valid FHIR metadata. API endpoints and advanced features are not available for this server.": [
-    null
+    "Dieser Server ist nicht erreichbar oder antwortet nicht mit gültigen FHIR-Metadaten. API-Endpunkte und erweiterte Funktionen sind für diesen Server nicht verfügbar."
   ],
   "This server is unreachable and can be safely removed. Delete \"{{name}}\"?": [
-    null
+    "Dieser Server ist nicht erreichbar und kann sicher entfernt werden. „{{name}}\" löschen?"
   ],
   "This user already has Person resources on all available FHIR servers.": [
-    null
+    "Dieser Benutzer hat bereits Person-Ressourcen auf allen verfügbaren FHIR-Servern."
   ],
   "This will sync Keycloak users to the door management provider. Existing members will be skipped.": [
-    null
+    "Dies synchronisiert Keycloak-Benutzer mit dem Türverwaltungsanbieter. Bestehende Mitglieder werden übersprungen."
   ],
   "Time": [
-    null
+    "Zeit"
   ],
   "Timeout": [
-    null
+    "Zeitüberschreitung"
   ],
   "Timeout (ms)": [
-    null
+    "Zeitüberschreitung (ms)"
   ],
   "Timeout:": [
-    null
+    "Zeitüberschreitung:"
   ],
   "Timestamp": [
-    null
+    "Zeitstempel"
   ],
   "Tip: If fetching fails in browser, the server may not allow CORS for your origin. Try a proxy or server-side check.": [
-    null
+    "Tipp: Wenn der Abruf im Browser fehlschlägt, erlaubt der Server möglicherweise kein CORS für Ihren Ursprung. Versuchen Sie einen Proxy oder serverseitige Prüfung."
   ],
   "To link an IdP, edit it in the Identity Providers tab and select this organization.": [
-    null
+    "Um einen IdP zu verknüpfen, bearbeiten Sie ihn im Identity-Provider-Tab und wählen Sie diese Organisation."
   ],
   "Token": [
-    null
+    "Token"
   ],
   "Token Exchange": [
-    null
+    "Token-Austausch"
   ],
   "Token URL": [
-    null
+    "Token-URL"
   ],
   "Tokens:": [
-    null
+    "Tokens:"
   ],
   "Top Actors": [
-    null
+    "Top-Akteure"
   ],
   "Top Applications": [
-    null
+    "Top-Anwendungen"
   ],
   "Top Clients": [
-    null
+    "Top-Clients"
   ],
   "Top Denied Clients": [
-    null
+    "Top abgelehnte Clients"
   ],
   "Top Denied Patients": [
-    null
+    "Top abgelehnte Patienten"
   ],
   "Top Error": [
-    null
+    "Häufigster Fehler"
   ],
   "Top-level": [
-    null
+    "Oberste Ebene"
   ],
   "Total": [
-    null
+    "Gesamt"
   ],
   "Total Actions": [
-    null
+    "Aktionen gesamt"
   ],
   "Total Apps": [
-    null
+    "Apps gesamt"
   ],
   "Total Decisions": [
-    null
+    "Entscheidungen gesamt"
   ],
   "Total Federations": [
-    null
+    "Föderationen gesamt"
   ],
   "Total IdPs": [
-    null
+    "IdPs gesamt"
   ],
   "Total Requests": [
-    null
+    "Anfragen gesamt"
   ],
   "Total Scope Sets": [
-    null
+    "Scope-Sets gesamt"
   ],
   "Total Scopes": [
-    null
+    "Scopes gesamt"
   ],
   "Total Servers": [
-    null
+    "Server gesamt"
   ],
   "Total Users": [
-    null
+    "Benutzer gesamt"
   ],
   "Track admin mutations, actor activity, and security events": [
-    null
+    "Admin-Änderungen, Akteursaktivitäten und Sicherheitsereignisse verfolgen"
   ],
   "Transient": [
-    null
+    "Flüchtig"
   ],
   "Trend": [
-    null
+    "Trend"
   ],
   "Troubleshooting Actions": [
-    null
+    "Fehlerbehebungsaktionen"
   ],
   "Trust Email": [
-    null
+    "E-Mail vertrauen"
   ],
   "Trust email addresses from LDAP without verification": [
-    null
+    "E-Mail-Adressen aus LDAP ohne Verifizierung vertrauen"
   ],
   "Try Again": [
-    null
+    "Erneut versuchen"
   ],
   "Try adjusting your filter criteria": [
-    null
+    "Versuchen Sie, Ihre Filterkriterien anzupassen"
   ],
   "Type": [
-    null
+    "Typ"
   ],
   "Type & Auth": [
-    null
+    "Typ & Authentifizierung"
   ],
   "Type:": [
-    null
+    "Typ:"
   ],
   "UI Display Override": [
-    null
+    "UI-Anzeige-Überschreibung"
   ],
   "URI Patterns": [
-    null
+    "URI-Muster"
   ],
   "URI that uniquely identifies this brand (typically the website URL)": [
-    null
+    "URI, die diese Marke eindeutig identifiziert (typischerweise die Website-URL)"
   ],
   "URIs": [
-    null
+    "URIs"
   ],
   "URL endpoint where the proxy can fetch your app\\": [
-    null
+    "URL-Endpunkt, unter dem der Proxy Ihre App abrufen kann"
   ],
   "UUID LDAP Attribute": [
-    null
+    "UUID-LDAP-Attribut"
   ],
   "Unable to Connect": [
-    null
+    "Verbindung nicht möglich"
   ],
   "Unable to connect to server": [
-    null
+    "Verbindung zum Server nicht möglich"
   ],
   "Unable to connect to this FHIR server or retrieve metadata": [
-    null
+    "Verbindung zu diesem FHIR-Server oder Abruf der Metadaten nicht möglich"
   ],
   "Unable to delete provider without an alias.": [
-    null
+    "Anbieter ohne Alias kann nicht gelöscht werden."
   ],
   "Unable to toggle status without an alias.": [
-    null
+    "Status ohne Alias kann nicht umgeschaltet werden."
   ],
   "Undo link": [
-    null
+    "Verknüpfung rückgängig machen"
   ],
   "Undo removal": [
-    null
+    "Entfernung rückgängig machen"
   ],
   "UniFi Access (Local)": [
-    null
+    "UniFi Access (Lokal)"
   ],
   "UniFi Access Credentials": [
-    null
+    "UniFi Access-Anmeldedaten"
   ],
   "Unknown": [
-    null
+    "Unbekannt"
   ],
   "Unlink": [
-    null
+    "Verknüpfung aufheben"
   ],
   "Unlock": [
-    null
+    "Entsperren"
   ],
   "Unlocked": [
-    null
+    "Entsperrt"
   ],
   "Unlocking": [
-    null
+    "Wird entsperrt"
   ],
   "Unpublish from store": [
-    null
+    "Aus Store entfernen"
   ],
   "Unreachable": [
-    null
+    "Nicht erreichbar"
   ],
   "Unspecified": [
-    null
+    "Nicht angegeben"
   ],
   "Unsupported": [
-    null
+    "Nicht unterstützt"
   ],
   "Unsupported Servers": [
-    null
+    "Nicht unterstützte Server"
   ],
   "Update": [
-    null
+    "Aktualisieren"
   ],
   "Update Provider": [
-    null
+    "Anbieter aktualisieren"
   ],
   "Update Scope Configuration": [
-    null
+    "Scope-Konfiguration aktualisieren"
   ],
   "Update Server": [
-    null
+    "Server aktualisieren"
   ],
   "Update User": [
-    null
+    "Benutzer aktualisieren"
   ],
   "Update the DICOMweb/PACS server configuration.": [
-    null
+    "DICOMweb/PACS-Server-Konfiguration aktualisieren."
   ],
   "Update the URL for \"{{name}}\". The server name and details will be automatically retrieved from the server\\": [
-    null
+    "URL für „{{name}}\" aktualisieren. Servername und Details werden automatisch vom Server abgerufen"
   ],
   "Update user information and permissions": [
-    null
+    "Benutzerinformationen und Berechtigungen aktualisieren"
   ],
   "Updated": [
-    null
+    "Aktualisiert"
   ],
   "Updating...": [
-    null
+    "Wird aktualisiert..."
   ],
   "Upload .crt/.pem": [
-    null
+    ".crt/.pem hochladen"
   ],
   "Upload .key/.pem": [
-    null
+    ".key/.pem hochladen"
   ],
   "Uptime": [
-    null
+    "Betriebszeit"
   ],
   "Usage": [
-    null
+    "Nutzung"
   ],
   "Use \"Clear Session Data\" for PKCE/OAuth state issues. Use \"Clear All Caches\" for \"Code not valid\" errors. Use \"Force Logout\" for persistent login issues.": [
-    null
+    "„Sitzungsdaten löschen\" für PKCE/OAuth-Statusprobleme. „Alle Caches leeren\" für „Code nicht gültig\"-Fehler. „Abmeldung erzwingen\" für anhaltende Anmeldeprobleme."
   ],
   "Use SMART scopes like patient/Observation.read, user/*.write, offline_access. The backend should enforce policies.": [
-    null
+    "Verwenden Sie SMART-Scopes wie patient/Observation.read, user/*.write, offline_access. Das Backend sollte Richtlinien durchsetzen."
   ],
   "Use paged result controls for LDAP queries": [
-    null
+    "Seitenweise Ergebnissteuerung für LDAP-Abfragen verwenden"
   ],
   "Use strong certificate passwords and rotate certificates regularly": [
-    null
+    "Starke Zertifikatpasswörter verwenden und Zertifikate regelmäßig rotieren"
   ],
   "Use these tools if you\\": [
-    null
+    "Verwenden Sie diese Tools, wenn Sie"
   ],
   "User": [
     "Benutzer"
   ],
   "User Federation": [
-    null
+    "Benutzerföderation"
   ],
   "User ID at IdP": [
-    null
+    "Benutzer-ID beim IdP"
   ],
   "User Info URL": [
-    null
+    "Benutzerinfo-URL"
   ],
   "User Management": [
     "Benutzerverwaltung"
   ],
   "User Object Classes": [
-    null
+    "Benutzer-Objektklassen"
   ],
   "User Person Server Access": [
-    null
+    "Benutzer-Person-Serverzugang"
   ],
   "User Restrictions": [
-    null
+    "Benutzereinschränkungen"
   ],
   "User created": [
-    null
+    "Benutzer erstellt"
   ],
   "User must explicitly consent to scopes at login": [
-    null
+    "Benutzer muss bei der Anmeldung explizit den Scopes zustimmen"
   ],
   "User sync failed": [
-    null
+    "Benutzersynchronisierung fehlgeschlagen"
   ],
   "User-Person Linked Servers": [
-    null
+    "Benutzer-Person-verknüpfte Server"
   ],
   "Userinfo": [
-    null
+    "Benutzerinfo"
   ],
   "Username": [
-    null
+    "Benutzername"
   ],
   "Username LDAP Attribute": [
-    null
+    "Benutzername-LDAP-Attribut"
   ],
   "Username at IdP": [
-    null
+    "Benutzername beim IdP"
   ],
   "Username cannot be changed": [
-    null
+    "Benutzername kann nicht geändert werden"
   ],
   "Username:": [
-    null
+    "Benutzername:"
   ],
   "Users": [
     "Benutzer"
   ],
   "Users & Federation": [
-    null
+    "Benutzer & Föderation"
   ],
   "Users DN": [
-    null
+    "Benutzer-DN"
   ],
   "Using asymmetric JWT authentication with registered public key": [
-    null
+    "Asymmetrische JWT-Authentifizierung mit registriertem öffentlichem Schlüssel"
   ],
   "Valid": [
-    null
+    "Gültig"
   ],
   "Valid Until:": [
-    null
+    "Gültig bis:"
   ],
   "Validate Signature": [
-    null
+    "Signatur validieren"
   ],
   "Validates token scopes against requested FHIR resources. Supports SMART v1 (read/write) and v2 (cruds) scope formats.": [
-    null
+    "Validiert Token-Scopes gegen angeforderte FHIR-Ressourcen. Unterstützt SMART v1 (read/write) und v2 (cruds) Scope-Formate."
   ],
   "Verify Patient Link": [
-    null
+    "Patientenverknüpfung überprüfen"
   ],
   "Verify identity assurance via Person resources": [
-    null
+    "Identitätssicherung über Person-Ressourcen überprüfen"
   ],
   "Verify that the FHIR server is configured to require client certificates": [
-    null
+    "Überprüfen Sie, dass der FHIR-Server für Client-Zertifikate konfiguriert ist"
   ],
   "View Certificates": [
-    null
+    "Zertifikate anzeigen"
   ],
   "View Configuration": [
-    null
+    "Konfiguration anzeigen"
   ],
   "View Details": [
-    null
+    "Details anzeigen"
   ],
   "View and manage all Keycloak organizations": [
-    null
+    "Alle Keycloak-Organisationen anzeigen und verwalten"
   ],
   "View and manage all SMART on FHIR applications": [
-    null
+    "Alle SMART on FHIR-Anwendungen anzeigen und verwalten"
   ],
   "View and manage all configured identity providers": [
-    null
+    "Alle konfigurierten Identity Provider anzeigen und verwalten"
   ],
   "View and manage all healthcare professionals and administrative users": [
-    null
+    "Alle medizinischen Fachkräfte und administrativen Benutzer anzeigen und verwalten"
   ],
   "Visible Tabs": [
-    null
+    "Sichtbare Tabs"
   ],
   "Visual Scope Builder": [
-    null
+    "Visueller Scope-Builder"
   ],
   "WADO-RS Root:": [
-    null
+    "WADO-RS-Root:"
   ],
   "Want AuthnRequests Signed": [
-    null
+    "AuthnRequests signiert gewünscht"
   ],
   "Warning": [
-    null
+    "Warnung"
   ],
   "Warning:": [
-    null
+    "Warnung:"
   ],
   "Watchlist": [
-    null
+    "Beobachtungsliste"
   ],
   "Web Origins (CORS)": [
-    null
+    "Web-Origins (CORS)"
   ],
   "Web apps, mobile apps (no client secret)": [
-    null
+    "Web-Apps, Mobile-Apps (kein Client-Secret)"
   ],
   "Website": [
-    null
+    "Website"
   ],
   "Weekday Patterns": [
-    null
+    "Wochentagsmuster"
   ],
   "Welcome back, {{name}}": [
-    null
+    "Willkommen zurück, {{name}}"
   ],
   "Which admin resources are most modified": [
-    null
+    "Welche Admin-Ressourcen am häufigsten geändert werden"
   ],
   "Which types of OAuth2 clients can register": [
-    null
+    "Welche Arten von OAuth2-Clients sich registrieren können"
   ],
   "Yes": [
-    null
+    "Ja"
   ],
   "You are logged in with the temporary bootstrap admin account. Please create a permanent admin user in the Identity Providers or Users tab. Once a permanent admin exists, Keycloak will automatically disable this bootstrap account.": [
-    null
+    "Sie sind mit dem temporären Bootstrap-Admin-Konto angemeldet. Bitte erstellen Sie einen permanenten Admin-Benutzer im Identity-Provider- oder Benutzer-Tab. Sobald ein permanenter Admin existiert, wird Keycloak dieses Bootstrap-Konto automatisch deaktivieren."
   ],
   "You can provide either a JWKS URI or a public key directly. The JWKS URI is recommended as it allows for key rotation. If both are provided, the JWKS URI takes precedence.": [
-    null
+    "Sie können entweder eine JWKS-URI oder einen öffentlichen Schlüssel direkt angeben. Die JWKS-URI wird empfohlen, da sie Schlüsselrotation ermöglicht. Wenn beides angegeben wird, hat die JWKS-URI Vorrang."
   ],
   "You can skip this section and configure it later. The admin client is only needed for automatic SMART app registration.": [
-    null
+    "Sie können diesen Abschnitt überspringen und später konfigurieren. Der Admin-Client wird nur für die automatische SMART-App-Registrierung benötigt."
   ],
   "actions": [
-    null
+    "Aktionen"
   ],
   "activate": [
-    null
+    "aktivieren"
   ],
   "activated": [
-    null
+    "aktiviert"
   ],
   "available": [
-    null
+    "verfügbar"
   ],
   "checks": [
-    null
+    "Prüfungen"
   ],
   "clients": [
-    null
+    "Clients"
   ],
   "days": [
-    null
+    "Tage"
   ],
   "days sampled": [
-    null
+    "Tage erfasst"
   ],
   "deactivate": [
-    null
+    "deaktivieren"
   ],
   "deactivated": [
-    null
+    "deaktiviert"
   ],
   "denied requests": [
-    null
+    "abgelehnte Anfragen"
   ],
   "e.g. .maxhealth.tech or https://mcp.example.com": [
-    null
+    "z.B. .maxhealth.tech oder https://mcp.example.com"
   ],
   "e.g. DocumentReference": [
-    null
+    "z.B. DocumentReference"
   ],
   "e.g., Configuration changes, performance issues, updates, etc.": [
-    null
+    "z.B. Konfigurationsänderungen, Leistungsprobleme, Updates usw."
   ],
   "e.g., Scheduled maintenance, emergency stop, etc.": [
-    null
+    "z.B. Geplante Wartung, Notfall-Stopp usw."
   ],
   "flows": [
-    null
+    "Flows"
   ],
   "healthy": [
-    null
+    "gesund"
   ],
   "hidden": [
-    null
+    "ausgeblendet"
   ],
   "member@example.com": [
-    null
+    "mitglied@beispiel.de"
   ],
   "more": [
-    null
+    "mehr"
   ],
   "ms avg": [
-    null
+    "ms Durchschn."
   ],
   "optional": [
-    null
+    "optional"
   ],
   "or publish a registered app.": [
-    null
+    "oder eine registrierte App veröffentlichen."
   ],
   "override(s)": [
-    null
+    "Überschreibung(en)"
   ],
   "page": [
-    null
+    "Seite"
   ],
   "registered": [
-    null
+    "registriert"
   ],
   "the selected provider": [
-    null
+    "den ausgewählten Anbieter"
   ],
   "unlimited": [
-    null
+    "unbegrenzt"
   ],
   "unsaved changes": [
-    null
+    "ungespeicherte Änderungen"
   ],
   "uptime": [
-    null
+    "Betriebszeit"
   ],
   "users": [
-    null
+    "Benutzer"
   ],
   "visible": [
-    null
+    "sichtbar"
   ],
   "will be added": [
-    null
+    "wird hinzugefügt"
   ],
   "will be removed": [
-    null
+    "wird entfernt"
   ],
   "{{count}} door(s)": [
-    null
+    "{{count}} Tür(en)"
   ],
   "{{count}} event(s)": [
-    null
+    "{{count}} Ereignis(se)"
   ],
   "{{count}} group(s)": [
-    null
+    "{{count}} Gruppe(n)"
   ],
   "{{count}} location(s) configured": [
-    null
+    "{{count}} Standort(e) konfiguriert"
   ],
   "{{count}} member(s)": [
-    null
+    "{{count}} Mitglied(er)"
   ],
   "{{count}} scope(s) with missing mappers": [
-    null
+    "{{count}} Scope(s) mit fehlenden Mappern"
   ],
   "{{online}} online, {{offline}} offline": [
-    null
+    "{{online}} online, {{offline}} offline"
   ],
   "— Inherit from main —": [
-    null
+    "— Vom Haupt-Branding erben —"
   ],
   "— Keycloak Default —": [
-    null
+    "— Keycloak-Standard —"
   ],
   "⚠️ Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?": [
-    null
+    "⚠️ Warnung: Das Ändern der Keycloak-URL oder Client-Konfiguration kann Sie aus dem System abmelden. Möglicherweise müssen Sie sich nach Änderungen erneut anmelden. Möchten Sie fortfahren?"
   ]
 }
