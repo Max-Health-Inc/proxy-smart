@@ -28,7 +28,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "dependencies": {
         "@ai-sdk/openai": "^3.0.66",
         "@elysiajs/cors": "^1.4.2",
@@ -76,7 +76,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -87,7 +87,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "dependencies": {
         "aws-cdk-lib": "^2.257.0",
         "constructs": "^10.6.0",
@@ -105,7 +105,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.2",
         "@cornerstonejs/core": "^4.22.13",
@@ -146,7 +146,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "dependencies": {
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
         "@radix-ui/react-avatar": "^1.1.11",
@@ -204,7 +204,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "devDependencies": {
         "@types/node": "^22.0.0",
         "typescript": "6.0.3",
@@ -212,7 +212,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -224,7 +224,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.1.0",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@sinclair/typebox": "^0.34.49",
@@ -241,7 +241,7 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.2.9-beta.202606031437.ac1617d86",
+      "version": "0.2.9-alpha.202606031445.6ca0d69ba",
       "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
         "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
@@ -853,7 +853,7 @@
 
     "@proxy-smart/eslint-config": ["@proxy-smart/eslint-config@workspace:config/eslint"],
 
-    "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@github:Max-Health-Inc/shared-ui#1b06f6a", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "Max-Health-Inc-shared-ui-1b06f6a", "sha512-2aPisOkuFo0KYNj8ZoVIIXTBeGI/+jnOa09ioRQ8ItghJHO61wnQjuiNebybB3UY4pG6obOhjVENyaeWeBFx6A=="],
+    "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@github:Max-Health-Inc/shared-ui#0077fdc", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "Max-Health-Inc-shared-ui-0077fdc", "sha512-KZpTCxW1nJ2PcfKMxzqVwEl+7Gr2LQW88iPJPIzFvn0bSx9WMDSAf0tgdAOwosxzOk25XzZkgOWGo7gkhIn9Zg=="],
 
     "@radix-ui/number": ["@radix-ui/number@1.1.1", "", {}, "sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g=="],
 
