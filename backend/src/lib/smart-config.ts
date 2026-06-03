@@ -10,6 +10,7 @@
 
 import { logger } from './logger'
 import { config } from '../config'
+import { getRuntimeBrandConfig } from './runtime-config'
 import type { SmartConfigurationResponseType } from '../schemas'
 
 interface OpenIDConfiguration {
@@ -142,7 +143,10 @@ class SmartConfigService {
             user_access_brand_identifier: {
                 system: 'urn:ietf:rfc:3986',
                 value: config.brand.identifier
-            }
+            },
+
+            // App Store discovery (vendor extension)
+            ...(() => { const url = getRuntimeBrandConfig().appStoreUrl; return url ? { app_store_url: url } : {} })(),
         }
     }
 
