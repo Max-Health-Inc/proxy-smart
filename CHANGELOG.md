@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.8-alpha.202606030821.c22ab62fc] - 2026-06-03
+
+- 🔧 Chores & Improvements: Replace console.debug with logger.debug in smartStore.ts and add logger import for improved logging
+
+- ⚠️ Breaking Changes: Remove Launch Context Sets feature scaffolding (LaunchContextManager.tsx, LaunchContextSetBuilder.tsx, related smartStore state/actions) and reduce related UI/store references in SmartConfigManager.tsx and smartStore.ts
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/780
+
+
 ## [0.2.7-beta.202606022042.f06c666e8] - 2026-06-02
 
 - 🔧 Chores & Improvements: Version bumps across multiple packages and configs; mcp-endpoint.json updated timestamp; mcp-endpoint-config.ts now initializes enabledTools to [] instead of null.
