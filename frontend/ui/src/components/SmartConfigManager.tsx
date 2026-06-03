@@ -24,7 +24,7 @@ export function SmartConfigManager() {
                             <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center mr-3 shadow-sm">
                                 <Shield className="w-5 h-5 text-primary" />
                             </div>
-                            {t('Manage FHIR resource scopes and application launch contexts')}
+                            {t('Manage FHIR resource scopes, protocol mappers, and access controls')}
                         </div>
                     </div>
                 </div>
