@@ -8,12 +8,12 @@ Proxy Smart includes a comprehensive monitoring system covering OAuth flows, FHI
 |-----------|--------|-------------|----------------|-----------|
 | **OAuth** | `/monitoring/oauth` | 2 (events, analytics) | 5 | `logs/oauth-metrics/` |
 | **FHIR Health** | `/monitoring/fhir` | 2 (checks, summaries) | 2 | `logs/fhir-health/` |
-| **FHIR Proxy** | `/monitoring/fhir-proxy` | 2 (events, analytics) | 2 | — |
-| **Auth Events** | `/monitoring/auth` | 2 (events, analytics) | 2 | — |
-| **Email Events** | `/monitoring/email` | 2 (events, analytics) | 2 | — |
+| **FHIR Proxy** | `/monitoring/fhir-proxy` | 2 (events, analytics) | 2 | -- |
+| **Auth Events** | `/monitoring/auth` | 2 (events, analytics) | 2 | -- |
+| **Email Events** | `/monitoring/email` | 2 (events, analytics) | 2 | -- |
 | **Consent** | `/monitoring/consent` | 2 (events, analytics) | 3 | `logs/consent-metrics/` |
 | **Admin Audit** | `/monitoring/admin-audit` | 2 (events, analytics) | 3 | `logs/admin-audit/` |
-| **System Status** | `/health`, `/status` | — | 2 | `logs/keycloak/` |
+| **System Status** | `/health`, `/status` | -- | 2 | `logs/keycloak/` |
 
 All monitoring endpoints require a valid Bearer token. SSE endpoints also accept a `?token=` query parameter (since `EventSource` cannot send custom headers).
 
@@ -24,7 +24,7 @@ The **Monitoring** tab in the admin dashboard is a tabbed container with:
 | Tab | Content |
 |-----|---------|
 | **Dashboard** | OAuth flow summary stats + FHIR server uptime widget |
-| **FHIR Proxy** | Proxied FHIR request metrics — throughput, response times, error rates by server and resource type |
+| **FHIR Proxy** | Proxied FHIR request metrics -- throughput, response times, error rates by server and resource type |
 | **OAuth** | Live OAuth event table and analytics charts with predictive insights |
 | **Auth** | Keycloak authentication events (logins, failures, session activity) |
 | **Email** | Email delivery events from Keycloak (verification, password reset) |
@@ -38,7 +38,7 @@ FHIR server health is also shown on the main **Dashboard** page as a status card
 
 Tracks all OAuth 2.0 authorization flows: token requests, refresh grants, authorization codes, errors.
 
-### Endpoints — `/monitoring/oauth`
+### Endpoints -- `/monitoring/oauth`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -54,12 +54,12 @@ Tracks all OAuth 2.0 authorization flows: token requests, refresh grants, author
 
 - `totalRequests`, `successfulRequests`, `failedRequests`, `successRate`
 - `averageResponseTime`, `activeTokens`
-- `topClients` — ranked by request count with per-client success rate
-- `flowsByType` — breakdown by grant type (authorization_code, refresh_token, etc.)
-- `errorsByType` — breakdown by error category
-- `hourlyStats` — time series (hour, success, error, total)
-- `predictiveInsights` — trend direction, next-hour forecast, anomaly risk assessment
-- `weekdayInsights` — per-weekday averages with projections
+- `topClients` -- ranked by request count with per-client success rate
+- `flowsByType` -- breakdown by grant type (authorization_code, refresh_token, etc.)
+- `errorsByType` -- breakdown by error category
+- `hourlyStats` -- time series (hour, success, error, total)
+- `predictiveInsights` -- trend direction, next-hour forecast, anomaly risk assessment
+- `weekdayInsights` -- per-weekday averages with projections
 
 ### WebSocket Transport
 
@@ -67,9 +67,9 @@ An alternative WebSocket transport is available at `/oauth/monitoring/websocket`
 
 ### Log Files
 
-- `logs/oauth-metrics/oauth-events.jsonl` — event log (one JSON object per line)
-- `logs/oauth-metrics/oauth-analytics.json` — latest analytics snapshot
-- `logs/oauth-metrics/system-health.json` — latest health snapshot
+- `logs/oauth-metrics/oauth-events.jsonl` -- event log (one JSON object per line)
+- `logs/oauth-metrics/oauth-analytics.json` -- latest analytics snapshot
+- `logs/oauth-metrics/system-health.json` -- latest health snapshot
 
 ## FHIR Server Health Monitoring
 
@@ -78,12 +78,12 @@ Background poller that checks all configured FHIR servers every 30 seconds.
 ### How It Works
 
 1. On startup, `FhirHealthLogger` initializes and replays recent checks from JSONL
-2. `start()` begins polling — hits each FHIR server's metadata endpoint
+2. `start()` begins polling -- hits each FHIR server's metadata endpoint
 3. Each check produces a `FhirHealthCheck` with status (`healthy`, `degraded`, `unhealthy`) and response time
 4. Results are persisted to JSONL and broadcast to SSE subscribers
 5. After each full sweep, uptime summaries are computed and broadcast
 
-### Endpoints — `/monitoring/fhir`
+### Endpoints -- `/monitoring/fhir`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -95,15 +95,15 @@ Background poller that checks all configured FHIR servers every 30 seconds.
 ### Summary Fields (per server)
 
 - `serverName`, `serverUrl`, `currentStatus`
-- `uptimePercent` — percentage of healthy checks
-- `avgResponseTimeMs` — average response time across all checks
+- `uptimePercent` -- percentage of healthy checks
+- `avgResponseTimeMs` -- average response time across all checks
 - `checksTotal`, `checksHealthy`
 - `lastChecked`, `lastError`
-- `recentChecks` — last ~1 hour of individual check results
+- `recentChecks` -- last ~1 hour of individual check results
 
 ### Log Files
 
-- `logs/fhir-health/health-checks.jsonl` — check history
+- `logs/fhir-health/health-checks.jsonl` -- check history
 
 ### Memory Limits
 
@@ -113,7 +113,7 @@ Ring buffer holds 2,880 entries per server (~24 hours at 30-second intervals).
 
 Tracks all proxied FHIR requests with per-request metrics.
 
-### Endpoints — `/monitoring/fhir-proxy`
+### Endpoints -- `/monitoring/fhir-proxy`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -130,7 +130,7 @@ Each proxied request logs: server name, HTTP method, resource path, resource typ
 
 Polls Keycloak authentication events (login, logout, session expiry, failed attempts) every 60 seconds.
 
-### Endpoints — `/monitoring/auth`
+### Endpoints -- `/monitoring/auth`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -143,7 +143,7 @@ Polls Keycloak authentication events (login, logout, session expiry, failed atte
 
 Polls Keycloak email delivery events (verification emails, password resets, account notifications) every 60 seconds.
 
-### Endpoints — `/monitoring/email`
+### Endpoints -- `/monitoring/email`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -156,7 +156,7 @@ Polls Keycloak email delivery events (verification emails, password resets, acco
 
 Tracks patient consent decisions during authorization flows.
 
-### Endpoints — `/monitoring/consent`
+### Endpoints -- `/monitoring/consent`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -174,8 +174,8 @@ Available at `/consent/monitoring/websocket` with the same message protocol as t
 
 - `totalDecisions`, `permitRate`, `denyRate`
 - `averageCheckDuration`, `cacheHitRate`
-- `decisionsByMode` — enforce, audit-only, disabled
-- `decisionsByResourceType` — e.g., Patient, Observation, MedicationRequest
+- `decisionsByMode` -- enforce, audit-only, disabled
+- `decisionsByResourceType` -- e.g., Patient, Observation, MedicationRequest
 - `topDeniedClients`, `topDeniedPatients`
 - `hourlyStats`
 
@@ -190,8 +190,8 @@ Each consent event includes:
 
 ### Log Files
 
-- `logs/consent-metrics/consent-events.jsonl` — event log
-- `logs/consent-metrics/consent-analytics.json` — latest analytics
+- `logs/consent-metrics/consent-events.jsonl` -- event log
+- `logs/consent-metrics/consent-analytics.json` -- latest analytics
 
 ## Admin Audit Monitoring
 
@@ -199,9 +199,9 @@ Tracks all admin mutations (create, update, delete actions) with actor identific
 
 ### Automatic Capture
 
-The `adminAuditPlugin` middleware automatically captures all admin route mutations. No manual instrumentation needed — it hooks into the Elysia request lifecycle.
+The `adminAuditPlugin` middleware automatically captures all admin route mutations. No manual instrumentation needed -- it hooks into the Elysia request lifecycle.
 
-### Endpoints — `/monitoring/admin-audit`
+### Endpoints -- `/monitoring/admin-audit`
 
 | Method | Path | Type | Description |
 |--------|------|------|-------------|
@@ -223,13 +223,13 @@ The `adminAuditPlugin` middleware automatically captures all admin route mutatio
 
 - `totalActions`, `successRate`
 - `actionsByType`, `actionsByResource`
-- `topActors` — most active admin users
+- `topActors` -- most active admin users
 - `hourlyStats`
-- `recentFailures` — last failed admin operations
+- `recentFailures` -- last failed admin operations
 
 ### Log Files
 
-- `logs/admin-audit/admin-audit.jsonl` — full audit log (replays last 7 days on startup)
+- `logs/admin-audit/admin-audit.jsonl` -- full audit log (replays last 7 days on startup)
 
 ## System Status & Health
 
@@ -248,10 +248,10 @@ Lightweight liveness probe (30-second TTL cache). Returns:
 
 Full system status check including:
 
-- **FHIR Servers** — per-server reachability and response time
-- **Keycloak** — connection status, realm accessibility, last connected time
-- **Memory** — heap usage, RSS, external
-- **Overall** — aggregate health status
+- **FHIR Servers** -- per-server reachability and response time
+- **Keycloak** -- connection status, realm accessibility, last connected time
+- **Memory** -- heap usage, RSS, external
+- **Overall** -- aggregate health status
 
 Keycloak connection events are logged to `logs/keycloak/connections.jsonl` and `logs/keycloak/last-connection.json`.
 
@@ -259,15 +259,15 @@ Keycloak connection events are logged to `logs/keycloak/connections.jsonl` and `
 
 All SSE streams follow the same pattern:
 
-1. **Connection event** — sent immediately on connect
+1. **Connection event** -- sent immediately on connect
    ```
    data: {"type":"connection","message":"Connected to ...","timestamp":"..."}
    ```
-2. **Data events** — sent as they occur
+2. **Data events** -- sent as they occur
    ```
    data: {"id":"...","type":"...","timestamp":"..."}
    ```
-3. **Keepalive** — every 30 seconds
+3. **Keepalive** -- every 30 seconds
    ```
    data: {"type":"keepalive","timestamp":"..."}
    ```

@@ -39,17 +39,17 @@ Click **Add Provider** to configure a new LDAP connection:
 
 Before saving, you can test the LDAP connection:
 
-- **Test Connection** — Verifies network connectivity and TLS handshake
-- **Test Authentication** — Verifies bind credentials are accepted
+- **Test Connection** -- Verifies network connectivity and TLS handshake
+- **Test Authentication** -- Verifies bind credentials are accepted
 
 ### Synchronization
 
 Once configured, synchronize users from LDAP:
 
-- **Full Sync** — Import all users matching the filter
-- **Changed Users Sync** — Import only users modified since the last sync
-- **Remove Imported** — Remove all users imported from this provider
-- **Unlink Users** — Unlink imported users from the federation provider (keeps the users)
+- **Full Sync** -- Import all users matching the filter
+- **Changed Users Sync** -- Import only users modified since the last sync
+- **Remove Imported** -- Remove all users imported from this provider
+- **Unlink Users** -- Unlink imported users from the federation provider (keeps the users)
 
 ### Mapper Configuration
 

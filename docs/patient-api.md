@@ -60,7 +60,7 @@ Converts a PDF document into validated FHIR resources using OCR and AI extractio
 ### Security
 
 - The token's patient claim is checked against the requested `patientId`
-- Resources are only *returned* for review — the patient portal must separately POST them through the FHIR proxy, which enforces scope, consent, and audit controls
+- Resources are only *returned* for review -- the patient portal must separately POST them through the FHIR proxy, which enforces scope, consent, and audit controls
 - Requires AI to be configured (`OPENAI_API_KEY`)
 
 ## Patient Scribe
@@ -81,7 +81,7 @@ Converts free-text descriptions into validated FHIR resources using AI.
 
 ### Response
 
-Same format as Document Import — returns validated and failed resources with processing time.
+Same format as Document Import -- returns validated and failed resources with processing time.
 
 ### Use Cases
 

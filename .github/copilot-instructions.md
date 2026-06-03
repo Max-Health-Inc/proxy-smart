@@ -1,4 +1,4 @@
-# Copilot Cloud Agent Instructions — Proxy Smart
+# Copilot Cloud Agent Instructions -- Proxy Smart
 
 ## Architecture Overview
 
@@ -7,7 +7,7 @@ Proxy Smart is a SMART on FHIR authorization proxy. Components in CI:
 | Component | Port | Purpose |
 |-----------|------|---------|
 | **Keycloak** | 8080 | Identity provider (OIDC/OAuth2) |
-| **Backend (Elysia/Bun)** | 8445 | Auth proxy — authorize, token, introspect, userinfo |
+| **Backend (Elysia/Bun)** | 8445 | Auth proxy -- authorize, token, introspect, userinfo |
 | **HAPI FHIR** | 8081 | FHIR R4 server (test data) |
 | **Inferno** | 8080 | SMART STU2.2 compliance test runner (Ruby) |
 | **PostgreSQL** | 5432 | Keycloak persistence |
@@ -41,10 +41,10 @@ The backend enriches introspection responses with SMART launch context from the 
 **CRITICAL**: Keycloak's `--import-realm` does **NOT** resolve `${VAR:-default}` bash-style env var syntax in JSON credential values. The literal string (including `${}` characters) is stored as the password/secret.
 
 - **DO**: Use plain values in `realm-export.json` (e.g., `"value": "DevD0c!2024"`)
-- **DON'T**: Use `"value": "${DOCTOR_PASSWORD:-DevD0c!2024}"` — this stores the literal string
+- **DON'T**: Use `"value": "${DOCTOR_PASSWORD:-DevD0c!2024}"` -- this stores the literal string
 - Production deployments override secrets via env vars on the Keycloak container, not via the JSON
 
-Keycloak's own template variables like `${profileScopeConsentText}` and `${role_default-roles}` are fine — those are resolved by Keycloak internally.
+Keycloak's own template variables like `${profileScopeConsentText}` and `${role_default-roles}` are fine -- those are resolved by Keycloak internally.
 
 ## Config Consistency Rules
 
@@ -63,7 +63,7 @@ The file `scripts/seed/fhir-seed-bundle.json` is a FHIR transaction bundle:
 
 - All entries use `PUT` method (idempotent upsert)
 - **`fullUrl` MUST match `request.url`** for PUT entries (e.g., `"fullUrl": "Patient/test-patient"`)
-- **DO NOT** use `urn:uuid:` for `fullUrl` with PUT — HAPI FHIR rejects this with HTTP 400
+- **DO NOT** use `urn:uuid:` for `fullUrl` with PUT -- HAPI FHIR rejects this with HTTP 400
 - `urn:uuid:` is only valid with `POST` (server-assigned ID) entries
 
 ## Common Failure Patterns
@@ -95,4 +95,4 @@ The CI workflow auto-detects the stage from the branch. Local stages start Keycl
 - When changing a password/secret, update ALL matching locations (see consistency rules)
 - Test configs are in `testing/{dev,alpha,beta,production}/inferno-config.json`
 - The backend reads `KEYCLOAK_ADMIN_CLIENT_ID` and `KEYCLOAK_ADMIN_CLIENT_SECRET` from env
-- Never commit real production secrets — only dev/test defaults
+- Never commit real production secrets -- only dev/test defaults

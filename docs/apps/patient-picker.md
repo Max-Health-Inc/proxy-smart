@@ -4,7 +4,7 @@ Embedded patient selection UI shown during SMART standalone launch flows when pa
 
 ## Overview
 
-The Patient Picker is **not a standalone SMART app** — it's rendered by the backend during the authorization flow. When a SMART app requests `launch/patient` scope in a standalone launch, the backend redirects to the Patient Picker, which lets the user search and select a patient before completing the authorization.
+The Patient Picker is **not a standalone SMART app** -- it's rendered by the backend during the authorization flow. When a SMART app requests `launch/patient` scope in a standalone launch, the backend redirects to the Patient Picker, which lets the user search and select a patient before completing the authorization.
 
 ```
 ┌────────────────┐   authorize   ┌──────────────┐   redirect   ┌────────────────┐
@@ -40,10 +40,10 @@ The Patient Picker is **not a standalone SMART app** — it's rendered by the ba
 
 ## Features
 
-- **Patient Search** — Searchable list of patients from the FHIR server
-- **Name Formatting** — Uses `formatHumanName()` from shared-ui
-- **Error Handling** — Shows clear error if parameters are missing
-- **Minimal UI** — Focused UX: no auth, no header sign-out, single purpose
+- **Patient Search** -- Searchable list of patients from the FHIR server
+- **Name Formatting** -- Uses `formatHumanName()` from shared-ui
+- **Error Handling** -- Shows clear error if parameters are missing
+- **Minimal UI** -- Focused UX: no auth, no header sign-out, single purpose
 
 ## Development
 
@@ -78,6 +78,6 @@ bun run dev
 
 ## Notes
 
-- This app does **not** use `SmartAppShell` because it's not a SMART app itself — it has no authentication flow
+- This app does **not** use `SmartAppShell` because it's not a SMART app itself -- it has no authentication flow
 - It receives its FHIR base URL from the `aud` parameter (set by the backend during redirect)
 - The patient list queries the FHIR server directly using the backend's service token (proxied through the backend)

@@ -56,15 +56,15 @@ SMART App  ──►  /proxy-smart/…   ──►  FHIR Server (with validated 
 ### SMART App Launch
 
 1. **App redirects to `/auth/authorize`** with standard OAuth parameters plus SMART-specific:
-   - `aud` — the FHIR server URL the app wants to access (validated against configured servers)
-   - `scope` — SMART scopes like `launch/patient patient/*.read openid fhirUser`
-   - `launch` — EHR launch token (for EHR launch flow)
+   - `aud` -- the FHIR server URL the app wants to access (validated against configured servers)
+   - `scope` -- SMART scopes like `launch/patient patient/*.read openid fhirUser`
+   - `launch` -- EHR launch token (for EHR launch flow)
 
-2. **Audience validation** — the proxy validates the `aud` parameter matches a configured FHIR endpoint, preventing token leakage to unauthorized servers (SMART App Launch 2.2.0 requirement).
+2. **Audience validation** -- the proxy validates the `aud` parameter matches a configured FHIR endpoint, preventing token leakage to unauthorized servers (SMART App Launch 2.2.0 requirement).
 
-3. **Keycloak handles authentication** — user logs in, consents to scopes, Keycloak redirects back with an authorization code.
+3. **Keycloak handles authentication** -- user logs in, consents to scopes, Keycloak redirects back with an authorization code.
 
-4. **App exchanges code at `/auth/token`** — the proxy forwards the token request to Keycloak. The response includes SMART launch context claims (patient, encounter, fhirUser) injected by Keycloak scope mappers.
+4. **App exchanges code at `/auth/token`** -- the proxy forwards the token request to Keycloak. The response includes SMART launch context claims (patient, encounter, fhirUser) injected by Keycloak scope mappers.
 
 ### Supported Grant Types
 
@@ -82,7 +82,7 @@ For system-to-system access without user interaction:
 
 - Uses `client_credentials` grant with `client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer`
 - Client authenticates with a signed JWT containing `system/*.read` scopes
-- No user context — suitable for bulk data, analytics, and integration engines
+- No user context -- suitable for bulk data, analytics, and integration engines
 
 ### Token Introspection
 
@@ -104,9 +104,9 @@ If Keycloak is unreachable when a user tries to authenticate, the proxy returns 
 
 | Variable | Description | Default |
 |---|---|---|
-| `KEYCLOAK_BASE_URL` | Internal Keycloak URL | — |
+| `KEYCLOAK_BASE_URL` | Internal Keycloak URL | -- |
 | `KEYCLOAK_PUBLIC_URL` | Browser-facing Keycloak URL (if different from internal) | derives from `KEYCLOAK_BASE_URL` |
-| `KEYCLOAK_REALM` | Keycloak realm name | — |
-| `KEYCLOAK_ADMIN_CLIENT_ID` | Service account client ID for admin API calls | — |
-| `KEYCLOAK_ADMIN_CLIENT_SECRET` | Service account client secret | — |
-| `KEYCLOAK_DOMAIN` | Domain override for public URL generation | — |
+| `KEYCLOAK_REALM` | Keycloak realm name | -- |
+| `KEYCLOAK_ADMIN_CLIENT_ID` | Service account client ID for admin API calls | -- |
+| `KEYCLOAK_ADMIN_CLIENT_SECRET` | Service account client secret | -- |
+| `KEYCLOAK_DOMAIN` | Domain override for public URL generation | -- |

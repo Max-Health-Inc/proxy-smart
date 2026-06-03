@@ -144,8 +144,8 @@ A successful update clears the Brand Bundle cache so the next request to `/brand
 
 The published bundle at `/branding.json` is a FHIR `Bundle` (type `collection`) containing:
 
-- **Organization** — the brand itself, with `organization-brand` and `organization-portal` extensions
-- **Endpoint** — one per registered FHIR server, with FHIR version and connection metadata
+- **Organization** -- the brand itself, with `organization-brand` and `organization-portal` extensions
+- **Endpoint** -- one per registered FHIR server, with FHIR version and connection metadata
 
 ### Example Bundle Structure
 
@@ -200,9 +200,9 @@ The `/.well-known/smart-configuration` response automatically includes:
 
 Brand settings resolve in the following order (first non-null wins):
 
-1. **Admin overrides** — values saved via the Admin UI or `PUT /admin/branding`
-2. **Environment variables** — `BRAND_*` env vars set at deployment
-3. **Built-in defaults** — package name, `BASE_URL`, `prov` category
+1. **Admin overrides** -- values saved via the Admin UI or `PUT /admin/branding`
+2. **Environment variables** -- `BRAND_*` env vars set at deployment
+3. **Built-in defaults** -- package name, `BASE_URL`, `prov` category
 
 This means you can deploy with env vars for a quick setup and later fine-tune through the Admin UI without restarting.
 

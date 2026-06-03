@@ -114,10 +114,10 @@ These are auto-migrated by `ensureProxySigningIdp()` for any client with `use.jw
 
 `ensureProxySigningIdp()` in `backend/src/init.ts` performs these steps on every boot (all idempotent):
 
-1. **Self-assign roles** — ensures `admin-service` has `manage-identity-providers` role
-2. **Create/update IdP** — ensures `proxy-smart-signing` exists with correct JWKS URL
-3. **Configure auth flow** — ensures `federated-jwt` execution exists in the client auth flow
-4. **Migrate clients** — ensures all JWKS clients use `federated-jwt` with correct attributes
+1. **Self-assign roles** -- ensures `admin-service` has `manage-identity-providers` role
+2. **Create/update IdP** -- ensures `proxy-smart-signing` exists with correct JWKS URL
+3. **Configure auth flow** -- ensures `federated-jwt` execution exists in the client auth flow
+4. **Migrate clients** -- ensures all JWKS clients use `federated-jwt` with correct attributes
 
 ## Troubleshooting
 
@@ -164,8 +164,8 @@ The client's JWT `aud` claim doesn't match `{config.baseUrl}/auth/token`. Per SM
 | File | Purpose |
 |------|---------|
 | `Dockerfile.keycloak` | Feature flags baked into KC image |
-| `backend/src/init.ts` | `ensureProxySigningIdp()` — IdP, flow, and client setup |
-| `backend/src/lib/proxy-signing.ts` | `signProxyAssertion()` — creates proxy-signed JWTs |
-| `backend/src/routes/auth/backend-services.ts` | `translateClientAssertion()` — validates client JWT, triggers re-signing |
-| `backend/src/routes/auth/oauth.ts` | Token endpoint — intercepts `client_assertion`, calls translation |
+| `backend/src/init.ts` | `ensureProxySigningIdp()` -- IdP, flow, and client setup |
+| `backend/src/lib/proxy-signing.ts` | `signProxyAssertion()` -- creates proxy-signed JWTs |
+| `backend/src/routes/auth/backend-services.ts` | `translateClientAssertion()` -- validates client JWT, triggers re-signing |
+| `backend/src/routes/auth/oauth.ts` | Token endpoint -- intercepts `client_assertion`, calls translation |
 | `keycloak/realm-export.json` | Client definitions with `federated-jwt` attributes |

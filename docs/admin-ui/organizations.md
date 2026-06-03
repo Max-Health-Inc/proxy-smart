@@ -44,9 +44,9 @@ Click an organization to open the edit dialog with two tabs:
 
 Within an organization, you can manage membership:
 
-- **View members** — list all users belonging to the organization
-- **Add member** — assign an existing Keycloak user to the organization
-- **Remove member** — revoke a user's organization membership
+- **View members** -- list all users belonging to the organization
+- **Add member** -- assign an existing Keycloak user to the organization
+- **Remove member** -- revoke a user's organization membership
 
 Members inherit the organization's branding and any organization-scoped access policies.
 

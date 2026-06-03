@@ -1,4 +1,4 @@
-# Patient Portal — Medical Imaging
+# Patient Portal -- Medical Imaging
 
 The Patient Portal includes a medical imaging module that displays FHIR ImagingStudy resources with DICOMweb thumbnails and a full Cornerstone3D DICOM viewer.
 
@@ -43,7 +43,7 @@ Displays FHIR `ImagingStudy` resources as expandable cards with DICOMweb thumbna
 Full-screen DICOM image viewer built on [Cornerstone3D](https://www.cornerstonejs.org/) v4.
 
 **Features:**
-- **Lazy-loaded** — Cornerstone3D (~2 MB) is only imported when the viewer is first opened, keeping the initial bundle small
+- **Lazy-loaded** -- Cornerstone3D (~2 MB) is only imported when the viewer is first opened, keeping the initial bundle small
 - **Stack viewport** with scroll navigation through all instances in a series
 - **Window/Level** adjustment via left-click drag
 - **Pan** via middle-click drag
@@ -52,8 +52,8 @@ Full-screen DICOM image viewer built on [Cornerstone3D](https://www.cornerstonej
 - Modal overlay built with Radix Dialog
 
 **Exported types:**
-- `ViewerTarget` — `{ studyUID: string, seriesUID: string, seriesDescription?: string, modality?: string }`
-- `DicomViewerDialog` — React component accepting `target`, `open`, and `onOpenChange` props
+- `ViewerTarget` -- `{ studyUID: string, seriesUID: string, seriesDescription?: string, modality?: string }`
+- `DicomViewerDialog` -- React component accepting `target`, `open`, and `onOpenChange` props
 
 ## Client Library (`dicomweb.ts`)
 

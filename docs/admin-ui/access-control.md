@@ -19,7 +19,7 @@ Physical access control integration for healthcare facilities. Proxy Smart provi
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `KISI_API_KEY` | Yes | — | API key from your Kisi dashboard |
+| `KISI_API_KEY` | Yes | -- | API key from your Kisi dashboard |
 | `KISI_BASE_URL` | No | `https://api.kisi.io` | Override for self-hosted Kisi |
 | `KISI_TIMEOUT_MS` | No | `10000` | HTTP request timeout |
 
@@ -27,9 +27,9 @@ Physical access control integration for healthcare facilities. Proxy Smart provi
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `UNIFI_ACCESS_HOST` | Yes | — | Controller IP or FQDN (no protocol) |
-| `UNIFI_ACCESS_USERNAME` | Yes | — | Controller admin username |
-| `UNIFI_ACCESS_PASSWORD` | Yes | — | Controller admin password |
+| `UNIFI_ACCESS_HOST` | Yes | -- | Controller IP or FQDN (no protocol) |
+| `UNIFI_ACCESS_USERNAME` | Yes | -- | Controller admin username |
+| `UNIFI_ACCESS_PASSWORD` | Yes | -- | Controller admin password |
 
 #### Provider Selection
 
@@ -45,8 +45,8 @@ The **Configure Provider** panel in the UI allows setting up access control with
 
 1. Select provider type (Kisi or UniFi Access)
 2. Enter credentials
-3. **Test Connection** — validates connectivity before saving
-4. **Save** — writes config to `.env` and reinitializes the provider
+3. **Test Connection** -- validates connectivity before saving
+4. **Save** -- writes config to `.env` and reinitializes the provider
 
 ## Admin UI
 
@@ -74,7 +74,7 @@ The Door Management page is a tabbed interface. Tabs are shown or hidden based o
 
 - Create and delete members (by email)
 - View group memberships per member
-- **Sync from Keycloak** button — imports users from the Keycloak realm
+- **Sync from Keycloak** button -- imports users from the Keycloak realm
 
 ### Events Tab *(capability-gated)*
 

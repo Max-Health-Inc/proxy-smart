@@ -17,20 +17,20 @@ features:
   - title: SMART App Launch 2.2.0
     details: Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, and refresh token rotation.
   - title: Stateless FHIR Proxy
-    details: No clinical data stored — requests pass through to your FHIR servers with full audit logging.
+    details: No clinical data stored -- requests pass through to your FHIR servers with full audit logging.
   - title: 6 SMART Apps
     details: Patient Portal, Consent Manager, DTR/Prior Auth, Patient Picker, DICOM Algorithm Template, and Admin UI.
   - title: MCP Server
     details: Streamable HTTP endpoint at /mcp exposing all admin tools and documentation search to AI clients.
   - title: Shared UI Library
-    details: "@proxy-smart/shared-ui — reusable components, SmartAppShell, hooks, and MaxHealth design system."
+    details: "@proxy-smart/shared-ui -- reusable components, SmartAppShell, hooks, and MaxHealth design system."
   - title: Medical Imaging
     details: DICOMweb proxy with QIDO-RS & WADO-RS, Cornerstone3D viewer, and SMART DICOM algorithm template.
   - title: Docker & AWS CDK
     details: Docker Compose for dev/staging. AWS CDK (ECS Fargate, RDS, WAF, ALB) for production.
 ---
 
-# Proxy Smart — Documentation
+# Proxy Smart -- Documentation
 
 Comprehensive documentation for the Proxy Smart platform: a stateless FHIR proxy with OAuth 2.0, SMART App Launch 2.2.0, and an intelligent admin interface.
 
@@ -80,66 +80,66 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 
 ### Key Features
 
-- **SMART App Launch 2.2.0** — Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation
-- **Stateless FHIR Proxy** — No clinical data stored; requests pass through to your FHIR servers
-- **Shared UI Library** — `@proxy-smart/shared-ui` with `SmartAppShell`, design system, hooks
-- **Admin Dashboard** — React UI for managing apps, users, servers, scopes, and identity providers
-- **MCP Server** — Streamable HTTP endpoint at `/mcp` exposing all admin tools
-- **Consent Management** — Patient consent app for authorization flows
-- **DTR App** — Da Vinci Documentation, Templates & Rules
-- **Medical Imaging** — DICOMweb proxy (QIDO-RS & WADO-RS) with Cornerstone3D viewer
-- **Access Control** — Physical access integrations (Kisi, UniFi Access)
-- **Docker & CDK** — Docker Compose for dev/staging, AWS CDK for production (ECS Fargate, RDS, WAF)
+- **SMART App Launch 2.2.0** -- Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation
+- **Stateless FHIR Proxy** -- No clinical data stored; requests pass through to your FHIR servers
+- **Shared UI Library** -- `@proxy-smart/shared-ui` with `SmartAppShell`, design system, hooks
+- **Admin Dashboard** -- React UI for managing apps, users, servers, scopes, and identity providers
+- **MCP Server** -- Streamable HTTP endpoint at `/mcp` exposing all admin tools
+- **Consent Management** -- Patient consent app for authorization flows
+- **DTR App** -- Da Vinci Documentation, Templates & Rules
+- **Medical Imaging** -- DICOMweb proxy (QIDO-RS & WADO-RS) with Cornerstone3D viewer
+- **Access Control** -- Physical access integrations (Kisi, UniFi Access)
+- **Docker & CDK** -- Docker Compose for dev/staging, AWS CDK for production (ECS Fargate, RDS, WAF)
 
 ## Documentation
 
 ### Apps (in this repo)
 
-- [Admin UI](./apps/admin-ui.md) — Platform administration
-- [Patient Picker](./apps/patient-picker.md) — Patient selection for standalone launch
-- [SMART DICOM Template](./apps/smart-dicom-template.md) — Imaging algorithm starter kit
+- [Admin UI](./apps/admin-ui.md) -- Platform administration
+- [Patient Picker](./apps/patient-picker.md) -- Patient selection for standalone launch
+- [SMART DICOM Template](./apps/smart-dicom-template.md) -- Imaging algorithm starter kit
 
 ### Apps (external repositories)
 
-- [Patient Portal](./apps/patient-portal.md) — Health records, imaging, IPS viewer
-- [Consent Manager](./apps/consent-app.md) — FHIR Consent resource management
-- [DTR / Prior Auth](./apps/dtr-app.md) — Da Vinci DTR workflow
+- [Patient Portal](./apps/patient-portal.md) -- Health records, imaging, IPS viewer
+- [Consent Manager](./apps/consent-app.md) -- FHIR Consent resource management
+- [DTR / Prior Auth](./apps/dtr-app.md) -- Da Vinci DTR workflow
 
 ### Shared UI
 
-- [Shared UI Library](./shared-ui.md) — `@proxy-smart/shared-ui`, SmartAppShell, design system, hooks
+- [Shared UI Library](./shared-ui.md) -- `@proxy-smart/shared-ui`, SmartAppShell, design system, hooks
 
 ### Admin UI
 
-- [Dashboard Overview](./admin-ui/dashboard.md) — System overview and health monitoring
-- [User Management](./admin-ui/user-management.md) — Healthcare users and FHIR associations
-- [SMART Apps](./admin-ui/smart-apps.md) — Application registration and management
-- [FHIR Servers](./admin-ui/fhir-servers.md) — Server configuration and monitoring
-- [Scope Management](./admin-ui/scope-management.md) — FHIR permissions and templates
-- [Access Control](./admin-ui/access-control.md) — Physical door management (Kisi, UniFi Access)
-- [Monitoring & Observability](./admin-ui/monitoring.md) — OAuth, FHIR health, consent, and audit monitoring
+- [Dashboard Overview](./admin-ui/dashboard.md) -- System overview and health monitoring
+- [User Management](./admin-ui/user-management.md) -- Healthcare users and FHIR associations
+- [SMART Apps](./admin-ui/smart-apps.md) -- Application registration and management
+- [FHIR Servers](./admin-ui/fhir-servers.md) -- Server configuration and monitoring
+- [Scope Management](./admin-ui/scope-management.md) -- FHIR permissions and templates
+- [Access Control](./admin-ui/access-control.md) -- Physical door management (Kisi, UniFi Access)
+- [Monitoring & Observability](./admin-ui/monitoring.md) -- OAuth, FHIR health, consent, and audit monitoring
 
 ### MCP
 
-- [MCP HTTP Server](./MCP_HTTP_SERVER.md) — Streamable HTTP endpoint architecture and usage
-- [Backend API Tools](./BACKEND_API_TOOLS.md) — Auto-generated tools from Elysia routes
-- [Backend MCP HTTP Client](./BACKEND_MCP_HTTP_CLIENT.md) — HTTP-based MCP client
-- [Backend MCP Streamable Client](./BACKEND_MCP_STREAMABLE_CLIENT.md) — Streamable HTTP MCP client
+- [MCP HTTP Server](./MCP_HTTP_SERVER.md) -- Streamable HTTP endpoint architecture and usage
+- [Backend API Tools](./BACKEND_API_TOOLS.md) -- Auto-generated tools from Elysia routes
+- [Backend MCP HTTP Client](./BACKEND_MCP_HTTP_CLIENT.md) -- HTTP-based MCP client
+- [Backend MCP Streamable Client](./BACKEND_MCP_STREAMABLE_CLIENT.md) -- Streamable HTTP MCP client
 
 ### Imaging & DICOMweb
 
-- [DICOMweb Proxy](./dicomweb-proxy.md) — QIDO-RS & WADO-RS proxy endpoints, authentication, and deployment
-- [Patient Portal Imaging](./patient-portal-imaging.md) — ImagingStudy cards, Cornerstone3D viewer, and DICOMweb client library
+- [DICOMweb Proxy](./dicomweb-proxy.md) -- QIDO-RS & WADO-RS proxy endpoints, authentication, and deployment
+- [Patient Portal Imaging](./patient-portal-imaging.md) -- ImagingStudy cards, Cornerstone3D viewer, and DICOMweb client library
 
 ### SMART on FHIR
 
-- [SMART 2.2.0 Implementation Checklist](./SMART_2.2.0_CHECKLIST.md) — Spec compliance status
+- [SMART 2.2.0 Implementation Checklist](./SMART_2.2.0_CHECKLIST.md) -- Spec compliance status
 
 ### Guides
 
-- [Deployment](./deployment.md) — Docker Compose, production, AWS CDK
-- [Environment Variables](./environment-variables.md) — Configuration reference
-- [Version Management](./tutorials/version-management.md) — Branching, versioning, and releases
+- [Deployment](./deployment.md) -- Docker Compose, production, AWS CDK
+- [Environment Variables](./environment-variables.md) -- Configuration reference
+- [Version Management](./tutorials/version-management.md) -- Branching, versioning, and releases
 
 ## Additional Resources
 

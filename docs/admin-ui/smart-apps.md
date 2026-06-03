@@ -16,13 +16,13 @@ Register and manage SMART on FHIR OAuth clients. Each SMART app corresponds to a
 
 When creating a SMART app, you provide:
 
-- **Client ID** — unique identifier used in OAuth flows
-- **App Name** — human-readable display name
-- **Redirect URIs** — allowed OAuth callback URLs
-- **Launch URI** — the URL opened when the app is launched from an EHR context
-- **Client Type** — `public` (SPA, native) or `confidential` (backend service)
-- **Grant Types** — `authorization_code`, `client_credentials`, etc.
-- **Scopes** — which SMART scopes the app is allowed to request
+- **Client ID** -- unique identifier used in OAuth flows
+- **App Name** -- human-readable display name
+- **Redirect URIs** -- allowed OAuth callback URLs
+- **Launch URI** -- the URL opened when the app is launched from an EHR context
+- **Client Type** -- `public` (SPA, native) or `confidential` (backend service)
+- **Grant Types** -- `authorization_code`, `client_credentials`, etc.
+- **Scopes** -- which SMART scopes the app is allowed to request
 
 ## Launch Types
 
@@ -36,11 +36,11 @@ When creating a SMART app, you provide:
 
 The backend stores the full Keycloak client configuration and adds SMART-specific metadata:
 
-- **PKCE enforcement** — required for public clients per SMART STU2
-- **Token lifetimes** — access token and refresh token expiry
-- **Allowed scopes** — restrict which scopes the app can request
-- **Web origins** — CORS origins for browser-based apps
-- **Logo URI** — displayed in consent screens and app store
+- **PKCE enforcement** -- required for public clients per SMART STU2
+- **Token lifetimes** -- access token and refresh token expiry
+- **Allowed scopes** -- restrict which scopes the app can request
+- **Web origins** -- CORS origins for browser-based apps
+- **Logo URI** -- displayed in consent screens and app store
 
 ## App Store Integration
 
@@ -56,9 +56,9 @@ Published apps appear in the `/admin/app-store/` catalog:
 
 ## Related
 
-- [Scope Management](./scope-management.md) — configure which scopes exist
-- [Launch Contexts](./launch-contexts.md) — set per-user launch context attributes
-- [FHIR Servers](./fhir-servers.md) — the upstream servers apps will access
+- [Scope Management](./scope-management.md) -- configure which scopes exist
+- [Launch Contexts](./launch-contexts.md) -- set per-user launch context attributes
+- [FHIR Servers](./fhir-servers.md) -- the upstream servers apps will access
 - **🔔 Notification Services**: Push notification support
 
 ## 📱 Mobile Application Support
@@ -119,9 +119,9 @@ API endpoints: `GET /admin/app-store/`, `POST /admin/app-store/publish`, `POST /
 ### Dynamic Client Registration
 Manages RFC 7591 Dynamic Client Registration settings:
 
-- **View settings** — current DCR policy configuration
-- **Update settings** — modify registration requirements and defaults
-- **Reset to defaults** — restore factory DCR settings
+- **View settings** -- current DCR policy configuration
+- **Update settings** -- modify registration requirements and defaults
+- **Reset to defaults** -- restore factory DCR settings
 
 API endpoints: `GET /admin/client-registration/settings`, `PUT /admin/client-registration/settings`, `POST /admin/client-registration/reset-defaults`.
 
