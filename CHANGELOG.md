@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.10-alpha.202606031951.ea3c49f35] - 2026-06-03
+
+- ✨ Features: Expose app_store_url in .well-known/smart-configuration (smart-config)
+- 🔧 Chores & Improvements: Sync package versions
+- 🔧 Chores & Improvements: Docker: include packages/elysia-mcp in build
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/791
+
+
 ## [0.2.8-alpha.202606030828.6d5ddb841] - 2026-06-03
 
 - 🔧 Chores & Improvements: sync package versions; update version metadata to alpha; CI/CD housekeeping
