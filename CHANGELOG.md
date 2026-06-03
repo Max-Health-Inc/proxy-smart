@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.8-alpha.202606030828.6d5ddb841] - 2026-06-03
+
+- 🔧 Chores & Improvements: sync package versions; update version metadata to alpha; CI/CD housekeeping
+- 🐛 Bug Fixes: remove static launch context admin routes and related dead code
+- 📚 Documentation: update CHANGELOG.md for PR #780
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/781
+
+
 ## [0.2.8-alpha.202606030821.c22ab62fc] - 2026-06-03
 
 - 🔧 Chores & Improvements: Replace console.debug with logger.debug in smartStore.ts and add logger import for improved logging
