@@ -192,18 +192,16 @@ export function createApp() {
         .get('/webapp/', () => Bun.file('public/webapp/index.html'))
         .get('/', () => Bun.file('public/index.html'))
         // Browsers request /favicon.ico by default — redirect to our SVG icon
-        .get('/favicon.ico', ({ set }) => {
-            set.redirect = '/proxy-smart.svg'
-        })
+        .get('/favicon.ico', () => Response.redirect('/proxy-smart.svg', 301))
         // SMART apps directory
         .get('/apps.json', () => ({ apps: discoverApps() }))
         // App Store UI — served from package in non-production; in production, hosted on maxhealth.tech/apps
-        .get('/apps', ({ set }) => {
-            if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
+        .get('/apps', () => {
+            if (process.env.NODE_ENV === 'production') return Response.redirect('https://maxhealth.tech/apps', 302)
             return serveAppStoreUi()
         })
-        .get('/apps/', ({ set }) => {
-            if (process.env.NODE_ENV === 'production') { set.redirect = 'https://maxhealth.tech/apps'; return }
+        .get('/apps/', () => {
+            if (process.env.NODE_ENV === 'production') return Response.redirect('https://maxhealth.tech/apps', 302)
             return serveAppStoreUi()
         })
         // Patient Picker SPA fallback
