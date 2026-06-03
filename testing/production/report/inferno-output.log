@@ -24,7 +24,7 @@ Pre-flight warm-up (deployed mode)...
 
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: c0piS37STsn
+✓ Created test session: lvZd4KVNNf3
 
 === Running Standalone Launch Tests ===
 
@@ -37,8 +37,8 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: 71e21b2e-eae3-4d66-961b-2f28d8f1c5eb
-Waiting for test run 71e21b2e-eae3-4d66-961b-2f28d8f1c5eb to complete (timeout: 3 minutes)...
+✓ Started test run: 2b1fff7c-dc44-4003-9c91-80e76dcd7f54
+Waiting for test run 2b1fff7c-dc44-4003-9c91-80e76dcd7f54 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
   [Poll #2] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
@@ -48,16 +48,16 @@ Waiting for test run 71e21b2e-eae3-4d66-961b-2f28d8f1c5eb to complete (timeout: 
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTs
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256.",
-  Found OAuth URL in result_message: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjw
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256.",
+  Found OAuth URL in result_message: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+  Navigating to: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
   Navigation response status: 403
   Server returned 403 error
   OAuth flow error: OAuth endpoint returned HTTP 403
   Page title: 403 Forbidden
-  Page URL: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+  Page URL: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
   Page content (first 1000 chars): <html><head><title>403 Forbidden</title></head>
 <body>
 <center><h1>403 Forbidden</h1></center>
@@ -83,16 +83,16 @@ Handling OAuth flow...
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTs
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256.",
-  Found OAuth URL in result_message: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjw
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256.",
+  Found OAuth URL in result_message: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+  Navigating to: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
   Navigation response status: 403
   Server returned 403 error
   OAuth flow error: OAuth endpoint returned HTTP 403
   Page title: 403 Forbidden
-  Page URL: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+  Page URL: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
   Page content (first 1000 chars): <html><head><title>403 Forbidden</title></head>
 <body>
 <center><h1>403 Forbidden</h1></center>
@@ -118,16 +118,16 @@ Handling OAuth flow...
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTs
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256.",
-  Found OAuth URL in result_message: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjw
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256.",
+  Found OAuth URL in result_message: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+  Navigating to: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
   Navigation response status: 403
   Server returned 403 error
   OAuth flow error: OAuth endpoint returned HTTP 403
   Page title: 403 Forbidden
-  Page URL: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=04750dd6-c3fc-49b6-a30a-96dbd04c02c5&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=KqPXTOGi7wRirv-0I5g8zHTGhQ9n-MvxPhacHTstQtM&code_challenge_method=S256
+  Page URL: https://api.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=e6cfdde6-59dc-443f-bc1d-8a322d9d2c31&aud=https%3A%2F%2Fapi.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=D9_ksQFG92J7bHzIw4BugDz6Uy-ecq9GQb0UYjwAJp4&code_challenge_method=S256
   Page content (first 1000 chars): <html><head><title>403 Forbidden</title></head>
 <body>
 <center><h1>403 Forbidden</h1></center>
@@ -146,3 +146,7 @@ Handling OAuth flow...
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Found 3 waiting result(s) but no OAuth URL found
   Progress: 5 passed, 0 failed, 3 waiting, 9 total
+  [Poll #6] Status: waiting
+  OAuth failed after 3 attempts — aborting wait
+Standalone Launch tests error: OAuth automation failed after 3 attempts
+Test execution failed: OAuth automation failed after 3 attempts
