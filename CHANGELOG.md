@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.11-alpha.202606032247.2e8256972] - 2026-06-03
+
+- ⚠️ Breaking Changes: None detected
+- ✨ Features (new functionality): None detected
+- 🐛 Bug Fixes: None detected
+- 📚 Documentation: CHANGELOG updated for PR #791
+- 🔧 Chores & Improvements: Internal version updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/795
+
+
 ## [0.2.10-alpha.202606031951.ea3c49f35] - 2026-06-03
 
 - ✨ Features: Expose app_store_url in .well-known/smart-configuration (smart-config)
