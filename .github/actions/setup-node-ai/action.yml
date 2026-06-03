@@ -1,11 +1,15 @@
 name: 'Setup Node.js with AI Dependencies'
-description: 'Checkout code, setup Node.js with caching, and install OpenAI + Octokit'
+description: 'Delegates to org-wide composite action in Max-Health-Inc/.github'
 
 inputs:
   node-version:
     description: 'Node.js version to setup'
     required: false
     default: '22'
+  bun-version:
+    description: 'Bun version to install'
+    required: false
+    default: 'latest'
   fetch-depth:
     description: 'Checkout fetch depth'
     required: false
@@ -18,25 +22,9 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      if: inputs.checkout == 'true'
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - uses: Max-Health-Inc/.github/.github/actions/setup-node-ai@main
       with:
         node-version: ${{ inputs.node-version }}
-
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v2
-      with:
-        bun-version: '1.3.13'  # Update quarterly or when needed
-
-    - name: Install AI dependencies
-      shell: bash
-      run: |
-        # Install AI dependencies using Bun for consistency
-        bun add openai@latest @octokit/rest@latest
-        echo "✅ Installed AI dependencies (OpenAI + Octokit) using Bun"
+        bun-version: ${{ inputs.bun-version }}
+        fetch-depth: ${{ inputs.fetch-depth }}
+        checkout: ${{ inputs.checkout }}

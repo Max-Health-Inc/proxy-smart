@@ -1,18 +1,30 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
+import translationsRaw from "../i18n/translations/translations.json";
 
-const translations = import.meta.glob("../i18n/translations/*.json", { eager: true });
+/**
+ * DRY i18n: Single translations.json file.
+ * Format: { "_languages": ["de", ...], "English key": ["DE translation", ...] }
+ * English is never stored — i18next returns the key itself as fallback.
+ */
+const { _languages, ...entries } = translationsRaw as Record<string, string[] | null[]>;
+const languages = _languages as unknown as string[];
 
-const resources: Record<string, { translation: Record<string, unknown> }> = {};
-export const supportedLanguages: string[] = [];
+export const supportedLanguages: string[] = ['en', ...languages];
 
-for (const path in translations) {
-  const lang = path.split("/").pop()?.replace(".json", "");
-  if (lang) {
-    const translationModule = translations[path] as Record<string, unknown>;
-    const translationContent = (translationModule.default || translationModule) as Record<string, unknown>;
-    supportedLanguages.push(lang);
-    resources[lang] = { translation: translationContent };
+const resources: Record<string, { translation: Record<string, string> }> = {};
+for (const lang of languages) {
+  resources[lang] = { translation: {} };
+}
+
+const langIndex = Object.fromEntries(languages.map((l, i) => [l, i]));
+for (const [key, values] of Object.entries(entries)) {
+  if (!Array.isArray(values)) continue;
+  for (const lang of languages) {
+    const val = values[langIndex[lang]];
+    if (val) {
+      resources[lang].translation[key] = val;
+    }
   }
 }
 

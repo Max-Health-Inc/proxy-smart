@@ -64,17 +64,6 @@ export interface SmartAppFormData extends CreateSmartAppRequest {
   authenticationType?: 'asymmetric' | 'symmetric' | 'none'; // UI-only field for form UX
 }
 
-export interface ContextSet {
-  id: string;
-  name: string;
-  description?: string;
-  contexts: string[];
-  category?: string;
-  createdAt: string;
-  updatedAt: string;
-  isTemplate: boolean;
-}
-
 // Import and re-export the API client's enum types
 import type { SmartAppAppTypeEnum } from '../api-client/models';
 import { SmartAppAppTypeEnum as SmartAppTypeEnum } from '../api-client/models';

@@ -1,0 +1,4505 @@
+{
+  "_languages": [
+    "de"
+  ],
+  "* (All resources)": [
+    "* (Alle Ressourcen)"
+  ],
+  "0 = no expiration": [
+    "0 = kein Ablauf"
+  ],
+  "1. Select Person Resource": [
+    "1. Person Ressource auswählen"
+  ],
+  "2xx/3xx responses": [
+    "2xx/3xx Antworten"
+  ],
+  "429s": [
+    "429er"
+  ],
+  "A shared secret used for symmetric client authentication. Keep this secure and never expose it in client-side code.": [
+    "Ein gemeinsames Geheimnis für symmetrische Client-Authentifizierung. Bewahren Sie dies sicher auf und exponieren Sie es niemals in clientseitigem Code."
+  ],
+  "AI Agent (Non-interactive, Autonomous)": [
+    "KI-Agent (Nicht-interaktiv, Autonom)"
+  ],
+  "AI Agents": [
+    "KI-Agenten"
+  ],
+  "AI Tools": [
+    "KI-Werkzeuge"
+  ],
+  "API Endpoints": [
+    "API-Endpunkte"
+  ],
+  "API Key": [
+    "API-Schlüssel"
+  ],
+  "API Response Time": [
+    "API-Antwortzeit"
+  ],
+  "Access": [
+    "Zugriff"
+  ],
+  "Access Control": [
+    "Zugriffskontrolle"
+  ],
+  "Access Token Lifespan": [
+    "Access-Token-Lebensdauer"
+  ],
+  "Access control settings saved successfully": [
+    "Zugriffskontroll-Einstellungen erfolgreich gespeichert"
+  ],
+  "Accessible": [
+    "Zugänglich"
+  ],
+  "Account enabled": [
+    "Konto aktiviert"
+  ],
+  "Action": [
+    "Aktion"
+  ],
+  "Action:": [
+    "Aktion:"
+  ],
+  "Actions": [
+    "Aktionen"
+  ],
+  "Actions by Resource": [
+    "Aktionen nach Ressource"
+  ],
+  "Actions by Type": [
+    "Aktionen nach Typ"
+  ],
+  "Active": [
+    "Aktiv"
+  ],
+  "Active Admins": [
+    "Aktive Admins"
+  ],
+  "Active Scopes": [
+    "Aktive Bereiche"
+  ],
+  "Active Tokens": [
+    "Aktive Tokens"
+  ],
+  "Activity Trend (24h)": [
+    "Aktivitätstrend (24h)"
+  ],
+  "Actor": [
+    "Akteur"
+  ],
+  "Add": [
+    "Hinzufügen"
+  ],
+  "Add DICOM Server": [
+    "DICOM-Server hinzufügen"
+  ],
+  "Add Execution": [
+    "Ausführung hinzufügen"
+  ],
+  "Add FHIR Person": [
+    "FHIR-Person hinzufügen"
+  ],
+  "Add FHIR Person Resource": [
+    "FHIR-Person Ressource hinzufügen"
+  ],
+  "Add FHIR Server Association": [
+    "FHIR-Server-Verknüpfung hinzufügen"
+  ],
+  "Add First Link": [
+    "Ersten Link hinzufügen"
+  ],
+  "Add Identity Provider": [
+    "Identitätsanbieter hinzufügen"
+  ],
+  "Add LDAP Provider": [
+    "LDAP-Anbieter hinzufügen"
+  ],
+  "Add Link": [
+    "Link hinzufügen"
+  ],
+  "Add Member": [
+    "Mitglied hinzufügen"
+  ],
+  "Add New FHIR Server": [
+    "Neuen FHIR-Server hinzufügen"
+  ],
+  "Add New Healthcare User": [
+    "Neuen Gesundheitswesen-Benutzer hinzufügen"
+  ],
+  "Add New Identity Provider": [
+    "Neuen Identitätsanbieter hinzufügen"
+  ],
+  "Add New Organization": [
+    "Neue Organisation hinzufügen"
+  ],
+  "Add New Resource Link": [
+    "Neue Ressourcenverknüpfung hinzufügen"
+  ],
+  "Add New User": [
+    "Neuen Benutzer hinzufügen"
+  ],
+  "Add Organization": [
+    "Organisation hinzufügen"
+  ],
+  "Add Pattern": [
+    "Muster hinzufügen"
+  ],
+  "Add Scope": [
+    "Scope hinzufügen"
+  ],
+  "Add Server": [
+    "Server hinzufügen"
+  ],
+  "Add This Person": [
+    "Diese Person hinzufügen"
+  ],
+  "Add a DICOMweb/PACS server to enable DICOM imaging features.": [
+    "DICOMweb/PACS-Server hinzufügen, um DICOM-Bildgebungsfunktionen zu aktivieren."
+  ],
+  "Add a FHIR server to manage connections and view metadata.": [
+    "FHIR-Server hinzufügen, um Verbindungen zu verwalten und Metadaten anzuzeigen."
+  ],
+  "Add a new healthcare application to your system": [
+    "Neue Gesundheitsanwendung zu Ihrem System hinzufügen"
+  ],
+  "Add alternative name...": [
+    "Alternativnamen hinzufügen..."
+  ],
+  "Add an LDAP provider to start syncing users from an external directory": [
+    "LDAP-Anbieter hinzufügen, um Benutzer aus einem externen Verzeichnis zu synchronisieren"
+  ],
+  "Add client ID...": [
+    "Client-ID hinzufügen..."
+  ],
+  "Add sensitive resource type…": [
+    "Sensiblen Ressourcentyp hinzufügen…"
+  ],
+  "Added": [
+    "Hinzugefügt"
+  ],
+  "Added this week": [
+    "Diese Woche hinzugefügt"
+  ],
+  "Adding Server...": [
+    "Server wird hinzugefügt..."
+  ],
+  "Adding...": [
+    "Wird hinzugefügt..."
+  ],
+  "Additional Configuration": [
+    "Zusätzliche Konfiguration"
+  ],
+  "Additional Optional Scopes": [
+    "Zusätzliche optionale Bereiche"
+  ],
+  "Additional Scopes": [
+    "Zusätzliche Bereiche"
+  ],
+  "Additional notes about this link...": [
+    "Zusätzliche Anmerkungen zu diesem Link..."
+  ],
+  "Address": [
+    "Adresse"
+  ],
+  "Admin Activity (24h)": [
+    "Admin-Aktivität (24h)"
+  ],
+  "Admin Approval Required": [
+    "Administratorgenehmigung erforderlich"
+  ],
+  "Admin Audit Dashboard": [
+    "Admin-Audit-Dashboard"
+  ],
+  "Admin Client": [
+    "Admin-Client"
+  ],
+  "Admin Client Config": [
+    "Admin-Client-Konfiguration"
+  ],
+  "Admin Client ID": [
+    "Admin-Client-ID"
+  ],
+  "Admin Client Secret": [
+    "Admin-Client-Geheimnis"
+  ],
+  "Admin UI Roles": [
+    "Admin-Benutzeroberflächen-Rollen"
+  ],
+  "Admin actions over time": [
+    "Admin-Aktionen im Zeitverlauf"
+  ],
+  "Admin actions that returned error status codes": [
+    "Admin-Aktionen mit Fehler-Statuscodes"
+  ],
+  "Admin audit events are pushed in real time as they occur.": [
+    "Admin-Audit-Ereignisse werden in Echtzeit übermittelt."
+  ],
+  "Administrative": [
+    "Administrativ"
+  ],
+  "Administrator": [
+    "Administrator"
+  ],
+  "Agent": [
+    "Agent"
+  ],
+  "Agent Flow Characteristics": [
+    "Agent-Flow-Merkmale"
+  ],
+  "Alias": [
+    "Alias"
+  ],
+  "Alias (immutable)": [
+    "Alias (unveränderlich)"
+  ],
+  "Alias (unique identifier)": [
+    "Alias (eindeutiger Bezeichner)"
+  ],
+  "Alias cannot be changed after creation": [
+    "Alias kann nach der Erstellung nicht geändert werden"
+  ],
+  "Alias is required to update an Identity Provider.": [
+    "Alias ist erforderlich, um einen Identity Provider zu aktualisieren."
+  ],
+  "Alias or display name is required to create an Identity Provider.": [
+    "Alias oder Anzeigename ist erforderlich, um einen Identity Provider zu erstellen."
+  ],
+  "Aliases": [
+    "Aliase"
+  ],
+  "All": [
+    "Alle"
+  ],
+  "All Available Servers": [
+    "Alle verfügbaren Server"
+  ],
+  "All Resources": [
+    "Alle Ressourcen"
+  ],
+  "All Roles": [
+    "Alle Rollen"
+  ],
+  "All Server Access": [
+    "Zugriff auf alle Server"
+  ],
+  "All Servers": [
+    "Alle Server"
+  ],
+  "All Servers Used": [
+    "Alle Server verwendet"
+  ],
+  "All Statuses": [
+    "Alle Status"
+  ],
+  "All Types": [
+    "Alle Typen"
+  ],
+  "All admin actions completed successfully": [
+    "Alle Admin-Aktionen erfolgreich abgeschlossen"
+  ],
+  "All clients are accessing resources within their consent scope": [
+    "Alle Clients greifen auf Ressourcen innerhalb ihres Einwilligungsbereichs zu"
+  ],
+  "All doors are already assigned to this group": [
+    "Alle Türen sind dieser Gruppe bereits zugewiesen"
+  ],
+  "All mappers healthy": [
+    "Alle Mapper funktionsfähig"
+  ],
+  "All patient data access has been within consent scope": [
+    "Alle Patientendaten-Zugriffe lagen im Einwilligungsbereich"
+  ],
+  "All users are already members": [
+    "Alle Benutzer sind bereits Mitglieder"
+  ],
+  "Allow Offline Access": [
+    "Offline-Zugriff erlauben"
+  ],
+  "Allow RFC 8693 standard token exchange for this client": [
+    "RFC 8693 Standard-Token-Austausch für diesen Client erlauben"
+  ],
+  "Allow access when Person resource cannot be resolved (default: deny)": [
+    "Zugriff erlauben, wenn Person-Ressource nicht aufgelöst werden kann (Standard: verweigern)"
+  ],
+  "Allow apps to register automatically via public endpoint": [
+    "Apps die automatische Registrierung über öffentlichen Endpunkt erlauben"
+  ],
+  "Allow on Person Lookup Failure": [
+    "Bei Person-Suchfehler erlauben"
+  ],
+  "Allowed Client Types": [
+    "Erlaubte Client-Typen"
+  ],
+  "Allowed FHIR User Types": [
+    "Erlaubte FHIR-Benutzertypen"
+  ],
+  "Allowed Redirect URI Patterns": [
+    "Erlaubte Redirect-URI-Muster"
+  ],
+  "Allowed Scopes": [
+    "Erlaubte Bereiche"
+  ],
+  "Allowed Server IDs": [
+    "Erlaubte Server-IDs"
+  ],
+  "Allowed access requests": [
+    "Erlaubte Zugriffsanfragen"
+  ],
+  "An error occurred": [
+    "Ein Fehler ist aufgetreten"
+  ],
+  "Analytics": [
+    "Analytik"
+  ],
+  "App Management": [
+    "App-Verwaltung"
+  ],
+  "App Store": [
+    "App Store"
+  ],
+  "App Store Visibility": [
+    "App-Store-Sichtbarkeit"
+  ],
+  "App Type": [
+    "App-Typ"
+  ],
+  "Application": [
+    "Anwendung"
+  ],
+  "Application \"{{name}}\" {{action}} successfully": [
+    "Anwendung \"{{name}}\" erfolgreich {{action}}"
+  ],
+  "Application Configuration": [
+    "Anwendungskonfiguration"
+  ],
+  "Application Name": [
+    "Anwendungsname"
+  ],
+  "Application Type": [
+    "Anwendungstyp"
+  ],
+  "Application updated successfully": [
+    "Anwendung erfolgreich aktualisiert"
+  ],
+  "Application:": [
+    "Anwendung:"
+  ],
+  "Apps must provide TOS URI": [
+    "Apps müssen eine AGB-URI angeben"
+  ],
+  "Apps must provide privacy policy URI": [
+    "Apps müssen eine Datenschutzrichtlinien-URI angeben"
+  ],
+  "Are you sure you want to delete \"{{name}}\"? Any SMART apps or launch contexts referencing this server will lose their FHIR connection. This action cannot be undone.": [
+    "Möchten Sie \"{{name}}\" wirklich löschen? Alle SMART-Apps oder Launch-Kontexte, die diesen Server referenzieren, verlieren ihre FHIR-Verbindung. Diese Aktion kann nicht rückgängig gemacht werden."
+  ],
+  "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.": [
+    "Möchten Sie \"{{name}}\" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+  ],
+  "Are you sure you want to delete \"{{name}}\"? This cannot be undone.": [
+    "Möchten Sie \"{{name}}\" wirklich löschen? Dies kann nicht rückgängig gemacht werden."
+  ],
+  "Are you sure you want to delete this scope? It will be removed from all SMART apps that use it.": [
+    "Möchten Sie diesen Scope wirklich löschen? Er wird aus allen SMART-Apps entfernt, die ihn verwenden."
+  ],
+  "Are you sure you want to remove \"{{name}}\"? This action cannot be undone.": [
+    "Möchten Sie \"{{name}}\" wirklich entfernen? Diese Aktion kann nicht rückgängig gemacht werden."
+  ],
+  "Are you sure you want to restart the server? This will temporarily interrupt all services. Please provide a reason for this action:": [
+    "Möchten Sie den Server wirklich neu starten? Alle Dienste werden vorübergehend unterbrochen. Bitte geben Sie einen Grund an:"
+  ],
+  "Are you sure you want to shutdown the server? This will stop all services. Please provide a reason for this action:": [
+    "Möchten Sie den Server wirklich herunterfahren? Alle Dienste werden gestoppt. Bitte geben Sie einen Grund an:"
+  ],
+  "Assign": [
+    "Zuweisen"
+  ],
+  "Assign Door": [
+    "Tür zuweisen"
+  ],
+  "Assign Door to Group": [
+    "Tür einer Gruppe zuweisen"
+  ],
+  "Assign roles to control user permissions": [
+    "Rollen zuweisen, um Benutzerberechtigungen zu steuern"
+  ],
+  "Assigned Doors": [
+    "Zugewiesene Türen"
+  ],
+  "Assigning...": [
+    "Wird zugewiesen..."
+  ],
+  "Assurance Level": [
+    "Vertrauensstufe"
+  ],
+  "Assurance Levels": [
+    "Vertrauensstufen"
+  ],
+  "Asymmetric (Required)": [
+    "Asymmetrisch (Erforderlich)"
+  ],
+  "Asymmetric Authentication": [
+    "Asymmetrische Authentifizierung"
+  ],
+  "Asymmetric Client Authentication": [
+    "Asymmetrische Client-Authentifizierung"
+  ],
+  "Audience Clients": [
+    "Audience-Clients"
+  ],
+  "Audit Event Log": [
+    "Audit-Ereignisprotokoll"
+  ],
+  "Audit Log": [
+    "Audit-Protokoll"
+  ],
+  "Audit Only": [
+    "Nur Audit"
+  ],
+  "Audit Only — log decisions but allow all": [
+    "Nur Audit — Entscheidungen protokollieren, aber alles erlauben"
+  ],
+  "Auth": [
+    "Auth"
+  ],
+  "Auth Flows": [
+    "Auth-Flows"
+  ],
+  "Auth State:": [
+    "Auth-Status:"
+  ],
+  "Authenticating": [
+    "Authentifizierung läuft"
+  ],
+  "Authentication": [
+    "Authentifizierung"
+  ],
+  "Authentication Debug": [
+    "Authentifizierungs-Debug"
+  ],
+  "Authentication Flows": [
+    "Authentifizierungs-Flows"
+  ],
+  "Authentication Not Configured": [
+    "Authentifizierung nicht konfiguriert"
+  ],
+  "Authentication Options": [
+    "Authentifizierungsoptionen"
+  ],
+  "Authentication Settings": [
+    "Authentifizierungseinstellungen"
+  ],
+  "Authentication Type": [
+    "Authentifizierungstyp"
+  ],
+  "Authentication flow triggered after every broker login.": [
+    "Authentifizierungs-Flow, der nach jedem Broker-Login ausgeführt wird."
+  ],
+  "Authentication flow triggered on first login via this IdP.": [
+    "Authentifizierungs-Flow, der beim ersten Login über diesen IdP ausgeführt wird."
+  ],
+  "Authentication:": [
+    "Authentifizierung:"
+  ],
+  "Authenticator": [
+    "Authentifikator"
+  ],
+  "Authorization": [
+    "Autorisierung"
+  ],
+  "Authorization Header Value": [
+    "Authorization-Header-Wert"
+  ],
+  "Auto-refresh every 30s": [
+    "Automatische Aktualisierung alle 30s"
+  ],
+  "Auto-verify email from this IdP and use it for account linking.": [
+    "E-Mail von diesem IdP automatisch verifizieren und für Kontoverknüpfung verwenden."
+  ],
+  "Autonomous agents operate like backend services (no user login) but with non-deterministic, self-initiated behavior:": [
+    "Autonome Agenten arbeiten wie Backend-Dienste (kein Benutzer-Login), jedoch mit nicht-deterministischem, selbstinitiiertem Verhalten:"
+  ],
+  "Available Templates": [
+    "Verfügbare Vorlagen"
+  ],
+  "Average consent check": [
+    "Durchschnittliche Einwilligungsprüfung"
+  ],
+  "Average latency": [
+    "Durchschnittliche Latenz"
+  ],
+  "Average response time": [
+    "Durchschnittliche Antwortzeit"
+  ],
+  "Avg Check Time": [
+    "Durchschn. Prüfzeit"
+  ],
+  "Avg Response": [
+    "Durchschn. Antwort"
+  ],
+  "Avg Response Time": [
+    "Durchschn. Antwortzeit"
+  ],
+  "Avg Scopes": [
+    "Durchschn. Scopes"
+  ],
+  "Back": [
+    "Zurück"
+  ],
+  "Backchannel Logout URL": [
+    "Backchannel-Logout-URL"
+  ],
+  "Backend Service": [
+    "Backend-Dienst"
+  ],
+  "Backend Service (Non-interactive, Deterministic)": [
+    "Backend-Dienst (Nicht-interaktiv, Deterministisch)"
+  ],
+  "Backend Service Clients": [
+    "Backend-Dienst-Clients"
+  ],
+  "Backend Services": [
+    "Backend-Dienste"
+  ],
+  "Background health checks every 30 seconds": [
+    "Hintergrund-Gesundheitsprüfungen alle 30 Sekunden"
+  ],
+  "Base URL": [
+    "Basis-URL"
+  ],
+  "Base URL is required": [
+    "Basis-URL ist erforderlich"
+  ],
+  "Base URL:": [
+    "Basis-URL:"
+  ],
+  "Based on the user\\": [
+    "Basierend auf dem Benutzer\\"
+  ],
+  "Basic Auth": [
+    "Basic Auth"
+  ],
+  "Basic Configuration": [
+    "Grundkonfiguration"
+  ],
+  "Basic Information": [
+    "Grundinformationen"
+  ],
+  "Basic Settings": [
+    "Grundeinstellungen"
+  ],
+  "Basic connection settings for your Keycloak server": [
+    "Grundlegende Verbindungseinstellungen für Ihren Keycloak-Server"
+  ],
+  "Batch Size": [
+    "Stapelgröße"
+  ],
+  "Bearer Token": [
+    "Bearer-Token"
+  ],
+  "Bind Credential": [
+    "Bind-Anmeldedaten"
+  ],
+  "Bind DN": [
+    "Bind-DN"
+  ],
+  "Blocked access requests": [
+    "Blockierte Zugriffsanfragen"
+  ],
+  "Bootstrap Admin Account": [
+    "Bootstrap-Admin-Konto"
+  ],
+  "Brand Identifier": [
+    "Markenkennung"
+  ],
+  "Brand Identity": [
+    "Markenidentität"
+  ],
+  "Brand Logo URL": [
+    "Markenlogo-URL"
+  ],
+  "Brand Management": [
+    "Markenverwaltung"
+  ],
+  "Brand Name": [
+    "Markenname"
+  ],
+  "Brand Overrides": [
+    "Markenüberschreibungen"
+  ],
+  "Brand settings saved successfully": [
+    "Markeneinstellungen erfolgreich gespeichert"
+  ],
+  "Branding": [
+    "Branding"
+  ],
+  "Branding saved successfully!": [
+    "Branding erfolgreich gespeichert!"
+  ],
+  "Brief description of the app": [
+    "Kurze Beschreibung der App"
+  ],
+  "Brief description of the application": [
+    "Kurze Beschreibung der Anwendung"
+  ],
+  "Browser redirected here on logout (visible to user)": [
+    "Browser wird bei Abmeldung hierher umgeleitet (für Benutzer sichtbar)"
+  ],
+  "Build SMART on FHIR scopes visually or with templates": [
+    "SMART on FHIR Scopes visuell oder mit Vorlagen erstellen"
+  ],
+  "Build a scope...": [
+    "Scope erstellen..."
+  ],
+  "Build and manage FHIR resource access scopes": [
+    "FHIR-Ressourcen-Zugriffs-Scopes erstellen und verwalten"
+  ],
+  "Build scopes using the controls on the left or load a template": [
+    "Scopes mit den Steuerelementen links erstellen oder Vorlage laden"
+  ],
+  "Built-in": [
+    "Integriert"
+  ],
+  "Built-in MCP Endpoint": [
+    "Integrierter MCP-Endpunkt"
+  ],
+  "By Resource Type": [
+    "Nach Ressourcentyp"
+  ],
+  "CA Certificate": [
+    "CA-Zertifikat"
+  ],
+  "Cache Hit Rate": [
+    "Cache-Trefferquote"
+  ],
+  "Cache Status": [
+    "Cache-Status"
+  ],
+  "Cache TTL (ms)": [
+    "Cache-TTL (ms)"
+  ],
+  "Cancel": [
+    "Abbrechen"
+  ],
+  "Cannot test connection for providers without an alias.": [
+    "Verbindungstest ohne Alias nicht möglich."
+  ],
+  "Category": [
+    "Kategorie"
+  ],
+  "Certificate Authority to verify FHIR server certificate": [
+    "Zertifizierungsstelle zur Verifizierung des FHIR-Server-Zertifikats"
+  ],
+  "Certificate Details": [
+    "Zertifikatsdetails"
+  ],
+  "Certificate Details (PEM Format)": [
+    "Zertifikatsdetails (PEM-Format)"
+  ],
+  "Certificate Status": [
+    "Zertifikatsstatus"
+  ],
+  "Certificate for proxy to authenticate with FHIR server": [
+    "Zertifikat zur Proxy-Authentifizierung beim FHIR-Server"
+  ],
+  "Certificates & Keys": [
+    "Zertifikate & Schlüssel"
+  ],
+  "Certificates for": [
+    "Zertifikate für"
+  ],
+  "Changed Sync": [
+    "Geänderte Synchronisierung"
+  ],
+  "Changed Users Sync Period (seconds)": [
+    "Synchronisierungsintervall geänderter Benutzer (Sekunden)"
+  ],
+  "Changing authentication type requires re-registering the application to ensure proper key/secret generation. To change the auth method, delete this app and create a new one with the desired configuration.": [
+    "Die Änderung des Authentifizierungstyps erfordert eine Neuregistrierung der Anwendung. Löschen Sie diese App und erstellen Sie eine neue mit der gewünschten Konfiguration."
+  ],
+  "Check FHIR Consent resources before proxying requests": [
+    "FHIR-Consent-Ressourcen vor der Weiterleitung prüfen"
+  ],
+  "Check Security": [
+    "Sicherheit prüfen"
+  ],
+  "Check Status": [
+    "Status prüfen"
+  ],
+  "Checking door management status...": [
+    "Türverwaltungsstatus wird geprüft..."
+  ],
+  "Checking...": [
+    "Wird geprüft..."
+  ],
+  "Choose a Person resource above to manage its links to other FHIR resources": [
+    "Wählen Sie oben eine Person-Ressource, um deren Verknüpfungen zu verwalten"
+  ],
+  "Choose a registered SMART app to use as the DICOM image viewer across the platform.": [
+    "Wählen Sie eine registrierte SMART-App als DICOM-Bildbetrachter für die Plattform."
+  ],
+  "Choose an icon": [
+    "Symbol auswählen"
+  ],
+  "Choose which FHIR server to add the Person resource to": [
+    "Wählen Sie den FHIR-Server für die Person-Ressource"
+  ],
+  "Choose which Person resource to manage links for": [
+    "Wählen Sie die Person-Ressource zum Verwalten der Verknüpfungen"
+  ],
+  "Choose which tools are available to MCP clients. {{exposed}} of {{total}} enabled.": [
+    "Wählen Sie die verfügbaren Tools für MCP-Clients. {{exposed}} von {{total}} aktiviert."
+  ],
+  "City": [
+    "Stadt"
+  ],
+  "Claim": [
+    "Claim"
+  ],
+  "Clear All Caches": [
+    "Alle Caches leeren"
+  ],
+  "Clear All Overrides": [
+    "Alle Überschreibungen löschen"
+  ],
+  "Clear Session Data": [
+    "Sitzungsdaten löschen"
+  ],
+  "Click \"Sync Now\" to begin the synchronization process.": [
+    "Klicken Sie auf \"Jetzt synchronisieren\", um den Synchronisierungsprozess zu starten."
+  ],
+  "Client": [
+    "Client"
+  ],
+  "Client Authentication": [
+    "Client-Authentifizierung"
+  ],
+  "Client Certificate": [
+    "Client-Zertifikat"
+  ],
+  "Client Distribution": [
+    "Client-Verteilung"
+  ],
+  "Client ID": [
+    "Client-ID"
+  ],
+  "Client ID with admin permissions for dynamic registration": [
+    "Client-ID mit Admin-Berechtigungen für dynamische Registrierung"
+  ],
+  "Client ID:": [
+    "Client-ID:"
+  ],
+  "Client IDs included as audience in tokens (for token exchange)": [
+    "Client-IDs als Audience in Tokens (für Token-Austausch)"
+  ],
+  "Client IDs that skip consent checks": [
+    "Client-IDs, die Einwilligungsprüfungen überspringen"
+  ],
+  "Client Lifetime": [
+    "Client-Lebensdauer"
+  ],
+  "Client Lifetime (days)": [
+    "Client-Lebensdauer (Tage)"
+  ],
+  "Client Secret": [
+    "Client-Secret"
+  ],
+  "Client Type": [
+    "Client-Typ"
+  ],
+  "Client expiration and notification settings": [
+    "Client-Ablauf- und Benachrichtigungseinstellungen"
+  ],
+  "Clients": [
+    "Clients"
+  ],
+  "Clients with the most denied requests": [
+    "Clients mit den meisten abgelehnten Anfragen"
+  ],
+  "Clinical": [
+    "Klinisch"
+  ],
+  "Clinical resource types subject to patient-scoped filtering when role-based filtering is active.": [
+    "Klinische Ressourcentypen, die bei rollenbasierter Filterung patientenbezogen gefiltert werden."
+  ],
+  "Close": [
+    "Schließen"
+  ],
+  "Confidence": [
+    "Konfidenz"
+  ],
+  "Confidential Clients": [
+    "Vertrauliche Clients"
+  ],
+  "Config source: {{source}}. MCP endpoint is enabled by default. Override with MCP_ENDPOINT_ENABLED env var.": [
+    "Konfigurationsquelle: {{source}}. MCP-Endpunkt ist standardmäßig aktiviert. Überschreiben mit MCP_ENDPOINT_ENABLED Umgebungsvariable."
+  ],
+  "Configuration Error": [
+    "Konfigurationsfehler"
+  ],
+  "Configure Door Management": [
+    "Türverwaltung konfigurieren"
+  ],
+  "Configure FHIR servers first": [
+    "Zuerst FHIR-Server konfigurieren"
+  ],
+  "Configure Keycloak": [
+    "Keycloak konfigurieren"
+  ],
+  "Configure LDAP user federation to sync users from external directories": [
+    "LDAP-Benutzerföderation konfigurieren, um Benutzer aus externen Verzeichnissen zu synchronisieren"
+  ],
+  "Configure Mutual TLS": [
+    "Mutual TLS konfigurieren"
+  ],
+  "Configure RFC 7591 automated app registration settings": [
+    "RFC 7591 automatische App-Registrierungseinstellungen konfigurieren"
+  ],
+  "Configure SMART on FHIR scopes for this application": [
+    "SMART on FHIR Scopes für diese Anwendung konfigurieren"
+  ],
+  "Configure a door management provider (KISI or UniFi Access) to view access events.": [
+    "Türverwaltungsanbieter (KISI oder UniFi Access) konfigurieren, um Zugriffsereignisse anzuzeigen."
+  ],
+  "Configure a new DICOMweb/PACS server connection.": [
+    "Neue DICOMweb/PACS-Serververbindung konfigurieren."
+  ],
+  "Configure a new SMART on FHIR application": [
+    "Neue SMART on FHIR Anwendung konfigurieren"
+  ],
+  "Configure a new identity provider for healthcare system authentication": [
+    "Neuen Identity Provider für die Authentifizierung im Gesundheitswesen konfigurieren"
+  ],
+  "Configure and manage Keycloak organizations for multi-tenancy": [
+    "Keycloak-Organisationen für Multi-Tenancy konfigurieren und verwalten"
+  ],
+  "Configure and manage identity providers for healthcare system authentication": [
+    "Identity Provider für die Authentifizierung im Gesundheitswesen konfigurieren und verwalten"
+  ],
+  "Configure mTLS": [
+    "mTLS konfigurieren"
+  ],
+  "Configure mutual TLS authentication for \"{{name}}\". This ensures secure, authenticated communication between the proxy and FHIR server.": [
+    "Mutual TLS-Authentifizierung für \"{{name}}\" konfigurieren. Dies gewährleistet sichere, authentifizierte Kommunikation zwischen Proxy und FHIR-Server."
+  ],
+  "Configure your identity provider to enable secure authentication": [
+    "Konfigurieren Sie Ihren Identity Provider für sichere Authentifizierung"
+  ],
+  "Configured": [
+    "Konfiguriert"
+  ],
+  "Confirm": [
+    "Bestätigen"
+  ],
+  "Confirmed": [
+    "Bestätigt"
+  ],
+  "Connect a physical access control provider to manage doors": [
+    "Physischen Zutrittskontrollanbieter verbinden, um Türen zu verwalten"
+  ],
+  "Connected": [
+    "Verbunden"
+  ],
+  "Connection": [
+    "Verbindung"
+  ],
+  "Connection Error": [
+    "Verbindungsfehler"
+  ],
+  "Connection Failed": [
+    "Verbindung fehlgeschlagen"
+  ],
+  "Connection Mode": [
+    "Verbindungsmodus"
+  ],
+  "Connection Pooling": [
+    "Verbindungs-Pooling"
+  ],
+  "Connection Settings": [
+    "Verbindungseinstellungen"
+  ],
+  "Connection Successful": [
+    "Verbindung erfolgreich"
+  ],
+  "Connection Test Results": [
+    "Verbindungstest-Ergebnisse"
+  ],
+  "Connection URL": [
+    "Verbindungs-URL"
+  ],
+  "Consent": [
+    "Einwilligung"
+  ],
+  "Consent Activity (24h)": [
+    "Einwilligungs-Aktivität (24h)"
+  ],
+  "Consent Analytics Dashboard": [
+    "Einwilligungs-Analytics-Dashboard"
+  ],
+  "Consent Enforcement": [
+    "Einwilligungsdurchsetzung"
+  ],
+  "Consent Monitoring": [
+    "Einwilligungsüberwachung"
+  ],
+  "Consent Required": [
+    "Einwilligung erforderlich"
+  ],
+  "Consent Scoping": [
+    "Einwilligungs-Scoping"
+  ],
+  "Consent decisions are pushed in real time as they occur.": [
+    "Einwilligungsentscheidungen werden in Echtzeit übermittelt."
+  ],
+  "Consent decisions over time": [
+    "Einwilligungsentscheidungen im Zeitverlauf"
+  ],
+  "Consider mutual TLS (mTLS) between proxy and FHIR server for extra assurance.": [
+    "Erwägen Sie Mutual TLS (mTLS) zwischen Proxy und FHIR-Server für zusätzliche Sicherheit."
+  ],
+  "Contacts": [
+    "Kontakte"
+  ],
+  "Context": [
+    "Kontext"
+  ],
+  "Continue": [
+    "Weiter"
+  ],
+  "Control which FHIR servers this application can access": [
+    "Steuern Sie, auf welche FHIR-Server diese Anwendung zugreifen kann"
+  ],
+  "Control which apps appear on the public": [
+    "Steuern Sie, welche Apps öffentlich erscheinen"
+  ],
+  "Controller Host": [
+    "Controller-Host"
+  ],
+  "Controls how Keycloak links accounts when a user logs in via this provider for the first time.": [
+    "Steuert, wie Keycloak Konten verknüpft, wenn sich ein Benutzer erstmals über diesen Anbieter anmeldet."
+  ],
+  "Controls the theme used on the Keycloak login page. Requires the theme to be installed on the server.": [
+    "Steuert das Thema auf der Keycloak-Anmeldeseite. Das Thema muss auf dem Server installiert sein."
+  ],
+  "Copy Scopes": [
+    "Scopes kopieren"
+  ],
+  "Copy scope": [
+    "Scope kopieren"
+  ],
+  "Core configuration for dynamic client registration": [
+    "Grundkonfiguration für dynamische Client-Registrierung"
+  ],
+  "Could not reach the door management service. Please check your configuration.": [
+    "Türverwaltungsdienst nicht erreichbar. Bitte überprüfen Sie Ihre Konfiguration."
+  ],
+  "Country": [
+    "Land"
+  ],
+  "Create": [
+    "Erstellen"
+  ],
+  "Create Group": [
+    "Gruppe erstellen"
+  ],
+  "Create New Person": [
+    "Neue Person erstellen"
+  ],
+  "Create New Person Resource": [
+    "Neue Person-Ressource erstellen"
+  ],
+  "Create Organization": [
+    "Organisation erstellen"
+  ],
+  "Create Person Resource": [
+    "Person-Ressource erstellen"
+  ],
+  "Create Provider": [
+    "Anbieter erstellen"
+  ],
+  "Create SMART Scope": [
+    "SMART-Scope erstellen"
+  ],
+  "Create Scope": [
+    "Scope erstellen"
+  ],
+  "Create Scope Set": [
+    "Scope-Set erstellen"
+  ],
+  "Create a new Keycloak organization": [
+    "Neue Keycloak-Organisation erstellen"
+  ],
+  "Create a new door group": [
+    "Neue Türgruppe erstellen"
+  ],
+  "Create a new user account for healthcare professionals": [
+    "Neues Benutzerkonto für medizinisches Fachpersonal erstellen"
+  ],
+  "Create, Update, Delete distribution": [
+    "Verteilung von Erstellen, Aktualisieren, Löschen"
+  ],
+  "Created": [
+    "Erstellt"
+  ],
+  "Created: {{count}}": [
+    "Erstellt: {{count}}"
+  ],
+  "Creating Person Resource...": [
+    "Person-Ressource wird erstellt..."
+  ],
+  "Creating...": [
+    "Wird erstellt..."
+  ],
+  "Current Configuration": [
+    "Aktuelle Konfiguration"
+  ],
+  "Current Scope Preview": [
+    "Aktuelle Scope-Vorschau"
+  ],
+  "Current Scope Set": [
+    "Aktuelles Scope-Set"
+  ],
+  "Current Scopes": [
+    "Aktuelle Scopes"
+  ],
+  "Current Status": [
+    "Aktueller Status"
+  ],
+  "Current success rate": [
+    "Aktuelle Erfolgsrate"
+  ],
+  "Currently valid": [
+    "Derzeit gültig"
+  ],
+  "Custom": [
+    "Benutzerdefiniert"
+  ],
+  "Custom & templates": [
+    "Benutzerdefiniert & Vorlagen"
+  ],
+  "Custom (editable)": [
+    "Benutzerdefiniert (bearbeitbar)"
+  ],
+  "Custom Header": [
+    "Benutzerdefinierter Header"
+  ],
+  "Custom Scope Sets": [
+    "Benutzerdefinierte Scope-Sets"
+  ],
+  "Custom Scopes": [
+    "Benutzerdefinierte Scopes"
+  ],
+  "DICOM Server Management": [
+    "DICOM-Server-Verwaltung"
+  ],
+  "DICOM Servers": [
+    "DICOM-Server"
+  ],
+  "DICOM Viewer App": [
+    "DICOM-Viewer-App"
+  ],
+  "DICOM server added": [
+    "DICOM-Server hinzugefügt"
+  ],
+  "DICOM server deleted": [
+    "DICOM-Server gelöscht"
+  ],
+  "DICOM server updated": [
+    "DICOM-Server aktualisiert"
+  ],
+  "DICOM viewer app updated": [
+    "DICOM-Viewer-App aktualisiert"
+  ],
+  "DICOMweb Endpoints": [
+    "DICOMweb-Endpunkte"
+  ],
+  "Dark": [
+    "Dunkel"
+  ],
+  "Dashboard": [
+    "Übersicht"
+  ],
+  "Decision": [
+    "Entscheidung"
+  ],
+  "Decision Trend (24h)": [
+    "Entscheidungstrend (24h)"
+  ],
+  "Decision:": [
+    "Entscheidung:"
+  ],
+  "Decisions": [
+    "Entscheidungen"
+  ],
+  "Decisions by Mode": [
+    "Entscheidungen nach Modus"
+  ],
+  "Decisions by Resource Type": [
+    "Entscheidungen nach Ressourcentyp"
+  ],
+  "Decreasing": [
+    "Abnehmend"
+  ],
+  "Default": [
+    "Standard"
+  ],
+  "Default (30s)": [
+    "Standard (30s)"
+  ],
+  "Default DICOM server updated": [
+    "Standard-DICOM-Server aktualisiert"
+  ],
+  "Default Scopes": [
+    "Standard-Scopes"
+  ],
+  "Default Scopes:": [
+    "Standard-Scopes:"
+  ],
+  "Define what data this application can access": [
+    "Definieren Sie, auf welche Daten diese Anwendung zugreifen kann"
+  ],
+  "Delete": [
+    "Löschen"
+  ],
+  "Delete Application": [
+    "Anwendung löschen"
+  ],
+  "Delete DICOM Server": [
+    "DICOM-Server löschen"
+  ],
+  "Delete Group": [
+    "Gruppe löschen"
+  ],
+  "Delete Scope": [
+    "Scope löschen"
+  ],
+  "Delete Server": [
+    "Server löschen"
+  ],
+  "Delete User": [
+    "Benutzer löschen"
+  ],
+  "Delete failed": [
+    "Löschen fehlgeschlagen"
+  ],
+  "Delete scope": [
+    "Scope löschen"
+  ],
+  "Deleting this application will permanently remove it from Keycloak. Any active sessions and tokens for this application will be invalidated.": [
+    "Diese Anwendung wird dauerhaft aus Keycloak entfernt. Alle aktiven Sitzungen und Tokens werden ungültig."
+  ],
+  "Deleting...": [
+    "Wird gelöscht..."
+  ],
+  "Denied Access": [
+    "Zugriff verweigert"
+  ],
+  "Deny": [
+    "Ablehnen"
+  ],
+  "Deny Rate": [
+    "Ablehnungsrate"
+  ],
+  "Deploy apps to": [
+    "Apps bereitstellen auf"
+  ],
+  "Description": [
+    "Beschreibung"
+  ],
+  "Details": [
+    "Details"
+  ],
+  "Disable": [
+    "Deaktivieren"
+  ],
+  "Disabled": [
+    "Deaktiviert"
+  ],
+  "Disabled — no consent checking": [
+    "Deaktiviert — keine Einwilligungsprüfung"
+  ],
+  "Disconnected": [
+    "Getrennt"
+  ],
+  "Dismiss": [
+    "Verwerfen"
+  ],
+  "Display Name": [
+    "Anzeigename"
+  ],
+  "Display name (optional)": [
+    "Anzeigename (optional)"
+  ],
+  "Distinct actors (24h)": [
+    "Unterschiedliche Akteure (24h)"
+  ],
+  "Domains": [
+    "Domänen"
+  ],
+  "Door Access": [
+    "Türzugang"
+  ],
+  "Door Management": [
+    "Türverwaltung"
+  ],
+  "Door Status": [
+    "Türstatus"
+  ],
+  "Door access monitoring is not available": [
+    "Türzugangsüberwachung ist nicht verfügbar"
+  ],
+  "Door groups": [
+    "Türgruppen"
+  ],
+  "Doors": [
+    "Türen"
+  ],
+  "Download current dashboard analytics": [
+    "Aktuelle Dashboard-Analysen herunterladen"
+  ],
+  "Download events log from server": [
+    "Ereignisprotokoll vom Server herunterladen"
+  ],
+  "Download events log from server (JSONL)": [
+    "Ereignisprotokoll vom Server herunterladen (JSONL)"
+  ],
+  "Download filtered events as CSV": [
+    "Gefilterte Ereignisse als CSV herunterladen"
+  ],
+  "Download full audit log as newline-delimited JSON": [
+    "Vollständiges Audit-Protokoll als JSONL herunterladen"
+  ],
+  "Duration": [
+    "Dauer"
+  ],
+  "Dynamic Client Registration": [
+    "Dynamische Client-Registrierung"
+  ],
+  "Dynamic Client Registration Setup": [
+    "Einrichtung der dynamischen Client-Registrierung"
+  ],
+  "Dynamic Registration": [
+    "Dynamische Registrierung"
+  ],
+  "Dynamic identity": [
+    "Dynamische Identität"
+  ],
+  "ECDSA-SHA256": [
+    "ECDSA-SHA256"
+  ],
+  "ECDSA-SHA384": [
+    "ECDSA-SHA384"
+  ],
+  "ECDSA-SHA512": [
+    "ECDSA-SHA512"
+  ],
+  "EHR Launch": [
+    "EHR-Start"
+  ],
+  "EHR Launch App (Interactive)": [
+    "EHR-Start-App (Interaktiv)"
+  ],
+  "EHR Launch Clients": [
+    "EHR-Start-Clients"
+  ],
+  "Early warning indicators for OAuth reliability": [
+    "Frühwarnindikatoren für OAuth-Zuverlässigkeit"
+  ],
+  "Edit": [
+    "Bearbeiten"
+  ],
+  "Edit Configuration": [
+    "Konfiguration bearbeiten"
+  ],
+  "Edit DICOM Server": [
+    "DICOM-Server bearbeiten"
+  ],
+  "Edit Details": [
+    "Details bearbeiten"
+  ],
+  "Edit Healthcare User": [
+    "Gesundheitsbenutzer bearbeiten"
+  ],
+  "Edit Identity Provider": [
+    "Identity Provider bearbeiten"
+  ],
+  "Edit LDAP Provider": [
+    "LDAP-Anbieter bearbeiten"
+  ],
+  "Edit Mode": [
+    "Bearbeitungsmodus"
+  ],
+  "Edit Organization": [
+    "Organisation bearbeiten"
+  ],
+  "Edit Profile": [
+    "Profil bearbeiten"
+  ],
+  "Edit SMART Application": [
+    "SMART-Anwendung bearbeiten"
+  ],
+  "Edit Scope Set": [
+    "Scope-Set bearbeiten"
+  ],
+  "Email": [
+    "E-Mail"
+  ],
+  "Email Address": [
+    "E-Mail-Adresse"
+  ],
+  "Email Domains": [
+    "E-Mail-Domänen"
+  ],
+  "Email:": [
+    "E-Mail:"
+  ],
+  "Empty fields inherit from the main branding tab.": [
+    "Leere Felder erben die Werte vom Haupt-Branding-Tab."
+  ],
+  "Enable": [
+    "Aktivieren"
+  ],
+  "Enable Consent Enforcement": [
+    "Einwilligungsdurchsetzung aktivieren"
+  ],
+  "Enable Dynamic Registration": [
+    "Dynamische Registrierung aktivieren"
+  ],
+  "Enable IAL Verification": [
+    "IAL-Verifizierung aktivieren"
+  ],
+  "Enable Mutual TLS": [
+    "Mutual TLS aktivieren"
+  ],
+  "Enable Provider Immediately": [
+    "Anbieter sofort aktivieren"
+  ],
+  "Enable StartTLS": [
+    "StartTLS aktivieren"
+  ],
+  "Enable refresh tokens for this application": [
+    "Refresh-Tokens für diese Anwendung aktivieren"
+  ],
+  "Enabled": [
+    "Aktiviert"
+  ],
+  "Enforce": [
+    "Durchsetzen"
+  ],
+  "Enforce HTTPS for redirect URIs (localhost exempted)": [
+    "HTTPS für Redirect-URIs erzwingen (localhost ausgenommen)"
+  ],
+  "Enforce vs Audit-only vs Disabled": [
+    "Durchsetzen vs. Nur-Audit vs. Deaktiviert"
+  ],
+  "Enforce — block requests without valid consent": [
+    "Durchsetzen — Anfragen ohne gültige Einwilligung blockieren"
+  ],
+  "Enforcement": [
+    "Durchsetzung"
+  ],
+  "Enforcement Mode": [
+    "Durchsetzungsmodus"
+  ],
+  "Ensure private keys are never shared or transmitted over insecure channels": [
+    "Stellen Sie sicher, dass private Schlüssel niemals geteilt oder über unsichere Kanäle übertragen werden"
+  ],
+  "Ensure token's patient claim matches Person.link[]": [
+    "Sicherstellen, dass der patient-Claim des Tokens mit Person.link[] übereinstimmt"
+  ],
+  "Enter client secret...": [
+    "Client-Secret eingeben..."
+  ],
+  "Enter password": [
+    "Passwort eingeben"
+  ],
+  "Enter shared secret": [
+    "Shared Secret eingeben"
+  ],
+  "Enter the Person resource ID to link to this user": [
+    "Person-Ressource-ID eingeben, um sie mit diesem Benutzer zu verknüpfen"
+  ],
+  "Enter the base URL of the FHIR server. The server name and details will be automatically retrieved from the server\\": [
+    "Geben Sie die Basis-URL des FHIR-Servers ein. Name und Details werden automatisch vom Server abgerufen\\"
+  ],
+  "Enter your Kisi API key": [
+    "Geben Sie Ihren Kisi-API-Schlüssel ein"
+  ],
+  "Enter your Kisi API key from the Kisi dashboard": [
+    "Geben Sie Ihren Kisi-API-Schlüssel aus dem Kisi-Dashboard ein"
+  ],
+  "Enter your UniFi Access controller details": [
+    "Geben Sie Ihre UniFi Access Controller-Details ein"
+  ],
+  "Entity ID / Client ID": [
+    "Entity-ID / Client-ID"
+  ],
+  "Entity identifier or client ID": [
+    "Entity-Kennung oder Client-ID"
+  ],
+  "Environment": [
+    "Umgebung"
+  ],
+  "Error": [
+    "Fehler"
+  ],
+  "Error Loading Servers": [
+    "Fehler beim Laden der Server"
+  ],
+  "Errors": [
+    "Fehler"
+  ],
+  "Event Log": [
+    "Ereignisprotokoll"
+  ],
+  "Event Type": [
+    "Ereignistyp"
+  ],
+  "Events": [
+    "Ereignisse"
+  ],
+  "Execution added successfully": [
+    "Ausführung erfolgreich hinzugefügt"
+  ],
+  "Execution deleted": [
+    "Ausführung gelöscht"
+  ],
+  "Execution updated": [
+    "Ausführung aktualisiert"
+  ],
+  "Exempt Clients": [
+    "Ausgenommene Clients"
+  ],
+  "Exempt Resource Types": [
+    "Ausgenommene Ressourcentypen"
+  ],
+  "Exempt clients &amp; resource types": [
+    "Ausgenommene Clients & Ressourcentypen"
+  ],
+  "Existing Links": [
+    "Vorhandene Verknüpfungen"
+  ],
+  "Export": [
+    "Exportieren"
+  ],
+  "Export CSV": [
+    "CSV exportieren"
+  ],
+  "Export Current Data": [
+    "Aktuelle Daten exportieren"
+  ],
+  "Export JSONL": [
+    "JSONL exportieren"
+  ],
+  "Export Server Events": [
+    "Server-Ereignisse exportieren"
+  ],
+  "Expose FHIR tools via MCP for AI agents": [
+    "FHIR-Tools über MCP für KI-Agenten bereitstellen"
+  ],
+  "Expose Resources as Tools": [
+    "Ressourcen als Tools bereitstellen"
+  ],
+  "Expose backend tools to AI clients (Claude, IDE plugins) via the MCP Streamable HTTP protocol.": [
+    "Backend-Tools über das MCP Streamable HTTP-Protokoll für KI-Clients (Claude, IDE-Plugins) bereitstellen."
+  ],
+  "Exposed Resources": [
+    "Bereitgestellte Ressourcen"
+  ],
+  "Exposed Tools": [
+    "Bereitgestellte Tools"
+  ],
+  "External Audiences": [
+    "Externe Audiences"
+  ],
+  "External resource servers that use this proxy as their authorization server (e.g. third-party MCP servers). Entries starting with \\": [
+    "Externe Ressourcen-Server, die diesen Proxy als Autorisierungsserver verwenden (z.B. MCP-Server von Drittanbietern). Einträge beginnend mit \\"
+  ],
+  "FHIR & DICOM Server Management": [
+    "FHIR- & DICOM-Server-Verwaltung"
+  ],
+  "FHIR Associations": [
+    "FHIR-Verknüpfungen"
+  ],
+  "FHIR Compliant": [
+    "FHIR-konform"
+  ],
+  "FHIR Consent-based access control policy": [
+    "FHIR-Consent-basierte Zugriffskontrollrichtlinie"
+  ],
+  "FHIR Metadata Validator": [
+    "FHIR-Metadaten-Validator"
+  ],
+  "FHIR Person Associations": [
+    "FHIR-Person-Verknüpfungen"
+  ],
+  "FHIR Proxy": [
+    "FHIR-Proxy"
+  ],
+  "FHIR Resource": [
+    "FHIR-Ressource"
+  ],
+  "FHIR Server": [
+    "FHIR-Server"
+  ],
+  "FHIR Server Access": [
+    "FHIR-Server-Zugriff"
+  ],
+  "FHIR Server Association": [
+    "FHIR-Server-Verknüpfung"
+  ],
+  "FHIR Server Management": [
+    "FHIR-Server-Verwaltung"
+  ],
+  "FHIR Server Uptime": [
+    "FHIR-Server-Verfügbarkeit"
+  ],
+  "FHIR Servers": [
+    "FHIR-Server"
+  ],
+  "FHIR Servers Health": [
+    "FHIR-Server-Zustand"
+  ],
+  "FHIR User Identity": [
+    "FHIR-Benutzeridentität"
+  ],
+  "FHIR Version": [
+    "FHIR-Version"
+  ],
+  "FHIR Version:": [
+    "FHIR-Version:"
+  ],
+  "FHIR server added": [
+    "FHIR-Server hinzugefügt"
+  ],
+  "FHIR server deleted": [
+    "FHIR-Server gelöscht"
+  ],
+  "FHIR server updated": [
+    "FHIR-Server aktualisiert"
+  ],
+  "Fail": [
+    "Fehlgeschlagen"
+  ],
+  "Failed": [
+    "Fehlgeschlagen"
+  ],
+  "Failed to Load Consent Monitoring": [
+    "Einwilligungsüberwachung konnte nicht geladen werden"
+  ],
+  "Failed to Load OAuth Monitoring Data": [
+    "OAuth-Überwachungsdaten konnten nicht geladen werden"
+  ],
+  "Failed to add FHIR server. Please check if the server is accessible and supports FHIR.": [
+    "FHIR-Server konnte nicht hinzugefügt werden. Bitte prüfen Sie, ob der Server erreichbar ist und FHIR unterstützt."
+  ],
+  "Failed to add Identity Provider. Please try again.": [
+    "Identity Provider konnte nicht hinzugefügt werden. Bitte versuchen Sie es erneut."
+  ],
+  "Failed to add execution": [
+    "Ausführung konnte nicht hinzugefügt werden"
+  ],
+  "Failed to add member.": [
+    "Mitglied konnte nicht hinzugefügt werden."
+  ],
+  "Failed to check door management status": [
+    "Türverwaltungsstatus konnte nicht geprüft werden"
+  ],
+  "Failed to create LDAP federation": [
+    "LDAP-Föderation konnte nicht erstellt werden"
+  ],
+  "Failed to create organization.": [
+    "Organisation konnte nicht erstellt werden."
+  ],
+  "Failed to delete Identity Provider. Please try again.": [
+    "Identity Provider konnte nicht gelöscht werden. Bitte versuchen Sie es erneut."
+  ],
+  "Failed to delete LDAP federation": [
+    "LDAP-Föderation konnte nicht gelöscht werden"
+  ],
+  "Failed to delete application: {{error}}": [
+    "Anwendung konnte nicht gelöscht werden: {{error}}"
+  ],
+  "Failed to delete execution": [
+    "Ausführung konnte nicht gelöscht werden"
+  ],
+  "Failed to delete mapper": [
+    "Mapper konnte nicht gelöscht werden"
+  ],
+  "Failed to delete organization.": [
+    "Organisation konnte nicht gelöscht werden."
+  ],
+  "Failed to fix mappers": [
+    "Mapper konnten nicht repariert werden"
+  ],
+  "Failed to load FHIR servers": [
+    "FHIR-Server konnten nicht geladen werden"
+  ],
+  "Failed to load IAL settings": [
+    "Fehler beim Laden der IAL-Einstellungen"
+  ],
+  "Failed to load Identity Providers. Please try again.": [
+    "Identity Provider konnten nicht geladen werden. Bitte versuchen Sie es erneut."
+  ],
+  "Failed to load SMART flow mapping": [
+    "SMART-Flow-Zuordnung konnte nicht geladen werden"
+  ],
+  "Failed to load authentication flows": [
+    "Authentifizierungs-Flows konnten nicht geladen werden"
+  ],
+  "Failed to load branding overrides": [
+    "Branding-Überschreibungen konnten nicht geladen werden"
+  ],
+  "Failed to load doors": [
+    "Türen konnten nicht geladen werden"
+  ],
+  "Failed to load events": [
+    "Ereignisse konnten nicht geladen werden"
+  ],
+  "Failed to load flow executions": [
+    "Flow-Ausführungen konnten nicht geladen werden"
+  ],
+  "Failed to load groups": [
+    "Gruppen konnten nicht geladen werden"
+  ],
+  "Failed to load members": [
+    "Mitglieder konnten nicht geladen werden"
+  ],
+  "Failed to load organizations.": [
+    "Organisationen konnten nicht geladen werden."
+  ],
+  "Failed to load overview": [
+    "Übersicht konnte nicht geladen werden"
+  ],
+  "Failed to load overview data": [
+    "Fehler beim Laden der Übersichtsdaten"
+  ],
+  "Failed to load scope mapper status": [
+    "Scope-Mapper-Status konnte nicht geladen werden"
+  ],
+  "Failed to load user federations": [
+    "Benutzerföderationen konnten nicht geladen werden"
+  ],
+  "Failed to perform health check: {{error}}": [
+    "Gesundheitsprüfung fehlgeschlagen: {{error}}"
+  ],
+  "Failed to refresh SMART flow mapping": [
+    "SMART-Flow-Zuordnung konnte nicht aktualisiert werden"
+  ],
+  "Failed to remove imported users": [
+    "Importierte Benutzer konnten nicht entfernt werden"
+  ],
+  "Failed to remove member": [
+    "Mitglied konnte nicht entfernt werden"
+  ],
+  "Failed to reorder execution": [
+    "Ausführung konnte nicht neu sortiert werden"
+  ],
+  "Failed to reset branding": [
+    "Branding konnte nicht zurückgesetzt werden"
+  ],
+  "Failed to restart server: {{error}}": [
+    "Server konnte nicht neu gestartet werden: {{error}}"
+  ],
+  "Failed to save IAL settings": [
+    "Fehler beim Speichern der IAL-Einstellungen"
+  ],
+  "Failed to save branding overrides": [
+    "Branding-Überschreibungen konnten nicht gespeichert werden"
+  ],
+  "Failed to save scope set": [
+    "Scope-Set konnte nicht gespeichert werden"
+  ],
+  "Failed to shutdown server: {{error}}": [
+    "Server konnte nicht heruntergefahren werden: {{error}}"
+  ],
+  "Failed to unlink federated users": [
+    "Föderierte Benutzer konnten nicht getrennt werden"
+  ],
+  "Failed to update FHIR server. Please check if the server is accessible and supports FHIR.": [
+    "FHIR-Server konnte nicht aktualisiert werden. Bitte prüfen Sie die Erreichbarkeit und FHIR-Unterstützung."
+  ],
+  "Failed to update Identity Provider status. Please try again.": [
+    "Identity-Provider-Status konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+  ],
+  "Failed to update Identity Provider. Please try again.": [
+    "Identity Provider konnte nicht aktualisiert werden. Bitte versuchen Sie es erneut."
+  ],
+  "Failed to update LDAP federation": [
+    "LDAP-Föderation konnte nicht aktualisiert werden"
+  ],
+  "Failed to update MCP endpoint setting": [
+    "MCP-Endpunkt-Einstellung konnte nicht aktualisiert werden"
+  ],
+  "Failed to update execution requirement": [
+    "Ausführungsanforderung konnte nicht aktualisiert werden"
+  ],
+  "Failed to update organization status.": [
+    "Organisationsstatus konnte nicht aktualisiert werden."
+  ],
+  "Failed to update organization.": [
+    "Organisation konnte nicht aktualisiert werden."
+  ],
+  "Failed to update scopes": [
+    "Scopes konnten nicht aktualisiert werden"
+  ],
+  "Failed to update strict capabilities setting": [
+    "Strict-Capabilities-Einstellung konnte nicht aktualisiert werden"
+  ],
+  "Failed to update viewer app": [
+    "Viewer-App konnte nicht aktualisiert werden"
+  ],
+  "Failed to {{action}} application: {{error}}": [
+    "{{action}} der Anwendung fehlgeschlagen: {{error}}"
+  ],
+  "Failed: {{count}}": [
+    "Fehlgeschlagen: {{count}}"
+  ],
+  "Failure": [
+    "Fehler"
+  ],
+  "Failures": [
+    "Fehler"
+  ],
+  "Federated users unlinked": [
+    "Föderierte Benutzer getrennt"
+  ],
+  "Filter Audit Events": [
+    "Audit-Ereignisse filtern"
+  ],
+  "Filter Consent Decisions": [
+    "Einwilligungsentscheidungen filtern"
+  ],
+  "Filter OAuth Flows": [
+    "OAuth-Flows filtern"
+  ],
+  "Filter scopes...": [
+    "Scopes filtern..."
+  ],
+  "Filtering Mode": [
+    "Filtermodus"
+  ],
+  "Find Existing Person Resource": [
+    "Vorhandene Person-Ressource suchen"
+  ],
+  "Fingerprint:": [
+    "Fingerabdruck:"
+  ],
+  "First Broker Login Flow": [
+    "Erster Broker-Login-Flow"
+  ],
+  "First Name": [
+    "Vorname"
+  ],
+  "Fix All": [
+    "Alle reparieren"
+  ],
+  "Fix Server URL": [
+    "Server-URL korrigieren"
+  ],
+  "Fix URL": [
+    "URL korrigieren"
+  ],
+  "Flow": [
+    "Flow"
+  ],
+  "Flow Activity (24h)": [
+    "Flow-Aktivität (24h)"
+  ],
+  "Flow Analytics": [
+    "Flow-Analytik"
+  ],
+  "Flow Steps": [
+    "Flow-Schritte"
+  ],
+  "For refresh tokens include offline_access. For patient context, prefer patient/Resource.access scopes.": [
+    "Für Refresh-Tokens offline_access einschließen. Für Patientenkontext patient/Resource.access Scopes bevorzugen."
+  ],
+  "Force Logout & Reset": [
+    "Abmeldung erzwingen & Zurücksetzen"
+  ],
+  "Forecast generated": [
+    "Prognose erstellt"
+  ],
+  "Friendly name for login screens": [
+    "Anzeigename für Anmeldeseiten"
+  ],
+  "Front-Channel Logout URL": [
+    "Front-Channel-Logout-URL"
+  ],
+  "Full Scope Allowed": [
+    "Vollständiger Scope erlaubt"
+  ],
+  "Full Sync": [
+    "Vollständige Synchronisierung"
+  ],
+  "Full Sync Period (seconds)": [
+    "Vollständiges Synchronisierungsintervall (Sekunden)"
+  ],
+  "Full reference:": [
+    "Vollständige Referenz:"
+  ],
+  "General": [
+    "Allgemein"
+  ],
+  "Genomics": [
+    "Genomik"
+  ],
+  "Get notified when new clients register": [
+    "Benachrichtigung bei neuen Client-Registrierungen"
+  ],
+  "Group name": [
+    "Gruppenname"
+  ],
+  "Groups": [
+    "Gruppen"
+  ],
+  "Health": [
+    "Zustand"
+  ],
+  "Health check completed: Server is {{status}}": [
+    "Gesundheitsprüfung abgeschlossen: Server ist {{status}}"
+  ],
+  "Healthcare Administration": [
+    "Gesundheitsverwaltung"
+  ],
+  "Healthcare Administrator": [
+    "Gesundheitsadministrator"
+  ],
+  "Healthcare Users": [
+    "Gesundheitsbenutzer"
+  ],
+  "Healthy": [
+    "Gesund"
+  ],
+  "Heap Used": [
+    "Heap belegt"
+  ],
+  "Help": [
+    "Hilfe"
+  ],
+  "Hide": [
+    "Ausblenden"
+  ],
+  "Hide on Login Page": [
+    "Auf Anmeldeseite ausblenden"
+  ],
+  "Hide this IdP from the Keycloak login page.": [
+    "Diesen IdP auf der Keycloak-Anmeldeseite ausblenden."
+  ],
+  "Highest success": [
+    "Höchste Erfolgsrate"
+  ],
+  "Hourly request breakdown over last 24 hours": [
+    "Stündliche Anfragenaufschlüsselung der letzten 24 Stunden"
+  ],
+  "How SMART on FHIR launch flows map to Keycloak authentication flows and which clients use each flow type.": [
+    "Zuordnung von SMART on FHIR Launch-Flows zu Keycloak-Authentifizierungs-Flows und welche Clients jeden Flow-Typ verwenden."
+  ],
+  "How long Person resources are cached. 300000 = 5 minutes.": [
+    "Wie lange Person-Ressourcen gecacht werden. 300000 = 5 Minuten."
+  ],
+  "How long consent decisions are cached. 60000 = 1 minute.": [
+    "Wie lange Einwilligungsentscheidungen gecacht werden. 60000 = 1 Minute."
+  ],
+  "Human-readable description": [
+    "Lesbare Beschreibung"
+  ],
+  "IAL Policies": [
+    "IAL-Richtlinien"
+  ],
+  "IAL settings saved successfully": [
+    "IAL-Einstellungen erfolgreich gespeichert"
+  ],
+  "ID": [
+    "ID"
+  ],
+  "IP Address": [
+    "IP-Adresse"
+  ],
+  "Icon": [
+    "Symbol"
+  ],
+  "IdP Management": [
+    "IdP-Verwaltung"
+  ],
+  "Identifier URI": [
+    "Identifier-URI"
+  ],
+  "Identity": [
+    "Identität"
+  ],
+  "Identity Assurance Level (IAL)": [
+    "Identitätssicherungsstufe (IAL)"
+  ],
+  "Identity Linking": [
+    "Identitätsverknüpfung"
+  ],
+  "Identity Provider": [
+    "Identity Provider"
+  ],
+  "Identity Provider Certificates": [
+    "Identity-Provider-Zertifikate"
+  ],
+  "Identity Provider Links": [
+    "Identity-Provider-Verknüpfungen"
+  ],
+  "Identity Provider Management": [
+    "Identity-Provider-Verwaltung"
+  ],
+  "Identity Provider added (local only).": [
+    "Identity Provider hinzugefügt (nur lokal)."
+  ],
+  "Identity Provider added successfully!": [
+    "Identity Provider erfolgreich hinzugefügt!"
+  ],
+  "Identity Provider deleted (local only).": [
+    "Identity Provider gelöscht (nur lokal)."
+  ],
+  "Identity Provider deleted successfully!": [
+    "Identity Provider erfolgreich gelöscht!"
+  ],
+  "Identity Provider updated (local only).": [
+    "Identity Provider aktualisiert (nur lokal)."
+  ],
+  "Identity Provider updated successfully!": [
+    "Identity Provider erfolgreich aktualisiert!"
+  ],
+  "Identity Providers": [
+    "Identitätsanbieter"
+  ],
+  "Identity provider issuer URL": [
+    "Identity-Provider-Aussteller-URL"
+  ],
+  "Identity providers linked to {{orgName}}. Users authenticating through these IdPs will be associated with this organization.": [
+    "Mit {{orgName}} verknüpfte Identity Provider. Benutzer, die sich über diese IdPs authentifizieren, werden dieser Organisation zugeordnet."
+  ],
+  "Imaging": [
+    "Bildgebung"
+  ],
+  "Import Users": [
+    "Benutzer importieren"
+  ],
+  "Import users from LDAP into Keycloak database": [
+    "Benutzer aus LDAP in die Keycloak-Datenbank importieren"
+  ],
+  "Imported users removed": [
+    "Importierte Benutzer entfernt"
+  ],
+  "Inactive": [
+    "Inaktiv"
+  ],
+  "Include all realm/client roles in tokens (disable to restrict)": [
+    "Alle Realm-/Client-Rollen in Tokens einschließen (deaktivieren zum Einschränken)"
+  ],
+  "Increasing": [
+    "Zunehmend"
+  ],
+  "Inherit": [
+    "Erben"
+  ],
+  "Inherit from main": [
+    "Vom Haupt-Branding erben"
+  ],
+  "Insufficient scopes are logged but requests are allowed through.": [
+    "Unzureichende Scopes werden protokolliert, aber Anfragen werden durchgelassen."
+  ],
+  "Invalid URL format": [
+    "Ungültiges URL-Format"
+  ],
+  "Invalid server URL or server not accessible": [
+    "Ungültige Server-URL oder Server nicht erreichbar"
+  ],
+  "Issuer": [
+    "Aussteller"
+  ],
+  "Issuer:": [
+    "Aussteller:"
+  ],
+  "JWKS Configuration": [
+    "JWKS-Konfiguration"
+  ],
+  "JWKS String (inline JSON)": [
+    "JWKS-String (Inline-JSON)"
+  ],
+  "JWKS URI": [
+    "JWKS-URI"
+  ],
+  "KC Flows": [
+    "KC-Flows"
+  ],
+  "Key signals": [
+    "Schlüsselsignale"
+  ],
+  "Keycloak": [
+    "Keycloak"
+  ],
+  "Keycloak Base URL": [
+    "Keycloak-Basis-URL"
+  ],
+  "Keycloak Configuration": [
+    "Keycloak-Konfiguration"
+  ],
+  "Keycloak Database": [
+    "Keycloak-Datenbank"
+  ],
+  "Keycloak Flows": [
+    "Keycloak-Flows"
+  ],
+  "Keycloak Last Connected": [
+    "Keycloak zuletzt verbunden"
+  ],
+  "Keycloak Login Theme": [
+    "Keycloak-Login-Thema"
+  ],
+  "Keycloak Realm": [
+    "Keycloak-Realm"
+  ],
+  "Keycloak URL": [
+    "Keycloak-URL"
+  ],
+  "Keycloak client scopes available for SMART apps": [
+    "Keycloak-Client-Scopes verfügbar für SMART-Apps"
+  ],
+  "Keycloak configuration saved successfully": [
+    "Keycloak-Konfiguration erfolgreich gespeichert"
+  ],
+  "Keycloak is not yet configured on this server.": [
+    "Keycloak ist auf diesem Server noch nicht konfiguriert."
+  ],
+  "Kisi (Cloud)": [
+    "Kisi (Cloud)"
+  ],
+  "Kisi Credentials": [
+    "Kisi-Anmeldedaten"
+  ],
+  "LDAP Users": [
+    "LDAP-Benutzer"
+  ],
+  "LDAP Vendor": [
+    "LDAP-Anbieter"
+  ],
+  "LDAP connection test failed": [
+    "LDAP-Verbindungstest fehlgeschlagen"
+  ],
+  "LDAP connection test successful": [
+    "LDAP-Verbindungstest erfolgreich"
+  ],
+  "LDAP federation created successfully": [
+    "LDAP-Föderation erfolgreich erstellt"
+  ],
+  "LDAP federation deleted": [
+    "LDAP-Föderation gelöscht"
+  ],
+  "LDAP federation updated successfully": [
+    "LDAP-Föderation erfolgreich aktualisiert"
+  ],
+  "Language": [
+    "Sprache"
+  ],
+  "Last 20 failed FHIR proxy requests": [
+    "Letzte 20 fehlgeschlagene FHIR-Proxy-Anfragen"
+  ],
+  "Last 24 hours": [
+    "Letzte 24 Stunden"
+  ],
+  "Last Connected": [
+    "Zuletzt verbunden"
+  ],
+  "Last Login": [
+    "Letzte Anmeldung"
+  ],
+  "Last Name": [
+    "Nachname"
+  ],
+  "Last Sync Result": [
+    "Letztes Synchronisierungsergebnis"
+  ],
+  "Last Used": [
+    "Zuletzt verwendet"
+  ],
+  "Last observed": [
+    "Zuletzt beobachtet"
+  ],
+  "Last updated": [
+    "Zuletzt aktualisiert"
+  ],
+  "Latency": [
+    "Latenz"
+  ],
+  "Launch URL": [
+    "Start-URL"
+  ],
+  "Leave blank for no password": [
+    "Leer lassen für kein Passwort"
+  ],
+  "Leave empty to keep current": [
+    "Leer lassen um aktuellen Wert beizubehalten"
+  ],
+  "Level 1 - Little confidence": [
+    "Stufe 1 – Wenig Vertrauen"
+  ],
+  "Level 2 - Some confidence": [
+    "Stufe 2 – Etwas Vertrauen"
+  ],
+  "Level 3 - High confidence": [
+    "Stufe 3 – Hohes Vertrauen"
+  ],
+  "Level 4 - Very high confidence": [
+    "Stufe 4 – Sehr hohes Vertrauen"
+  ],
+  "Lifetime & Notifications": [
+    "Gültigkeitsdauer & Benachrichtigungen"
+  ],
+  "Light": [
+    "Hell"
+  ],
+  "Link": [
+    "Verknüpfen"
+  ],
+  "Link Existing Person": [
+    "Vorhandene Person verknüpfen"
+  ],
+  "Link IdP": [
+    "IdP verknüpfen"
+  ],
+  "Link New Identity Provider": [
+    "Neuen Identity Provider verknüpfen"
+  ],
+  "Link Only": [
+    "Nur verknüpfen"
+  ],
+  "Link Person resources to other FHIR resources on the same server": [
+    "Person-Ressourcen mit anderen FHIR-Ressourcen auf demselben Server verknüpfen"
+  ],
+  "Link this identity provider to an organization. Users authenticating through this IdP will be associated with the selected organization.": [
+    "Diesen Identity Provider mit einer Organisation verknüpfen. Benutzer, die sich über diesen IdP authentifizieren, werden der ausgewählten Organisation zugeordnet."
+  ],
+  "Linked Identity Providers": [
+    "Verknüpfte Identity Provider"
+  ],
+  "Loading Admin Panel...": [
+    "Admin-Panel wird geladen..."
+  ],
+  "Loading DICOM servers...": [
+    "DICOM-Server werden geladen..."
+  ],
+  "Loading FHIR Servers...": [
+    "FHIR-Server werden geladen..."
+  ],
+  "Loading FHIR servers...": [
+    "FHIR-Server werden geladen..."
+  ],
+  "Loading IAL settings...": [
+    "IAL-Einstellungen werden geladen..."
+  ],
+  "Loading Identity Providers...": [
+    "Identity Provider werden geladen..."
+  ],
+  "Loading MCP endpoint settings...": [
+    "MCP-Endpunkt-Einstellungen werden geladen..."
+  ],
+  "Loading OAuth monitoring data...": [
+    "OAuth-Überwachungsdaten werden geladen..."
+  ],
+  "Loading Organizations...": [
+    "Organisationen werden geladen..."
+  ],
+  "Loading SMART applications...": [
+    "SMART-Anwendungen werden geladen..."
+  ],
+  "Loading SMART flow mapping...": [
+    "SMART-Flow-Zuordnung wird geladen..."
+  ],
+  "Loading User Federations...": [
+    "Benutzerföderationen werden geladen..."
+  ],
+  "Loading access control settings...": [
+    "Zugangssteuerungseinstellungen werden geladen..."
+  ],
+  "Loading admin audit data...": [
+    "Admin-Audit-Daten werden geladen..."
+  ],
+  "Loading apps...": [
+    "Apps werden geladen..."
+  ],
+  "Loading authentication flows...": [
+    "Authentifizierungs-Flows werden geladen..."
+  ],
+  "Loading authentication options...": [
+    "Authentifizierungsoptionen werden geladen..."
+  ],
+  "Loading available servers...": [
+    "Verfügbare Server werden geladen..."
+  ],
+  "Loading brand settings...": [
+    "Markeneinstellungen werden geladen..."
+  ],
+  "Loading branding...": [
+    "Branding wird geladen..."
+  ],
+  "Loading consent monitoring data...": [
+    "Einwilligungsüberwachungsdaten werden geladen..."
+  ],
+  "Loading consent settings...": [
+    "Einwilligungseinstellungen werden geladen..."
+  ],
+  "Loading doors...": [
+    "Türen werden geladen..."
+  ],
+  "Loading events...": [
+    "Ereignisse werden geladen..."
+  ],
+  "Loading groups...": [
+    "Gruppen werden geladen..."
+  ],
+  "Loading members...": [
+    "Mitglieder werden geladen..."
+  ],
+  "Loading overview...": [
+    "Übersicht wird geladen..."
+  ],
+  "Loading registration settings...": [
+    "Registrierungseinstellungen werden geladen..."
+  ],
+  "Loading users...": [
+    "Benutzer werden geladen..."
+  ],
+  "Loading...": [
+    "Wird geladen..."
+  ],
+  "Locations": [
+    "Standorte"
+  ],
+  "Lock down the FHIR server to only accept proxy IPs via a private subnet or VPN—avoid relying solely on public-IP ACLs.": [
+    "FHIR-Server absichern, sodass nur Proxy-IPs über ein privates Subnetz oder VPN akzeptiert werden – nicht nur auf öffentliche IP-ACLs vertrauen."
+  ],
+  "Locked": [
+    "Gesperrt"
+  ],
+  "Logo": [
+    "Logo"
+  ],
+  "Logo & Branding": [
+    "Logo & Branding"
+  ],
+  "Logo License URL": [
+    "Logo-Lizenz-URL"
+  ],
+  "Logo URI": [
+    "Logo-URI"
+  ],
+  "Logo URL": [
+    "Logo-URL"
+  ],
+  "Logout": [
+    "Abmelden"
+  ],
+  "Logout URL": [
+    "Abmelde-URL"
+  ],
+  "MCP Endpoint": [
+    "MCP-Endpunkt"
+  ],
+  "Manage DICOMweb/PACS server connections": [
+    "DICOMweb/PACS-Serververbindungen verwalten"
+  ],
+  "Manage FHIR resource scopes, protocol mappers, and access controls": [
+    "FHIR-Ressourcen-Scopes, Protokoll-Mapper und Zugriffssteuerungen verwalten"
+  ],
+  "Manage Links": [
+    "Verknüpfungen verwalten"
+  ],
+  "Manage Scopes": [
+    "Scopes verwalten"
+  ],
+  "Manage Servers": [
+    "Server verwalten"
+  ],
+  "Manage and monitor FHIR server connections": [
+    "FHIR-Serververbindungen verwalten und überwachen"
+  ],
+  "Manage authenticator executions for this flow": [
+    "Authenticator-Ausführungen für diesen Flow verwalten"
+  ],
+  "Manage healthcare professionals and administrative users": [
+    "Medizinische Fachkräfte und administrative Benutzer verwalten"
+  ],
+  "Manage healthcare professionals, administrative users, and identity federation": [
+    "Medizinische Fachkräfte, administrative Benutzer und Identitätsföderation verwalten"
+  ],
+  "Manage members for": [
+    "Mitglieder verwalten für"
+  ],
+  "Manage registered healthcare applications and their SMART on FHIR permissions": [
+    "Registrierte Gesundheitsanwendungen und ihre SMART on FHIR-Berechtigungen verwalten"
+  ],
+  "Manage your SMART scope configurations": [
+    "SMART-Scope-Konfigurationen verwalten"
+  ],
+  "Mapper": [
+    "Mapper"
+  ],
+  "Maps this user to a FHIR resource (used in SMART fhirUser claim)": [
+    "Ordnet diesen Benutzer einer FHIR-Ressource zu (verwendet im SMART fhirUser-Claim)"
+  ],
+  "Max Redirect URIs": [
+    "Maximale Redirect-URIs"
+  ],
+  "Max session duration in seconds": [
+    "Maximale Sitzungsdauer in Sekunden"
+  ],
+  "Members": [
+    "Mitglieder"
+  ],
+  "Memory": [
+    "Speicher"
+  ],
+  "Memory Usage": [
+    "Speicherauslastung"
+  ],
+  "Metadata": [
+    "Metadaten"
+  ],
+  "Metadata URL": [
+    "Metadaten-URL"
+  ],
+  "Method": [
+    "Methode"
+  ],
+  "Minimum Level (General)": [
+    "Mindeststufe (Allgemein)"
+  ],
+  "Minimum Level (Sensitive Resources)": [
+    "Mindeststufe (Sensible Ressourcen)"
+  ],
+  "Minimum identity verification requirements": [
+    "Mindestanforderungen an die Identitätsverifizierung"
+  ],
+  "Missing": [
+    "Fehlend"
+  ],
+  "Mode": [
+    "Modus"
+  ],
+  "Mode and caching": [
+    "Modus und Caching"
+  ],
+  "Modify": [
+    "Ändern"
+  ],
+  "Monitor certificate expiration dates and renew before expiry": [
+    "Zertifikatsablaufdaten überwachen und vor Ablauf erneuern"
+  ],
+  "Monitor consent decisions, denial patterns, and performance": [
+    "Einwilligungsentscheidungen, Ablehnungsmuster und Leistung überwachen"
+  ],
+  "Monitoring": [
+    "Überwachung"
+  ],
+  "Most active OAuth clients": [
+    "Aktivste OAuth-Clients"
+  ],
+  "Most active admin users": [
+    "Aktivste Admin-Benutzer"
+  ],
+  "Move Down": [
+    "Nach unten"
+  ],
+  "Move Up": [
+    "Nach oben"
+  ],
+  "Multi-Tenancy": [
+    "Mandantenfähigkeit"
+  ],
+  "Name": [
+    "Name"
+  ],
+  "Name for new scope set:": [
+    "Name für neues Scope-Set:"
+  ],
+  "Name, Connection URL, and Users DN are required": [
+    "Name, Verbindungs-URL und Benutzer-DN sind erforderlich"
+  ],
+  "Name:": [
+    "Name:"
+  ],
+  "NameID Format": [
+    "NameID-Format"
+  ],
+  "New clients need manual approval before activation": [
+    "Neue Clients benötigen manuelle Freigabe vor der Aktivierung"
+  ],
+  "Next": [
+    "Weiter"
+  ],
+  "No": [
+    "Nein"
+  ],
+  "No Auth": [
+    "Keine Authentifizierung"
+  ],
+  "No Authentication": [
+    "Keine Authentifizierung"
+  ],
+  "No Available Servers": [
+    "Keine verfügbaren Server"
+  ],
+  "No Certificate": [
+    "Kein Zertifikat"
+  ],
+  "No DICOM servers configured": [
+    "Keine DICOM-Server konfiguriert"
+  ],
+  "No FHIR Servers": [
+    "Keine FHIR-Server"
+  ],
+  "No FHIR proxy request data available": [
+    "Keine FHIR-Proxy-Anfragedaten verfügbar"
+  ],
+  "No FHIR servers available": [
+    "Keine FHIR-Server verfügbar"
+  ],
+  "No FHIR servers configured": [
+    "Keine FHIR-Server konfiguriert"
+  ],
+  "No FHIR servers have been configured yet. Click \"Manage Servers\" to add your first FHIR server.": [
+    "Es sind noch keine FHIR-Server konfiguriert. Klicken Sie auf „Server verwalten\", um Ihren ersten FHIR-Server hinzuzufügen."
+  ],
+  "No LDAP Federations Configured": [
+    "Keine LDAP-Föderationen konfiguriert"
+  ],
+  "No SMART flow data available": [
+    "Keine SMART-Flow-Daten verfügbar"
+  ],
+  "No SMART scopes found in Keycloak": [
+    "Keine SMART-Scopes in Keycloak gefunden"
+  ],
+  "No SMART scopes registered": [
+    "Keine SMART-Scopes registriert"
+  ],
+  "No Server Selected": [
+    "Kein Server ausgewählt"
+  ],
+  "No action distribution data": [
+    "Keine Aktionsverteilungsdaten"
+  ],
+  "No activity data available": [
+    "Keine Aktivitätsdaten verfügbar"
+  ],
+  "No actor data available": [
+    "Keine Akteursdaten verfügbar"
+  ],
+  "No apps in the store yet.": [
+    "Noch keine Apps im Store."
+  ],
+  "No associations": [
+    "Keine Zuordnungen"
+  ],
+  "No audit events match your filters": [
+    "Keine Audit-Ereignisse entsprechen Ihren Filtern"
+  ],
+  "No authentication flows found": [
+    "Keine Authentifizierungs-Flows gefunden"
+  ],
+  "No client activity data available": [
+    "Keine Client-Aktivitätsdaten verfügbar"
+  ],
+  "No client distribution data available": [
+    "Keine Client-Verteilungsdaten verfügbar"
+  ],
+  "No clients configured for this flow type": [
+    "Keine Clients für diesen Flow-Typ konfiguriert"
+  ],
+  "No consent activity data available": [
+    "Keine Einwilligungsaktivitätsdaten verfügbar"
+  ],
+  "No denied client requests": [
+    "Keine abgelehnten Client-Anfragen"
+  ],
+  "No denied patient requests": [
+    "Keine abgelehnten Patientenanfragen"
+  ],
+  "No doors assigned to this group": [
+    "Keine Türen dieser Gruppe zugewiesen"
+  ],
+  "No doors found": [
+    "Keine Türen gefunden"
+  ],
+  "No doors match your search": [
+    "Keine Türen entsprechen Ihrer Suche"
+  ],
+  "No errors": [
+    "Keine Fehler"
+  ],
+  "No event data available": [
+    "Keine Ereignisdaten verfügbar"
+  ],
+  "No events match your filters": [
+    "Keine Ereignisse entsprechen Ihren Filtern"
+  ],
+  "No events match your search": [
+    "Keine Ereignisse entsprechen Ihrer Suche"
+  ],
+  "No events recorded yet": [
+    "Noch keine Ereignisse aufgezeichnet"
+  ],
+  "No executions in this flow": [
+    "Keine Ausführungen in diesem Flow"
+  ],
+  "No external audiences configured": [
+    "Keine externen Zielgruppen konfiguriert"
+  ],
+  "No flow activity data available": [
+    "Keine Flow-Aktivitätsdaten verfügbar"
+  ],
+  "No groups found. Create one to get started.": [
+    "Keine Gruppen gefunden. Erstellen Sie eine, um zu beginnen."
+  ],
+  "No groups match your search": [
+    "Keine Gruppen entsprechen Ihrer Suche"
+  ],
+  "No identity providers are linked to this organization.": [
+    "Keine Identity Provider sind mit dieser Organisation verknüpft."
+  ],
+  "No identity providers linked to this user": [
+    "Keine Identity Provider mit diesem Benutzer verknüpft"
+  ],
+  "No interactive login": [
+    "Keine interaktive Anmeldung"
+  ],
+  "No links yet": [
+    "Noch keine Verknüpfungen"
+  ],
+  "No matching users found": [
+    "Keine passenden Benutzer gefunden"
+  ],
+  "No members found. Add one or sync from Keycloak.": [
+    "Keine Mitglieder gefunden. Fügen Sie welche hinzu oder synchronisieren Sie aus Keycloak."
+  ],
+  "No members match your search": [
+    "Keine Mitglieder entsprechen Ihrer Suche"
+  ],
+  "No members yet. Search and add users above.": [
+    "Noch keine Mitglieder. Suchen und fügen Sie Benutzer oben hinzu."
+  ],
+  "No mode distribution data available": [
+    "Keine Modusverteilungsdaten verfügbar"
+  ],
+  "No organization linked": [
+    "Keine Organisation verknüpft"
+  ],
+  "No organizations found. Create your first organization to get started.": [
+    "Keine Organisationen gefunden. Erstellen Sie Ihre erste Organisation, um zu beginnen."
+  ],
+  "No recent failures": [
+    "Keine aktuellen Fehler"
+  ],
+  "No redirect URIs configured": [
+    "Keine Redirect-URIs konfiguriert"
+  ],
+  "No resource data available": [
+    "Keine Ressourcendaten verfügbar"
+  ],
+  "No resource type data available": [
+    "Keine Ressourcentypdaten verfügbar"
+  ],
+  "No role-based filtering is applied.": [
+    "Keine rollenbasierte Filterung wird angewendet."
+  ],
+  "No scope checking is performed.": [
+    "Keine Scope-Prüfung wird durchgeführt."
+  ],
+  "No scopes added yet": [
+    "Noch keine Scopes hinzugefügt"
+  ],
+  "No scopes match your filter": [
+    "Keine Scopes entsprechen Ihrem Filter"
+  ],
+  "No signing certificate is configured for this identity provider.": [
+    "Kein Signaturzertifikat für diesen Identity Provider konfiguriert."
+  ],
+  "No status code data available": [
+    "Keine Statuscode-Daten verfügbar"
+  ],
+  "No success rate data available": [
+    "Keine Erfolgsraten-Daten verfügbar"
+  ],
+  "No tools available. The tool registry may not be initialized yet.": [
+    "Keine Tools verfügbar. Die Tool-Registry ist möglicherweise noch nicht initialisiert."
+  ],
+  "No trend data available": [
+    "Keine Trenddaten verfügbar"
+  ],
+  "Non-deterministic": [
+    "Nicht-deterministisch"
+  ],
+  "None": [
+    "Keine"
+  ],
+  "None (use built-in viewer)": [
+    "Keine (integrierten Viewer verwenden)"
+  ],
+  "Not Set": [
+    "Nicht gesetzt"
+  ],
+  "Not configured": [
+    "Nicht konfiguriert"
+  ],
+  "Not required": [
+    "Nicht erforderlich"
+  ],
+  "Note:": [
+    "Hinweis:"
+  ],
+  "Notes (Optional)": [
+    "Notizen (Optional)"
+  ],
+  "Notification Email": [
+    "Benachrichtigungs-E-Mail"
+  ],
+  "Nurse": [
+    "Pflegekraft"
+  ],
+  "OAuth": [
+    "OAuth"
+  ],
+  "OAuth 2.0": [
+    "OAuth 2.0"
+  ],
+  "OAuth Flow Monitoring": [
+    "OAuth-Flow-Überwachung"
+  ],
+  "OAuth Flows": [
+    "OAuth-Flows"
+  ],
+  "OAuth State:": [
+    "OAuth-Status:"
+  ],
+  "OAuth Success": [
+    "OAuth-Erfolg"
+  ],
+  "OAuth client statistics will appear here once data is collected": [
+    "OAuth-Client-Statistiken erscheinen hier, sobald Daten gesammelt werden"
+  ],
+  "OAuth clients by usage": [
+    "OAuth-Clients nach Nutzung"
+  ],
+  "OAuth events are pushed in real time as they occur.": [
+    "OAuth-Ereignisse werden in Echtzeit übertragen."
+  ],
+  "OAuth flow success over time": [
+    "OAuth-Flow-Erfolg im Zeitverlauf"
+  ],
+  "OAuth flows over time": [
+    "OAuth-Flows im Zeitverlauf"
+  ],
+  "OAuth protected — MCP clients will be prompted to log in via Keycloak. The access token is returned to the client (IDE, Claude Desktop, etc.) automatically via RFC 9728 discovery.": [
+    "OAuth-geschützt — MCP-Clients werden zur Anmeldung über Keycloak aufgefordert. Das Access-Token wird dem Client (IDE, Claude Desktop etc.) automatisch über RFC 9728 Discovery zurückgegeben."
+  ],
+  "OAuth2/OIDC client secret": [
+    "OAuth2/OIDC-Client-Secret"
+  ],
+  "OIDC": [
+    "OIDC"
+  ],
+  "OK": [
+    "OK"
+  ],
+  "Offline": [
+    "Offline"
+  ],
+  "Online": [
+    "Online"
+  ],
+  "Only available for interactive applications (not backend services)": [
+    "Nur für interaktive Anwendungen verfügbar (nicht für Backend-Services)"
+  ],
+  "Only link to existing accounts, never create new users.": [
+    "Nur mit bestehenden Konten verknüpfen, nie neue Benutzer erstellen."
+  ],
+  "Only these resource types need consent (empty = all types)": [
+    "Nur diese Ressourcentypen benötigen Einwilligung (leer = alle Typen)"
+  ],
+  "Open Store": [
+    "Store öffnen"
+  ],
+  "OpenID Connect": [
+    "OpenID Connect"
+  ],
+  "Optional": [
+    "Optional"
+  ],
+  "Optional Configuration": [
+    "Optionale Konfiguration"
+  ],
+  "Optional Scopes:": [
+    "Optionale Scopes:"
+  ],
+  "Optional description": [
+    "Optionale Beschreibung"
+  ],
+  "Optional description...": [
+    "Optionale Beschreibung..."
+  ],
+  "Or enter custom scope": [
+    "Oder benutzerdefinierten Scope eingeben"
+  ],
+  "Organization": [
+    "Organisation"
+  ],
+  "Organization Address": [
+    "Organisationsadresse"
+  ],
+  "Organization Category": [
+    "Organisationskategorie"
+  ],
+  "Organization Management": [
+    "Organisationsverwaltung"
+  ],
+  "Organization Members": [
+    "Organisationsmitglieder"
+  ],
+  "Organization created successfully!": [
+    "Organisation erfolgreich erstellt!"
+  ],
+  "Organization deleted successfully!": [
+    "Organisation erfolgreich gelöscht!"
+  ],
+  "Organization updated successfully!": [
+    "Organisation erfolgreich aktualisiert!"
+  ],
+  "Organization:": [
+    "Organisation:"
+  ],
+  "Organizations": [
+    "Organisationen"
+  ],
+  "Origin URL:": [
+    "Herkunfts-URL:"
+  ],
+  "Other": [
+    "Sonstige"
+  ],
+  "Override realm default (in seconds). Leave empty for realm default.": [
+    "Realm-Standard überschreiben (in Sekunden). Leer lassen für Realm-Standard."
+  ],
+  "Override realm-wide branding for": [
+    "Realm-weites Branding überschreiben für"
+  ],
+  "Overview": [
+    "Überblick"
+  ],
+  "PKCE:": [
+    "PKCE:"
+  ],
+  "Page {{current}} of {{total}}": [
+    "Seite {{current}} von {{total}}"
+  ],
+  "Pagination": [
+    "Seitennavigation"
+  ],
+  "Password": [
+    "Passwort"
+  ],
+  "Password (Optional)": [
+    "Passwort (Optional)"
+  ],
+  "Path": [
+    "Pfad"
+  ],
+  "Patient": [
+    "Patient"
+  ],
+  "Patient Portal": [
+    "Patientenportal"
+  ],
+  "Patient link and failure behaviour": [
+    "Patientenverknüpfung und Fehlerverhalten"
+  ],
+  "Patient-Scoped Resources": [
+    "Patientenbezogene Ressourcen"
+  ],
+  "Patient-facing portal description (supports Markdown)": [
+    "Patientenportal-Beschreibung (unterstützt Markdown)"
+  ],
+  "Patients whose data was most frequently denied": [
+    "Patienten, deren Daten am häufigsten abgelehnt wurden"
+  ],
+  "Pause": [
+    "Pausieren"
+  ],
+  "Pending": [
+    "Ausstehend"
+  ],
+  "Per scope set": [
+    "Pro Scope-Set"
+  ],
+  "Performance": [
+    "Leistung"
+  ],
+  "Permission Matrix": [
+    "Berechtigungsmatrix"
+  ],
+  "Permissions": [
+    "Berechtigungen"
+  ],
+  "Permit": [
+    "Erlauben"
+  ],
+  "Permit / Deny per FHIR resource": [
+    "Erlauben / Verweigern pro FHIR-Ressource"
+  ],
+  "Permit Rate": [
+    "Erlaubnisrate"
+  ],
+  "Permit vs Deny over time": [
+    "Erlaubt vs. Verweigert im Zeitverlauf"
+  ],
+  "Persistent": [
+    "Persistent"
+  ],
+  "Person Cache TTL (ms)": [
+    "Person-Cache-TTL (ms)"
+  ],
+  "Person ID": [
+    "Person-ID"
+  ],
+  "Person ID:": [
+    "Person-ID:"
+  ],
+  "Person Resource Details": [
+    "Person-Ressourcen-Details"
+  ],
+  "Person Resource ID": [
+    "Person-Ressourcen-ID"
+  ],
+  "Person Resource Linker": [
+    "Person-Ressourcen-Verknüpfer"
+  ],
+  "Person→Patient link verification (NIST SP 800-63-3)": [
+    "Person→Patient-Verknüpfungsprüfung (NIST SP 800-63-3)"
+  ],
+  "Pharmacist": [
+    "Apotheker"
+  ],
+  "Physical Access": [
+    "Physischer Zugang"
+  ],
+  "Physician": [
+    "Arzt"
+  ],
+  "Platform (UI) Version": [
+    "Plattform (UI)-Version"
+  ],
+  "Please enter a valid URL (e.g., https://hapi.fhir.org/baseR4)": [
+    "Bitte geben Sie eine gültige URL ein (z.B. https://hapi.fhir.org/baseR4)"
+  ],
+  "Please wait while we initialize your workspace.": [
+    "Bitte warten Sie, während wir Ihren Arbeitsbereich initialisieren."
+  ],
+  "Please wait while we verify your credentials...": [
+    "Bitte warten Sie, während wir Ihre Anmeldedaten überprüfen..."
+  ],
+  "Portal Description": [
+    "Portal-Beschreibung"
+  ],
+  "Portal Description (Markdown)": [
+    "Portal-Beschreibung (Markdown)"
+  ],
+  "Portal Logo License": [
+    "Portal-Logo-Lizenz"
+  ],
+  "Portal Logo License URL": [
+    "Portal-Logo-Lizenz-URL"
+  ],
+  "Portal Logo URL": [
+    "Portal-Logo-URL"
+  ],
+  "Portal Name": [
+    "Portal-Name"
+  ],
+  "Portal URL": [
+    "Portal-URL"
+  ],
+  "Post Broker Login Flow": [
+    "Post-Broker-Login-Flow"
+  ],
+  "Postal Code": [
+    "Postleitzahl"
+  ],
+  "Practitioner": [
+    "Behandelnder"
+  ],
+  "Predictive Forecast": [
+    "Vorhersageprognose"
+  ],
+  "Predictive Insights": [
+    "Prädiktive Erkenntnisse"
+  ],
+  "Preferences": [
+    "Einstellungen"
+  ],
+  "Preview": [
+    "Vorschau"
+  ],
+  "Previous": [
+    "Zurück"
+  ],
+  "Primary Role": [
+    "Primäre Rolle"
+  ],
+  "Privacy Policy URI": [
+    "Datenschutzrichtlinien-URI"
+  ],
+  "Private Key": [
+    "Privater Schlüssel"
+  ],
+  "Private key corresponding to the client certificate": [
+    "Privater Schlüssel zum Client-Zertifikat"
+  ],
+  "Processed": [
+    "Verarbeitet"
+  ],
+  "Processing...": [
+    "Verarbeitung..."
+  ],
+  "Profile": [
+    "Profil"
+  ],
+  "Profile Settings": [
+    "Profileinstellungen"
+  ],
+  "Projected OAuth flows in the next hour": [
+    "Prognostizierte OAuth-Flows in der nächsten Stunde"
+  ],
+  "Projected busiest day for OAuth volume": [
+    "Prognostiziert geschäftigster Tag für OAuth-Volumen"
+  ],
+  "Proof Key for Code Exchange (recommended for public clients)": [
+    "Proof Key for Code Exchange (empfohlen für öffentliche Clients)"
+  ],
+  "Protocol Mappers": [
+    "Protokoll-Mapper"
+  ],
+  "Provide JWKS URI or public key for JWT signature verification": [
+    "JWKS-URI oder öffentlichen Schlüssel zur JWT-Signaturverifizierung angeben"
+  ],
+  "Provide a public key directly if not using JWKS URI. Supports PEM format (RSA, EC).": [
+    "Öffentlichen Schlüssel direkt angeben, wenn keine JWKS-URI verwendet wird. Unterstützt PEM-Format (RSA, EC)."
+  ],
+  "Provider": [
+    "Anbieter"
+  ],
+  "Provider Name": [
+    "Anbietername"
+  ],
+  "Provider Type": [
+    "Anbietertyp"
+  ],
+  "Provider Vendor": [
+    "Anbieter-Hersteller"
+  ],
+  "Provider:": [
+    "Anbieter:"
+  ],
+  "Provides automatic data governance and access control": [
+    "Bietet automatische Datensteuerung und Zugriffskontrolle"
+  ],
+  "Proxy Smart": [
+    "Proxy Smart"
+  ],
+  "Proxy Smart Dashboard": [
+    "Proxy Smart Dashboard"
+  ],
+  "Proxy URL:": [
+    "Proxy-URL:"
+  ],
+  "Public Brand Discovery": [
+    "Öffentliche Marken-Erkennung"
+  ],
+  "Public Client": [
+    "Öffentlicher Client"
+  ],
+  "Public Clients": [
+    "Öffentliche Clients"
+  ],
+  "Public Key (Alternative)": [
+    "Öffentlicher Schlüssel (Alternativ)"
+  ],
+  "Public Key (PEM)": [
+    "Öffentlicher Schlüssel (PEM)"
+  ],
+  "Public endpoint:": [
+    "Öffentlicher Endpunkt:"
+  ],
+  "Publish": [
+    "Veröffentlichen"
+  ],
+  "Publish App": [
+    "App veröffentlichen"
+  ],
+  "Publish App to Store": [
+    "App im Store veröffentlichen"
+  ],
+  "QIDO-RS Root:": [
+    "QIDO-RS-Root:"
+  ],
+  "Query parameters are injected to restrict results by role. Non-matching requests are blocked.": [
+    "Abfrageparameter werden eingefügt, um Ergebnisse nach Rolle einzuschränken. Nicht übereinstimmende Anfragen werden blockiert."
+  ],
+  "Quick Add": [
+    "Schnell hinzufügen"
+  ],
+  "RDN LDAP Attribute": [
+    "RDN-LDAP-Attribut"
+  ],
+  "RSA-SHA256": [
+    "RSA-SHA256"
+  ],
+  "RSA-SHA384": [
+    "RSA-SHA384"
+  ],
+  "RSA-SHA512": [
+    "RSA-SHA512"
+  ],
+  "RSS Total": [
+    "RSS gesamt"
+  ],
+  "Rate Limit (per minute)": [
+    "Ratenbegrenzung (pro Minute)"
+  ],
+  "Raw capability statement": [
+    "Rohe Capability-Anweisung"
+  ],
+  "Read-only GET endpoints are always available as MCP resources. Enable this to also register them as tools with readOnlyHint so AI models can invoke them directly.": [
+    "Schreibgeschützte GET-Endpunkte sind immer als MCP-Ressourcen verfügbar. Aktivieren Sie dies, um sie auch als Tools mit readOnlyHint zu registrieren, damit KI-Modelle sie direkt aufrufen können."
+  ],
+  "Read-only GET endpoints exposed as MCP resources. {{exposed}} of {{total}} enabled.": [
+    "Schreibgeschützte GET-Endpunkte als MCP-Ressourcen. {{exposed}} von {{total}} aktiviert."
+  ],
+  "Real-time": [
+    "Echtzeit"
+  ],
+  "Real-time Audit Monitoring Active": [
+    "Echtzeit-Audit-Überwachung aktiv"
+  ],
+  "Real-time Audit Monitoring Paused": [
+    "Echtzeit-Audit-Überwachung pausiert"
+  ],
+  "Real-time Monitoring Active": [
+    "Echtzeit-Überwachung aktiv"
+  ],
+  "Real-time Monitoring Paused": [
+    "Echtzeit-Überwachung pausiert"
+  ],
+  "Real-time consent decision monitoring and analytics": [
+    "Echtzeit-Einwilligungsüberwachung und -Analytik"
+  ],
+  "Real-time monitoring and analytics for OAuth 2.0 flows": [
+    "Echtzeit-Überwachung und -Analytik für OAuth 2.0 Flows"
+  ],
+  "Real-time updates are paused. Click Resume to continue monitoring.": [
+    "Echtzeit-Updates sind pausiert. Klicken Sie auf Fortsetzen, um die Überwachung fortzusetzen."
+  ],
+  "Realm": [
+    "Realm"
+  ],
+  "Realm Name": [
+    "Realm-Name"
+  ],
+  "Realm Roles": [
+    "Realm-Rollen"
+  ],
+  "Realm default": [
+    "Realm-Standard"
+  ],
+  "Reason": [
+    "Grund"
+  ],
+  "Reason must be at least 10 characters long": [
+    "Grund muss mindestens 10 Zeichen lang sein"
+  ],
+  "Recent": [
+    "Aktuell"
+  ],
+  "Recent Consent Decisions": [
+    "Aktuelle Einwilligungsentscheidungen"
+  ],
+  "Recent Errors": [
+    "Aktuelle Fehler"
+  ],
+  "Recent Events": [
+    "Aktuelle Ereignisse"
+  ],
+  "Recent Failures": [
+    "Aktuelle Fehler"
+  ],
+  "Recent OAuth Events": [
+    "Aktuelle OAuth-Ereignisse"
+  ],
+  "Recent failed actions": [
+    "Aktuelle fehlgeschlagene Aktionen"
+  ],
+  "Recommended action": [
+    "Empfohlene Aktion"
+  ],
+  "Redirect URI": [
+    "Redirect-URI"
+  ],
+  "Redirect URIs": [
+    "Redirect-URIs"
+  ],
+  "Redirect URL": [
+    "Redirect-URL"
+  ],
+  "Refresh": [
+    "Aktualisieren"
+  ],
+  "Refresh Status": [
+    "Status aktualisieren"
+  ],
+  "Register Application": [
+    "Anwendung registrieren"
+  ],
+  "Register New App": [
+    "Neue App registrieren"
+  ],
+  "Register New Application": [
+    "Neue Anwendung registrieren"
+  ],
+  "Register New SMART on FHIR Application": [
+    "Neue SMART on FHIR-Anwendung registrieren"
+  ],
+  "Register a new SMART on FHIR scope in Keycloak. Use the format context/Resource.permissions (e.g. user/Claim.cud).": [
+    "Neuen SMART on FHIR-Scope in Keycloak registrieren. Verwenden Sie das Format context/Resource.permissions (z.B. user/Claim.cud)."
+  ],
+  "Register a new member for door management": [
+    "Neues Mitglied für die Türverwaltung registrieren"
+  ],
+  "Registered": [
+    "Registriert"
+  ],
+  "Registered App": [
+    "Registrierte App"
+  ],
+  "Registered Applications": [
+    "Registrierte Anwendungen"
+  ],
+  "Registered Apps": [
+    "Registrierte Apps"
+  ],
+  "Registered Scopes": [
+    "Registrierte Scopes"
+  ],
+  "Registered members": [
+    "Registrierte Mitglieder"
+  ],
+  "Registration": [
+    "Registrierung"
+  ],
+  "Regular expression patterns for validating redirect URIs": [
+    "Reguläre Ausdrücke zur Validierung von Redirect-URIs"
+  ],
+  "Reject requests for unsupported FHIR interactions": [
+    "Anfragen für nicht unterstützte FHIR-Interaktionen ablehnen"
+  ],
+  "RelatedPerson": [
+    "RelatedPerson"
+  ],
+  "Reload": [
+    "Neu laden"
+  ],
+  "Remove": [
+    "Entfernen"
+  ],
+  "Remove Imported": [
+    "Importierte entfernen"
+  ],
+  "Remove Member": [
+    "Mitglied entfernen"
+  ],
+  "Remove Provider": [
+    "Anbieter entfernen"
+  ],
+  "Remove scope": [
+    "Scope entfernen"
+  ],
+  "Removed": [
+    "Entfernt"
+  ],
+  "Removing...": [
+    "Wird entfernt..."
+  ],
+  "Request Volume": [
+    "Anfragevolumen"
+  ],
+  "Requests without sufficient scopes are blocked with 403.": [
+    "Anfragen ohne ausreichende Scopes werden mit 403 blockiert."
+  ],
+  "Require HTTPS": [
+    "HTTPS erforderlich"
+  ],
+  "Require PKCE": [
+    "PKCE erforderlich"
+  ],
+  "Require Privacy Policy": [
+    "Datenschutzrichtlinie erforderlich"
+  ],
+  "Require Terms of Service": [
+    "Nutzungsbedingungen erforderlich"
+  ],
+  "Require client certificate authentication": [
+    "Client-Zertifikat-Authentifizierung erforderlich"
+  ],
+  "Required": [
+    "Erforderlich"
+  ],
+  "Required For Resource Types": [
+    "Erforderlich für Ressourcentypen"
+  ],
+  "Required Roles": [
+    "Erforderliche Rollen"
+  ],
+  "Required for dynamic client registration and advanced features": [
+    "Erforderlich für dynamische Client-Registrierung und erweiterte Funktionen"
+  ],
+  "Requirement": [
+    "Anforderung"
+  ],
+  "Researcher": [
+    "Forscher"
+  ],
+  "Reset Defaults": [
+    "Standardwerte zurücksetzen"
+  ],
+  "Resource": [
+    "Ressource"
+  ],
+  "Resource ID": [
+    "Ressourcen-ID"
+  ],
+  "Resource Type": [
+    "Ressourcentyp"
+  ],
+  "Resource types requiring elevated IAL (e.g. MedicationRequest, DiagnosticReport)": [
+    "Ressourcentypen mit erhöhter IAL-Anforderung (z.B. MedicationRequest, DiagnosticReport)"
+  ],
+  "Resource types that never require consent": [
+    "Ressourcentypen, die nie eine Einwilligung erfordern"
+  ],
+  "Resource:": [
+    "Ressource:"
+  ],
+  "Response": [
+    "Antwort"
+  ],
+  "Restart": [
+    "Neustart"
+  ],
+  "Restart Failed": [
+    "Neustart fehlgeschlagen"
+  ],
+  "Restart Reason": [
+    "Neustartgrund"
+  ],
+  "Restart Server": [
+    "Server neu starten"
+  ],
+  "Restrict which users can access this app based on their FHIR user type or assigned roles. Leave empty for no restrictions.": [
+    "Zugriff auf diese App basierend auf FHIR-Benutzertyp oder zugewiesenen Rollen einschränken. Leer lassen für keine Einschränkungen."
+  ],
+  "Restricts data visibility based on the fhirUser token claim. Patients only see their own data, Practitioners only see assigned patients.": [
+    "Schränkt die Datensichtbarkeit basierend auf dem fhirUser-Token-Claim ein. Patienten sehen nur ihre eigenen Daten, Behandelnde nur zugewiesene Patienten."
+  ],
+  "Results from testing identity provider connections": [
+    "Ergebnisse der Identity-Provider-Verbindungstests"
+  ],
+  "Resume": [
+    "Fortsetzen"
+  ],
+  "Retry": [
+    "Wiederholen"
+  ],
+  "Revoke": [
+    "Widerrufen"
+  ],
+  "Risk: High": [
+    "Risiko: Hoch"
+  ],
+  "Risk: Low": [
+    "Risiko: Niedrig"
+  ],
+  "Risk: Medium": [
+    "Risiko: Mittel"
+  ],
+  "Risk: Unknown": [
+    "Risiko: Unbekannt"
+  ],
+  "Role Management": [
+    "Rollenverwaltung"
+  ],
+  "Role violations are logged but data is not filtered.": [
+    "Rollenverstöße werden protokolliert, aber Daten werden nicht gefiltert."
+  ],
+  "Role-Based Data Filtering": [
+    "Rollenbasierte Datenfilterung"
+  ],
+  "Role-Based Templates": [
+    "Rollenbasierte Vorlagen"
+  ],
+  "Role-based": [
+    "Rollenbasiert"
+  ],
+  "SAML 2.0": [
+    "SAML 2.0"
+  ],
+  "SAML Providers": [
+    "SAML-Anbieter"
+  ],
+  "SMART App Launch 2.2.0 User-Access Brands": [
+    "SMART App Launch 2.2.0 User-Access Brands"
+  ],
+  "SMART Apps": [
+    "SMART-Apps"
+  ],
+  "SMART Capabilities": [
+    "SMART-Capabilities"
+  ],
+  "SMART Capabilities:": [
+    "SMART-Capabilities:"
+  ],
+  "SMART Config": [
+    "SMART-Konfiguration"
+  ],
+  "SMART Configuration": [
+    "SMART-Konfiguration"
+  ],
+  "SMART Flows": [
+    "SMART-Flows"
+  ],
+  "SMART Scope Enforcement": [
+    "SMART-Scope-Durchsetzung"
+  ],
+  "SMART Scope Management": [
+    "SMART-Scope-Verwaltung"
+  ],
+  "SMART Version": [
+    "SMART-Version"
+  ],
+  "SMART configuration": [
+    "SMART-Konfiguration"
+  ],
+  "SMART on FHIR": [
+    "SMART on FHIR"
+  ],
+  "SMART on FHIR Applications": [
+    "SMART on FHIR-Anwendungen"
+  ],
+  "SMART on FHIR flow types and Keycloak authentication flows": [
+    "SMART on FHIR-Flow-Typen und Keycloak-Authentifizierungs-Flows"
+  ],
+  "SMART scopes that can be requested during registration": [
+    "SMART-Scopes, die bei der Registrierung angefordert werden können"
+  ],
+  "SMART/Launch": [
+    "SMART/Launch"
+  ],
+  "SSO URL / Authorization Endpoint": [
+    "SSO-URL / Autorisierungsendpunkt"
+  ],
+  "SVG or 1024px PNG with transparent background recommended": [
+    "SVG oder 1024px PNG mit transparentem Hintergrund empfohlen"
+  ],
+  "Save": [
+    "Speichern"
+  ],
+  "Save & Connect": [
+    "Speichern & Verbinden"
+  ],
+  "Save Changes": [
+    "Änderungen speichern"
+  ],
+  "Save Configuration": [
+    "Konfiguration speichern"
+  ],
+  "Save IAL Settings": [
+    "IAL-Einstellungen speichern"
+  ],
+  "Save Overrides": [
+    "Überschreibungen speichern"
+  ],
+  "Save Scopes": [
+    "Scopes speichern"
+  ],
+  "Save Settings": [
+    "Einstellungen speichern"
+  ],
+  "Save as Scope Set": [
+    "Als Scope-Set speichern"
+  ],
+  "Save the current default scopes as a reusable scope set": [
+    "Aktuelle Standard-Scopes als wiederverwendbares Scope-Set speichern"
+  ],
+  "Saving Configuration...": [
+    "Konfiguration wird gespeichert..."
+  ],
+  "Saving...": [
+    "Wird gespeichert..."
+  ],
+  "Saving…": [
+    "Wird gespeichert…"
+  ],
+  "Scope": [
+    "Scope"
+  ],
+  "Scope Configuration": [
+    "Scope-Konfiguration"
+  ],
+  "Scope Name": [
+    "Scope-Name"
+  ],
+  "Scope Preview": [
+    "Scope-Vorschau"
+  ],
+  "Scope Set": [
+    "Scope-Set"
+  ],
+  "Scope Set Details": [
+    "Scope-Set-Details"
+  ],
+  "Scope Sets": [
+    "Scope-Sets"
+  ],
+  "Scope Template": [
+    "Scope-Vorlage"
+  ],
+  "Scope set name": [
+    "Scope-Set-Name"
+  ],
+  "Scope set saved": [
+    "Scope-Set gespeichert"
+  ],
+  "Scopes": [
+    "Scopes"
+  ],
+  "Scopes & Launch Context": [
+    "Scopes & Launch-Kontext"
+  ],
+  "Scopes updated successfully": [
+    "Scopes erfolgreich aktualisiert"
+  ],
+  "Search": [
+    "Suchen"
+  ],
+  "Search Parameters (Optional)": [
+    "Suchparameter (Optional)"
+  ],
+  "Search Results": [
+    "Suchergebnisse"
+  ],
+  "Search Scope": [
+    "Suchbereich"
+  ],
+  "Search by actor, path, resource...": [
+    "Nach Akteur, Pfad, Ressource suchen..."
+  ],
+  "Search by client or user...": [
+    "Nach Client oder Benutzer suchen..."
+  ],
+  "Search by client, patient, path...": [
+    "Nach Client, Patient, Pfad suchen..."
+  ],
+  "Search doors...": [
+    "Türen suchen..."
+  ],
+  "Search events...": [
+    "Ereignisse suchen..."
+  ],
+  "Search groups...": [
+    "Gruppen suchen..."
+  ],
+  "Search members...": [
+    "Mitglieder suchen..."
+  ],
+  "Search users by name, email, or username...": [
+    "Benutzer nach Name, E-Mail oder Benutzername suchen..."
+  ],
+  "Search...": [
+    "Suchen..."
+  ],
+  "Searching...": [
+    "Suche läuft..."
+  ],
+  "Seconds before idle session expires": [
+    "Sekunden bis zur Sitzungszeitüberschreitung"
+  ],
+  "Secret for the admin client (keep this secure)": [
+    "Secret für den Admin-Client (sicher aufbewahren)"
+  ],
+  "Secure": [
+    "Sicher"
+  ],
+  "Secure authentication via OpenID Connect. Your credentials are never stored on this application.": [
+    "Sichere Authentifizierung über OpenID Connect. Ihre Anmeldedaten werden nie in dieser Anwendung gespeichert."
+  ],
+  "Security Best Practices:": [
+    "Sicherheits-Best-Practices:"
+  ],
+  "Security Options": [
+    "Sicherheitsoptionen"
+  ],
+  "Security Warning": [
+    "Sicherheitswarnung"
+  ],
+  "Select Allowed Servers": [
+    "Erlaubte Server auswählen"
+  ],
+  "Select FHIR Server": [
+    "FHIR-Server auswählen"
+  ],
+  "Select FHIR server": [
+    "FHIR-Server auswählen"
+  ],
+  "Select Scope Set": [
+    "Scope-Set auswählen"
+  ],
+  "Select a FHIR server": [
+    "FHIR-Server auswählen"
+  ],
+  "Select a Person Resource": [
+    "Person-Ressource auswählen"
+  ],
+  "Select a Person resource": [
+    "Person-Ressource auswählen"
+  ],
+  "Select a door to add to this group": [
+    "Tür auswählen, um sie dieser Gruppe hinzuzufügen"
+  ],
+  "Select a registered app to publish to the public app store.": [
+    "Registrierte App auswählen, um sie im öffentlichen App Store zu veröffentlichen."
+  ],
+  "Select a server from the overview tab to view detailed information": [
+    "Server aus der Übersicht auswählen, um Details anzuzeigen"
+  ],
+  "Select an app...": [
+    "App auswählen..."
+  ],
+  "Select authenticator provider": [
+    "Authenticator-Anbieter auswählen"
+  ],
+  "Select identity provider": [
+    "Identity Provider auswählen"
+  ],
+  "Select primary role...": [
+    "Primäre Rolle auswählen..."
+  ],
+  "Select resource type": [
+    "Ressourcentyp auswählen"
+  ],
+  "Select resource...": [
+    "Ressource auswählen..."
+  ],
+  "Select the access control system you want to connect": [
+    "Wählen Sie das Zutrittskontrollsystem, das Sie verbinden möchten"
+  ],
+  "Selected Servers": [
+    "Ausgewählte Server"
+  ],
+  "Self-initiated": [
+    "Selbst initiiert"
+  ],
+  "Sensitive Resource Types": [
+    "Sensible Ressourcentypen"
+  ],
+  "Served from cache": [
+    "Aus Cache bereitgestellt"
+  ],
+  "Server": [
+    "Server"
+  ],
+  "Server Access": [
+    "Serverzugang"
+  ],
+  "Server Access Configuration": [
+    "Serverzugangs-Konfiguration"
+  ],
+  "Server Access Type": [
+    "Serverzugangstyp"
+  ],
+  "Server Configuration": [
+    "Server-Konfiguration"
+  ],
+  "Server Details": [
+    "Server-Details"
+  ],
+  "Server ID:": [
+    "Server-ID:"
+  ],
+  "Server Information": [
+    "Server-Informationen"
+  ],
+  "Server Name": [
+    "Servername"
+  ],
+  "Server Name:": [
+    "Servername:"
+  ],
+  "Server Overview": [
+    "Server-Übersicht"
+  ],
+  "Server Restart Initiated": [
+    "Server-Neustart eingeleitet"
+  ],
+  "Server Shutdown Initiated": [
+    "Server-Herunterfahren eingeleitet"
+  ],
+  "Server Software": [
+    "Server-Software"
+  ],
+  "Server Status": [
+    "Server-Status"
+  ],
+  "Server URL": [
+    "Server-URL"
+  ],
+  "Server URL is required": [
+    "Server-URL ist erforderlich"
+  ],
+  "Server Version": [
+    "Server-Version"
+  ],
+  "Server Version:": [
+    "Server-Version:"
+  ],
+  "Server access is determined dynamically at runtime": [
+    "Serverzugang wird zur Laufzeit dynamisch bestimmt"
+  ],
+  "Server name is required": [
+    "Servername ist erforderlich"
+  ],
+  "Server receives a logout token when the session ends": [
+    "Server erhält ein Logout-Token bei Sitzungsende"
+  ],
+  "Server restart has been initiated successfully. Reason: {{reason}}": [
+    "Server-Neustart erfolgreich eingeleitet. Grund: {{reason}}"
+  ],
+  "Server shutdown has been initiated successfully. Reason: {{reason}}": [
+    "Server-Herunterfahren erfolgreich eingeleitet. Grund: {{reason}}"
+  ],
+  "Server-side apps with client secret": [
+    "Serverseitige Apps mit Client-Secret"
+  ],
+  "Server:": [
+    "Server:"
+  ],
+  "Servers": [
+    "Server"
+  ],
+  "Servers with User Person Records": [
+    "Server mit Benutzer-Person-Datensätzen"
+  ],
+  "Session Idle Timeout": [
+    "Sitzungs-Leerlauf-Zeitüberschreitung"
+  ],
+  "Session Max Lifespan": [
+    "Maximale Sitzungsdauer"
+  ],
+  "Session Timeouts": [
+    "Sitzungszeitüberschreitungen"
+  ],
+  "Set": [
+    "Festlegen"
+  ],
+  "Set Default": [
+    "Als Standard festlegen"
+  ],
+  "Setup Dynamic Registration": [
+    "Dynamische Registrierung einrichten"
+  ],
+  "Show": [
+    "Anzeigen"
+  ],
+  "Showing first 100 events of {{total}}": [
+    "Zeige die ersten 100 Ereignisse von {{total}}"
+  ],
+  "Showing first 50 events of {{total}}": [
+    "Zeige die ersten 50 Ereignisse von {{total}}"
+  ],
+  "Showing {{count}} of {{total}} events": [
+    "{{count}} von {{total}} Ereignissen angezeigt"
+  ],
+  "Shutdown Failed": [
+    "Herunterfahren fehlgeschlagen"
+  ],
+  "Shutdown Reason": [
+    "Grund für Herunterfahren"
+  ],
+  "Shutdown Server": [
+    "Server herunterfahren"
+  ],
+  "Sign out": [
+    "Abmelden"
+  ],
+  "Signature Algorithm": [
+    "Signaturalgorithmus"
+  ],
+  "Signature Validation:": [
+    "Signaturvalidierung:"
+  ],
+  "Signed AuthN Requests:": [
+    "Signierte AuthN-Anfragen:"
+  ],
+  "Signing Certificate": [
+    "Signaturzertifikat"
+  ],
+  "Signing in...": [
+    "Anmeldung läuft..."
+  ],
+  "Skipped: {{count}}": [
+    "Übersprungen: {{count}}"
+  ],
+  "Something went wrong": [
+    "Etwas ist schiefgelaufen"
+  ],
+  "Specific Servers Only": [
+    "Nur bestimmte Server"
+  ],
+  "Stable": [
+    "Stabil"
+  ],
+  "Standalone": [
+    "Eigenständig"
+  ],
+  "Standalone App (Interactive)": [
+    "Eigenständige App (Interaktiv)"
+  ],
+  "Standalone Launch Clients": [
+    "Standalone-Launch-Clients"
+  ],
+  "State": [
+    "Status"
+  ],
+  "State / Province": [
+    "Bundesland / Kanton"
+  ],
+  "Status": [
+    "Status"
+  ],
+  "Status Code": [
+    "Statuscode"
+  ],
+  "Status Codes": [
+    "Statuscodes"
+  ],
+  "Status:": [
+    "Status:"
+  ],
+  "Store a shared secret for client authentication": [
+    "Shared Secret für Client-Authentifizierung speichern"
+  ],
+  "Strict Capabilities": [
+    "Strikte Capabilities"
+  ],
+  "Sub-flow": [
+    "Sub-Flow"
+  ],
+  "Subject:": [
+    "Betreff:"
+  ],
+  "Success": [
+    "Erfolg"
+  ],
+  "Success Rate": [
+    "Erfolgsrate"
+  ],
+  "Success rate": [
+    "Erfolgsrate"
+  ],
+  "Success vs Errors": [
+    "Erfolg vs. Fehler"
+  ],
+  "Success vs failure over time": [
+    "Erfolg vs. Fehler im Zeitverlauf"
+  ],
+  "Successful operations": [
+    "Erfolgreiche Operationen"
+  ],
+  "Successfully deleted application \"{{name}}\"": [
+    "Anwendung „{{name}}\" erfolgreich gelöscht"
+  ],
+  "Suggestions:": [
+    "Vorschläge:"
+  ],
+  "Supported": [
+    "Unterstützt"
+  ],
+  "Supported Servers": [
+    "Unterstützte Server"
+  ],
+  "Symmetric Authentication": [
+    "Symmetrische Authentifizierung"
+  ],
+  "Symmetric Client Authentication": [
+    "Symmetrische Client-Authentifizierung"
+  ],
+  "Symmetric authentication (client secrets) is less secure than asymmetric authentication (JWT with public/private keys). Use asymmetric authentication when possible, especially for production deployments.": [
+    "Symmetrische Authentifizierung (Client-Secrets) ist weniger sicher als asymmetrische Authentifizierung (JWT mit öffentlichen/privaten Schlüsseln). Verwenden Sie wenn möglich asymmetrische Authentifizierung, besonders in Produktionsumgebungen."
+  ],
+  "Sync Members from Keycloak": [
+    "Mitglieder aus Keycloak synchronisieren"
+  ],
+  "Sync Now": [
+    "Jetzt synchronisieren"
+  ],
+  "Sync Registrations": [
+    "Registrierungen synchronisieren"
+  ],
+  "Sync Settings": [
+    "Synchronisierungseinstellungen"
+  ],
+  "Sync completed: {{added}} added, {{updated}} updated, {{removed}} removed, {{failed}} failed": [
+    "Synchronisierung abgeschlossen: {{added}} hinzugefügt, {{updated}} aktualisiert, {{removed}} entfernt, {{failed}} fehlgeschlagen"
+  ],
+  "Sync from Keycloak": [
+    "Aus Keycloak synchronisieren"
+  ],
+  "Sync new Keycloak registrations to LDAP": [
+    "Neue Keycloak-Registrierungen nach LDAP synchronisieren"
+  ],
+  "Syncing...": [
+    "Synchronisierung..."
+  ],
+  "System": [
+    "System"
+  ],
+  "System Health": [
+    "Systemstatus"
+  ],
+  "System Uptime": [
+    "Systembetriebszeit"
+  ],
+  "System-to-system integrations (client_credentials)": [
+    "System-zu-System-Integrationen (client_credentials)"
+  ],
+  "TLS everywhere: secure client-to-proxy and proxy-to-FHIR connections.": [
+    "TLS überall: Client-zu-Proxy- und Proxy-zu-FHIR-Verbindungen absichern."
+  ],
+  "Template": [
+    "Vorlage"
+  ],
+  "Template:": [
+    "Vorlage:"
+  ],
+  "Temporary password": [
+    "Temporäres Passwort"
+  ],
+  "Terms of Service URI": [
+    "Nutzungsbedingungen-URI"
+  ],
+  "Test Connection": [
+    "Verbindung testen"
+  ],
+  "Test scope": [
+    "Scope testen"
+  ],
+  "Testing Connection...": [
+    "Verbindung wird getestet..."
+  ],
+  "Testing...": [
+    "Test läuft..."
+  ],
+  "The Keycloak realm that contains your users and clients": [
+    "Der Keycloak-Realm, der Ihre Benutzer und Clients enthält"
+  ],
+  "The brand bundle is published as a FHIR Bundle at the URL below and referenced from .well-known/smart-configuration.": [
+    "Das Brand-Bundle wird als FHIR-Bundle unter der untenstehenden URL veröffentlicht und von .well-known/smart-configuration referenziert."
+  ],
+  "The complete URL where your Keycloak server is running": [
+    "Die vollständige URL, unter der Ihr Keycloak-Server läuft"
+  ],
+  "Theme": [
+    "Design"
+  ],
+  "Therapist": [
+    "Therapeut"
+  ],
+  "This FHIR server is publicly accessible and can be reached directly, bypassing the secure proxy. It should only accept traffic from the Proxy Server.": [
+    "Dieser FHIR-Server ist öffentlich zugänglich und kann direkt erreicht werden, ohne den sicheren Proxy. Er sollte nur Datenverkehr vom Proxy-Server akzeptieren."
+  ],
+  "This URL is already registered": [
+    "Diese URL ist bereits registriert"
+  ],
+  "This action cannot be undone": [
+    "Diese Aktion kann nicht rückgängig gemacht werden"
+  ],
+  "This app will have access to all FHIR servers configured behind the Proxy. Use this option for apps that need broad access across all healthcare data sources.": [
+    "Diese App hat Zugriff auf alle hinter dem Proxy konfigurierten FHIR-Server. Verwenden Sie diese Option für Apps, die breiten Zugriff auf alle Gesundheitsdatenquellen benötigen."
+  ],
+  "This app will only be able to access FHIR servers where the authenticated user has an associated Person resource.": [
+    "Diese App kann nur auf FHIR-Server zugreifen, auf denen der authentifizierte Benutzer eine zugehörige Person-Ressource hat."
+  ],
+  "This field is required": [
+    "Dieses Feld ist erforderlich"
+  ],
+  "This server cannot be reached or does not respond with valid FHIR metadata. API endpoints and advanced features are not available for this server.": [
+    "Dieser Server ist nicht erreichbar oder antwortet nicht mit gültigen FHIR-Metadaten. API-Endpunkte und erweiterte Funktionen sind für diesen Server nicht verfügbar."
+  ],
+  "This server is unreachable and can be safely removed. Delete \"{{name}}\"?": [
+    "Dieser Server ist nicht erreichbar und kann sicher entfernt werden. „{{name}}\" löschen?"
+  ],
+  "This user already has Person resources on all available FHIR servers.": [
+    "Dieser Benutzer hat bereits Person-Ressourcen auf allen verfügbaren FHIR-Servern."
+  ],
+  "This will sync Keycloak users to the door management provider. Existing members will be skipped.": [
+    "Dies synchronisiert Keycloak-Benutzer mit dem Türverwaltungsanbieter. Bestehende Mitglieder werden übersprungen."
+  ],
+  "Time": [
+    "Zeit"
+  ],
+  "Timeout": [
+    "Zeitüberschreitung"
+  ],
+  "Timeout (ms)": [
+    "Zeitüberschreitung (ms)"
+  ],
+  "Timeout:": [
+    "Zeitüberschreitung:"
+  ],
+  "Timestamp": [
+    "Zeitstempel"
+  ],
+  "Tip: If fetching fails in browser, the server may not allow CORS for your origin. Try a proxy or server-side check.": [
+    "Tipp: Wenn der Abruf im Browser fehlschlägt, erlaubt der Server möglicherweise kein CORS für Ihren Ursprung. Versuchen Sie einen Proxy oder serverseitige Prüfung."
+  ],
+  "To link an IdP, edit it in the Identity Providers tab and select this organization.": [
+    "Um einen IdP zu verknüpfen, bearbeiten Sie ihn im Identity-Provider-Tab und wählen Sie diese Organisation."
+  ],
+  "Token": [
+    "Token"
+  ],
+  "Token Exchange": [
+    "Token-Austausch"
+  ],
+  "Token URL": [
+    "Token-URL"
+  ],
+  "Tokens:": [
+    "Tokens:"
+  ],
+  "Top Actors": [
+    "Top-Akteure"
+  ],
+  "Top Applications": [
+    "Top-Anwendungen"
+  ],
+  "Top Clients": [
+    "Top-Clients"
+  ],
+  "Top Denied Clients": [
+    "Top abgelehnte Clients"
+  ],
+  "Top Denied Patients": [
+    "Top abgelehnte Patienten"
+  ],
+  "Top Error": [
+    "Häufigster Fehler"
+  ],
+  "Top-level": [
+    "Oberste Ebene"
+  ],
+  "Total": [
+    "Gesamt"
+  ],
+  "Total Actions": [
+    "Aktionen gesamt"
+  ],
+  "Total Apps": [
+    "Apps gesamt"
+  ],
+  "Total Decisions": [
+    "Entscheidungen gesamt"
+  ],
+  "Total Federations": [
+    "Föderationen gesamt"
+  ],
+  "Total IdPs": [
+    "IdPs gesamt"
+  ],
+  "Total Requests": [
+    "Anfragen gesamt"
+  ],
+  "Total Scope Sets": [
+    "Scope-Sets gesamt"
+  ],
+  "Total Scopes": [
+    "Scopes gesamt"
+  ],
+  "Total Servers": [
+    "Server gesamt"
+  ],
+  "Total Users": [
+    "Benutzer gesamt"
+  ],
+  "Track admin mutations, actor activity, and security events": [
+    "Admin-Änderungen, Akteursaktivitäten und Sicherheitsereignisse verfolgen"
+  ],
+  "Transient": [
+    "Flüchtig"
+  ],
+  "Trend": [
+    "Trend"
+  ],
+  "Troubleshooting Actions": [
+    "Fehlerbehebungsaktionen"
+  ],
+  "Trust Email": [
+    "E-Mail vertrauen"
+  ],
+  "Trust email addresses from LDAP without verification": [
+    "E-Mail-Adressen aus LDAP ohne Verifizierung vertrauen"
+  ],
+  "Try Again": [
+    "Erneut versuchen"
+  ],
+  "Try adjusting your filter criteria": [
+    "Versuchen Sie, Ihre Filterkriterien anzupassen"
+  ],
+  "Type": [
+    "Typ"
+  ],
+  "Type & Auth": [
+    "Typ & Authentifizierung"
+  ],
+  "Type:": [
+    "Typ:"
+  ],
+  "UI Display Override": [
+    "UI-Anzeige-Überschreibung"
+  ],
+  "URI Patterns": [
+    "URI-Muster"
+  ],
+  "URI that uniquely identifies this brand (typically the website URL)": [
+    "URI, die diese Marke eindeutig identifiziert (typischerweise die Website-URL)"
+  ],
+  "URIs": [
+    "URIs"
+  ],
+  "URL endpoint where the proxy can fetch your app\\": [
+    "URL-Endpunkt, unter dem der Proxy Ihre App abrufen kann"
+  ],
+  "UUID LDAP Attribute": [
+    "UUID-LDAP-Attribut"
+  ],
+  "Unable to Connect": [
+    "Verbindung nicht möglich"
+  ],
+  "Unable to connect to server": [
+    "Verbindung zum Server nicht möglich"
+  ],
+  "Unable to connect to this FHIR server or retrieve metadata": [
+    "Verbindung zu diesem FHIR-Server oder Abruf der Metadaten nicht möglich"
+  ],
+  "Unable to delete provider without an alias.": [
+    "Anbieter ohne Alias kann nicht gelöscht werden."
+  ],
+  "Unable to toggle status without an alias.": [
+    "Status ohne Alias kann nicht umgeschaltet werden."
+  ],
+  "Undo link": [
+    "Verknüpfung rückgängig machen"
+  ],
+  "Undo removal": [
+    "Entfernung rückgängig machen"
+  ],
+  "UniFi Access (Local)": [
+    "UniFi Access (Lokal)"
+  ],
+  "UniFi Access Credentials": [
+    "UniFi Access-Anmeldedaten"
+  ],
+  "Unknown": [
+    "Unbekannt"
+  ],
+  "Unlink": [
+    "Verknüpfung aufheben"
+  ],
+  "Unlock": [
+    "Entsperren"
+  ],
+  "Unlocked": [
+    "Entsperrt"
+  ],
+  "Unlocking": [
+    "Wird entsperrt"
+  ],
+  "Unpublish from store": [
+    "Aus Store entfernen"
+  ],
+  "Unreachable": [
+    "Nicht erreichbar"
+  ],
+  "Unspecified": [
+    "Nicht angegeben"
+  ],
+  "Unsupported": [
+    "Nicht unterstützt"
+  ],
+  "Unsupported Servers": [
+    "Nicht unterstützte Server"
+  ],
+  "Update": [
+    "Aktualisieren"
+  ],
+  "Update Provider": [
+    "Anbieter aktualisieren"
+  ],
+  "Update Scope Configuration": [
+    "Scope-Konfiguration aktualisieren"
+  ],
+  "Update Server": [
+    "Server aktualisieren"
+  ],
+  "Update User": [
+    "Benutzer aktualisieren"
+  ],
+  "Update the DICOMweb/PACS server configuration.": [
+    "DICOMweb/PACS-Server-Konfiguration aktualisieren."
+  ],
+  "Update the URL for \"{{name}}\". The server name and details will be automatically retrieved from the server\\": [
+    "URL für „{{name}}\" aktualisieren. Servername und Details werden automatisch vom Server abgerufen"
+  ],
+  "Update user information and permissions": [
+    "Benutzerinformationen und Berechtigungen aktualisieren"
+  ],
+  "Updated": [
+    "Aktualisiert"
+  ],
+  "Updating...": [
+    "Wird aktualisiert..."
+  ],
+  "Upload .crt/.pem": [
+    ".crt/.pem hochladen"
+  ],
+  "Upload .key/.pem": [
+    ".key/.pem hochladen"
+  ],
+  "Uptime": [
+    "Betriebszeit"
+  ],
+  "Usage": [
+    "Nutzung"
+  ],
+  "Use \"Clear Session Data\" for PKCE/OAuth state issues. Use \"Clear All Caches\" for \"Code not valid\" errors. Use \"Force Logout\" for persistent login issues.": [
+    "„Sitzungsdaten löschen\" für PKCE/OAuth-Statusprobleme. „Alle Caches leeren\" für „Code nicht gültig\"-Fehler. „Abmeldung erzwingen\" für anhaltende Anmeldeprobleme."
+  ],
+  "Use SMART scopes like patient/Observation.read, user/*.write, offline_access. The backend should enforce policies.": [
+    "Verwenden Sie SMART-Scopes wie patient/Observation.read, user/*.write, offline_access. Das Backend sollte Richtlinien durchsetzen."
+  ],
+  "Use paged result controls for LDAP queries": [
+    "Seitenweise Ergebnissteuerung für LDAP-Abfragen verwenden"
+  ],
+  "Use strong certificate passwords and rotate certificates regularly": [
+    "Starke Zertifikatpasswörter verwenden und Zertifikate regelmäßig rotieren"
+  ],
+  "Use these tools if you\\": [
+    "Verwenden Sie diese Tools, wenn Sie"
+  ],
+  "User": [
+    "Benutzer"
+  ],
+  "User Federation": [
+    "Benutzerföderation"
+  ],
+  "User ID at IdP": [
+    "Benutzer-ID beim IdP"
+  ],
+  "User Info URL": [
+    "Benutzerinfo-URL"
+  ],
+  "User Management": [
+    "Benutzerverwaltung"
+  ],
+  "User Object Classes": [
+    "Benutzer-Objektklassen"
+  ],
+  "User Person Server Access": [
+    "Benutzer-Person-Serverzugang"
+  ],
+  "User Restrictions": [
+    "Benutzereinschränkungen"
+  ],
+  "User created": [
+    "Benutzer erstellt"
+  ],
+  "User must explicitly consent to scopes at login": [
+    "Benutzer muss bei der Anmeldung explizit den Scopes zustimmen"
+  ],
+  "User sync failed": [
+    "Benutzersynchronisierung fehlgeschlagen"
+  ],
+  "User-Person Linked Servers": [
+    "Benutzer-Person-verknüpfte Server"
+  ],
+  "Userinfo": [
+    "Benutzerinfo"
+  ],
+  "Username": [
+    "Benutzername"
+  ],
+  "Username LDAP Attribute": [
+    "Benutzername-LDAP-Attribut"
+  ],
+  "Username at IdP": [
+    "Benutzername beim IdP"
+  ],
+  "Username cannot be changed": [
+    "Benutzername kann nicht geändert werden"
+  ],
+  "Username:": [
+    "Benutzername:"
+  ],
+  "Users": [
+    "Benutzer"
+  ],
+  "Users & Federation": [
+    "Benutzer & Föderation"
+  ],
+  "Users DN": [
+    "Benutzer-DN"
+  ],
+  "Using asymmetric JWT authentication with registered public key": [
+    "Asymmetrische JWT-Authentifizierung mit registriertem öffentlichem Schlüssel"
+  ],
+  "Valid": [
+    "Gültig"
+  ],
+  "Valid Until:": [
+    "Gültig bis:"
+  ],
+  "Validate Signature": [
+    "Signatur validieren"
+  ],
+  "Validates token scopes against requested FHIR resources. Supports SMART v1 (read/write) and v2 (cruds) scope formats.": [
+    "Validiert Token-Scopes gegen angeforderte FHIR-Ressourcen. Unterstützt SMART v1 (read/write) und v2 (cruds) Scope-Formate."
+  ],
+  "Verify Patient Link": [
+    "Patientenverknüpfung überprüfen"
+  ],
+  "Verify identity assurance via Person resources": [
+    "Identitätssicherung über Person-Ressourcen überprüfen"
+  ],
+  "Verify that the FHIR server is configured to require client certificates": [
+    "Überprüfen Sie, dass der FHIR-Server für Client-Zertifikate konfiguriert ist"
+  ],
+  "View Certificates": [
+    "Zertifikate anzeigen"
+  ],
+  "View Configuration": [
+    "Konfiguration anzeigen"
+  ],
+  "View Details": [
+    "Details anzeigen"
+  ],
+  "View and manage all Keycloak organizations": [
+    "Alle Keycloak-Organisationen anzeigen und verwalten"
+  ],
+  "View and manage all SMART on FHIR applications": [
+    "Alle SMART on FHIR-Anwendungen anzeigen und verwalten"
+  ],
+  "View and manage all configured identity providers": [
+    "Alle konfigurierten Identity Provider anzeigen und verwalten"
+  ],
+  "View and manage all healthcare professionals and administrative users": [
+    "Alle medizinischen Fachkräfte und administrativen Benutzer anzeigen und verwalten"
+  ],
+  "Visible Tabs": [
+    "Sichtbare Tabs"
+  ],
+  "Visual Scope Builder": [
+    "Visueller Scope-Builder"
+  ],
+  "WADO-RS Root:": [
+    "WADO-RS-Root:"
+  ],
+  "Want AuthnRequests Signed": [
+    "AuthnRequests signiert gewünscht"
+  ],
+  "Warning": [
+    "Warnung"
+  ],
+  "Warning:": [
+    "Warnung:"
+  ],
+  "Watchlist": [
+    "Beobachtungsliste"
+  ],
+  "Web Origins (CORS)": [
+    "Web-Origins (CORS)"
+  ],
+  "Web apps, mobile apps (no client secret)": [
+    "Web-Apps, Mobile-Apps (kein Client-Secret)"
+  ],
+  "Website": [
+    "Website"
+  ],
+  "Weekday Patterns": [
+    "Wochentagsmuster"
+  ],
+  "Welcome back, {{name}}": [
+    "Willkommen zurück, {{name}}"
+  ],
+  "Which admin resources are most modified": [
+    "Welche Admin-Ressourcen am häufigsten geändert werden"
+  ],
+  "Which types of OAuth2 clients can register": [
+    "Welche Arten von OAuth2-Clients sich registrieren können"
+  ],
+  "Yes": [
+    "Ja"
+  ],
+  "You are logged in with the temporary bootstrap admin account. Please create a permanent admin user in the Identity Providers or Users tab. Once a permanent admin exists, Keycloak will automatically disable this bootstrap account.": [
+    "Sie sind mit dem temporären Bootstrap-Admin-Konto angemeldet. Bitte erstellen Sie einen permanenten Admin-Benutzer im Identity-Provider- oder Benutzer-Tab. Sobald ein permanenter Admin existiert, wird Keycloak dieses Bootstrap-Konto automatisch deaktivieren."
+  ],
+  "You can provide either a JWKS URI or a public key directly. The JWKS URI is recommended as it allows for key rotation. If both are provided, the JWKS URI takes precedence.": [
+    "Sie können entweder eine JWKS-URI oder einen öffentlichen Schlüssel direkt angeben. Die JWKS-URI wird empfohlen, da sie Schlüsselrotation ermöglicht. Wenn beides angegeben wird, hat die JWKS-URI Vorrang."
+  ],
+  "You can skip this section and configure it later. The admin client is only needed for automatic SMART app registration.": [
+    "Sie können diesen Abschnitt überspringen und später konfigurieren. Der Admin-Client wird nur für die automatische SMART-App-Registrierung benötigt."
+  ],
+  "actions": [
+    "Aktionen"
+  ],
+  "activate": [
+    "aktivieren"
+  ],
+  "activated": [
+    "aktiviert"
+  ],
+  "available": [
+    "verfügbar"
+  ],
+  "checks": [
+    "Prüfungen"
+  ],
+  "clients": [
+    "Clients"
+  ],
+  "days": [
+    "Tage"
+  ],
+  "days sampled": [
+    "Tage erfasst"
+  ],
+  "deactivate": [
+    "deaktivieren"
+  ],
+  "deactivated": [
+    "deaktiviert"
+  ],
+  "denied requests": [
+    "abgelehnte Anfragen"
+  ],
+  "e.g. .maxhealth.tech or https://mcp.example.com": [
+    "z.B. .maxhealth.tech oder https://mcp.example.com"
+  ],
+  "e.g. DocumentReference": [
+    "z.B. DocumentReference"
+  ],
+  "e.g., Configuration changes, performance issues, updates, etc.": [
+    "z.B. Konfigurationsänderungen, Leistungsprobleme, Updates usw."
+  ],
+  "e.g., Scheduled maintenance, emergency stop, etc.": [
+    "z.B. Geplante Wartung, Notfall-Stopp usw."
+  ],
+  "flows": [
+    "Flows"
+  ],
+  "healthy": [
+    "gesund"
+  ],
+  "hidden": [
+    "ausgeblendet"
+  ],
+  "member@example.com": [
+    "mitglied@beispiel.de"
+  ],
+  "more": [
+    "mehr"
+  ],
+  "ms avg": [
+    "ms Durchschn."
+  ],
+  "optional": [
+    "optional"
+  ],
+  "or publish a registered app.": [
+    "oder eine registrierte App veröffentlichen."
+  ],
+  "override(s)": [
+    "Überschreibung(en)"
+  ],
+  "page": [
+    "Seite"
+  ],
+  "registered": [
+    "registriert"
+  ],
+  "the selected provider": [
+    "den ausgewählten Anbieter"
+  ],
+  "unlimited": [
+    "unbegrenzt"
+  ],
+  "unsaved changes": [
+    "ungespeicherte Änderungen"
+  ],
+  "uptime": [
+    "Betriebszeit"
+  ],
+  "users": [
+    "Benutzer"
+  ],
+  "visible": [
+    "sichtbar"
+  ],
+  "will be added": [
+    "wird hinzugefügt"
+  ],
+  "will be removed": [
+    "wird entfernt"
+  ],
+  "{{count}} door(s)": [
+    "{{count}} Tür(en)"
+  ],
+  "{{count}} event(s)": [
+    "{{count}} Ereignis(se)"
+  ],
+  "{{count}} group(s)": [
+    "{{count}} Gruppe(n)"
+  ],
+  "{{count}} location(s) configured": [
+    "{{count}} Standort(e) konfiguriert"
+  ],
+  "{{count}} member(s)": [
+    "{{count}} Mitglied(er)"
+  ],
+  "{{count}} scope(s) with missing mappers": [
+    "{{count}} Scope(s) mit fehlenden Mappern"
+  ],
+  "{{online}} online, {{offline}} offline": [
+    "{{online}} online, {{offline}} offline"
+  ],
+  "— Inherit from main —": [
+    "— Vom Haupt-Branding erben —"
+  ],
+  "— Keycloak Default —": [
+    "— Keycloak-Standard —"
+  ],
+  "⚠️ Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?": [
+    "⚠️ Warnung: Das Ändern der Keycloak-URL oder Client-Konfiguration kann Sie aus dem System abmelden. Möglicherweise müssen Sie sich nach Änderungen erneut anmelden. Möchten Sie fortfahren?"
+  ]
+}

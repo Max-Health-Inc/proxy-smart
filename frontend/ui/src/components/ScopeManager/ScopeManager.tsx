@@ -6,7 +6,6 @@ import { useAuth } from '@/stores/authStore';
 import { FHIR_RESOURCES, SCOPE_TEMPLATES } from './constants';
 import { ScopeBuilder } from './ScopeBuilder';
 import { ScopeSetsTable } from './ScopeSetsTable';
-import { RegisteredScopes } from './RegisteredScopes';
 import type { BuilderState, ScopeTemplate, ScopeValidation } from './types';
 import type { ScopeSet } from '@/lib/types/api';
 
@@ -231,9 +230,6 @@ export function ScopeManager({ embedded }: { embedded?: boolean } = {}) {
           </div>
         </div>
       )}
-
-      {/* Registered Keycloak Scopes */}
-      <RegisteredScopes embedded />
 
       {/* Scope Builder */}
       {showBuilder && (

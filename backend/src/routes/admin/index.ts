@@ -6,7 +6,6 @@ import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
 import { rolesRoutes } from './roles'
-import { launchContextRoutes } from './launch-contexts'
 import { identityProvidersRoutes } from './identity-providers'
 import { smartConfigAdminRoutes } from './smart-config'
 import { clientRegistrationSettingsRoutes } from './client-registration-settings'
@@ -98,7 +97,6 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(smartAppsRoutes)
   .use(healthcareUsersRoutes)
   .use(rolesRoutes)
-  .use(launchContextRoutes)
   .use(identityProvidersRoutes)
   .use(smartConfigAdminRoutes)
   .use(brandingAdminRoutes)
