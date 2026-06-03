@@ -6,6 +6,7 @@ import {
   AppStoreApi,
   AuthFlowsApi,
   AuthenticationApi,
+  ClientPoliciesApi,
   FhirMonitoringApi,
   HealthcareUsersApi,
   IdentityProvidersApi,
@@ -108,6 +109,7 @@ const createConfig = (token?: string) => {
 // Create individual client APIs
 export const createAdminApi = (token?: string) => new AdminApi(createConfig(token));
 export const createAppStoreApi = (token?: string) => new AppStoreApi(createConfig(token));
+export const createClientPoliciesApi = (token?: string) => new ClientPoliciesApi(createConfig(token));
 export const createAuthApi = (token?: string) => new AuthenticationApi(createConfig(token));
 export const createHealthcareUsersApi = (token?: string) => new HealthcareUsersApi(createConfig(token));
 export const createIdentityProvidersApi = (token?: string) => new IdentityProvidersApi(createConfig(token));
@@ -165,6 +167,7 @@ export const createClientApis = (token?: string) => ({
   admin: wrapApiClient(createAdminApi(token)),
   appStore: wrapApiClient(createAppStoreApi(token)),
   auth: wrapApiClient(createAuthApi(token)),
+  clientPolicies: wrapApiClient(createClientPoliciesApi(token)),
   fhirMonitoring: wrapApiClient(createFhirMonitoringApi(token)),
   healthcareUsers: wrapApiClient(createHealthcareUsersApi(token)),
   identityProviders: wrapApiClient(createIdentityProvidersApi(token)),

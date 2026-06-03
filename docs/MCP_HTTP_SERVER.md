@@ -435,10 +435,10 @@ Both endpoints are served by `backend/src/routes/auth/mcp-metadata.ts` and proxy
 
 When an MCP client (e.g. VS Code, Claude Desktop) connects, it resolves a `client_id` in this order:
 
-1. **Pre-registered client** — Client already has a known `client_id` (e.g. hardcoded or from prior registration)
-2. **Client ID Metadata Document (CIMD)** — Client sends its `client_id` as a URL (e.g. `https://vscode.dev/mcp-client`); Keycloak fetches the metadata document from that URL and processes the request without prior registration. Requires Keycloak `--features=cimd`.
-3. **Dynamic Client Registration (DCR)** — Client calls `registration_endpoint` (`/auth/register`) to auto-register
-4. **Prompt user** — Fallback: ask the user to provide a `client_id` manually
+1. **Pre-registered client** -- Client already has a known `client_id` (e.g. hardcoded or from prior registration)
+2. **Client ID Metadata Document (CIMD)** -- Client sends its `client_id` as a URL (e.g. `https://vscode.dev/mcp-client`); Keycloak fetches the metadata document from that URL and processes the request without prior registration. Requires Keycloak `--features=cimd`.
+3. **Dynamic Client Registration (DCR)** -- Client calls `registration_endpoint` (`/auth/register`) to auto-register
+4. **Prompt user** -- Fallback: ask the user to provide a `client_id` manually
 
 Our server advertises both CIMD and DCR via `client_registration_types_supported` in the AS metadata. Keycloak handles CIMD natively (option 2), and our `/auth/register` proxy handles DCR (option 3).
 
@@ -468,7 +468,7 @@ With this configuration, when an MCP client sends `client_id=https://vscode.dev/
 
 ### VS Code MCP Configuration
 
-VS Code's `.vscode/mcp.json` schema for `http` type servers supports only: `type`, `url`, `headers`, `dev`. There is **no `clientId` field** — VS Code handles OAuth internally.
+VS Code's `.vscode/mcp.json` schema for `http` type servers supports only: `type`, `url`, `headers`, `dev`. There is **no `clientId` field** -- VS Code handles OAuth internally.
 
 When connecting to our MCP endpoint, VS Code will:
 1. Fetch `/.well-known/oauth-protected-resource` → gets AS URL
@@ -477,7 +477,7 @@ When connecting to our MCP endpoint, VS Code will:
 4. Open browser for Authorization Code + PKCE flow
 5. Exchange code for tokens and connect
 
-If DCR fails, VS Code falls back to prompting the user — enter `mcp-client` when asked.
+If DCR fails, VS Code falls back to prompting the user -- enter `mcp-client` when asked.
 
 ```jsonc
 // .vscode/mcp.json

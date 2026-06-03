@@ -24,7 +24,7 @@ Click **Add Identity Provider** to configure a new external authentication sourc
 |---|---|
 | **Alias** | Unique identifier for the provider (used in URLs) |
 | **Display Name** | User-facing name shown on the login page |
-| **Provider Type** | Protocol — `saml`, `oidc`, `google`, `microsoft`, etc. |
+| **Provider Type** | Protocol -- `saml`, `oidc`, `google`, `microsoft`, etc. |
 | **Enabled** | Whether the provider is active |
 | **Trust Email** | Trust email addresses from this provider without verification |
 | **Store Token** | Store the external token for later use |
@@ -70,7 +70,7 @@ Test the connection to an identity provider to verify configuration without affe
 
 ## Common Use Cases
 
-- **Enterprise SSO** — Connect to hospital Active Directory via SAML or OIDC
-- **Social Login** — Allow patients to sign in with Google or Apple accounts
-- **Multi-organization** — Different identity providers per organization for federated access
-- **Identity Brokering** — Chain multiple providers through Keycloak's brokering flows
+- **Enterprise SSO** -- Connect to hospital Active Directory via SAML or OIDC
+- **Social Login** -- Allow patients to sign in with Google or Apple accounts
+- **Multi-organization** -- Different identity providers per organization for federated access
+- **Identity Brokering** -- Chain multiple providers through Keycloak's brokering flows

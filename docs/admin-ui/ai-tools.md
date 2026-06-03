@@ -14,16 +14,16 @@ Manages connections to external MCP servers that provide additional tools to MCP
 
 Displays all configured MCP servers with:
 - Server name and URL
-- Type badge — `internal` (from templates) or `external` (dynamically added)
-- Connection status — `connected`, `disconnected`, `error`, `unknown`
+- Type badge -- `internal` (from templates) or `external` (dynamically added)
+- Connection status -- `connected`, `disconnected`, `error`, `unknown`
 - Tool count
 - Last health check timestamp
 
 ### Adding a Server
 
-**From Template Gallery** — Browse pre-configured MCP server templates organized by category (Healthcare, Development, Data, etc.). Click a template to install with pre-filled configuration.
+**From Template Gallery** -- Browse pre-configured MCP server templates organized by category (Healthcare, Development, Data, etc.). Click a template to install with pre-filled configuration.
 
-**Custom Server** — Click **Add Server** to configure a custom MCP server:
+**Custom Server** -- Click **Add Server** to configure a custom MCP server:
 
 | Field | Description |
 |---|---|
@@ -33,10 +33,10 @@ Displays all configured MCP servers with:
 
 ### Server Operations
 
-- **Health Check** — Test connectivity and retrieve server capabilities
-- **View Tools** — List all tools exposed by the server with their input schemas
-- **Refresh All** — Re-check health of all configured servers
-- **Delete** — Remove a dynamically added server
+- **Health Check** -- Test connectivity and retrieve server capabilities
+- **View Tools** -- List all tools exposed by the server with their input schemas
+- **Refresh All** -- Re-check health of all configured servers
+- **Delete** -- Remove a dynamically added server
 
 ### Registry Search
 
@@ -61,22 +61,22 @@ See [MCP HTTP Server](../MCP_HTTP_SERVER) for protocol details.
 
 ## Skills Tab
 
-Manages skill packages — structured prompts and tool configurations that extend platform capabilities.
+Manages skill packages -- structured prompts and tool configurations that extend platform capabilities.
 
 ### Installed Skills
 
 Lists currently installed skills with:
 - Skill name and description
 - Source URL (e.g., GitHub repository)
-- Type — `claude-skill` or `custom`
+- Type -- `claude-skill` or `custom`
 - Install date
 - Enabled/disabled toggle
 
 ### Adding Skills
 
-**From Registry** — Browse and search the skills.sh registry for community skills. Click install to add a skill.
+**From Registry** -- Browse and search the skills.sh registry for community skills. Click install to add a skill.
 
-**Custom Skill** — Create a custom skill with a name and description.
+**Custom Skill** -- Create a custom skill with a name and description.
 
 ### Deleting Skills
 
@@ -120,6 +120,6 @@ Remove installed skills that are no longer needed. Built-in default skills can b
 
 | Variable | Description | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | API key for embeddings and semantic search | — |
+| `OPENAI_API_KEY` | API key for embeddings and semantic search | -- |
 | `MCP_ENDPOINT_ENABLED` | Enable/disable MCP endpoint | `true` |
 | `MCP_ENDPOINT_PATH` | URL path for MCP endpoint | `/mcp` |

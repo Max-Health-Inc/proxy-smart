@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.2.8-RELEASE.202606030904.67ce4477e",
+  "version": "0.2.9-beta.202606031703.72fceccb2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -130,6 +130,7 @@
   "workspaces": [
     "packages/auth",
     "packages/app-store",
+    "packages/elysia-mcp",
     "config/eslint",
     "backend",
     "deploy/infra",

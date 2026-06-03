@@ -20,7 +20,7 @@ Interactions: `read`, `write`, `cruds` (create + read + update + delete + search
 
 Examples: `patient/Observation.read`, `user/Patient.cruds`, `system/Bundle.read`.
 
-## API Endpoints — Client Scopes
+## API Endpoints -- Client Scopes
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -46,7 +46,7 @@ The batch endpoint accepts an array of scope names and creates any that don't al
 }
 ```
 
-## API Endpoints — Protocol Mappers
+## API Endpoints -- Protocol Mappers
 
 Protocol mappers ensure that granted scopes appear correctly in access tokens. The scope-mappers endpoints check health and auto-fix missing mappers.
 
@@ -79,12 +79,12 @@ These scopes are typically needed for SMART STU2 compliance:
 
 The **SMART Config** page in the admin UI contains three sub-tabs:
 
-- **Scopes** — scope CRUD (documented above)
-- **Launch Context** — per-user SMART launch context management; see [Launch Contexts](./launch-contexts.md)
-- **Protocol Mappers** — diagnostic view showing mapper health + one-click fix via `POST /admin/scope-mappers/fix`
+- **Scopes** -- scope CRUD (documented above)
+- **Launch Context** -- per-user SMART launch context management; see [Launch Contexts](./launch-contexts.md)
+- **Protocol Mappers** -- diagnostic view showing mapper health + one-click fix via `POST /admin/scope-mappers/fix`
 
 ## Related
 
-- [SMART Apps](./smart-apps.md) — assign allowed scopes to app registrations
-- [User Management](./user-management.md) — users whose tokens carry these scopes
+- [SMART Apps](./smart-apps.md) -- assign allowed scopes to app registrations
+- [User Management](./user-management.md) -- users whose tokens carry these scopes
 

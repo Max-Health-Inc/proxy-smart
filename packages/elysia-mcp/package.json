@@ -1,0 +1,56 @@
+{
+  "name": "@max-health-inc/elysia-mcp",
+  "version": "0.2.9-alpha.202606031445.6ca0d69ba",
+  "private": false,
+  "type": "module",
+  "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Zod bridge, Streamable HTTP transport, session management.",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
+    "directory": "packages/elysia-mcp"
+  },
+  "license": "MIT",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./introspect": "./src/introspect.ts",
+    "./transport": "./src/transport.ts",
+    "./typebox-to-zod": "./src/typebox-to-zod.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": ">=1.20.0",
+    "@sinclair/typebox": ">=0.34.0",
+    "elysia": ">=1.2.0",
+    "zod": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@sinclair/typebox": "^0.34.49",
+    "elysia": "^1.4.28",
+    "typescript": "6.0.3",
+    "zod": "4.3.6"
+  },
+  "keywords": [
+    "elysia",
+    "mcp",
+    "model-context-protocol",
+    "bun",
+    "typebox",
+    "zod",
+    "introspection",
+    "auto-generate",
+    "tools",
+    "ai"
+  ]
+}

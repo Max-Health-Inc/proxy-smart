@@ -4,7 +4,7 @@ A starter kit for building SMART on FHIR imaging algorithm apps with [Proxy Smar
 
 ## Quick Start
 
-1. **Implement your algorithm** in [`src/algorithm.ts`](src/algorithm.ts) — this is the only file you need to edit
+1. **Implement your algorithm** in [`src/algorithm.ts`](src/algorithm.ts) -- this is the only file you need to edit
 2. **Register as a SMART app** in Proxy Smart's admin dashboard with client ID `smart-dicom-template`
 3. **Run locally**:
 
@@ -84,19 +84,19 @@ export async function runAlgorithm(input: AlgorithmInput): Promise<AlgorithmResu
 
 ## Tech Stack
 
-- **SMART on FHIR** — OAuth2 authentication via Proxy Smart
-- **DICOMweb** — Image access via `@babelfhir-ts/dicomweb`
-- **Cornerstone3D** — DICOM image loading
+- **SMART on FHIR** -- OAuth2 authentication via Proxy Smart
+- **DICOMweb** -- Image access via `@babelfhir-ts/dicomweb`
+- **Cornerstone3D** -- DICOM image loading
 - **React 19** + **TypeScript 6** + **Vite 8** + **Tailwind CSS 4**
-- **Proxy Smart Shared UI** — Consistent look and feel
+- **Proxy Smart Shared UI** -- Consistent look and feel
 
 ## SMART App Scopes
 
 This template requests:
-- `openid` — OpenID Connect
-- `fhirUser` — User identity
-- `patient/ImagingStudy.read` — Read imaging studies
-- `patient/DiagnosticReport.write` — Write algorithm results back
+- `openid` -- OpenID Connect
+- `fhirUser` -- User identity
+- `patient/ImagingStudy.read` -- Read imaging studies
+- `patient/DiagnosticReport.write` -- Write algorithm results back
 
 ## License
 
