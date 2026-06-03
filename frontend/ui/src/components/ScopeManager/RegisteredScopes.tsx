@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Input,
+  StatCard,
   Table,
   TableBody,
   TableCell,
@@ -16,7 +17,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@proxy-smart/shared-ui';
-import { Plus, Trash2, RefreshCw, Shield, Search, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, RefreshCw, Shield, Search, AlertTriangle, Database, Rocket, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SmartScopeResponse } from '@/lib/api-client';
 import { useAuth } from '@/stores/authStore';
@@ -146,17 +147,10 @@ export function RegisteredScopes({ embedded }: { embedded?: boolean }) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: t('Total'), value: counts.total, color: 'text-foreground' },
-          { label: t('FHIR Resource'), value: counts.fhir, color: 'text-green-600 dark:text-green-400' },
-          { label: t('SMART/Launch'), value: counts.launch, color: 'text-blue-600 dark:text-blue-400' },
-          { label: t('OIDC'), value: counts.oidc, color: 'text-slate-600 dark:text-slate-400' },
-        ].map(stat => (
-          <div key={stat.label} className="bg-card border border-border/50 rounded-xl p-3 text-center">
-            <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-            <div className="text-xs text-muted-foreground">{stat.label}</div>
-          </div>
-        ))}
+        <StatCard icon={Shield} label={t('Total')} value={counts.total} color="primary" />
+        <StatCard icon={Database} label={t('FHIR Resource')} value={counts.fhir} color="green" />
+        <StatCard icon={Rocket} label={t('SMART/Launch')} value={counts.launch} color="blue" />
+        <StatCard icon={KeyRound} label={t('OIDC')} value={counts.oidc} color="purple" />
       </div>
 
       {/* Error */}
