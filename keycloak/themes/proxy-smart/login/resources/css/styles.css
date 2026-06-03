@@ -1,0 +1,656 @@
+/*
+ * Proxy Smart Login Theme — Max Health Design System
+ *
+ * Overrides PatternFly v5 defaults to match the shared UI:
+ * - Geist font family (sans + mono)
+ * - 0 border-radius (sharp geometric edges)
+ * - Opacity-based color hierarchy
+ * - Light font weights
+ * - Slow 500ms transitions
+ * - Barely-visible borders
+ * - No shadows
+ *
+ * Design reference: /memories/repo/maxhealth-design-system.md
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   Font Loading — Geist Sans + Geist Mono
+   ═══════════════════════════════════════════════════════════════════ */
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-sans/Geist-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-sans/Geist-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-sans/Geist-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-mono/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CSS Custom Properties — Design System Tokens
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Colors — dark mode (login page is always dark) */
+  --ps-bg: #000000;
+  --ps-surface: #0a0a0a;
+  --ps-surface-elevated: #111111;
+  --ps-foreground: #fafafa;
+  --ps-foreground-90: rgba(250, 250, 250, 0.9);
+  --ps-foreground-70: rgba(250, 250, 250, 0.7);
+  --ps-foreground-50: rgba(250, 250, 250, 0.5);
+  --ps-foreground-40: rgba(250, 250, 250, 0.4);
+  --ps-foreground-20: rgba(250, 250, 250, 0.2);
+  --ps-foreground-10: rgba(250, 250, 250, 0.1);
+  --ps-foreground-5: rgba(250, 250, 250, 0.05);
+  --ps-border: rgba(250, 250, 250, 0.1);
+  --ps-border-hover: rgba(250, 250, 250, 0.25);
+  --ps-border-focus: rgba(250, 250, 250, 0.4);
+  --ps-input-bg: rgba(250, 250, 250, 0.03);
+  --ps-accent: #00d294; /* Max Health emerald */
+  --ps-accent-subtle: rgba(0, 210, 148, 0.15);
+  --ps-error: #ef4444;
+  --ps-error-subtle: rgba(239, 68, 68, 0.1);
+
+  /* Typography */
+  --ps-font-sans: "Geist Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --ps-font-mono: "Geist Mono", ui-monospace, monospace;
+
+  /* Spacing */
+  --ps-radius: 0px;
+
+  /* Transitions */
+  --ps-transition: 500ms ease;
+  --ps-transition-fast: 200ms ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Global Reset — Override PatternFly
+   ═══════════════════════════════════════════════════════════════════ */
+
+.login-pf body,
+body.kc-login {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300;
+  background: var(--ps-bg) !important;
+  color: var(--ps-foreground-90) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Kill all border-radius globally */
+.login-pf *,
+body.kc-login * {
+  border-radius: var(--ps-radius) !important;
+}
+
+/* Default cursor everywhere, explicit pointer on interactive */
+.login-pf,
+body.kc-login {
+  cursor: default;
+}
+
+.login-pf a,
+.login-pf button,
+.login-pf [role="button"],
+.login-pf input[type="submit"],
+.login-pf input[type="checkbox"],
+.login-pf select,
+body.kc-login a,
+body.kc-login button,
+body.kc-login [role="button"],
+body.kc-login input[type="submit"],
+body.kc-login input[type="checkbox"],
+body.kc-login select {
+  cursor: pointer;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Page Background — Pure black with subtle noise
+   ═══════════════════════════════════════════════════════════════════ */
+
+.login-pf,
+.pf-v5-c-login {
+  background: var(--ps-bg) !important;
+  min-height: 100vh;
+}
+
+/* Subtle noise texture overlay */
+.login-pf::before,
+.pf-v5-c-login::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Login Card Container
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-login__main,
+#kc-login {
+  background: var(--ps-surface) !important;
+  border: 1px solid var(--ps-border) !important;
+  box-shadow: none !important;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 48px 40px !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* Subtle top accent line */
+.pf-v5-c-login__main::before,
+#kc-login::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ps-accent), transparent);
+  opacity: 0.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Header / Logo Area
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-login__header,
+.pf-v5-c-login__main-header {
+  text-align: center;
+  margin-bottom: 32px !important;
+  padding-bottom: 24px !important;
+  border-bottom: 1px solid var(--ps-foreground-5) !important;
+}
+
+/* Page title / realm name */
+#kc-page-title,
+.pf-v5-c-login__main-header-desc,
+.pf-v5-c-title {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300 !important;
+  font-size: 1.5rem !important;
+  letter-spacing: -0.02em;
+  color: var(--ps-foreground-90) !important;
+}
+
+/* Subtitle / helper text */
+.pf-v5-c-login__main-header .pf-v5-c-content p,
+.pf-v5-c-login__main-header-desc {
+  font-size: 0.8125rem !important;
+  color: var(--ps-foreground-50) !important;
+  font-weight: 300;
+  margin-top: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Form Labels — Monospaced, tiny, uppercase
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-form__label,
+.pf-v5-c-form__label-text,
+label {
+  font-family: var(--ps-font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2em !important;
+  color: var(--ps-foreground-40) !important;
+  margin-bottom: 8px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Form Inputs — Transparent bg, subtle border
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-form-control,
+.pf-v5-c-form-control > input,
+.pf-v5-c-form-control > textarea,
+.pf-v5-c-form-control > select,
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300 !important;
+  font-size: 0.875rem !important;
+  background: var(--ps-input-bg) !important;
+  border: 1px solid var(--ps-border) !important;
+  color: var(--ps-foreground-90) !important;
+  padding: 14px 16px !important;
+  transition: border-color var(--ps-transition), background-color var(--ps-transition) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.pf-v5-c-form-control:hover,
+.pf-v5-c-form-control > input:hover,
+input[type="text"]:hover,
+input[type="password"]:hover,
+input[type="email"]:hover {
+  border-color: var(--ps-border-hover) !important;
+  background: rgba(250, 250, 250, 0.05) !important;
+}
+
+.pf-v5-c-form-control:focus-within,
+.pf-v5-c-form-control > input:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus {
+  border-color: var(--ps-border-focus) !important;
+  background: rgba(250, 250, 250, 0.05) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Placeholder text */
+.pf-v5-c-form-control > input::placeholder,
+input::placeholder {
+  color: var(--ps-foreground-20) !important;
+  font-weight: 300;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Primary Button — Border-based, not filled
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-button.pf-m-primary,
+#kc-login-button,
+input[type="submit"] {
+  font-family: var(--ps-font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.15em !important;
+  background: var(--ps-foreground-5) !important;
+  border: 1px solid var(--ps-border) !important;
+  color: var(--ps-foreground-70) !important;
+  padding: 14px 24px !important;
+  width: 100%;
+  transition: all var(--ps-transition) !important;
+  box-shadow: none !important;
+  margin-top: 8px;
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+#kc-login-button:hover,
+input[type="submit"]:hover {
+  background: var(--ps-foreground-10) !important;
+  border-color: var(--ps-border-hover) !important;
+  color: var(--ps-foreground-90) !important;
+  box-shadow: none !important;
+}
+
+.pf-v5-c-button.pf-m-primary:focus,
+#kc-login-button:focus,
+input[type="submit"]:focus {
+  border-color: var(--ps-border-focus) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.pf-v5-c-button.pf-m-primary:active,
+#kc-login-button:active,
+input[type="submit"]:active {
+  background: var(--ps-foreground-10) !important;
+  transform: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Secondary / Link Buttons
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-button.pf-m-link,
+.pf-v5-c-button.pf-m-secondary {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300 !important;
+  font-size: 0.8125rem !important;
+  color: var(--ps-foreground-50) !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 8px 0 !important;
+  transition: color var(--ps-transition) !important;
+  box-shadow: none !important;
+}
+
+.pf-v5-c-button.pf-m-link:hover,
+.pf-v5-c-button.pf-m-secondary:hover {
+  color: var(--ps-foreground-70) !important;
+  text-decoration: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Links
+   ═══════════════════════════════════════════════════════════════════ */
+
+.login-pf a,
+body.kc-login a {
+  color: var(--ps-foreground-50) !important;
+  text-decoration: none !important;
+  transition: color var(--ps-transition) !important;
+  font-weight: 300;
+}
+
+.login-pf a:hover,
+body.kc-login a:hover {
+  color: var(--ps-foreground-70) !important;
+  text-decoration: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Checkbox / Remember Me
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-check__label {
+  font-family: var(--ps-font-sans) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 300 !important;
+  color: var(--ps-foreground-50) !important;
+}
+
+.pf-v5-c-check__input {
+  border: 1px solid var(--ps-border) !important;
+  background: var(--ps-input-bg) !important;
+}
+
+.pf-v5-c-check__input:checked {
+  background: var(--ps-foreground-10) !important;
+  border-color: var(--ps-border-hover) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Social / IdP Providers Section
+   ═══════════════════════════════════════════════════════════════════ */
+
+#kc-social-providers {
+  margin-top: 24px !important;
+  padding-top: 24px !important;
+  border-top: 1px solid var(--ps-foreground-5) !important;
+}
+
+/* "Or sign in with" divider text */
+.kc-login-main-footer-band,
+.pf-v5-c-login__main-footer-band {
+  font-family: var(--ps-font-mono) !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2em !important;
+  color: var(--ps-foreground-40) !important;
+  margin-bottom: 16px !important;
+}
+
+/* IdP buttons */
+#kc-social-providers .pf-v5-c-button,
+.kc-social-provider-link {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300 !important;
+  font-size: 0.8125rem !important;
+  background: var(--ps-surface-elevated) !important;
+  border: 1px solid var(--ps-border) !important;
+  color: var(--ps-foreground-70) !important;
+  padding: 12px 16px !important;
+  transition: all var(--ps-transition) !important;
+  box-shadow: none !important;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#kc-social-providers .pf-v5-c-button:hover,
+.kc-social-provider-link:hover {
+  border-color: var(--ps-border-hover) !important;
+  background: var(--ps-foreground-5) !important;
+  color: var(--ps-foreground-90) !important;
+}
+
+#kc-social-providers ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#kc-social-providers li {
+  margin: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Alert Messages (errors, warnings, info)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-alert {
+  background: var(--ps-error-subtle) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  padding: 12px 16px !important;
+  margin-bottom: 16px !important;
+  box-shadow: none !important;
+}
+
+.pf-v5-c-alert__title,
+.pf-v5-c-alert__description {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300 !important;
+  font-size: 0.8125rem !important;
+  color: #fca5a5 !important;
+}
+
+.pf-v5-c-alert.pf-m-success {
+  background: var(--ps-accent-subtle) !important;
+  border-color: rgba(0, 210, 148, 0.2) !important;
+}
+
+.pf-v5-c-alert.pf-m-success .pf-v5-c-alert__title,
+.pf-v5-c-alert.pf-m-success .pf-v5-c-alert__description {
+  color: var(--ps-accent) !important;
+}
+
+.pf-v5-c-alert.pf-m-info {
+  background: rgba(96, 165, 250, 0.1) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+}
+
+.pf-v5-c-alert.pf-m-info .pf-v5-c-alert__title,
+.pf-v5-c-alert.pf-m-info .pf-v5-c-alert__description {
+  color: #93c5fd !important;
+}
+
+/* Hide the alert icon — too noisy */
+.pf-v5-c-alert__icon {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-login__footer,
+.pf-v5-c-login__main-footer {
+  text-align: center;
+  margin-top: 24px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid var(--ps-foreground-5) !important;
+}
+
+.pf-v5-c-login__footer a,
+.pf-v5-c-login__main-footer a,
+.pf-v5-c-login__main-footer-links a {
+  font-family: var(--ps-font-sans) !important;
+  font-size: 0.75rem !important;
+  font-weight: 300 !important;
+  color: var(--ps-foreground-40) !important;
+}
+
+.pf-v5-c-login__footer a:hover,
+.pf-v5-c-login__main-footer a:hover {
+  color: var(--ps-foreground-70) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Form Groups — Spacing
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-form__group {
+  margin-bottom: 20px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Hide unnecessary PatternFly chrome
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Remove the default PF5 login background image grid */
+.pf-v5-c-login__container::before,
+.pf-v5-c-login__container::after {
+  display: none !important;
+}
+
+/* Remove PF brand image / background pattern */
+.pf-v5-c-brand {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Layout — Centered vertically and horizontally
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-login {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 100vh !important;
+  padding: 24px !important;
+}
+
+.pf-v5-c-login__container {
+  width: 100% !important;
+  max-width: 420px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Consent Page Specifics
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Scope list items */
+.pf-v5-c-list li,
+#kc-oauth .pf-v5-c-list li {
+  font-family: var(--ps-font-sans) !important;
+  font-weight: 300 !important;
+  font-size: 0.8125rem !important;
+  color: var(--ps-foreground-70) !important;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ps-foreground-5);
+}
+
+/* Grant buttons row */
+#kc-oauth .pf-v5-c-button.pf-m-primary {
+  background: var(--ps-accent-subtle) !important;
+  border-color: rgba(0, 210, 148, 0.3) !important;
+  color: var(--ps-accent) !important;
+}
+
+#kc-oauth .pf-v5-c-button.pf-m-primary:hover {
+  background: rgba(0, 210, 148, 0.25) !important;
+  border-color: var(--ps-accent) !important;
+}
+
+/* Deny button */
+#kc-oauth .pf-v5-c-button.pf-m-secondary,
+#kc-oauth .pf-v5-c-button.pf-m-link {
+  background: var(--ps-error-subtle) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  color: #fca5a5 !important;
+}
+
+#kc-oauth .pf-v5-c-button.pf-m-secondary:hover,
+#kc-oauth .pf-v5-c-button.pf-m-link:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Password Visibility Toggle
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-button.pf-m-control {
+  background: transparent !important;
+  border: none !important;
+  border-left: 1px solid var(--ps-border) !important;
+  color: var(--ps-foreground-40) !important;
+  padding: 0 12px !important;
+  transition: color var(--ps-transition) !important;
+}
+
+.pf-v5-c-button.pf-m-control:hover {
+  color: var(--ps-foreground-70) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Responsive — Smaller screens
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .pf-v5-c-login__main,
+  #kc-login {
+    padding: 32px 24px !important;
+    border: none !important;
+    border-top: 1px solid var(--ps-border) !important;
+  }
+
+  .pf-v5-c-login__main::before,
+  #kc-login::before {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Status Labels — Mono, tiny, tracking
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-helper-text__item-text {
+  font-family: var(--ps-font-mono) !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.2em !important;
+  color: var(--ps-foreground-40) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Powered by / Version footer
+   ═══════════════════════════════════════════════════════════════════ */
+
+.pf-v5-c-login__footer .pf-v5-c-login__main-footer-band-item {
+  font-family: var(--ps-font-mono) !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3em !important;
+  color: var(--ps-foreground-20) !important;
+}
