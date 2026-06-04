@@ -190,19 +190,17 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         }
       }
 
-      // Validate requested scopes against allowed scopes
+      // Filter requested scopes to only those allowed by server policy.
+      // Per RFC 7591 §2, the server MAY grant fewer scopes than requested —
+      // rejecting the entire registration for unsupported scopes breaks
+      // clients like VS Code that pass their resource metadata scopes verbatim.
       if (body.scope) {
         const requestedScopes = body.scope.split(' ')
-        const disallowedScopes = requestedScopes.filter(scope => 
-          !settings.allowedScopes.includes(scope)
+        const allowedRequestedScopes = requestedScopes.filter(scope =>
+          settings.allowedScopes.includes(scope)
         )
-        if (disallowedScopes.length > 0) {
-          set.status = 400
-          return {
-            error: 'invalid_scope',
-            error_description: `The following scopes are not allowed: ${disallowedScopes.join(', ')}`
-          }
-        }
+        // Replace with filtered scope string (may be empty → server defaults apply)
+        body.scope = allowedRequestedScopes.join(' ') || undefined as unknown as string
       }
 
       const clientId = `smart_app_${crypto.randomUUID()}`
