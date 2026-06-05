@@ -53,8 +53,11 @@ concurrency:
 env:
   AWS_REGION: eu-central-1
   ECR_REPOSITORY: proxy-smart-backend
+  ECR_KEYCLOAK_REPOSITORY: proxy-smart-keycloak
   ECS_CLUSTER: proxy-smart-production
   ECS_SERVICE: proxy-smart-backend
+  ECS_KEYCLOAK_CLUSTER: proxy-smart-keycloak
+  ECS_KEYCLOAK_SERVICE: keycloak
   PRODUCTION_URL: https://proxy-smart.com
   API_URL: https://api.proxy-smart.com
   KEYCLOAK_URL: https://auth.proxy-smart.com
@@ -106,6 +109,31 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Create Keycloak ECR repository (idempotent)
+        run: |
+          aws ecr describe-repositories \
+            --repository-names ${{ env.ECR_KEYCLOAK_REPOSITORY }} \
+            --region ${{ env.AWS_REGION }} > /dev/null 2>&1 || \
+          aws ecr create-repository \
+            --repository-name ${{ env.ECR_KEYCLOAK_REPOSITORY }} \
+            --region ${{ env.AWS_REGION }} \
+            --image-scanning-configuration scanOnPush=true
+
+      - name: Build and push Keycloak image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile.keycloak
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}
+          build-args: |
+            DEPLOY_ENV=prod
+          cache-from: type=gha,scope=prod-keycloak
+          cache-to: type=gha,mode=max,scope=prod-keycloak
+
       - name: Force new ECS deployment
         run: |
           echo "🚀 Forcing new deployment on ECS service..."
@@ -123,6 +151,24 @@ jobs:
             --cluster ${{ env.ECS_CLUSTER }} \
             --services ${{ env.ECS_SERVICE }}
           echo "✅ ECS service is stable"
+
+      - name: Force new Keycloak ECS deployment
+        run: |
+          echo "🚀 Forcing new Keycloak deployment..."
+          aws ecs update-service \
+            --cluster ${{ env.ECS_KEYCLOAK_CLUSTER }} \
+            --service ${{ env.ECS_KEYCLOAK_SERVICE }} \
+            --force-new-deployment \
+            --query 'service.deployments[0].id' \
+            --output text
+
+      - name: Wait for Keycloak ECS service stability
+        run: |
+          echo "⏳ Waiting for Keycloak ECS service to stabilize..."
+          aws ecs wait services-stable \
+            --cluster ${{ env.ECS_KEYCLOAK_CLUSTER }} \
+            --services ${{ env.ECS_KEYCLOAK_SERVICE }}
+          echo "✅ Keycloak ECS service is stable"
 
       - name: Verify deployment health
         run: |

@@ -1,16 +1,16 @@
 {
   "version": "53.0.0",
   "files": {
-    "ccb4e71f87f7614b768d3deb7e928b69782ba72c3a008d7c4e4296373a8db648": {
+    "9509a2597c73668e273d6e71c99faf0fd4804e04e84ea4dd7a2e2c4b74cb76aa": {
       "displayName": "ProxySmartVpc Template",
       "source": {
         "path": "ProxySmartVpc.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "579201838740-eu-central-1-add8e3dc": {
+        "579201838740-eu-central-1-55452c94": {
           "bucketName": "cdk-hnb659fds-assets-579201838740-eu-central-1",
-          "objectKey": "ccb4e71f87f7614b768d3deb7e928b69782ba72c3a008d7c4e4296373a8db648.json",
+          "objectKey": "9509a2597c73668e273d6e71c99faf0fd4804e04e84ea4dd7a2e2c4b74cb76aa.json",
           "region": "eu-central-1",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-file-publishing-role-579201838740-eu-central-1"
         }
