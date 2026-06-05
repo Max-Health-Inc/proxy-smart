@@ -921,7 +921,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WOQW/CMAyFfwv3NBuR4I7QhpDQFpWJ6+QGrwTSuEocqqnqf5/SMnp6n5+fn6ykWq3lcgFdLMz5Vjhbyf7IYG4Cuvjdo1GyP7VGbH/8SW+FTpWz5pgqj5y9mUpKjF9QOZz92dvESMYCW/LPcIa3vc7yAbwDxg5+hQ72Doxz8d4zBo/PwPTJY9owg7k06Fm8O+oOVOf9AwdhoZF9SdNPo2py1owlEw3CUR1lf6B6Fyi1efPPwyBKjJSCGe8/E7eJB+HpjPIaX+5KyaWSr4trtLYIybNtUJaT/gGAouSnWQEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WOQW/CMAyFfwv3NGOREGeENoSEtqhMXCc3eCWQxlXiUE1V//uUltHT+/z8/GQl1WotlwvoYmHOt8LZSvZHBnMT0MXvHo2S/ak1YvvjT3ordKqcNcdUeeTszVRSYvyCyuHsz94mRjIW2JJ/hjO87XWWD+AdMHbwK3Swd2Cci/eeMXh8BqZPHtOGGcylQc/i3VF3oDrvHzgIC43sS5p+GlWTs2YsmWgQjuoo+wPVu0CpzZt/HgZRYqQUzHj/mbhNPAhPZ5TX+HJXSr4quVxco7VFSJ5tg7Kc9A/FscsoWQEAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartVpc/CDKMetadata/Default"
