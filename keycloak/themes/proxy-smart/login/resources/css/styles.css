@@ -160,6 +160,7 @@ body.kc-login select {
   border: 1px solid var(--ps-border) !important;
   box-shadow: none !important;
   max-width: 420px;
+  height: fit-content !important;
   margin: 0 auto;
   padding: 48px 40px !important;
   position: relative;

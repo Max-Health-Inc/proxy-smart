@@ -2,6 +2,7 @@ import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
@@ -18,10 +19,19 @@ export interface KeycloakStackProps extends cdk.StackProps {
   domainName: string;
   hostedZone: route53.IHostedZone;
   /**
-   * Keycloak container image tag
+   * Keycloak container image tag — only used when `imageUri` is not set.
    * @default '26.0'
    */
   keycloakVersion?: string;
+  /**
+   * Full ECR image URI for the custom Keycloak image that includes the
+   * proxy-smart login theme. When provided, the pre-built ECR image is used
+   * with `start --optimized`; when omitted the stock quay.io image is used.
+   *
+   * ECR repo name must be `proxy-smart-keycloak`.
+   * @example "579201838740.dkr.ecr.eu-central-1.amazonaws.com/proxy-smart-keycloak:latest"
+   */
+  imageUri?: string;
 }
 
 /**
@@ -42,6 +52,15 @@ export class KeycloakStack extends cdk.Stack {
     super(scope, id, props);
 
     const keycloakVersion = props.keycloakVersion ?? '26.0';
+    const useCustomImage = Boolean(props.imageUri);
+
+    // Container image: ECR custom image (with pre-built proxy-smart theme) or stock quay.io
+    const keycloakRepo = useCustomImage
+      ? ecr.Repository.fromRepositoryName(this, 'KeycloakRepo', 'proxy-smart-keycloak')
+      : undefined;
+    const containerImage = keycloakRepo
+      ? ecs.ContainerImage.fromEcrRepository(keycloakRepo, 'latest')
+      : ecs.ContainerImage.fromRegistry(`quay.io/keycloak/keycloak:${keycloakVersion}`);
 
     // Separate Keycloak admin credentials (don't reuse DB credentials)
     const adminSecret = new secretsmanager.Secret(this, 'KeycloakAdminSecret', {
@@ -252,7 +271,7 @@ export class KeycloakStack extends cdk.Stack {
         sslPolicy: elbv2.SslPolicy.TLS13_RES,
         
         taskImageOptions: {
-          image: ecs.ContainerImage.fromRegistry(`quay.io/keycloak/keycloak:${keycloakVersion}`),
+          image: containerImage,
           containerPort: 8080,
           environment: {
             KC_HOSTNAME: props.domainName,
@@ -273,8 +292,9 @@ export class KeycloakStack extends cdk.Stack {
             KC_BOOTSTRAP_ADMIN_USERNAME: ecs.Secret.fromSecretsManager(adminSecret, 'username'),
             KC_BOOTSTRAP_ADMIN_PASSWORD: ecs.Secret.fromSecretsManager(adminSecret, 'password'),
           },
-          // Stock image needs 'start' (not '--optimized' which requires pre-build)
-          command: ['start'],
+          // Custom image uses kc.sh build at Docker build time → --optimized avoids re-build.
+          // Stock image has no pre-built config so must use plain 'start'.
+          command: useCustomImage ? ['start', '--optimized'] : ['start'],
         },
         
         // Health check — check management port 9000 where KC26 serves /health/ready
@@ -283,8 +303,8 @@ export class KeycloakStack extends cdk.Stack {
           interval: cdk.Duration.seconds(30),
           timeout: cdk.Duration.seconds(10),
           retries: 5,
-          // Keycloak without --optimized does runtime build on first start (~2-3 min)
-          startPeriod: cdk.Duration.seconds(300),
+          // Custom pre-built image: ~1-2 min. Stock runtime build: ~3-5 min.
+          startPeriod: useCustomImage ? cdk.Duration.seconds(120) : cdk.Duration.seconds(300),
         },
         
         // Circuit breaker for auto-rollback
