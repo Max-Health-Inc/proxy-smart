@@ -8,6 +8,37 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Initial loading indicator: shown instantly before the JS bundle / React mounts,
+         then removed in main.tsx once the app renders. Inline styles so it works with
+         no external CSS loaded. -->
+    <div id="initial-loader" aria-label="Loading" role="status">
+      <div class="initial-loader__spinner"></div>
+      <style>
+        #initial-loader {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #ffffff;
+          z-index: 9999;
+        }
+        @media (prefers-color-scheme: dark) {
+          #initial-loader { background: #0a0a0a; }
+        }
+        .initial-loader__spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid rgba(0, 210, 148, 0.2);
+          border-top-color: #00d294;
+          border-radius: 50%;
+          animation: initial-loader-spin 0.8s linear infinite;
+        }
+        @keyframes initial-loader-spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
