@@ -1,28 +1,28 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-06-07 10:12:23,079 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 9646ms
+2026-06-07 10:56:23,884 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 7451ms
 Running the server in development mode. DO NOT use this configuration in production.
-2026-06-07 10:12:26,801 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
-2026-06-07 10:12:27,802 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-06-07 10:12:27,834 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
-2026-06-07 10:12:27,835 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1
-2026-06-07 10:12:27,835 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
-2026-06-07 10:12:28,927 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-06-07 10:12:36,020 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-06-07 10:12:36,370 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_353038, Site name: null
-2026-06-07 10:12:36,587 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 22:12:36, then every PT12H
-2026-06-07 10:12:36,605 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
-2026-06-07 10:12:36,783 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
-2026-06-07 10:12:38,248 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
-2026-06-07 10:12:41,683 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
-2026-06-07 10:12:41,684 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: IGNORE_EXISTING
-2026-06-07 10:12:41,684 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
-2026-06-07 10:12:41,684 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
-2026-06-07 10:12:41,684 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
-2026-06-07 10:12:41,770 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
-2026-06-07 10:12:41,965 INFO  [org.keycloak.services.resources.KeycloakApplication] (main) Bootstrap completed in 14.129000 seconds
-2026-06-07 10:12:42,079 INFO  [io.quarkus] (main) Keycloak 26.6.1 on JVM (powered by Quarkus 3.33.1) started in 18.853s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
-2026-06-07 10:12:42,079 INFO  [io.quarkus] (main) Profile dev activated. 
-2026-06-07 10:12:42,079 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
-2026-06-07 10:14:44,802 WARN  [org.keycloak.events] (executor-thread-27) type="INTROSPECT_TOKEN_ERROR", realmId="fd654169-1472-46cf-9d99-ce7693b7d339", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="invalid_token", reason="Access token JWT check failed", client_auth_method="client-secret"
-2026-06-07 10:15:00,792 WARN  [org.keycloak.events] (executor-thread-27) type="CLIENT_LOGIN_ERROR", realmId="fd654169-1472-46cf-9d99-ce7693b7d339", realmName="proxy-smart", clientId="null", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="client_not_found", client_assertion_id="e136c279f225e79591a377794b40daea250faa9da807451dacf0ca7e12b4a44d", grant_type="client_credentials", client_assertion_issuer="inferno-backend-services", client_assertion_sub="inferno-backend-services"
-2026-06-07 10:15:00,827 WARN  [org.keycloak.events] (executor-thread-27) type="CLIENT_LOGIN_ERROR", realmId="fd654169-1472-46cf-9d99-ce7693b7d339", realmName="proxy-smart", clientId="null", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="client_not_found", client_assertion_id="2edd1d6fd3b99185dd4291ee39e166533085ce42ec26c881bf3ff2f52f110f52", grant_type="client_credentials", client_assertion_issuer="inferno-backend-services", client_assertion_sub="inferno-backend-services"
+2026-06-07 10:56:27,106 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
+2026-06-07 10:56:28,034 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-06-07 10:56:28,063 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
+2026-06-07 10:56:28,064 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1
+2026-06-07 10:56:28,065 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
+2026-06-07 10:56:29,029 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-06-07 10:56:36,438 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-06-07 10:56:36,715 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_940362, Site name: null
+2026-06-07 10:56:36,875 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 22:56:36, then every PT12H
+2026-06-07 10:56:36,938 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-06-07 10:56:37,103 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-06-07 10:56:38,766 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
+2026-06-07 10:56:41,740 INFO  [org.keycloak.exportimport.util.ImportUtils] (main) Realm 'proxy-smart' imported
+2026-06-07 10:56:41,740 INFO  [org.keycloak.services] (main) KC-SERVICES0030: Full model import requested. Strategy: IGNORE_EXISTING
+2026-06-07 10:56:41,740 INFO  [org.keycloak.services] (main) KC-SERVICES0032: Import finished successfully
+2026-06-07 10:56:41,741 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN' is deprecated, use 'KC_BOOTSTRAP_ADMIN_USERNAME' instead
+2026-06-07 10:56:41,741 WARN  [org.keycloak.services] (main) KC-SERVICES0110: Environment variable 'KEYCLOAK_ADMIN_PASSWORD' is deprecated, use 'KC_BOOTSTRAP_ADMIN_PASSWORD' instead
+2026-06-07 10:56:41,825 INFO  [org.keycloak.services] (main) KC-SERVICES0077: Created temporary admin user with username admin
+2026-06-07 10:56:42,013 INFO  [org.keycloak.services.resources.KeycloakApplication] (main) Bootstrap completed in 13.947000 seconds
+2026-06-07 10:56:42,111 INFO  [io.quarkus] (main) Keycloak 26.6.1 on JVM (powered by Quarkus 3.33.1) started in 18.107s. Listening on: http://0.0.0.0:8080. Management interface listening on http://0.0.0.0:9000.
+2026-06-07 10:56:42,111 INFO  [io.quarkus] (main) Profile dev activated. 
+2026-06-07 10:56:42,111 INFO  [io.quarkus] (main) Installed features: [agroal, cdi, hibernate-orm, jdbc-postgresql, keycloak, narayana-jta, opentelemetry, reactive-routes, rest, rest-jackson, smallrye-context-propagation, smallrye-health, vertx]
+2026-06-07 10:58:42,853 WARN  [org.keycloak.events] (executor-thread-53) type="INTROSPECT_TOKEN_ERROR", realmId="dfb794db-c38a-49d4-acfa-980aa2e5d1ef", realmName="proxy-smart", clientId="admin-service", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="invalid_token", reason="Access token JWT check failed", client_auth_method="client-secret"
+2026-06-07 10:58:58,510 WARN  [org.keycloak.events] (executor-thread-54) type="CLIENT_LOGIN_ERROR", realmId="dfb794db-c38a-49d4-acfa-980aa2e5d1ef", realmName="proxy-smart", clientId="null", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="client_not_found", client_assertion_id="8f5345f1a6c66d2a636dcefba664eeb76f3f555f9b396b108f5bca8da4456f86", grant_type="client_credentials", client_assertion_issuer="inferno-backend-services", client_assertion_sub="inferno-backend-services"
+2026-06-07 10:58:58,541 WARN  [org.keycloak.events] (executor-thread-54) type="CLIENT_LOGIN_ERROR", realmId="dfb794db-c38a-49d4-acfa-980aa2e5d1ef", realmName="proxy-smart", clientId="null", userId="null", ipAddress="0:0:0:0:0:0:0:1", error="client_not_found", client_assertion_id="ac4cf128b9962a464f28d507d3cb3697313ca1b492a875df00442f502de95eb7", grant_type="client_credentials", client_assertion_issuer="inferno-backend-services", client_assertion_sub="inferno-backend-services"
