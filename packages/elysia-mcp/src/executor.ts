@@ -1,19 +1,41 @@
 /**
  * @max-health-inc/elysia-mcp - Tool & Resource Execution
  *
- * Executes route handlers by building a synthetic Elysia-like context.
- * Handles path param extraction, body/query separation, and result serialization.
+ * Two execution strategies:
+ *
+ *  1. PIPELINE DISPATCH (secure, preferred) — when an Elysia app reference is
+ *     supplied via the `__app` context decorator, the tool/resource is executed
+ *     by reconstructing an HTTP `Request` from the route metadata + args + token
+ *     and dispatching it through `app.handle()`. This runs the FULL Elysia
+ *     lifecycle: `beforeHandle`/guards, response-schema coercion, and
+ *     `onAfterResponse` hooks (e.g. audit logging). Use the ROOT app so global
+ *     plugins and route prefixes resolve.
+ *
+ *  2. SYNTHETIC CONTEXT (legacy fallback) — when no app reference is supplied,
+ *     a hand-built Elysia-like context is passed directly to the handler. This
+ *     BYPASSES the pipeline (no guards / response-schema / lifecycle hooks) and
+ *     is retained only for environments that cannot dispatch through an app.
  */
 
 import { Value } from '@sinclair/typebox/value'
 import type { ToolMetadata, ResourceMetadata } from './types'
 import { getMergedInputSchema } from './typebox-to-zod'
 
+/** Context-decorator key carrying the Elysia app used for pipeline dispatch. */
+export const DISPATCH_APP_KEY = '__app'
+
+/** Minimal shape of an Elysia app we depend on for pipeline dispatch. */
+interface DispatchableApp {
+  handle(request: Request): Promise<Response> | Response
+}
+
 // ── Tool Execution ───────────────────────────────────────────────────────────
 
 /**
  * Execute a tool (route handler) with the given arguments.
- * Builds a synthetic Elysia context and invokes the handler.
+ *
+ * Dispatches through the real Elysia pipeline when a `__app` decorator is
+ * present; otherwise falls back to the synthetic-context invocation.
  */
 export async function executeTool(
   toolName: string,
@@ -36,6 +58,18 @@ export async function executeTool(
       }
     }
 
+    const app = getDispatchApp(contextDecorators)
+
+    // ── Pipeline dispatch (secure) ───────────────────────────────────────
+    if (app) {
+      const { status, text } = await dispatchThroughPipeline(app, meta.path, meta.method, args, authToken)
+      if (status >= 400) {
+        return { content: [{ type: 'text', text }], isError: true }
+      }
+      return { content: [{ type: 'text', text }] }
+    }
+
+    // ── Synthetic context (legacy fallback) ──────────────────────────────
     if (typeof meta.handler !== 'function') {
       return {
         content: [{ type: 'text', text: `Tool ${toolName} has no callable handler.` }],
@@ -43,52 +77,15 @@ export async function executeTool(
       }
     }
 
-    // Separate path params from body/query args
-    const pathParams = extractPathParams(meta.path, args)
-    const cleanArgs = { ...args }
-    for (const key of Object.keys(pathParams)) {
-      delete cleanArgs[key]
-    }
-
-    const isGetRoute = meta.method === 'GET'
-    let responseStatus = 200
-
-    const elysiaContext = {
-      body: isGetRoute ? {} : cleanArgs,
-      headers: {
-        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
-        'content-type': 'application/json',
-      },
-      set: {
-        status: 200,
-        headers: {} as Record<string, string>,
-      },
-      params: pathParams,
-      query: isGetRoute ? cleanArgs : {},
-      request: new Request(`http://localhost${meta.path}`, {
-        method: meta.method,
-        headers: {
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-          'Content-Type': 'application/json',
-        },
-      }),
-      // Inject consumer-provided decorators (e.g. getAdmin, db, etc.)
-      ...contextDecorators,
-    }
-
+    const elysiaContext = buildSyntheticContext(meta.path, meta.method, args, authToken, contextDecorators)
     const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
-    responseStatus = typeof elysiaContext.set.status === 'number' ? elysiaContext.set.status : 200
+    const responseStatus = typeof elysiaContext.set.status === 'number' ? elysiaContext.set.status : 200
 
-    const text = result === undefined || result === null
-      ? JSON.stringify({ success: true, status: responseStatus })
-      : typeof result === 'string'
-        ? result
-        : JSON.stringify(result, serializeErrors, 2)
+    const text = serializeResult(result, responseStatus)
 
     if (responseStatus >= 400) {
       return { content: [{ type: 'text', text }], isError: true }
     }
-
     return { content: [{ type: 'text', text }] }
   } catch (err) {
     return {
@@ -102,6 +99,9 @@ export async function executeTool(
 
 /**
  * Execute a GET route handler and return the serialized result.
+ *
+ * Dispatches through the real Elysia pipeline when a `__app` decorator is
+ * present; otherwise falls back to the synthetic-context invocation.
  */
 export async function executeResource(
   meta: ResourceMetadata,
@@ -110,29 +110,29 @@ export async function executeResource(
   contextDecorators?: Record<string, unknown>,
 ): Promise<string> {
   try {
+    const app = getDispatchApp(contextDecorators)
+
+    // ── Pipeline dispatch (secure) ───────────────────────────────────────
+    if (app) {
+      // pathParams are pre-resolved by the caller; feed them as args so the
+      // shared URL builder interpolates them into the concrete path.
+      const { text } = await dispatchThroughPipeline(app, meta.path, 'GET', pathParams, authToken)
+      return text
+    }
+
+    // ── Synthetic context (legacy fallback) ──────────────────────────────
     if (typeof meta.handler !== 'function') {
       return JSON.stringify({ error: 'Resource has no callable handler' })
     }
 
     const elysiaContext = {
       body: {},
-      headers: {
-        ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
-        'content-type': 'application/json',
-      },
-      set: {
-        status: 200,
-        headers: {} as Record<string, string>,
-      },
+      headers: buildHeaders(authToken),
+      set: { status: 200, headers: {} as Record<string, string> },
       params: pathParams,
       query: {},
-      request: new Request(`http://localhost${meta.path}`, {
-        method: 'GET',
-        headers: {
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        },
-      }),
-      ...contextDecorators,
+      request: new Request(`http://localhost${meta.path}`, { method: 'GET', headers: buildAuthHeader(authToken) }),
+      ...stripDispatchApp(contextDecorators),
     }
 
     const result = await (meta.handler as (ctx: unknown) => unknown)(elysiaContext)
@@ -146,7 +146,137 @@ export async function executeResource(
   }
 }
 
+// ── Pipeline dispatch ──────────────────────────────────────────────────────────
+
+/**
+ * Reconstruct an HTTP Request from route metadata + args + token and dispatch it
+ * through the real Elysia pipeline, returning the parsed status + body text.
+ *
+ * - Path params (`:name` segments) are interpolated into the URL.
+ * - For GET, remaining args become query-string params.
+ * - For mutations, remaining args become the JSON body.
+ */
+async function dispatchThroughPipeline(
+  app: DispatchableApp,
+  path: string,
+  method: string,
+  args: Record<string, unknown>,
+  authToken?: string,
+): Promise<{ status: number; text: string }> {
+  const { url, rest } = buildUrl(path, method, args)
+  const isGet = method.toUpperCase() === 'GET'
+
+  const init: RequestInit = { method, headers: buildAuthHeader(authToken) }
+  if (!isGet && Object.keys(rest).length > 0) {
+    ;(init.headers as Record<string, string>)['Content-Type'] = 'application/json'
+    init.body = JSON.stringify(rest)
+  }
+
+  const response = await app.handle(new Request(`http://localhost${url}`, init))
+  const text = await response.text()
+  return { status: response.status, text }
+}
+
+/**
+ * Build the concrete request URL by interpolating path params and (for GET)
+ * appending remaining args as query parameters. Returns the URL plus the args
+ * that were NOT consumed as path params (the request body / query payload).
+ */
+function buildUrl(
+  path: string,
+  method: string,
+  args: Record<string, unknown>,
+): { url: string; rest: Record<string, unknown> } {
+  const pathParams = extractPathParams(path, args)
+  let url = path
+  for (const [name, value] of Object.entries(pathParams)) {
+    url = url.replace(`:${name}`, encodeURIComponent(value))
+  }
+
+  const rest = { ...args }
+  for (const key of Object.keys(pathParams)) delete rest[key]
+
+  if (method.toUpperCase() === 'GET' && Object.keys(rest).length > 0) {
+    const qs = new URLSearchParams()
+    for (const [key, value] of Object.entries(rest)) {
+      if (value !== undefined && value !== null) qs.append(key, String(value))
+    }
+    const query = qs.toString()
+    if (query) url += `?${query}`
+    return { url, rest: {} }
+  }
+
+  return { url, rest }
+}
+
+/** Pull the dispatch app out of the context decorators, if present. */
+function getDispatchApp(contextDecorators?: Record<string, unknown>): DispatchableApp | null {
+  const candidate = contextDecorators?.[DISPATCH_APP_KEY]
+  if (candidate && typeof (candidate as { handle?: unknown }).handle === 'function') {
+    return candidate as DispatchableApp
+  }
+  return null
+}
+
+// ── Synthetic-context helpers ──────────────────────────────────────────────────
+
+/** Copy of the decorators with the dispatch-app key removed (never leak it to handlers). */
+function stripDispatchApp(contextDecorators?: Record<string, unknown>): Record<string, unknown> {
+  const decorators = { ...contextDecorators }
+  delete decorators[DISPATCH_APP_KEY]
+  return decorators
+}
+
+/** Build a synthetic Elysia-like context for the legacy fallback path. */
+function buildSyntheticContext(
+  path: string,
+  method: string,
+  args: Record<string, unknown>,
+  authToken: string | undefined,
+  contextDecorators: Record<string, unknown> | undefined,
+) {
+  const pathParams = extractPathParams(path, args)
+  const cleanArgs = { ...args }
+  for (const key of Object.keys(pathParams)) delete cleanArgs[key]
+
+  const isGetRoute = method.toUpperCase() === 'GET'
+
+  return {
+    body: isGetRoute ? {} : cleanArgs,
+    headers: buildHeaders(authToken),
+    set: { status: 200, headers: {} as Record<string, string> },
+    params: pathParams,
+    query: isGetRoute ? cleanArgs : {},
+    request: new Request(`http://localhost${path}`, {
+      method,
+      headers: { ...buildAuthHeader(authToken), 'Content-Type': 'application/json' },
+    }),
+    ...stripDispatchApp(contextDecorators),
+  }
+}
+
+/** Serialize a synthetic-handler result to MCP text content. */
+function serializeResult(result: unknown, status: number): string {
+  if (result === undefined || result === null) {
+    return JSON.stringify({ success: true, status })
+  }
+  return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Lowercased header map (Elysia handler `ctx.headers` convention). */
+function buildHeaders(authToken?: string): Record<string, string> {
+  return {
+    ...(authToken ? { authorization: `Bearer ${authToken}` } : {}),
+    'content-type': 'application/json',
+  }
+}
+
+/** Request `Authorization` header (capitalized, for the WHATWG Request). */
+function buildAuthHeader(authToken?: string): Record<string, string> {
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {}
+}
 
 /**
  * Extract path parameter values from route path pattern and flat args object.

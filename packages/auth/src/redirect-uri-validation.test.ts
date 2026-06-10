@@ -1,0 +1,230 @@
+/**
+ * redirect-uri-validation.test.ts — TDD (security)
+ *
+ * VULN 1 (CRITICAL): Authorization-code theft via unvalidated redirect_uri.
+ *
+ * The SMART authorize interceptor stored the client's raw `redirect_uri` and
+ * later forwarded the auth code to it without ever validating it against the
+ * client's registered redirect URIs. Because the interceptor overwrites the
+ * redirect_uri sent to Keycloak with the proxy's own callback, Keycloak never
+ * validated the real client URI either — so there was zero redirect_uri
+ * validation in the whole SMART path.
+ *
+ * Fix: inject `getRegisteredRedirectUris(clientId)` into the authorize handler
+ * and the callback handler; validate `redirect_uri` by EXACT match (RFC 6749
+ * §3.1.2) BEFORE storing/forwarding. Reject with an OAuth error otherwise.
+ *
+ * These tests assert SECURE behavior — they fail (red) on the pre-fix code.
+ */
+
+import { describe, test, expect } from 'bun:test'
+import { handleAuthorize, type AuthorizeInterceptorDeps } from './authorize-interceptor'
+import { handleCallback, type CallbackParams, type CallbackHandlerDeps } from './callback-handler'
+import { MemoryStore } from './stores/memory'
+import type { AuthorizeParams, LaunchSession, SmartProxyConfig } from './types'
+import type { IdPAdapter } from './idp/interface'
+
+const BASE_CONFIG: SmartProxyConfig = {
+  baseUrl: 'https://proxy.example.com',
+  callbackPath: '/auth/smart-callback',
+  launchCodeSecret: 'test-secret-key-for-testing-only',
+}
+
+const REGISTERED_REDIRECT = 'https://app.example.com/callback'
+const ATTACKER_REDIRECT = 'https://attacker.evil/steal'
+const CLIENT_ID = 'smart-app-client'
+
+const idp: IdPAdapter = {
+  getAuthorizationUrl: () => 'https://kc.example.com/realms/test/protocol/openid-connect/auth',
+  getTokenUrl: () => 'https://kc.example.com/realms/test/protocol/openid-connect/token',
+  getIntrospectionUrl: () => 'https://kc.example.com/realms/test/protocol/openid-connect/token/introspect',
+  getLogoutUrl: () => 'https://kc.example.com/realms/test/protocol/openid-connect/logout',
+}
+
+/** Build authorize deps with an injected registered-redirect-uri lookup. */
+function makeAuthorizeDeps(
+  store: MemoryStore,
+  registered: string[],
+): AuthorizeInterceptorDeps {
+  return {
+    config: BASE_CONFIG,
+    store,
+    idp,
+    // The injected allowlist source the secure handler must consult.
+    getRegisteredRedirectUris: async (clientId: string) =>
+      clientId === CLIENT_ID ? registered : [],
+  }
+}
+
+function smartAuthorizeParams(redirectUri: string): AuthorizeParams {
+  return {
+    response_type: 'code',
+    client_id: CLIENT_ID,
+    redirect_uri: redirectUri,
+    scope: 'openid launch/patient patient/*.read',
+    state: 'client-state-123',
+  }
+}
+
+function makeSession(overrides: Partial<LaunchSession> = {}): LaunchSession {
+  return {
+    clientRedirectUri: REGISTERED_REDIRECT,
+    clientState: 'client-state-123',
+    clientId: CLIENT_ID,
+    scope: 'openid launch/patient patient/*.read',
+    needsPatientPicker: false,
+    patient: 'Patient/123',
+    createdAt: Date.now(),
+    ...overrides,
+  }
+}
+
+describe('VULN 1 — authorize: redirect_uri allowlist validation', () => {
+  test('rejects an authorize request whose redirect_uri is NOT registered', async () => {
+    const store = new MemoryStore()
+    const deps = makeAuthorizeDeps(store, [REGISTERED_REDIRECT])
+
+    const { result, sessionKey } = await handleAuthorize(
+      smartAuthorizeParams(ATTACKER_REDIRECT),
+      deps,
+    )
+
+    // SECURE: must error out, must NOT create a session, must NOT redirect to KC.
+    expect(result.type).toBe('error')
+    expect(result.type === 'error' && result.status).toBe(400)
+    expect(result.type === 'error' && result.error).toBe('invalid_request')
+    expect(sessionKey).toBeUndefined()
+    expect(store.size()).toBe(0)
+  })
+
+  test('does not leak a redirect to the attacker host', async () => {
+    const store = new MemoryStore()
+    const deps = makeAuthorizeDeps(store, [REGISTERED_REDIRECT])
+
+    const { result } = await handleAuthorize(smartAuthorizeParams(ATTACKER_REDIRECT), deps)
+
+    if (result.type === 'redirect') {
+      expect(result.url).not.toContain('attacker.evil')
+    }
+    expect(result.type).toBe('error')
+  })
+
+  test('accepts a registered redirect_uri and proceeds normally (no regression)', async () => {
+    const store = new MemoryStore()
+    const deps = makeAuthorizeDeps(store, [REGISTERED_REDIRECT])
+
+    const { result, sessionKey } = await handleAuthorize(
+      smartAuthorizeParams(REGISTERED_REDIRECT),
+      deps,
+    )
+
+    expect(result.type).toBe('redirect')
+    expect(sessionKey).toBeDefined()
+    const session = store.get(sessionKey!)
+    expect(session).not.toBeNull()
+    expect(session!.clientRedirectUri).toBe(REGISTERED_REDIRECT)
+
+    // The redirect to KC must use the proxy callback (interception preserved).
+    if (result.type === 'redirect') {
+      const kcUrl = new URL(result.url)
+      expect(kcUrl.searchParams.get('redirect_uri')).toBe(
+        `${BASE_CONFIG.baseUrl}${BASE_CONFIG.callbackPath}`,
+      )
+    }
+  })
+
+  test('exact-match only: a registered-prefix attacker URI is rejected', async () => {
+    const store = new MemoryStore()
+    const deps = makeAuthorizeDeps(store, [REGISTERED_REDIRECT])
+
+    // Open-redirect style: same prefix, different effective destination.
+    const sneaky = `${REGISTERED_REDIRECT}.attacker.evil/cb`
+    const { result } = await handleAuthorize(smartAuthorizeParams(sneaky), deps)
+
+    expect(result.type).toBe('error')
+    expect(store.size()).toBe(0)
+  })
+
+  test('when no validator is injected, behaviour is unchanged (backward compatible)', async () => {
+    const store = new MemoryStore()
+    const deps: AuthorizeInterceptorDeps = { config: BASE_CONFIG, store, idp }
+
+    const { result, sessionKey } = await handleAuthorize(
+      smartAuthorizeParams(REGISTERED_REDIRECT),
+      deps,
+    )
+
+    // No validator → no allowlist enforcement (consumers opt in by injecting it).
+    expect(result.type).toBe('redirect')
+    expect(sessionKey).toBeDefined()
+  })
+})
+
+describe('VULN 1 — callback: defense-in-depth redirect_uri re-validation', () => {
+  test('rejects forwarding the auth code to an unregistered clientRedirectUri', async () => {
+    const store = new MemoryStore()
+    // A session that somehow carries an attacker redirect (e.g. pre-fix poisoning).
+    store.set('session-key', makeSession({ clientRedirectUri: ATTACKER_REDIRECT }))
+
+    const deps: CallbackHandlerDeps = {
+      config: BASE_CONFIG,
+      store,
+      getRegisteredRedirectUris: async (clientId) =>
+        clientId === CLIENT_ID ? [REGISTERED_REDIRECT] : [],
+    }
+
+    const params: CallbackParams = { state: 'session-key', code: 'auth-code-123' }
+    const { result } = await handleCallback(params, deps)
+
+    // SECURE: must NOT redirect the code to the attacker host.
+    expect(result.type).toBe('error')
+    if (result.type === 'redirect') {
+      expect(result.url).not.toContain('attacker.evil')
+    }
+  })
+
+  test('rejects forwarding an IdP error to an unregistered clientRedirectUri', async () => {
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ clientRedirectUri: ATTACKER_REDIRECT }))
+
+    const deps: CallbackHandlerDeps = {
+      config: BASE_CONFIG,
+      store,
+      getRegisteredRedirectUris: async (clientId) =>
+        clientId === CLIENT_ID ? [REGISTERED_REDIRECT] : [],
+    }
+
+    const params: CallbackParams = {
+      state: 'session-key',
+      error: 'access_denied',
+      error_description: 'User denied',
+    }
+    const { result } = await handleCallback(params, deps)
+
+    expect(result.type).toBe('error')
+    if (result.type === 'redirect') {
+      expect(result.url).not.toContain('attacker.evil')
+    }
+  })
+
+  test('forwards the code normally when clientRedirectUri is registered', async () => {
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ clientRedirectUri: REGISTERED_REDIRECT }))
+
+    const deps: CallbackHandlerDeps = {
+      config: BASE_CONFIG,
+      store,
+      getRegisteredRedirectUris: async (clientId) =>
+        clientId === CLIENT_ID ? [REGISTERED_REDIRECT] : [],
+    }
+
+    const params: CallbackParams = { state: 'session-key', code: 'auth-code-123' }
+    const { result } = await handleCallback(params, deps)
+
+    expect(result.type).toBe('redirect')
+    if (result.type === 'redirect') {
+      expect(result.url).toContain('app.example.com/callback')
+      expect(result.url).toContain('code=auth-code-123')
+    }
+  })
+})

@@ -6,7 +6,7 @@ import { getAllServers, ensureServersInitialized, getServerInfoByName } from '@/
 import { logger } from '@/lib/logger'
 import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
-import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
+import { getSmartClientConfig, getRegisteredRedirectUris } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { tokenContextStore } from '@/lib/token-context-store'
 import { hasClientAssertion, translateClientAssertion, ClientAssertionError } from './backend-services'
@@ -191,6 +191,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       logger: smartLogger,
       validateAudience,
       isIdpReachable: isKeycloakReachable,
+      getRegisteredRedirectUris,
     })
 
     switch (result.type) {
@@ -213,7 +214,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   .get('/smart-callback', async ({ query, redirect, set }) => {
     const { result } = await handleCallback(
       { state: query.state, code: query.code, error: query.error, error_description: query.error_description, session_state: query.session_state },
-      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient },
+      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient, getRegisteredRedirectUris },
     )
 
     switch (result.type) {

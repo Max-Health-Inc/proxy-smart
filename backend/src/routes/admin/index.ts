@@ -2,6 +2,7 @@ import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { validateAdminToken } from '@/lib/auth'
+import { adminAuthGuard } from '@/lib/admin-auth-guard'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
@@ -32,9 +33,15 @@ import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
  * Admin routes aggregator - combines all admin functionality
  */
 export const adminRoutes = new Elysia({ prefix: '/admin' })
-  // Audit middleware — logs every admin mutation with actor identity
+  // Audit middleware — logs every admin mutation with actor identity.
+  // Registered first so its onBeforeHandle stashes the audit start-time and its
+  // onAfterResponse still records requests the auth guard rejects (401/403).
   .use(adminAuditPlugin)
-  // Then add authentication guard for protected routes
+  // Structural authentication: enforce a valid Keycloak admin token on EVERY
+  // admin route before any handler runs. This is the real enforcement; the
+  // `.guard()` below only contributes OpenAPI security metadata.
+  .use(adminAuthGuard)
+  // OpenAPI security metadata for the protected routes (documentation only).
   .guard({
     detail: {
       security: [{ BearerAuth: [] }]

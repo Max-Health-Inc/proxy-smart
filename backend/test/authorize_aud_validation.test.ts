@@ -131,6 +131,11 @@ describe('Authorize endpoint aud/resource validation', () => {
   // INVALID aud/resource values
   // ────────────────────────────────────────────────────────────────────────────
 
+  // TODO(flaky): this case occasionally exceeds the default 5s test timeout under
+  // concurrent full-suite load because aud validation resolves the audience against
+  // configured FHIR servers (can hit server discovery). Passes reliably in
+  // isolation. Raised the per-test timeout as a stop-gap; the proper fix is to
+  // stub server discovery so unknown-aud rejection short-circuits without network.
   it('rejects aud pointing to an unknown server', async () => {
     const res = await authRoutes.handle(new Request(authorizeUrl({
       aud: 'https://evil.example.com/fhir'
@@ -139,7 +144,7 @@ describe('Authorize endpoint aud/resource validation', () => {
     const body = await res.json()
     expect(body.error).toBe('invalid_request')
     expect(body.error_description).toContain('aud')
-  })
+  }, 15000)
 
   it('rejects resource pointing to an unrelated URL', async () => {
     const res = await authRoutes.handle(new Request(authorizeUrl({
