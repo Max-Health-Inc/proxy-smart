@@ -4,8 +4,8 @@
   "version": "0.2.13-alpha.202606132144.3ff0f990b",
   "type": "module",
   "scripts": {
-    "test": "bun test",
-    "test:watch": "bun test --watch",
+    "test": "bun test --isolate",
+    "test:watch": "bun test --isolate --watch",
     "dev": "bun run --watch --watch-path src src/index.ts",
     "start": "bun run src/index.ts",
     "mcp": "bun run src/mcp-server.ts",

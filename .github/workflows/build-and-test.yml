@@ -90,15 +90,13 @@ jobs:
       run: |
         echo "🧪 Testing backend..."
         cd backend
-        # Run test files in a fixed (alphabetical) order rather than relying on
-        # bun's default filesystem-readdir order, which differs between Linux
-        # (CI, hash order) and dev machines (NTFS ~alphabetical). Bun's
-        # mock.module() is process-global and persists across files, so a file
-        # that mocks a shared module (e.g. @/lib/auth) can leak into a later
-        # file that tests the real one. Alphabetical order deterministically
-        # keeps each "victim" file (auth-audience-binding, access-control-factory)
-        # before the files that mock its dependencies.
-        bun test $(find test -name '*.test.ts' | sort)
+        # `bun run test` uses `bun test --isolate` (see package.json). --isolate
+        # gives each test file a fresh global object, so mock.module() (which is
+        # process-global and is NOT undone by mock.restore()) can't leak between
+        # files. Without it, a file mocking a shared module (e.g. @/lib/auth)
+        # leaked into files testing the real one — order-dependent, so it passed
+        # locally but failed in CI (Linux readdir order). See bun docs: mocks.
+        bun run test
 
     # === FRONTEND TESTS ===
     - name: Test Frontend
