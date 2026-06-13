@@ -90,7 +90,15 @@ jobs:
       run: |
         echo "🧪 Testing backend..."
         cd backend
-        bun run test
+        # Run test files in a fixed (alphabetical) order rather than relying on
+        # bun's default filesystem-readdir order, which differs between Linux
+        # (CI, hash order) and dev machines (NTFS ~alphabetical). Bun's
+        # mock.module() is process-global and persists across files, so a file
+        # that mocks a shared module (e.g. @/lib/auth) can leak into a later
+        # file that tests the real one. Alphabetical order deterministically
+        # keeps each "victim" file (auth-audience-binding, access-control-factory)
+        # before the files that mock its dependencies.
+        bun test $(find test -name '*.test.ts' | sort)
 
     # === FRONTEND TESTS ===
     - name: Test Frontend
