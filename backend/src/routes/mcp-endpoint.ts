@@ -266,10 +266,9 @@ function unauthorized(): Response {
 // ── Core request handler ─────────────────────────────────────────────────────
 
 async function handleMcpRequest(request: Request): Promise<Response> {
-  // Master switch
+  // Master switch — file-backed config is the single source of truth
   const endpointCfg = loadMcpEndpointConfig()
-  const envOverride = process.env.MCP_ENDPOINT_ENABLED
-  const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : endpointCfg.enabled
+  const effectiveEnabled = endpointCfg.enabled
   if (!effectiveEnabled) {
     return new Response(JSON.stringify({ error: 'MCP endpoint is disabled' }), {
       status: 404,

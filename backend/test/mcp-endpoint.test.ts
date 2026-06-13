@@ -61,7 +61,6 @@ mock.module('../src/lib/ai/rag-tools', () => ({
 // IMPORTANT: Do NOT mock.module('../src/config') — that replaces the entire
 // singleton with a partial object, permanently stripping ial, accessControl,
 // etc. for all subsequent test files in the same bun process.
-process.env.MCP_ENDPOINT_ENABLED = 'true'
 process.env.KEYCLOAK_BASE_URL = 'http://localhost:8080'
 process.env.KEYCLOAK_PUBLIC_URL = 'http://localhost:8080'
 process.env.KEYCLOAK_REALM = 'proxy-smart'
@@ -308,81 +307,31 @@ describe('MCP Endpoint — /mcp', () => {
   })
 
   // ── Disabled endpoint ────────────────────────────────────────────────────
-  // Either file-config OR env-config being enabled is sufficient (OR logic).
-  // Only when BOTH are disabled should the endpoint return 404.
+  // The file-backed config is the single source of truth. When it disables MCP,
+  // the endpoint returns 404. (The beforeEach re-arms enabled: true before each test.)
 
   describe('Disabled endpoint', () => {
-    it('returns 404 when both file-config and env-config disable MCP', async () => {
-      // Both sources disabled → endpoint must be off
+    it('returns 404 when file-config disables MCP', async () => {
       saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
-      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
-      process.env.MCP_ENDPOINT_ENABLED = 'false'
-      try {
-        const app = createApp()
-        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-        expect(res.status).toBe(404)
-      } finally {
-        process.env.MCP_ENDPOINT_ENABLED = prevEnv
-      }
+      const app = createApp()
+      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+      expect(res.status).toBe(404)
     })
 
     it('returns 404 response body is JSON with error message', async () => {
       saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
-      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
-      process.env.MCP_ENDPOINT_ENABLED = 'false'
-      try {
-        const app = createApp()
-        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-        const body = await res.json()
-        expect(body.error).toBeDefined()
-      } finally {
-        process.env.MCP_ENDPOINT_ENABLED = prevEnv
-      }
+      const app = createApp()
+      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+      const body = await res.json()
+      expect(body.error).toBeDefined()
     })
 
-    it('is disabled when file-config is disabled (env not set)', async () => {
-      // Admin UI toggled off, no env override → endpoint is disabled
+    it('is disabled when file-config is disabled', async () => {
+      // Admin UI toggled off → endpoint is disabled
       saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
-      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
-      delete process.env.MCP_ENDPOINT_ENABLED
-      try {
-        const app = createApp()
-        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-        expect(res.status).toBe(404)
-      } finally {
-        if (prevEnv !== undefined) process.env.MCP_ENDPOINT_ENABLED = prevEnv
-        else delete process.env.MCP_ENDPOINT_ENABLED
-      }
-    })
-
-    it('env var overrides file-config: env=false disables even when file says enabled', async () => {
-      // Env says disabled → endpoint disabled regardless of file config
-      saveMcpEndpointConfig({ enabled: true, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
-      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
-      process.env.MCP_ENDPOINT_ENABLED = 'false'
-      try {
-        const app = createApp()
-        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-        expect(res.status).toBe(404)
-      } finally {
-        if (prevEnv !== undefined) process.env.MCP_ENDPOINT_ENABLED = prevEnv
-        else delete process.env.MCP_ENDPOINT_ENABLED
-      }
-    })
-
-    it('env var overrides file-config: env=true enables even when file says disabled', async () => {
-      // Env says enabled → endpoint enabled regardless of file config
-      saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
-      const prevEnv = process.env.MCP_ENDPOINT_ENABLED
-      process.env.MCP_ENDPOINT_ENABLED = 'true'
-      try {
-        const app = createApp()
-        const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-        expect(res.status).not.toBe(404)
-      } finally {
-        if (prevEnv !== undefined) process.env.MCP_ENDPOINT_ENABLED = prevEnv
-        else delete process.env.MCP_ENDPOINT_ENABLED
-      }
+      const app = createApp()
+      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+      expect(res.status).toBe(404)
     })
   })
 

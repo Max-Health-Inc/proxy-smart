@@ -37,14 +37,10 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
     const resources = buildResourceList(cfg)
 
-    // Env var takes absolute precedence (non-overridable); otherwise use file config
-    const envOverride = process.env.MCP_ENDPOINT_ENABLED
-    const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : cfg.enabled
-    const configSource = envOverride !== undefined ? 'env' : 'file'
-
+    // File-backed config is the single source of truth
     return {
-      enabled: effectiveEnabled,
-      configSource,
+      enabled: cfg.enabled,
+      configSource: 'file',
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,
@@ -89,13 +85,10 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
     const resources = buildResourceList(cfg)
 
-    // Env var takes absolute precedence; otherwise use file config
-    const envOverride = process.env.MCP_ENDPOINT_ENABLED
-    const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : cfg.enabled
-
+    // File-backed config is the single source of truth
     return {
-      enabled: effectiveEnabled,
-      configSource: envOverride !== undefined ? 'env' : 'file',
+      enabled: cfg.enabled,
+      configSource: 'file',
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,

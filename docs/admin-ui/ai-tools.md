@@ -121,5 +121,4 @@ Remove installed skills that are no longer needed. Built-in default skills can b
 | Variable | Description | Default |
 |---|---|---|
 | `OPENAI_API_KEY` | API key for embeddings and semantic search | -- |
-| `MCP_ENDPOINT_ENABLED` | Enable/disable MCP endpoint | `true` |
 | `MCP_ENDPOINT_PATH` | URL path for MCP endpoint | `/mcp` |
