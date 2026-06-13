@@ -13,7 +13,17 @@
   background-color: rgba(250, 250, 250, 0.03) !important;
   color: rgba(250, 250, 250, 0.9) !important;
   border: 1px solid rgba(250, 250, 250, 0.15) !important;
+  box-shadow: none !important;
   transition: all 500ms ease !important;
+}
+
+/* PatternFly draws the secondary-button outline as an inset box-shadow on
+   ::after — strip it so only our muted white border shows (no blue). */
+#social-maxhealth::after,
+#social-maxhealth::before {
+  display: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 #social-maxhealth:hover {

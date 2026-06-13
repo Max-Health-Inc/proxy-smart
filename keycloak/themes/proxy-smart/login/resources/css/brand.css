@@ -1,13 +1,14 @@
 /*
- * Proxy Smart brand overrides for keycloak.v2 login theme.
+ * Proxy Smart brand override for the keycloak.v2 login theme.
  *
- * The parent theme (keycloak.v2/login/resources/css/styles.css) sets:
- *   --keycloak-logo-url      → Keycloak wordmark SVG as header background
- *   --keycloak-bg-logo-url   → Keycloak pattern as page background
- *   div.kc-logo-text span    → display: none  (hides the realm name text)
+ * In Keycloak 26's keycloak.v2 theme the brand lives in:
+ *   <header id="kc-header"> <div id="kc-header-wrapper" class="pf-v5-c-brand">REALM NAME</div> </header>
  *
- * We override these so the login page shows the Proxy Smart heart icon
- * alongside the realm name text styled with Geist font.
+ * The parent theme renders that element as a background-image logo. We blank
+ * the logo image (via --keycloak-logo-url) and instead show the realm name as
+ * a Geist wordmark with the Proxy Smart heart icon beside it.
+ *
+ * (.kc-logo-text is kept as a fallback selector for older Keycloak markup.)
  */
 
 :root {
@@ -15,38 +16,48 @@
   --keycloak-bg-logo-url: none;
 }
 
-/* Remove Keycloak logo background, use flexbox for icon + text */
+/* Brand wordmark — heart icon + realm name, centered above the card */
+#kc-header-wrapper,
 div.kc-logo-text {
-  background-image: none;
-  height: auto;
-  width: auto;
-  display: flex;
+  background-image: none !important;
+  height: auto !important;
+  width: auto !important;
+  display: flex !important;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  margin-bottom: 8px;
+  gap: 12px;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-indent: 0 !important;
+  white-space: nowrap;
+  font-family: "Geist Sans", ui-sans-serif, system-ui, sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 1.375rem !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  color: rgba(250, 250, 250, 0.92) !important;
 }
 
-/* Heart icon via ::before pseudo-element (white stroke, emerald pulse) */
+/* Heart icon via ::before (emerald stroke, matches the app favicon) */
+#kc-header-wrapper::before,
 div.kc-logo-text::before {
   content: "";
   display: inline-block;
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='-4 -4 32 32' fill='none'%3E%3Cpath d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5' stroke='%2300d294' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
-/* Show the realm name text — styled like design system hero */
+/* Keep any nested span (older markup) inline with the wordmark styling */
+#kc-header-wrapper span,
 div.kc-logo-text span {
   display: inline !important;
-  font-family: "Geist Sans", ui-sans-serif, system-ui, sans-serif !important;
-  font-weight: 300 !important;
-  font-size: 1.25rem !important;
-  letter-spacing: -0.02em;
-  color: rgba(250, 250, 250, 0.9) !important;
+  font: inherit !important;
+  color: inherit !important;
+  letter-spacing: inherit !important;
 }
