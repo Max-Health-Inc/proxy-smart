@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { randomBytes } from 'crypto'
+import { loadMcpEndpointConfig } from './lib/mcp-endpoint-config'
 
 // Per-process fallback secret for EHR Launch codes when SMART_LAUNCH_SECRET is not set.
 // WARNING: This is NOT safe for multi-node deployments — set SMART_LAUNCH_SECRET env var.
@@ -276,12 +277,11 @@ export const config = {
   },
 
   mcp: {
-    // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server
-    // Enabled by default. Override with MCP_ENDPOINT_ENABLED=false to disable.
+    // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server.
+    // The file-backed config (mcp-endpoint.json, managed via the admin UI) is the single
+    // source of truth for whether the endpoint is enabled. Enabled by default.
     get enabled(): boolean {
-      const explicit = process.env.MCP_ENDPOINT_ENABLED
-      if (explicit !== undefined) return explicit === 'true'
-      return true
+      return loadMcpEndpointConfig().enabled
     },
     get path() {
       return process.env.MCP_ENDPOINT_PATH || '/mcp'

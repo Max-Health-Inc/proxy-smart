@@ -25,11 +25,13 @@ import {
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
+  DISPATCH_APP_KEY,
 } from '@max-health-inc/elysia-mcp'
 import type { ToolMetadata, ResourceMetadata } from '@max-health-inc/elysia-mcp'
 
 import { config } from '../config'
 import { validateToken } from '../lib/auth'
+import { getMcpResourceAudience } from '../lib/token-audience'
 import { logger } from '../lib/logger'
 import {
   getToolRegistry,
@@ -37,6 +39,7 @@ import {
   getResourceRegistry,
   isResourceRegistryInitialized,
   pathToResourceUri,
+  getDispatchApp,
 } from '../lib/ai/tool-registry'
 import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
 import { searchDocumentation } from '../lib/ai/rag-tools'
@@ -52,10 +55,19 @@ const sessionManager = new SessionManager(100, 30 * 60_000, {
   error: (msg, data) => logger.error('mcp', msg, data),
 })
 
-// Domain-specific context decorators injected into tool/resource execution
-const contextDecorators = {
-  getAdmin: createAdminClient,
-  getAccessControl: getAccessControlInstance,
+// Domain-specific context decorators injected into tool/resource execution.
+// The dispatch app (resolved lazily — it is registered after this module loads)
+// routes execution through the real Elysia pipeline so guards, response-schema
+// coercion, and lifecycle hooks (e.g. admin audit logging) all run. The
+// getAdmin / getAccessControl decorators remain for the synthetic fallback path.
+function buildContextDecorators(): Record<string, unknown> {
+  const decorators: Record<string, unknown> = {
+    getAdmin: createAdminClient,
+    getAccessControl: getAccessControlInstance,
+  }
+  const app = getDispatchApp()
+  if (app) decorators[DISPATCH_APP_KEY] = app
+  return decorators
 }
 
 // ── Tool bridging ────────────────────────────────────────────────────────────
@@ -66,6 +78,7 @@ const contextDecorators = {
  * GET (read-only) tools are collapsed into a single `read_resource` tool.
  */
 function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
+  const contextDecorators = buildContextDecorators()
   if (isToolRegistryInitialized()) {
     const registry = getToolRegistry()
 
@@ -140,6 +153,7 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
 function registerResources(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   if (!isResourceRegistryInitialized()) return
 
+  const contextDecorators = buildContextDecorators()
   const registry = getResourceRegistry()
 
   for (const [resourceName, meta] of registry) {
@@ -216,7 +230,11 @@ async function authenticateRequest(request: Request): Promise<AuthResult | Respo
   if (!token) return unauthorized()
 
   try {
-    const payload = await validateToken(token)
+    // MCP tokens are bound to the MCP endpoint resource (RFC 8707) or the proxy's
+    // own client. A patient-facing SMART-app token (FHIR-base aud) is rejected.
+    const mcpAudiences = [getMcpResourceAudience()]
+    if (config.keycloak.adminClientId) mcpAudiences.push(config.keycloak.adminClientId)
+    const payload = await validateToken(token, { audience: mcpAudiences })
     const realmRoles: string[] = (payload as Record<string, unknown> & { realm_access?: { roles?: string[] } }).realm_access?.roles ?? []
     const clientRoles: string[] = Object.values(
       (payload as Record<string, unknown> & { resource_access?: Record<string, { roles?: string[] }> }).resource_access ?? {},
@@ -248,10 +266,9 @@ function unauthorized(): Response {
 // ── Core request handler ─────────────────────────────────────────────────────
 
 async function handleMcpRequest(request: Request): Promise<Response> {
-  // Master switch
+  // Master switch — file-backed config is the single source of truth
   const endpointCfg = loadMcpEndpointConfig()
-  const envOverride = process.env.MCP_ENDPOINT_ENABLED
-  const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : endpointCfg.enabled
+  const effectiveEnabled = endpointCfg.enabled
   if (!effectiveEnabled) {
     return new Response(JSON.stringify({ error: 'MCP endpoint is disabled' }), {
       status: 404,

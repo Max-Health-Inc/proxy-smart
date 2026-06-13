@@ -833,8 +833,8 @@
   "Confidential Clients": [
     "Vertrauliche Clients"
   ],
-  "Config source: {{source}}. MCP endpoint is enabled by default. Override with MCP_ENDPOINT_ENABLED env var.": [
-    "Konfigurationsquelle: {{source}}. MCP-Endpunkt ist standardmäßig aktiviert. Überschreiben mit MCP_ENDPOINT_ENABLED Umgebungsvariable."
+  "Config source: {{source}}. MCP endpoint is enabled by default and managed here.": [
+    "Konfigurationsquelle: {{source}}. MCP-Endpunkt ist standardmäßig aktiviert und wird hier verwaltet."
   ],
   "Configuration Error": [
     "Konfigurationsfehler"

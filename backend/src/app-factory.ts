@@ -32,6 +32,7 @@ import { brandBundleService } from './lib/brand-bundle'
 import { getRuntimeBrandConfig } from './lib/runtime-config'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
+import { setDispatchApp } from './lib/ai/tool-registry'
 
 export interface DiscoveredApp {
     id: string
@@ -331,6 +332,12 @@ a:hover{opacity:.85}
 </html>`
             }
         })
+
+    // Register the ROOT app for secure MCP / AI-chat tool dispatch. Tool and
+    // resource execution is routed through `app.handle()` so guards,
+    // response-schema coercion, and lifecycle hooks (e.g. admin audit logging)
+    // all run — closing the synthetic-context middleware-bypass class.
+    setDispatchApp(app)
 
     return app
 }

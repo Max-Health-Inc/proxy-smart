@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia'
 import { join } from 'path'
 import { readdirSync, readFileSync, existsSync } from 'fs'
 import { validateToken } from '../lib/auth'
+import { getFhirResourceAudiences } from '../lib/token-audience'
 import { AuthenticationError, ConfigurationError } from '../lib/admin-utils'
 import { config } from '../config'
 import { getDefaultDicomServer, getDicomServerById, getDicomViewerAppClientId } from '../lib/runtime-config'
@@ -86,7 +87,9 @@ async function proxyDicomWeb(request: Request, subPath: string, set: { status?: 
   }
 
   try {
-    await validateToken(token)
+    // DICOM imaging is a FHIR-resource-class endpoint: the SMART access token's
+    // aud is the FHIR resource server base, not a client id.
+    await validateToken(token, { audience: getFhirResourceAudiences() })
   } catch (err) {
     if (err instanceof AuthenticationError) {
       set.status = 401
@@ -175,7 +178,9 @@ async function proxyDicomWebPost(request: Request, subPath: string, set: { statu
   }
 
   try {
-    await validateToken(token)
+    // DICOM imaging is a FHIR-resource-class endpoint: the SMART access token's
+    // aud is the FHIR resource server base, not a client id.
+    await validateToken(token, { audience: getFhirResourceAudiences() })
   } catch (err) {
     if (err instanceof AuthenticationError) {
       set.status = 401

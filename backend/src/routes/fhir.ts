@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import fetch from 'cross-fetch'
 import { validateToken } from '../lib/auth'
+import { getFhirResourceAudiences } from '../lib/token-audience'
 import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
 import { config } from '../config'
 import { fhirServerStore, getServerByName, getServerInfoByName } from '../lib/fhir-server-store'
@@ -40,7 +41,9 @@ async function proxyFHIR({ params, request, set }: any) {
         set.status = 401
         return { error: 'Authentication required' }
       }
-      tokenPayload = await validateToken(auth)
+      // SMART on FHIR: the access token's aud is the FHIR resource server base
+      // (this proxy's FHIR base / configured upstream base), NOT a client id.
+      tokenPayload = await validateToken(auth, { audience: getFhirResourceAudiences() })
     }
 
     // 2) Consent + IAL enforcement check
@@ -439,7 +442,7 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
     }
 
     try {
-      await validateToken(auth)
+      await validateToken(auth, { audience: getFhirResourceAudiences() })
 
       // Get server info by name (automatically initializes if needed)
       const serverInfo = await getServerInfoByName(params.server_name)

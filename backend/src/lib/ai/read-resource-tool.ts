@@ -11,9 +11,11 @@
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import * as z from 'zod'
+import { executeResource as pkgExecuteResource, DISPATCH_APP_KEY } from '@max-health-inc/elysia-mcp'
 import {
   getResourceRegistry,
   isResourceRegistryInitialized,
+  getDispatchApp,
 } from './tool-registry'
 import type { ResourceMetadata } from './tool-registry'
 import { isResourceExposed } from '../mcp-endpoint-config'
@@ -94,14 +96,6 @@ function matchResource(
   return null
 }
 
-// JSON.stringify replacer for Error objects
-function serializeErrors(_key: string, value: unknown): unknown {
-  if (value instanceof Error) {
-    return { name: value.name, message: value.message, stack: value.stack }
-  }
-  return value
-}
-
 // ── Registration ─────────────────────────────────────────────────────────────
 
 /**
@@ -137,40 +131,25 @@ export function registerReadResourceTool(
       }
 
       try {
-        const elysiaContext = {
-          body: {},
-          headers: {
-            ...(tokenRef.current ? { authorization: `Bearer ${tokenRef.current}` } : {}),
-            'content-type': 'application/json',
-          },
-          set: {
-            status: 200,
-            headers: {} as Record<string, string>,
-          },
-          params: match.pathParams,
-          query: (query as Record<string, string> | undefined) ?? {},
-          request: new Request(`http://localhost${path}`, {
-            method: 'GET',
-            headers: {
-              ...(tokenRef.current ? { Authorization: `Bearer ${tokenRef.current}` } : {}),
-            },
-          }),
+        // Dispatch through the package executor. When a ROOT dispatch app is
+        // registered, this runs the full Elysia pipeline (guards,
+        // response-schema coercion, lifecycle hooks); otherwise it falls back
+        // to a synthetic context. The getAdmin / getAccessControl decorators
+        // remain available for the synthetic fallback path. Query params are
+        // merged into the args the executor uses to rebuild the request.
+        const app = getDispatchApp()
+        const contextDecorators: Record<string, unknown> = {
           getAdmin: createAdminClient,
           getAccessControl: getAccessControlInstance,
         }
+        if (app) contextDecorators[DISPATCH_APP_KEY] = app
 
-        const result = await (match.meta.handler as (ctx: unknown) => unknown)(elysiaContext)
-        const status = typeof elysiaContext.set.status === 'number' ? elysiaContext.set.status : 200
-
-        const text = result === undefined || result === null
-          ? JSON.stringify({ success: true, status })
-          : typeof result === 'string'
-            ? result
-            : JSON.stringify(result, serializeErrors, 2)
-
-        if (status >= 400) {
-          return { content: [{ type: 'text' as const, text }], isError: true }
+        const params: Record<string, string> = {
+          ...match.pathParams,
+          ...((query as Record<string, string> | undefined) ?? {}),
         }
+
+        const text = await pkgExecuteResource(match.meta, params, tokenRef.current, contextDecorators)
         return { content: [{ type: 'text' as const, text }] }
       } catch (err) {
         return {

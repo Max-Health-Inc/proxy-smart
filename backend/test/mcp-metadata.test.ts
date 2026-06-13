@@ -25,7 +25,6 @@ const TEST_MCP_PATH = '/mcp'
 // IMPORTANT: Do NOT mock.module('../src/config') — that replaces the entire
 // singleton with a partial object, permanently stripping ial, accessControl,
 // etc. for all subsequent test files in the same bun process.
-process.env.MCP_ENDPOINT_ENABLED = 'true'
 process.env.KEYCLOAK_BASE_URL = TEST_KEYCLOAK_BASE
 process.env.KEYCLOAK_PUBLIC_URL = TEST_KEYCLOAK_BASE
 process.env.KEYCLOAK_REALM = TEST_REALM

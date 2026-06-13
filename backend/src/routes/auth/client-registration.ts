@@ -7,6 +7,7 @@ import * as crypto from 'crypto'
 import { getClientRegistrationSettings } from '../admin/client-registration-settings'
 import { ClientRegistrationRequest, ClientRegistrationResponse, CommonErrorResponses } from '@/schemas'
 import { config } from '@/config'
+import { validateExternalUrl } from '@/lib/url-validation'
 
 /**
  * OAuth 2.0 Dynamic Client Registration Protocol (RFC 7591)
@@ -156,6 +157,31 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         return {
           error: 'invalid_client_metadata',
           error_description: 'Privacy policy URI is required'
+        }
+      }
+
+      // VULN 2 (HIGH) — registration-layer SSRF guard (fail-closed).
+      // A client-supplied jwks_uri is fetched server-side during private_key_jwt
+      // assertion validation (backend-services.ts → fetchJwksUrl). Reject any
+      // jwks_uri that targets an internal/metadata/RFC1918/link-local host (or a
+      // non-http(s) scheme) at write time, so the malicious URL is never stored.
+      // The fetch layer re-validates (defense in depth); this layer fails closed.
+      // Reuses the shared validateExternalUrl helper (DRY). The dev/docker
+      // carve-out mirrors fhir-servers.ts so internal federation still works
+      // locally; the guard is fully active in test and production.
+      if (body.jwks_uri) {
+        const allowInternal = process.env.NODE_ENV === 'development'
+        const jwksUriCheck = validateExternalUrl(body.jwks_uri, allowInternal)
+        if (!jwksUriCheck.valid) {
+          logger.admin.warn('Rejected client registration with SSRF-suspect jwks_uri', {
+            jwksUri: body.jwks_uri,
+            reason: jwksUriCheck.reason,
+          })
+          set.status = 400
+          return {
+            error: 'invalid_client_metadata',
+            error_description: `jwks_uri rejected: ${jwksUriCheck.reason}`
+          }
         }
       }
 

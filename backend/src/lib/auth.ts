@@ -3,6 +3,19 @@ import jwksClient, { type JwksClient } from 'jwks-rsa'
 import { config } from '../config'
 import { AuthenticationError, ConfigurationError } from './admin-utils'
 import { logger } from './logger'
+import { isAudienceAccepted } from './token-audience'
+
+/** Options for {@link validateToken}. */
+export interface ValidateTokenOptions {
+  /**
+   * Expected audience(s) for this call site. SMART on FHIR endpoints accept
+   * different audiences (proxy client id for admin/MCP; FHIR resource base URL
+   * for the FHIR/DICOM proxy). When omitted, a config-derived default set of
+   * acceptable audiences applies. Audience is ALWAYS enforced (fail-closed)
+   * unless the `JWT_AUDIENCE_ENFORCEMENT=disabled` escape hatch is set.
+   */
+  audience?: string | string[]
+}
 
 /** Keycloak-specific JWT payload with realm/resource access claims */
 export interface KeycloakJwtPayload extends JwtPayload {
@@ -57,11 +70,18 @@ async function getKey(header: jwt.JwtHeader) {
  * Validates a JWT token using Keycloak's public keys.
  * Verifies signature, expiry, and issuer (iss).
  *
+ * Audience binding: in addition to signature/expiry/issuer, the token's
+ * `aud`/`azp` is bound to an acceptable audience (fail-closed). Call sites pass
+ * their expected audience via {@link ValidateTokenOptions}; when omitted, a
+ * config-derived default set applies. This prevents cross-audience token replay
+ * (e.g. a patient-facing SMART app token being accepted at /mcp or admin routes).
+ *
  * @param token JWT token to validate
+ * @param options Optional audience expectations (see {@link ValidateTokenOptions})
  * @returns Decoded token payload
- * @throws AuthenticationError for invalid/expired tokens
+ * @throws AuthenticationError for invalid/expired tokens or audience mismatch
  */
-export async function validateToken(token: string): Promise<JwtPayload> {
+export async function validateToken(token: string, options?: ValidateTokenOptions): Promise<JwtPayload> {
   try {
     logger.auth.debug('Starting token validation')
     
@@ -94,18 +114,28 @@ export async function validateToken(token: string): Promise<JwtPayload> {
       verifyOptions.issuer = expectedIssuer
     }
 
-    // Enforce audience only when explicitly configured via env var.
-    // Do NOT default to adminClientId — that would reject all non-admin tokens
-    // (patient-portal, SMART apps, etc. each have their own aud claim).
-    const expectedAudience = process.env.JWT_EXPECTED_AUDIENCE
-    if (expectedAudience) {
-      verifyOptions.audience = expectedAudience
-    }
+    // NOTE: audience is enforced manually below (after verify) rather than via
+    // jwt.verify's `audience` option, because we must also honour `azp` and
+    // prefix-match resource-server base URLs — neither of which jwt.verify does.
 
-    // Verify the token (signature + expiry + issuer + audience)
+    // Verify the token (signature + expiry + issuer)
     const verified = jwt.verify(token, key, verifyOptions) as JwtPayload
     logger.auth.debug('Token verified successfully')
-    
+
+    // Audience binding (fail-closed). Determine the expected audience(s):
+    //  - explicit per-call-site audience (options.audience), else
+    //  - the legacy JWT_EXPECTED_AUDIENCE env var (back-compat), else
+    //  - the config-derived default acceptable-audience set.
+    const expectedAudience = options?.audience ?? process.env.JWT_EXPECTED_AUDIENCE ?? undefined
+    if (!isAudienceAccepted(verified.aud, (verified as Record<string, unknown>).azp, expectedAudience)) {
+      logger.auth.warn('Token rejected — audience not accepted', {
+        aud: verified.aud,
+        azp: (verified as Record<string, unknown>).azp,
+        expectedAudience,
+      })
+      throw new AuthenticationError('Token audience is not accepted by this resource')
+    }
+
     return verified
   } catch (error) {
     logger.auth.error('Token validation failed', { 
@@ -139,7 +169,15 @@ export async function validateToken(token: string): Promise<JwtPayload> {
  * @throws AuthenticationError for invalid tokens or missing admin roles
  */
 export async function validateAdminToken(token: string): Promise<JwtPayload> {
-  const payload = await validateToken(token)
+  // Admin tokens are bound to the proxy's own client audience (admin-ui / MCP
+  // client), NOT a FHIR resource base. Pass that expectation explicitly so an
+  // FHIR-base-audienced (patient-app) token can never reach admin operations.
+  // When no admin client id is configured, fall back to the default audience
+  // set (still fail-closed) so admin validation does not silently break.
+  const adminAudience = config.keycloak.adminClientId
+  const payload = adminAudience
+    ? await validateToken(token, { audience: adminAudience })
+    : await validateToken(token)
   const keycloakPayload = payload as KeycloakJwtPayload
 
   const realmRoles: string[] = keycloakPayload.realm_access?.roles || []

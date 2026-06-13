@@ -388,4 +388,102 @@ describe('Backend Services', () => {
       expect(err.description).toContain('jti')
     })
   })
+
+  // ── VULN 2 (HIGH): SSRF via unvalidated DCR jwks_uri fetched server-side ──
+  // A client whose stored jwks.url points to an internal/metadata host must
+  // NEVER be fetched server-side. The assertion flow must reject as
+  // invalid_client BEFORE issuing the request.
+  describe('jwks_uri SSRF protection (defense in depth)', () => {
+    /** Build a fetch mock whose client lookup returns an internal jwks.url. */
+    function fetchMockWithJwksUrl(jwksUrl: string): ReturnType<typeof mock> {
+      return mock((url: string | URL | Request, _init?: RequestInit) => {
+        const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.toString() : url.url
+
+        // Admin token endpoint
+        if (urlStr.includes('/protocol/openid-connect/token') && _init?.body?.toString().includes('client_credentials')) {
+          return Promise.resolve(new Response(JSON.stringify({
+            access_token: 'admin-token-123', token_type: 'Bearer', expires_in: 300,
+          }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+        }
+
+        // Client lookup → client configured with a jwks.url (not inline string)
+        if (urlStr.includes('/admin/realms/') && urlStr.includes('clients?clientId=')) {
+          return Promise.resolve(new Response(JSON.stringify([{
+            id: TEST_INTERNAL_CLIENT_UUID,
+            clientId: TEST_CLIENT_ID,
+            attributes: { 'use.jwks.url': 'true', 'jwks.url': jwksUrl },
+          }]), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+        }
+
+        // If the JWKS URL is ever fetched, return a valid JWKS so the test
+        // would PASS the assertion — proving the SSRF guard is the only thing
+        // standing between the attacker and the internal request.
+        if (urlStr === jwksUrl) {
+          return Promise.resolve(new Response(JSON.stringify(clientJwks), {
+            status: 200, headers: { 'Content-Type': 'application/json' },
+          }))
+        }
+
+        return Promise.resolve(new Response('Not Found', { status: 404 }))
+      })
+    }
+
+    it('does NOT fetch a jwks.url that resolves to the cloud metadata endpoint', async () => {
+      const internalJwks = 'http://169.254.169.254/latest/meta-data/'
+      fetchMock = fetchMockWithJwksUrl(internalJwks)
+
+      const err = await validateClientAssertion(createClientAssertion(), TEST_CLIENT_ID).catch(e => e)
+
+      // Must reject the flow.
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      // And must NEVER have issued a request to the internal URL.
+      const fetchedInternal = fetchMock.mock.calls.some(([u]) => {
+        const s = typeof u === 'string' ? u : u instanceof URL ? u.toString() : (u as Request).url
+        return s === internalJwks
+      })
+      expect(fetchedInternal).toBe(false)
+    })
+
+    it('does NOT fetch a jwks.url on an RFC1918 private host', async () => {
+      const internalJwks = 'http://10.0.0.5/jwks'
+      fetchMock = fetchMockWithJwksUrl(internalJwks)
+
+      const err = await validateClientAssertion(createClientAssertion(), TEST_CLIENT_ID).catch(e => e)
+
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      const fetchedInternal = fetchMock.mock.calls.some(([u]) => {
+        const s = typeof u === 'string' ? u : u instanceof URL ? u.toString() : (u as Request).url
+        return s === internalJwks
+      })
+      expect(fetchedInternal).toBe(false)
+    })
+
+    it('does NOT fetch a non-http(s) jwks.url (e.g. file://)', async () => {
+      const internalJwks = 'file:///etc/passwd'
+      fetchMock = fetchMockWithJwksUrl(internalJwks)
+
+      const err = await validateClientAssertion(createClientAssertion(), TEST_CLIENT_ID).catch(e => e)
+
+      expect(err).toBeInstanceOf(ClientAssertionError)
+      const fetchedInternal = fetchMock.mock.calls.some(([u]) => {
+        const s = typeof u === 'string' ? u : u instanceof URL ? u.toString() : (u as Request).url
+        return s === internalJwks
+      })
+      expect(fetchedInternal).toBe(false)
+    })
+
+    it('STILL fetches a legitimate public https jwks.url (no regression)', async () => {
+      const publicJwksUrl = 'https://client.example.com/.well-known/jwks.json'
+      fetchMock = fetchMockWithJwksUrl(publicJwksUrl)
+
+      const result = await validateClientAssertion(createClientAssertion(), TEST_CLIENT_ID)
+      expect(result.clientId).toBe(TEST_CLIENT_ID)
+
+      const fetchedPublic = fetchMock.mock.calls.some(([u]) => {
+        const s = typeof u === 'string' ? u : u instanceof URL ? u.toString() : (u as Request).url
+        return s === publicJwksUrl
+      })
+      expect(fetchedPublic).toBe(true)
+    })
+  })
 })
