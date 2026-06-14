@@ -116,6 +116,18 @@ describe('validateAdminToken — admin webapp client (admin-ui) accepted indepen
     })
     expect(await rejects(validateAdminToken(token))).toBe(true)
   })
+
+  it('default audience set (no explicit audience, e.g. GET /auth/userinfo) accepts an admin-ui token', async () => {
+    // /auth/userinfo calls validateToken(token) with NO audience → the default
+    // set. The admin-ui webapp client must be accepted there too, independently
+    // of the admin-service account id, or webapp login fails right after the
+    // token exchange (the symptom: userinfo 401 on beta).
+    const token = signTestToken({
+      iss: ISSUER, sub: 'admin-2', aud: 'account', azp: 'admin-ui', realmRoles: ['admin'],
+    })
+    const payload = await validateToken(token)
+    expect(payload.sub).toBe('admin-2')
+  })
 })
 
 describe('validateToken — admin / MCP audience (proxy client id)', () => {

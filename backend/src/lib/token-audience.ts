@@ -65,7 +65,15 @@ function matchesPrefix(candidate: string, prefix: string): boolean {
 export function getDefaultAudienceMatchers(): AudienceMatcher[] {
   const matchers: AudienceMatcher[] = []
 
-  // Proxy's own client (admin-ui / MCP client) — exact match on aud or azp.
+  // The proxy's own clients — exact match on aud or azp. Two clients legitimately
+  // produce proxy tokens: the admin WEBAPP browser client (admin-ui) and the
+  // Keycloak admin-REST service account (admin-service). admin-ui MUST be included
+  // independently of adminClientId, which is the service account on beta/prod —
+  // otherwise admin-ui user tokens are rejected at every default-audience call
+  // site (e.g. GET /auth/userinfo), breaking admin webapp login.
+  if (config.keycloak.adminUiClientId) {
+    matchers.push({ value: config.keycloak.adminUiClientId, mode: 'exact' })
+  }
   if (config.keycloak.adminClientId) {
     matchers.push({ value: config.keycloak.adminClientId, mode: 'exact' })
   }
