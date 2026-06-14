@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.2.13-beta.202606141233.0dff01f81",
+  "version": "0.2.13-alpha.202606141914.b4c832296",
   "type": "module",
   "scripts": {
     "test": "bun test --isolate",
@@ -22,7 +22,7 @@
     "@elysiajs/eden": "^1.4.9",
     "@elysiajs/openapi": "^1.4.15",
     "@elysiajs/static": "^1.4.10",
-    "@keycloak/keycloak-admin-client": "^26.6.2",
+    "@keycloak/keycloak-admin-client": "^26.6.3",
     "@max-health-inc/elysia-mcp": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@opendataloader/pdf": "^2.4.7",

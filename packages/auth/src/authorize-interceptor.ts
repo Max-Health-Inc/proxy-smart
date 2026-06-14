@@ -194,12 +194,24 @@ export async function handleAuthorize(
   }
 
   // ── Forward all query params to IdP ───────────────────────────────────
-  // Strip aud/resource — already validated above; Keycloak doesn't support RFC 8707
+  // Strip aud/resource from the generic copy; RFC 8707 uses `resource` (not
+  // `aud`). We forward the validated audience as `resource` below.
   const stripFromIdp = new Set(['aud', 'resource'])
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && !stripFromIdp.has(k)) {
       url.searchParams.set(k, v)
     }
+  }
+
+  // ── RFC 8707 resource indicator ───────────────────────────────────────
+  // Keycloak 26.6.3 supports RFC 8707 via the resource-indicators feature
+  // (a TokenPostProcessor). We forward the validated requested audience as the
+  // `resource` parameter so Keycloak binds it into the access-token aud. The
+  // post-processor's ResourceIndicatorValidation rejects a value with a query
+  // or fragment, so only forward clean absolute URIs (the FHIR base and MCP
+  // URL have neither).
+  if (aud && !aud.includes('?') && !aud.includes('#')) {
+    url.searchParams.set('resource', aud)
   }
 
   // ── Rewrite redirect_uri and state for interception ───────────────────

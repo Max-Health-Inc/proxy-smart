@@ -139,6 +139,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         // (SMART launch context enrichment, Backend Services JWT validation, aud enforcement)
         authorization_endpoint: `${baseUrl}/auth/authorize`,
         token_endpoint: `${baseUrl}/auth/token`,
+        device_authorization_endpoint: `${baseUrl}/auth/device`,
         jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         // Point to our own DCR endpoint instead of Keycloak's native one
         // (Keycloak's requires initial access tokens / trusted host policy)
@@ -198,6 +199,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         ...oidcConfig,
         authorization_endpoint: `${baseUrl}/auth/authorize`,
         token_endpoint: `${baseUrl}/auth/token`,
+        device_authorization_endpoint: `${baseUrl}/auth/device`,
         jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         introspection_endpoint: `${baseUrl}/auth/introspect`,
@@ -250,6 +252,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         ...oidcConfig,
         authorization_endpoint: `${baseUrl}/auth/authorize`,
         token_endpoint: `${baseUrl}/auth/token`,
+        device_authorization_endpoint: `${baseUrl}/auth/device`,
         jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         introspection_endpoint: `${baseUrl}/auth/introspect`,
@@ -311,6 +314,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         issuer: baseUrl,
         authorization_endpoint: `${baseUrl}/auth/authorize`,
         token_endpoint: `${baseUrl}/auth/token`,
+        device_authorization_endpoint: `${baseUrl}/auth/device`,
         jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         client_registration_types_supported: ['client_id_metadata_document', 'dynamic_client_registration'],
