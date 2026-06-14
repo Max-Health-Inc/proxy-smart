@@ -80,6 +80,7 @@ export {
 export {
   enrichTokenResponse,
   getRewrittenRedirectUri,
+  getSessionAudience,
   type TokenEnricherDeps,
   type TokenEnrichInput,
 } from './token-enricher'

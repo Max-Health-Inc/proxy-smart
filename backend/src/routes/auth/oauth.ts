@@ -20,6 +20,7 @@ import {
   enrichTokenResponse,
   enrichIntrospection,
   getRewrittenRedirectUri,
+  getSessionAudience,
   signLaunchCode,
   toAbsoluteFhirUser,
   type LaunchCodePayload,
@@ -488,13 +489,25 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       const finalRedirectUri = rewrittenUri || clientRedirectUri
       if (finalRedirectUri) formData.append('redirect_uri', finalRedirectUri)
 
+      // ── RFC 8707 resource indicator for SMART sessions ──────────────
+      // Re-send the resource captured at /authorize so it matches what Keycloak
+      // stored on the code (a mismatch => Keycloak ERROR_NOT_MATCHING). Prefer the
+      // session value over any client-sent resource. Skip values with a query or
+      // fragment (rejected by Keycloak's ResourceIndicatorValidation).
+      const sessionAud = getSessionAudience(clientIdForSession, clientRedirectUri, {
+        config: smartProxyConfig, store: smartStore, logger: smartLogger,
+      })
+      const resourceParam = sessionAud ?? bodyObj.resource
+
       if (bodyObj.client_id || bodyObj.clientId) formData.append('client_id', bodyObj.client_id || bodyObj.clientId!)
       if (bodyObj.client_secret || bodyObj.clientSecret) formData.append('client_secret', bodyObj.client_secret || bodyObj.clientSecret!)
       if (bodyObj.code_verifier || bodyObj.codeVerifier) formData.append('code_verifier', bodyObj.code_verifier || bodyObj.codeVerifier!)
       if (bodyObj.refresh_token || bodyObj.refreshToken) formData.append('refresh_token', bodyObj.refresh_token || bodyObj.refreshToken!)
       if (bodyObj.scope) formData.append('scope', bodyObj.scope)
       if (bodyObj.audience) formData.append('audience', bodyObj.audience)
-      if (bodyObj.resource) formData.append('resource', bodyObj.resource)
+      if (resourceParam && !resourceParam.includes('?') && !resourceParam.includes('#')) {
+        formData.append('resource', resourceParam)
+      }
       if (bodyObj.username) formData.append('username', bodyObj.username)
       if (bodyObj.password) formData.append('password', bodyObj.password)
       if (bodyObj.client_assertion_type) formData.append('client_assertion_type', bodyObj.client_assertion_type)
