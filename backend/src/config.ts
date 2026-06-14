@@ -56,9 +56,18 @@ export const config = {
     get adminClientId() {
       return process.env.KEYCLOAK_ADMIN_CLIENT_ID || null
     },
-    
+
     get adminClientSecret() {
       return process.env.KEYCLOAK_ADMIN_CLIENT_SECRET || null
+    },
+
+    // The browser client the admin WEBAPP signs in with (see
+    // frontend/ui/src/service/openid-service.ts). This is DISTINCT from
+    // adminClientId, which is the backend's Keycloak admin-REST service account
+    // (e.g. admin-service). validateAdminToken binds admin-user tokens to THIS
+    // client's id (matched on aud/azp). Defaults to 'admin-ui'.
+    get adminUiClientId() {
+      return process.env.KEYCLOAK_ADMIN_UI_CLIENT_ID || 'admin-ui'
     },
     
     // Check if Keycloak is configured

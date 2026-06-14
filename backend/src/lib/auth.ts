@@ -169,14 +169,20 @@ export async function validateToken(token: string, options?: ValidateTokenOption
  * @throws AuthenticationError for invalid tokens or missing admin roles
  */
 export async function validateAdminToken(token: string): Promise<JwtPayload> {
-  // Admin tokens are bound to the proxy's own client audience (admin-ui / MCP
-  // client), NOT a FHIR resource base. Pass that expectation explicitly so an
-  // FHIR-base-audienced (patient-app) token can never reach admin operations.
-  // When no admin client id is configured, fall back to the default audience
-  // set (still fail-closed) so admin validation does not silently break.
-  const adminAudience = config.keycloak.adminClientId
-  const payload = adminAudience
-    ? await validateToken(token, { audience: adminAudience })
+  // Admin tokens are bound to the proxy's own client audience, NOT a FHIR
+  // resource base, so an FHIR-base-audienced (patient-app) token can never reach
+  // admin operations. Two proxy clients legitimately produce admin tokens:
+  //   - admin-ui      : the browser client the admin WEBAPP signs in with
+  //                     (config.keycloak.adminUiClientId) — what real users use.
+  //   - admin-service : the backend's Keycloak admin-REST service account
+  //                     (config.keycloak.adminClientId).
+  // Accept either (matched on aud/azp), still fail-closed. Admin ROLES are still
+  // required below. NB: these were historically conflated under adminClientId,
+  // which broke webapp login wherever KEYCLOAK_ADMIN_CLIENT_ID=admin-service.
+  const adminAudiences = [config.keycloak.adminUiClientId, config.keycloak.adminClientId]
+    .filter((v): v is string => !!v)
+  const payload = adminAudiences.length
+    ? await validateToken(token, { audience: adminAudiences })
     : await validateToken(token)
   const keycloakPayload = payload as KeycloakJwtPayload
 
