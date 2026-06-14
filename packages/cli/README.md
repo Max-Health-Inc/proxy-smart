@@ -133,10 +133,18 @@ proxy-smart restart --yes
 ## The generated API client
 
 `src/api-client/` is a **generated copy**, produced from the backend's exported
-OpenAPI document with the same generator the admin UI uses
-(`openapi-ts-fetch`). Model types are never hand-rolled.
+OpenAPI document with the same generator the admin UI uses. Model types are
+never hand-rolled.
 
-Regenerate it whenever the admin API changes:
+The generator, `openapi-ts-fetch`, is this repo's own pure-Python tool. It is
+installed from PyPI with pip/uv and pinned to `==0.2.2` in CI (it is **not** a
+bun/npm package and is not resolved via `bunx` or the GitHub package registry):
+
+```bash
+pip install openapi-ts-fetch==0.2.2   # or: uv pip install openapi-ts-fetch==0.2.2
+```
+
+Regenerate the client whenever the admin API changes:
 
 ```bash
 # 1. export the OpenAPI document from the backend
@@ -146,7 +154,8 @@ bun run --filter backend export-openapi      # writes backend/dist/openapi.json
 cd packages/cli && bun run generate
 ```
 
-The `generate` script is scoped to the tags the CLI actually drives:
+The `generate` script scopes the client to the tags the CLI actually drives via
+the generator's `--tags` flag (supported by `openapi-ts-fetch==0.2.2`):
 
 ```
 openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client \

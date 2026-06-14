@@ -8,11 +8,9 @@ import {
   CreateSmartAppRequestFromJSON,
   UpdateSmartAppRequestFromJSON,
 } from '../api-client'
+import { flagList } from '../args'
 import { CliError, printJson, printTable } from '../output'
 import { requireJsonData, requirePositional, type CommandContext } from './shared'
-
-/** Columns shown in the `list` table view. */
-const LIST_COLUMNS = ['clientId', 'name', 'enabled', 'publicClient']
 
 /** Dispatch a smart-apps verb. positionals[1] is the verb. */
 export async function smartAppsCommand(ctx: CommandContext): Promise<void> {
@@ -39,7 +37,7 @@ async function listSmartApps(ctx: CommandContext): Promise<void> {
     printJson(apps)
     return
   }
-  printTable(apps as unknown as Array<Record<string, unknown>>, LIST_COLUMNS)
+  printTable(apps as unknown as Array<Record<string, unknown>>, flagList(ctx.args.flags, 'columns'))
 }
 
 async function getSmartApp(ctx: CommandContext): Promise<void> {

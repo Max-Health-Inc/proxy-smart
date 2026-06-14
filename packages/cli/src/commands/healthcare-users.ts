@@ -6,12 +6,9 @@
  * generic `request` escape hatch and can be promoted later).
  */
 import { CreateHealthcareUserRequestFromJSON } from '../api-client'
-import { flagString } from '../args'
+import { flagList, flagString } from '../args'
 import { CliError, printJson, printTable } from '../output'
 import { requireJsonData, requirePositional, type CommandContext } from './shared'
-
-/** Columns shown in the `list` table view. */
-const LIST_COLUMNS = ['id', 'username', 'email', 'firstName', 'lastName', 'enabled']
 
 /** Dispatch a healthcare-users verb. positionals[1] is the verb. */
 export async function healthcareUsersCommand(ctx: CommandContext): Promise<void> {
@@ -41,7 +38,7 @@ async function listUsers(ctx: CommandContext): Promise<void> {
     printJson(users)
     return
   }
-  printTable(users as unknown as Array<Record<string, unknown>>, LIST_COLUMNS)
+  printTable(users as unknown as Array<Record<string, unknown>>, flagList(ctx.args.flags, 'columns'))
 }
 
 async function getUser(ctx: CommandContext): Promise<void> {

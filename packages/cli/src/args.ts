@@ -99,3 +99,19 @@ export function flagString(flags: Record<string, string | boolean>, name: string
 export function flagBool(flags: Record<string, string | boolean>, name: string): boolean {
   return flags[name] === true || flags[name] === 'true'
 }
+
+/**
+ * Read a comma-separated list flag (e.g. `--columns a,b,c`) into a string
+ * array. Surrounding whitespace is trimmed and empty entries dropped. Returns
+ * undefined when the flag is absent or boolean-only, so callers can fall back
+ * to their default behavior.
+ */
+export function flagList(flags: Record<string, string | boolean>, name: string): string[] | undefined {
+  const value = flagString(flags, name)
+  if (value === undefined) return undefined
+  const items = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+  return items.length > 0 ? items : undefined
+}

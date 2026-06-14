@@ -59,6 +59,11 @@ DOMAINS
   scope-sets        list | get <id> | create | delete <id>
   mcp-endpoint      get | update
 
+LIST OUTPUT
+  By default, list renders an aligned table whose columns are derived from the
+  returned data (the first few scalar fields). Override the columns with
+  --columns <a,b,c>, or use --json to emit the full objects.
+
 SERVER OPS
   shutdown --yes          Gracefully stop the proxy server
   restart  --yes          Restart the proxy server

@@ -4,11 +4,9 @@
  * Backed by the generated ScopeSetsApi. v1 verbs: list / get / create / delete.
  */
 import { CreateScopeSetRequestFromJSON } from '../api-client'
+import { flagList } from '../args'
 import { CliError, printJson, printTable } from '../output'
 import { requireJsonData, requirePositional, type CommandContext } from './shared'
-
-/** Columns shown in the `list` table view. */
-const LIST_COLUMNS = ['id', 'name', 'isTemplate', 'description']
 
 /** Dispatch a scope-sets verb. positionals[1] is the verb. */
 export async function scopeSetsCommand(ctx: CommandContext): Promise<void> {
@@ -33,7 +31,10 @@ async function listScopeSets(ctx: CommandContext): Promise<void> {
     printJson(response)
     return
   }
-  printTable(response.scopeSets as unknown as Array<Record<string, unknown>>, LIST_COLUMNS)
+  printTable(
+    response.scopeSets as unknown as Array<Record<string, unknown>>,
+    flagList(ctx.args.flags, 'columns'),
+  )
 }
 
 async function getScopeSet(ctx: CommandContext): Promise<void> {
