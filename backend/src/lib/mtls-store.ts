@@ -1,5 +1,5 @@
 import { logger } from './logger'
-import { Pool } from 'pg'
+import { getSharedPool, hasDatabaseUrl } from './pg-pool'
 
 /**
  * mTLS Configuration for a FHIR server
@@ -78,16 +78,16 @@ class InMemoryMtlsStorage implements MtlsStorageBackend {
  * Automatically used when DATABASE_URL is set
  */
 class PostgresMtlsStorage implements MtlsStorageBackend {
-  private pool: Pool
-  private initialized = false
-
-  constructor(connectionString: string) {
-    this.pool = new Pool({ connectionString })
+  private get pool() {
+    // Reuse the shared process-wide pool so mTLS and admin-config stores don't
+    // open separate connection pools against the same RDS.
+    return getSharedPool()
   }
+  private initialized = false
 
   async initialize(): Promise<void> {
     if (this.initialized) return
-    
+
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS mtls_configs (
         server_id VARCHAR(255) PRIMARY KEY,
@@ -218,9 +218,8 @@ class MtlsStore {
   private certificateExpiryWarningDays = 30
 
   constructor() {
-    const dbUrl = process.env.DATABASE_URL
-    if (dbUrl) {
-      this.storage = new PostgresMtlsStorage(dbUrl)
+    if (hasDatabaseUrl()) {
+      this.storage = new PostgresMtlsStorage()
       logger.info('security', 'mTLS store initialized with PostgreSQL backend')
     } else {
       logger.warn('security', 'No DATABASE_URL configured, using in-memory mTLS storage (data will be lost on restart)')

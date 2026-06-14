@@ -103,6 +103,11 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      # Shared admin-config store (MCP endpoint + app-store visibility) and mTLS
+      # store. Backed by the proxy_smart DB on the shared postgres service (created
+      # by keycloak/database/init.sql). Without this, those configs fall back to
+      # ephemeral, per-task container files and diverge under scale-out / restart.
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/proxy_smart
       SHL_EXCHANGE_CLIENT_ID: shl-exchange
       SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:-shl-exchange-dev-secret}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
@@ -133,7 +138,10 @@ services:
       retries: 5
       start_period: 300s
     depends_on:
-      - keycloak
+      keycloak:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     networks:
       - proxy-smart
       - caddy
