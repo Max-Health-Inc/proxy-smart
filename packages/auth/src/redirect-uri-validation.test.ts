@@ -20,6 +20,7 @@
 import { describe, test, expect } from 'bun:test'
 import { handleAuthorize, type AuthorizeInterceptorDeps } from './authorize-interceptor'
 import { handleCallback, type CallbackParams, type CallbackHandlerDeps } from './callback-handler'
+import { isRedirectUriRegistered } from './redirect-uri'
 import { MemoryStore } from './stores/memory'
 import type { AuthorizeParams, LaunchSession, SmartProxyConfig } from './types'
 import type { IdPAdapter } from './idp/interface'
@@ -226,5 +227,35 @@ describe('VULN 1 — callback: defense-in-depth redirect_uri re-validation', () 
       expect(result.url).toContain('app.example.com/callback')
       expect(result.url).toContain('code=auth-code-123')
     }
+  })
+})
+
+describe('isRedirectUriRegistered — Keycloak-compatible matching (exact + trailing wildcard)', () => {
+  test('exact match', () => {
+    expect(isRedirectUriRegistered('https://app.example.com/cb', ['https://app.example.com/cb'])).toBe(true)
+  })
+
+  test('trailing wildcard matches any path suffix (the dicom-viewer "/*" case)', () => {
+    const reg = ['https://dicom.beta.maxhealth.tech/*']
+    expect(isRedirectUriRegistered('https://dicom.beta.maxhealth.tech/callback', reg)).toBe(true)
+    expect(isRedirectUriRegistered('https://dicom.beta.maxhealth.tech/cb?x=1', reg)).toBe(true)
+    // Keycloak also matches the bare origin for a path wildcard.
+    expect(isRedirectUriRegistered('https://dicom.beta.maxhealth.tech', reg)).toBe(true)
+  })
+
+  test('trailing wildcard does NOT cross the host boundary', () => {
+    const reg = ['https://app.example.com/*']
+    expect(isRedirectUriRegistered('https://app.example.com.evil/cb', reg)).toBe(false)
+    expect(isRedirectUriRegistered('https://evil.com/https://app.example.com/', reg)).toBe(false)
+  })
+
+  test('a registration WITHOUT a wildcard stays strictly exact (no prefix bypass)', () => {
+    const reg = ['https://app.example.com/cb']
+    expect(isRedirectUriRegistered('https://app.example.com/cb.attacker.evil/x', reg)).toBe(false)
+    expect(isRedirectUriRegistered('https://app.example.com/cb/extra', reg)).toBe(false)
+  })
+
+  test('empty allowlist rejects everything', () => {
+    expect(isRedirectUriRegistered('https://app.example.com/cb', [])).toBe(false)
   })
 })
