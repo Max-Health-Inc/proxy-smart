@@ -31,7 +31,7 @@ afterEach(() => {
 function config(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
   return {
     url: 'https://proxy.example.com',
-    clientId: 'admin-cli',
+    clientId: 'admin-ui',
     scope: 'openid',
     directKeycloak: false,
     homeDir: home,
@@ -275,7 +275,7 @@ describe('getAccessToken refresh-when-stale', () => {
     return {
       access_token: 'STALE',
       refresh_token: 'GOOD-RT',
-      client_id: 'admin-cli',
+      client_id: 'admin-ui',
       expires_at: now - 60,
       refresh_expires_at: now + 3_600,
     }
@@ -294,7 +294,7 @@ describe('getAccessToken refresh-when-stale', () => {
     const tokenCall = calls.find((call) => call.url === TOKEN_URL)
     expect(tokenCall?.body.get('grant_type')).toBe('refresh_token')
     expect(tokenCall?.body.get('refresh_token')).toBe('GOOD-RT')
-    expect(tokenCall?.body.get('client_id')).toBe('admin-cli')
+    expect(tokenCall?.body.get('client_id')).toBe('admin-ui')
 
     // The new token (and rotated refresh token) replace the stale cache entry.
     expect(readCachedToken(home)?.access_token).toBe('REFRESHED')

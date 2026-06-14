@@ -17,8 +17,17 @@ import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from 'fs'
 /** Built-in fallback for the proxy base URL when nothing else is provided. */
 export const DEFAULT_PROXY_URL = 'http://localhost:8445'
 
-/** Default OAuth client used for the interactive (device) login flow. */
-export const DEFAULT_CLIENT_ID = 'admin-cli'
+/**
+ * Default OAuth client used for the interactive (device) login flow.
+ *
+ * Reuses the realm's existing public `admin-ui` client (the one the admin
+ * webapp signs in with) rather than minting a dedicated CLI client. The backend
+ * `validateAdminToken` already accepts tokens whose `azp` is `admin-ui`, so a
+ * device-flow token (azp=admin-ui + realm role `admin`) passes the admin API
+ * with no extra audience config. The `admin-ui` client has the RFC 8628 device
+ * authorization grant enabled in every realm export.
+ */
+export const DEFAULT_CLIENT_ID = 'admin-ui'
 
 /** Default scopes requested for admin sessions. */
 export const DEFAULT_SCOPE = 'openid profile email'
