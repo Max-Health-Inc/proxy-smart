@@ -44,6 +44,10 @@ export class KeycloakAdapter implements IdPAdapter {
     return `${this.baseUrl}/realms/${this.realm}/protocol/openid-connect/token`
   }
 
+  getDeviceAuthorizationUrl(): string {
+    return `${this.baseUrl}/realms/${this.realm}/protocol/openid-connect/auth/device`
+  }
+
   getIntrospectionUrl(): string {
     return `${this.baseUrl}/realms/${this.realm}/protocol/openid-connect/token/introspect`
   }
