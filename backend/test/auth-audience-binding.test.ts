@@ -60,7 +60,7 @@ afterAll(() => {
 })
 
 // ── Import the REAL auth + audience modules (NOT mocked) ──────────────────────
-const { validateToken } = await import('../src/lib/auth')
+const { validateToken, validateAdminToken } = await import('../src/lib/auth')
 const { getFhirResourceAudiences, getMcpResourceAudience } = await import('../src/lib/token-audience')
 
 interface MintOpts {
@@ -82,6 +82,41 @@ async function rejects(promise: Promise<unknown>): Promise<boolean> {
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
+
+describe('validateAdminToken — admin webapp client (admin-ui) accepted independently of the admin-REST service account', () => {
+  // Regression: the admin WEBAPP signs in via the `admin-ui` browser client, but
+  // KEYCLOAK_ADMIN_CLIENT_ID on beta/prod is `admin-service` (the backend's
+  // Keycloak admin-REST service account — a DIFFERENT client). Once audience
+  // enforcement became fail-closed, admin-ui user tokens were rejected at
+  // /admin/* — i.e. the admin "could not log in". validateAdminToken must accept
+  // the admin-ui client regardless of the service-account id, while still
+  // rejecting patient-app tokens.
+  let saved: string | undefined
+  beforeAll(() => {
+    saved = process.env.KEYCLOAK_ADMIN_CLIENT_ID
+    process.env.KEYCLOAK_ADMIN_CLIENT_ID = 'admin-service' // beta/prod value
+    // KEYCLOAK_ADMIN_UI_CLIENT_ID unset → config defaults to 'admin-ui'
+  })
+  afterAll(() => {
+    if (saved === undefined) delete process.env.KEYCLOAK_ADMIN_CLIENT_ID
+    else process.env.KEYCLOAK_ADMIN_CLIENT_ID = saved
+  })
+
+  it('accepts an admin-ui webapp token (azp=admin-ui, admin role) even though adminClientId=admin-service', async () => {
+    const token = signTestToken({
+      iss: ISSUER, sub: 'admin-1', aud: 'account', azp: 'admin-ui', realmRoles: ['admin'],
+    })
+    const payload = await validateAdminToken(token)
+    expect(payload.sub).toBe('admin-1')
+  })
+
+  it('still REJECTS a patient-facing token at admin routes (even with an admin role claim)', async () => {
+    const token = signTestToken({
+      iss: ISSUER, sub: 'pt-1', aud: FHIR_BASE_AUD, azp: 'patient-portal', realmRoles: ['admin'],
+    })
+    expect(await rejects(validateAdminToken(token))).toBe(true)
+  })
+})
 
 describe('validateToken — admin / MCP audience (proxy client id)', () => {
   it('accepts a token whose aud names the proxy admin client when admin audience is expected', async () => {
