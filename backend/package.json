@@ -22,7 +22,7 @@
     "@elysiajs/eden": "^1.4.9",
     "@elysiajs/openapi": "^1.4.15",
     "@elysiajs/static": "^1.4.10",
-    "@keycloak/keycloak-admin-client": "^26.6.2",
+    "@keycloak/keycloak-admin-client": "^26.6.3",
     "@max-health-inc/elysia-mcp": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@opendataloader/pdf": "^2.4.7",
