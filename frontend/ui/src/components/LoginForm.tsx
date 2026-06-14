@@ -23,11 +23,14 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { Button } from '@proxy-smart/shared-ui';
+import { Button, useBranding } from '@proxy-smart/shared-ui';
 import { useTranslation } from 'react-i18next';
 
 export function LoginForm() {
   const { t } = useTranslation();
+  // Shared branding (logo + org name) — the same source the SMART app shell
+  // (AIHR, patient apps) uses, so the admin login is visually consistent.
+  const brand = useBranding();
 
   // Parse OAuth callback params + validate PKCE synchronously (runs exactly once)
   const [oauthCallback] = useState<{ error: string } | { code: string; codeVerifier: string } | null>(() => {
@@ -252,12 +255,15 @@ export function LoginForm() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-        {/* Logo & Title */}
-        <div className="text-center mb-10">
-          <div className="w-12 h-12 mx-auto mb-6 border border-border rounded-lg flex items-center justify-center">
-            <Heart className="w-6 h-6 text-foreground" />
-          </div>
-          <h1 className="text-2xl font-medium tracking-tight text-foreground mb-1">{t('Proxy Smart')}</h1>
+        {/* Brand chrome — matches the shared SMART app shell (AIHR etc.):
+            branding logo with an icon fallback, title, subtitle. */}
+        <div className="text-center space-y-2 mb-10">
+          {brand?.logoUrl ? (
+            <img src={brand.logoUrl} alt={brand.name} className="h-16 mx-auto" />
+          ) : (
+            <Heart className="size-16 mx-auto text-muted-foreground/30" />
+          )}
+          <h1 className="text-2xl font-semibold">{brand?.name || t('Proxy Smart')}</h1>
           <p className="text-muted-foreground text-sm">{t('Healthcare Administration')}</p>
         </div>
         
@@ -348,8 +354,9 @@ export function LoginForm() {
 
               {/* Default OpenID Connect Login */}
               <Button
+                size="lg"
                 onClick={() => handleLogin()}
-                className="w-full py-3"
+                className="w-full"
                 disabled={loading}
               >
                 {loading ? (
