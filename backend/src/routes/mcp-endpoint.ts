@@ -230,9 +230,14 @@ async function authenticateRequest(request: Request): Promise<AuthResult | Respo
   if (!token) return unauthorized()
 
   try {
-    // MCP tokens are bound to the MCP endpoint resource (RFC 8707) or the proxy's
-    // own client. A patient-facing SMART-app token (FHIR-base aud) is rejected.
+    // MCP tokens are bound to the MCP endpoint resource (RFC 8707) or one of the
+    // proxy's own clients (matched on aud/azp): the admin WEBAPP client
+    // (admin-ui) and the backend admin-REST service account (admin-service). A
+    // patient-facing SMART-app token (FHIR-base aud) is rejected. NB: admin-ui
+    // must be accepted independently of adminClientId, which on beta/prod is the
+    // service account (admin-service) — see validateAdminToken for the same fix.
     const mcpAudiences = [getMcpResourceAudience()]
+    if (config.keycloak.adminUiClientId) mcpAudiences.push(config.keycloak.adminUiClientId)
     if (config.keycloak.adminClientId) mcpAudiences.push(config.keycloak.adminClientId)
     const payload = await validateToken(token, { audience: mcpAudiences })
     const realmRoles: string[] = (payload as Record<string, unknown> & { realm_access?: { roles?: string[] } }).realm_access?.roles ?? []
