@@ -111,3 +111,67 @@ describe('Token endpoint form body parsing', () => {
     expect(data.error_description).not.toContain('client_assertion_type')
   })
 })
+
+describe('Auth discovery doc does not leak Keycloak-direct endpoints', () => {
+  // Keycloak OIDC doc loaded with the Keycloak-direct endpoints + mTLS aliases the
+  // proxy must rewrite or strip. Realm is whatever the test-config resolves to;
+  // the protocol/openid-connect/ path marker is what matters for the leak check.
+  const KC_OIDC_WITH_LEAKS = {
+    issuer: 'http://keycloak/realms/proxy-smart',
+    authorization_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/auth',
+    token_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/token',
+    jwks_uri: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/certs',
+    end_session_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/logout',
+    device_authorization_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/auth/device',
+    revocation_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/revoke',
+    pushed_authorization_request_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/ext/par/request',
+    backchannel_authentication_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/ext/ciba/auth',
+    mtls_endpoint_aliases: {
+      token_endpoint: 'http://keycloak/realms/proxy-smart/protocol/openid-connect/token',
+    },
+    scopes_supported: ['openid', 'profile'],
+    response_types_supported: ['code'],
+    grant_types_supported: ['authorization_code'],
+    token_endpoint_auth_methods_supported: ['client_secret_basic'],
+    code_challenge_methods_supported: ['S256'],
+  }
+
+  beforeEach(() => {
+    globalThis.fetch = Object.assign(
+      async (input: RequestInfo | URL) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+        if (url.includes('.well-known/openid-configuration')) {
+          return new Response(JSON.stringify(KC_OIDC_WITH_LEAKS), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          })
+        }
+        return ORIGINAL_FETCH(input)
+      },
+      { preconnect: () => {} },
+    ) as typeof fetch
+  })
+
+  afterEach(() => {
+    globalThis.fetch = ORIGINAL_FETCH
+  })
+
+  it('GET /auth/.well-known/openid-configuration strips all Keycloak-direct URLs and mtls aliases', async () => {
+    const res = await authRoutes.handle(
+      new Request('http://localhost/auth/.well-known/openid-configuration'),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+
+    expect(JSON.stringify(body)).not.toContain('/protocol/openid-connect/')
+    expect(body).not.toHaveProperty('mtls_endpoint_aliases')
+    expect(body).not.toHaveProperty('revocation_endpoint')
+    expect(body).not.toHaveProperty('pushed_authorization_request_endpoint')
+    expect(body).not.toHaveProperty('backchannel_authentication_endpoint')
+
+    // Proxy-fronted endpoints are rewritten to the proxy origin and still present.
+    expect(body.token_endpoint).toContain('/auth/token')
+    expect(body.device_authorization_endpoint).toContain('/auth/device')
+    expect(body.end_session_endpoint).toContain('/auth/logout')
+  })
+})

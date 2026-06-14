@@ -2,6 +2,7 @@ import { Elysia } from 'elysia'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
 import { getProxyJwks } from '@/lib/proxy-signing'
+import { sanitizeDiscoveryDocument } from '@/lib/oidc-discovery'
 import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
 
 /**
@@ -194,17 +195,9 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       const oidcConfig = await response.json()
       const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
 
-      // Rewrite endpoints to proxy URLs so MCP clients go through our auth layer
-      return {
-        ...oidcConfig,
-        authorization_endpoint: `${baseUrl}/auth/authorize`,
-        token_endpoint: `${baseUrl}/auth/token`,
-        device_authorization_endpoint: `${baseUrl}/auth/device`,
-        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
-        registration_endpoint: `${baseUrl}/auth/register`,
-        introspection_endpoint: `${baseUrl}/auth/introspect`,
-        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
-      }
+      // Rewrite proxy-fronted endpoints, strip mtls_endpoint_aliases, and drop
+      // every remaining Keycloak-direct URL so nothing bypasses the proxy.
+      return sanitizeDiscoveryDocument(oidcConfig, baseUrl)
     } catch {
       set.status = 500
       return {
@@ -248,16 +241,9 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       const oidcConfig = await response.json()
       const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
 
-      return {
-        ...oidcConfig,
-        authorization_endpoint: `${baseUrl}/auth/authorize`,
-        token_endpoint: `${baseUrl}/auth/token`,
-        device_authorization_endpoint: `${baseUrl}/auth/device`,
-        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
-        registration_endpoint: `${baseUrl}/auth/register`,
-        introspection_endpoint: `${baseUrl}/auth/introspect`,
-        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
-      }
+      // Rewrite proxy-fronted endpoints, strip mtls_endpoint_aliases, and drop
+      // every remaining Keycloak-direct URL so nothing bypasses the proxy.
+      return sanitizeDiscoveryDocument(oidcConfig, baseUrl)
     } catch {
       set.status = 500
       return {
