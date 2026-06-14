@@ -86,9 +86,19 @@ export function toCachedToken(tokens: TokenSet, clientId: string, now = Math.flo
 /** Callback used to report device-flow progress to the user. */
 export type DevicePrompt = (info: DeviceAuthResponse) => void
 
+/** Delay helper injected into the session (real delay by default). */
+export type SleepImpl = (ms: number) => Promise<void>
+
+/** Clock helper injected into the session (real wall clock by default). */
+export type NowImpl = () => number
+
 /**
  * Manages OAuth endpoints + token acquisition for a single CLI invocation.
  * Discovery results are memoized for the lifetime of the instance.
+ *
+ * `fetchImpl`, `sleepImpl`, and `nowImpl` are injectable seams: production code
+ * uses the real `fetch`, a `setTimeout`-based delay, and the wall clock, while
+ * tests can drive the device-poll loop offline without sleeping for real time.
  */
 export class Session {
   private endpoints?: AuthEndpoints
@@ -96,6 +106,8 @@ export class Session {
   constructor(
     private readonly config: ResolvedConfig,
     private readonly fetchImpl: typeof fetch = fetch,
+    private readonly sleepImpl: SleepImpl = sleep,
+    private readonly nowImpl: NowImpl = Date.now,
   ) {}
 
   /**
@@ -233,11 +245,11 @@ export class Session {
 
   /** Poll the token endpoint until the user approves the device, or it expires. */
   private async pollForDeviceToken(tokenEndpoint: string, device: DeviceAuthResponse): Promise<TokenSet> {
-    const deadline = Date.now() + device.expires_in * 1000
+    const deadline = this.nowImpl() + device.expires_in * 1000
     let intervalMs = (device.interval ?? 5) * 1000
 
-    while (Date.now() < deadline) {
-      await sleep(intervalMs)
+    while (this.nowImpl() < deadline) {
+      await this.sleepImpl(intervalMs)
       const res = await this.fetchImpl(tokenEndpoint, {
         method: 'POST',
         headers: FORM_HEADERS,
