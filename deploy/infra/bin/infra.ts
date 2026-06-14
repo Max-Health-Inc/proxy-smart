@@ -103,6 +103,10 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   domainName: config.backendDomain,
   apexDomain: config.hostedZoneName,
   hostedZone,
+  // Shared RDS for the backend's admin-config + mTLS stores (dedicated
+  // proxy_smart database — see BackendStackProps.databaseName).
+  database: databaseStack.database,
+  dbSecret: databaseStack.secret,
   // FHIR URL is resolved after FHIR stack deploys — use internal service discovery
   fhirServerBase: config.fhirServerBase || 'http://hapi-fhir.proxy-smart.internal:8080/fhir',
   kisiEnabled: config.kisiEnabled,
@@ -110,6 +114,7 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   unifiAccessEnabled: config.unifiAccessEnabled,
 });
 backendStack.addDependency(keycloakStack);
+backendStack.addDependency(databaseStack);
 
 // 5. FHIR Stack (internal only — no public ALB, uses Cloud Map service discovery)
 const fhirStack = new FhirStack(app, 'ProxySmartFhir', {

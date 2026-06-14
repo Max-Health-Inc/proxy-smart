@@ -1,5 +1,10 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
-import type { AppStoreConfig, AppStoreConfigStoreOptions, PublishedApp } from './types'
+import type {
+  AppStoreConfig,
+  AppStoreConfigPersistence,
+  AppStoreConfigStoreOptions,
+  PublishedApp,
+} from './types'
 
 const DEFAULT_CONFIG: AppStoreConfig = {
   hiddenAppIds: [],
@@ -7,48 +12,72 @@ const DEFAULT_CONFIG: AppStoreConfig = {
   updatedAt: new Date().toISOString(),
 }
 
-/**
- * Manages app-store visibility configuration.
- * Stores which discovered apps are hidden from the public /apps page,
- * and which registered (Keycloak) apps are published to the store.
- * Persisted to a JSON file for volume-backed durability.
- */
-export class AppStoreConfigStore {
-  private config: AppStoreConfig
-  private readonly configPath: string
-  private readonly logger?: AppStoreConfigStoreOptions['logger']
-
-  constructor(options: AppStoreConfigStoreOptions) {
-    this.configPath = options.configPath
-    this.logger = options.logger
-    this.config = this.load()
+/** Normalise an arbitrary persisted blob into a complete, typed config. */
+function normalize(data: Partial<AppStoreConfig> | null): AppStoreConfig {
+  if (!data) return { ...DEFAULT_CONFIG, updatedAt: new Date().toISOString() }
+  return {
+    hiddenAppIds: Array.isArray(data.hiddenAppIds) ? data.hiddenAppIds : [],
+    publishedApps: Array.isArray(data.publishedApps) ? data.publishedApps : [],
+    updatedAt: data.updatedAt ?? new Date().toISOString(),
   }
+}
 
-  private load(): AppStoreConfig {
+/**
+ * File-backed persistence (default). Reads/writes a JSON file at `configPath`.
+ * Used directly for local dev and as the fallback when no external persistence
+ * (e.g. the backend's shared Postgres store) is supplied.
+ */
+class FilePersistence implements AppStoreConfigPersistence {
+  constructor(
+    private readonly configPath: string,
+    private readonly logger?: AppStoreConfigStoreOptions['logger'],
+  ) {}
+
+  load(): AppStoreConfig {
     try {
-      if (!existsSync(this.configPath)) return { ...DEFAULT_CONFIG, updatedAt: new Date().toISOString() }
+      if (!existsSync(this.configPath)) return normalize(null)
       const raw = readFileSync(this.configPath, 'utf-8')
-      const data = JSON.parse(raw)
-      return {
-        hiddenAppIds: Array.isArray(data.hiddenAppIds) ? data.hiddenAppIds : [],
-        publishedApps: Array.isArray(data.publishedApps) ? data.publishedApps : [],
-        updatedAt: data.updatedAt ?? new Date().toISOString(),
-      }
+      return normalize(JSON.parse(raw))
     } catch (error) {
       this.logger?.warn('Failed to load app-store-config.json', {
         error: error instanceof Error ? error.message : String(error),
       })
-      return { ...DEFAULT_CONFIG, updatedAt: new Date().toISOString() }
+      return normalize(null)
     }
   }
 
-  private save(): void {
-    writeFileSync(this.configPath, JSON.stringify(this.config, null, 2), 'utf-8')
+  save(config: AppStoreConfig): void {
+    writeFileSync(this.configPath, JSON.stringify(config, null, 2), 'utf-8')
+  }
+}
+
+/**
+ * Manages app-store visibility configuration.
+ * Stores which discovered apps are hidden from the public /apps page,
+ * and which registered (Keycloak) apps are published to the store.
+ *
+ * Persistence is pluggable: by default it writes a JSON file (`configPath`),
+ * but a host (e.g. the backend) may inject a durable, cluster-safe
+ * `persistence` (Postgres) instead. The visibility/publish mutation logic lives
+ * here in one place regardless of backend, keeping it DRY.
+ */
+export class AppStoreConfigStore {
+  private config: AppStoreConfig
+  private readonly persistence: AppStoreConfigPersistence
+
+  constructor(options: AppStoreConfigStoreOptions) {
+    this.persistence =
+      options.persistence ?? new FilePersistence(options.configPath ?? '', options.logger)
+    this.config = normalize(this.persistence.load())
   }
 
-  /** Reload config from disk */
+  private save(): void {
+    this.persistence.save(this.config)
+  }
+
+  /** Reload config from the persistence backend */
   reload(): void {
-    this.config = this.load()
+    this.config = normalize(this.persistence.load())
   }
 
   /** Get the full store configuration */

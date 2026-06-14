@@ -43,6 +43,19 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+# Ensure application databases exist on the RUNNING Postgres.
+# init.sql is only auto-run by Postgres on a fresh data volume; the beta
+# postgres_data volume is persistent, so on existing deployments the
+# proxy_smart DB (used by the backend's DATABASE_URL) would never be created.
+# init.sql is idempotent (CREATE DATABASE ... WHERE NOT EXISTS ... \gexec), so
+# re-running it every deploy is safe. Run it before dependent services start.
+echo '🗄️ Ensuring application databases exist (idempotent init.sql)...'
+if $COMPOSE exec -T postgres psql -U postgres -d postgres -f /docker-entrypoint-initdb.d/init.sql; then
+  echo '  ✅ Application databases ensured'
+else
+  echo '  ⚠️ init.sql apply returned non-zero — continuing (databases may already exist)'
+fi
+
 $COMPOSE up -d keycloak hapi-fhir orthanc
 
 # ── 5. Wait for Keycloak ──

@@ -75,7 +75,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
     if (update.enabledTools !== undefined) cfg.enabledTools = update.enabledTools
     if (update.exposeResourcesAsTools !== undefined) cfg.exposeResourcesAsTools = update.exposeResourcesAsTools
 
-    saveMcpEndpointConfig(cfg)
+    await saveMcpEndpointConfig(cfg)
     logger.server.info('MCP endpoint config updated', {
       enabled: cfg.enabled,
       disabledToolCount: cfg.disabledTools.length,
@@ -135,7 +135,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
       cfg.disabledTools = Array.from(set)
     }
 
-    saveMcpEndpointConfig(cfg)
+    await saveMcpEndpointConfig(cfg)
     logger.server.info('MCP tool toggled', { toolName, exposed })
 
     return { toolName, exposed, updatedAt: cfg.updatedAt }

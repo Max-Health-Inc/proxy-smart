@@ -16,3 +16,8 @@ GRANT ALL PRIVILEGES ON DATABASE hapi TO postgres;
 -- Orthanc PACS database
 SELECT 'CREATE DATABASE orthanc' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'orthanc')\gexec
 GRANT ALL PRIVILEGES ON DATABASE orthanc TO postgres;
+
+-- Proxy Smart backend database (shared admin config: MCP endpoint, app-store, mTLS).
+-- The backend connects via DATABASE_URL and creates its own tables on startup.
+SELECT 'CREATE DATABASE proxy_smart' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'proxy_smart')\gexec
+GRANT ALL PRIVILEGES ON DATABASE proxy_smart TO postgres;

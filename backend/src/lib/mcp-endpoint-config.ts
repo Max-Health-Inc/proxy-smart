@@ -1,14 +1,21 @@
 /**
- * MCP Endpoint Configuration — file-backed persistence for tool exposure settings.
+ * MCP Endpoint Configuration — durable persistence for tool exposure settings.
  *
- * Persists to `mcp-endpoint.json` next to the running backend.
- * Admin API reads/writes through helpers exported here.
+ * Backed by the shared {@link adminConfigStore}: PostgreSQL when DATABASE_URL is
+ * set (cluster-safe, survives redeploys), otherwise the existing
+ * `DATA_DIR/mcp-endpoint.json` file (local dev / current beta).
+ *
+ * The read API stays SYNCHRONOUS (`loadMcpEndpointConfig`, `isToolExposed`,
+ * `isResourceExposed`) so the `config.mcp.enabled` getter and the tight
+ * tool-registration loops do not need to become async. Reads come from the
+ * store's short-TTL cache, so a write from one task is observed by all tasks
+ * within seconds — replacing the previous indefinite cache that never re-read.
+ *
+ * `saveMcpEndpointConfig` is async (it may write to Postgres) but updates the
+ * cache synchronously first, so unawaited callers still read the new value.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'fs'
-import { join } from 'path'
-import { logger } from './logger'
-import { DATA_DIR } from './paths'
+import { adminConfigStore } from './admin-config-store'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,9 +32,10 @@ export interface McpEndpointConfig {
   updatedAt: string
 }
 
-// ── File persistence ─────────────────────────────────────────────────────────
+// ── Persistence ────────────────────────────────────────────────────────────────
 
-const CONFIG_PATH = join(DATA_DIR, 'mcp-endpoint.json')
+/** Storage key — also the filename stem (`mcp-endpoint.json`) in file mode. */
+const CONFIG_KEY = 'mcp-endpoint'
 
 const DEFAULT_CONFIG: McpEndpointConfig = {
   enabled: true,
@@ -37,38 +45,31 @@ const DEFAULT_CONFIG: McpEndpointConfig = {
   updatedAt: new Date().toISOString(),
 }
 
-let cached: McpEndpointConfig | null = null
-
-export function loadMcpEndpointConfig(): McpEndpointConfig {
-  if (cached) return cached
-  try {
-    if (!existsSync(CONFIG_PATH)) {
-      cached = { ...DEFAULT_CONFIG }
-      return cached
-    }
-    const raw = readFileSync(CONFIG_PATH, 'utf-8')
-    const data = JSON.parse(raw) as Partial<McpEndpointConfig>
-    cached = {
-      enabled: data.enabled ?? DEFAULT_CONFIG.enabled,
-      disabledTools: Array.isArray(data.disabledTools) ? data.disabledTools : [],
-      enabledTools: Array.isArray(data.enabledTools) ? data.enabledTools : null,
-      exposeResourcesAsTools: data.exposeResourcesAsTools ?? DEFAULT_CONFIG.exposeResourcesAsTools,
-      updatedAt: data.updatedAt ?? new Date().toISOString(),
-    }
-    return cached
-  } catch (error) {
-    logger.server.warn('Failed to load mcp-endpoint.json, using defaults', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-    cached = { ...DEFAULT_CONFIG }
-    return cached
+/** Merge a persisted (partial) value onto defaults into a fully-typed config. */
+function mergeConfig(
+  defaults: McpEndpointConfig,
+  raw: Record<string, unknown> | null,
+): McpEndpointConfig {
+  if (!raw) return { ...defaults }
+  return {
+    enabled: typeof raw.enabled === 'boolean' ? raw.enabled : defaults.enabled,
+    disabledTools: Array.isArray(raw.disabledTools) ? (raw.disabledTools as string[]) : [],
+    enabledTools: Array.isArray(raw.enabledTools) ? (raw.enabledTools as string[]) : null,
+    exposeResourcesAsTools:
+      typeof raw.exposeResourcesAsTools === 'boolean'
+        ? raw.exposeResourcesAsTools
+        : defaults.exposeResourcesAsTools,
+    updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : new Date().toISOString(),
   }
 }
 
-export function saveMcpEndpointConfig(cfg: McpEndpointConfig): void {
+export function loadMcpEndpointConfig(): McpEndpointConfig {
+  return adminConfigStore.get<McpEndpointConfig>(CONFIG_KEY, DEFAULT_CONFIG, mergeConfig)
+}
+
+export async function saveMcpEndpointConfig(cfg: McpEndpointConfig): Promise<void> {
   cfg.updatedAt = new Date().toISOString()
-  cached = cfg
-  writeFileSync(CONFIG_PATH, JSON.stringify(cfg, null, 2), 'utf-8')
+  await adminConfigStore.set(CONFIG_KEY, cfg)
 }
 
 /**

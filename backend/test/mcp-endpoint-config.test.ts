@@ -7,9 +7,12 @@
  *  - Edge cases: empty allowlist blocks everything, null enabledTools uses blocklist
  *  - saveMcpEndpointConfig updates timestamp and file
  *
- * NOTE: The module caches config in memory (`let cached`). We use
- * `saveMcpEndpointConfig` to update the in-memory cache between tests
- * rather than writing files and trying to bust the module cache.
+ * NOTE: Config is persisted via the shared admin-config store. In the no-DB
+ * (file-fallback) test environment, `saveMcpEndpointConfig` updates the store's
+ * short-TTL cache synchronously and writes the JSON file asynchronously, so
+ * tests that assert on the file contents must AWAIT the save first. Sync reads
+ * (`loadMcpEndpointConfig` / `isToolExposed`) observe the new value immediately
+ * without awaiting because the cache is updated synchronously.
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
@@ -37,26 +40,26 @@ function backupConfig() {
   }
 }
 
-function restoreConfig() {
+async function restoreConfig() {
   if (originalContent !== null) {
     writeFileSync(CONFIG_PATH, originalContent, 'utf-8')
-    // Also update the in-memory cache
+    // Also update the store cache + durable backend
     try {
-      saveMcpEndpointConfig(JSON.parse(originalContent))
+      await saveMcpEndpointConfig(JSON.parse(originalContent))
     } catch {
       // If original was invalid JSON, reset to defaults
-      saveMcpEndpointConfig({
+      await saveMcpEndpointConfig({
         enabled: true,
         disabledTools: [],
         enabledTools: null,
         exposeResourcesAsTools: true,
-      updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       })
     }
   } else if (existsSync(CONFIG_PATH)) {
     unlinkSync(CONFIG_PATH)
-    // Reset the in-memory cache to defaults
-    saveMcpEndpointConfig({
+    // Reset the store cache to defaults
+    await saveMcpEndpointConfig({
       enabled: true,
       disabledTools: [],
       enabledTools: null,
@@ -73,8 +76,8 @@ describe('MCP Endpoint Config — isToolExposed', () => {
     backupConfig()
   })
 
-  afterEach(() => {
-    restoreConfig()
+  afterEach(async () => {
+    await restoreConfig()
   })
 
   it('exposes all tools in default blocklist mode (empty blocklist)', () => {
@@ -165,12 +168,12 @@ describe('MCP Endpoint Config — saveMcpEndpointConfig', () => {
     backupConfig()
   })
 
-  afterEach(() => {
-    restoreConfig()
+  afterEach(async () => {
+    await restoreConfig()
   })
 
-  it('persists config to mcp-endpoint.json', () => {
-    saveMcpEndpointConfig({
+  it('persists config to mcp-endpoint.json', async () => {
+    await saveMcpEndpointConfig({
       enabled: false,
       disabledTools: ['test_tool'],
       enabledTools: null,
@@ -185,9 +188,9 @@ describe('MCP Endpoint Config — saveMcpEndpointConfig', () => {
     expect(raw.updatedAt).not.toBe('')
   })
 
-  it('updates the updatedAt timestamp', () => {
+  it('updates the updatedAt timestamp', async () => {
     const before = new Date().toISOString()
-    saveMcpEndpointConfig({
+    await saveMcpEndpointConfig({
       enabled: true,
       disabledTools: [],
       enabledTools: null,
@@ -200,7 +203,9 @@ describe('MCP Endpoint Config — saveMcpEndpointConfig', () => {
   })
 
   it('saved config is immediately visible via loadMcpEndpointConfig', () => {
-    saveMcpEndpointConfig({
+    // Unawaited on purpose: the store updates its cache synchronously, so a sync
+    // read reflects the write immediately even before the durable write resolves.
+    void saveMcpEndpointConfig({
       enabled: false,
       disabledTools: ['x'],
       enabledTools: ['y'],
