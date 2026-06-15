@@ -15,6 +15,7 @@ import { mkdtempSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { type ResolvedConfig } from '../src/config'
+import { deriveCodeChallenge } from '../src/oauth'
 import { Session, readCachedToken, writeCachedToken } from '../src/session'
 
 let home: string
@@ -148,6 +149,38 @@ describe('loginWithDeviceFlow device-poll loop (RFC 8628 §3.4-3.5)', () => {
     expect(tokenCalls.length).toBe(3)
     expect(tokenCalls[0]!.body.get('grant_type')).toBe('urn:ietf:params:oauth:grant-type:device_code')
     expect(tokenCalls[0]!.body.get('device_code')).toBe('DEV-CODE')
+  })
+
+  it('sends a PKCE S256 challenge in the device-auth request and replays the matching verifier on every poll', async () => {
+    const { impl, calls } = scriptedFetch({
+      [DISCOVERY_URL]: [jsonResponse(DISCOVERY)],
+      [DEVICE_URL]: [deviceAuth()],
+      [TOKEN_URL]: [
+        jsonResponse({ error: 'authorization_pending' }, 400),
+        jsonResponse({ error: 'authorization_pending' }, 400),
+        jsonResponse({ access_token: 'GRANTED', expires_in: 300 }),
+      ],
+    })
+    const clock = fakeClock()
+    const session = new Session(config(), impl, clock.sleepImpl, clock.nowImpl)
+
+    await session.loginWithDeviceFlow(() => {})
+
+    // The device authorization request advertises the S256 PKCE method and a
+    // non-empty challenge (RFC 7636 §4.3).
+    const deviceCall = calls.find((call) => call.url === DEVICE_URL)!
+    const challenge = deviceCall.body.get('code_challenge')
+    expect(deviceCall.body.get('code_challenge_method')).toBe('S256')
+    expect(challenge).toBeTruthy()
+
+    // Every token poll replays the SAME verifier, and that verifier hashes to
+    // exactly the challenge that was advertised (RFC 7636 §4.5-4.6).
+    const tokenCalls = calls.filter((call) => call.url === TOKEN_URL)
+    expect(tokenCalls.length).toBe(3)
+    const verifiers = tokenCalls.map((call) => call.body.get('code_verifier'))
+    expect(verifiers.every((v) => typeof v === 'string' && v.length > 0)).toBe(true)
+    expect(new Set(verifiers).size).toBe(1)
+    expect(deriveCodeChallenge(verifiers[0]!)).toBe(challenge)
   })
 
   it('backs off the poll interval by 5s on slow_down before the next poll', async () => {

@@ -25,6 +25,7 @@ import {
   deviceTokenBody,
   endpointsFromMetadata,
   expiresAt,
+  generatePkcePair,
   isTokenFresh,
   keycloakEndpoints,
   parseDeviceAuthResponse,
@@ -167,10 +168,17 @@ export class Session {
       )
     }
 
+    // Always send PKCE (RFC 7636, S256) for the device flow: it is the public
+    // client best practice and is required by clients such as `admin-ui` that
+    // Keycloak configures with `pkce.code.challenge.method: S256`. One pair is
+    // generated per login; the challenge goes in the authorization request and
+    // the same verifier is replayed on every token poll.
+    const pkce = generatePkcePair()
+
     const authRes = await this.fetchImpl(endpoints.deviceAuthorizationEndpoint, {
       method: 'POST',
       headers: FORM_HEADERS,
-      body: deviceAuthBody(this.config.clientId, this.config.scope, this.config.clientSecret),
+      body: deviceAuthBody(this.config.clientId, this.config.scope, this.config.clientSecret, pkce.challenge),
     })
     if (!authRes.ok) {
       throw new CliError(`Device authorization request failed (HTTP ${authRes.status}): ${await safeText(authRes)}`)
@@ -178,7 +186,7 @@ export class Session {
     const device = parseDeviceAuthResponse(await authRes.json())
     prompt(device)
 
-    const tokens = await this.pollForDeviceToken(endpoints.tokenEndpoint, device)
+    const tokens = await this.pollForDeviceToken(endpoints.tokenEndpoint, device, pkce.verifier)
     const cached = toCachedToken(tokens, this.config.clientId)
     writeCachedToken(this.config.homeDir, cached)
     return cached
@@ -243,8 +251,16 @@ export class Session {
     clearTokenCache(this.config.homeDir)
   }
 
-  /** Poll the token endpoint until the user approves the device, or it expires. */
-  private async pollForDeviceToken(tokenEndpoint: string, device: DeviceAuthResponse): Promise<TokenSet> {
+  /**
+   * Poll the token endpoint until the user approves the device, or it expires.
+   * `codeVerifier` is the PKCE verifier (RFC 7636) replayed on every poll so the
+   * server can match it against the challenge sent in the authorization request.
+   */
+  private async pollForDeviceToken(
+    tokenEndpoint: string,
+    device: DeviceAuthResponse,
+    codeVerifier: string,
+  ): Promise<TokenSet> {
     const deadline = this.nowImpl() + device.expires_in * 1000
     let intervalMs = (device.interval ?? 5) * 1000
 
@@ -253,7 +269,7 @@ export class Session {
       const res = await this.fetchImpl(tokenEndpoint, {
         method: 'POST',
         headers: FORM_HEADERS,
-        body: deviceTokenBody(this.config.clientId, device.device_code, this.config.clientSecret),
+        body: deviceTokenBody(this.config.clientId, device.device_code, this.config.clientSecret, codeVerifier),
       })
       const payload: unknown = await res.json()
 

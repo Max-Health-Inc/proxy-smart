@@ -504,6 +504,9 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       if (bodyObj.client_id || bodyObj.clientId) formData.append('client_id', bodyObj.client_id || bodyObj.clientId!)
       if (bodyObj.client_secret || bodyObj.clientSecret) formData.append('client_secret', bodyObj.client_secret || bodyObj.clientSecret!)
       if (bodyObj.code_verifier || bodyObj.codeVerifier) formData.append('code_verifier', bodyObj.code_verifier || bodyObj.codeVerifier!)
+      // RFC 8628 device-grant poll: forward the device_code so Keycloak can match
+      // the pending authorization. Without this the device login never completes.
+      if (bodyObj.device_code || bodyObj.deviceCode) formData.append('device_code', bodyObj.device_code || bodyObj.deviceCode!)
       if (bodyObj.refresh_token || bodyObj.refreshToken) formData.append('refresh_token', bodyObj.refresh_token || bodyObj.refreshToken!)
       if (bodyObj.scope) formData.append('scope', bodyObj.scope)
       if (bodyObj.audience) formData.append('audience', bodyObj.audience)

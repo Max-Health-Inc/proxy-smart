@@ -14,6 +14,7 @@ export const TokenRequest = t.Object({
   client_id: t.Optional(t.String({ description: 'OAuth2 client ID' })),
   client_secret: t.Optional(t.String({ description: 'OAuth2 client secret' })),
   code_verifier: t.Optional(t.String({ description: 'PKCE code verifier' })),
+  device_code: t.Optional(t.String({ description: 'Device verification code (for the RFC 8628 device_code grant poll)' })),
   refresh_token: t.Optional(t.String({ description: 'Refresh token (for refresh_token grant)' })),
   scope: t.Optional(t.String({ description: 'Requested scopes (space-separated)' })),
   audience: t.Optional(t.String({ description: 'Target audience for the token' })),
