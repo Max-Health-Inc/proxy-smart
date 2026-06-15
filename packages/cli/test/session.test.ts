@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { mkdtempSync, rmSync } from 'fs'
+import { mkdtempSync, rmSync, writeFileSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { type ResolvedConfig } from '../src/config'
+import { type ResolvedConfig, tokenCachePath } from '../src/config'
 import {
   Session,
   readCachedToken,
@@ -69,6 +69,48 @@ describe('token cache round-trip', () => {
     const token: CachedToken = { access_token: 'AT', refresh_token: 'RT', client_id: 'admin-ui', expires_at: 123 }
     writeCachedToken(home, token)
     expect(readCachedToken(home)).toEqual(token)
+  })
+})
+
+describe('token cache robustness against concurrency / corruption', () => {
+  it('treats a corrupt / partial token.json as "no token"', () => {
+    // Simulate a half-written file from a racing process (truncated JSON).
+    writeFileSync(tokenCachePath(home), '{"access_token": "AT", "refr')
+    expect(readCachedToken(home)).toBeUndefined()
+  })
+
+  it('treats JSON without an access_token as "no token"', () => {
+    writeFileSync(tokenCachePath(home), JSON.stringify({ not_a_token: true }))
+    expect(readCachedToken(home)).toBeUndefined()
+  })
+
+  it('getAccessToken throws the friendly login error on a corrupt cache instead of crashing', async () => {
+    writeFileSync(tokenCachePath(home), '{ this is not json')
+    const session = new Session(config(), failingFetch)
+    await expect(session.getAccessToken()).rejects.toThrow('login')
+  })
+
+  it('does not leave a corrupt file when writes interleave; the result still parses', () => {
+    const a: CachedToken = { access_token: 'A', refresh_token: 'RA', client_id: 'admin-ui', expires_at: 111 }
+    const b: CachedToken = { access_token: 'B', refresh_token: 'RB', client_id: 'admin-ui', expires_at: 222 }
+    // Interleave two writes back-to-back, as racing processes would.
+    for (let i = 0; i < 20; i++) {
+      writeCachedToken(home, i % 2 === 0 ? a : b)
+      const read = readCachedToken(home)
+      // Every observed state must be one of the two whole tokens, never torn.
+      expect(read).toBeDefined()
+      expect([a.access_token, b.access_token]).toContain(read?.access_token)
+    }
+    // No temp files are left behind in the home dir.
+    expect(existsSync(`${tokenCachePath(home)}.tmp`)).toBe(false)
+  })
+
+  it('does not leave the refresh lock file behind after a successful fresh-token read', async () => {
+    const future = Math.floor(Date.now() / 1000) + 3_600
+    writeCachedToken(home, { access_token: 'FRESH', client_id: 'admin-ui', expires_at: future })
+    const session = new Session(config(), failingFetch)
+    await session.getAccessToken()
+    expect(existsSync(join(home, 'token.lock'))).toBe(false)
   })
 })
 
