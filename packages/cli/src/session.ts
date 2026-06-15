@@ -13,7 +13,18 @@
  *
  * The pure URL/body building lives in oauth.ts; this module owns the I/O.
  */
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'fs'
+import {
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  renameSync,
+  rmSync,
+  openSync,
+  closeSync,
+  statSync,
+} from 'fs'
+import { join } from 'path'
 import { type ResolvedConfig, tokenCachePath, clearTokenCache } from './config'
 import {
   type AuthEndpoints,
@@ -51,7 +62,15 @@ export interface CachedToken {
 
 const FORM_HEADERS = { 'content-type': 'application/x-www-form-urlencoded' } as const
 
-/** Read the cached token from disk, tolerating a missing/corrupt file. */
+/**
+ * Read the cached token from disk, tolerating a missing/partial/corrupt file.
+ *
+ * A concurrent writer (see `writeCachedToken`) renames a fully-written temp file
+ * over `token.json`, so a reader should never observe a torn file. As defense in
+ * depth we still treat any unreadable or non-JSON content as "no token" and
+ * return `undefined` rather than throwing, so a single bad read never crashes a
+ * command or forces a re-login when a valid token may simply be mid-rotation.
+ */
 export function readCachedToken(homeDir: string): CachedToken | undefined {
   const file = tokenCachePath(homeDir)
   if (!existsSync(file)) return undefined
@@ -66,10 +85,37 @@ export function readCachedToken(homeDir: string): CachedToken | undefined {
   }
 }
 
-/** Persist a token to disk with owner-only permissions. */
+/**
+ * Persist a token to disk with owner-only permissions, atomically.
+ *
+ * Several `proxy-smart` invocations can run back-to-back or concurrently and
+ * each may read / refresh / write the token cache. A plain `writeFileSync` to
+ * the real path is not atomic: a reader in another process can observe a
+ * half-written file and treat it as corrupt, which surfaces as a spurious
+ * `Not authenticated` / 401 and forces a re-login. To avoid that we write the
+ * full payload to a unique temp file in the same directory (so `rename` stays on
+ * one filesystem and is therefore atomic) and then `renameSync` it over the real
+ * path. Readers only ever see the old file or the new file, never a torn one.
+ */
 export function writeCachedToken(homeDir: string, token: CachedToken): void {
   mkdirSync(homeDir, { recursive: true })
-  writeFileSync(tokenCachePath(homeDir), `${JSON.stringify(token, null, 2)}\n`, { mode: 0o600 })
+  const finalPath = tokenCachePath(homeDir)
+  // Unique per write: pid keeps it distinct across processes, the random/time
+  // suffix across rapid writes within one process. Both are fine to use in a
+  // normal CLI runtime.
+  const tmpPath = `${finalPath}.${process.pid}.${Date.now()}.${Math.floor(Math.random() * 1e9)}.tmp`
+  try {
+    writeFileSync(tmpPath, `${JSON.stringify(token, null, 2)}\n`, { mode: 0o600 })
+    renameSync(tmpPath, finalPath)
+  } catch (err) {
+    // Best-effort cleanup so we never leak a temp file if the rename failed.
+    try {
+      rmSync(tmpPath, { force: true })
+    } catch {
+      // ignore cleanup failure
+    }
+    throw err
+  }
 }
 
 /** Map a fresh token response onto a persisted CachedToken. */
@@ -224,18 +270,8 @@ export class Session {
     }
 
     if (cached?.refresh_token && isTokenFresh(cached.refresh_expires_at)) {
-      try {
-        const endpoints = await this.resolveEndpoints()
-        const tokens = await this.exchange(
-          endpoints.tokenEndpoint,
-          refreshTokenBody(cached.client_id, cached.refresh_token, this.config.clientSecret),
-        )
-        const refreshed = toCachedToken(tokens, cached.client_id)
-        writeCachedToken(this.config.homeDir, refreshed)
-        return refreshed.access_token
-      } catch {
-        // fall through to other strategies on refresh failure
-      }
+      const refreshed = await this.refreshSingleFlight(cached)
+      if (refreshed) return refreshed
     }
 
     if (this.config.clientSecret) {
@@ -244,6 +280,72 @@ export class Session {
     }
 
     throw new CliError('Not authenticated. Run `proxy-smart login` first.')
+  }
+
+  /**
+   * Refresh the access token, serializing across processes so concurrent
+   * invocations do not both refresh and clobber each other's freshly-rotated
+   * token (which, with refresh-token rotation, can invalidate the survivor and
+   * force a re-login).
+   *
+   * Best-effort single-flight:
+   *   - Acquire a short-lived exclusive lock file next to the cache.
+   *   - If we win the lock, refresh, persist atomically, and return the token.
+   *   - If another process holds the lock, wait briefly and re-read the cache;
+   *     that process has very likely just written a fresh token, so we reuse it
+   *     and skip a redundant refresh. If the cache is still not fresh after the
+   *     wait, fall back to refreshing ourselves.
+   *
+   * The lock is always released in `finally`, is bounded by a short wait, and is
+   * broken if stale, so it can never deadlock. On any refresh error we return
+   * `undefined` so `getAccessToken` falls through to its other strategies.
+   */
+  private async refreshSingleFlight(cached: CachedToken): Promise<string | undefined> {
+    const lockFd = tryAcquireLock(this.config.homeDir)
+
+    if (lockFd === undefined) {
+      // Another process is refreshing. Wait briefly, then prefer its result.
+      await this.sleepImpl(250)
+      const reread = readCachedToken(this.config.homeDir)
+      if (reread && isTokenFresh(reread.expires_at)) return reread.access_token
+      // The other process did not (yet) produce a fresh token; fall through and
+      // refresh from the freshest refresh_token we can see.
+      const source = reread?.refresh_token && isTokenFresh(reread.refresh_expires_at) ? reread : cached
+      return this.doRefresh(source)
+    }
+
+    try {
+      // We hold the lock. Re-read under the lock in case another process
+      // refreshed between our first read and acquiring the lock.
+      const reread = readCachedToken(this.config.homeDir)
+      if (reread && isTokenFresh(reread.expires_at)) return reread.access_token
+      const source = reread?.refresh_token && isTokenFresh(reread.refresh_expires_at) ? reread : cached
+      return this.doRefresh(source)
+    } finally {
+      releaseLock(this.config.homeDir, lockFd)
+    }
+  }
+
+  /**
+   * Perform a single refresh-token exchange and persist the result atomically.
+   * Returns the new access token, or `undefined` if the refresh failed (the
+   * caller then falls through to its remaining auth strategies).
+   */
+  private async doRefresh(cached: CachedToken): Promise<string | undefined> {
+    if (!cached.refresh_token) return undefined
+    try {
+      const endpoints = await this.resolveEndpoints()
+      const tokens = await this.exchange(
+        endpoints.tokenEndpoint,
+        refreshTokenBody(cached.client_id, cached.refresh_token, this.config.clientSecret),
+      )
+      const refreshed = toCachedToken(tokens, cached.client_id)
+      writeCachedToken(this.config.homeDir, refreshed)
+      return refreshed.access_token
+    } catch {
+      // fall through to other strategies on refresh failure
+      return undefined
+    }
   }
 
   /** Forget any cached token. */
@@ -310,4 +412,63 @@ async function safeText(res: Response): Promise<string> {
 /** Promise-based delay. */
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Path to the cross-process refresh lock that guards token rotation. */
+function tokenLockPath(homeDir: string): string {
+  return join(homeDir, 'token.lock')
+}
+
+/**
+ * A lock is considered stale (and may be broken) once it is older than this.
+ * A real refresh is a single token-endpoint round-trip, so a few seconds is a
+ * generous ceiling; anything older almost certainly belongs to a process that
+ * died before releasing the lock.
+ */
+const STALE_LOCK_MS = 5_000
+
+/**
+ * Try to acquire the cross-process refresh lock with an exclusive-create open
+ * (`wx`). Returns the open file descriptor on success, or `undefined` if the
+ * lock is currently held by another (live) process. A lock file older than
+ * `STALE_LOCK_MS` is treated as abandoned and broken so we can never deadlock
+ * on a crashed process.
+ */
+function tryAcquireLock(homeDir: string): number | undefined {
+  mkdirSync(homeDir, { recursive: true })
+  const lockPath = tokenLockPath(homeDir)
+  try {
+    return openSync(lockPath, 'wx', 0o600)
+  } catch {
+    // Lock exists. Break it if it is stale, then retry once.
+    try {
+      const age = Date.now() - statSync(lockPath).mtimeMs
+      if (age > STALE_LOCK_MS) {
+        rmSync(lockPath, { force: true })
+        return openSync(lockPath, 'wx', 0o600)
+      }
+    } catch {
+      // The lock vanished or could not be inspected; retry once below.
+      try {
+        return openSync(lockPath, 'wx', 0o600)
+      } catch {
+        return undefined
+      }
+    }
+    return undefined
+  }
+}
+
+/** Release the refresh lock: close the descriptor and remove the lock file. */
+function releaseLock(homeDir: string, fd: number): void {
+  try {
+    closeSync(fd)
+  } catch {
+    // ignore
+  }
+  try {
+    rmSync(tokenLockPath(homeDir), { force: true })
+  } catch {
+    // ignore
+  }
 }
