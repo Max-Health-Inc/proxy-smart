@@ -18,6 +18,7 @@
  * library here to keep the CLI dependency footprint minimal; the few response
  * shapes are validated with small, explicit type guards.
  */
+import { createHash, randomBytes } from 'node:crypto'
 
 /** Subset of an OIDC discovery document the CLI consumes. */
 export interface OidcMetadata {
@@ -158,23 +159,88 @@ export function formEncode(params: Record<string, string | undefined>): string {
 }
 
 /**
- * Build the form body for the device authorization request (RFC 8628 §3.1).
- * Pure — no network.
+ * A PKCE (RFC 7636) verifier/challenge pair.
+ *   - `verifier` is the high-entropy secret kept by the client and replayed on
+ *     every token request.
+ *   - `challenge` is the public value sent in the authorization request; it is
+ *     `base64url(SHA-256(ASCII(verifier)))` for the S256 method.
  */
-export function deviceAuthBody(clientId: string, scope: string, clientSecret?: string): string {
-  return formEncode({ client_id: clientId, client_secret: clientSecret, scope })
+export interface PkcePair {
+  verifier: string
+  challenge: string
+}
+
+/** The only PKCE challenge method the CLI uses (RFC 7636 §4.3). */
+export const PKCE_METHOD_S256 = 'S256' as const
+
+/**
+ * base64url-encode a byte buffer per RFC 4648 §5 (no padding, `+`->`-`,
+ * `/`->`_`). RFC 7636 §3 requires this encoding for both the verifier (when
+ * derived from random bytes) and the S256 challenge.
+ */
+function base64UrlEncode(bytes: Buffer): string {
+  return bytes.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+/**
+ * Derive the S256 code challenge for a given verifier:
+ * `base64url(SHA-256(ASCII(verifier)))` (RFC 7636 §4.2). Pure — no randomness,
+ * so a test can assert the verifier/challenge relationship deterministically.
+ */
+export function deriveCodeChallenge(verifier: string): string {
+  return base64UrlEncode(createHash('sha256').update(verifier, 'ascii').digest())
+}
+
+/**
+ * Generate a PKCE pair for the S256 method (RFC 7636 §4.1-4.2). The verifier is
+ * 32 random bytes base64url-encoded, yielding a 43-char string drawn entirely
+ * from the unreserved set, well within the legal 43-128 range. `randomImpl` is
+ * injectable so a test can pin the entropy and still get a real S256 challenge.
+ */
+export function generatePkcePair(randomImpl: (size: number) => Buffer = randomBytes): PkcePair {
+  const verifier = base64UrlEncode(randomImpl(32))
+  return { verifier, challenge: deriveCodeChallenge(verifier) }
+}
+
+/**
+ * Build the form body for the device authorization request (RFC 8628 §3.1).
+ * When `codeChallenge` is supplied it adds the PKCE parameters (RFC 7636 §4.3),
+ * which Keycloak requires for public clients configured with
+ * `pkce.code.challenge.method: S256`. Pure — no network.
+ */
+export function deviceAuthBody(
+  clientId: string,
+  scope: string,
+  clientSecret?: string,
+  codeChallenge?: string,
+): string {
+  return formEncode({
+    client_id: clientId,
+    client_secret: clientSecret,
+    scope,
+    code_challenge: codeChallenge,
+    code_challenge_method: codeChallenge ? PKCE_METHOD_S256 : undefined,
+  })
 }
 
 /**
  * Build the form body to poll the token endpoint for a device grant
- * (RFC 8628 §3.4). Pure — no network.
+ * (RFC 8628 §3.4). When `codeVerifier` is supplied it adds the PKCE verifier
+ * (RFC 7636 §4.5) so the server can confirm it against the challenge sent in the
+ * authorization request. Pure — no network.
  */
-export function deviceTokenBody(clientId: string, deviceCode: string, clientSecret?: string): string {
+export function deviceTokenBody(
+  clientId: string,
+  deviceCode: string,
+  clientSecret?: string,
+  codeVerifier?: string,
+): string {
   return formEncode({
     grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
     client_id: clientId,
     client_secret: clientSecret,
     device_code: deviceCode,
+    code_verifier: codeVerifier,
   })
 }
 

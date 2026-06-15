@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'bun:test'
+import { createHash } from 'node:crypto'
 import {
   asTokenError,
   clientCredentialsBody,
+  deriveCodeChallenge,
   deviceAuthBody,
   deviceTokenBody,
   endpointsFromMetadata,
   expiresAt,
   formEncode,
+  generatePkcePair,
   isTokenFresh,
   keycloakDiscoveryUrl,
   keycloakEndpoints,
@@ -72,10 +75,32 @@ describe('form body building', () => {
     expect(body.get('client_secret')).toBe('shh')
   })
 
+  it('omits PKCE params from the device authorization body when no challenge is given', () => {
+    const body = new URLSearchParams(deviceAuthBody('admin-ui', 'openid'))
+    expect(body.has('code_challenge')).toBe(false)
+    expect(body.has('code_challenge_method')).toBe(false)
+  })
+
+  it('includes the S256 PKCE params in the device authorization body when a challenge is given', () => {
+    const body = new URLSearchParams(deviceAuthBody('admin-ui', 'openid', undefined, 'CHALLENGE'))
+    expect(body.get('code_challenge')).toBe('CHALLENGE')
+    expect(body.get('code_challenge_method')).toBe('S256')
+  })
+
   it('builds a device token poll body with the RFC 8628 grant type', () => {
     const body = new URLSearchParams(deviceTokenBody('admin-ui', 'DEV-CODE'))
     expect(body.get('grant_type')).toBe('urn:ietf:params:oauth:grant-type:device_code')
     expect(body.get('device_code')).toBe('DEV-CODE')
+  })
+
+  it('includes the PKCE verifier in the device token poll body when one is given', () => {
+    const body = new URLSearchParams(deviceTokenBody('admin-ui', 'DEV-CODE', undefined, 'VERIFIER'))
+    expect(body.get('code_verifier')).toBe('VERIFIER')
+  })
+
+  it('omits the PKCE verifier from the device token poll body when none is given', () => {
+    const body = new URLSearchParams(deviceTokenBody('admin-ui', 'DEV-CODE'))
+    expect(body.has('code_verifier')).toBe(false)
   })
 
   it('builds a client_credentials body', () => {
@@ -90,6 +115,46 @@ describe('form body building', () => {
     const body = new URLSearchParams(refreshTokenBody('svc', 'RT'))
     expect(body.get('grant_type')).toBe('refresh_token')
     expect(body.get('refresh_token')).toBe('RT')
+  })
+})
+
+describe('PKCE (RFC 7636, S256)', () => {
+  /** base64url(sha256(ascii(verifier))) computed independently of the source. */
+  function expectedChallenge(verifier: string): string {
+    return createHash('sha256').update(verifier, 'ascii').digest('base64url')
+  }
+
+  it('generates a verifier in the legal length and charset', () => {
+    const { verifier } = generatePkcePair()
+    // RFC 7636 §4.1: 43-128 chars drawn from the unreserved set. 32 random
+    // bytes base64url-encoded (no padding) is exactly 43 chars.
+    expect(verifier.length).toBeGreaterThanOrEqual(43)
+    expect(verifier.length).toBeLessThanOrEqual(128)
+    expect(verifier).toMatch(/^[A-Za-z0-9\-._~]+$/)
+  })
+
+  it('derives a challenge equal to base64url(sha256(verifier))', () => {
+    const { verifier, challenge } = generatePkcePair()
+    expect(challenge).toBe(expectedChallenge(verifier))
+    // The challenge is also base64url with no padding.
+    expect(challenge).toMatch(/^[A-Za-z0-9\-_]+$/)
+  })
+
+  it('produces a different verifier on each call', () => {
+    expect(generatePkcePair().verifier).not.toBe(generatePkcePair().verifier)
+  })
+
+  it('honours the injected randomness while still deriving a real S256 challenge', () => {
+    const fixed = Buffer.alloc(32, 7)
+    const { verifier, challenge } = generatePkcePair(() => fixed)
+    expect(verifier).toBe(fixed.toString('base64url'))
+    expect(challenge).toBe(expectedChallenge(verifier))
+  })
+
+  it('deriveCodeChallenge matches the RFC 7636 §4.2 worked example', () => {
+    // The appendix B verifier and its known S256 challenge.
+    const verifier = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'
+    expect(deriveCodeChallenge(verifier)).toBe('E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM')
   })
 })
 
