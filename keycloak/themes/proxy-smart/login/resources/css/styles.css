@@ -148,7 +148,7 @@ body.kc-login select {
   background: var(--ps-surface) !important;
   border: 1px solid var(--ps-border) !important;
   box-shadow: none !important;
-  max-width: 420px;
+  max-width: 480px;
   height: fit-content !important;
   margin: 0 auto;
   padding: 48px 40px !important;
@@ -597,13 +597,13 @@ body.kc-login a:hover {
 /* PF v5 makes .__container a CSS grid with ~98px horizontal padding, which
    shrank the card's content box to ~224px (card collapsed on desktop) and
    stopped it shrinking on mobile. Force a centered block sized off the
-   VIEWPORT: exactly 420px on desktop, fluid on small screens (24px gutters). */
+   VIEWPORT: exactly 480px on desktop, fluid on small screens (24px gutters). */
 .pf-v5-c-login__container {
   display: block !important;
   grid-template-columns: none !important;
   grid-template-rows: none !important;
   flex: 0 0 auto !important;
-  width: min(420px, calc(100vw - 48px)) !important;
+  width: min(480px, calc(100vw - 48px)) !important;
   max-width: 100% !important;
   padding: 0 !important;
   margin: 0 auto !important;

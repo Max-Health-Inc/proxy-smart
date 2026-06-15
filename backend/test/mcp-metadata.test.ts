@@ -49,6 +49,20 @@ const MOCK_KEYCLOAK_OIDC = {
   token_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/token`,
   jwks_uri: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/certs`,
   registration_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/clients-registrations/openid-connect`,
+  // Keycloak-direct endpoints the proxy must rewrite or drop, never leak.
+  introspection_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/token/introspect`,
+  userinfo_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/userinfo`,
+  end_session_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/logout`,
+  device_authorization_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/auth/device`,
+  revocation_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/revoke`,
+  pushed_authorization_request_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/ext/par/request`,
+  backchannel_authentication_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/ext/ciba/auth`,
+  // Nested mTLS-bound aliases the proxy does not front — must be stripped entirely.
+  mtls_endpoint_aliases: {
+    token_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/token`,
+    revocation_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/revoke`,
+    introspection_endpoint: `${TEST_KEYCLOAK_BASE}/realms/${TEST_REALM}/protocol/openid-connect/token/introspect`,
+  },
   scopes_supported: ['openid', 'profile', 'email'],
   response_types_supported: ['code'],
   grant_types_supported: ['authorization_code', 'refresh_token'],
@@ -292,4 +306,75 @@ describe('MCP Metadata — /.well-known/oauth-authorization-server', () => {
     expect(body.code_challenge_methods_supported).toBeInstanceOf(Array)
     expect(body.code_challenge_methods_supported).toContain('S256')
   })
+})
+
+describe('Discovery docs do not leak Keycloak-direct endpoints', () => {
+  // Every proxy discovery response must rewrite proxy-fronted endpoints, strip
+  // mtls_endpoint_aliases, and advertise NO Keycloak-direct
+  // /protocol/openid-connect/ URL — otherwise an mTLS client (or anything reading
+  // the doc) could bypass the proxy's auth layer.
+  beforeEach(() => {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      if (url.includes('.well-known/openid-configuration')) {
+        return new Response(JSON.stringify(MOCK_KEYCLOAK_OIDC), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+      return ORIGINAL_FETCH(input, init)
+    }) as typeof fetch
+  })
+
+  afterEach(() => {
+    globalThis.fetch = ORIGINAL_FETCH
+  })
+
+  // All proxy discovery variants served by this route module.
+  const DISCOVERY_PATHS = [
+    '/.well-known/openid-configuration',
+    '/.well-known/openid-configuration/auth',
+    '/.well-known/oauth-authorization-server',
+    '/.well-known/oauth-authorization-server/auth',
+  ] as const
+
+  for (const path of DISCOVERY_PATHS) {
+    it(`${path} contains no /protocol/openid-connect/ substring`, async () => {
+      const app = createApp()
+      const res = await app.handle(new Request(`http://localhost${path}`))
+      expect(res.status).toBe(200)
+      const raw = JSON.stringify(await res.json())
+      expect(raw).not.toContain('/protocol/openid-connect/')
+    })
+
+    it(`${path} has no mtls_endpoint_aliases key`, async () => {
+      const app = createApp()
+      const res = await app.handle(new Request(`http://localhost${path}`))
+      const body = await res.json()
+      expect(body).not.toHaveProperty('mtls_endpoint_aliases')
+    })
+
+    it(`${path} does not advertise unsupported endpoints (revocation/PAR/CIBA)`, async () => {
+      const app = createApp()
+      const res = await app.handle(new Request(`http://localhost${path}`))
+      const body = await res.json()
+      expect(body).not.toHaveProperty('revocation_endpoint')
+      expect(body).not.toHaveProperty('pushed_authorization_request_endpoint')
+      expect(body).not.toHaveProperty('backchannel_authentication_endpoint')
+    })
+  }
+
+  // The OIDC-mirror variants spread Keycloak's doc, so they are the ones that
+  // must rewrite token/device endpoints (and end_session) to the proxy origin.
+  for (const path of ['/.well-known/openid-configuration', '/.well-known/openid-configuration/auth'] as const) {
+    it(`${path} still advertises proxy token + device endpoints`, async () => {
+      const app = createApp()
+      const res = await app.handle(new Request(`http://localhost${path}`))
+      const body = await res.json()
+      expect(body.token_endpoint).toBe(`${TEST_BASE_URL}/auth/token`)
+      expect(body.device_authorization_endpoint).toBe(`${TEST_BASE_URL}/auth/device`)
+      // end_session is rewritten to the proxy /auth/logout route, not dropped.
+      expect(body.end_session_endpoint).toBe(`${TEST_BASE_URL}/auth/logout`)
+    })
+  }
 })

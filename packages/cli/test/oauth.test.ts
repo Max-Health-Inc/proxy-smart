@@ -61,8 +61,8 @@ describe('form body building', () => {
   })
 
   it('builds a device authorization body', () => {
-    const body = new URLSearchParams(deviceAuthBody('admin-cli', 'openid profile'))
-    expect(body.get('client_id')).toBe('admin-cli')
+    const body = new URLSearchParams(deviceAuthBody('admin-ui', 'openid profile'))
+    expect(body.get('client_id')).toBe('admin-ui')
     expect(body.get('scope')).toBe('openid profile')
     expect(body.has('client_secret')).toBe(false)
   })
@@ -73,7 +73,7 @@ describe('form body building', () => {
   })
 
   it('builds a device token poll body with the RFC 8628 grant type', () => {
-    const body = new URLSearchParams(deviceTokenBody('admin-cli', 'DEV-CODE'))
+    const body = new URLSearchParams(deviceTokenBody('admin-ui', 'DEV-CODE'))
     expect(body.get('grant_type')).toBe('urn:ietf:params:oauth:grant-type:device_code')
     expect(body.get('device_code')).toBe('DEV-CODE')
   })

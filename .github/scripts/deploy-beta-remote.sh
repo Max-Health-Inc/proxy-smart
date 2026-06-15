@@ -431,6 +431,65 @@ else
   echo '  ⚠️ Keycloak container not found — skipping resource-indicator reconciliation'
 fi
 
+# ── 10c. Keycloak Device-Grant Reconciliation (admin-ui) ──
+# realm-export.json uses IGNORE_EXISTING, so flipping
+# oauth2.device.authorization.grant.enabled to "true" on admin-ui in the export
+# never reaches an already-imported beta realm. The CLI's interactive login
+# (RFC 8628 device flow) uses the admin-ui client, so without this attribute
+# Keycloak rejects the device-authorization request with unauthorized_client.
+# Best-effort, non-fatal, idempotent: GET admin-ui by clientId, set the
+# attribute via grep/sed (no jq on the VPS), PUT the updated representation.
+echo '🔧 Reconciling admin-ui device-authorization grant...'
+KC_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' \
+  proxy-smart-keycloak-beta 2>/dev/null || true)
+
+if [ -n "${KC_IP:-}" ]; then
+  KC_BASE="http://${KC_IP}:8080/auth"
+  KC_PASS=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' .env.beta | cut -d= -f2 || true)
+  KC_TOKEN=$(curl -sf -X POST "${KC_BASE}/realms/master/protocol/openid-connect/token" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=admin' \
+    -d "password=${KC_PASS}" \
+    -d 'grant_type=password' \
+    -d 'client_id=admin-cli' 2>/dev/null | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4 || true)
+
+  if [ -n "${KC_TOKEN:-}" ]; then
+    KC_CLIENTS="${KC_BASE}/admin/realms/proxy-smart/clients"
+    ADMIN_UI=$(curl -sf "${KC_CLIENTS}?clientId=admin-ui" \
+      -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+    # The list endpoint returns a JSON array; strip the surrounding [ ] to get the object.
+    ADMIN_UI=$(echo "$ADMIN_UI" | sed 's/^\[//; s/\]$//')
+    AU_UUID=$(echo "$ADMIN_UI" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+
+    if [ -z "${AU_UUID:-}" ]; then
+      echo '  ℹ️ admin-ui client not found — skipping device-grant reconciliation'
+    elif echo "$ADMIN_UI" | grep -q '"oauth2.device.authorization.grant.enabled":"true"'; then
+      echo '  ✅ admin-ui device-authorization grant already enabled'
+    else
+      # Flip an existing "false" value, or inject the attribute if absent.
+      if echo "$ADMIN_UI" | grep -q '"oauth2.device.authorization.grant.enabled":"false"'; then
+        UPDATED_AU=$(echo "$ADMIN_UI" \
+          | sed 's/"oauth2.device.authorization.grant.enabled":"false"/"oauth2.device.authorization.grant.enabled":"true"/')
+      else
+        UPDATED_AU=$(echo "$ADMIN_UI" \
+          | sed 's/"attributes":{/"attributes":{"oauth2.device.authorization.grant.enabled":"true",/')
+      fi
+      HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X PUT "${KC_CLIENTS}/${AU_UUID}" \
+        -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+        -d "$UPDATED_AU" 2>/dev/null || true)
+      if [ "${HTTP_CODE:-}" = '204' ]; then
+        echo '  ✅ admin-ui device-authorization grant enabled'
+      else
+        echo "  ⚠️ Failed to enable admin-ui device grant (HTTP ${HTTP_CODE:-none})"
+      fi
+    fi
+  else
+    echo '  ⚠️ Could not get Keycloak admin token — skipping device-grant reconciliation'
+  fi
+else
+  echo '  ⚠️ Keycloak container not found — skipping device-grant reconciliation'
+fi
+
 # ── 11. Seed Data ──
 echo '🏥 Seeding HAPI FHIR with sample data...'
 HAPI_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' \

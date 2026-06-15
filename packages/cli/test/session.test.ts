@@ -25,7 +25,7 @@ afterEach(() => {
 function config(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
   return {
     url: 'https://proxy.example.com',
-    clientId: 'admin-cli',
+    clientId: 'admin-ui',
     scope: 'openid',
     directKeycloak: false,
     homeDir: home,
@@ -66,7 +66,7 @@ describe('token cache round-trip', () => {
   })
 
   it('persists and reads back a token', () => {
-    const token: CachedToken = { access_token: 'AT', refresh_token: 'RT', client_id: 'admin-cli', expires_at: 123 }
+    const token: CachedToken = { access_token: 'AT', refresh_token: 'RT', client_id: 'admin-ui', expires_at: 123 }
     writeCachedToken(home, token)
     expect(readCachedToken(home)).toEqual(token)
   })
@@ -177,7 +177,7 @@ describe('Session.resolveEndpoints direct-Keycloak escape hatch', () => {
 describe('Session.getAccessToken', () => {
   it('returns a cached, still-fresh access token without any network', async () => {
     const future = Math.floor(Date.now() / 1000) + 3_600
-    writeCachedToken(home, { access_token: 'FRESH', client_id: 'admin-cli', expires_at: future })
+    writeCachedToken(home, { access_token: 'FRESH', client_id: 'admin-ui', expires_at: future })
     const session = new Session(config(), failingFetch)
     expect(await session.getAccessToken()).toBe('FRESH')
   })
@@ -188,7 +188,7 @@ describe('Session.getAccessToken', () => {
   })
 
   it('clears the cached token on logout', () => {
-    writeCachedToken(home, { access_token: 'AT', client_id: 'admin-cli' })
+    writeCachedToken(home, { access_token: 'AT', client_id: 'admin-ui' })
     const session = new Session(config(), failingFetch)
     session.logout()
     expect(readCachedToken(home)).toBeUndefined()

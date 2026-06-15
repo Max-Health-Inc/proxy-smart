@@ -33,7 +33,7 @@ Settings resolve in this precedence order (highest first):
 | Setting        | Flag                | Env var                       | Default                  |
 | -------------- | ------------------- | ----------------------------- | ------------------------ |
 | Proxy base URL | `--url`             | `PROXY_SMART_URL`             | `http://localhost:8445`  |
-| Client id      | `--client-id`       | `PROXY_SMART_CLIENT_ID`       | `admin-cli`              |
+| Client id      | `--client-id`       | `PROXY_SMART_CLIENT_ID`       | `admin-ui`               |
 | Client secret  | `--client-secret`   | `PROXY_SMART_CLIENT_SECRET`   | (unset)                  |
 | Scopes         | `--scope`           | `PROXY_SMART_SCOPE`           | `openid profile email`   |
 | CLI home dir   | —                   | `PROXY_SMART_HOME`            | `~/.proxy-smart`         |
