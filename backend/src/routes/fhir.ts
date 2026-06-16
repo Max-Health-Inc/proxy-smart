@@ -1,7 +1,6 @@
 import { Elysia, t } from 'elysia'
 import fetch from 'cross-fetch'
 import { validateToken } from '../lib/auth'
-import { getFhirResourceAudiences } from '../lib/token-audience'
 import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
 import { config } from '../config'
 import { fhirServerStore, getServerByName, getServerInfoByName } from '../lib/fhir-server-store'
@@ -41,9 +40,14 @@ async function proxyFHIR({ params, request, set }: any) {
         set.status = 401
         return { error: 'Authentication required' }
       }
-      // SMART on FHIR: the access token's aud is the FHIR resource server base
-      // (this proxy's FHIR base / configured upstream base), NOT a client id.
-      tokenPayload = await validateToken(auth, { audience: getFhirResourceAudiences() })
+      // SMART App Launch 2.2.0: the access-token format is implementation-defined
+      // and does NOT require a JWT `aud` claim, so browser SMART app tokens never
+      // carry the FHIR base as `aud` (Keycloak defaults aud="account"). Per issue
+      // #355 JWT `aud`-claim validation is intentionally NOT enforced here. FHIR
+      // access is gated instead by: issuer/signature/expiry (validateToken), the
+      // `aud`/`resource` REQUEST parameter validated at /authorize (#355 Phase 2),
+      // and SMART scope enforcement (enforceScopeAccess, defaults to "enforce").
+      tokenPayload = await validateToken(auth, { enforceAudience: false })
     }
 
     // 2) Consent + IAL enforcement check
@@ -442,7 +446,11 @@ export const fhirRoutes = new Elysia({ prefix: `/${config.name}/:server_name/:fh
     }
 
     try {
-      await validateToken(auth, { audience: getFhirResourceAudiences() })
+      // SMART App Launch 2.2.0: token format is implementation-defined and does
+      // not require a JWT `aud` claim; per #355 JWT `aud` is not enforced for the
+      // FHIR call sites (issuer/signature/expiry + authorize-time aud param +
+      // SMART scope are the gates). Keep this aligned with the proxy call site.
+      await validateToken(auth, { enforceAudience: false })
 
       // Get server info by name (automatically initializes if needed)
       const serverInfo = await getServerInfoByName(params.server_name)
