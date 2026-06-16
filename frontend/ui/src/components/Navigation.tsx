@@ -24,6 +24,7 @@ import {
   Heart,
   Sparkles,
   Server,
+  ShieldCheck,
   Languages,
   Check,
   Target,
@@ -123,14 +124,20 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
       description: t('App Management'),
       icon: Zap
     },
-    { 
-      id: 'users', 
-      label: t('Users'), 
+    {
+      id: 'users',
+      label: t('Users'),
       description: t('Users & Federation'),
       icon: Users
     },
-    { 
-      id: 'servers', 
+    {
+      id: 'roles',
+      label: t('Roles'),
+      description: t('Role Management'),
+      icon: ShieldCheck
+    },
+    {
+      id: 'servers',
       label: t('Servers'), 
       description: t('FHIR & DICOM Server Management'),
       icon: Server
