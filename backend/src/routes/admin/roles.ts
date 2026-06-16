@@ -12,17 +12,22 @@ import {
 } from '@/schemas'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { enrichRole, isTechnicalRole, REPRESENTED_SCOPE_SET_ATTR } from '@/lib/role-metadata'
 
 /**
  * Healthcare Roles & Permissions Management
- * 
+ *
  * All routes now use the user's access token to perform operations,
  * acting as a secure proxy for Keycloak admin operations.
+ *
+ * Roles carry DESCRIPTIVE metadata only: a role may reference a scope set as a
+ * human-readable label of the "typical scopes it represents". This is never used
+ * for FHIR/MCP access enforcement (that stays scope-based in smart-access-control.ts).
  */
 export const rolesRoutes = new Elysia({ prefix: '/roles' })
   .use(keycloakPlugin)
 
-  .get('/', async ({ getAdmin, headers, set }): Promise<RoleResponseType[] | ErrorResponseType> => {
+  .get('/', async ({ getAdmin, headers, query, set }): Promise<RoleResponseType[] | ErrorResponseType> => {
     try {
       // Extract user's token from Authorization header
       const token = extractBearerToken(headers)
@@ -34,18 +39,28 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       const admin = await getAdmin(token)
       const realmRoles = await admin.roles.find()
 
-      return realmRoles;
+      // Hide plumbing roles (offline_access, default-roles-*, uma_authorization)
+      // by default. Pass ?includeTechnical=true to include them.
+      const includeTechnical = query.includeTechnical === 'true'
+      const filtered = includeTechnical
+        ? realmRoles
+        : realmRoles.filter(role => !isTechnicalRole(role))
+
+      return filtered.map(enrichRole)
     } catch (error) {
       return handleAdminError(error, set)
     }
   }, {
+    query: t.Object({
+      includeTechnical: t.Optional(t.String({ description: 'Set to "true" to include technical/plumbing roles (default hides them)' }))
+    }),
     response: {
       200: t.Array(RoleResponse),
       ...CommonErrorResponses
     },
     detail: {
       summary: 'List All Roles',
-      description: 'Get all roles',
+      description: 'Get all realm roles, enriched with descriptive metadata (isTechnical flag + represented scope set). Technical/plumbing roles are hidden unless ?includeTechnical=true.',
       tags: ['roles']
     }
   })
@@ -65,14 +80,18 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
         description: body.description,
         attributes: {
           smart_role: ['true'],
-          fhir_scopes: body.fhirScopes || []
+          fhir_scopes: body.fhirScopes || [],
+          // Descriptive label only: the scope set this role represents.
+          ...(body.representedScopeSetId
+            ? { [REPRESENTED_SCOPE_SET_ATTR]: [body.representedScopeSetId] }
+            : {})
         }
       }
 
       await admin.roles.create(roleData)
-      // Return the created role object (fetch by name)
+      // Return the created role object (fetch by name), enriched with metadata.
       const created = await admin.roles.findOneByName({ name: body.name })
-      return created ?? {}
+      return created ? enrichRole(created) : {}
     } catch (error) {
       return handleAdminError(error, set)
     }
@@ -106,7 +125,7 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
         return { error: 'Role not found' }
       }
 
-      return role
+      return enrichRole(role)
     } catch (error) {
       return handleAdminError(error, set)
     }
@@ -142,12 +161,28 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
         return { error: 'Role not found' }
       }
 
+      // Resolve the represented scope-set attribute:
+      //  - undefined  -> leave as-is
+      //  - ''         -> clear the link
+      //  - non-empty  -> set the link
+      const existingScopeSet = role.attributes?.[REPRESENTED_SCOPE_SET_ATTR]
+      let scopeSetAttr: { [REPRESENTED_SCOPE_SET_ATTR]: string[] } | Record<string, never>
+      if (body.representedScopeSetId === undefined) {
+        scopeSetAttr = existingScopeSet ? { [REPRESENTED_SCOPE_SET_ATTR]: existingScopeSet as string[] } : {}
+      } else if (body.representedScopeSetId === '') {
+        scopeSetAttr = {}
+      } else {
+        scopeSetAttr = { [REPRESENTED_SCOPE_SET_ATTR]: [body.representedScopeSetId] }
+      }
+
+      const { [REPRESENTED_SCOPE_SET_ATTR]: _omit, ...attrsWithoutScopeSet } = role.attributes ?? {}
       const updateData = {
         ...role,
         description: body.description ?? role.description,
         attributes: {
-          ...role.attributes,
-          fhir_scopes: body.fhirScopes || role.attributes?.fhir_scopes || []
+          ...attrsWithoutScopeSet,
+          fhir_scopes: body.fhirScopes || role.attributes?.fhir_scopes || [],
+          ...scopeSetAttr
         }
       }
 
@@ -229,7 +264,7 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       }
 
       const clientRoles = await admin.clients.listRoles({ id: clients[0].id! })
-      return clientRoles
+      return clientRoles.map(enrichRole)
     } catch (error) {
       return handleAdminError(error, set)
     }
