@@ -12,9 +12,22 @@ export interface ValidateTokenOptions {
    * different audiences (proxy client id for admin/MCP; FHIR resource base URL
    * for the FHIR/DICOM proxy). When omitted, a config-derived default set of
    * acceptable audiences applies. Audience is ALWAYS enforced (fail-closed)
-   * unless the `JWT_AUDIENCE_ENFORCEMENT=disabled` escape hatch is set.
+   * unless the `JWT_AUDIENCE_ENFORCEMENT=disabled` escape hatch is set, or
+   * `enforceAudience` is explicitly false for this call site.
    */
   audience?: string | string[]
+  /**
+   * Whether to enforce the JWT `aud`/`azp` audience binding for this call site.
+   * Defaults to `true` (fail-closed). Set to `false` only for the FHIR proxy:
+   * per SMART App Launch 2.2.0 the access-token format is implementation-defined
+   * and does NOT require a JWT `aud` claim, so SMART app tokens never carry the
+   * FHIR base as `aud`. The anti-leakage guarantee for FHIR is instead met by the
+   * `aud`/`resource` REQUEST parameter validated at /authorize (issue #355
+   * Phase 2), while issuer/signature/expiry verification and SMART scope
+   * enforcement remain the gates. This flag is a no-op for callers that omit it;
+   * admin and MCP call sites keep audience enforced.
+   */
+  enforceAudience?: boolean
 }
 
 /** Keycloak-specific JWT payload with realm/resource access claims */
@@ -122,18 +135,24 @@ export async function validateToken(token: string, options?: ValidateTokenOption
     const verified = jwt.verify(token, key, verifyOptions) as JwtPayload
     logger.auth.debug('Token verified successfully')
 
-    // Audience binding (fail-closed). Determine the expected audience(s):
-    //  - explicit per-call-site audience (options.audience), else
-    //  - the legacy JWT_EXPECTED_AUDIENCE env var (back-compat), else
-    //  - the config-derived default acceptable-audience set.
-    const expectedAudience = options?.audience ?? process.env.JWT_EXPECTED_AUDIENCE ?? undefined
-    if (!isAudienceAccepted(verified.aud, (verified as Record<string, unknown>).azp, expectedAudience)) {
-      logger.auth.warn('Token rejected — audience not accepted', {
-        aud: verified.aud,
-        azp: (verified as Record<string, unknown>).azp,
-        expectedAudience,
-      })
-      throw new AuthenticationError('Token audience is not accepted by this resource')
+    // Audience binding (fail-closed by default). A call site MAY opt out by
+    // passing `enforceAudience: false` (FHIR proxy only — see ValidateTokenOptions
+    // and issue #355). Issuer/signature/expiry above are verified regardless, so
+    // opting out never weakens those guarantees.
+    if (options?.enforceAudience !== false) {
+      // Determine the expected audience(s):
+      //  - explicit per-call-site audience (options.audience), else
+      //  - the legacy JWT_EXPECTED_AUDIENCE env var (back-compat), else
+      //  - the config-derived default acceptable-audience set.
+      const expectedAudience = options?.audience ?? process.env.JWT_EXPECTED_AUDIENCE ?? undefined
+      if (!isAudienceAccepted(verified.aud, (verified as Record<string, unknown>).azp, expectedAudience)) {
+        logger.auth.warn('Token rejected — audience not accepted', {
+          aud: verified.aud,
+          azp: (verified as Record<string, unknown>).azp,
+          expectedAudience,
+        })
+        throw new AuthenticationError('Token audience is not accepted by this resource')
+      }
     }
 
     return verified

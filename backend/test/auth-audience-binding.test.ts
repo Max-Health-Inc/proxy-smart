@@ -239,3 +239,35 @@ describe('validateToken — route audience contracts', () => {
     expect(await rejects(validateToken(token, { audience: getFhirResourceAudiences() }))).toBe(true)
   })
 })
+
+/**
+ * The FHIR proxy passes `enforceAudience: false`. Per SMART App Launch 2.2.0 the
+ * access-token format is implementation-defined and does NOT require a JWT `aud`
+ * claim, so browser SMART app tokens carry aud="account" (Keycloak default), not
+ * the FHIR base — see issue #355, which intentionally skips JWT-aud validation.
+ * FHIR access is gated instead by issuer + the authorize-time `aud` param + SMART
+ * SCOPE (enforceScopeAccess; its deny behaviour is covered exhaustively in
+ * smart-access-control.test.ts). These tests prove the relaxation drops the
+ * audience check ONLY (issuer/signature/expiry stay enforced) and is a no-op for
+ * every caller that does not opt in.
+ */
+describe('validateToken — enforceAudience: false (FHIR proxy relaxation, SMART App Launch + #355)', () => {
+  it('accepts a browser SMART app token whose aud is NOT the FHIR base (aud=account)', async () => {
+    const token = mintToken({ aud: 'account', azp: 'aihr-portal' })
+    const payload = await validateToken(token, { enforceAudience: false })
+    expect(payload.sub).toBe('user-1')
+  })
+
+  it('still REJECTS a wrong-issuer token even with enforceAudience:false (relaxation drops aud, not issuer)', async () => {
+    const token = signTestToken({
+      iss: 'https://evil.example.com/realms/proxy-smart',
+      sub: 'user-1', aud: 'account', azp: 'aihr-portal',
+    })
+    expect(await rejects(validateToken(token, { enforceAudience: false }))).toBe(true)
+  })
+
+  it('is a no-op for other callers: a non-matching aud is still rejected when enforceAudience is omitted', async () => {
+    const token = mintToken({ aud: 'patient-portal', azp: 'patient-portal' })
+    expect(await rejects(validateToken(token))).toBe(true)
+  })
+})

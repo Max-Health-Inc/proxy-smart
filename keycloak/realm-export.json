@@ -515,7 +515,7 @@
     },
     {
       "name": "resource-indicators",
-      "description": "RFC 8707 resource indicators: pre-populates the access-token aud with the resource-client ids (fhir-resource-server, mcp-resource-server) so Keycloak's resource-indicators post-processor (feature gated) can replace aud with the requested resource. Also guards against the null-aud NPE (#49077).",
+      "description": "RFC 8707 resource indicators: pre-populates access-token aud with resource-client ids (fhir-resource-server, mcp-resource-server) so Keycloak's resource-indicators post-processor can set aud to the requested resource. Guards null-aud NPE (#49077).",
       "protocol": "openid-connect",
       "attributes": {
         "include.in.token.scope": "false",
