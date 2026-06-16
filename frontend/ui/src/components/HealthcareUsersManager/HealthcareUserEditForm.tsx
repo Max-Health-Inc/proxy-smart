@@ -19,10 +19,11 @@ import {
   SelectValue,
   Checkbox,
 } from '@proxy-smart/shared-ui';
-import { Shield, Server, Database, Trash2, Link2, Unlink, Plus, Undo2 } from 'lucide-react';
+import { Shield, Server, Database, Trash2, Link2, Unlink, Plus, Undo2, Info } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
 import type { FederatedIdentity, IdentityProviderResponse } from '@/lib/api-client';
+import { roleSubtitle, isPlumbingRoleName, type RolesMeta } from './rolePickerHelpers';
 import { createPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
 
@@ -66,6 +67,7 @@ interface HealthcareUserEditFormProps {
   availableRealmRoles: string[];
   availableClientRoles: Record<string, string[]>;
   getAllAvailableRoles: () => string[];
+  rolesMeta?: RolesMeta;
   federatedIdentities?: FederatedIdentity[];
   availableIdPs?: IdentityProviderResponse[];
 }
@@ -95,6 +97,7 @@ export function HealthcareUserEditForm({
   availableRealmRoles,
   availableClientRoles,
   getAllAvailableRoles,
+  rolesMeta,
   federatedIdentities,
   availableIdPs,
 }: HealthcareUserEditFormProps) {
@@ -245,6 +248,7 @@ export function HealthcareUserEditForm({
             availableRealmRoles={availableRealmRoles}
             availableClientRoles={availableClientRoles}
             getAllAvailableRoles={getAllAvailableRoles}
+            rolesMeta={rolesMeta}
           />
 
           <DialogFooter>
@@ -265,7 +269,7 @@ export function HealthcareUserEditForm({
 
 function FederatedIdentitySection({
   t,
-  userId,
+  userId: _userId,
   federatedIdentities,
   availableIdPs,
   pendingOps,
@@ -603,6 +607,7 @@ function RoleManagementSection({
   availableRealmRoles,
   availableClientRoles,
   getAllAvailableRoles,
+  rolesMeta,
 }: {
   t: (key: string) => string;
   formData: EditUserFormData;
@@ -610,12 +615,21 @@ function RoleManagementSection({
   availableRealmRoles: string[];
   availableClientRoles: Record<string, string[]>;
   getAllAvailableRoles: () => string[];
+  rolesMeta?: RolesMeta;
 }) {
+  const noScopes = t('No typical scopes set');
+  const pickableRealmRoles = availableRealmRoles.filter(r => !isPlumbingRoleName(r));
   return (
     <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
       <div className="flex items-center gap-2">
         <Shield className="w-4 h-4 text-primary" />
         <h4 className="font-semibold">{t('Role Management')}</h4>
+      </div>
+
+      {/* Helper line: roles are admin-console access + clinical-intent labels, not enforced FHIR access. */}
+      <div className="flex items-start gap-2 text-xs text-muted-foreground">
+        <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+        <span>{t('Roles control access to this admin console and act as labels for clinical intent. They are not enforced as FHIR data access.')}</span>
       </div>
 
       {/* Primary Role */}
@@ -624,7 +638,7 @@ function RoleManagementSection({
         <Select value={formData.primaryRole || undefined} onValueChange={(v) => setFormData(prev => ({ ...prev, primaryRole: v }))}>
           <SelectTrigger><SelectValue placeholder={t('Select primary role...')} /></SelectTrigger>
           <SelectContent>
-            {getAllAvailableRoles().map((role) => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+            {getAllAvailableRoles().filter(r => !isPlumbingRoleName(r)).map((role) => <SelectItem key={role} value={role}>{role}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -632,48 +646,67 @@ function RoleManagementSection({
       {/* Realm Roles */}
       <div>
         <Label className="mb-2 block">{t('Realm Roles')}</Label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {availableRealmRoles.map((role) => (
-            <div key={role} className="flex items-center space-x-2">
-              <Checkbox
-                id={`edit-realm-${role}`}
-                checked={formData.realmRoles.includes(role)}
-                onCheckedChange={(checked) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    realmRoles: checked === true ? [...prev.realmRoles, role] : prev.realmRoles.filter(r => r !== role),
-                  }));
-                }}
-              />
-              <Label htmlFor={`edit-realm-${role}`} className="text-sm capitalize">{role}</Label>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {pickableRealmRoles.map((role) => {
+            const meta = rolesMeta?.[role];
+            const subtitle = roleSubtitle(meta, noScopes);
+            return (
+              <div key={role} className="flex items-start space-x-2" title={subtitle}>
+                <Checkbox
+                  id={`edit-realm-${role}`}
+                  className="mt-0.5"
+                  checked={formData.realmRoles.includes(role)}
+                  onCheckedChange={(checked) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      realmRoles: checked === true ? [...prev.realmRoles, role] : prev.realmRoles.filter(r => r !== role),
+                    }));
+                  }}
+                />
+                <div className="min-w-0">
+                  <Label htmlFor={`edit-realm-${role}`} className="text-sm capitalize">{role}</Label>
+                  {meta?.description && <p className="text-xs text-muted-foreground truncate">{meta.description}</p>}
+                  {(meta?.representedScopes?.length ?? 0) > 0 && (
+                    <p className="text-xs text-muted-foreground truncate">{t('Typical scopes')}: {meta!.representedScopes!.join(', ')}</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Client Roles */}
       <div>
         <Label className="mb-2 block">{t('Admin UI Roles')}</Label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {availableClientRoles['admin-ui']?.map((role) => (
-            <div key={role} className="flex items-center space-x-2">
-              <Checkbox
-                id={`edit-client-${role}`}
-                checked={formData.clientRoles['admin-ui']?.includes(role) || false}
-                onCheckedChange={(checked) => {
-                  const current = formData.clientRoles['admin-ui'] || [];
-                  setFormData(prev => ({
-                    ...prev,
-                    clientRoles: {
-                      ...prev.clientRoles,
-                      'admin-ui': checked === true ? [...current, role] : current.filter(r => r !== role),
-                    },
-                  }));
-                }}
-              />
-              <Label htmlFor={`edit-client-${role}`} className="text-sm capitalize">{role.replace('-', ' ')}</Label>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {availableClientRoles['admin-ui']?.map((role) => {
+            const meta = rolesMeta?.[role];
+            const subtitle = roleSubtitle(meta, noScopes);
+            return (
+              <div key={role} className="flex items-start space-x-2" title={subtitle}>
+                <Checkbox
+                  id={`edit-client-${role}`}
+                  className="mt-0.5"
+                  checked={formData.clientRoles['admin-ui']?.includes(role) || false}
+                  onCheckedChange={(checked) => {
+                    const current = formData.clientRoles['admin-ui'] || [];
+                    setFormData(prev => ({
+                      ...prev,
+                      clientRoles: {
+                        ...prev.clientRoles,
+                        'admin-ui': checked === true ? [...current, role] : current.filter(r => r !== role),
+                      },
+                    }));
+                  }}
+                />
+                <div className="min-w-0">
+                  <Label htmlFor={`edit-client-${role}`} className="text-sm capitalize">{role.replace('-', ' ')}</Label>
+                  {meta?.description && <p className="text-xs text-muted-foreground truncate">{meta.description}</p>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
