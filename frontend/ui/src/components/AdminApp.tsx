@@ -6,6 +6,7 @@ import { McpEndpointSettings } from './McpEndpointSettings';
 import { useState, useEffect } from 'react';
 import { Navigation } from './Navigation';
 import { UsersAndFederationManager } from './UsersAndFederationManager';
+import { RolesManager } from './RolesManager';
 import { useAuth } from '../stores/authStore';
 import { useAppStore } from '../stores/appStore';
 import { LoginForm } from './LoginForm';
@@ -137,6 +138,7 @@ export function AdminApp() {
                             {currentTab === 'dashboard' && <SmartProxyOverview onNavigate={handleTabChange} />}
                             {currentTab === 'smart-apps' && <SmartAppsManager />}
                             {currentTab === 'users' && <UsersAndFederationManager />}
+                            {currentTab === 'roles' && <RolesManager />}
                             {currentTab === 'servers' && <ServersManager />}
                             {currentTab === 'ai-tools' && <McpEndpointSettings />}
                             {currentTab === 'idp' && <IdPManager />}

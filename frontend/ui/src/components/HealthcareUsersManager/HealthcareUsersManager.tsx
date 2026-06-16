@@ -5,9 +5,9 @@ import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { HealthcareUsersHeader } from './HealthcareUsersHeader';
 import { HealthcareUsersStats } from './HealthcareUsersStats';
 import { HealthcareUserAddForm } from './HealthcareUserAddForm';
-import { HealthcareUserEditForm, type PendingIdPOperation } from './HealthcareUserEditForm';
+import { HealthcareUserEditForm } from './HealthcareUserEditForm';
 import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } from '@/lib/types/api';
-import type { FederatedIdentity, IdentityProviderResponse } from '@/lib/api-client';
+import type { FederatedIdentity, IdentityProviderResponse, RoleResponse } from '@/lib/api-client';
 import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';
@@ -123,6 +123,9 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
   // Dynamic roles fetched from Keycloak
   const [availableRealmRoles, setAvailableRealmRoles] = useState<string[]>([]);
   const [availableClientRoles, setAvailableClientRoles] = useState<Record<string, string[]>>({ 'admin-ui': [] });
+  // Full role metadata (description + typical scopes), keyed by role name, so the
+  // pickers can show rich subtitles instead of bare names.
+  const [rolesMeta, setRolesMeta] = useState<Record<string, RoleResponse>>({});
 
   // Identity providers and per-user federated identities
   const [availableIdPs, setAvailableIdPs] = useState<IdentityProviderResponse[]>([]);
@@ -158,12 +161,24 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
       clientApis.identityProviders.getAdminIdps().catch(() => []),
     ])
       .then(([realmRoles, adminUiRoles, idps]) => {
-        const realmRoleNames = realmRoles
+        // getAdminRoles() already hides technical roles; defensively drop plumbing too.
+        const nonTechnicalRoles = realmRoles.filter(r =>
+          !r.isTechnical &&
+          !(r.name ?? '').startsWith('default-roles-') &&
+          !['offline_access', 'uma_authorization'].includes(r.name ?? '')
+        );
+        const realmRoleNames = nonTechnicalRoles
           .map(r => r.name)
-          .filter((n): n is string => !!n)
-          .filter(n => !n.startsWith('default-roles-'));
+          .filter((n): n is string => !!n);
         setAvailableRealmRoles(realmRoleNames);
         setAvailableClientRoles({ 'admin-ui': adminUiRoles });
+
+        // Index full metadata by role name (realm roles carry description + scopes).
+        const meta: Record<string, RoleResponse> = {};
+        for (const role of nonTechnicalRoles) {
+          if (role.name) meta[role.name] = role;
+        }
+        setRolesMeta(meta);
         setAvailableIdPs(idps);
       })
       .catch(() => { /* Fallback: leave empty */ });
@@ -365,6 +380,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
         availableRealmRoles={availableRealmRoles}
         availableClientRoles={availableClientRoles}
         getAllAvailableRoles={getAllAvailableRoles}
+        rolesMeta={rolesMeta}
       />
 
       {/* Edit User Form */}
@@ -380,6 +396,10 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
             setSubmitting(true);
             setError(null);
             
+            // NOTE: roles are deliberately OMITTED from the PUT body. The PUT replaces
+            // ALL of a user's roles (destructive). We instead diff against the user's
+            // original roles and apply only the deltas via the additive endpoints, so
+            // editing one role no longer wipes the rest.
             const updateRequest = {
               firstName: formData.firstName,
               lastName: formData.lastName,
@@ -388,14 +408,51 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
               organization: formData.organization || undefined,
               fhirUser: formData.fhirUser || undefined,
               fhirPersons: (formData.fhirPersons && formData.fhirPersons.length > 0) ? formData.fhirPersons : undefined,
-              realmRoles: formData.realmRoles.length > 0 ? formData.realmRoles : undefined,
-              clientRoles: Object.keys(formData.clientRoles).length > 0 ? formData.clientRoles : undefined,
             };
 
             const updatedUser = await clientApis.healthcareUsers.putAdminHealthcareUsersByUserId({
               userId: formData.id,
               updateHealthcareUserRequest: updateRequest
             });
+
+            // ── Apply role deltas additively ──────────────────────────────────
+            const original = editingUser;
+            const originalRealm = original?.realmRoles ?? [];
+            const originalClient = original?.clientRoles?.['admin-ui'] ?? [];
+            const nextRealm = formData.realmRoles;
+            const nextClient = formData.clientRoles['admin-ui'] ?? [];
+
+            const addedRealm = nextRealm.filter(r => !originalRealm.includes(r));
+            const removedRealm = originalRealm.filter(r => !nextRealm.includes(r));
+            const addedClient = nextClient.filter(r => !originalClient.includes(r));
+            const removedClient = originalClient.filter(r => !nextClient.includes(r));
+
+            if (addedRealm.length > 0) {
+              await clientApis.healthcareUsers.postAdminHealthcareUsersByUserIdRealmRoles({
+                userId: formData.id,
+                postAdminHealthcareUsersByUserIdRealmRolesRequest: { roles: addedRealm },
+              });
+            }
+            for (const roleName of removedRealm) {
+              await clientApis.healthcareUsers.deleteAdminHealthcareUsersByUserIdRealmRolesByRoleName({
+                userId: formData.id,
+                roleName,
+              });
+            }
+            if (addedClient.length > 0) {
+              await clientApis.healthcareUsers.postAdminHealthcareUsersByUserIdClientRolesByClientId({
+                userId: formData.id,
+                clientId: 'admin-ui',
+                postAdminHealthcareUsersByUserIdRealmRolesRequest: { roles: addedClient },
+              });
+            }
+            for (const roleName of removedClient) {
+              await clientApis.healthcareUsers.deleteAdminHealthcareUsersByUserIdClientRolesByClientIdByRoleName({
+                userId: formData.id,
+                clientId: 'admin-ui',
+                roleName,
+              });
+            }
 
             // Execute pending IdP operations after successful user update
             for (const op of pendingIdPOps) {
@@ -419,9 +476,16 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
               setEditingUserFederatedIdentities(updatedIdentities);
             }
 
-            // Update the user in the local state
-            const transformedUser = transformApiUser(updatedUser);
-            setUsers(users.map(user => 
+            // Update the user in the local state. The PUT response does not carry
+            // role mappings, so merge the edited role selections back in explicitly
+            // (they were applied via the additive endpoints above).
+            const transformedUser = {
+              ...transformApiUser(updatedUser),
+              realmRoles: nextRealm,
+              clientRoles: { ...formData.clientRoles, 'admin-ui': nextClient },
+              primaryRole: getPrimaryRole(nextRealm, { 'admin-ui': nextClient }),
+            };
+            setUsers(users.map(user =>
               user.id === formData.id ? transformedUser : user
             ));
             
@@ -454,6 +518,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
         availableRealmRoles={availableRealmRoles}
         availableClientRoles={availableClientRoles}
         getAllAvailableRoles={getAllAvailableRoles}
+        rolesMeta={rolesMeta}
         federatedIdentities={editingUserFederatedIdentities}
         availableIdPs={availableIdPs}
       />
