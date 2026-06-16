@@ -1,24 +1,24 @@
 Updating the configuration and installing your custom providers, if any. Please wait.
-2026-06-16 19:00:16,629 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 7780ms
+2026-06-16 19:06:11,194 INFO  [io.quarkus.deployment.QuarkusAugmentor] (main) Quarkus augmentation completed in 8261ms
 Running the server in development mode. DO NOT use this configuration in production.
-2026-06-16 19:00:20,159 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
-2026-06-16 19:00:21,165 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
-2026-06-16 19:00:21,199 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
-2026-06-16 19:00:21,200 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1, resource-indicators:v1
-2026-06-16 19:00:21,201 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
-2026-06-16 19:00:22,219 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
-2026-06-16 19:00:29,884 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
-2026-06-16 19:00:30,252 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_529649, Site name: null
-2026-06-16 19:00:30,440 INFO  [org.keycloak.quarkus.runtime.storage.database.jpa.DatabaseIndexChecker] (db-index-checker) Running database index checker
-2026-06-16 19:00:30,480 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 07:00:30, then every PT12H
-2026-06-16 19:00:30,570 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
-2026-06-16 19:00:30,814 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
-2026-06-16 19:00:32,471 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
-2026-06-16 19:00:33,318 INFO  [org.hibernate.orm.jdbc.batch] (main) HHH100503: JDBC batch still contained JDBC statements on release
-2026-06-16 19:00:33,368 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
-2026-06-16 19:00:33,392 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
-2026-06-16 19:00:33,392 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Database operation failed
-2026-06-16 19:00:33,392 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: could not execute batch [Batch entry 0 <unknown> was aborted: ERROR: value too long for type character varying(255)  Call getNextException to see other errors in the batch.] [update CLIENT set ALWAYS_DISPLAY_IN_CONSOLE=?,BASE_URL=?,BEARER_ONLY=?,CLIENT_AUTHENTICATOR_TYPE=?,CLIENT_ID=?,CONSENT_REQUIRED=?,DESCRIPTION=?,DIRECT_ACCESS_GRANTS_ENABLED=?,ENABLED=?,FRONTCHANNEL_LOGOUT=?,FULL_SCOPE_ALLOWED=?,IMPLICIT_FLOW_ENABLED=?,MANAGEMENT_URL=?,NAME=?,NODE_REREG_TIMEOUT=?,NOT_BEFORE=?,PROTOCOL=?,PUBLIC_CLIENT=?,REALM_ID=?,REGISTRATION_TOKEN=?,ROOT_URL=?,SECRET=?,SERVICE_ACCOUNTS_ENABLED=?,STANDARD_FLOW_ENABLED=?,SURROGATE_AUTH_REQUIRED=? where ID=?]
-2026-06-16 19:00:33,392 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Batch entry 0 <unknown> was aborted: ERROR: value too long for type character varying(255)  Call getNextException to see other errors in the batch.
-2026-06-16 19:00:33,393 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: ERROR: value too long for type character varying(255)
-2026-06-16 19:00:33,393 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
+2026-06-16 19:06:15,096 INFO  [org.infinispan.CONTAINER] (main) ISPN000974: Virtual threads support: enabled
+2026-06-16 19:06:16,093 INFO  [org.hibernate.orm.jdbc.batch] (JPA Startup Thread) HHH100501: Automatic JDBC statement batching enabled (maximum batch size 32)
+2026-06-16 19:06:16,126 INFO  [org.keycloak.common.Profile] (main) Preview features enabled: token-exchange:v1
+2026-06-16 19:06:16,127 WARN  [org.keycloak.common.Profile] (main) Experimental features enabled: cimd:v1, resource-indicators:v1
+2026-06-16 19:06:16,127 WARN  [org.keycloak.common.Profile] (main) Deprecated features enabled: token-exchange:v1
+2026-06-16 19:06:17,238 INFO  [org.keycloak.quarkus.runtime.storage.database.liquibase.QuarkusJpaUpdaterProvider] (main) Initializing database schema. Using changelog META-INF/jpa-changelog-master.xml
+2026-06-16 19:06:25,105 INFO  [org.infinispan.CONTAINER] (main) ISPN000556: Starting user marshaller 'org.infinispan.commons.marshall.ImmutableProtoStreamMarshaller'
+2026-06-16 19:06:25,424 INFO  [org.keycloak.connections.infinispan.DefaultInfinispanConnectionProviderFactory] (main) Node name: node_505953, Site name: null
+2026-06-16 19:06:25,598 INFO  [org.keycloak.quarkus.runtime.storage.database.jpa.DatabaseIndexChecker] (db-index-checker) Running database index checker
+2026-06-16 19:06:25,686 INFO  [org.keycloak.models.workflow.WorkflowsEventListenerFactory] (main) Workflow runner task scheduled: next execution at 07:06:25, then every PT12H
+2026-06-16 19:06:25,725 INFO  [org.keycloak.exportimport.dir.DirImportProvider] (main) Importing from directory /opt/keycloak/bin/../data/import
+2026-06-16 19:06:25,995 INFO  [org.keycloak.services] (main) KC-SERVICES0050: Initializing master realm
+2026-06-16 19:06:27,439 INFO  [org.keycloak.exportimport.singlefile.SingleFileImportProvider] (main) Full importing from file /opt/keycloak/bin/../data/import/realm-export.json
+2026-06-16 19:06:28,338 INFO  [org.hibernate.orm.jdbc.batch] (main) HHH100503: JDBC batch still contained JDBC statements on release
+2026-06-16 19:06:28,405 INFO  [com.arjuna.ats.jbossatx] (main) ARJUNA032014: Stopping transaction recovery manager
+2026-06-16 19:06:28,440 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Failed to start server in (development) mode
+2026-06-16 19:06:28,440 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Database operation failed
+2026-06-16 19:06:28,440 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: could not execute batch [Batch entry 0 <unknown> was aborted: ERROR: value too long for type character varying(255)  Call getNextException to see other errors in the batch.] [update CLIENT set ALWAYS_DISPLAY_IN_CONSOLE=?,BASE_URL=?,BEARER_ONLY=?,CLIENT_AUTHENTICATOR_TYPE=?,CLIENT_ID=?,CONSENT_REQUIRED=?,DESCRIPTION=?,DIRECT_ACCESS_GRANTS_ENABLED=?,ENABLED=?,FRONTCHANNEL_LOGOUT=?,FULL_SCOPE_ALLOWED=?,IMPLICIT_FLOW_ENABLED=?,MANAGEMENT_URL=?,NAME=?,NODE_REREG_TIMEOUT=?,NOT_BEFORE=?,PROTOCOL=?,PUBLIC_CLIENT=?,REALM_ID=?,REGISTRATION_TOKEN=?,ROOT_URL=?,SECRET=?,SERVICE_ACCOUNTS_ENABLED=?,STANDARD_FLOW_ENABLED=?,SURROGATE_AUTH_REQUIRED=? where ID=?]
+2026-06-16 19:06:28,440 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: Batch entry 0 <unknown> was aborted: ERROR: value too long for type character varying(255)  Call getNextException to see other errors in the batch.
+2026-06-16 19:06:28,441 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) ERROR: ERROR: value too long for type character varying(255)
+2026-06-16 19:06:28,441 ERROR [org.keycloak.quarkus.runtime.cli.ExecutionExceptionHandler] (main) For more details run the same command passing the '--verbose' option. Also you can use '--help' to see the details about the usage of the particular command.
