@@ -5,6 +5,7 @@ import { config } from '@/config'
 import { checkKeycloakConnection, isKeycloakAccessible } from '@/init'
 import { AuthConfigResponse } from '@/schemas/auth/config'
 import { rateLimit } from '@/lib/rate-limit'
+import { sanitizeDiscoveryDocument } from '@/lib/oidc-discovery'
 
 /**
  * Authentication routes - OAuth2 and Dynamic Client Registration
@@ -45,15 +46,10 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
       const oidcConfig = await response.json()
       const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
 
-      // Rewrite endpoints to proxy URLs so MCP clients go through our auth layer
+      // Rewrite proxy-fronted endpoints, strip mtls_endpoint_aliases, and drop
+      // every remaining Keycloak-direct URL so nothing bypasses the proxy.
       return {
-        ...oidcConfig,
-        authorization_endpoint: `${baseUrl}/auth/authorize`,
-        token_endpoint: `${baseUrl}/auth/token`,
-        jwks_uri: `${baseUrl}/.well-known/jwks.json`,
-        registration_endpoint: `${baseUrl}/auth/register`,
-        introspection_endpoint: `${baseUrl}/auth/introspect`,
-        userinfo_endpoint: `${baseUrl}/auth/userinfo`,
+        ...sanitizeDiscoveryDocument(oidcConfig, baseUrl),
         client_id_metadata_document_supported: true,
       }
     } catch {
@@ -108,6 +104,7 @@ export const authRoutes = new Elysia({ prefix: '/auth', tags: ['authentication']
         issuer: baseUrl,
         authorization_endpoint: `${baseUrl}/auth/authorize`,
         token_endpoint: `${baseUrl}/auth/token`,
+        device_authorization_endpoint: `${baseUrl}/auth/device`,
         jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
         scopes_supported: oidcConfig.scopes_supported,

@@ -24,6 +24,10 @@ const config = {
   backendDomain: app.node.tryGetContext('backendDomain') || 'api.proxy-smart.com',
   hostedZoneId: app.node.tryGetContext('hostedZoneId') || 'Z023389060QW09IU3L29',
   hostedZoneName: app.node.tryGetContext('hostedZoneName') || 'proxy-smart.com',
+  // Custom Keycloak image URI (ECR) — includes proxy-smart login theme + pre-built config.
+  // Set via CI: cdk deploy -c keycloakImageUri=579201838740.dkr.ecr.eu-central-1.amazonaws.com/proxy-smart-keycloak:latest
+  // Omit to fall back to the stock quay.io/keycloak image (theme not applied).
+  keycloakImageUri: app.node.tryGetContext('keycloakImageUri') as string | undefined,
   // FHIR server (optional override — defaults to internal service discovery)
   fhirServerBase: app.node.tryGetContext('fhirServerBase'),
   // Door management (optional) - enable per provider
@@ -86,6 +90,7 @@ const keycloakStack = new KeycloakStack(app, 'ProxySmartKeycloak', {
   dbSecret: databaseStack.secret,
   domainName: config.keycloakDomain,
   hostedZone,
+  imageUri: config.keycloakImageUri,
 });
 keycloakStack.addDependency(databaseStack);
 
@@ -98,6 +103,10 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   domainName: config.backendDomain,
   apexDomain: config.hostedZoneName,
   hostedZone,
+  // Shared RDS for the backend's admin-config + mTLS stores (dedicated
+  // proxy_smart database — see BackendStackProps.databaseName).
+  database: databaseStack.database,
+  dbSecret: databaseStack.secret,
   // FHIR URL is resolved after FHIR stack deploys — use internal service discovery
   fhirServerBase: config.fhirServerBase || 'http://hapi-fhir.proxy-smart.internal:8080/fhir',
   kisiEnabled: config.kisiEnabled,
@@ -105,6 +114,7 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   unifiAccessEnabled: config.unifiAccessEnabled,
 });
 backendStack.addDependency(keycloakStack);
+backendStack.addDependency(databaseStack);
 
 // 5. FHIR Stack (internal only — no public ALB, uses Cloud Map service discovery)
 const fhirStack = new FhirStack(app, 'ProxySmartFhir', {

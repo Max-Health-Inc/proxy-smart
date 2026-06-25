@@ -300,6 +300,27 @@ describe('Token proxy → KC forwarding', () => {
     expect(captured!.params.has('redirect_uri')).toBe(false)
   })
 
+  // ── device_code grant (RFC 8628) ─────────────────────────────────────────
+
+  it('device_code: forwards grant_type, device_code and code_verifier (PKCE) to KC', async () => {
+    const body = new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+      client_id: 'admin-ui',
+      device_code: 'DEV-CODE-123',
+      code_verifier: 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+    })
+
+    await authRoutes.handle(tokenRequest(body.toString()))
+
+    expect(captured).not.toBeNull()
+    expect(captured!.params.get('grant_type')).toBe('urn:ietf:params:oauth:grant-type:device_code')
+    // device_code must survive body validation and reach KC; without it the
+    // device login poll fails with "Missing parameter: device_code".
+    expect(captured!.params.get('device_code')).toBe('DEV-CODE-123')
+    expect(captured!.params.get('code_verifier')).toBe('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')
+    expect(captured!.params.has('redirect_uri')).toBe(false)
+  })
+
   // ── token-exchange (RFC 8693) ───────────────────────────────────────────
 
   it('token-exchange: forwards subject_token fields', async () => {

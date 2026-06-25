@@ -154,3 +154,25 @@ export function getRewrittenRedirectUri(
 
   return null
 }
+
+/**
+ * Resolve the requested resource audience captured for a SMART session at the
+ * token endpoint, so it can be re-sent to Keycloak as the RFC 8707 `resource`
+ * parameter (must match the value sent at /authorize, else Keycloak returns
+ * invalid_target / not-matching). Returns null when no SMART session matches or
+ * the session carried no aud.
+ */
+export function getSessionAudience(
+  clientId: string | undefined,
+  clientRedirectUri: string | undefined,
+  deps: TokenEnricherDeps,
+): string | null {
+  if (!clientId || !clientRedirectUri) return null
+  const { store } = deps
+  const match = store.find(
+    s => s.clientId === clientId && s.clientRedirectUri === clientRedirectUri,
+  )
+  if (!match) return null
+  const [, session] = match
+  return session.aud ?? null
+}

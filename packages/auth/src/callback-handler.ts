@@ -8,6 +8,7 @@
 import type { LaunchSession, SmartProxyConfig, SmartProxyLogger, SmartProxyResult } from './types'
 import type { ILaunchContextStore } from './stores/interface'
 import { extractPatientFromFhirUser } from './fhir-user'
+import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
 
 export interface CallbackParams {
   state?: string
@@ -29,6 +30,14 @@ export interface CallbackHandlerDeps {
    * (e.g. because fhirUser is "Patient/123"), the picker is skipped.
    */
   autoResolvePatient?: (session: LaunchSession, params: CallbackParams) => Promise<string | null>
+  /**
+   * Look up the redirect URIs registered for a client (RFC 6749 §3.1.2.3).
+   * Defense in depth: re-validate the session's stored `clientRedirectUri`
+   * before redirecting the authorization code (or an IdP error) to it, so a
+   * poisoned/unvalidated session can never leak the code to an attacker host.
+   * When omitted, no re-validation happens (consumers opt in).
+   */
+  getRegisteredRedirectUris?: GetRegisteredRedirectUris
 }
 
 export interface CallbackResult {
@@ -71,6 +80,38 @@ export async function handleCallback(
     logger?.warn('SMART callback: session not found or expired', { state: sessionKey.slice(0, 8) + '...' })
     return {
       result: { type: 'error', status: 400, error: 'invalid_request', error_description: 'Session expired or invalid. Please restart the authorization flow.' },
+    }
+  }
+
+  // ── Re-validate the stored redirect_uri (defense in depth) ────────────
+  // RFC 6749 §10.6: before forwarding the authorization code (or an IdP
+  // error) to the client's redirect_uri, confirm it is STILL an exact match
+  // for one registered to this client. Even though authorize already
+  // validated it, a session could be poisoned or predate the fix — never
+  // emit a code/error to an unvalidated host.
+  if (deps.getRegisteredRedirectUris) {
+    let registered: string[] = []
+    try {
+      registered = await deps.getRegisteredRedirectUris(session.clientId)
+    } catch (err) {
+      logger?.error('SMART callback: failed to load registered redirect URIs — refusing redirect', {
+        clientId: session.clientId,
+        err,
+      })
+      store.delete(sessionKey)
+      return {
+        result: { type: 'error', status: 400, error: 'invalid_request', error_description: 'Unable to validate redirect_uri' },
+      }
+    }
+    if (!isRedirectUriRegistered(session.clientRedirectUri, registered)) {
+      logger?.warn('SMART callback: stored redirect_uri not registered for client — refusing redirect', {
+        clientId: session.clientId,
+        redirectUri: session.clientRedirectUri,
+      })
+      store.delete(sessionKey)
+      return {
+        result: { type: 'error', status: 400, error: 'invalid_request', error_description: 'redirect_uri does not match a registered redirect URI for this client' },
+      }
     }
   }
 

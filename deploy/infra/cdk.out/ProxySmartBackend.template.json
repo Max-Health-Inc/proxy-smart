@@ -500,6 +500,10 @@
         "Value": "8445"
        },
        {
+        "Name": "CORS_ORIGINS",
+        "Value": "https://api.proxy-smart.com,https://patient.maxhealth.tech,https://consent.maxhealth.tech,https://dtr.maxhealth.tech,https://dicom.maxhealth.tech,https://maxhealth.tech"
+       },
+       {
         "Name": "KEYCLOAK_BASE_URL",
         "Value": "https://auth.proxy-smart.com"
        },
@@ -1210,7 +1214,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4r2uqhe3e9rSgQYIMdYI8FI9MeG0UyRCpBYPjfB8mpk3TFnnh3PtI8SYUuHr7q+zs48sq0u5WlrR4bAbNTcOSXEU3QNQ6eSXw4PQKjYjQBhffgoMegxyZzVXVuRpMyGIQ6MiC4uKqLlqxXdFJH6A6FHqvO/cZtWa3VgkpmbwiEvJsUGtZjZSMLhjzjDH9A6EFwA7z7hh05SvZkeK94J0AOw5V27m0wHMjgHGKGjQELW5vHVj46yQu8DCCCwbEuh8Gm/cm7tYf2ESw4g+27gWiBhYz10G6zg1yfsn7cnWPd8GsfsaA7e97w1fcNhB7lKfg4zOEXmjYv8kXFQHJaLP8XvvcBmf+Rn13WJxV8FHz4oseyRuNDm5wzatIjINjrsfY2H2quv7wlc0p0RpOyvmc9rn2/bPCGJwWXZBDFswFLrtfj5V5SvrzerTKXTQCzI9c3c9/l3zfCpIz1sT2CmD96LC2EffJkME0J/owyRFE1so/B4KScb1G/8qdDUej7Qn++e2WiVYhOaI+6nutf+6ltrlcDAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4rWueh2LPrbUWBABvsAHssGJn22CiSIVIJAsP/PkhOnaQr9sS785HmSSp08fBV39/BkVem3a0sbfXYCJidgiO/jGiCrnHwTOLD6REYFaMJKLwHBz0GPTaZq6pzM5qUwSDUkQHBxVVdtGS9opM6Qnco9Fh17jduy2qtFlQye0Mg5N2k0LAeKxtZMOQZZ/gDQg+CG+DdN+zIUbInw3vFOwFyGK60c2+D4UAG5xAzbAxY2No8tvLRSV7gZQARDI51OQw27U/erT20j2DBGWzfDUQLLGSsh3abHeT6lPXj7hzrhl/7iAXd2fOGr75vIPQoT8HHYQ6/0LR5kS8qBpLTYvm/8L0PyPyP/OyyPqngo+DDFz2WNRof2uScUZMeAcFej7W3+VBz/eUtmVOiM5qU9T3rce37ZYM3PCm4JIMong1Ycr0eL/eS8uX1bpW5bAKYHbm+mfsu/74RJmWsj+0RxPzRY2kh7JMng2lK8GeUIYqqkX0MBiflfIv6lT8dikJ/LvT93SsTrUJ0QnvU9Vz/AvVSIcFXAwAA"
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartBackend/CDKMetadata/Default"

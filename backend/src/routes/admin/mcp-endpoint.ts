@@ -37,14 +37,10 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
     const resources = buildResourceList(cfg)
 
-    // Env var takes absolute precedence (non-overridable); otherwise use file config
-    const envOverride = process.env.MCP_ENDPOINT_ENABLED
-    const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : cfg.enabled
-    const configSource = envOverride !== undefined ? 'env' : 'file'
-
+    // File-backed config is the single source of truth
     return {
-      enabled: effectiveEnabled,
-      configSource,
+      enabled: cfg.enabled,
+      configSource: 'file',
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,
@@ -79,7 +75,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
     if (update.enabledTools !== undefined) cfg.enabledTools = update.enabledTools
     if (update.exposeResourcesAsTools !== undefined) cfg.exposeResourcesAsTools = update.exposeResourcesAsTools
 
-    saveMcpEndpointConfig(cfg)
+    await saveMcpEndpointConfig(cfg)
     logger.server.info('MCP endpoint config updated', {
       enabled: cfg.enabled,
       disabledToolCount: cfg.disabledTools.length,
@@ -89,13 +85,10 @@ export const mcpEndpointAdminRoutes = new Elysia({
     const tools = buildToolList(cfg)
     const resources = buildResourceList(cfg)
 
-    // Env var takes absolute precedence; otherwise use file config
-    const envOverride = process.env.MCP_ENDPOINT_ENABLED
-    const effectiveEnabled = envOverride !== undefined ? envOverride === 'true' : cfg.enabled
-
+    // File-backed config is the single source of truth
     return {
-      enabled: effectiveEnabled,
-      configSource: envOverride !== undefined ? 'env' : 'file',
+      enabled: cfg.enabled,
+      configSource: 'file',
       endpointPath: config.mcp.path,
       endpointUrl: `${config.baseUrl}${config.mcp.path}`,
       tools,
@@ -142,7 +135,7 @@ export const mcpEndpointAdminRoutes = new Elysia({
       cfg.disabledTools = Array.from(set)
     }
 
-    saveMcpEndpointConfig(cfg)
+    await saveMcpEndpointConfig(cfg)
     logger.server.info('MCP tool toggled', { toolName, exposed })
 
     return { toolName, exposed, updatedAt: cfg.updatedAt }

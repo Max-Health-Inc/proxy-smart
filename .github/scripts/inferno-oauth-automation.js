@@ -291,10 +291,67 @@ async function handlePatientPicker(page) {
   console.log(`  Post patient-picker URL: ${page.url()}`);
 }
 
+/**
+ * Regression guard for the Keycloak login THEME.
+ *
+ * WHY: functional login tests only fill the form, so they stay green even when
+ * the themed login page is visually broken. We previously shipped a bug where
+ * the Geist font @font-face URLs 404'd (the pinned geist@1.4.0 CDN path did not
+ * exist) and CI never noticed. This helper makes those regressions fail the run
+ * by asserting deterministically (no pixel/screenshot snapshots — those are flaky):
+ *   (a) no Keycloak login-theme static asset returned a 4xx, and
+ *   (b) the Geist fonts actually loaded according to the browser font registry.
+ */
+async function assertLoginThemeHealthy(page) {
+  // (a) No 4xx theme assets (woff2/css under /resources/ or our proxy-smart theme).
+  const failures = page.__themeAssetFailures || [];
+  if (failures.length > 0) {
+    for (const failure of failures) {
+      console.error(`  Theme asset failed: ${failure.url} (HTTP ${failure.status})`);
+    }
+    throw new Error('Login theme asset(s) failed to load: ' + JSON.stringify(failures));
+  }
+
+  // (b) Geist actually loaded — both Sans (title/labels) and Mono are used by the page.
+  await page.evaluate(() => document.fonts.ready);
+  const fontStatus = await page.evaluate(() => ({
+    sans: document.fonts.check('300 16px "Geist Sans"'),
+    mono: document.fonts.check('400 16px "Geist Mono"'),
+    faces: [...document.fonts].map(f => f.family + ':' + f.status),
+  }));
+  if (!fontStatus.sans || !fontStatus.mono) {
+    throw new Error(
+      `Geist font failed to load on login page (sans=${fontStatus.sans} mono=${fontStatus.mono}); ` +
+      `faces=${JSON.stringify(fontStatus.faces)}`
+    );
+  }
+
+  console.log(`  ✓ Login theme healthy: Geist Sans + Mono loaded, no 4xx theme assets`);
+}
+
 async function handleOAuthFlow(page, authorizeUrl) {
   console.log('Handling OAuth flow...');
   console.log(`  Navigating to: ${authorizeUrl}`);
-  
+
+  // Capture failed Keycloak login-theme static assets (4xx) so we can fail the
+  // run if the themed login page is broken. Attach once per page to avoid
+  // duplicate listeners across repeated calls/interstitials.
+  if (!page.__themeCheckAttached) {
+    page.__themeCheckAttached = true;
+    page.__themeAssetFailures = [];
+    page.on('response', (response) => {
+      const status = response.status();
+      if (status < 400) return;
+      const url = response.url();
+      const isThemeAsset =
+        (url.includes('/resources/') && (url.endsWith('.woff2') || url.endsWith('.css'))) ||
+        url.includes('login/proxy-smart');
+      if (isThemeAsset) {
+        page.__themeAssetFailures.push({ url, status });
+      }
+    });
+  }
+
   try {
     // Navigate to the authorize URL
     const response = await page.goto(authorizeUrl, { waitUntil: 'networkidle', timeout: 30000 });
@@ -325,6 +382,14 @@ async function handleOAuthFlow(page, authorizeUrl) {
       
       // Wait for and fill username
       await page.waitForSelector('#username, input[name="username"]', { timeout: 10000 });
+
+      // The login page is rendered and settled (goto used networkidle) — verify the
+      // themed login assets actually loaded. Run once per page so retries don't repeat it.
+      if (!page.__themeChecked) {
+        page.__themeChecked = true;
+        await assertLoginThemeHealthy(page);
+      }
+
       await page.fill('#username, input[name="username"]', KC_USERNAME);
       console.log('  Filled username');
       

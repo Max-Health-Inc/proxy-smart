@@ -7,12 +7,13 @@
  */
 
 import type { TSchema } from '@sinclair/typebox'
-import { Value } from '@sinclair/typebox/value'
 import {
   extractRouteTools as _extractRouteTools,
   extractRouteResources as _extractRouteResources,
   pathToResourceUri as _pathToResourceUri,
   getMergedInputSchema as _getMergedInputSchema,
+  executeTool as _executeTool,
+  DISPATCH_APP_KEY,
 } from '@max-health-inc/elysia-mcp'
 import type {
   ToolMetadata,
@@ -27,6 +28,38 @@ export type { ToolMetadata, ResourceMetadata }
 
 let globalTools: Map<string, ToolMetadata> | null = null
 let globalResources: Map<string, ResourceMetadata> | null = null
+
+/**
+ * Names of tools that are CUSTOM (not auto-generated from Elysia routes).
+ * Custom tools use the `(args, ctx)` handler contract and are invoked directly;
+ * route-derived tools use the single-`(ctx)` contract and are dispatched through
+ * the HTTP pipeline. Populated by `initializeToolRegistry`.
+ */
+const customToolNames = new Set<string>()
+
+/**
+ * ROOT Elysia app used to dispatch tool/resource execution through the real
+ * HTTP pipeline (so guards, response-schema coercion, and lifecycle hooks like
+ * the admin audit middleware all run). Set once after the full app is assembled
+ * (see app-factory.ts). When absent, executors fall back to synthetic context.
+ */
+interface DispatchApp {
+  handle(request: Request): Promise<Response> | Response
+}
+let dispatchApp: DispatchApp | null = null
+
+/**
+ * Register the ROOT app used for secure pipeline dispatch.
+ * Call once after all routes (and global plugins) are mounted.
+ */
+export function setDispatchApp(app: DispatchApp): void {
+  dispatchApp = app
+}
+
+/** Get the registered dispatch app, or null if not yet set. */
+export function getDispatchApp(): DispatchApp | null {
+  return dispatchApp
+}
 
 // ── OpenAI Tool Definition types ─────────────────────────────────────────────
 
@@ -70,6 +103,8 @@ export function initializeToolRegistry(app: unknown, options?: { prefixes?: stri
   console.log(`[tool-registry] Extracted ${routeTools.size} route tools`)
 
   const customTools = getCustomTools()
+  customToolNames.clear()
+  for (const name of customTools.keys()) customToolNames.add(name)
   globalTools = addCustomTools(routeTools, customTools)
   console.log(`[tool-registry] Added ${customTools.size} custom tools, total: ${globalTools.size}`)
 
@@ -179,14 +214,37 @@ export function generateToolDefinitions(
 
 // ── Tool executor (used by AI chat assistant) ────────────────────────────────
 
+/** Context supplied to the AI-chat tool executor. */
+export interface ToolExecutorContext {
+  userId: string
+  roles: string[]
+  email?: string
+  /** Bearer token forwarded to route handlers so Keycloak RBAC applies. */
+  token?: string
+  /**
+   * ROOT Elysia app for secure pipeline dispatch. Defaults to the registry's
+   * registered dispatch app (see `setDispatchApp`). Route-derived tools are
+   * dispatched through this app so guards, response-schema coercion, and the
+   * audit middleware all run.
+   */
+  app?: DispatchApp
+}
+
 /**
- * Create a tool executor that runs route handlers directly
+ * Create a tool executor for the AI assistant chat.
+ *
+ * Route-derived tools are dispatched through the real Elysia HTTP pipeline
+ * (forwarding the bearer token), so they are authenticated, response-filtered,
+ * guarded, and audited exactly like a direct HTTP call. Custom tools (registered
+ * via `getCustomTools`) keep their `(args, ctx)` handler contract.
  */
 export function createToolExecutor(
   tools: Map<string, ToolMetadata>,
-  context: { userId: string; roles: string[]; email?: string },
+  context: ToolExecutorContext,
 ) {
-  type ExecutorHandler = (args: unknown, context: unknown) => unknown | Promise<unknown>
+  type CustomHandler = (args: unknown, context: unknown) => unknown | Promise<unknown>
+  const app = context.app ?? dispatchApp
+
   return {
     async execute(toolName: string, args: unknown): Promise<unknown> {
       const tool = tools.get(toolName)
@@ -199,23 +257,50 @@ export function createToolExecutor(
         throw new Error(`Permission denied: ${toolName} requires admin role`)
       }
 
-      if (tool.schema) {
-        const valid = Value.Check(tool.schema, args)
-        if (!valid) {
-          const errors = [...Value.Errors(tool.schema, args)]
-          throw new Error(`Invalid arguments: ${JSON.stringify(errors)}`)
-        }
-      }
-
       if (typeof tool.handler !== 'function') {
         throw new Error(`Invalid handler for tool ${toolName}`)
       }
 
-      return await (tool.handler as ExecutorHandler)(args, { user: context })
+      // Custom tools use the (args, ctx) contract and are invoked directly.
+      if (customToolNames.has(toolName)) {
+        return await (tool.handler as CustomHandler)(args, { user: context })
+      }
+
+      // Route-derived tools: dispatch through the real pipeline so auth,
+      // response-schema, guards, and audit logging all apply. The package
+      // executor validates args against the merged schema and returns an MCP
+      // envelope; unwrap it to the underlying data for the AI assistant.
+      const result = await _executeTool(
+        toolName,
+        tool,
+        (args as Record<string, unknown>) ?? {},
+        context.token,
+        app ? { [DISPATCH_APP_KEY]: app } : undefined,
+      )
+
+      const text = result.content[0]?.text ?? ''
+      if (result.isError) {
+        throw new Error(text || `Tool execution failed: ${toolName}`)
+      }
+      return parseToolResultText(text)
     },
 
     getToolDefinitions(): ToolDefinition[] {
       return generateToolDefinitions(tools, context.roles)
     },
+  }
+}
+
+/**
+ * The package executor returns tool results as serialized text. Parse JSON back
+ * to structured data for the AI assistant; fall back to the raw string when the
+ * result was a plain (non-JSON) string.
+ */
+function parseToolResultText(text: string): unknown {
+  if (!text) return { success: true }
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
   }
 }

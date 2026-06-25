@@ -15,6 +15,13 @@ import { logger } from '@/lib/logger'
 export interface SmartClientConfig {
   /** If true → resolve fhirUser to Patient. If false → Practitioner. If undefined → no resolution (backward compat). */
   patientFacing?: boolean
+  /**
+   * The redirect URIs registered for this client in Keycloak.
+   * Used to validate the authorize/callback redirect_uri (RFC 6749 §3.1.2.3)
+   * so the proxy never forwards an authorization code to an unregistered URI.
+   * Empty array → no registered URIs (or client unknown) → reject all.
+   */
+  redirectUris: string[]
 }
 
 interface CacheEntry {
@@ -45,6 +52,22 @@ export async function getSmartClientConfig(clientId: string): Promise<SmartClien
 }
 
 /**
+ * Get the redirect URIs registered for a client (RFC 6749 §3.1.2.3).
+ *
+ * Reuses the cached client config (single Keycloak admin lookup, shared with
+ * patientFacing resolution). Returns an empty array for unknown clients or
+ * when Keycloak is unavailable — the caller treats an empty allowlist as
+ * "reject every redirect_uri" (fail-closed).
+ *
+ * Wired into `@proxy-smart/auth`'s `getRegisteredRedirectUris` dependency.
+ */
+export async function getRegisteredRedirectUris(clientId: string): Promise<string[]> {
+  if (!clientId) return []
+  const { redirectUris } = await getSmartClientConfig(clientId)
+  return redirectUris
+}
+
+/**
  * Invalidate cache for a specific client (call after admin updates).
  */
 export function invalidateClientConfig(clientId: string): void {
@@ -60,7 +83,7 @@ export function clearClientConfigCache(): void {
 
 async function fetchClientConfig(clientId: string): Promise<SmartClientConfig> {
   if (!config.keycloak.isConfigured || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
-    return {}
+    return { redirectUris: [] }
   }
 
   try {
@@ -76,7 +99,7 @@ async function fetchClientConfig(clientId: string): Promise<SmartClientConfig> {
 
     const clients = await admin.clients.find({ clientId, max: 1 })
     if (!clients || clients.length === 0) {
-      return {}
+      return { redirectUris: [] }
     }
 
     const attrs = clients[0].attributes || {}
@@ -85,12 +108,14 @@ async function fetchClientConfig(clientId: string): Promise<SmartClientConfig> {
       : patientFacingRaw === 'false' ? false
       : undefined
 
-    return { patientFacing }
+    const redirectUris = Array.isArray(clients[0].redirectUris) ? clients[0].redirectUris : []
+
+    return { patientFacing, redirectUris }
   } catch (error) {
     logger.auth.warn('Failed to fetch client config from Keycloak', {
       clientId,
       error: error instanceof Error ? error.message : 'Unknown error',
     })
-    return {}
+    return { redirectUris: [] }
   }
 }

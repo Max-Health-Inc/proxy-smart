@@ -561,3 +561,180 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
       security: [{ BearerAuth: [] }]
     }
   })
+
+  // ── Additive Role Assignment (non-destructive) ─────────────────────────────
+  // The destructive PUT /:userId replaces ALL of a user's roles. These additive
+  // endpoints add/remove a specific role without touching the others, so editing
+  // one role can no longer wipe the rest.
+
+  .post('/:userId/realm-roles', async ({ getAdmin, params, body, set, headers }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+
+      // Ensure the user exists before mutating role mappings.
+      const user = await admin.users.findOne({ id: params.userId })
+      if (!user) { set.status = 404; return { error: 'User not found' } }
+
+      const requested = body.roles ?? []
+      if (requested.length === 0) {
+        return { success: true, message: 'No roles to add' }
+      }
+
+      const allRealmRoles = await admin.roles.find()
+      const rolesToAssign = allRealmRoles
+        .filter(role => requested.includes(role.name || ''))
+        .map(role => ({ id: role.id!, name: role.name! }))
+
+      if (rolesToAssign.length === 0) {
+        set.status = 404
+        return { error: 'None of the requested realm roles exist' }
+      }
+
+      // addRealmRoleMappings is additive in Keycloak: it does not remove others.
+      await admin.users.addRealmRoleMappings({ id: params.userId, roles: rolesToAssign })
+      return { success: true, message: `Added ${rolesToAssign.length} realm role(s)` }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: UserIdParam,
+    body: t.Object({
+      roles: t.Array(t.String(), { description: 'Realm role names to add (additive, existing roles are preserved)' })
+    }),
+    response: { 200: SuccessResponse, ...CommonErrorResponses },
+    detail: {
+      summary: 'Add Realm Roles to User',
+      description: 'Additively assign realm roles to a user without removing existing roles.',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  .delete('/:userId/realm-roles/:roleName', async ({ getAdmin, params, set, headers }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+
+      const role = await admin.roles.findOneByName({ name: params.roleName })
+      if (!role) { set.status = 404; return { error: `Realm role '${params.roleName}' not found` } }
+
+      await admin.users.delRealmRoleMappings({
+        id: params.userId,
+        roles: [{ id: role.id!, name: role.name! }]
+      })
+      return { success: true, message: `Removed realm role '${params.roleName}'` }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      userId: t.String({ description: 'User ID' }),
+      roleName: t.String({ description: 'Realm role name to remove' })
+    }),
+    response: { 200: SuccessResponse, ...CommonErrorResponses },
+    detail: {
+      summary: 'Remove Realm Role from User',
+      description: 'Remove a single realm role from a user without touching the others.',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  .post('/:userId/client-roles/:clientId', async ({ getAdmin, params, body, set, headers }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+
+      const user = await admin.users.findOne({ id: params.userId })
+      if (!user) { set.status = 404; return { error: 'User not found' } }
+
+      const clients = await admin.clients.find({ clientId: params.clientId })
+      if (clients.length === 0) { set.status = 404; return { error: `Client '${params.clientId}' not found` } }
+      const client = clients[0]
+
+      const requested = body.roles ?? []
+      if (requested.length === 0) {
+        return { success: true, message: 'No roles to add' }
+      }
+
+      const clientRoles = await admin.clients.listRoles({ id: client.id! })
+      const rolesToAssign = clientRoles
+        .filter(role => requested.includes(role.name || ''))
+        .map(role => ({ id: role.id!, name: role.name! }))
+
+      if (rolesToAssign.length === 0) {
+        set.status = 404
+        return { error: `None of the requested client roles exist for '${params.clientId}'` }
+      }
+
+      await admin.users.addClientRoleMappings({
+        id: params.userId,
+        clientUniqueId: client.id!,
+        roles: rolesToAssign
+      })
+      return { success: true, message: `Added ${rolesToAssign.length} client role(s) for '${params.clientId}'` }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      userId: t.String({ description: 'User ID' }),
+      clientId: t.String({ description: 'Keycloak client ID (e.g. admin-ui)' })
+    }),
+    body: t.Object({
+      roles: t.Array(t.String(), { description: 'Client role names to add (additive, existing roles are preserved)' })
+    }),
+    response: { 200: SuccessResponse, ...CommonErrorResponses },
+    detail: {
+      summary: 'Add Client Roles to User',
+      description: 'Additively assign client roles to a user without removing existing roles.',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })
+
+  .delete('/:userId/client-roles/:clientId/:roleName', async ({ getAdmin, params, set, headers }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return UNAUTHORIZED_RESPONSE }
+
+      const admin = await getValidatedAdmin(getAdmin, token)
+
+      const clients = await admin.clients.find({ clientId: params.clientId })
+      if (clients.length === 0) { set.status = 404; return { error: `Client '${params.clientId}' not found` } }
+      const client = clients[0]
+
+      const clientRoles = await admin.clients.listRoles({ id: client.id! })
+      const role = clientRoles.find(r => r.name === params.roleName)
+      if (!role) { set.status = 404; return { error: `Client role '${params.roleName}' not found for '${params.clientId}'` } }
+
+      await admin.users.delClientRoleMappings({
+        id: params.userId,
+        clientUniqueId: client.id!,
+        roles: [{ id: role.id!, name: role.name! }]
+      })
+      return { success: true, message: `Removed client role '${params.roleName}'` }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      userId: t.String({ description: 'User ID' }),
+      clientId: t.String({ description: 'Keycloak client ID (e.g. admin-ui)' }),
+      roleName: t.String({ description: 'Client role name to remove' })
+    }),
+    response: { 200: SuccessResponse, ...CommonErrorResponses },
+    detail: {
+      summary: 'Remove Client Role from User',
+      description: 'Remove a single client role from a user without touching the others.',
+      tags: ['healthcare-users'],
+      security: [{ BearerAuth: [] }]
+    }
+  })

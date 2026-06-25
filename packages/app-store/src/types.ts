@@ -23,10 +23,30 @@ export interface AppStoreConfig {
   updatedAt: string
 }
 
+/**
+ * Pluggable persistence backend for the app-store config.
+ * The default is file-backed JSON; a host may supply a durable, cluster-safe
+ * implementation (e.g. Postgres) instead.
+ */
+export interface AppStoreConfigPersistence {
+  /** Load the persisted config (or a default when nothing is stored yet). */
+  load(): AppStoreConfig
+  /** Persist the full config. */
+  save(config: AppStoreConfig): void
+}
+
 /** Options for creating an AppStoreConfigStore */
 export interface AppStoreConfigStoreOptions {
-  /** Absolute path to the config JSON file */
-  configPath: string
+  /**
+   * Absolute path to the config JSON file. Required when no `persistence` is
+   * supplied (the default file backend writes here).
+   */
+  configPath?: string
+  /**
+   * Custom persistence backend. When provided it fully replaces file I/O,
+   * letting a host back the store with a shared/durable store instead.
+   */
+  persistence?: AppStoreConfigPersistence
   /** Optional logger — receives warnings on load failures */
   logger?: { warn: (msg: string, meta?: Record<string, unknown>) => void }
 }

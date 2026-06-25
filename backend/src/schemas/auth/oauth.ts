@@ -14,6 +14,7 @@ export const TokenRequest = t.Object({
   client_id: t.Optional(t.String({ description: 'OAuth2 client ID' })),
   client_secret: t.Optional(t.String({ description: 'OAuth2 client secret' })),
   code_verifier: t.Optional(t.String({ description: 'PKCE code verifier' })),
+  device_code: t.Optional(t.String({ description: 'Device verification code (for the RFC 8628 device_code grant poll)' })),
   refresh_token: t.Optional(t.String({ description: 'Refresh token (for refresh_token grant)' })),
   scope: t.Optional(t.String({ description: 'Requested scopes (space-separated)' })),
   audience: t.Optional(t.String({ description: 'Target audience for the token' })),
@@ -28,6 +29,34 @@ export const TokenRequest = t.Object({
   requested_token_type: t.Optional(t.String({ description: 'Type of requested token (urn:ietf:params:oauth:token-type:access_token)' }))
 }, { title: 'TokenRequest' })
 export type TokenRequestType = Static<typeof TokenRequest>
+
+// ==================== OAuth Device Authorization (RFC 8628) ====================
+
+// Device-authorization request. The proxy forwards these form fields to the
+// IdP's device-authorization endpoint. Kept permissive (mostly optional) since
+// public clients may omit client_secret and confidential clients include it.
+export const DeviceAuthorizationRequest = t.Object({
+  client_id: t.Optional(t.String({ description: 'OAuth2 client ID' })),
+  client_secret: t.Optional(t.String({ description: 'OAuth2 client secret (confidential clients only)' })),
+  scope: t.Optional(t.String({ description: 'Requested scopes (space-separated)' })),
+  audience: t.Optional(t.String({ description: 'Target audience for the eventual token' })),
+  resource: t.Optional(t.String({ description: 'Target resource URI (RFC 8707 Resource Indicators)' })),
+}, { title: 'DeviceAuthorizationRequest', additionalProperties: true })
+export type DeviceAuthorizationRequestType = Static<typeof DeviceAuthorizationRequest>
+
+// Device-authorization response (RFC 8628 §3.2). error/error_description cover
+// the failure path so the same schema serves both outcomes.
+export const DeviceAuthorizationResponse = t.Object({
+  device_code: t.Optional(t.String({ description: 'Device verification code used to poll the token endpoint' })),
+  user_code: t.Optional(t.String({ description: 'End-user code to enter at the verification URI' })),
+  verification_uri: t.Optional(t.String({ description: 'URL the user visits to approve the device (IdP browser page)' })),
+  verification_uri_complete: t.Optional(t.String({ description: 'verification_uri pre-filled with the user_code' })),
+  expires_in: t.Optional(t.Number({ description: 'Lifetime in seconds of device_code and user_code' })),
+  interval: t.Optional(t.Number({ description: 'Minimum seconds the client should wait between token polls' })),
+  error: t.Optional(t.String({ description: 'Error code if the request failed' })),
+  error_description: t.Optional(t.String({ description: 'Human-readable error description' })),
+}, { title: 'DeviceAuthorizationResponse' })
+export type DeviceAuthorizationResponseType = Static<typeof DeviceAuthorizationResponse>
 
 // RFC 7662 Token Introspection — accept any form fields since clients may send
 // auth params (client_assertion, client_assertion_type) that vary by implementation.

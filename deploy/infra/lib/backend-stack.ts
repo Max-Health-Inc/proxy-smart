@@ -9,6 +9,7 @@ import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as rds from 'aws-cdk-lib/aws-rds';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import type { Construct } from 'constructs';
 
@@ -18,6 +19,27 @@ export interface BackendStackProps extends cdk.StackProps {
   domainName: string;  // e.g., api.proxy-smart.com
   apexDomain?: string; // e.g., proxy-smart.com (landing page on root domain)
   hostedZone: route53.IHostedZone;
+  /**
+   * Shared RDS instance. The backend connects to a dedicated database on this
+   * instance (default `proxy_smart`) for its admin-config + mTLS stores.
+   */
+  database: rds.IDatabaseInstance;
+  /** Secret holding the RDS master credentials (username/password). */
+  dbSecret: secretsmanager.ISecret;
+  /**
+   * Name of the backend's database on the shared RDS instance.
+   *
+   * ⚠️ MANUAL PROVISIONING (one-time): the shared RDS only auto-creates the
+   * `keycloak` database. This database must be created once before/at first
+   * deploy, e.g. by connecting with the master credentials and running:
+   *   CREATE DATABASE proxy_smart;
+   * The backend then creates its own tables on startup (CREATE TABLE IF NOT
+   * EXISTS). Until this database exists the backend's DB-backed stores will log
+   * connection errors and fall back to serving defaults.
+   *
+   * @default 'proxy_smart'
+   */
+  databaseName?: string;
   /**
    * Optional FHIR server URL
    */
@@ -176,6 +198,13 @@ export class BackendStack extends cdk.Stack {
       // Keycloak config
       KEYCLOAK_BASE_URL: props.keycloakUrl,
       KEYCLOAK_REALM: 'proxy-smart',
+      // Database connection (admin-config + mTLS stores). Credentials come from
+      // Secrets Manager below as PGUSER/PGPASSWORD; the backend assembles
+      // DATABASE_URL from these PG* parts so the password never lives in a plain
+      // env var. Mirrors how the Keycloak task injects KC_DB_* secrets.
+      PGHOST: props.database.instanceEndpoint.hostname,
+      PGPORT: '5432',
+      PGDATABASE: props.databaseName ?? 'proxy_smart',
     };
 
     // Add FHIR server if provided
@@ -192,6 +221,9 @@ export class BackendStack extends cdk.Stack {
     const secrets: Record<string, ecs.Secret> = {
       KEYCLOAK_ADMIN_CLIENT_ID: ecs.Secret.fromSecretsManager(keycloakAdminSecret, 'clientId'),
       KEYCLOAK_ADMIN_CLIENT_SECRET: ecs.Secret.fromSecretsManager(keycloakAdminSecret, 'clientSecret'),
+      // RDS credentials for the proxy_smart database (same secret Keycloak uses).
+      PGUSER: ecs.Secret.fromSecretsManager(props.dbSecret, 'username'),
+      PGPASSWORD: ecs.Secret.fromSecretsManager(props.dbSecret, 'password'),
     };
 
     // Add KISI secret if enabled
@@ -216,7 +248,11 @@ export class BackendStack extends cdk.Stack {
         cpu: 512,
         memoryLimitMiB: 2048,
         desiredCount: 1,
-        
+
+        // Place tasks in private subnets so the RDS security group's
+        // private-subnet-CIDR ingress applies (same as the Keycloak service).
+        taskSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+
         certificate,
         domainName: props.domainName,
         domainZone: props.hostedZone,

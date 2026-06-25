@@ -2,6 +2,7 @@
 export type {
   PublishedApp,
   AppStoreConfig,
+  AppStoreConfigPersistence,
   AppStoreConfigStoreOptions,
 } from './types'
 

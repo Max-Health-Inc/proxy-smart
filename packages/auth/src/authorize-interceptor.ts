@@ -20,6 +20,7 @@ import type { ILaunchContextStore } from './stores/interface'
 import type { IdPAdapter } from './idp/interface'
 import { isSmartLaunch, isStandaloneLaunch, parseScopes } from './smart-scopes'
 import { verifyLaunchCode, type LaunchCodeServiceOptions } from './launch-code'
+import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
 
 export interface AuthorizeInterceptorDeps {
   config: SmartProxyConfig
@@ -30,6 +31,14 @@ export interface AuthorizeInterceptorDeps {
   validateAudience?: (aud: string) => Promise<string | null>
   /** Check if IdP is reachable. Return false to serve a friendly error page. */
   isIdpReachable?: () => Promise<boolean>
+  /**
+   * Look up the redirect URIs registered for a client (RFC 6749 §3.1.2.3).
+   * When provided, the requested `redirect_uri` MUST exactly match one of the
+   * returned URIs or the authorize request is rejected — preventing
+   * authorization-code theft via an attacker-controlled redirect_uri.
+   * When omitted, no allowlist enforcement happens (consumers opt in).
+   */
+  getRegisteredRedirectUris?: GetRegisteredRedirectUris
 }
 
 export interface AuthorizeInterceptResult {
@@ -119,6 +128,34 @@ export async function handleAuthorize(
   const sessionKey = crypto.randomUUID()
   const shouldIntercept = smartLaunch && !!params.redirect_uri
 
+  // ── Validate redirect_uri against the client's registered URIs ────────
+  // RFC 6749 §3.1.2.3 / §10.6: reject any redirect_uri that is not an EXACT
+  // match for one registered to this client. Because the interceptor below
+  // overwrites the redirect_uri sent to the IdP with the proxy callback, the
+  // IdP can no longer validate the real client URI — so the proxy MUST do it
+  // here (fail-closed) before storing it in the session.
+  if (shouldIntercept && deps.getRegisteredRedirectUris) {
+    const clientId = params.client_id || ''
+    let registered: string[] = []
+    try {
+      registered = await deps.getRegisteredRedirectUris(clientId)
+    } catch (err) {
+      logger?.error('Failed to load registered redirect URIs — rejecting authorize', { clientId, err })
+      return {
+        result: { type: 'error', status: 400, error: 'invalid_request', error_description: 'Unable to validate redirect_uri' },
+      }
+    }
+    if (!isRedirectUriRegistered(params.redirect_uri!, registered)) {
+      logger?.warn('Authorize rejected — redirect_uri not registered for client', {
+        clientId,
+        redirectUri: params.redirect_uri,
+      })
+      return {
+        result: { type: 'error', status: 400, error: 'invalid_request', error_description: 'redirect_uri does not match a registered redirect URI for this client' },
+      }
+    }
+  }
+
   // ── Create session for callback interception ──────────────────────────
   if (shouldIntercept) {
     const session: LaunchSession = {
@@ -157,12 +194,24 @@ export async function handleAuthorize(
   }
 
   // ── Forward all query params to IdP ───────────────────────────────────
-  // Strip aud/resource — already validated above; Keycloak doesn't support RFC 8707
+  // Strip aud/resource from the generic copy; RFC 8707 uses `resource` (not
+  // `aud`). We forward the validated audience as `resource` below.
   const stripFromIdp = new Set(['aud', 'resource'])
   for (const [k, v] of Object.entries(params)) {
     if (v !== undefined && v !== null && !stripFromIdp.has(k)) {
       url.searchParams.set(k, v)
     }
+  }
+
+  // ── RFC 8707 resource indicator ───────────────────────────────────────
+  // Keycloak 26.6.3 supports RFC 8707 via the resource-indicators feature
+  // (a TokenPostProcessor). We forward the validated requested audience as the
+  // `resource` parameter so Keycloak binds it into the access-token aud. The
+  // post-processor's ResourceIndicatorValidation rejects a value with a query
+  // or fragment, so only forward clean absolute URIs (the FHIR base and MCP
+  // URL have neither).
+  if (aud && !aud.includes('?') && !aud.includes('#')) {
+    url.searchParams.set('resource', aud)
   }
 
   // ── Rewrite redirect_uri and state for interception ───────────────────

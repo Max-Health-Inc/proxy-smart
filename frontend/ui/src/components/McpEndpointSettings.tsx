@@ -384,7 +384,7 @@ export function McpEndpointSettings() {
               <Info className="w-4 h-4 mt-0.5 shrink-0" />
               <span>
                 {t(
-                  'Config source: {{source}}. MCP endpoint is enabled by default. Override with MCP_ENDPOINT_ENABLED env var.',
+                  'Config source: {{source}}. MCP endpoint is enabled by default and managed here.',
                   { source: status.configSource },
                 )}
               </span>

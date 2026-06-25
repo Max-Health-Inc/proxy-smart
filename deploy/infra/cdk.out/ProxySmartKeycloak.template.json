@@ -79,9 +79,102 @@
    "Type": "AWS::WAFv2::WebACL",
    "Properties": {
     "DefaultAction": {
-     "Allow": {}
+     "Block": {}
     },
     "Rules": [
+     {
+      "Action": {
+       "Block": {}
+      },
+      "Name": "BlockSensitiveEndpoints",
+      "Priority": 0,
+      "Statement": {
+       "OrStatement": {
+        "Statements": [
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "CONTAINS",
+           "SearchString": "/protocol/openid-connect/token",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "LOWERCASE"
+            }
+           ]
+          }
+         },
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "CONTAINS",
+           "SearchString": "/protocol/openid-connect/userinfo",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "LOWERCASE"
+            }
+           ]
+          }
+         },
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "STARTS_WITH",
+           "SearchString": "/admin",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "LOWERCASE"
+            }
+           ]
+          }
+         },
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "STARTS_WITH",
+           "SearchString": "/realms/master",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "LOWERCASE"
+            }
+           ]
+          }
+         },
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "CONTAINS",
+           "SearchString": "/clients-registrations",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "LOWERCASE"
+            }
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "VisibilityConfig": {
+       "CloudWatchMetricsEnabled": true,
+       "MetricName": "BlockSensitiveEndpointsMetrics",
+       "SampledRequestsEnabled": true
+      }
+     },
      {
       "Name": "AWSManagedRulesCommonRuleSet",
       "OverrideAction": {
@@ -96,9 +189,6 @@
          },
          {
           "Name": "CrossSiteScripting_BODY"
-         },
-         {
-          "Name": "GenericRFI_BODY"
          }
         ],
         "Name": "AWSManagedRulesCommonRuleSet",
@@ -126,6 +216,69 @@
       "VisibilityConfig": {
        "CloudWatchMetricsEnabled": true,
        "MetricName": "KnownBadInputsMetrics",
+       "SampledRequestsEnabled": true
+      }
+     },
+     {
+      "Action": {
+       "Allow": {}
+      },
+      "Name": "AllowBrowserFacingPaths",
+      "Priority": 10,
+      "Statement": {
+       "OrStatement": {
+        "Statements": [
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "STARTS_WITH",
+           "SearchString": "/realms/proxy-smart/",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "NONE"
+            }
+           ]
+          }
+         },
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "STARTS_WITH",
+           "SearchString": "/resources/",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "NONE"
+            }
+           ]
+          }
+         },
+         {
+          "ByteMatchStatement": {
+           "FieldToMatch": {
+            "UriPath": {}
+           },
+           "PositionalConstraint": "STARTS_WITH",
+           "SearchString": "/js/",
+           "TextTransformations": [
+            {
+             "Priority": 0,
+             "Type": "NONE"
+            }
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "VisibilityConfig": {
+       "CloudWatchMetricsEnabled": true,
+       "MetricName": "AllowBrowserFacingPathsMetrics",
        "SampledRequestsEnabled": true
       }
      }
@@ -534,7 +687,8 @@
     "ContainerDefinitions": [
      {
       "Command": [
-       "start"
+       "start",
+       "--optimized"
       ],
       "Environment": [
        {
@@ -593,10 +747,21 @@
        ],
        "Interval": 30,
        "Retries": 5,
-       "StartPeriod": 300,
+       "StartPeriod": 120,
        "Timeout": 10
       },
-      "Image": "quay.io/keycloak/keycloak:26.0",
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         "579201838740.dkr.ecr.eu-central-1.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/proxy-smart-keycloak:latest"
+        ]
+       ]
+      },
       "LogConfiguration": {
        "LogDriver": "awslogs",
        "Options": {
@@ -787,6 +952,31 @@
    "Properties": {
     "PolicyDocument": {
      "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:",
+          {
+           "Ref": "AWS::Partition"
+          },
+          ":ecr:eu-central-1:579201838740:repository/proxy-smart-keycloak"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "ecr:GetAuthorizationToken",
+       "Effect": "Allow",
+       "Resource": "*"
+      },
       {
        "Action": [
         "logs:CreateLogStream",
@@ -1267,7 +1457,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtNVF9+55HygQYEMcYI8FI9MaG0UyJCpBIei/D5JTJ+mGPfHufKR5khrZPH6S93dwCis17FeGdjL1DGov4BSeU0DlkcMBLGj0MvWVi260M8pCoWcaSQHj4uouWrFe0SxOMB4bmbrR/sJd263FgtoQnCJgcjYLVEGmzsTA6OuMM/wGXgPjFsL+C45kqdiL4b3iLANZ9FfaubdHfySFc4gZ9goM7Ewd27louS7wPAEzehtkO02m7E/Orh0Mn8GAVTi8G4gGApMyDoZddZDVJeu/u2usG37to8Boz543fPV9C14jf/cuTnP4hZbNm3pR0RO/Lpb/C1+1xxD+kp9s1bPwLjI+PsjUblA5PxTnjPryCAgOMm2cqYda609nSL0WOqMsjNNBprXTywZvOAu4JIPILigwZLVMl3sp+ep6t8pcth7Unqzu577Lv2+ELJRxcTgBq98ytQb8oXgqyLnAH5GnyGKDwUWvMAvrBpQv4cOxaeR9Iz/evQSilY+W6YByM9c/ok0cs0QDAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4rWueh2LPrbUWBABvsAHssGJn22CiSIVIJAsP/PkhOnaQr9sS785HmSSp08fBV39/BkVem3a0sbfXYCJidgiO/jGiCrnHwTOLD6REYFaMJKLwHBz0GPTaZq6pzM5qUwSDUkQHBxVVdtGS9opM6Qnco9Fh17jduy2qtFlQye0Mg5N2k0LAeKxtZMOQZZ/gDQg+CG+DdN+zIUbInw3vFOwFyGK60c2+D4UAG5xAzbAxY2No8tvLRSV7gZQARDI51OQw27U/erT20j2DBGWzfDUQLLGSsh3abHeT6lPXj7hzrhl/7iAXd2fOGr75vIPQoT8HHYQ6/0LR5kS8qBpLTYvm/8L0PyPyP/OyyPqngo+DDFz2WNRof2uScUZMeAcFej7W3+VBz/eUtmVOiM5qU9T3rce37ZYM3PCm4JIMong1Ycr0eL/eS8uX1bpW5bAKYHbm+mfsu/74RJmWsj+0RxPzRY2kh7JMng2lK8GeUIYqqkX0MBiflfIv6lT8dikJ/LvT93SsTrUJ0QnvU9Vz/AvVSIcFXAwAA"
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartKeycloak/CDKMetadata/Default"

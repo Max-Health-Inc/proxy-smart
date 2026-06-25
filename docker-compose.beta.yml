@@ -48,7 +48,8 @@ services:
       # NOTE: Caddy path matcher * only matches a single segment (no slashes).
       # There is NO ** glob-star support. Use explicit depth levels for broker paths:
       #   /broker/* = /broker/alias, /broker/*/* = /broker/alias/login|endpoint
-      caddy.@keycloak.path: "/auth/realms/proxy-smart/protocol/openid-connect/auth /auth/realms/proxy-smart/protocol/openid-connect/logout /auth/realms/proxy-smart/protocol/openid-connect/certs /auth/realms/proxy-smart/broker/* /auth/realms/proxy-smart/broker/*/* /auth/realms/proxy-smart/login-actions/* /auth/realms/proxy-smart/.well-known/* /auth/resources/* /auth/js/*"
+      #   /device, /device/* = RFC 8628 device-flow verification page (CLI login)
+      caddy.@keycloak.path: "/auth/realms/proxy-smart/protocol/openid-connect/auth /auth/realms/proxy-smart/protocol/openid-connect/logout /auth/realms/proxy-smart/protocol/openid-connect/certs /auth/realms/proxy-smart/broker/* /auth/realms/proxy-smart/broker/*/* /auth/realms/proxy-smart/login-actions/* /auth/realms/proxy-smart/device /auth/realms/proxy-smart/device/* /auth/realms/proxy-smart/.well-known/* /auth/resources/* /auth/js/*"
       caddy.0_reverse_proxy: "@keycloak {{upstreams 8080}}"
       caddy.0_reverse_proxy.health_uri: /auth/health/ready
       caddy.0_reverse_proxy.health_port: 9000
@@ -103,6 +104,11 @@ services:
       KEYCLOAK_JWKS_URI: http://keycloak:8080/auth/realms/proxy-smart/protocol/openid-connect/certs
       KEYCLOAK_ADMIN_CLIENT_ID: admin-service
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:?Set KEYCLOAK_ADMIN_CLIENT_SECRET}
+      # Shared admin-config store (MCP endpoint + app-store visibility) and mTLS
+      # store. Backed by the proxy_smart DB on the shared postgres service (created
+      # by keycloak/database/init.sql). Without this, those configs fall back to
+      # ephemeral, per-task container files and diverge under scale-out / restart.
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/proxy_smart
       SHL_EXCHANGE_CLIENT_ID: shl-exchange
       SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:-shl-exchange-dev-secret}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
@@ -133,7 +139,10 @@ services:
       retries: 5
       start_period: 300s
     depends_on:
-      - keycloak
+      keycloak:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     networks:
       - proxy-smart
       - caddy

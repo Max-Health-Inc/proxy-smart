@@ -15,6 +15,12 @@ export interface IdPAdapter {
   /** Get the IdP's token endpoint URL */
   getTokenUrl(): string
 
+  /**
+   * Get the IdP's RFC 8628 device-authorization endpoint URL.
+   * Optional: not every IdP exposes the device grant.
+   */
+  getDeviceAuthorizationUrl?(): string
+
   /** Get the IdP's introspection endpoint URL */
   getIntrospectionUrl(): string
 

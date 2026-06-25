@@ -122,7 +122,6 @@ mock.module('../src/lib/fhir-proxy-metrics-logger', () => ({
   },
 }))
 
-process.env.MCP_ENDPOINT_ENABLED = 'true'
 process.env.KEYCLOAK_BASE_URL = 'http://localhost:8080'
 process.env.KEYCLOAK_PUBLIC_URL = 'http://localhost:8080'
 process.env.KEYCLOAK_REALM = 'proxy-smart'

@@ -43,6 +43,19 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+# Ensure application databases exist on the RUNNING Postgres.
+# init.sql is only auto-run by Postgres on a fresh data volume; the beta
+# postgres_data volume is persistent, so on existing deployments the
+# proxy_smart DB (used by the backend's DATABASE_URL) would never be created.
+# init.sql is idempotent (CREATE DATABASE ... WHERE NOT EXISTS ... \gexec), so
+# re-running it every deploy is safe. Run it before dependent services start.
+echo '🗄️ Ensuring application databases exist (idempotent init.sql)...'
+if $COMPOSE exec -T postgres psql -U postgres -d postgres -f /docker-entrypoint-initdb.d/init.sql; then
+  echo '  ✅ Application databases ensured'
+else
+  echo '  ⚠️ init.sql apply returned non-zero — continuing (databases may already exist)'
+fi
+
 $COMPOSE up -d keycloak hapi-fhir orthanc
 
 # ── 5. Wait for Keycloak ──
@@ -266,6 +279,215 @@ if [ -n "$KC_IP" ]; then
   fi
 else
   echo '  ⚠️ Keycloak container not found — skipping IDP reconciliation'
+fi
+
+# ── 10b. Keycloak Resource-Indicator Reconciliation ──
+# realm-export.json uses IGNORE_EXISTING, so RFC 8707 resource-indicator wiring
+# (resource clients + shared scope + default-scope attachment) does NOT reach an
+# existing beta realm via import. This best-effort, non-fatal block reconciles:
+#   1. the resource clients fhir-resource-server / mcp-resource-server
+#      (each holding a resource_url attribute the post-processor binds into aud)
+#   2. the resource-indicators client scope (two oidc-audience-mappers)
+#   3. that scope attached as a DEFAULT scope on each beta SMART app client
+# All sub-steps are idempotent and parse JSON with grep/cut (no jq dependency).
+echo '🔧 Reconciling Keycloak resource indicators...'
+RI_FHIR_URL='https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir-server/R4'
+RI_MCP_URL='https://beta.proxy-smart.com/mcp'
+KC_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' \
+  proxy-smart-keycloak-beta 2>/dev/null || true)
+
+if [ -n "${KC_IP:-}" ]; then
+  KC_BASE="http://${KC_IP}:8080/auth"
+  KC_PASS=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' .env.beta | cut -d= -f2 || true)
+  KC_TOKEN=$(curl -sf -X POST "${KC_BASE}/realms/master/protocol/openid-connect/token" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=admin' \
+    -d "password=${KC_PASS}" \
+    -d 'grant_type=password' \
+    -d 'client_id=admin-cli' 2>/dev/null | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4 || true)
+
+  if [ -n "${KC_TOKEN:-}" ]; then
+    KC_CLIENTS="${KC_BASE}/admin/realms/proxy-smart/clients"
+    KC_SCOPES="${KC_BASE}/admin/realms/proxy-smart/client-scopes"
+
+    # Step 1: ensure the two resource clients exist with the right resource_url.
+    ensure_resource_client() {
+      RC_ID="$1"; RC_NAME="$2"; RC_DESC="$3"; RC_URL="$4"
+      EXISTING=$(curl -sf "${KC_CLIENTS}?clientId=${RC_ID}" \
+        -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+      RC_UUID=$(echo "$EXISTING" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+      RC_BODY=$(cat <<JSON
+{"clientId":"${RC_ID}","name":"${RC_NAME}","description":"${RC_DESC}","enabled":true,"clientAuthenticatorType":"client-secret","protocol":"openid-connect","publicClient":false,"bearerOnly":false,"standardFlowEnabled":false,"implicitFlowEnabled":false,"directAccessGrantsEnabled":false,"serviceAccountsEnabled":false,"authorizationServicesEnabled":false,"fullScopeAllowed":false,"attributes":{"resource_url":"${RC_URL}"}}
+JSON
+)
+      if [ -z "$RC_UUID" ]; then
+        HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X POST "$KC_CLIENTS" \
+          -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+          -d "$RC_BODY" 2>/dev/null || true)
+        if [ "${HTTP_CODE:-}" = '201' ]; then
+          echo "  ✅ Created resource client ${RC_ID}"
+        else
+          echo "  ⚠️ Failed to create resource client ${RC_ID} (HTTP ${HTTP_CODE:-none})"
+        fi
+      else
+        HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X PUT "${KC_CLIENTS}/${RC_UUID}" \
+          -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+          -d "$RC_BODY" 2>/dev/null || true)
+        if [ "${HTTP_CODE:-}" = '204' ]; then
+          echo "  ✅ Reconciled resource_url for ${RC_ID}"
+        else
+          echo "  ⚠️ Failed to reconcile resource client ${RC_ID} (HTTP ${HTTP_CODE:-none})"
+        fi
+      fi
+    }
+    ensure_resource_client 'fhir-resource-server' \
+      'FHIR Resource Server (RFC 8707 resource indicator)' \
+      'Non-login resource client. Holds resource_url = the proxy FHIR base.' \
+      "$RI_FHIR_URL"
+    ensure_resource_client 'mcp-resource-server' \
+      'MCP Resource Server (RFC 8707 resource indicator)' \
+      'Non-login resource client. Holds resource_url = the proxy MCP URL.' \
+      "$RI_MCP_URL"
+
+    # Step 2: ensure the resource-indicators client scope exists with both
+    # oidc-audience-mappers (fhir-resource-server + mcp-resource-server).
+    ALL_SCOPES=$(curl -sf "$KC_SCOPES" -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+    if echo "$ALL_SCOPES" | grep -q '"name":"resource-indicators"'; then
+      echo '  ✅ resource-indicators client scope already present'
+    else
+      SCOPE_BODY='{"name":"resource-indicators","description":"RFC 8707 resource indicators: pre-populates the access-token aud with the resource-client ids.","protocol":"openid-connect","attributes":{"include.in.token.scope":"false","display.on.consent.screen":"false"}}'
+      HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X POST "$KC_SCOPES" \
+        -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+        -d "$SCOPE_BODY" 2>/dev/null || true)
+      if [ "${HTTP_CODE:-}" = '201' ]; then
+        echo '  ✅ Created resource-indicators client scope'
+      else
+        echo "  ⚠️ Failed to create resource-indicators scope (HTTP ${HTTP_CODE:-none})"
+      fi
+    fi
+
+    # Resolve the scope id, then ensure both audience mappers exist on it.
+    SCOPE_LIST=$(curl -sf "$KC_SCOPES" -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+    # Isolate the resource-indicators object, then take the id that precedes its name.
+    RI_SCOPE_ID=$(echo "$SCOPE_LIST" \
+      | grep -o '{"id":"[^"]*","name":"resource-indicators"' \
+      | head -1 | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+    if [ -n "${RI_SCOPE_ID:-}" ]; then
+      EXISTING_MAPPERS=$(curl -sf "${KC_SCOPES}/${RI_SCOPE_ID}/protocol-mappers/models" \
+        -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+      ensure_audience_mapper() {
+        MAP_NAME="$1"; MAP_AUD="$2"
+        if echo "$EXISTING_MAPPERS" | grep -q "\"name\":\"${MAP_NAME}\""; then
+          echo "  ✅ Audience mapper ${MAP_NAME} already present"
+          return
+        fi
+        MAP_BODY=$(cat <<JSON
+{"name":"${MAP_NAME}","protocol":"openid-connect","protocolMapper":"oidc-audience-mapper","consentRequired":false,"config":{"included.client.audience":"${MAP_AUD}","id.token.claim":"false","access.token.claim":"true"}}
+JSON
+)
+        HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X POST \
+          "${KC_SCOPES}/${RI_SCOPE_ID}/protocol-mappers/models" \
+          -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+          -d "$MAP_BODY" 2>/dev/null || true)
+        if [ "${HTTP_CODE:-}" = '201' ]; then
+          echo "  ✅ Added audience mapper ${MAP_NAME}"
+        else
+          echo "  ⚠️ Failed to add audience mapper ${MAP_NAME} (HTTP ${HTTP_CODE:-none})"
+        fi
+      }
+      ensure_audience_mapper 'fhir-resource-audience' 'fhir-resource-server'
+      ensure_audience_mapper 'mcp-resource-audience' 'mcp-resource-server'
+
+      # Step 3: attach the scope as a DEFAULT client scope on each SMART app.
+      for SMART_CLIENT in admin-ui mcp-client patient-portal dicom-viewer consent-app dtr-app; do
+        SC_UUID=$(curl -sf "${KC_CLIENTS}?clientId=${SMART_CLIENT}" \
+          -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null \
+          | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+        if [ -z "${SC_UUID:-}" ]; then
+          echo "  ℹ️ SMART client ${SMART_CLIENT} not found — skipping scope attach"
+          continue
+        fi
+        HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X PUT \
+          "${KC_CLIENTS}/${SC_UUID}/default-client-scopes/${RI_SCOPE_ID}" \
+          -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+        if [ "${HTTP_CODE:-}" = '204' ]; then
+          echo "  ✅ Attached resource-indicators default scope to ${SMART_CLIENT}"
+        else
+          echo "  ⚠️ Could not attach resource-indicators to ${SMART_CLIENT} (HTTP ${HTTP_CODE:-none})"
+        fi
+      done
+    else
+      # TODO: operator action — could not resolve the resource-indicators scope id
+      # via grep. Run manually once:
+      #   GET  /admin/realms/proxy-smart/client-scopes  (find the "resource-indicators" id)
+      #   POST /admin/realms/proxy-smart/client-scopes/{id}/protocol-mappers/models  (both audience mappers)
+      #   PUT  /admin/realms/proxy-smart/clients/{clientUuid}/default-client-scopes/{id}  (per SMART client)
+      echo '  ⚠️ Could not resolve resource-indicators scope id — see TODO in deploy script'
+    fi
+  else
+    echo '  ⚠️ Could not get Keycloak admin token — skipping resource-indicator reconciliation'
+  fi
+else
+  echo '  ⚠️ Keycloak container not found — skipping resource-indicator reconciliation'
+fi
+
+# ── 10c. Keycloak Device-Grant Reconciliation (admin-ui) ──
+# realm-export.json uses IGNORE_EXISTING, so flipping
+# oauth2.device.authorization.grant.enabled to "true" on admin-ui in the export
+# never reaches an already-imported beta realm. The CLI's interactive login
+# (RFC 8628 device flow) uses the admin-ui client, so without this attribute
+# Keycloak rejects the device-authorization request with unauthorized_client.
+# Best-effort, non-fatal, idempotent: GET admin-ui by clientId, set the
+# attribute via grep/sed (no jq on the VPS), PUT the updated representation.
+echo '🔧 Reconciling admin-ui device-authorization grant...'
+KC_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' \
+  proxy-smart-keycloak-beta 2>/dev/null || true)
+
+if [ -n "${KC_IP:-}" ]; then
+  KC_BASE="http://${KC_IP}:8080/auth"
+  KC_PASS=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' .env.beta | cut -d= -f2 || true)
+  KC_TOKEN=$(curl -sf -X POST "${KC_BASE}/realms/master/protocol/openid-connect/token" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=admin' \
+    -d "password=${KC_PASS}" \
+    -d 'grant_type=password' \
+    -d 'client_id=admin-cli' 2>/dev/null | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4 || true)
+
+  if [ -n "${KC_TOKEN:-}" ]; then
+    KC_CLIENTS="${KC_BASE}/admin/realms/proxy-smart/clients"
+    ADMIN_UI=$(curl -sf "${KC_CLIENTS}?clientId=admin-ui" \
+      -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+    # The list endpoint returns a JSON array; strip the surrounding [ ] to get the object.
+    ADMIN_UI=$(echo "$ADMIN_UI" | sed 's/^\[//; s/\]$//')
+    AU_UUID=$(echo "$ADMIN_UI" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+
+    if [ -z "${AU_UUID:-}" ]; then
+      echo '  ℹ️ admin-ui client not found — skipping device-grant reconciliation'
+    elif echo "$ADMIN_UI" | grep -q '"oauth2.device.authorization.grant.enabled":"true"'; then
+      echo '  ✅ admin-ui device-authorization grant already enabled'
+    else
+      # Flip an existing "false" value, or inject the attribute if absent.
+      if echo "$ADMIN_UI" | grep -q '"oauth2.device.authorization.grant.enabled":"false"'; then
+        UPDATED_AU=$(echo "$ADMIN_UI" \
+          | sed 's/"oauth2.device.authorization.grant.enabled":"false"/"oauth2.device.authorization.grant.enabled":"true"/')
+      else
+        UPDATED_AU=$(echo "$ADMIN_UI" \
+          | sed 's/"attributes":{/"attributes":{"oauth2.device.authorization.grant.enabled":"true",/')
+      fi
+      HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X PUT "${KC_CLIENTS}/${AU_UUID}" \
+        -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+        -d "$UPDATED_AU" 2>/dev/null || true)
+      if [ "${HTTP_CODE:-}" = '204' ]; then
+        echo '  ✅ admin-ui device-authorization grant enabled'
+      else
+        echo "  ⚠️ Failed to enable admin-ui device grant (HTTP ${HTTP_CODE:-none})"
+      fi
+    fi
+  else
+    echo '  ⚠️ Could not get Keycloak admin token — skipping device-grant reconciliation'
+  fi
+else
+  echo '  ⚠️ Keycloak container not found — skipping device-grant reconciliation'
 fi
 
 # ── 11. Seed Data ──

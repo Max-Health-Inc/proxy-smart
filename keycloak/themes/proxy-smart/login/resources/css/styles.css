@@ -14,37 +14,27 @@
  */
 
 /* ═══════════════════════════════════════════════════════════════════
-   Font Loading — Geist Sans + Geist Mono
+   Font Loading — Geist Sans + Geist Mono (self-hosted variable fonts)
+
+   Self-hosted to match the proxy-smart UI (frontend/ui/src/index.css) — the
+   same Geist-Variable.woff2 / GeistMono-Variable.woff2 from the `geist` npm
+   package. One variable file per family covers every weight (100–900), so no
+   external CDN request from the auth page (previously these 404'd against a
+   non-existent geist@1.4.0 path). Files live in ../fonts/ (resources/fonts/).
    ═══════════════════════════════════════════════════════════════════ */
 
 @font-face {
   font-family: "Geist Sans";
-  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-sans/Geist-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Geist Sans";
-  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-sans/Geist-Light.woff2") format("woff2");
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Geist Sans";
-  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-sans/Geist-Medium.woff2") format("woff2");
-  font-weight: 500;
+  src: url("../fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: "Geist Mono";
-  src: url("https://cdn.jsdelivr.net/npm/geist@1.4.0/dist/fonts/geist-mono/GeistMono-Regular.woff2") format("woff2");
-  font-weight: 400;
+  src: url("../fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
@@ -154,12 +144,12 @@ body.kc-login select {
    Login Card Container
    ═══════════════════════════════════════════════════════════════════ */
 
-.pf-v5-c-login__main,
-#kc-login {
+.pf-v5-c-login__main {
   background: var(--ps-surface) !important;
   border: 1px solid var(--ps-border) !important;
   box-shadow: none !important;
-  max-width: 420px;
+  max-width: 480px;
+  height: fit-content !important;
   margin: 0 auto;
   padding: 48px 40px !important;
   position: relative;
@@ -167,8 +157,7 @@ body.kc-login select {
 }
 
 /* Subtle top accent line */
-.pf-v5-c-login__main::before,
-#kc-login::before {
+.pf-v5-c-login__main::before {
   content: "";
   position: absolute;
   top: 0;
@@ -183,7 +172,13 @@ body.kc-login select {
    Header / Logo Area
    ═══════════════════════════════════════════════════════════════════ */
 
-.pf-v5-c-login__header,
+/* Brand header sits ABOVE the card — clean, no divider */
+.pf-v5-c-login__header {
+  text-align: center;
+  margin-bottom: 24px !important;
+}
+
+/* Title header is INSIDE the card — keep the hairline divider */
 .pf-v5-c-login__main-header {
   text-align: center;
   margin-bottom: 32px !important;
@@ -231,43 +226,72 @@ label {
    Form Inputs — Transparent bg, subtle border
    ═══════════════════════════════════════════════════════════════════ */
 
-.pf-v5-c-form-control,
+/* In PF v5 the .pf-v5-c-form-control is a <span> wrapping the <input>.
+   The wrapper owns the border + background; the inner <input> stays
+   transparent and borderless so we don't get a double-boxed field. */
+.pf-v5-c-form-control {
+  background: var(--ps-input-bg) !important;
+  border: 1px solid var(--ps-border) !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border-color var(--ps-transition), background-color var(--ps-transition) !important;
+}
+
+/* Kill PatternFly's ::after bottom-highlight (the bright cyan focus line) */
+.pf-v5-c-form-control::after,
+.pf-v5-c-form-control::before {
+  display: none !important;
+}
+
 .pf-v5-c-form-control > input,
 .pf-v5-c-form-control > textarea,
-.pf-v5-c-form-control > select,
-input[type="text"],
-input[type="password"],
-input[type="email"] {
+.pf-v5-c-form-control > select {
   font-family: var(--ps-font-sans) !important;
   font-weight: 300 !important;
   font-size: 0.875rem !important;
-  background: var(--ps-input-bg) !important;
-  border: 1px solid var(--ps-border) !important;
+  background: transparent !important;
+  border: none !important;
   color: var(--ps-foreground-90) !important;
-  padding: 14px 16px !important;
-  transition: border-color var(--ps-transition), background-color var(--ps-transition) !important;
+  width: 100%;
+  padding: 13px 14px !important;
   outline: none !important;
   box-shadow: none !important;
 }
 
-.pf-v5-c-form-control:hover,
-.pf-v5-c-form-control > input:hover,
-input[type="text"]:hover,
-input[type="password"]:hover,
-input[type="email"]:hover {
+.pf-v5-c-form-control:hover {
   border-color: var(--ps-border-hover) !important;
   background: rgba(250, 250, 250, 0.05) !important;
 }
 
-.pf-v5-c-form-control:focus-within,
-.pf-v5-c-form-control > input:focus,
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="email"]:focus {
+.pf-v5-c-form-control:focus-within {
   border-color: var(--ps-border-focus) !important;
   background: rgba(250, 250, 250, 0.05) !important;
   box-shadow: none !important;
   outline: none !important;
+}
+
+/* Password field: the input + visibility toggle live in an input-group.
+   Border the GROUP as one unit so the toggle reads as part of the field. */
+.pf-v5-c-input-group {
+  background: var(--ps-input-bg) !important;
+  border: 1px solid var(--ps-border) !important;
+  box-shadow: none !important;
+  transition: border-color var(--ps-transition), background-color var(--ps-transition) !important;
+}
+
+.pf-v5-c-input-group:hover {
+  border-color: var(--ps-border-hover) !important;
+}
+
+.pf-v5-c-input-group:focus-within {
+  border-color: var(--ps-border-focus) !important;
+  background: rgba(250, 250, 250, 0.05) !important;
+}
+
+.pf-v5-c-input-group .pf-v5-c-form-control {
+  border: none !important;
+  background: transparent !important;
 }
 
 /* Placeholder text */
@@ -282,16 +306,16 @@ input::placeholder {
    ═══════════════════════════════════════════════════════════════════ */
 
 .pf-v5-c-button.pf-m-primary,
-#kc-login-button,
+#kc-login,
 input[type="submit"] {
   font-family: var(--ps-font-mono) !important;
   font-size: 11px !important;
   font-weight: 400 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.15em !important;
-  background: var(--ps-foreground-5) !important;
-  border: 1px solid var(--ps-border) !important;
-  color: var(--ps-foreground-70) !important;
+  background: var(--ps-accent-subtle) !important;
+  border: 1px solid rgba(0, 210, 148, 0.35) !important;
+  color: var(--ps-accent) !important;
   padding: 14px 24px !important;
   width: 100%;
   transition: all var(--ps-transition) !important;
@@ -299,27 +323,32 @@ input[type="submit"] {
   margin-top: 8px;
 }
 
+/* Neutralize PatternFly's ::after border/box-shadow on buttons */
+.pf-v5-c-button::after {
+  display: none !important;
+}
+
 .pf-v5-c-button.pf-m-primary:hover,
-#kc-login-button:hover,
+#kc-login:hover,
 input[type="submit"]:hover {
-  background: var(--ps-foreground-10) !important;
-  border-color: var(--ps-border-hover) !important;
-  color: var(--ps-foreground-90) !important;
+  background: rgba(0, 210, 148, 0.22) !important;
+  border-color: rgba(0, 210, 148, 0.6) !important;
+  color: #00d294 !important;
   box-shadow: none !important;
 }
 
 .pf-v5-c-button.pf-m-primary:focus,
-#kc-login-button:focus,
+#kc-login:focus,
 input[type="submit"]:focus {
-  border-color: var(--ps-border-focus) !important;
+  border-color: rgba(0, 210, 148, 0.6) !important;
   box-shadow: none !important;
   outline: none !important;
 }
 
 .pf-v5-c-button.pf-m-primary:active,
-#kc-login-button:active,
+#kc-login:active,
 input[type="submit"]:active {
-  background: var(--ps-foreground-10) !important;
+  background: rgba(0, 210, 148, 0.28) !important;
   transform: none !important;
 }
 
@@ -389,10 +418,12 @@ body.kc-login a:hover {
    Social / IdP Providers Section
    ═══════════════════════════════════════════════════════════════════ */
 
+/* The parent .__main-footer already draws the single divider above this
+   section, so don't add a second one here (avoids a double hairline). */
 #kc-social-providers {
-  margin-top: 24px !important;
-  padding-top: 24px !important;
-  border-top: 1px solid var(--ps-foreground-5) !important;
+  margin-top: 16px !important;
+  padding-top: 0 !important;
+  border-top: none !important;
 }
 
 /* "Or sign in with" divider text */
@@ -496,9 +527,16 @@ body.kc-login a:hover {
 .pf-v5-c-login__footer,
 .pf-v5-c-login__main-footer {
   text-align: center;
-  margin-top: 24px !important;
-  padding-top: 16px !important;
+  margin-top: 20px !important;
+  padding-top: 20px !important;
   border-top: 1px solid var(--ps-foreground-5) !important;
+}
+
+/* Keycloak renders a trailing empty .__main-footer — hide it so it doesn't
+   leave a stray bordered strip below the social buttons. */
+.pf-v5-c-login__footer:empty,
+.pf-v5-c-login__main-footer:empty {
+  display: none !important;
 }
 
 .pf-v5-c-login__footer a,
@@ -533,26 +571,50 @@ body.kc-login a:hover {
   display: none !important;
 }
 
-/* Remove PF brand image / background pattern */
+/* Brand text is restyled in brand.css — just strip any inherited logo image */
 .pf-v5-c-brand {
-  display: none !important;
+  background-image: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    Layout — Centered vertically and horizontally
    ═══════════════════════════════════════════════════════════════════ */
 
+/* Row flex: vertically + horizontally center the single container.
+   (Do NOT use flex-direction:column + align-items:center here — that sizes
+   the container to its min-content, collapsing the card.) */
 .pf-v5-c-login {
   display: flex !important;
+  flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
+  width: 100% !important;
   min-height: 100vh !important;
   padding: 24px !important;
+  box-sizing: border-box !important;
 }
 
+/* PF v5 makes .__container a CSS grid with ~98px horizontal padding, which
+   shrank the card's content box to ~224px (card collapsed on desktop) and
+   stopped it shrinking on mobile. Force a centered block sized off the
+   VIEWPORT: exactly 480px on desktop, fluid on small screens (24px gutters). */
 .pf-v5-c-login__container {
+  display: block !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  flex: 0 0 auto !important;
+  width: min(480px, calc(100vw - 48px)) !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+}
+
+/* Card + brand always fill the container width */
+.pf-v5-c-login__main,
+.pf-v5-c-login__header {
   width: 100% !important;
-  max-width: 420px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -582,12 +644,22 @@ body.kc-login a:hover {
   border-color: var(--ps-accent) !important;
 }
 
-/* Deny button */
+/* Deny button — match the primary button's full-width box + typography so the
+   Yes/No grant buttons are the same size (the base .pf-m-secondary rule styles
+   it as a compact text link, which collapsed it to content width). */
 #kc-oauth .pf-v5-c-button.pf-m-secondary,
 #kc-oauth .pf-v5-c-button.pf-m-link {
   background: var(--ps-error-subtle) !important;
   border: 1px solid rgba(239, 68, 68, 0.2) !important;
   color: #fca5a5 !important;
+  width: 100% !important;
+  padding: 14px 24px !important;
+  margin-top: 8px !important;
+  font-family: var(--ps-font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.15em !important;
 }
 
 #kc-oauth .pf-v5-c-button.pf-m-secondary:hover,
@@ -618,15 +690,13 @@ body.kc-login a:hover {
    ═══════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 480px) {
-  .pf-v5-c-login__main,
-  #kc-login {
+  .pf-v5-c-login__main {
     padding: 32px 24px !important;
     border: none !important;
     border-top: 1px solid var(--ps-border) !important;
   }
 
-  .pf-v5-c-login__main::before,
-  #kc-login::before {
+  .pf-v5-c-login__main::before {
     display: none;
   }
 }

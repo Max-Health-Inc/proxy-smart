@@ -201,7 +201,7 @@ export type { IntrospectOptions } from './introspect'
 
 export { typeboxToZod, getMergedInputSchema } from './typebox-to-zod'
 
-export { executeTool, executeResource } from './executor'
+export { executeTool, executeResource, DISPATCH_APP_KEY } from './executor'
 
 export {
   SessionManager,

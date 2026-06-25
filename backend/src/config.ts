@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { randomBytes } from 'crypto'
+import { loadMcpEndpointConfig } from './lib/mcp-endpoint-config'
 
 // Per-process fallback secret for EHR Launch codes when SMART_LAUNCH_SECRET is not set.
 // WARNING: This is NOT safe for multi-node deployments — set SMART_LAUNCH_SECRET env var.
@@ -55,9 +56,18 @@ export const config = {
     get adminClientId() {
       return process.env.KEYCLOAK_ADMIN_CLIENT_ID || null
     },
-    
+
     get adminClientSecret() {
       return process.env.KEYCLOAK_ADMIN_CLIENT_SECRET || null
+    },
+
+    // The browser client the admin WEBAPP signs in with (see
+    // frontend/ui/src/service/openid-service.ts). This is DISTINCT from
+    // adminClientId, which is the backend's Keycloak admin-REST service account
+    // (e.g. admin-service). validateAdminToken binds admin-user tokens to THIS
+    // client's id (matched on aud/azp). Defaults to 'admin-ui'.
+    get adminUiClientId() {
+      return process.env.KEYCLOAK_ADMIN_UI_CLIENT_ID || 'admin-ui'
     },
     
     // Check if Keycloak is configured
@@ -276,12 +286,11 @@ export const config = {
   },
 
   mcp: {
-    // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server
-    // Enabled by default. Override with MCP_ENDPOINT_ENABLED=false to disable.
+    // MCP endpoint configuration — exposes backend tools as a Streamable HTTP MCP server.
+    // The file-backed config (mcp-endpoint.json, managed via the admin UI) is the single
+    // source of truth for whether the endpoint is enabled. Enabled by default.
     get enabled(): boolean {
-      const explicit = process.env.MCP_ENDPOINT_ENABLED
-      if (explicit !== undefined) return explicit === 'true'
-      return true
+      return loadMcpEndpointConfig().enabled
     },
     get path() {
       return process.env.MCP_ENDPOINT_PATH || '/mcp'

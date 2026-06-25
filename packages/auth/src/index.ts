@@ -53,6 +53,9 @@ export {
 // ─── Launch Code ────────────────────────────────────────────────────────────
 export { signLaunchCode, verifyLaunchCode, type LaunchCodeServiceOptions } from './launch-code'
 
+// ─── Redirect URI Validation ──────────────────────────────────────────────────
+export { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
+
 // ─── Stores ─────────────────────────────────────────────────────────────────
 export type { ILaunchContextStore, LaunchContextStoreOptions } from './stores/interface'
 export { MemoryStore } from './stores/memory'
@@ -77,6 +80,7 @@ export {
 export {
   enrichTokenResponse,
   getRewrittenRedirectUri,
+  getSessionAudience,
   type TokenEnricherDeps,
   type TokenEnrichInput,
 } from './token-enricher'

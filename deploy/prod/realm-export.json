@@ -515,9 +515,80 @@
         "include.in.token.scope": "true",
         "display.on.consent.screen": "false"
       }
+    },
+    {
+      "name": "resource-indicators",
+      "description": "RFC 8707 resource indicators: pre-populates access-token aud with resource-client ids (fhir-resource-server, mcp-resource-server) so Keycloak's resource-indicators post-processor can set aud to the requested resource. Guards null-aud NPE (#49077).",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "fhir-resource-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "fhir-resource-server",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "mcp-resource-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "mcp-resource-server",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "clients": [
+    {
+      "clientId": "fhir-resource-server",
+      "name": "FHIR Resource Server (RFC 8707 resource indicator)",
+      "description": "Non-login resource client. Holds resource_url = the proxy FHIR base so the resource-indicators post-processor can bind a requested resource into aud. Never authenticates.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": false,
+      "attributes": {
+        "resource_url": "https://api.proxy-smart.com/proxy-smart-backend/hapi-fhir-server/R4"
+      }
+    },
+    {
+      "clientId": "mcp-resource-server",
+      "name": "MCP Resource Server (RFC 8707 resource indicator)",
+      "description": "Non-login resource client. Holds resource_url = the proxy MCP URL so the resource-indicators post-processor can bind a requested MCP resource into aud. The existing mcp-audience mapper continues to bind the literal MCP URL into aud independently; this client only adds RFC 8707 resource-indicator support and does not change the existing /mcp aud behaviour.",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "fullScopeAllowed": false,
+      "attributes": {
+        "resource_url": "https://api.proxy-smart.com/mcp"
+      }
+    },
     {
       "clientId": "admin-ui",
       "name": "Admin UI",
@@ -545,7 +616,8 @@
         "acr",
         "profile",
         "roles",
-        "email"
+        "email",
+        "resource-indicators"
       ],
       "optionalClientScopes": [
         "address",
@@ -555,7 +627,7 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "oauth2.device.authorization.grant.enabled": "false",
+        "oauth2.device.authorization.grant.enabled": "true",
         "oidc.ciba.grant.enabled": "false",
         "backchannel.logout.session.required": "true",
         "backchannel.logout.revoke.offline.tokens": "false",
@@ -608,7 +680,8 @@
         "acr",
         "profile",
         "roles",
-        "email"
+        "email",
+        "resource-indicators"
       ],
       "optionalClientScopes": [
         "address",
@@ -774,7 +847,8 @@
         "profile",
         "roles",
         "email",
-        "openid"
+        "openid",
+        "resource-indicators"
       ],
       "optionalClientScopes": [
         "address",
@@ -830,7 +904,8 @@
         "profile",
         "roles",
         "email",
-        "openid"
+        "openid",
+        "resource-indicators"
       ],
       "optionalClientScopes": [
         "address",
@@ -876,7 +951,8 @@
         "profile",
         "roles",
         "email",
-        "openid"
+        "openid",
+        "resource-indicators"
       ],
       "optionalClientScopes": [
         "address",
@@ -932,7 +1008,8 @@
         "profile",
         "roles",
         "email",
-        "openid"
+        "openid",
+        "resource-indicators"
       ],
       "optionalClientScopes": [
         "address",

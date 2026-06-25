@@ -39,6 +39,7 @@ export const smartStore: ILaunchContextStore = launchContextStore
 export const keycloakAdapter: IdPAdapter = {
   getAuthorizationUrl: () => `${config.keycloak.publicUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/auth`,
   getTokenUrl: () => `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token`,
+  getDeviceAuthorizationUrl: () => `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/auth/device`,
   getIntrospectionUrl: () => `${config.keycloak.baseUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/token/introspect`,
   getLogoutUrl: () => `${config.keycloak.publicUrl}/realms/${config.keycloak.realm}/protocol/openid-connect/logout`,
   getLaunchContextParams: (context) => {

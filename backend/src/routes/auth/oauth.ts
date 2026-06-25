@@ -6,7 +6,7 @@ import { getAllServers, ensureServersInitialized, getServerInfoByName } from '@/
 import { logger } from '@/lib/logger'
 import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
-import { getSmartClientConfig } from '@/lib/smart-client-config-cache'
+import { getSmartClientConfig, getRegisteredRedirectUris } from '@/lib/smart-client-config-cache'
 import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
 import { tokenContextStore } from '@/lib/token-context-store'
 import { hasClientAssertion, translateClientAssertion, ClientAssertionError } from './backend-services'
@@ -20,6 +20,7 @@ import {
   enrichTokenResponse,
   enrichIntrospection,
   getRewrittenRedirectUri,
+  getSessionAudience,
   signLaunchCode,
   toAbsoluteFhirUser,
   type LaunchCodePayload,
@@ -28,6 +29,8 @@ import {
 } from '@proxy-smart/auth'
 import {
   TokenRequest,
+  DeviceAuthorizationRequest,
+  DeviceAuthorizationResponse,
   IntrospectRequest,
   IntrospectResponse,
   AuthorizationQuery,
@@ -191,6 +194,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       logger: smartLogger,
       validateAudience,
       isIdpReachable: isKeycloakReachable,
+      getRegisteredRedirectUris,
     })
 
     switch (result.type) {
@@ -213,7 +217,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   .get('/smart-callback', async ({ query, redirect, set }) => {
     const { result } = await handleCallback(
       { state: query.state, code: query.code, error: query.error, error_description: query.error_description, session_state: query.session_state },
-      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient },
+      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient, getRegisteredRedirectUris },
     )
 
     switch (result.type) {
@@ -487,13 +491,28 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       const finalRedirectUri = rewrittenUri || clientRedirectUri
       if (finalRedirectUri) formData.append('redirect_uri', finalRedirectUri)
 
+      // ── RFC 8707 resource indicator for SMART sessions ──────────────
+      // Re-send the resource captured at /authorize so it matches what Keycloak
+      // stored on the code (a mismatch => Keycloak ERROR_NOT_MATCHING). Prefer the
+      // session value over any client-sent resource. Skip values with a query or
+      // fragment (rejected by Keycloak's ResourceIndicatorValidation).
+      const sessionAud = getSessionAudience(clientIdForSession, clientRedirectUri, {
+        config: smartProxyConfig, store: smartStore, logger: smartLogger,
+      })
+      const resourceParam = sessionAud ?? bodyObj.resource
+
       if (bodyObj.client_id || bodyObj.clientId) formData.append('client_id', bodyObj.client_id || bodyObj.clientId!)
       if (bodyObj.client_secret || bodyObj.clientSecret) formData.append('client_secret', bodyObj.client_secret || bodyObj.clientSecret!)
       if (bodyObj.code_verifier || bodyObj.codeVerifier) formData.append('code_verifier', bodyObj.code_verifier || bodyObj.codeVerifier!)
+      // RFC 8628 device-grant poll: forward the device_code so Keycloak can match
+      // the pending authorization. Without this the device login never completes.
+      if (bodyObj.device_code || bodyObj.deviceCode) formData.append('device_code', bodyObj.device_code || bodyObj.deviceCode!)
       if (bodyObj.refresh_token || bodyObj.refreshToken) formData.append('refresh_token', bodyObj.refresh_token || bodyObj.refreshToken!)
       if (bodyObj.scope) formData.append('scope', bodyObj.scope)
       if (bodyObj.audience) formData.append('audience', bodyObj.audience)
-      if (bodyObj.resource) formData.append('resource', bodyObj.resource)
+      if (resourceParam && !resourceParam.includes('?') && !resourceParam.includes('#')) {
+        formData.append('resource', resourceParam)
+      }
       if (bodyObj.username) formData.append('username', bodyObj.username)
       if (bodyObj.password) formData.append('password', bodyObj.password)
       if (bodyObj.client_assertion_type) formData.append('client_assertion_type', bodyObj.client_assertion_type)
@@ -634,6 +653,89 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     body: TokenRequest,
     response: { 200: TokenResponse },
     detail: { summary: 'OAuth Token Exchange', description: 'Exchange authorization code for access token with SMART launch context', tags: ['authentication'] }
+  })
+
+  // ── Device authorization endpoint (RFC 8628) ──────────────────────────
+  // Fronts Keycloak's device-authorization endpoint so CLI / device clients
+  // begin the device grant at the proxy instead of talking to Keycloak
+  // directly. We forward the form body verbatim and return Keycloak's JSON
+  // device-authorization response. The verification_uri (Keycloak's browser
+  // approval page) is returned as-is — it is the IdP's user-facing page.
+  // Subsequent device_code polling happens at /auth/token, which already
+  // forwards grant_type generically.
+  .post('/device', async ({ body, set, headers }) => {
+    const startTime = Date.now()
+    const deviceUrl = keycloakAdapter.getDeviceAuthorizationUrl?.()
+    const bodyObj = body as Record<string, string | undefined>
+
+    if (!deviceUrl) {
+      set.status = 501
+      set.headers['Cache-Control'] = 'no-store'
+      return { error: 'unsupported', error_description: 'Device authorization is not supported by this authorization server' }
+    }
+
+    logger.auth.debug('Device authorization request', {
+      client_id: bodyObj.client_id || 'MISSING',
+      has_scope: !!bodyObj.scope,
+    })
+
+    try {
+      // Forward the application/x-www-form-urlencoded fields verbatim. The
+      // device grant has no SMART session yet (no redirect_uri / code), so
+      // there is no resource to inject here — that binding happens, if at all,
+      // when the token is later minted at /auth/token.
+      const formData = new URLSearchParams()
+      for (const [key, value] of Object.entries(bodyObj)) {
+        if (value !== undefined && value !== '') formData.append(key, value)
+      }
+
+      const resp = await fetch(deviceUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString(),
+      })
+
+      const data = await resp.json()
+
+      try {
+        await oauthMetricsLogger.logEvent({
+          type: 'token',
+          status: resp.status === 200 ? 'success' : 'error',
+          clientId: bodyObj.client_id || 'unknown',
+          clientName: bodyObj.client_id || 'unknown',
+          scopes: bodyObj.scope ? bodyObj.scope.split(' ') : [],
+          grantType: 'device_authorization',
+          responseTime: Date.now() - startTime,
+          ipAddress: headers['x-forwarded-for'] || headers['x-real-ip'] || 'unknown',
+          userAgent: headers['user-agent'] || 'unknown',
+          errorMessage: data.error_description,
+          errorCode: data.error,
+          requestDetails: { path: '/auth/device', method: 'POST', headers: { 'content-type': headers['content-type'] || '', 'user-agent': headers['user-agent'] || '' } },
+        })
+      } catch (logError) {
+        logger.auth.error('Failed to log OAuth device event', { logError })
+      }
+
+      set.status = resp.status
+      set.headers['Cache-Control'] = 'no-store'
+      set.headers['Pragma'] = 'no-cache'
+      return data
+    } catch (error) {
+      logger.auth.error('Device authorization endpoint error', { error })
+      set.status = 500
+      return { error: 'internal_server_error', error_description: 'Failed to process device authorization request' }
+    }
+  }, {
+    async parse({ request, contentType }) {
+      const mediaType = contentType?.split(';')[0]?.trim()
+      if (mediaType === 'application/x-www-form-urlencoded') {
+        const text = await request.text()
+        return Object.fromEntries(new URLSearchParams(text).entries())
+      }
+    },
+    body: DeviceAuthorizationRequest,
+    response: { 200: DeviceAuthorizationResponse },
+    detail: { summary: 'OAuth Device Authorization (RFC 8628)', description: 'Begin the device authorization grant through the proxy. Forwards to the authorization server device endpoint and returns the device_code / user_code response.', tags: ['authentication'] }
   })
 
   // ── Introspection (delegates enrichment to @proxy-smart/auth) ─────────

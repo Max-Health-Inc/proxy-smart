@@ -111,6 +111,23 @@ mock.module('@/lib/auth', () => ({
   },
 }))
 
+// Mock the Keycloak admin lookup behind getRegisteredRedirectUris (VULN 1 fix).
+// The redirect_uri allowlist is validated at authorize/callback time. These
+// integration tests use a fixed set of legitimate client redirect URIs; the
+// real lookup needs a live Keycloak admin API, so we return the allowlist
+// directly here. getSmartClientConfig is kept intact for fhirUser resolution.
+const ALLOWED_REDIRECT_URIS = [
+  'http://localhost:3000/callback', // TEST_CLIENT_REDIRECT
+  'http://app-a.local/callback',
+  'http://app-b.local/callback',
+]
+mock.module('@/lib/smart-client-config-cache', () => ({
+  getSmartClientConfig: async () => ({ patientFacing: undefined, redirectUris: ALLOWED_REDIRECT_URIS }),
+  getRegisteredRedirectUris: async () => ALLOWED_REDIRECT_URIS,
+  invalidateClientConfig: () => {},
+  clearClientConfigCache: () => {},
+}))
+
 // ─── Imports (after mocks) ──────────────────────────────────────────────────
 
 import { authRoutes } from '../src/routes/auth'

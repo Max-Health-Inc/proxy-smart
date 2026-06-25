@@ -21,6 +21,7 @@ import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
 import { signProxyAssertion } from '@/lib/proxy-signing'
+import { validateExternalUrl } from '@/lib/url-validation'
 
 /** A JSON Web Key with required kty and optional kid, plus any additional JWK fields */
 interface JwkKey { kty: string; kid?: string; [key: string]: unknown }
@@ -275,17 +276,13 @@ async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
 
   if (useJwksUrl && jwksUrl) {
     // Preferred: fetch from registered JWKS URL (supports key rotation)
-    const jwksResp = await fetch(jwksUrl)
-    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksUrl}`)
-    jwks = await jwksResp.json()
+    jwks = await fetchJwksUrl(jwksUrl)
   } else if (jwksInline) {
     // Fallback: inline JWKS string stored in client attributes
     jwks = JSON.parse(jwksInline)
   } else if (jwksUrl) {
     // Legacy fallback: jwks.url without explicit toggle
-    const jwksResp = await fetch(jwksUrl)
-    if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksUrl}`)
-    jwks = await jwksResp.json()
+    jwks = await fetchJwksUrl(jwksUrl)
   } else {
     throw new Error(`Client '${clientId}' has no registered JWKS`)
   }
@@ -297,6 +294,34 @@ async function getClientMetadata(clientId: string): Promise<ClientMetadata> {
 
   jwksCache.set(clientId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS })
   return result
+}
+
+/**
+ * Fetch a client's JWKS from a registered jwks_uri, with SSRF protection.
+ *
+ * VULN 2 (HIGH) — defense-in-depth fetch layer: a client-supplied jwks_uri is
+ * a server-side fetch sink. Although registration-layer validation
+ * (client-registration.ts) blocks internal hosts at write time, we re-validate
+ * here at read time so that any pre-existing or out-of-band stored URL pointing
+ * at an internal/metadata/RFC1918/link-local host is NEVER dereferenced. The
+ * guard runs BEFORE the request is issued, so no SSRF probe ever leaves the
+ * process. http(s) scheme only; fail-closed.
+ *
+ * Mirrors the dev/docker carve-out used in fhir-servers.ts so legitimate
+ * internal federation keeps working in local development; the guard is fully
+ * active in test and production.
+ */
+async function fetchJwksUrl(jwksUrl: string): Promise<{ keys: JwkKey[] }> {
+  const allowInternal = process.env.NODE_ENV === 'development'
+  const urlCheck = validateExternalUrl(jwksUrl, allowInternal)
+  if (!urlCheck.valid) {
+    logger.auth.warn('Blocked SSRF-suspect jwks_uri fetch', { jwksUrl, reason: urlCheck.reason })
+    throw new Error(`Refusing to fetch jwks_uri '${jwksUrl}': ${urlCheck.reason}`)
+  }
+
+  const jwksResp = await fetch(jwksUrl)
+  if (!jwksResp.ok) throw new Error(`Failed to fetch JWKS from ${jwksUrl}: ${jwksResp.status}`)
+  return jwksResp.json()
 }
 
 /**
