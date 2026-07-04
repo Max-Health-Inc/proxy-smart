@@ -319,7 +319,7 @@
     "ClusterSettings": [
      {
       "Name": "containerInsights",
-      "Value": "enabled"
+      "Value": "disabled"
      }
     ],
     "Tags": [
@@ -687,8 +687,7 @@
     "ContainerDefinitions": [
      {
       "Command": [
-       "start",
-       "--optimized"
+       "start"
       ],
       "Environment": [
        {
@@ -736,7 +735,7 @@
        },
        {
         "Name": "JAVA_OPTS_KC_HEAP",
-        "Value": "-Xms256m -Xmx1024m"
+        "Value": "-Xms256m -Xmx768m"
        }
       ],
       "Essential": true,
@@ -747,21 +746,10 @@
        ],
        "Interval": 30,
        "Retries": 5,
-       "StartPeriod": 120,
+       "StartPeriod": 300,
        "Timeout": 10
       },
-      "Image": {
-       "Fn::Join": [
-        "",
-        [
-         "579201838740.dkr.ecr.eu-central-1.",
-         {
-          "Ref": "AWS::URLSuffix"
-         },
-         "/proxy-smart-keycloak:latest"
-        ]
-       ]
-      },
+      "Image": "quay.io/keycloak/keycloak:26.0",
       "LogConfiguration": {
        "LogDriver": "awslogs",
        "Options": {
@@ -839,7 +827,7 @@
       ]
      }
     ],
-    "Cpu": "1024",
+    "Cpu": "512",
     "ExecutionRoleArn": {
      "Fn::GetAtt": [
       "KeycloakServiceTaskDefExecutionRoleF3AB432D",
@@ -847,7 +835,7 @@
      ]
     },
     "Family": "ProxySmartKeycloakKeycloakServiceTaskDef93510180",
-    "Memory": "2048",
+    "Memory": "1024",
     "NetworkMode": "awsvpc",
     "RequiresCompatibilities": [
      "FARGATE"
@@ -952,31 +940,6 @@
    "Properties": {
     "PolicyDocument": {
      "Statement": [
-      {
-       "Action": [
-        "ecr:BatchCheckLayerAvailability",
-        "ecr:GetDownloadUrlForLayer",
-        "ecr:BatchGetImage"
-       ],
-       "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:",
-          {
-           "Ref": "AWS::Partition"
-          },
-          ":ecr:eu-central-1:579201838740:repository/proxy-smart-keycloak"
-         ]
-        ]
-       }
-      },
-      {
-       "Action": "ecr:GetAuthorizationToken",
-       "Effect": "Allow",
-       "Resource": "*"
-      },
       {
        "Action": [
         "logs:CreateLogStream",
@@ -1457,7 +1420,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4rWueh2LPrbUWBABvsAHssGJn22CiSIVIJAsP/PkhOnaQr9sS785HmSSp08fBV39/BkVem3a0sbfXYCJidgiO/jGiCrnHwTOLD6REYFaMJKLwHBz0GPTaZq6pzM5qUwSDUkQHBxVVdtGS9opM6Qnco9Fh17jduy2qtFlQye0Mg5N2k0LAeKxtZMOQZZ/gDQg+CG+DdN+zIUbInw3vFOwFyGK60c2+D4UAG5xAzbAxY2No8tvLRSV7gZQARDI51OQw27U/erT20j2DBGWzfDUQLLGSsh3abHeT6lPXj7hzrhl/7iAXd2fOGr75vIPQoT8HHYQ6/0LR5kS8qBpLTYvm/8L0PyPyP/OyyPqngo+DDFz2WNRof2uScUZMeAcFej7W3+VBz/eUtmVOiM5qU9T3rce37ZYM3PCm4JIMong1Ycr0eL/eS8uX1bpW5bAKYHbm+mfsu/74RJmWsj+0RxPzRY2kh7JMng2lK8GeUIYqqkX0MBiflfIv6lT8dikJ/LvT93SsTrUJ0QnvU9Vz/AvVSIcFXAwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtM1FsWfP+0CBAB3iAHssGJnW2CiSIVEJCkH/fZCcOkk37Il35yPNk9TI5uGz/HgHp7BSw35laCdTz6D2Ak7hOQVUHjkcwIJGL1NfuehGO6MsFHqmkRQwLq7uohXrFc3iBOOxkakb7S/ctd1aLKgNwSkCJmezQBVk6kwMjL7OOMPv4DUwbiHsv+JIloq9GN4rzjKQRX+lnXt79EdSOIeYYa/AwM7UsZ2LlusCzxMwo7dBttNkyv7k7NrB8AUMWIXDu4FoIDAp42DYVQdZXbL+u7vGuuHXPgqM9ux5w1fft+A18g/v4jSHX2jZvKkXFT3x62L5v/BNewzhL/nRVj0L7yLjw71M7QaV80Nxzqgvj4DgINPGmXqotf50htRroTPKwjgdZFo7vWzwhrOASzKI7IICQ1bLdLmXkq+ud6vMZetB7cnqfu67/PtGyEIZF4cTsPotU2vAH4qngpwLfIo8RRYbDC56hVlYN6B8CR+OTSObe/np7iUQrXy0TAeUm7n+Ac1bdQ5EAwAA"
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartKeycloak/CDKMetadata/Default"

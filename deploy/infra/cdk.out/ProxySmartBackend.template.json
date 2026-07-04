@@ -162,7 +162,7 @@
     "ClusterSettings": [
      {
       "Name": "containerInsights",
-      "Value": "enabled"
+      "Value": "disabled"
      }
     ],
     "Tags": [
@@ -512,6 +512,20 @@
         "Value": "proxy-smart"
        },
        {
+        "Name": "PGHOST",
+        "Value": {
+         "Fn::ImportValue": "ProxySmartDatabase:ExportsOutputFnGetAttKeycloakDbC29913F8EndpointAddress1D2B321C"
+        }
+       },
+       {
+        "Name": "PGPORT",
+        "Value": "5432"
+       },
+       {
+        "Name": "PGDATABASE",
+        "Value": "proxy_smart"
+       },
+       {
         "Name": "FHIR_SERVER_BASE",
         "Value": "http://hapi-fhir.proxy-smart.internal:8080/fhir"
        }
@@ -574,11 +588,39 @@
           ]
          ]
         }
+       },
+       {
+        "Name": "PGUSER",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "ProxySmartDatabase:ExportsOutputRefDbSecret685A0FA57881E1C6"
+           },
+           ":username::"
+          ]
+         ]
+        }
+       },
+       {
+        "Name": "PGPASSWORD",
+        "ValueFrom": {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "ProxySmartDatabase:ExportsOutputRefDbSecret685A0FA57881E1C6"
+           },
+           ":password::"
+          ]
+         ]
+        }
        }
       ]
      }
     ],
-    "Cpu": "512",
+    "Cpu": "256",
     "ExecutionRoleArn": {
      "Fn::GetAtt": [
       "BackendServiceTaskDefExecutionRole15BE46B5",
@@ -586,7 +628,7 @@
      ]
     },
     "Family": "ProxySmartBackendBackendServiceTaskDefCD1092CA",
-    "Memory": "2048",
+    "Memory": "512",
     "NetworkMode": "awsvpc",
     "RequiresCompatibilities": [
      "FARGATE"
@@ -737,6 +779,16 @@
        "Effect": "Allow",
        "Resource": {
         "Ref": "KeycloakAdminSecret02FB07E0"
+       }
+      },
+      {
+       "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "ProxySmartDatabase:ExportsOutputRefDbSecret685A0FA57881E1C6"
        }
       }
      ],
@@ -1214,7 +1266,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4rWueh2LPrbUWBABvsAHssGJn22CiSIVIJAsP/PkhOnaQr9sS785HmSSp08fBV39/BkVem3a0sbfXYCJidgiO/jGiCrnHwTOLD6REYFaMJKLwHBz0GPTaZq6pzM5qUwSDUkQHBxVVdtGS9opM6Qnco9Fh17jduy2qtFlQye0Mg5N2k0LAeKxtZMOQZZ/gDQg+CG+DdN+zIUbInw3vFOwFyGK60c2+D4UAG5xAzbAxY2No8tvLRSV7gZQARDI51OQw27U/erT20j2DBGWzfDUQLLGSsh3abHeT6lPXj7hzrhl/7iAXd2fOGr75vIPQoT8HHYQ6/0LR5kS8qBpLTYvm/8L0PyPyP/OyyPqngo+DDFz2WNRof2uScUZMeAcFej7W3+VBz/eUtmVOiM5qU9T3rce37ZYM3PCm4JIMong1Ycr0eL/eS8uX1bpW5bAKYHbm+mfsu/74RJmWsj+0RxPzRY2kh7JMng2lK8GeUIYqqkX0MBiflfIv6lT8dikJ/LvT93SsTrUJ0QnvU9Vz/AvVSIcFXAwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4r2uai2LPrbUWBABvsAHssGJn22CiSIVIJAsP/PkhOnaQr9sS785HmSSp08fBVf76DI69Mu1tZ2uqxETA7BUd+GdEEXePgmcSH0yMwKkYTUHgPDnoMemwyV1XnZjQpg0GoIwOCi6u6aMl6RSd1hO5Q6LHq3G/cltVaLahk9oZAyLtJoWE9VjayYMgzzvAHhB4EN8C7b9iRo2RPhveKdwLkMFxp594Gw4EMziFm2BiwsLV5bOWjk7zAywAiGBzrchhs2p+8W3toH8GCM9i+G4gWWMhYD+02O8j1KevH3TnWDb/2EQu6s+cNX33fQOhRnoKPwxx+oWnzIl9UDCSnxfJ/4XsfkPkf+dllfVLBR8GHez2WNRof2uScUZMeAcFej7W3+VBz/eUtmVOiM5qU9T3rce37ZYM3PCm4JIMong1Ycr0eL/eS8uX1bpW5bAKYHbm+mfsu/74RJmWsj+0RxPzRY2kh7JMng2lK8GeUIYqqkX0MBiflfIv6lT8dikIX9/rL3SsTrUJ0QnvU9Vz/AkHlwWJXAwAA"
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartBackend/CDKMetadata/Default"
