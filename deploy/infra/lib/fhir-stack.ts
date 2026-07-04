@@ -154,10 +154,12 @@ export class FhirStack extends cdk.Stack {
 
     const taskDefinition = new ecs.FargateTaskDefinition(this, 'FhirTaskDef', {
       // Right-sized from 1024/2048: 30d avg CPU 0.5%, peak mem ~50% (~1 GB).
-      // Keep 1.5 GB so the JVM heap (-Xmx1024m below) has metaspace/off-heap
-      // headroom; halve the vCPU since CPU is idle.
+      // Halve the vCPU since CPU is idle. Memory stays at 2 GB because Fargate
+      // only permits {1024,2048,3072,4096} MB with 512 CPU — 1536 is invalid at
+      // this CPU tier. The vCPU halving is the real cost driver; memory-GB-hours
+      // are the cheaper dimension, so keeping 2 GB is a fine trade.
       cpu: 512,        // 0.5 vCPU — HAPI FHIR is JVM-based
-      memoryLimitMiB: 1536, // 1.5 GB — JVM heap + overhead
+      memoryLimitMiB: 2048, // 2 GB — required min pairing for 512 CPU; heap headroom
     });
 
     taskDefinition.addContainer('hapi-fhir', {
@@ -183,7 +185,7 @@ export class FhirStack extends cdk.Stack {
         // SMART on FHIR capability
         'hapi.fhir.tester.home.fhir_version': 'R4',
         // JVM tuning for container
-        JAVA_OPTS: '-Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport',
+        JAVA_OPTS: '-Xms512m -Xmx1536m -XX:+UseG1GC -XX:+UseContainerSupport',
       },
       secrets: {
         'spring.datasource.username': ecs.Secret.fromSecretsManager(
