@@ -9,7 +9,7 @@ import * as route53Targets from 'aws-cdk-lib/aws-route53-targets';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
-import * as rds from 'aws-cdk-lib/aws-rds';
+import type * as rds from 'aws-cdk-lib/aws-rds';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import type { Construct } from 'constructs';
 
@@ -177,7 +177,10 @@ export class BackendStack extends cdk.Stack {
     this.cluster = new ecs.Cluster(this, 'Cluster', {
       vpc: props.vpc,
       clusterName: 'proxy-smart-production',
-      containerInsightsV2: ecs.ContainerInsights.ENABLED,
+      // Disabled to cut the CloudWatch per-task metric spend (~$27/mo across
+      // clusters) — avg CPU <1% here. This cluster runs both the backend and
+      // HAPI FHIR services. Free ALB/ECS metrics still feed the alarms below.
+      containerInsightsV2: ecs.ContainerInsights.DISABLED,
     });
 
     // Build environment variables
@@ -245,8 +248,10 @@ export class BackendStack extends cdk.Stack {
       {
         cluster: this.cluster,
         serviceName: 'proxy-smart-backend',
-        cpu: 512,
-        memoryLimitMiB: 2048,
+        // Right-sized from 512/2048: 30d avg CPU 0.8%, peak mem ~11% (~220 MB).
+        // Node process — 512 MB is ample. Autoscaling covers bursts.
+        cpu: 256,
+        memoryLimitMiB: 512,
         desiredCount: 1,
 
         // Place tasks in private subnets so the RDS security group's
