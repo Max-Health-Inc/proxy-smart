@@ -22,7 +22,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/9509a2597c73668e273d6e71c99faf0fd4804e04e84ea4dd7a2e2c4b74cb76aa.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/76a2d27a9ab2edcd4b5e21a8e276241ef8f8ce8265675e95799d301745cb36e6.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -61,7 +61,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/1eaddba3f2aa6e3033e3b3d64e705a3d3d1501dcf2114b40132bc46e60a2777d.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/b741b4215413bfab8c62afea635519dc6673699a1d7862c05b3234e7cbf4227b.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -103,7 +103,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/13f757e865c000707c34bd2d4b212729c228c202d2c0aefd5a29a53e30fde074.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/2d01923eed8ea63be2c1bec6cbd8e38f81d73163968db8bfb2195c00d65ec62a.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -146,7 +146,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/68ed1268d77b5a8ff6df9befcd5ceb2796562d6829535c8c222ea7723b4ae35e.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/67da8749ab6ee4b3719d152d0986e4b577352c2e39b9e26a328d20aab6726cd2.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -160,6 +160,7 @@
       },
       "dependencies": [
         "ProxySmartKeycloak",
+        "ProxySmartDatabase",
         "ProxySmartVpc",
         "ProxySmartBackend.assets"
       ],
@@ -189,7 +190,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/640a9df4b194aa414067e627234eff8c8d49b17dd763f61f467665689eed2e7c.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/2221bb4fd2bb0438f2623a7860c5667593447b71873576902245ff3e49fbbd92.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
