@@ -84,7 +84,8 @@ jobs:
         continue-on-error: true
         run: |
           cd backend
-          bun test 2>&1 | tee /tmp/backend-test-output.log
+          # --isolate required (global mock.module collisions) — see docs/keycloak-features.md
+          bun test --isolate 2>&1 | tee /tmp/backend-test-output.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
       - name: Run frontend tests (initial)
@@ -150,7 +151,7 @@ jobs:
 
             PROMPT="You are in a CI environment fixing failing backend tests.
           Working directory: $(pwd)
-          Test command: cd backend && bun test
+          Test command: cd backend && bun test --isolate
 
           The following test failures occurred:
           \`\`\`
@@ -162,7 +163,7 @@ jobs:
           Rules:
           - Read the failing test files and the source files they test
           - Fix the SOURCE code to make tests pass, do NOT modify test files unless the test itself is wrong
-          - Run 'cd backend && bun test' to verify your fix
+          - Run 'cd backend && bun test --isolate' to verify your fix
           - If tests pass, stop. If not, try another approach.
           - Do not add new dependencies
           - Keep changes minimal and focused"
@@ -192,7 +193,7 @@ jobs:
             # Re-run tests to check
             echo "::group::Backend test retry $ATTEMPT"
             cd backend
-            if bun test 2>&1 | tee /tmp/backend-test-output.log; then
+            if bun test --isolate 2>&1 | tee /tmp/backend-test-output.log; then
               FIXED="true"
               cd ..
               echo "::endgroup::"
