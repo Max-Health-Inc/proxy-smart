@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-beta.202607191927.fe7e4bfa3] - 2026-07-19
+
+- 🔧 Chores & Improvements: CI/CD and version bump housekeeping
+  - chore(testing): update dev SMART compliance report
+  - 🔄 Update version to 0.2.13-alpha.202607191930.ad4938422 (alpha)
+  - 🔄 Update version to 0.2.13-beta.202607191927.fe7e4bfa3 (beta)
+  - chore: sync package versions
+
+- 🐛 Bug Fixes: small compatibility and description length tweaks
+  - fix(keycloak): shorten mcp-resource-server description to fit DB column (<=255)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/824
+
+
 ## [0.2.11-alpha.202606032247.2e8256972] - 2026-06-03
 
 - ⚠️ Breaking Changes: None detected
