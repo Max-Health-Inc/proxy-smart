@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { HardDrive, RefreshCw, Plus, Info, Eye } from 'lucide-react'
-import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Label } from '@proxy-smart/shared-ui'
-import { LoadingButton } from '@/components/ui/loading-button'
+import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui'
 import { PageLoadingState } from '@/components/ui/page-loading-state'
 import { PageErrorState } from '@/components/ui/page-error-state'
 import { useAuth } from '@/stores/authStore'
@@ -56,11 +55,10 @@ export function DicomServersManager() {
 
   const fetchServers = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
       const resp = await clientApis.admin.getAdminDicomServers()
       const serverList = (resp.servers ?? []).map(s => ({ ...s }))
       setServers(serverList)
+      setError(null)
       // Fetch SMART apps for viewer selector (non-blocking)
       clientApis.smartApps.getAdminSmartApps()
         .then(apps => setSmartApps(Array.isArray(apps) ? apps : []))
@@ -79,7 +77,10 @@ export function DicomServersManager() {
   }, [clientApis, probeAllServers])
 
   useEffect(() => {
-    fetchServers()
+    // fetchServers updates state only after an await; the rule can't trace that
+    // across the useCallback boundary, so this fetch-on-mount is safe.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchServers()
   }, [fetchServers])
 
   // ── CRUD handlers ──────────────────────────────────────────────────

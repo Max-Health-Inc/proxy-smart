@@ -106,18 +106,17 @@ export function FhirServersManager() {
 
   const fetchServers = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
       const response = await clientApis.servers.getFhirServers();
-      
+
       const mappedServers: FhirServerWithState[] = response.servers.map((server) => ({
         ...server,
         connectionStatus: server.fhirVersion === 'Unknown' ? 'disconnected' : 'connected',
         loading: false,
         error: undefined
       }));
-      
+
       setServers(mappedServers);
+      setError(null);
 
       setSecurityChecks(prevChecks => {
         const updatedChecks = { ...prevChecks };
@@ -351,7 +350,10 @@ export function FhirServersManager() {
   }, [clientApis]);
 
   useEffect(() => {
-    fetchServers();
+    // fetchServers updates state only after an await; the rule can't trace that
+    // across the useCallback boundary, so this fetch-on-mount is safe.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchServers();
   }, [fetchServers]);
 
   if (loading) {

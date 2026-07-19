@@ -154,10 +154,10 @@ export function AlgorithmRunner() {
                         {modalityInfo?.emoji} {modalityInfo?.label ?? modality}
                       </span>
                     )}
-                    {study.numberOfSeries != null && (
+                    {typeof study.numberOfSeries === 'number' && (
                       <span className="ml-2">{study.numberOfSeries} series</span>
                     )}
-                    {study.numberOfInstances != null && (
+                    {typeof study.numberOfInstances === 'number' && (
                       <span className="ml-1">· {study.numberOfInstances} images</span>
                     )}
                   </CardDescription>
@@ -262,7 +262,7 @@ function ResultCard({ result }: { result: AlgorithmResult }) {
         <CardTitle className="flex items-center gap-2">
           {severityIcon[severity]}
           {result.title}
-          {result.confidence != null && (
+          {typeof result.confidence === 'number' && (
             <span className="ml-auto text-sm font-normal text-muted-foreground">
               {(result.confidence * 100).toFixed(1)}% confidence
             </span>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Edit } from 'lucide-react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import { LoadingButton } from '@/components/ui/loading-button';
@@ -33,12 +33,14 @@ export function EditServerDialog({
   const [localUrlError, setLocalUrlError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Sync editServerUrl when server changes
-  useEffect(() => {
-    if (server?.url) {
-      setEditServerUrl(server.url);
-    }
-  }, [server?.url]);
+  // Sync editServerUrl when a different server is opened for editing.
+  // Adjusting state during render (React's documented pattern) avoids the
+  // extra commit an effect would cause.
+  const [syncedUrl, setSyncedUrl] = useState(server?.url);
+  if (server?.url && server.url !== syncedUrl) {
+    setSyncedUrl(server.url);
+    setEditServerUrl(server.url);
+  }
 
   const isValidUrl = (url: string) => {
     try {

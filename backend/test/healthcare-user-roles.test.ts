@@ -18,6 +18,9 @@ import { describe, it, expect, mock, beforeEach } from 'bun:test'
 let currentMockAdmin: ReturnType<typeof createMockAdmin>
 
 mock.module('@/lib/keycloak-plugin', () => {
+  // Lazily resolve Elysia here: a top-level import binding is still in the TDZ
+  // when mock.module evaluates this factory.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { Elysia } = require('elysia')
   return {
     createAdminClient: async () => currentMockAdmin,

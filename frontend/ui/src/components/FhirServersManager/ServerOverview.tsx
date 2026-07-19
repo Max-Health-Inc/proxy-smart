@@ -24,7 +24,6 @@ export function ServerOverview({
   onCheckSecurity,
   onEditServer,
   onDeleteServer,
-  onAddServer,
   onToggleStrictCapabilities,
   onToggleMcpEnabled
 }: ServerOverviewProps) {

@@ -20,7 +20,6 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({
     profile,
-    systemHealth,
     onRefresh,
     onHealthCheck,
     onRestart,
