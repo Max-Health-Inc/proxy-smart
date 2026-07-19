@@ -80,7 +80,9 @@ jobs:
         run: |
           echo "=== Running Backend Tests ==="
           cd backend
-          bun test 2>&1 | tee ../backend-test.log
+          # --isolate is REQUIRED: test files use process-global mock.module()
+          # that collide across files without it (see docs/keycloak-features.md).
+          bun test --isolate 2>&1 | tee ../backend-test.log
 
       - name: 🤖 Copilot Self-Heal (Backend Tests)
         id: test-heal
@@ -92,7 +94,7 @@ jobs:
           component: backend
           app-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          retry-command: 'cd backend && bun test'
+          retry-command: 'cd backend && bun test --isolate'
 
       - name: Fail if Backend Tests Unresolved
         if: ${{ inputs.run_tests && steps.test-backend.outcome == 'failure' && steps.test-heal.outputs.fixed != 'true' && inputs.fail_on_test_failure }}

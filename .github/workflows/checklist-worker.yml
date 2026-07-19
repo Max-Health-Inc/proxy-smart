@@ -213,7 +213,7 @@ jobs:
             
             summary += `\\n### 🚀 Next Steps\\n`;
             summary += `- Review implemented code in the repository\\n`;
-            summary += `- Run tests to validate functionality: \`bun test\` / \`npm test\`\\n`;
+            summary += `- Run tests to validate functionality: \`bun run test\` (uses --isolate)\\n`;
             summary += `- Check updated checklist items marked as \`[implemented]\`\\n`;
             summary += `- Merge changes when ready for deployment\\n`;
             
