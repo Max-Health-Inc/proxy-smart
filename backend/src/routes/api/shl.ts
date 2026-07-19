@@ -23,6 +23,7 @@ import { getAllServers } from '@/lib/fhir-server-store'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
 import { shlSessionStore } from '@/lib/shl-session-store'
+import { isDicomPathAllowed, scopeFhirRequest } from '@/lib/shl-scope'
 import * as crypto from 'crypto'
 
 // KTC doesn't support smart-api-access yet (in their Future Work).
@@ -98,6 +99,7 @@ const CreateShlBody = t.Object({
   passcode: t.Optional(t.String({ description: 'Optional passcode to protect the SHL' })),
   expiresInMinutes: t.Optional(t.Number({ description: 'Expiry in minutes (default 60, max 4320 = 72h)', default: 60, minimum: 1 })),
   verifiedOnly: t.Optional(t.Boolean({ description: 'Whether to include only verified resources', default: false })),
+  studyInstanceUID: t.Optional(t.String({ description: 'DICOM Study Instance UID — scope the SHL to a single imaging study' })),
   shortenUrl: t.Optional(t.Boolean({ description: 'Opt-in: shorten the viewer URL via go.maxhealth.tech (stored securely, auto-expires)', default: false })),
   maxUses: t.Optional(t.Number({ description: 'Maximum number of times the shortened URL can be accessed before expiring (only when shortenUrl is true)', minimum: 1 })),
 })
@@ -143,19 +145,35 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
     // Extract the FHIR path after /fhir/ (empty string for base /fhir route)
     const fhirPath = (params as Record<string, string>)?.['*'] || ''
 
-    // Scope enforcement: only allow requests scoped to the session's patient
     const url = new URL(request.url)
-    const patientParam = url.searchParams.get('patient')
-    const pathSegments = fhirPath.split('/')
+    // Query string sent upstream. Study-scoped requests may rewrite this to force the scope filter.
+    let queryString = url.search
 
-    if (pathSegments[0] === 'Patient') {
-      if (pathSegments[1] && pathSegments[1] !== session.patientId) {
+    if (session.studyInstanceUID) {
+      // Study-scoped share: default-deny whitelist (Patient self, ImagingStudy search, metadata).
+      const decision = scopeFhirRequest(fhirPath, url.search, {
+        patientId: session.patientId,
+        studyInstanceUID: session.studyInstanceUID,
+      })
+      if (!decision.allowed) {
+        set.status = 403
+        return { error: 'Access denied: outside shared study scope' }
+      }
+      if (decision.rewrittenSearch !== undefined) queryString = decision.rewrittenSearch
+    } else {
+      // Whole-patient share: unchanged legacy patient-scope enforcement.
+      const patientParam = url.searchParams.get('patient')
+      const pathSegments = fhirPath.split('/')
+
+      if (pathSegments[0] === 'Patient') {
+        if (pathSegments[1] && pathSegments[1] !== session.patientId) {
+          set.status = 403
+          return { error: 'Access denied: patient scope mismatch' }
+        }
+      } else if (patientParam && patientParam !== `Patient/${session.patientId}` && patientParam !== session.patientId) {
         set.status = 403
         return { error: 'Access denied: patient scope mismatch' }
       }
-    } else if (patientParam && patientParam !== `Patient/${session.patientId}` && patientParam !== session.patientId) {
-      set.status = 403
-      return { error: 'Access denied: patient scope mismatch' }
     }
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -173,7 +191,6 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
       return { error: `Service account auth unavailable: ${msg}` }
     }
 
-    const queryString = url.search
     const targetUrl = `${session.fhirServerUrl}/${fhirPath}${queryString}`
 
     let resp: Response
@@ -272,7 +289,15 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
 
     const dicomPath = (params as Record<string, string>)?.['*'] || ''
     const url = new URL(request.url)
-    const targetUrl = `${dicomServer.baseUrl.replace(/\/+$/, '')}/${dicomPath}${url.search}`
+
+    // Study-scope enforcement: default-deny anything outside the shared study.
+    const decision = isDicomPathAllowed(dicomPath, url.search, session.studyInstanceUID)
+    if (!decision.allowed) {
+      set.status = 403
+      return { error: 'Access denied: outside shared study scope' }
+    }
+    const queryString = decision.rewrittenSearch !== undefined ? decision.rewrittenSearch : url.search
+    const targetUrl = `${dicomServer.baseUrl.replace(/\/+$/, '')}/${dicomPath}${queryString}`
 
     // Build upstream headers
     const upstreamHeaders = new Headers()
@@ -405,6 +430,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         jwe,
         sessionToken,
         patientId,
+        studyInstanceUID: body.studyInstanceUID,
         fhirServerUrl,
         expiresAt,
         verifiedOnly: body.verifiedOnly ?? false,

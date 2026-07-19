@@ -23,6 +23,8 @@ export interface ShlSession {
   sessionToken: string
   /** Patient ID to scope FHIR requests */
   patientId: string
+  /** Optional DICOM Study Instance UID — when set, scopes the SHL to a single imaging study */
+  studyInstanceUID?: string
   /** Upstream FHIR server base URL */
   fhirServerUrl: string
   /** Expiry timestamp (ms) */
@@ -42,6 +44,7 @@ interface ShlRow {
   shl_payload: string // JSON
   jwe: string
   patient_id: string
+  study_instance_uid: string | null
   fhir_server_url: string
   expires_at: number
   verified_only: number // 0 or 1
@@ -70,6 +73,7 @@ function createDatabase(): Database {
       shl_payload TEXT NOT NULL,
       jwe TEXT NOT NULL,
       patient_id TEXT NOT NULL,
+      study_instance_uid TEXT,
       fhir_server_url TEXT NOT NULL,
       expires_at INTEGER NOT NULL,
       verified_only INTEGER NOT NULL DEFAULT 0,
@@ -78,6 +82,13 @@ function createDatabase(): Database {
       created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
     )
   `)
+
+  // Idempotent migration: add study-scope column to pre-existing DBs.
+  try {
+    db.run('ALTER TABLE shl_sessions ADD COLUMN study_instance_uid TEXT')
+  } catch {
+    /* column already exists */
+  }
 
   // Index for token lookups (FHIR proxy uses this path)
   db.run('CREATE INDEX IF NOT EXISTS idx_shl_session_token ON shl_sessions(session_token)')
@@ -108,9 +119,9 @@ class ShlSessionStore {
   set(id: string, session: ShlSession): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO shl_sessions
-        (id, session_token, shl_payload, jwe, patient_id, fhir_server_url, expires_at, verified_only, access_count, passcode_hash, created_at)
+        (id, session_token, shl_payload, jwe, patient_id, study_instance_uid, fhir_server_url, expires_at, verified_only, access_count, passcode_hash, created_at)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     stmt.run(
       id,
@@ -118,6 +129,7 @@ class ShlSessionStore {
       JSON.stringify(session.shl),
       session.jwe,
       session.patientId,
+      session.studyInstanceUID ?? null,
       session.fhirServerUrl,
       session.expiresAt,
       session.verifiedOnly ? 1 : 0,
@@ -182,6 +194,7 @@ class ShlSessionStore {
       jwe: row.jwe,
       sessionToken: row.session_token,
       patientId: row.patient_id,
+      studyInstanceUID: row.study_instance_uid ?? undefined,
       fhirServerUrl: row.fhir_server_url,
       expiresAt: row.expires_at,
       verifiedOnly: row.verified_only === 1,
