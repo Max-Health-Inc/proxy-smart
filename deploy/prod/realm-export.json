@@ -573,7 +573,7 @@
     {
       "clientId": "mcp-resource-server",
       "name": "MCP Resource Server (RFC 8707 resource indicator)",
-      "description": "Non-login resource client. Holds resource_url = the proxy MCP URL so the resource-indicators post-processor can bind a requested MCP resource into aud. The existing mcp-audience mapper continues to bind the literal MCP URL into aud independently; this client only adds RFC 8707 resource-indicator support and does not change the existing /mcp aud behaviour.",
+      "description": "Non-login resource client. Holds resource_url = the proxy MCP URL so the resource-indicators post-processor can bind a requested MCP resource into aud (RFC 8707). The mcp-audience mapper still binds the literal MCP URL into aud independently.",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "protocol": "openid-connect",
