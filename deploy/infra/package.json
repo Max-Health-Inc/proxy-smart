@@ -22,18 +22,18 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.257.0",
-    "constructs": "^10.6.0"
+    "aws-cdk-lib": "^2.261.0",
+    "constructs": "^10.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^25.9.1",
-    "aws-cdk": "^2.1125.0",
-    "eslint": "^10.4.0",
-    "globals": "^17.6.0",
-    "tsx": "^4.22.3",
+    "@types/node": "^26.1.1",
+    "aws-cdk": "^2.1132.0",
+    "eslint": "^10.7.0",
+    "globals": "^17.7.0",
+    "tsx": "^4.23.1",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.60.0"
+    "typescript-eslint": "^8.64.0"
   },
   "engines": {
     "node": ">=18.0.0",
