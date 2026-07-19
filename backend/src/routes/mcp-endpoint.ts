@@ -90,18 +90,22 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       const inputSchema = getMergedInputSchema(meta)
       const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
       const description = generateDescription(toolName, meta)
+      // Behavioural hints derived from the HTTP verb (destructiveHint for
+      // delete_*, idempotentHint for update_*/PUT, etc.) so MCP clients can
+      // flag destructive admin operations. See elysia-mcp `annotationsForMethod`.
+      const annotations = meta.annotations
 
       if (zodSchema) {
         server.registerTool(
           toolName,
-          { description, inputSchema: zodSchema },
+          { description, inputSchema: zodSchema, annotations },
           async (args: unknown) =>
             pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators),
         )
       } else {
         server.registerTool(
           toolName,
-          { description },
+          { description, annotations },
           async () =>
             pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators),
         )

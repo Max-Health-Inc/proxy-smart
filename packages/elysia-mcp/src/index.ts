@@ -183,6 +183,7 @@ export function createElysiaMcp(options: ElysiaMcpOptions = {}) {
 export type {
   ElysiaMcpOptions,
   ToolMetadata,
+  ToolAnnotations,
   ResourceMetadata,
   AuthResult,
   McpSession,
@@ -192,6 +193,7 @@ export type {
 export {
   extractRouteTools,
   extractRouteResources,
+  annotationsForMethod,
   pathToToolName,
   pathToResourceName,
   pathToResourceUri,

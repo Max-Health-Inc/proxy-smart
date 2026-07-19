@@ -9,6 +9,7 @@ import { Type } from '@sinclair/typebox'
 import {
   extractRouteTools,
   extractRouteResources,
+  annotationsForMethod,
   pathToToolName,
   pathToResourceName,
   pathToResourceUri,
@@ -301,6 +302,67 @@ describe('executeTool', () => {
     const result = await executeTool('create_admin_strict', meta, { name: 123 as unknown as string })
     expect(result.isError).toBe(true)
     expect(result.content[0].text).toContain('Validation error')
+  })
+
+  it('surfaces object results as structuredContent (with text fallback)', async () => {
+    const meta: ToolMetadata = {
+      path: '/admin/obj',
+      method: 'POST',
+      handler: () => ({ id: 'abc', ok: true }),
+    }
+
+    const result = await executeTool('create_admin_obj', meta, {})
+    expect(result.isError).toBeUndefined()
+    // text block always present
+    expect(JSON.parse(result.content[0].text)).toEqual({ id: 'abc', ok: true })
+    // structured mirror present for object payloads
+    expect(result.structuredContent).toEqual({ id: 'abc', ok: true })
+  })
+
+  it('omits structuredContent for non-object (array) results', async () => {
+    const meta: ToolMetadata = {
+      path: '/admin/list',
+      method: 'POST',
+      handler: () => [1, 2, 3],
+    }
+
+    const result = await executeTool('create_admin_list', meta, {})
+    expect(result.isError).toBeUndefined()
+    // arrays are not valid MCP structuredContent — text only
+    expect(result.structuredContent).toBeUndefined()
+    expect(JSON.parse(result.content[0].text)).toEqual([1, 2, 3])
+  })
+})
+
+describe('annotationsForMethod', () => {
+  it('marks GET as read-only and idempotent', () => {
+    expect(annotationsForMethod('GET')).toEqual({ readOnlyHint: true, idempotentHint: true, openWorldHint: false })
+  })
+
+  it('marks DELETE as destructive and idempotent', () => {
+    const a = annotationsForMethod('DELETE')
+    expect(a.destructiveHint).toBe(true)
+    expect(a.idempotentHint).toBe(true)
+    expect(a.readOnlyHint).toBe(false)
+  })
+
+  it('marks PUT as idempotent but not destructive', () => {
+    const a = annotationsForMethod('PUT')
+    expect(a.idempotentHint).toBe(true)
+    expect(a.destructiveHint).toBe(false)
+  })
+
+  it('marks POST as non-idempotent, non-destructive create', () => {
+    const a = annotationsForMethod('post')
+    expect(a.idempotentHint).toBe(false)
+    expect(a.destructiveHint).toBe(false)
+    expect(a.readOnlyHint).toBe(false)
+  })
+
+  it('always signals a closed world for admin routes', () => {
+    for (const m of ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']) {
+      expect(annotationsForMethod(m).openWorldHint).toBe(false)
+    }
   })
 })
 

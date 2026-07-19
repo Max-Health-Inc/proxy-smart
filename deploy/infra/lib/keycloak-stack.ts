@@ -20,7 +20,7 @@ export interface KeycloakStackProps extends cdk.StackProps {
   hostedZone: route53.IHostedZone;
   /**
    * Keycloak container image tag — only used when `imageUri` is not set.
-   * @default '26.0'
+   * @default '26.7'
    */
   keycloakVersion?: string;
   /**
@@ -51,7 +51,7 @@ export class KeycloakStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: KeycloakStackProps) {
     super(scope, id, props);
 
-    const keycloakVersion = props.keycloakVersion ?? '26.0';
+    const keycloakVersion = props.keycloakVersion ?? '26.7';
     const useCustomImage = Boolean(props.imageUri);
 
     // Container image: ECR custom image (with pre-built proxy-smart theme) or stock quay.io
