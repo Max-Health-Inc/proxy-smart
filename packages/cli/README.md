@@ -102,6 +102,7 @@ request <METHOD> <path> [--data <json>]
 smart-apps        list | get <clientId> | create | update <clientId> | delete <clientId>
 healthcare-users  list | get <userId> | create | delete <userId>
 scope-sets        list | get <id> | create | delete <id>
+smart-scopes      list | create | batch | delete <scopeId>
 mcp-endpoint      get | update
 
 shutdown --yes        Gracefully stop the proxy server (POST /admin/shutdown)
@@ -124,6 +125,8 @@ proxy-smart smart-apps list --json
 proxy-smart smart-apps get my-client-id
 proxy-smart smart-apps create --data @app.json
 proxy-smart scope-sets create --data '{"name":"Reader","scopes":["patient/*.read"]}'
+proxy-smart smart-scopes list --smart-only
+proxy-smart smart-scopes batch --data '{"scopes":[{"name":"patient/Binary.cruds"},{"name":"patient/DocumentReference.cruds"}]}'
 proxy-smart healthcare-users list --limit 50
 proxy-smart mcp-endpoint update --data '{"enabled":true,"disabledTools":["delete_admin_smart_apps"]}'
 proxy-smart request GET /admin/smart-config
