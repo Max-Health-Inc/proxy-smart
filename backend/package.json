@@ -33,7 +33,6 @@
     "cross-fetch": "^4.1.0",
     "date-fns": "^4.3.0",
     "elysia": "^1.4.29",
-    "fhirpath": "^5.0.0",
     "hl7.fhir.uv.ips-generated": "../lib/hl7.fhir.uv.ips-generated.tgz",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.1.0",
