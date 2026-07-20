@@ -459,8 +459,22 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       // Resolve the upstream FHIR server URL
       const fhirServerUrl = await getDefaultFhirServerUrl()
 
+      // Normalize the selective-sharing scope. Persist it only when it actually
+      // narrows the share; an omitted or all-empty scope stays undefined so the
+      // proxy takes the untouched "share everything" path.
+      const excludedTypes = body.shareScope?.excludedTypes ?? []
+      const excludedIds = body.shareScope?.excludedIds ?? []
+      const excludedObservationCategories = body.shareScope?.excludedObservationCategories ?? []
+      const shareScope: ShareScope | undefined =
+        excludedTypes.length + excludedIds.length + excludedObservationCategories.length > 0
+          ? { excludedTypes, excludedIds, excludedObservationCategories }
+          : undefined
+
       // Build the SMART API Access token response (per SHL spec)
-      // aud points to our FHIR proxy — the viewer never talks to the real FHIR server
+      // aud points to our FHIR proxy — the viewer never talks to the real FHIR server.
+      // `complete` is a non-standard hint for our own viewer: false when the patient
+      // de-selected records, so the recipient can be told the summary is partial
+      // (qualitative only — no counts leak). Only the key holder can read it (JWE).
       const smartApiAccess = JSON.stringify({
         access_token: sessionToken,
         token_type: 'Bearer',
@@ -468,6 +482,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         scope: 'patient/*.read',
         patient: patientId,
         aud: `${config.baseUrl}/api/shl/fhir`,
+        complete: !shareScope,
       })
 
       // Generate SHL using kill-the-clipboard
@@ -491,17 +506,6 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       const passcodeHash = body.passcode
         ? crypto.createHash('sha256').update(body.passcode).digest('hex')
         : undefined
-
-      // Normalize the selective-sharing scope. Persist it only when it actually
-      // narrows the share; an omitted or all-empty scope stays undefined so the
-      // proxy takes the untouched "share everything" path.
-      const excludedTypes = body.shareScope?.excludedTypes ?? []
-      const excludedIds = body.shareScope?.excludedIds ?? []
-      const excludedObservationCategories = body.shareScope?.excludedObservationCategories ?? []
-      const shareScope: ShareScope | undefined =
-        excludedTypes.length + excludedIds.length + excludedObservationCategories.length > 0
-          ? { excludedTypes, excludedIds, excludedObservationCategories }
-          : undefined
 
       // Store session (proxy token → patient data mapping, no real tokens)
       shlSessionStore.set(shlId, {
