@@ -27,6 +27,8 @@ export interface ShareScope {
   excludedTypes: string[]
   /** Individually hidden resources as `ResourceType/id`. */
   excludedIds: string[]
+  /** Observation `category` codes fully hidden (e.g. `vital-signs`, `laboratory`). */
+  excludedObservationCategories: string[]
 }
 
 export interface ShlSession {

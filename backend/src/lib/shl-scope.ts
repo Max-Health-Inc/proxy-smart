@@ -16,8 +16,6 @@
  * Kept free of I/O so the decisions are unit-testable and reviewable in isolation.
  */
 
-import { isResourceVerified } from './fhir-verification'
-
 /** Result of a scope decision. `rewrittenSearch` (when present) MUST be used as the upstream query string. */
 export interface ScopeDecision {
   allowed: boolean
@@ -147,18 +145,21 @@ export function scopeFhirRequest(
 //
 // Applies ONLY to whole-patient shares (no studyInstanceUID). The patient starts
 // with everything selected and may hide whole categories (→ resource types and/or
-// Observation category codes) and individual records (→ `Type/id`). An optional
-// `verifiedOnly` filter hides patient-entered/unconfirmed data. Absent scope (or
-// an all-empty one with verifiedOnly=false) means "share everything" and these
-// helpers become no-ops, preserving the legacy behavior byte-for-byte.
+// Observation category codes) and individual records (→ `Type/id`). Absent scope
+// (or an all-empty one) means "share everything" and these helpers become no-ops,
+// preserving the legacy behavior byte-for-byte.
+//
+// This is about WHAT the patient chose to share, not verification: an unverified
+// record the patient selects is shared like any other. Verification is a display
+// signal for the recipient ("verified by …"), never an access filter here.
 //
 // Enforcement is two-phase:
 //   1. preScreenSelectiveRequest — decide BEFORE hitting upstream (deny a read of
 //      a hidden resource; short-circuit a hidden-type/category search to an empty
 //      Bundle so no data is fetched at all).
-//   2. applySelectiveFilter — post-filter the upstream payload (drop hidden /
-//      unverified entries from search Bundles; 404 a single hidden/unverified read)
-//      as defense-in-depth and to cover searches that mix kept + hidden items.
+//   2. applySelectiveFilter — post-filter the upstream payload (drop hidden
+//      entries from search Bundles; 404 a single hidden read) as defense-in-depth
+//      and to cover searches that mix kept + hidden items.
 
 /** A whole-patient share's selective scope. */
 export interface SelectiveScope {
@@ -168,8 +169,6 @@ export interface SelectiveScope {
   excludedIds: readonly string[]
   /** Observation `category` codes fully hidden (e.g. `vital-signs`, `laboratory`). */
   excludedObservationCategories: readonly string[]
-  /** When true, only clinician-verified resources are shared. */
-  verifiedOnly: boolean
 }
 
 /** What the proxy should do with a request before contacting upstream. */
@@ -199,8 +198,7 @@ export function isSelectiveScopeActive(scope: SelectiveScope): boolean {
   return (
     scope.excludedTypes.length > 0 ||
     scope.excludedIds.length > 0 ||
-    scope.excludedObservationCategories.length > 0 ||
-    scope.verifiedOnly
+    scope.excludedObservationCategories.length > 0
   )
 }
 
@@ -226,7 +224,7 @@ function requestedObservationCategories(search: string): string[] {
     .filter((v) => v.length > 0)
 }
 
-/** Whether a single resource is hidden by the scope (type, id, obs-category, or verification). */
+/** Whether a single resource is hidden by the scope (type, id, or Observation category). */
 export function isResourceExcluded(resource: FhirResourceLike, scope: SelectiveScope): boolean {
   const { resourceType, id } = resource
   if (resourceType && scope.excludedTypes.includes(resourceType)) return true
@@ -235,7 +233,6 @@ export function isResourceExcluded(resource: FhirResourceLike, scope: SelectiveS
     const codes = observationCategoryCodes(resource)
     if (codes.some((c) => scope.excludedObservationCategories.includes(c))) return true
   }
-  if (scope.verifiedOnly && !isResourceVerified(resource)) return true
   return false
 }
 
@@ -298,7 +295,7 @@ export interface SelectiveFilterResult {
 /**
  * Post-filter an upstream FHIR JSON payload under a selective scope.
  *
- * - searchset/collection Bundle → drop hidden/unverified entries; `total` is
+ * - searchset/collection Bundle → drop hidden entries; `total` is
  *   removed so link-based pagination stays consistent.
  * - single resource → `denied: true` when the resource itself is hidden (caller
  *   returns 404); otherwise returned unchanged.

@@ -7,7 +7,16 @@
  * through unchanged.
  */
 import { describe, expect, it } from 'bun:test'
-import { isDicomPathAllowed, scopeFhirRequest } from '../src/lib/shl-scope'
+import {
+  isDicomPathAllowed,
+  scopeFhirRequest,
+  isSelectiveScopeActive,
+  preScreenSelectiveRequest,
+  applySelectiveFilter,
+  isResourceExcluded,
+  emptySearchBundle,
+  type SelectiveScope,
+} from '../src/lib/shl-scope'
 
 const STUDY = '1.2.840.113619.2.55.3.604688119.971.1600000000.100'
 const OTHER_STUDY = '9.9.999.999999.9.99.9.999999999.999.9999999999.999'
@@ -142,5 +151,138 @@ describe('scopeFhirRequest — study-scoped whitelist', () => {
 
   it('denies the base/pagination route (403)', () => {
     expect(scopeFhirRequest('', '?_getpages=xyz', opts)).toEqual({ allowed: false })
+  })
+})
+
+// ── Selective sharing (record / category de-selection) ────────────────────────
+
+const emptyScope: SelectiveScope = { excludedTypes: [], excludedIds: [], excludedObservationCategories: [] }
+function scope(partial: Partial<SelectiveScope>): SelectiveScope {
+  return { ...emptyScope, ...partial }
+}
+
+describe('isSelectiveScopeActive', () => {
+  it('is false for an all-empty scope (share everything)', () => {
+    expect(isSelectiveScopeActive(emptyScope)).toBe(false)
+  })
+  it('is true when any list is non-empty', () => {
+    expect(isSelectiveScopeActive(scope({ excludedTypes: ['Condition'] }))).toBe(true)
+    expect(isSelectiveScopeActive(scope({ excludedIds: ['Observation/1'] }))).toBe(true)
+    expect(isSelectiveScopeActive(scope({ excludedObservationCategories: ['vital-signs'] }))).toBe(true)
+  })
+})
+
+describe('preScreenSelectiveRequest', () => {
+  it('passes through metadata and pagination', () => {
+    const s = scope({ excludedTypes: ['Condition'] })
+    expect(preScreenSelectiveRequest('metadata', '', s)).toEqual({ action: 'passthrough' })
+    expect(preScreenSelectiveRequest('', '?_getpages=x', s)).toEqual({ action: 'passthrough' })
+  })
+
+  it('empties a search for an excluded type, denies a read of it', () => {
+    const s = scope({ excludedTypes: ['Condition'] })
+    expect(preScreenSelectiveRequest('Condition', '?patient=Patient/1', s)).toEqual({ action: 'empty-bundle' })
+    expect(preScreenSelectiveRequest('Condition/abc', '', s)).toEqual({ action: 'deny' })
+  })
+
+  it('passes through kept types', () => {
+    const s = scope({ excludedTypes: ['Condition'] })
+    expect(preScreenSelectiveRequest('AllergyIntolerance', '?patient=Patient/1', s)).toEqual({ action: 'passthrough' })
+  })
+
+  it('denies a read of an individually excluded record but not its siblings', () => {
+    const s = scope({ excludedIds: ['MedicationStatement/42'] })
+    expect(preScreenSelectiveRequest('MedicationStatement/42', '', s)).toEqual({ action: 'deny' })
+    expect(preScreenSelectiveRequest('MedicationStatement/43', '', s)).toEqual({ action: 'passthrough' })
+    // The list search is passed through; individual exclusions are post-filtered.
+    expect(preScreenSelectiveRequest('MedicationStatement', '?patient=Patient/1', s)).toEqual({ action: 'passthrough' })
+  })
+
+  it('empties an Observation search filtered solely to excluded categories', () => {
+    const s = scope({ excludedObservationCategories: ['vital-signs'] })
+    expect(preScreenSelectiveRequest('Observation', '?patient=Patient/1&category=vital-signs', s))
+      .toEqual({ action: 'empty-bundle' })
+  })
+
+  it('passes through an Observation search that includes a kept category', () => {
+    const s = scope({ excludedObservationCategories: ['vital-signs'] })
+    // Mixed / kept category → passthrough, post-filter handles any excluded entries.
+    expect(preScreenSelectiveRequest('Observation', '?patient=Patient/1&category=laboratory', s))
+      .toEqual({ action: 'passthrough' })
+    expect(preScreenSelectiveRequest('Observation', '?patient=Patient/1', s))
+      .toEqual({ action: 'passthrough' })
+  })
+})
+
+describe('isResourceExcluded', () => {
+  it('excludes by type, id, and Observation category', () => {
+    expect(isResourceExcluded({ resourceType: 'Condition', id: '1' }, scope({ excludedTypes: ['Condition'] }))).toBe(true)
+    expect(isResourceExcluded({ resourceType: 'Condition', id: '1' }, scope({ excludedIds: ['Condition/1'] }))).toBe(true)
+    expect(isResourceExcluded(
+      { resourceType: 'Observation', id: '9', category: [{ coding: [{ code: 'vital-signs' }] }] },
+      scope({ excludedObservationCategories: ['vital-signs'] }),
+    )).toBe(true)
+  })
+
+  it('keeps resources outside the scope', () => {
+    expect(isResourceExcluded({ resourceType: 'AllergyIntolerance', id: '1' }, scope({ excludedTypes: ['Condition'] }))).toBe(false)
+    expect(isResourceExcluded(
+      { resourceType: 'Observation', id: '9', category: [{ coding: [{ code: 'laboratory' }] }] },
+      scope({ excludedObservationCategories: ['vital-signs'] }),
+    )).toBe(false)
+  })
+})
+
+describe('applySelectiveFilter', () => {
+  const bundle = {
+    resourceType: 'Bundle',
+    type: 'searchset',
+    total: 3,
+    entry: [
+      { resource: { resourceType: 'Condition', id: '1' } },
+      { resource: { resourceType: 'Condition', id: '2' } },
+      { resource: { resourceType: 'AllergyIntolerance', id: '3' } },
+    ],
+  }
+
+  it('is a no-op for an inactive scope', () => {
+    const result = applySelectiveFilter(bundle, emptyScope)
+    expect(result).toEqual({ body: bundle, denied: false })
+  })
+
+  it('drops excluded entries from a search Bundle and removes total', () => {
+    const result = applySelectiveFilter(bundle, scope({ excludedIds: ['Condition/2'] }))
+    const body = result.body as { entry: unknown[]; total?: number }
+    expect(result.denied).toBe(false)
+    expect(body.entry).toHaveLength(2)
+    expect(body.total).toBeUndefined()
+  })
+
+  it('drops a whole excluded type from a Bundle', () => {
+    const result = applySelectiveFilter(bundle, scope({ excludedTypes: ['Condition'] }))
+    const body = result.body as { entry: Array<{ resource: { resourceType: string } }> }
+    expect(body.entry).toHaveLength(1)
+    expect(body.entry[0].resource.resourceType).toBe('AllergyIntolerance')
+  })
+
+  it('flags a single excluded resource read as denied (→ 404)', () => {
+    const result = applySelectiveFilter({ resourceType: 'Condition', id: '1' }, scope({ excludedTypes: ['Condition'] }))
+    expect(result.denied).toBe(true)
+  })
+
+  it('passes a kept single resource through unchanged', () => {
+    const resource = { resourceType: 'AllergyIntolerance', id: '3' }
+    expect(applySelectiveFilter(resource, scope({ excludedTypes: ['Condition'] }))).toEqual({ body: resource, denied: false })
+  })
+
+  it('leaves an OperationOutcome untouched', () => {
+    const oo = { resourceType: 'OperationOutcome', issue: [] }
+    expect(applySelectiveFilter(oo, scope({ excludedTypes: ['Condition'] }))).toEqual({ body: oo, denied: false })
+  })
+})
+
+describe('emptySearchBundle', () => {
+  it('is a valid empty searchset', () => {
+    expect(emptySearchBundle()).toEqual({ resourceType: 'Bundle', type: 'searchset', total: 0, entry: [] })
   })
 })
