@@ -22,6 +22,7 @@ import { logger } from '@/lib/logger'
 import { getAllServers } from '@/lib/fhir-server-store'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
+import { getPublishedApps } from '@/lib/app-store-config'
 import { shlSessionStore } from '@/lib/shl-session-store'
 import { isDicomPathAllowed, scopeFhirRequest } from '@/lib/shl-scope'
 import * as crypto from 'crypto'
@@ -439,18 +440,26 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       })
 
       // Build the SHL URI and viewer URL.
-      // SHLs minted by the standalone DICOM viewer open in the viewer itself —
-      // a per-study share renders as an almost-empty patient portal. Route by
-      // the creating OAuth client (azp), falling back to the patient portal.
+      // Open the recipient in the SMART app that MINTED the share, using that
+      // app's registered launch URL (app-store registry). A per-study share
+      // minted by the DICOM viewer therefore opens in the viewer itself instead
+      // of an almost-empty patient portal. Falls back to the patient portal for
+      // apps without a registered launch URL. No per-env config needed.
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
       const creatingClient = String(tokenPayload.azp ?? tokenPayload.client_id ?? '')
-      const openInDicomViewer =
-        !!config.brand.dicomViewerUrl && creatingClient === config.brand.dicomViewerClientId
-      const portalBase = openInDicomViewer
-        ? config.brand.dicomViewerUrl!
-        : (config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`)
-      const viewerUrl = `${portalBase.replace(/\/$/, '')}/#${shlinkURI}`
+      const creatingApp = creatingClient
+        ? getPublishedApps().find((a) => a.clientId === creatingClient)
+        : undefined
+      let viewerBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
+      if (creatingApp?.launchUrl) {
+        try {
+          viewerBase = new URL(creatingApp.launchUrl).origin
+        } catch {
+          // malformed launch URL — keep the portal fallback
+        }
+      }
+      const viewerUrl = `${viewerBase.replace(/\/$/, '')}/#${shlinkURI}`
 
       // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)
       const shortUrl = body.shortenUrl
