@@ -19,12 +19,12 @@ Checking Inferno availability...
 ✓ Inferno is ready
 Pre-flight warm-up (deployed mode)...
   SMART config: 200 (attempt 1/24)
-  FHIR /metadata: 200
+  FHIR /metadata: 500
   ✓ Pre-flight warm-up complete
 
 Launching headless Chromium for OAuth automation...
 Creating test session for suite: smart_stu2_2
-✓ Created test session: gMjC1eStDIj
+✓ Created test session: gaIoMPS084W
 
 === Running Standalone Launch Tests ===
 
@@ -37,32 +37,34 @@ Available test groups in suite:
 
 Running test group: smart_stu2_2-smart_full_standalone_launch — Standalone Launch
 Starting test group: smart_stu2_2-smart_full_standalone_launch
-✓ Started test run: c65c7b64-d4e6-4881-979b-3e99441f3824
-Waiting for test run c65c7b64-d4e6-4881-979b-3e99441f3824 to complete (timeout: 3 minutes)...
+✓ Started test run: 2a7234af-3bf9-4184-8252-e6532c62c902
+Waiting for test run 2a7234af-3bf9-4184-8252-e6532c62c902 to complete (timeout: 3 minutes)...
   [Poll #1] Status: queued
-  [Poll #2] Status: waiting
+  [Poll #2] Status: running
+  Progress: 3 passed, 0 failed, 0 waiting, 3 total
+  [Poll #3] Status: waiting
   Test is waiting for user action (OAuth flow, attempt 1/3)...
   Wait result keys: id, created_at, inputs, messages, optional, outputs, requests, result, result_message, test_id, test_run_id, test_session_id, updated_at
   result_message (first 500 chars): 
 ### Standalone Launch
 
-[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=1482cbc4-60dd-41a5-ae29-c3c8b7156435&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=eDNgzt3WYOt1k0DZhIjMn_vGYD_fQSCfYSH9Z
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=1482cbc4-60dd-41a5-ae29-c3c8b7156435&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=eDNgzt3WYOt1k0DZhIjMn_vGYD_fQSCfYSH9ZLoM3Qk&code_challenge_method=S256.
-  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=1482cbc4-60dd-41a5-ae29-c3c8b7156435&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=eDNgzt3WYOt1k0DZhIjMn_vGYD_fQSCfYSH9ZLoM3Qk&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=83d4eddd-d491-4b16-8209-d18b56756a32&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=vxT_4aCvTgsQk5jTtx-4Kk-HpMq5vRYkLwTHO
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=83d4eddd-d491-4b16-8209-d18b56756a32&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=vxT_4aCvTgsQk5jTtx-4Kk-HpMq5vRYkLwTHOUbFtl4&code_challenge_method=S256.
+  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=83d4eddd-d491-4b16-8209-d18b56756a32&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=vxT_4aCvTgsQk5jTtx-4Kk-HpMq5vRYkLwTHOUbFtl4&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=1482cbc4-60dd-41a5-ae29-c3c8b7156435&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=eDNgzt3WYOt1k0DZhIjMn_vGYD_fQSCfYSH9ZLoM3Qk&code_challenge_method=S256
+  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=83d4eddd-d491-4b16-8209-d18b56756a32&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=vxT_4aCvTgsQk5jTtx-4Kk-HpMq5vRYkLwTHOUbFtl4&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=https%3A%2F%2Fbeta.proxy-smart.com%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=a0ad0746-40d2-4209-841f-50a3a286c3de&code_challenge=eDNgzt3WYOt1k0DZhIjMn_vGYD_fQSCfYSH9ZLoM3Qk&code_challenge_method=S256&resource=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=https%3A%2F%2Fbeta.proxy-smart.com%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=76f698e4-02b1-406f-9672-1f7ff1c90c3e&code_challenge=vxT_4aCvTgsQk5jTtx-4Kk-HpMq5vRYkLwTHOUbFtl4&code_challenge_method=S256&resource=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   On Keycloak login page, entering credentials...
   ✓ Login theme healthy: Geist Sans + Mono loaded, no 4xx theme assets
   Filled username
   Filled password
   Clicked login button
-  Post-login URL: https://beta.proxy-smart.com/patient-picker/?session=a0ad0746-40d2-4209-841f-50a3a286c3de&code=66276b02-91c8-b5cf-6191-7d25f6a28143._E6r5dvFyP0h0yqc3O4QIj9U.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Post-login URL: https://beta.proxy-smart.com/patient-picker/?session=76f698e4-02b1-406f-9672-1f7ff1c90c3e&code=40a447ba-17f0-3e2b-4a38-74f1b4959cdd.2FbR6WKPkIFXAOkHQ7kt-FBp.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   Detected Patient Picker page — selecting a patient...
   Clicked first patient row
   Clicked patient picker submit button
-  Post patient-picker URL: https://beta.proxy-smart.com/patient-picker/?session=a0ad0746-40d2-4209-841f-50a3a286c3de&code=66276b02-91c8-b5cf-6191-7d25f6a28143._E6r5dvFyP0h0yqc3O4QIj9U.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Post patient-picker URL: https://beta.proxy-smart.com/patient-picker/?session=76f698e4-02b1-406f-9672-1f7ff1c90c3e&code=40a447ba-17f0-3e2b-4a38-74f1b4959cdd.2FbR6WKPkIFXAOkHQ7kt-FBp.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   Detected Patient Picker page — selecting a patient...
   No patient rows found on page
   Page content (first 500 chars): <!DOCTYPE html><html lang="en"><head><style data-emotion="css-global" data-s=""></style><meta name="emotion-insertion-point" content=""><style data-emotion="css" data-s=""></style>
@@ -75,7 +77,7 @@ Handling OAuth flow...
     <meta name="theme-color" content=
   OAuth flow error: Patient Picker: no patient rows found
   Page title: SMART App Launch STU2.2 Test Session
-  Page URL: http://localhost:4567/smart_stu2_2/gMjC1eStDIj#smart_stu2_2-smart_full_standalone_launch
+  Page URL: http://localhost:4567/smart_stu2_2/gaIoMPS084W#smart_stu2_2-smart_full_standalone_launch
   Page content (first 1000 chars): <!DOCTYPE html><html lang="en"><head><style data-emotion="css-global" data-s=""></style><meta name="emotion-insertion-point" content=""><style data-emotion="css" data-s=""></style>
     <!-- Use the highest supported document mode of Internet Explorer -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -99,17 +101,17 @@ Handling OAuth flow...
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Found 3 waiting result(s) but no OAuth URL found
-  Progress: 5 passed, 0 failed, 3 waiting, 9 total
-  [Poll #3] Status: done
+  Progress: 4 passed, 1 failed, 3 waiting, 9 total
+  [Poll #4] Status: done
 Test completed with status: done
 
 === Running Token Introspection Tests ===
 
 Running test group: smart_stu2_2-smart_token_introspection_stu2_2 — Token Introspection
 Starting test group: smart_stu2_2-smart_token_introspection_stu2_2
-✓ Started test run: bd6b9803-9479-474f-b2e4-07eca1f15860
-Waiting for test run bd6b9803-9479-474f-b2e4-07eca1f15860 to complete (timeout: 3 minutes)...
-  [Poll #1] Status: queued
+✓ Started test run: d0fc2f5d-1295-4ae0-b5f5-3f293bb35a85
+Waiting for test run d0fc2f5d-1295-4ae0-b5f5-3f293bb35a85 to complete (timeout: 3 minutes)...
+  [Poll #1] Status: running
   [Poll #2] Status: running
   Progress: 3 passed, 0 failed, 0 waiting, 3 total
   [Poll #3] Status: waiting
@@ -118,23 +120,23 @@ Waiting for test run bd6b9803-9479-474f-b2e4-07eca1f15860 to complete (timeout: 
   result_message (first 500 chars): 
 ### Request New Access Token to Introspect
 
-[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=add0cc45-e70d-4636-b9a9-b97496428aa7&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=hH0kHgfv-EjSTkis
-  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=add0cc45-e70d-4636-b9a9-b97496428aa7&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=hH0kHgfv-EjSTkis52jhJGCB1S_L1oc0_3xu_yXPZq8&code_challenge_method=S256.
-  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=add0cc45-e70d-4636-b9a9-b97496428aa7&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=hH0kHgfv-EjSTkis52jhJGCB1S_L1oc0_3xu_yXPZq8&code_challenge_method=S256
+[Follow this link to authorize with the SMART server](https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=0954bcfc-0970-40a1-a531-74b407d592a5&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=wvpudf-8ztJ7cKhG
+  messages (first 500 chars): [{"message":"Inferno redirecting browser to https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=0954bcfc-0970-40a1-a531-74b407d592a5&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=wvpudf-8ztJ7cKhGOVZiIKIYCssOyI0OAD8RC006AvE&code_challenge_method=S256.
+  Found OAuth URL in result_message: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=0954bcfc-0970-40a1-a531-74b407d592a5&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=wvpudf-8ztJ7cKhGOVZiIKIYCssOyI0OAD8RC006AvE&code_challenge_method=S256
 Handling OAuth flow...
-  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=add0cc45-e70d-4636-b9a9-b97496428aa7&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=hH0kHgfv-EjSTkis52jhJGCB1S_L1oc0_3xu_yXPZq8&code_challenge_method=S256
+  Navigating to: https://beta.proxy-smart.com/auth/authorize?response_type=code&client_id=inferno-test-client&redirect_uri=http%3A%2F%2Flocalhost%3A4567%2Fcustom%2Fsmart_stu2_2%2Fredirect&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=0954bcfc-0970-40a1-a531-74b407d592a5&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4&code_challenge=wvpudf-8ztJ7cKhGOVZiIKIYCssOyI0OAD8RC006AvE&code_challenge_method=S256
   Navigation response status: 200
-  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=https%3A%2F%2Fbeta.proxy-smart.com%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=9f0d4a5e-ae5e-4eef-b29b-930b81ecaae0&code_challenge=hH0kHgfv-EjSTkis52jhJGCB1S_L1oc0_3xu_yXPZq8&code_challenge_method=S256&resource=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Current URL after navigation: https://beta.proxy-smart.com/auth/realms/proxy-smart/protocol/openid-connect/auth?response_type=code&client_id=inferno-test-client&redirect_uri=https%3A%2F%2Fbeta.proxy-smart.com%2Fauth%2Fsmart-callback&scope=launch%2Fpatient+openid+fhirUser+offline_access+patient%2F*.read&state=a5ce0070-71b9-422e-84bb-f336052b8ecc&code_challenge=wvpudf-8ztJ7cKhGOVZiIKIYCssOyI0OAD8RC006AvE&code_challenge_method=S256&resource=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   On Keycloak login page, entering credentials...
   ✓ Login theme healthy: Geist Sans + Mono loaded, no 4xx theme assets
   Filled username
   Filled password
   Clicked login button
-  Post-login URL: https://beta.proxy-smart.com/patient-picker/?session=9f0d4a5e-ae5e-4eef-b29b-930b81ecaae0&code=e66e8c59-1e2e-4627-3698-b0d2f75a62ea.BJ0etOCPcDzQvIXDPlaNxcRq.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Post-login URL: https://beta.proxy-smart.com/patient-picker/?session=a5ce0070-71b9-422e-84bb-f336052b8ecc&code=30a80279-4928-b678-76e9-d6f351ec569b.y06Jd4acfYNHF8i5yhPLJZTP.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   Detected Patient Picker page — selecting a patient...
   Clicked first patient row
   Clicked patient picker submit button
-  Post patient-picker URL: https://beta.proxy-smart.com/patient-picker/?session=9f0d4a5e-ae5e-4eef-b29b-930b81ecaae0&code=e66e8c59-1e2e-4627-3698-b0d2f75a62ea.BJ0etOCPcDzQvIXDPlaNxcRq.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
+  Post patient-picker URL: https://beta.proxy-smart.com/patient-picker/?session=a5ce0070-71b9-422e-84bb-f336052b8ecc&code=30a80279-4928-b678-76e9-d6f351ec569b.y06Jd4acfYNHF8i5yhPLJZTP.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&aud=https%3A%2F%2Fbeta.proxy-smart.com%2Fproxy-smart-backend%2Fhapi-fhir-server%2FR4
   Detected Patient Picker page — selecting a patient...
   No patient rows found on page
   Page content (first 500 chars): <!DOCTYPE html><html lang="en"><head><style data-emotion="css-global" data-s=""></style><meta name="emotion-insertion-point" content=""><style data-emotion="css" data-s=""></style>
@@ -147,7 +149,7 @@ Handling OAuth flow...
     <meta name="theme-color" content=
   OAuth flow error: Patient Picker: no patient rows found
   Page title: SMART App Launch STU2.2 Test Session
-  Page URL: http://localhost:4567/smart_stu2_2/gMjC1eStDIj#smart_stu2_2-smart_token_introspection_stu2_2
+  Page URL: http://localhost:4567/smart_stu2_2/gaIoMPS084W#smart_stu2_2-smart_token_introspection_stu2_2
   Page content (first 1000 chars): <!DOCTYPE html><html lang="en"><head><style data-emotion="css-global" data-s=""></style><meta name="emotion-insertion-point" content=""><style data-emotion="css" data-s=""></style>
     <!-- Use the highest supported document mode of Internet Explorer -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -173,7 +175,7 @@ Handling OAuth flow...
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Wait result keys: id, created_at, inputs, optional, outputs, requests, result, test_group_id, test_run_id, test_session_id, updated_at
   Found 5 waiting result(s) but no OAuth URL found
-  Progress: 5 passed, 0 failed, 5 waiting, 11 total
+  Progress: 4 passed, 1 failed, 5 waiting, 11 total
   [Poll #4] Status: done
 Test completed with status: done
 
@@ -183,11 +185,11 @@ Running test group: smart_stu2_2-smart_backend_services — Backend Services
   Loaded private JWKS from /home/runner/work/proxy-smart/proxy-smart/testing/dev/backend-services-private-jwks.json
 Auth info: {"auth_type":"backend_services","use_discovery":"true","client_id":"inferno-backend-services","requested_scopes":"system/*.read","encryption_algorithm":"RS384","jwks":"{\r\n  \"keys\": [\r\n    {\r\n      \"kty\": \"RSA\",\r\n      \"n\": \"k0j6wRB70KDa9_dmmTINZau8XOVIwDJEAGFJv7j2xbSYx11ZY9FJ7QiFes9E_MxFGTo_GkO3KlQ1MlQrdo08aoraB79sN1Pmr_A-6rLO6b7Y_yq3LHLoz2B7icTcIQ2zAPnWFumlASuQtisTdfsLifrOUHPsFGggBnRYSvO3P97msCROvQVAo243THv5RfsJ2_1e4ntiw4dVyZZ4rdjxPRyXT8oVHDtjcAnvki6WHsNZg7hc3BO5__nuNvP4c089kksnzKIP_CgAn1Xkzr97dsv8PFYUVjSPBTzS_Nd4pV42M6bCvrEx21wMrWuuFOpH82G680eQ8DU6ZBLCtu6r-w\",\r\n      \"e\": \"AQAB\",\r\n      \"d\": \"BT-rC_lJ6EfrNb3_zoLNnmtt1YOoQY0pBjhxV99AEBCdBzHI7zk0oLlWhGdhhn7DEaCVQhraqqwAj1AXkmx7FDLpjTAhq6EWTfvKSjPgEs1lz0YW7AMWT9mY3XKCA72IvQaqPfvKkQ2b5RoI4gH1yc-BzbUr2xhQ19oKkXU4-RIrHysaFXarMWVRzpQdFql8w_Os6kJ6gtUCsLmn8HVpmz7IocNrFm21PTZtZrZOGPg2E5nSXCUomSaKFsSXZsjB6LHnlNWTsiHpP8Dabv7p8YHzxYGVUf6XkOfWOBj4TbgdBlFAXKpVocu16OM8iFjAyuKCG2CmhyUrLiuTeGN36Q\",\r\n      \"p\": \"x2sr0BKks46Bkxs1PMsyt1_gmCxIuLVhzBvRgT7-XZvLowK1lEtsc9Eod30unyzrZWyqUfqtodmyiDv_T57QLe9YuAh_aCM0vN-G0fPv6MW3OM5JONqRbEoQvsbfYDAMhyazvQRyMshkCzoVnnRwLw_m6WwPazli_TBz6D04sNk\",\r\n      \"q\": \"vRMSjg8VVvsb-MUK7J_EtoNMat0RM-nq1n3GpcJXCNfqUM8TNESi6IEoUjIUUZBrRILsuX8vGNP_555CMRePz4S24v9dE2jACKZsILy9Ki9PtE7TmpV16fO-LcH6doo1mKR1VPyKRH_UzCsH3HvHvg88q0k0ilxej-wD9J80fvM\",\r\n      \"dp\": \"dACQtPITYuvTzin2lw2wy-D2-i5Qgznn0N6hyWhGeVeGZqXN0JzrUpfpzVBBjZCIwjArB5Ml68-CPiOAieVdPktLtYoj6wUHyZLRj1IyTZqt0VqWV381NuQCx6dSC1cIAppt1dc_QvE02R8JsmoTVB0Q-tnEQmBYh-XmlsL-Nkk\",\r\n      \"dq\": \"K_qfukNv50eJfhf3LosLKpjn0YOSWMz0PugKqMvHitsOObWw9dtxOTuxsUzMxRwel1UM0yjuP4wwXiPFqb2dSdvI3owfjkAzSs_LHuJH7eQLWhlrxu00_DIh7mrMY35KcTLvx9DmKIDDcqofrf1svJy2s_DXM8fAhyGS2feeMlk\",\r\n      \"qi\": \"SK_79fC4ceKj_VICqd6Ymkp_7mOGhKrddiV8qJRisBfSJXlynCJUJjXeYL7Z_r35UWsuM-AtRKyblr3cBakI0cW6B9TgpC2sv8f0OEG_kWjQv0TJQ4OzcsfK1P1T6tI26EG0Wjt6kPQP58jnD6geX1U2PAUyCP-ID1Y0ysncm2Y\",\r\n      \"use\": \"sig\",\r\n      \"key_ops\": [\"sign\"],\r\n      \"alg\": \"RS384\",\r\n      \"kid\": \"inferno-backend-services-key-1\"\r\n    }\r\n  ]\r\n}"}
 Starting test group: smart_stu2_2-smart_backend_services
-✓ Started test run: 8e8883ac-33fb-4d44-92c3-fb851d026b93
-Waiting for test run 8e8883ac-33fb-4d44-92c3-fb851d026b93 to complete (timeout: 3 minutes)...
-  [Poll #1] Status: running
+✓ Started test run: cd290c7e-fcef-4811-91de-6b63c414b9bc
+Waiting for test run cd290c7e-fcef-4811-91de-6b63c414b9bc to complete (timeout: 3 minutes)...
+  [Poll #1] Status: queued
   [Poll #2] Status: running
-  Progress: 6 passed, 0 failed, 0 waiting, 7 total
+  Progress: 4 passed, 1 failed, 0 waiting, 6 total
   [Poll #3] Status: done
 Test completed with status: done
 
@@ -206,7 +208,8 @@ WARNING: EHR Launch tests failed but continuing...
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_endpoint
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-well_known_capabilities_stu2
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_well_known_endpoint
-✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request
+✗ FAIL: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request
+    Reason: Unexpected response status: expected 200, but received 500
 ? OMIT: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-standalone_auth_tls
 ✓ PASS: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
 ✓ PASS: Unknown test
@@ -256,7 +259,8 @@ WARNING: EHR Launch tests failed but continuing...
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-well_known_endpoint
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-well_known_capabilities_stu2
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-smart_cors_well_known_endpoint
-✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-smart_cors_metadata_request
+✗ FAIL: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-smart_cors_metadata_request
+    Reason: Unexpected response status: expected 200, but received 500
 ? OMIT: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-standalone_auth_tls
 ✓ PASS: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_standalone_launch_stu2_2-smart_app_redirect_stu2
 ✓ PASS: Unknown test
@@ -283,7 +287,8 @@ WARNING: EHR Launch tests failed but continuing...
 ✓ PASS: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-well_known_endpoint
 ✓ PASS: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-well_known_capabilities_stu2
 ✓ PASS: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-smart_cors_well_known_endpoint
-✓ PASS: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-smart_cors_metadata_request
+✗ FAIL: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-smart_cors_metadata_request
+    Reason: Unexpected response status: expected 200, but received 500
 ✓ PASS: Unknown test
 ? OMIT: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_token_tls_version
 ✓ PASS: smart_stu2_2-smart_backend_services-backend_services_authorization-smart_backend_services_invalid_grant_type
@@ -295,7 +300,7 @@ WARNING: EHR Launch tests failed but continuing...
 ✓ PASS: Unknown test
 
 ========================================
-Total: 67 | Passed: 30 | Failed: 7 | Skipped: 25 | Errors: 0
+Total: 67 | Passed: 27 | Failed: 10 | Skipped: 25 | Errors: 0
 ========================================
 
 
@@ -304,6 +309,22 @@ Total: 67 | Passed: 30 | Failed: 7 | Skipped: 25 | Errors: 0
 ========================================
 
 
+--- smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request ---
+Test ID: smart_stu2_2-smart_full_standalone_launch-smart_discovery_stu2_2-smart_cors_metadata_request
+
+Result Message:
+Unexpected response status: expected 200, but received 500
+
+Recent HTTP Requests (last 1):
+  get https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir-server/R4/metadata
+    Response Status: 500
+    Available fields: id, direction, index, result_id, status, timestamp, url, verb
+    Request Headers: [{"name":"user-agent","value":"Ruby FHIR Client"},{"name":"accept","value":"application/json"},{"name":"origin","value":"http://localhost:4567"}]
+    Response Headers: [{"name":"access-control-allow-credentials","value":"true"},{"name":"access-control-allow-headers","value":"Content-Type, Authorization, X-Requested-With, Accept, Origin, Mcp-Session-Id, Mcp-Protocol-Version"},{"name":"access-control-allow-methods","value":"GET, POST, PUT, PATCH, DELETE, OPTIONS"},{
+    Response Body: {"error":"Failed to proxy FHIR request","details":{"message":"sorry, too many clients already"}}
+
+--------------------------------------------------
+
 --- smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2 ---
 Test ID: smart_stu2_2-smart_full_standalone_launch-smart_standalone_launch_stu2_2-smart_token_exchange_stu2_2
 
@@ -311,7 +332,7 @@ Result Message:
 Unexpected response status: expected 200, but received 400
 
 Recent HTTP Requests (last 2):
-  get http://localhost:4567/custom/smart_stu2_2/redirect?code=66276b02-91c8-b5cf-6191-7d25f6a28143._E6r5dvFyP0h0yqc3O4QIj9U.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&state=1482cbc4-60dd-41a5-ae29-c3c8b7156435
+  get http://localhost:4567/custom/smart_stu2_2/redirect?code=40a447ba-17f0-3e2b-4a38-74f1b4959cdd.2FbR6WKPkIFXAOkHQ7kt-FBp.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&state=83d4eddd-d491-4b16-8209-d18b56756a32
     Available fields: id, direction, index, result_id, timestamp, url, verb
   post https://beta.proxy-smart.com/auth/token
     Response Status: 400
@@ -330,6 +351,22 @@ Test ID: undefined
 
 --- Unknown test ---
 Test ID: undefined
+
+--------------------------------------------------
+
+--- smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-smart_cors_metadata_request ---
+Test ID: smart_stu2_2-smart_token_introspection_stu2_2-smart_token_introspection_access_token_group_stu2_2-smart_discovery_stu2_2-smart_cors_metadata_request
+
+Result Message:
+Unexpected response status: expected 200, but received 500
+
+Recent HTTP Requests (last 1):
+  get https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir-server/R4/metadata
+    Response Status: 500
+    Available fields: id, direction, index, result_id, status, timestamp, url, verb
+    Request Headers: [{"name":"user-agent","value":"Ruby FHIR Client"},{"name":"accept","value":"application/json"},{"name":"origin","value":"http://localhost:4567"}]
+    Response Headers: [{"name":"access-control-allow-credentials","value":"true"},{"name":"access-control-allow-headers","value":"Content-Type, Authorization, X-Requested-With, Accept, Origin, Mcp-Session-Id, Mcp-Protocol-Version"},{"name":"access-control-allow-methods","value":"GET, POST, PUT, PATCH, DELETE, OPTIONS"},{
+    Response Body: {"error":"Failed to proxy FHIR request","details":{"message":"sorry, too many clients already"}}
 
 --------------------------------------------------
 
@@ -340,7 +377,7 @@ Result Message:
 Unexpected response status: expected 200, but received 400
 
 Recent HTTP Requests (last 2):
-  get http://localhost:4567/custom/smart_stu2_2/redirect?code=e66e8c59-1e2e-4627-3698-b0d2f75a62ea.BJ0etOCPcDzQvIXDPlaNxcRq.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&state=add0cc45-e70d-4636-b9a9-b97496428aa7
+  get http://localhost:4567/custom/smart_stu2_2/redirect?code=30a80279-4928-b678-76e9-d6f351ec569b.y06Jd4acfYNHF8i5yhPLJZTP.bc9a3052-cf0b-4e6c-ab61-a4f624d4dca0&state=0954bcfc-0970-40a1-a531-74b407d592a5
     Available fields: id, direction, index, result_id, timestamp, url, verb
   post https://beta.proxy-smart.com/auth/token
     Response Status: 400
@@ -367,4 +404,20 @@ Test ID: undefined
 
 --------------------------------------------------
 
-❌ Tests failed: 7 failed, 0 errors out of 67
+--- smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-smart_cors_metadata_request ---
+Test ID: smart_stu2_2-smart_backend_services-smart_discovery_stu2_2-smart_cors_metadata_request
+
+Result Message:
+Unexpected response status: expected 200, but received 500
+
+Recent HTTP Requests (last 1):
+  get https://beta.proxy-smart.com/proxy-smart-backend/hapi-fhir-server/R4/metadata
+    Response Status: 500
+    Available fields: id, direction, index, result_id, status, timestamp, url, verb
+    Request Headers: [{"name":"user-agent","value":"Ruby FHIR Client"},{"name":"accept","value":"application/json"},{"name":"origin","value":"http://localhost:4567"}]
+    Response Headers: [{"name":"access-control-allow-credentials","value":"true"},{"name":"access-control-allow-headers","value":"Content-Type, Authorization, X-Requested-With, Accept, Origin, Mcp-Session-Id, Mcp-Protocol-Version"},{"name":"access-control-allow-methods","value":"GET, POST, PUT, PATCH, DELETE, OPTIONS"},{
+    Response Body: {"error":"Failed to proxy FHIR request","details":{"message":"sorry, too many clients already"}}
+
+--------------------------------------------------
+
+❌ Tests failed: 10 failed, 0 errors out of 67
