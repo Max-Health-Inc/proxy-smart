@@ -14,6 +14,58 @@ import { enforceTenantIsolation } from '../lib/tenant-isolation'
 import { fhirProxyMetricsLogger } from '../lib/fhir-proxy-metrics-logger'
 import { getServerCapabilities, normalizeSearchParams, isInteractionSupported, isHistorySupported, isOperationSupported, isPatchFormatSupported, parseFhirPath } from '../lib/fhir-capabilities'
 
+/**
+ * Short-lived CapabilityStatement (/metadata) cache with single-flight coalescing.
+ *
+ * Inferno (and any SMART client doing discovery) re-requests /metadata from many
+ * test groups near-simultaneously. Each uncached hit opens an upstream
+ * HAPI→Postgres connection; a burst can trip the shared Postgres limit
+ * ("sorry, too many clients already") and surface as a 500. Caching the
+ * (URL-rewritten) response for a short TTL and collapsing concurrent misses into
+ * a single upstream call removes that DB pressure. /metadata is unauthenticated
+ * and resource-agnostic, so it is safe to serve from a per-(server,version) cache.
+ */
+const METADATA_TTL_MS = 60_000
+interface MetadataCacheEntry { body: string; contentType: string; status: number; expiresAt: number }
+const metadataCache = new Map<string, MetadataCacheEntry>()
+const metadataInflight = new Map<string, Promise<MetadataCacheEntry>>()
+
+async function getCachedMetadata(
+  serverName: string,
+  fhirVersion: string,
+  serverUrl: string,
+  serverId: string,
+  mtlsConfig: { enabled?: boolean } | null | undefined,
+): Promise<MetadataCacheEntry> {
+  const key = `${serverName}/${fhirVersion}`
+  const now = Date.now()
+  const cached = metadataCache.get(key)
+  if (cached && cached.expiresAt > now) return cached
+  const inflight = metadataInflight.get(key)
+  if (inflight) return inflight
+
+  const promise = (async (): Promise<MetadataCacheEntry> => {
+    const target = `${serverUrl}/metadata`
+    const useMtls = mtlsConfig?.enabled === true && target.startsWith('https://')
+    const resp = useMtls
+      ? await fetchWithMtls(target, { headers: { accept: 'application/fhir+json' }, serverId })
+      : await fetch(target, { headers: { accept: 'application/fhir+json' } })
+    const text = await resp.text()
+    const replaced = text.replaceAll(
+      serverUrl,
+      `${config.baseUrl}/${config.name}/${serverName}/${fhirVersion}`,
+    )
+    const contentType = resp.headers.get('content-type') || 'application/fhir+json'
+    const entry: MetadataCacheEntry = { body: replaced, contentType, status: resp.status, expiresAt: now + METADATA_TTL_MS }
+    // Only cache successes; let transient upstream errors retry on the next hit.
+    if (resp.status === 200) metadataCache.set(key, entry)
+    return entry
+  })()
+
+  metadataInflight.set(key, promise)
+  try { return await promise } finally { metadataInflight.delete(key) }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function proxyFHIR({ params, request, set }: any) {
   // 1) early version sanity check
@@ -48,6 +100,23 @@ async function proxyFHIR({ params, request, set }: any) {
       // `aud`/`resource` REQUEST parameter validated at /authorize (#355 Phase 2),
       // and SMART scope enforcement (enforceScopeAccess, defaults to "enforce").
       tokenPayload = await validateToken(auth, { enforceAudience: false })
+    }
+
+    // 1.5) CapabilityStatement fast-path: serve /metadata from the short-lived,
+    // single-flight cache so a concurrent discovery burst does not exhaust the
+    // upstream FHIR DB connection pool. Unauthenticated and resource-agnostic, so
+    // it short-circuits before consent/scope/capability processing.
+    if (request.method === 'GET' && new URL(request.url).pathname.endsWith('/metadata')) {
+      const mtlsConfig = await getMtlsConfig(serverInfo.identifier)
+      const entry = await getCachedMetadata(
+        params.server_name, params.fhir_version, serverUrl, serverInfo.identifier, mtlsConfig,
+      )
+      set.status = entry.status
+      set.headers = { ...set.headers, 'content-type': entry.contentType }
+      if (entry.contentType.includes('json')) {
+        try { return JSON.parse(entry.body) } catch { /* fall through to string */ }
+      }
+      return entry.body
     }
 
     // 2) Consent + IAL enforcement check

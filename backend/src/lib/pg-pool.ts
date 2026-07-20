@@ -55,6 +55,9 @@ export function getSharedPool(): Pool {
   if (!connectionString) {
     throw new Error('getSharedPool() called without a database configured')
   }
-  pool = new Pool({ connectionString })
+  // Explicit cap (node-pg default is also 10) keeps the shared-Postgres
+  // connection budget deterministic: the backend never opens more than this,
+  // so it cannot contribute to "sorry, too many clients already" exhaustion.
+  pool = new Pool({ connectionString, max: 10 })
   return pool
 }

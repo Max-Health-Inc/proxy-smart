@@ -662,7 +662,7 @@ async function runEhrLaunchTests(sessionId, browser) {
 
     const inputs = [
       { name: 'url', value: FHIR_SERVER_URL },
-      { name: 'ehr_launch_smart_auth_info', value: ehrAuthInfo }
+      { name: 'ehr_smart_auth_info', value: ehrAuthInfo }
     ];
 
     const run = await runTestGroup(sessionId, ehrGroup.id, inputs);
