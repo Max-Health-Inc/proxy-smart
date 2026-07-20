@@ -23,6 +23,7 @@ import { getAllServers } from '@/lib/fhir-server-store'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
 import { getPublishedApps } from '@/lib/app-store-config'
+import { resolveClientLaunchUrl } from '@/lib/client-launch-url'
 import { shlSessionStore, type ShareScope } from '@/lib/shl-session-store'
 import {
   isDicomPathAllowed,
@@ -518,21 +519,24 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       })
 
       // Build the SHL URI and viewer URL.
-      // Open the recipient in the SMART app that MINTED the share, using that
-      // app's registered launch URL (app-store registry). A per-study share
-      // minted by the DICOM viewer therefore opens in the viewer itself instead
-      // of an almost-empty patient portal. Falls back to the patient portal for
-      // apps without a registered launch URL. No per-env config needed.
+      // Open the recipient in the SMART app that MINTED the share, at that app's
+      // registered launch URL — so a per-study share minted by the DICOM viewer
+      // opens in the viewer itself instead of an almost-empty patient portal.
+      // The launch URL lives on the app's Keycloak client (`launch_url`, set via
+      // Smart Apps); prefer that, then a published app-store entry, then the
+      // patient portal. No per-env config or manual publish needed.
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
       const creatingClient = String(tokenPayload.azp ?? tokenPayload.client_id ?? '')
-      const creatingApp = creatingClient
-        ? getPublishedApps().find((a) => a.clientId === creatingClient)
-        : undefined
+      const launchUrl =
+        (await resolveClientLaunchUrl(creatingClient)) ??
+        (creatingClient
+          ? getPublishedApps().find((a) => a.clientId === creatingClient)?.launchUrl
+          : undefined)
       let viewerBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
-      if (creatingApp?.launchUrl) {
+      if (launchUrl) {
         try {
-          viewerBase = new URL(creatingApp.launchUrl).origin
+          viewerBase = new URL(launchUrl).origin
         } catch {
           // malformed launch URL — keep the portal fallback
         }
