@@ -29,7 +29,7 @@ runs:
       echo "✅ Python ${{ inputs.python-version }} installed with uv"
 
   - name: Cache uv dependencies
-    uses: actions/cache@v4
+    uses: actions/cache@v5
     with:
       path: |
         ~/.cache/uv

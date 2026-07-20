@@ -57,7 +57,7 @@ jobs:
         id: api-app-auth
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
@@ -101,7 +101,7 @@ jobs:
           error-log: frontend-build.log
           phase: build
           component: frontend
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
           retry-command: 'cd frontend/ui && bun run build'
 
@@ -133,7 +133,7 @@ jobs:
           error-log: frontend-test.log
           phase: test
           component: frontend
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
           retry-command: 'cd frontend/ui && bun run test --run'
 

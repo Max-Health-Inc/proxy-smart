@@ -31,20 +31,20 @@ runs:
   steps:
   - name: Checkout code
     if: inputs.checkout == 'true'
-    uses: actions/checkout@v4
+    uses: actions/checkout@v6
     with:
       fetch-depth: ${{ inputs.fetch-depth }}
       token: ${{ inputs.token }}
       ref: ${{ inputs.ref }}
 
   - name: Setup Node.js
-    uses: actions/setup-node@v4
+    uses: actions/setup-node@v6
     with:
       node-version: ${{ inputs.node-version }}
 
   - name: Cache Bun binary
     id: cache-bun
-    uses: actions/cache@v4
+    uses: actions/cache@v5
     with:
       path: ~/.bun
       key: ${{ runner.os }}-bun-binary-${{ inputs.bun-version }}
@@ -57,7 +57,7 @@ runs:
       bun-version: ${{ inputs.bun-version }}
 
   - name: Cache Bun dependencies
-    uses: actions/cache@v4
+    uses: actions/cache@v5
     with:
       path: |
         backend/node_modules

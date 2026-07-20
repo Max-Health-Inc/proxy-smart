@@ -593,7 +593,7 @@ jobs:
             \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
             \"webOrigins\": [\"http://localhost:4567\", \"*\"],
             \"fullScopeAllowed\": true,
-            \"defaultClientScopes\": [\"web-origins\", \"acr\", \"profile\", \"roles\", \"email\", \"openid\"],
+            \"defaultClientScopes\": [\"web-origins\", \"acr\", \"profile\", \"roles\", \"email\", \"openid\", \"resource-indicators\"],
             \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\", \"oauth2.device.authorization.grant.enabled\": \"false\", \"oidc.ciba.grant.enabled\": \"false\", \"backchannel.logout.session.required\": \"true\"}
           }"
           

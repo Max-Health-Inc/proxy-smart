@@ -13,6 +13,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: postgres
       KC_DB_PASSWORD: ${KC_DB_PASSWORD:?Set KC_DB_PASSWORD}
+      # Cap the Keycloak DB pool (default 100) so it cannot alone exhaust the
+      # shared Postgres connection budget under load.
+      KC_DB_POOL_MAX_SIZE: "30"
       KC_HTTP_ENABLED: true
       KC_HEALTH_ENABLED: true
       KC_METRICS_ENABLED: true
@@ -29,6 +32,14 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: proxy-smart-postgres-prod
+    # Raise the connection ceiling above the default 100; the per-service pool
+    # caps keep actual usage far below it (see "sorry, too many clients already").
+    command:
+      - postgres
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=128MB
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: postgres

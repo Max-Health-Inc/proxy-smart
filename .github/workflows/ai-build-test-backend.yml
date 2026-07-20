@@ -61,7 +61,7 @@ jobs:
           error-log: backend-build.log
           phase: build
           component: backend
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
           retry-command: 'cd backend && rm -rf dist/ && bun run build'
 
@@ -92,7 +92,7 @@ jobs:
           error-log: backend-test.log
           phase: test
           component: backend
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           app-private-key: ${{ secrets.APP_PRIVATE_KEY }}
           retry-command: 'cd backend && bun test --isolate'
 

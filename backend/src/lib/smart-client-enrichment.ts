@@ -139,6 +139,53 @@ export async function enrichClient(
 }
 
 /**
+ * The RFC 8707 resource-indicators client scope.
+ *
+ * Attaching it as a DEFAULT scope pre-populates the access-token `aud` with the
+ * resource-server client ids (fhir-resource-server / mcp-resource-server), which
+ * is the ONLY way Keycloak's resource-indicators post-processor can bind a
+ * requested `resource` into `aud`. Without it, any token exchange that carries a
+ * `resource` param (every SMART launch through this proxy does — it forwards the
+ * session `aud` as `resource`) fails with `invalid_target`.
+ *
+ * The scope + its audience mappers + the resource clients are defined in
+ * keycloak/realm-export.json and reconciled onto deployments by the deploy
+ * scripts. This constant + {@link assignResourceIndicatorsScope} attach it to
+ * every client the backend provisions at runtime (DCR + admin API), so no
+ * hardcoded per-client list is needed.
+ */
+export const RESOURCE_INDICATORS_SCOPE = 'resource-indicators'
+
+/**
+ * Attach the {@link RESOURCE_INDICATORS_SCOPE} to a client as a DEFAULT scope.
+ * Idempotent (Keycloak's addDefaultClientScope is a PUT), so it is safe to call
+ * after scope replacement / on every update. No-op with a warning if the scope
+ * is absent from the realm (deployment misconfiguration).
+ */
+export async function assignResourceIndicatorsScope(
+  admin: KcAdminClient,
+  clientInternalId: string,
+  clientId: string,
+  allClientScopes?: { id?: string; name?: string }[],
+): Promise<void> {
+  try {
+    const scopes = allClientScopes ?? await admin.clientScopes.find()
+    const scope = scopes.find(s => s.name === RESOURCE_INDICATORS_SCOPE)
+    if (!scope?.id) {
+      logger.admin.warn(
+        'resource-indicators client scope missing from realm — token audience binding will fail for this client',
+        { clientId },
+      )
+      return
+    }
+    await admin.clients.addDefaultClientScope({ id: clientInternalId, clientScopeId: scope.id })
+    logger.admin.debug('Assigned resource-indicators default scope to client', { clientId })
+  } catch (error) {
+    logger.admin.warn('Failed to assign resource-indicators scope to client', { clientId, error })
+  }
+}
+
+/**
  * Auto-create missing SMART client scopes in Keycloak.
  *
  * Handles BOTH resource-level scopes (patient/Observation.read) AND

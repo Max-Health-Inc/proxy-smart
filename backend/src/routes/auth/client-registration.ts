@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
+import { assignResourceIndicatorsScope } from '@/lib/smart-client-enrichment'
 import { refreshCorsOrigins } from '@/lib/cors-origins'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import * as crypto from 'crypto'
@@ -342,6 +343,12 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
               }
             }
           }
+
+          // RFC 8707: attach the resource-indicators default scope so this
+          // dynamically-registered client's access-token aud binds to the
+          // FHIR/MCP resource server (otherwise token exchange with a resource
+          // param → invalid_target). Applies to every DCR client automatically.
+          await assignResourceIndicatorsScope(admin, createdClient.id, clientId, allClientScopes)
 
           // Configure requested scopes - map SMART/OIDC scopes to Keycloak client scopes
           if (body.scope) {

@@ -17,7 +17,7 @@ import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
 import { refreshCorsOrigins } from '@/lib/cors-origins'
 import { toKeycloakAuthType } from '@/lib/auth-method-mapping'
-import { enrichClient, ensureScopesExist, replaceClientScopes } from '@/lib/smart-client-enrichment'
+import { enrichClient, ensureScopesExist, replaceClientScopes, assignResourceIndicatorsScope } from '@/lib/smart-client-enrichment'
 import { invalidateClientConfig } from '@/lib/smart-client-config-cache'
 import { config } from '@/config'
 import * as crypto from 'crypto'
@@ -394,6 +394,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }
         }
 
+        // RFC 8707: every SMART client needs the resource-indicators default
+        // scope so its access-token aud binds to the FHIR/MCP resource server
+        // (otherwise token exchange with a resource param → invalid_target).
+        await assignResourceIndicatorsScope(admin, fullClient.id!, fullClient.clientId!, allClientScopes)
+
         logger.admin.debug('Scopes assigned to client', {
           clientId: fullClient.clientId,
           defaultScopes: defaultScopesToAssign,
@@ -756,6 +761,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             body.defaultClientScopes,
             body.optionalClientScopes,
           )
+
+          // replaceClientScopes wipes existing default scopes before re-adding
+          // the requested set, so re-attach resource-indicators (RFC 8707) to
+          // keep the client's token-audience binding intact after an update.
+          await assignResourceIndicatorsScope(admin, existing.id!, existing.clientId!, allClientScopes)
 
           // Auto-provision SMART protocol mappers on updated scopes
           const updatedScopeNames = [...(body.defaultClientScopes || []), ...(body.optionalClientScopes || [])]
