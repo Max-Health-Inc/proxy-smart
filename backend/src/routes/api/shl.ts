@@ -536,7 +536,11 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       let viewerBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
       if (launchUrl) {
         try {
-          viewerBase = new URL(launchUrl).origin
+          // Keep the app's path (its SPA base, e.g. /apps/patient-portal/) — using
+          // only `.origin` drops it and the SHL fragment lands on the host root.
+          // A root-only launch URL carries no app path, so keep the portal fallback.
+          const u = new URL(launchUrl)
+          if (u.pathname && u.pathname !== '/') viewerBase = `${u.origin}${u.pathname}`
         } catch {
           // malformed launch URL — keep the portal fallback
         }
