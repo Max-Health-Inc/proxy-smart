@@ -22,8 +22,17 @@ import { logger } from '@/lib/logger'
 import { getAllServers } from '@/lib/fhir-server-store'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
-import { shlSessionStore } from '@/lib/shl-session-store'
-import { isDicomPathAllowed, scopeFhirRequest } from '@/lib/shl-scope'
+import { getPublishedApps } from '@/lib/app-store-config'
+import { shlSessionStore, type ShareScope } from '@/lib/shl-session-store'
+import {
+  isDicomPathAllowed,
+  scopeFhirRequest,
+  isSelectiveScopeActive,
+  preScreenSelectiveRequest,
+  applySelectiveFilter,
+  emptySearchBundle,
+  type SelectiveScope,
+} from '@/lib/shl-scope'
 import * as crypto from 'crypto'
 
 // KTC doesn't support smart-api-access yet (in their Future Work).
@@ -99,6 +108,11 @@ const CreateShlBody = t.Object({
   passcode: t.Optional(t.String({ description: 'Optional passcode to protect the SHL' })),
   expiresInMinutes: t.Optional(t.Number({ description: 'Expiry in minutes (default 60, max 4320 = 72h)', default: 60, minimum: 1 })),
   verifiedOnly: t.Optional(t.Boolean({ description: 'Whether to include only verified resources', default: false })),
+  shareScope: t.Optional(t.Object({
+    excludedTypes: t.Optional(t.Array(t.String(), { description: 'FHIR resource types fully hidden from the recipient (a whole category was deselected)' })),
+    excludedIds: t.Optional(t.Array(t.String(), { description: 'Individually hidden resources as "ResourceType/id"' })),
+    excludedObservationCategories: t.Optional(t.Array(t.String(), { description: 'Observation category codes fully hidden (e.g. vital-signs, laboratory)' })),
+  }, { description: 'Selective sharing: the patient de-selected some records/categories. Omit (or leave empty) to share everything.' })),
   studyInstanceUID: t.Optional(t.String({ description: 'DICOM Study Instance UID — scope the SHL to a single imaging study' })),
   shortenUrl: t.Optional(t.Boolean({ description: 'Opt-in: shorten the viewer URL via go.maxhealth.tech (stored securely, auto-expires)', default: false })),
   maxUses: t.Optional(t.Number({ description: 'Maximum number of times the shortened URL can be accessed before expiring (only when shortenUrl is true)', minimum: 1 })),
@@ -118,6 +132,20 @@ const ManifestRequest = t.Object({
 })
 
 // ── SHL FHIR proxy handler ──────────────────────────────────────────────────
+
+/** True for FHIR/JSON responses we can safely parse and filter. */
+function isJsonContentType(contentType: string | null): boolean {
+  return !!contentType && /json/i.test(contentType)
+}
+
+/** Build the pure SelectiveScope from a session's persisted shareScope (all-empty when absent). */
+function sessionSelectiveScope(session: { shareScope?: ShareScope }): SelectiveScope {
+  return {
+    excludedTypes: session.shareScope?.excludedTypes ?? [],
+    excludedIds: session.shareScope?.excludedIds ?? [],
+    excludedObservationCategories: session.shareScope?.excludedObservationCategories ?? [],
+  }
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function shlFhirProxyHandler({ request, params, headers, set }: any) {
@@ -181,6 +209,26 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
       return { error: 'Only read operations are allowed on shared links' }
     }
 
+    // Selective sharing (record/category de-selection) — whole-patient shares only.
+    // Study-scoped shares have their own stricter whitelist above.
+    const selective = sessionSelectiveScope(session)
+    const selectiveActive = !session.studyInstanceUID && isSelectiveScopeActive(selective)
+    if (selectiveActive) {
+      const pre = preScreenSelectiveRequest(fhirPath, url.search, selective)
+      if (pre.action === 'deny') {
+        set.status = 404
+        set.headers['access-control-allow-origin'] = '*'
+        return { error: 'Resource not found or not shared' }
+      }
+      if (pre.action === 'empty-bundle') {
+        set.status = 200
+        set.headers['content-type'] = 'application/fhir+json'
+        set.headers['access-control-allow-origin'] = '*'
+        set.headers['access-control-allow-headers'] = 'Authorization, Content-Type'
+        return JSON.stringify(emptySearchBundle())
+      }
+    }
+
     let serviceToken: string
     try {
       serviceToken = await getServiceAccountToken()
@@ -226,6 +274,25 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
     // Rewrite upstream FHIR URLs to point through the SHL proxy
     const text = await resp.text()
     const proxyBase = `${config.baseUrl}/api/shl/fhir`
+
+    // Post-filter for selective shares: drop de-selected entries from search
+    // Bundles, and 404 a single de-selected read. Defense-in-depth on top of the
+    // pre-screen, and the only line of defense for searches that mix kept + hidden
+    // items (e.g. an Observation search spanning several categories).
+    if (selectiveActive && resp.ok && isJsonContentType(contentType)) {
+      try {
+        const parsed: unknown = JSON.parse(text)
+        const filtered = applySelectiveFilter(parsed, selective)
+        if (filtered.denied) {
+          set.status = 404
+          return { error: 'Resource not found or not shared' }
+        }
+        return JSON.stringify(filtered.body).replaceAll(session.fhirServerUrl, proxyBase)
+      } catch {
+        // Not JSON (or malformed) — fall through to the raw passthrough below.
+      }
+    }
+
     return text.replaceAll(session.fhirServerUrl, proxyBase)
   } catch (error) {
     logger.auth.error('SHL FHIR proxy error', { error })
@@ -424,6 +491,17 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         ? crypto.createHash('sha256').update(body.passcode).digest('hex')
         : undefined
 
+      // Normalize the selective-sharing scope. Persist it only when it actually
+      // narrows the share; an omitted or all-empty scope stays undefined so the
+      // proxy takes the untouched "share everything" path.
+      const excludedTypes = body.shareScope?.excludedTypes ?? []
+      const excludedIds = body.shareScope?.excludedIds ?? []
+      const excludedObservationCategories = body.shareScope?.excludedObservationCategories ?? []
+      const shareScope: ShareScope | undefined =
+        excludedTypes.length + excludedIds.length + excludedObservationCategories.length > 0
+          ? { excludedTypes, excludedIds, excludedObservationCategories }
+          : undefined
+
       // Store session (proxy token → patient data mapping, no real tokens)
       shlSessionStore.set(shlId, {
         shl: shl.payload,
@@ -434,15 +512,32 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         fhirServerUrl,
         expiresAt,
         verifiedOnly: body.verifiedOnly ?? false,
+        shareScope,
         accessCount: 0,
         passcodeHash,
       })
 
-      // Build the SHL URI and viewer URL
+      // Build the SHL URI and viewer URL.
+      // Open the recipient in the SMART app that MINTED the share, using that
+      // app's registered launch URL (app-store registry). A per-study share
+      // minted by the DICOM viewer therefore opens in the viewer itself instead
+      // of an almost-empty patient portal. Falls back to the patient portal for
+      // apps without a registered launch URL. No per-env config needed.
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
-      const portalBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
-      const viewerUrl = `${portalBase.replace(/\/$/, '')}/#${shlinkURI}`
+      const creatingClient = String(tokenPayload.azp ?? tokenPayload.client_id ?? '')
+      const creatingApp = creatingClient
+        ? getPublishedApps().find((a) => a.clientId === creatingClient)
+        : undefined
+      let viewerBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
+      if (creatingApp?.launchUrl) {
+        try {
+          viewerBase = new URL(creatingApp.launchUrl).origin
+        } catch {
+          // malformed launch URL — keep the portal fallback
+        }
+      }
+      const viewerUrl = `${viewerBase.replace(/\/$/, '')}/#${shlinkURI}`
 
       // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)
       const shortUrl = body.shortenUrl

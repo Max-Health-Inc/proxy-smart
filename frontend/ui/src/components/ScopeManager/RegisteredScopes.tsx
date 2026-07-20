@@ -56,11 +56,10 @@ export function RegisteredScopes({ embedded }: { embedded?: boolean }) {
   const [deleting, setDeleting] = useState(false);
 
   const fetchScopes = useCallback(async () => {
-    setLoading(true);
-    setError(null);
     try {
       const res = await clientApis.admin.getAdminSmartScopes({ smartOnly: 'true' });
       setScopes(res.scopes);
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -68,7 +67,12 @@ export function RegisteredScopes({ embedded }: { embedded?: boolean }) {
     }
   }, [clientApis]);
 
-  useEffect(() => { fetchScopes(); }, [fetchScopes]);
+  useEffect(() => {
+    // fetchScopes updates state only after an await; the rule can't trace that
+    // across the useCallback boundary, so this fetch-on-mount is safe.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchScopes();
+  }, [fetchScopes]);
 
   const handleCreate = async () => {
     if (!newScopeName.trim()) return;

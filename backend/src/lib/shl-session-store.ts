@@ -14,6 +14,23 @@ import { DATA_DIR } from './paths'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+/**
+ * Selective-sharing scope for a whole-patient share. Absent (or with both lists
+ * empty) means "share everything" — byte-for-byte the legacy behavior. When
+ * present it narrows the share by hiding whole resource types and/or individual
+ * resources. Enforced server-side in the SHL FHIR proxy (see shl-scope.ts), so
+ * deselected records are genuinely unreachable by the recipient, not merely
+ * hidden in the viewer.
+ */
+export interface ShareScope {
+  /** FHIR resource types fully hidden (a whole category was deselected). */
+  excludedTypes: string[]
+  /** Individually hidden resources as `ResourceType/id`. */
+  excludedIds: string[]
+  /** Observation `category` codes fully hidden (e.g. `vital-signs`, `laboratory`). */
+  excludedObservationCategories: string[]
+}
+
 export interface ShlSession {
   /** SHL payload from kill-the-clipboard (for manifest serving) */
   shl: { url: string; key: string; exp?: number; flag?: string; label?: string }
@@ -31,6 +48,8 @@ export interface ShlSession {
   expiresAt: number
   /** Whether verified-only filter is active */
   verifiedOnly: boolean
+  /** Optional selective-sharing scope (record/category de-selection). */
+  shareScope?: ShareScope
   /** Number of manifest accesses */
   accessCount: number
   /** Optional passcode (hashed) */
@@ -48,6 +67,7 @@ interface ShlRow {
   fhir_server_url: string
   expires_at: number
   verified_only: number // 0 or 1
+  share_scope: string | null // JSON-serialized ShareScope, or null for "share everything"
   access_count: number
   passcode_hash: string | null
   created_at: number
@@ -77,6 +97,7 @@ function createDatabase(): Database {
       fhir_server_url TEXT NOT NULL,
       expires_at INTEGER NOT NULL,
       verified_only INTEGER NOT NULL DEFAULT 0,
+      share_scope TEXT,
       access_count INTEGER NOT NULL DEFAULT 0,
       passcode_hash TEXT,
       created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
@@ -86,6 +107,13 @@ function createDatabase(): Database {
   // Idempotent migration: add study-scope column to pre-existing DBs.
   try {
     db.run('ALTER TABLE shl_sessions ADD COLUMN study_instance_uid TEXT')
+  } catch {
+    /* column already exists */
+  }
+
+  // Idempotent migration: add selective-sharing scope column to pre-existing DBs.
+  try {
+    db.run('ALTER TABLE shl_sessions ADD COLUMN share_scope TEXT')
   } catch {
     /* column already exists */
   }
@@ -119,9 +147,9 @@ class ShlSessionStore {
   set(id: string, session: ShlSession): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO shl_sessions
-        (id, session_token, shl_payload, jwe, patient_id, study_instance_uid, fhir_server_url, expires_at, verified_only, access_count, passcode_hash, created_at)
+        (id, session_token, shl_payload, jwe, patient_id, study_instance_uid, fhir_server_url, expires_at, verified_only, share_scope, access_count, passcode_hash, created_at)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     stmt.run(
       id,
@@ -133,6 +161,7 @@ class ShlSessionStore {
       session.fhirServerUrl,
       session.expiresAt,
       session.verifiedOnly ? 1 : 0,
+      session.shareScope ? JSON.stringify(session.shareScope) : null,
       session.accessCount,
       session.passcodeHash ?? null,
       Date.now(),
@@ -198,6 +227,7 @@ class ShlSessionStore {
       fhirServerUrl: row.fhir_server_url,
       expiresAt: row.expires_at,
       verifiedOnly: row.verified_only === 1,
+      shareScope: row.share_scope ? (JSON.parse(row.share_scope) as ShareScope) : undefined,
       accessCount: row.access_count,
       passcodeHash: row.passcode_hash ?? undefined,
     }
