@@ -438,10 +438,18 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         passcodeHash,
       })
 
-      // Build the SHL URI and viewer URL
+      // Build the SHL URI and viewer URL.
+      // SHLs minted by the standalone DICOM viewer open in the viewer itself —
+      // a per-study share renders as an almost-empty patient portal. Route by
+      // the creating OAuth client (azp), falling back to the patient portal.
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
-      const portalBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
+      const creatingClient = String(tokenPayload.azp ?? tokenPayload.client_id ?? '')
+      const openInDicomViewer =
+        !!config.brand.dicomViewerUrl && creatingClient === config.brand.dicomViewerClientId
+      const portalBase = openInDicomViewer
+        ? config.brand.dicomViewerUrl!
+        : (config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`)
       const viewerUrl = `${portalBase.replace(/\/$/, '')}/#${shlinkURI}`
 
       // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)

@@ -133,6 +133,10 @@ export const config = {
     get category() { return process.env.BRAND_CATEGORY || 'prov' }, // prov, pay, laboratory, etc.
     get portalName() { return process.env.BRAND_PORTAL_NAME || null },
     get portalUrl() { return process.env.BRAND_PORTAL_URL || null },
+    // Standalone DICOM viewer. SHLs minted by this OAuth client open in the
+    // viewer itself (a per-study share renders empty in the patient portal).
+    get dicomViewerUrl() { return process.env.BRAND_DICOM_VIEWER_URL || null },
+    get dicomViewerClientId() { return process.env.BRAND_DICOM_VIEWER_CLIENT_ID || 'dicom-viewer' },
     get portalDescription() { return process.env.BRAND_PORTAL_DESCRIPTION || null },
     get portalLogoUrl() { return process.env.BRAND_PORTAL_LOGO_URL || null },
     get portalLogoLicenseUrl() { return process.env.BRAND_PORTAL_LOGO_LICENSE_URL || null },
