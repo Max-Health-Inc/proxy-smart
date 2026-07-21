@@ -59,8 +59,8 @@ async function getServiceAccountToken(): Promise<string> {
   const realm = config.keycloak.realm
   if (!kcBase || !realm) throw new Error('Keycloak not configured')
 
-  const clientId = process.env.SHL_EXCHANGE_CLIENT_ID || 'shl-exchange'
-  const clientSecret = process.env.SHL_EXCHANGE_CLIENT_SECRET
+  const clientId = config.shlExchange.clientId
+  const clientSecret = config.shlExchange.clientSecret
   if (!clientSecret) throw new Error('SHL_EXCHANGE_CLIENT_SECRET not configured')
 
   const tokenUrl = `${kcBase}/realms/${realm}/protocol/openid-connect/token`

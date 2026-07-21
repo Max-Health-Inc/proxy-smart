@@ -1176,10 +1176,9 @@
     {
       "clientId": "shl-exchange",
       "name": "SHL Token Exchange",
-      "description": "Service account for SMART Health Link token exchange (RFC 8693). Mints scoped, short-lived tokens for QR-based patient data sharing.",
+      "description": "Service account for SMART Health Link token exchange (RFC 8693). Secret is reconciled at startup from config (ensureShlExchangeClient) — never stored here.",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "shl-exchange-dev-secret",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,

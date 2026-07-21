@@ -99,7 +99,24 @@ export const config = {
       return `${base}/realms/${this.realm}`
     },
   },
-  
+
+  // SMART Health Link token-exchange client (RFC 8693). Confidential Keycloak
+  // service-account client the SHL flow authenticates as to mint scoped,
+  // short-lived tokens. The secret is the single source of truth — Keycloak is
+  // reconciled to it at startup (see ensureShlExchangeClient), so it must never
+  // be hardcoded in realm-export. Fails closed: no secret ⇒ SHL disabled.
+  shlExchange: {
+    get clientId() {
+      return process.env.SHL_EXCHANGE_CLIENT_ID || 'shl-exchange'
+    },
+    get clientSecret() {
+      return process.env.SHL_EXCHANGE_CLIENT_SECRET || null
+    },
+    get isConfigured() {
+      return !!this.clientSecret
+    },
+  },
+
   fhir: {
     // Support multiple FHIR servers - can be a single URL or comma-separated list
     serverBases: (process.env.FHIR_SERVER_BASE ?? 'http://localhost:8081/fhir').split(',').map(s => s.trim()),
