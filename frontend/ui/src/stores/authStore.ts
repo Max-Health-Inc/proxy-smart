@@ -175,7 +175,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Tokens expired, try to refresh if we have refresh token
           if (tokens.refresh_token) {
-            if (import.meta.env.DEV) console.log('🔄 Tokens expired, attempting refresh...');
+            if (import.meta.env.DEV) console.log('Tokens expired, attempting refresh...');
             try {
               await get().refreshTokens();
               set({ isInitializing: false });
@@ -185,7 +185,7 @@ export const useAuthStore = create<AuthState>()(
                 await get().fetchProfile();
               }
             } catch (refreshError) {
-              console.warn('❌ Token refresh failed during initialization:', refreshError);
+              console.warn('Token refresh failed during initialization:', refreshError);
               
               // Check if this is an invalid_grant error (tokens are completely invalid)
               const isInvalidGrant = refreshError instanceof Error && 
@@ -193,7 +193,7 @@ export const useAuthStore = create<AuthState>()(
                  refreshError.message.includes('Token is not active'));
               
               if (isInvalidGrant) {
-                if (import.meta.env.DEV) console.warn('🗑️ Tokens are invalid, clearing auth state');
+                if (import.meta.env.DEV) console.warn('Tokens are invalid, clearing auth state');
                 // Clear everything — user will see the login page and can re-authenticate
                 await clearAllAuthData();
                 set({ 
@@ -217,7 +217,7 @@ export const useAuthStore = create<AuthState>()(
             }
           } else {
             // No refresh token, clear everything
-            if (import.meta.env.DEV) console.log('❌ No refresh token available, clearing auth state');
+            if (import.meta.env.DEV) console.log('No refresh token available, clearing auth state');
             await clearTokens();
             set({ 
               isAuthenticated: false, 
@@ -228,7 +228,7 @@ export const useAuthStore = create<AuthState>()(
             });
           }
         } catch (error) {
-          console.error('❌ Error during auth initialization:', error);
+          console.error('Error during auth initialization:', error);
           await clearTokens();
           set({ 
             isAuthenticated: false, 
@@ -384,9 +384,9 @@ export const useAuthStore = create<AuthState>()(
           // Update API clients with refreshed token
           await get().updateClientApis();
           
-          if (import.meta.env.DEV) console.debug('✅ Tokens refreshed successfully');
+          if (import.meta.env.DEV) console.debug('Tokens refreshed successfully');
         } catch (error) {
-          console.error('❌ Token refresh failed:', error);
+          console.error('Token refresh failed:', error);
           set({ loading: false });
           // Don't automatically logout here - let the API client handle that
           // This prevents competing logout calls
@@ -397,7 +397,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         const tokens = await getStoredTokens();
         
-        if (import.meta.env.DEV) console.log('🚪 Initiating logout with tokens:', {
+        if (import.meta.env.DEV) console.log('Initiating logout with tokens:', {
           hasAccessToken: !!tokens?.access_token,
           hasIdToken: !!tokens?.id_token,
           hasRefreshToken: !!tokens?.refresh_token

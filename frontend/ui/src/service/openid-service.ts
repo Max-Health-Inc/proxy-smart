@@ -133,12 +133,12 @@ class OpenIDService {
         if (errorObj.response) {
           try {
             const responseText = await errorObj.response.text();
-            console.error('🚨 Token exchange error response body:', responseText);
+            console.error('Token exchange error response body:', responseText);
 
             // Try to parse as JSON
             try {
               const errorDetails = JSON.parse(responseText);
-              console.error('📋 Parsed error details:', errorDetails);
+              console.error('Parsed error details:', errorDetails);
 
               // Create a more descriptive error message
               if (errorDetails.error) {
@@ -155,7 +155,7 @@ class OpenIDService {
 
         // Log the error structure for debugging
         try {
-          console.error('🔍 Error object details:', {
+          console.error('Error object details:', {
             name: errorObj.name,
             message: errorObj.message,
             status: errorObj.status,
@@ -225,11 +225,11 @@ class OpenIDService {
         if (errorObj.response) {
           try {
             const responseText = await errorObj.response.text();
-            console.error('🚨 Token refresh error response body:', responseText);
+            console.error('Token refresh error response body:', responseText);
 
             try {
               const errorDetails = JSON.parse(responseText);
-              console.error('📋 Parsed refresh error details:', errorDetails);
+              console.error('Parsed refresh error details:', errorDetails);
 
               if (errorDetails.error) {
                 const message = `Token refresh failed: ${errorDetails.error}${errorDetails.error_description ? ` - ${errorDetails.error_description}` : ''}`;
