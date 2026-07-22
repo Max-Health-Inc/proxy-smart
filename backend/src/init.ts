@@ -4,6 +4,8 @@ import { ensureServersInitialized, getAllServers } from './lib/fhir-server-store
 import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
 import { resolveKcRealmIssuer } from './lib/proxy-signing'
+import { getAdminClient } from './lib/kc-admin-factory'
+import { ensureShlExchangeClient } from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -854,6 +856,20 @@ async function ensureProxySigningIdp(): Promise<void> {
 /**
  * Initialize all server components (Keycloak + FHIR servers)
  */
+/**
+ * Reconcile proxy-owned Keycloak system clients whose secrets live in config
+ * (never in the committed realm-export). Runs as the admin-service service
+ * account. Idempotent and non-fatal.
+ */
+async function ensureSystemClients(): Promise<void> {
+  const admin = await getAdminClient()
+  if (!admin) {
+    logger.keycloak.debug('Skipping system-client reconcile — no admin credentials configured')
+    return
+  }
+  await ensureShlExchangeClient(admin)
+}
+
 export async function initializeServer(): Promise<void> {
   logger.server.info('Starting Proxy Smart...')
 
@@ -912,6 +928,10 @@ export async function initializeServer(): Promise<void> {
 
       // Ensure User Profile has all custom SMART attributes declared (KC 26+ requirement)
       await ensureUserProfileAttributes()
+
+      // Reconcile proxy-owned system clients (secret sourced from config, never
+      // committed to realm-export). Idempotent, non-fatal.
+      await ensureSystemClients()
 
       // Brand display name is managed via the admin branding API (PUT /admin/branding).
       // No longer overwritten on startup — the API calls saveBrandConfig() which syncs
