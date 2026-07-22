@@ -744,17 +744,27 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     const bodyObj = body as Record<string, string>
 
     const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const hasClientAuth = bodyObj.client_id || bodyObj.client_secret
+    // A bare `client_id` (public SMART client, e.g. Inferno) is NOT usable
+    // introspection auth: RFC 7662 requires the CALLER to authenticate, and
+    // Keycloak rejects a public client at the introspection endpoint, returning
+    // {"active": false} for an otherwise-valid token. Only real credentials
+    // (client_secret / client_assertion) count as caller auth; otherwise fall
+    // back to the proxy's configured introspection client and strip the partial
+    // client id so Keycloak doesn't see two competing auth methods.
+    const forwardBody: Record<string, string> = { ...bodyObj }
+    const hasClientAuth = bodyObj.client_secret || bodyObj.client_assertion
     if (!hasClientAuth) {
       const auth = keycloakAdapter.getIntrospectionAuth?.()
       if (auth) {
         headers['Authorization'] = `Basic ${Buffer.from(`${auth.clientId}:${auth.clientSecret}`).toString('base64')}`
+        delete forwardBody.client_id
+        delete forwardBody.client_secret
       }
     }
 
     const resp = await fetch(kcUrl, {
       method: 'POST', headers,
-      body: new URLSearchParams(bodyObj).toString()
+      body: new URLSearchParams(forwardBody).toString()
     })
 
     const data = await resp.json()
