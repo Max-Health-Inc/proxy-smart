@@ -13,12 +13,8 @@ minimumReleaseAge = 0 # Allow all packages regardless of age
 [install.scopes]
 # Resolve @max-health-inc packages from GitHub Packages
 "@max-health-inc" = "https://npm.pkg.github.com"
-# The Max Network design-language contract (@max-network/css) — single source of
-# the Max Health brand tokens, pulled in by @max-health-inc/shared-ui and the
-# admin UI. Private GitHub Packages; auth via env (never a committed token):
-#   locally  ->  NODE_AUTH_TOKEN="$(gh auth token)" bun install
-#   in CI    ->  NODE_AUTH_TOKEN set to a token with read:packages
-"@max-network" = { url = "https://npm.pkg.github.com/", token = "$NODE_AUTH_TOKEN" }
+# NOTE: the brand-token contract is now the public-npm package `brandc` (renamed
+# from @max-network/css), so no private-registry scope/token is needed for it.
 
 # Security scanner (Socket.dev)
 # [install.security]

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 /*
- * Max Health brand tokens — SINGLE SOURCE of truth in @max-network/css (the org
- * design-language contract), pulled in via @max-health-inc/shared-ui.
+ * Max Health brand tokens — SINGLE SOURCE of truth in the `brandc` design-language
+ * contract (public npm), also consumed by @max-health-inc/shared-ui.
  *   theme.css    ships the token VALUES (:root + dark via light-dark(), radius 0,
  *                flat/no-shadow, the Max Health emerald --maxhealth).
  *   tailwind.css maps them to Tailwind utilities by reference (bg-primary,
  *                text-maxhealth, bg-success, …) so runtime dark-switching works.
- * Rebrand or tweak a colour upstream in @max-network/css, never here.
+ * Rebrand or tweak a colour upstream in `brandc`, never here.
  */
-@import "@max-network/css/theme.css";
-@import "@max-network/css/tailwind.css";
+@import "brandc/theme.css";
+@import "brandc/tailwind.css";
 @plugin "@tailwindcss/typography";
 @source "../node_modules/@proxy-smart/shared-ui/src";
 
