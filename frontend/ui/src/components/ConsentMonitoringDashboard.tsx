@@ -20,6 +20,7 @@ import {
   ShieldX,
   Database,
   AlertCircle,
+  Zap,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
@@ -585,7 +586,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                             <TableCell>
                               <Badge variant="secondary" className="text-xs">
                                 {event.mode}
-                                {event.cached && <span className="ml-1" title={t('Served from cache')}>⚡</span>}
+                                {event.cached && <Zap className="inline-block ml-1 w-3 h-3 text-amber-500" aria-label={t('Served from cache')} />}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-muted-foreground">{event.checkDurationMs}ms</TableCell>

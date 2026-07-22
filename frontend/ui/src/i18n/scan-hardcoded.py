@@ -121,7 +121,7 @@ def main():
                 files_with_issues += 1
                 rel = os.path.relpath(filepath, os.path.join(UI_SRC, '..'))
                 print(f"\n{'='*80}")
-                print(f"📄 {rel}  ({len(findings)} hardcoded strings)")
+                print(f"{rel}  ({len(findings)} hardcoded strings)")
                 print(f"{'='*80}")
                 for line_no, kind, text in findings:
                     total_findings += 1

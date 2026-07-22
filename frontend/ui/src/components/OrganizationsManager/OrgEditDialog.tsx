@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Edit, X, Palette, Settings, Shield } from 'lucide-react';
+import { Edit, X, Palette, Settings, Shield, Check } from 'lucide-react';
 import { useState } from 'react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
@@ -153,7 +153,7 @@ export function OrgEditDialog({ isOpen, onClose, onUpdate, org }: OrgEditDialogP
                 {domains.map((d) => (
                   <span key={d.name} className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-muted text-sm">
                     {d.name}
-                    {d.verified && <span className="text-green-500 text-xs">✓</span>}
+                    {d.verified && <Check className="inline-block w-3 h-3 text-green-500" />}
                     <button type="button" onClick={() => removeDomain(d.name)} className="hover:text-destructive">
                       <X className="w-3 h-3" />
                     </button>

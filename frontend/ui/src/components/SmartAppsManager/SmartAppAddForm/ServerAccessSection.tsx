@@ -96,8 +96,8 @@ export function ServerAccessSection({
                             </div>
                         )}
                         {(newApp.allowedServerIds || []).length > 0 && (
-                            <div className="text-xs text-green-600 dark:text-green-400 bg-green-500/10 p-2 rounded-lg border border-green-500/20">
-                                ✓ {(newApp.allowedServerIds || []).length} server(s) selected
+                            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 bg-green-500/10 p-2 rounded-lg border border-green-500/20">
+                                <CheckCircle className="w-3.5 h-3.5" /> {(newApp.allowedServerIds || []).length} server(s) selected
                             </div>
                         )}
                     </div>

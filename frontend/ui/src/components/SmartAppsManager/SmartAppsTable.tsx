@@ -27,6 +27,11 @@ import {
   Users,
   Globe,
   AlertCircle,
+  Wrench,
+  Smartphone,
+  Hospital,
+  Bot,
+  HelpCircle,
 } from 'lucide-react';
 import type { SmartApp, ScopeSet, SmartAppType } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
@@ -119,15 +124,15 @@ export function SmartAppsTable({
   const getAppTypeIcon = (appType: SmartAppType) => {
     switch (appType) {
       case 'backend-service':
-        return '🔧';
+        return <Wrench className="w-5 h-5" />;
       case 'standalone-app':
-        return '📱';
+        return <Smartphone className="w-5 h-5" />;
       case 'ehr-launch':
-        return '🏥';
+        return <Hospital className="w-5 h-5" />;
       case 'agent':
-        return '🤖';
+        return <Bot className="w-5 h-5" />;
       default:
-        return '❓';
+        return <HelpCircle className="w-5 h-5" />;
     }
   };
 
@@ -163,7 +168,7 @@ export function SmartAppsTable({
 
           return (
             <DataListItem key={app.id} muted={app.status !== 'active'}>
-              <DataListIcon size="lg" className="text-xl">
+              <DataListIcon size="lg">
                 {getAppTypeIcon(app.appType || 'standalone-app')}
               </DataListIcon>
 

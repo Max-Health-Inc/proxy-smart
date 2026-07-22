@@ -91,7 +91,7 @@ export const AuthDebugPanel: React.FC = () => {
       // Update storage info
       await updateStorageInfo();
       
-      console.log('✅ Session data and authorization codes cleared successfully');
+      console.log('Session data and authorization codes cleared successfully');
     } catch (error) {
       console.error('Failed to clear session data:', error);
     }

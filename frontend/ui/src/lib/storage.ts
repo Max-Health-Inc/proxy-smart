@@ -138,7 +138,7 @@ export const clearAllAuthData = async (): Promise<void> => {
 
 // Utility to immediately clear authorization code data after use
 export const clearAuthorizationCodeData = (): void => {
-    console.log('🧹 Clearing authorization code data...');
+    console.log('Clearing authorization code data...');
     
     // Clear any potential authorization code storage
     removeSessionItem('authorization_code');

@@ -59,19 +59,19 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
   };
 
   const handleLanguageChange = async (languageCode: string) => {
-    console.debug('🔄 Navigation: Language change requested to:', languageCode);
-    console.debug('🔄 Navigation: Current language:', currentLanguage);
+    console.debug('Navigation: Language change requested to:', languageCode);
+    console.debug('Navigation: Current language:', currentLanguage);
     try {
       await setLanguage(languageCode);
-      console.debug('✅ Navigation: Language change completed');
+      console.debug('Navigation: Language change completed');
     } catch (error) {
-      console.error('❌ Navigation: Language change failed:', error);
+      console.error('Navigation: Language change failed:', error);
     }
   };
 
   const availableLanguages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
+    { code: 'en', name: 'English' },
+    { code: 'de', name: 'Deutsch' }
   ];
 
   const availableThemes = [
@@ -499,7 +499,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                               <Languages className="w-4 h-4 text-muted-foreground" />
                             </div>
                             <span className="flex items-center space-x-2 font-medium text-foreground">
-                              <span className="text-lg">{language.flag}</span>
+                              <span className="text-xs font-semibold text-muted-foreground w-6">{language.code.toUpperCase()}</span>
                               <span>{language.name}</span>
                             </span>
                           </div>

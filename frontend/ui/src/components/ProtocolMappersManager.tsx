@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/stores/authStore';
-import { CheckCircle, AlertCircle, Shield, Wrench, Trash2, RefreshCw, Loader2 } from 'lucide-react';
+import { CheckCircle, AlertCircle, Shield, Wrench, Trash2, RefreshCw, Loader2, Check, Minus } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@proxy-smart/shared-ui';
@@ -165,9 +165,9 @@ export function ProtocolMappersManager({ embedded }: ProtocolMappersManagerProps
                       )}
                       <td className="p-3 font-mono text-xs">{mapper.name}</td>
                       <td className="p-3 font-mono text-xs">{mapper.claimName}</td>
-                      <td className="p-3 text-center">{mapper.accessTokenClaim ? '✓' : '—'}</td>
-                      <td className="p-3 text-center">{mapper.idTokenClaim ? '✓' : '—'}</td>
-                      <td className="p-3 text-center">{mapper.userinfoTokenClaim ? '✓' : '—'}</td>
+                      <td className="p-3 text-center">{mapper.accessTokenClaim ? <Check className="inline w-4 h-4 text-green-600" /> : <Minus className="inline w-4 h-4 text-muted-foreground" />}</td>
+                      <td className="p-3 text-center">{mapper.idTokenClaim ? <Check className="inline w-4 h-4 text-green-600" /> : <Minus className="inline w-4 h-4 text-muted-foreground" />}</td>
+                      <td className="p-3 text-center">{mapper.userinfoTokenClaim ? <Check className="inline w-4 h-4 text-green-600" /> : <Minus className="inline w-4 h-4 text-muted-foreground" />}</td>
                       <td className="p-3 text-center">
                         <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/20 text-xs">
                           {t('OK')}
