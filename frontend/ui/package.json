@@ -17,6 +17,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@max-network/css": "^0.1.1",
     "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
     "@radix-ui/react-avatar": "^1.2.2",
     "@radix-ui/react-dialog": "^1.1.19",
