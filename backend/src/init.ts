@@ -5,7 +5,7 @@ import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
 import { resolveKcRealmIssuer } from './lib/proxy-signing'
 import { getAdminClient } from './lib/kc-admin-factory'
-import { ensureShlExchangeClient } from './lib/kc-system-provisioning'
+import { ensureShlExchangeClient, ensureIntrospectionClientConfig } from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -868,6 +868,7 @@ async function ensureSystemClients(): Promise<void> {
     return
   }
   await ensureShlExchangeClient(admin)
+  await ensureIntrospectionClientConfig(admin)
 }
 
 export async function initializeServer(): Promise<void> {
