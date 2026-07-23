@@ -13,6 +13,9 @@ import { hasClientAssertion, translateClientAssertion, ClientAssertionError } fr
 import { kcUnavailablePage, authErrorPage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
+import { getAdminClient } from '@/lib/kc-admin-factory'
+import { getOrgBranding } from '@/lib/org-branding'
+import { getAttr } from '@/lib/smart-client-enrichment'
 import {
   handleAuthorize,
   handleCallback,
@@ -359,6 +362,55 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     }
   }, {
     detail: { summary: 'Patient Search (Picker)', description: 'Session-validated Patient search for the patient picker SPA. Proxies to upstream FHIR server without requiring a Bearer token.', tags: ['authentication'] }
+  })
+
+  // ── Brand context (session-validated, for patient picker theming) ─────
+  // Resolves the brand COLOUR for the launch so the picker can theme itself to
+  // the launching organization. Starts from the global brand, then applies the
+  // launching client's org override when resolvable. UI-theming only — this is
+  // NOT the SMART User-access Brand (no logo/portal/endpoints here).
+  .get('/brand-context', async ({ query, set }) => {
+    const sessionKey = query.session as string | undefined
+    if (!sessionKey) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing session parameter' }
+    }
+    const session = smartStore.get(sessionKey)
+    if (!session) {
+      set.status = 401
+      return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    // Global brand colour is the default.
+    const brand: { primaryColor: string | null; accentColor: string | null } = {
+      primaryColor: config.brand.primaryColor,
+      accentColor: config.brand.accentColor,
+    }
+
+    // Per-org override: session client → its organization → org brand colour.
+    // Best-effort and non-fatal; falls back to the global brand on any failure.
+    try {
+      const clientId = (session as { clientId?: string }).clientId
+      const admin = clientId ? await getAdminClient() : null
+      if (admin && clientId) {
+        const clients = await admin.clients.find({ clientId })
+        const orgIds = getAttr(clients[0]?.attributes, 'organization_ids')?.split(',').filter(Boolean)
+        if (orgIds && orgIds.length > 0) {
+          const orgBrand = await getOrgBranding(admin, orgIds[0])
+          if (orgBrand.primaryColor) brand.primaryColor = orgBrand.primaryColor
+          if (orgBrand.accentColor) brand.accentColor = orgBrand.accentColor
+        }
+      }
+    } catch (err) {
+      logger.auth.debug('brand-context: per-org resolution failed, using global brand', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+
+    set.headers['Cache-Control'] = 'no-store'
+    return brand
+  }, {
+    detail: { summary: 'Brand Context (Picker)', description: 'Session-validated brand colour for theming the patient picker to the launching organization.', tags: ['authentication'] }
   })
 
   // ── Login redirect ────────────────────────────────────────────────────
