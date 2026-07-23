@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-beta.202607231603.838c9317b] - 2026-07-23
+
+- ✨ Features: Frontend BrandSettings now supports editing/preview of primaryColor and accentColor; runtime brand config now propagates and uses these values. Brand-context endpoint extended to resolve and return colors for session-based theming.
+- 🐛 Bug Fixes: None explicitly stated beyond feature-related updates.
+- 📚 Documentation: None.
+- 🔧 Chores & Improvements: Brand theming fields added across backend and runtime configs; theme CSS variables are applied on load; new API client for fetchBrandContext; package version bumps to 0.2.13-beta.202607231603.838c9317b; ESLint and token import updates; bunfig.toml note added for brand-token contract.
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/847
+
+
 ## [0.2.13-alpha.202607231603.838c9317b] - 2026-07-23
 
 - ✨ Features: 
