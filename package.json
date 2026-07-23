@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.2.13-beta.202607231042.705d38ecd",
+  "version": "0.2.13-alpha.202607231432.7f3c31ebe",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -63,6 +63,7 @@
     "generate:ui": "cd backend && bun run export-openapi && cd ../frontend/ui && bun run generate",
     "generate:ui:normalized": "bun run generate:ui && git add --renormalize frontend/ui/src/lib/api-client/",
     "generate:test": "cd testing && bun run generate",
+    "fhir:build": "node fhir/build.mjs",
     "validate-api": "concurrently \"bun run validate-api:ui\" \"bun run validate-api:test\"",
     "validate-api:ui": "cd frontend/ui && bun run validate-api",
     "validate-api:test": "cd testing && bun run validate-api",

@@ -56,3 +56,10 @@ docs/.vitepress/dist
 !scripts/seed/dicom/*.dcm
 
 backend/test_output.txt
+
+# FHIR IG build outputs (keep input/fsh source)
+fhir/fsh-generated/
+fhir/output/
+fhir/temp/
+fhir/.cache/
+fhir/maxhealth.consent-*.tgz
