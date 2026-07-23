@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607231603.838c9317b] - 2026-07-23
+
+- ✨ Features: 
+  - Add brand theming support across backend and frontend (primaryColor, accentColor) with propagation to runtime brand config and session-based theming via OAuth endpoint.
+  - Frontend BrandSettings now supports editing/preview of primaryColor and accentColor; default values added.
+  - Patient picker applies brand-context theming to root CSS variables (--primary, --maxhealth) on load.
+  - New API client to fetch brand context.
+
+- 🔧 Chores & Improvements:
+  - Dependency/version bumps to new beta tag across core, frontend, and packages.
+  - ESLint updates and brandc package integration for token imports in UI CSS (brandc/theme.css, brandc/tailwind.css).
+  - bunfig.toml scopes note added for brand-token contract. 
+
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/846
+
+
 ## [0.2.13-beta.202607231432.7f3c31ebe] - 2026-07-23
 
 - ✨ Features: Brand theming support
