@@ -38,7 +38,7 @@ RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8
 # reads for the @max-health-inc scope.
 RUN --mount=type=secret,id=gh_packages_token \
     GH_PACKAGES_TOKEN="$(cat /run/secrets/gh_packages_token 2>/dev/null || true)" \
-    bun install
+    sh -c 'for a in 1 2 3; do echo "bun install attempt $a"; timeout 360 bun install --network-concurrency=16 && exit 0; echo "attempt $a stalled; retrying with warmer cache"; done; exit 1'
 
 # Copy shared Vite config (imported by all SMART apps via ../../config/vite-config)
 COPY config/ ./config/
