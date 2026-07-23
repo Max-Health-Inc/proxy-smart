@@ -28,7 +28,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.16",
         "@elysiajs/cors": "^1.4.2",
@@ -75,7 +75,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -86,7 +86,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "dependencies": {
         "aws-cdk-lib": "^2.261.0",
         "constructs": "^10.7.0",
@@ -104,13 +104,13 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.3",
         "@cornerstonejs/core": "^5.6.7",
         "@cornerstonejs/dicom-image-loader": "^5.6.7",
         "@fontsource-variable/geist": "^5.3.0",
-        "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
+        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.4.8",
         "@radix-ui/react-dialog": "^1.1.19",
         "@radix-ui/react-slot": "^1.3.0",
         "@tailwindcss/vite": "^4.3.3",
@@ -144,9 +144,9 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "dependencies": {
-        "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
+        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.4.8",
         "@radix-ui/react-avatar": "^1.2.2",
         "@radix-ui/react-dialog": "^1.1.19",
         "@radix-ui/react-label": "^2.1.11",
@@ -203,7 +203,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "devDependencies": {
         "@types/node": "^26.1.1",
         "typescript": "6.0.3",
@@ -211,7 +211,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -223,7 +223,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@sinclair/typebox": "^0.34.52",
@@ -240,10 +240,10 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.2.13-beta.202607221520.e50fd77ec",
+      "version": "0.2.13-alpha.202607231042.705d38ecd",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
-        "@proxy-smart/shared-ui": "github:Max-Health-Inc/shared-ui",
+        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.4.8",
         "@tailwindcss/vite": "^4.3.3",
         "@types/fhir": "^0.0.44",
         "class-variance-authority": "^0.7.1",
@@ -708,7 +708,7 @@
 
     "@proxy-smart/eslint-config": ["@proxy-smart/eslint-config@workspace:config/eslint"],
 
-    "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@github:Max-Health-Inc/shared-ui#0f05673", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "i18next": "^26.0.0", "i18next-browser-languagedetector": "^8.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-i18next": "^17.0.0" }, "optionalPeers": ["i18next", "i18next-browser-languagedetector", "react-i18next"] }, "Max-Health-Inc-shared-ui-0f05673", "sha512-FkUo4gtYHdt/thBm7iDwfIbqw/95mhqrE3cNQwbRG14cb8pNKsxOAKNpfv9FIPTPEVaeXxOvEwIgAWowzSd+oA=="],
+    "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@0.4.8", "https://npm.pkg.github.com/download/@max-health-inc/shared-ui/0.4.8/4a143992d40671515280a3ad390674034a507cf8", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "brandc": "^0.2.2", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "i18next": "^26.0.0", "i18next-browser-languagedetector": "^8.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-i18next": "^17.0.0" } }, "sha512-vTjrZxUu7A/ZiYRJxQAP9PLZyTkBjGcNm/TN9rRs6yiEPrzDcWEAh8sx/eRszr4cd2e2kDVfe0Hl+uRA7OROZA=="],
 
     "@radix-ui/number": ["@radix-ui/number@1.1.1", "", {}, "sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g=="],
 
@@ -1710,6 +1710,8 @@
 
     "i18next": ["i18next@26.3.6", "", { "peerDependencies": { "typescript": "^5 || ^6 || ^7" }, "optionalPeers": ["typescript"] }, "sha512-Bu5Z2nAXgfVyM8xvW3jk9EKRIuX37PudsrBViThNFx7CR7aaYTpP01cxNB/E4c4UUzTDiAZRstEhsRfPOL/8xA=="],
 
+    "i18next-browser-languagedetector": ["i18next-browser-languagedetector@8.2.1", "", { "dependencies": { "@babel/runtime": "^7.23.2" } }, "sha512-bZg8+4bdmaOiApD7N7BPT9W8MLZG+nPTOFlLiJiT8uzKXFjhxw4v2ierCXOwB5sFDMtuA5G4kgYZ0AznZxQ/cw=="],
+
     "iconv-lite": ["iconv-lite@0.7.2", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw=="],
 
     "ieee754": ["ieee754@1.2.1", "", {}, "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="],
@@ -2650,6 +2652,8 @@
 
     "@originjs/vite-plugin-commonjs/esbuild": ["esbuild@0.14.54", "", { "optionalDependencies": { "@esbuild/linux-loong64": "0.14.54", "esbuild-android-64": "0.14.54", "esbuild-android-arm64": "0.14.54", "esbuild-darwin-64": "0.14.54", "esbuild-darwin-arm64": "0.14.54", "esbuild-freebsd-64": "0.14.54", "esbuild-freebsd-arm64": "0.14.54", "esbuild-linux-32": "0.14.54", "esbuild-linux-64": "0.14.54", "esbuild-linux-arm": "0.14.54", "esbuild-linux-arm64": "0.14.54", "esbuild-linux-mips64le": "0.14.54", "esbuild-linux-ppc64le": "0.14.54", "esbuild-linux-riscv64": "0.14.54", "esbuild-linux-s390x": "0.14.54", "esbuild-netbsd-64": "0.14.54", "esbuild-openbsd-64": "0.14.54", "esbuild-sunos-64": "0.14.54", "esbuild-windows-32": "0.14.54", "esbuild-windows-64": "0.14.54", "esbuild-windows-arm64": "0.14.54" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-Cy9llcy8DvET5uznocPyqL3BFRrFXSVqbgpMJ9Wz8oVjZlh/zUSNbPRbov0VX7VxN2JH1Oa0uNxZ7eLRb62pJA=="],
 
+    "@proxy-smart/shared-ui/brandc": ["brandc@0.2.2", "", {}, "sha512-/CTmmn+wM0ya5guc1F0RneHYOl/u6MDtQ1R6VWO/o7kSdrB6B4QIuPcEnT2hZnce9tJ6k7h2oNh+5nyiOi28Rw=="],
+
     "@radix-ui/react-accessible-icon/@radix-ui/react-visually-hidden": ["@radix-ui/react-visually-hidden@1.2.3", "", { "dependencies": { "@radix-ui/react-primitive": "2.1.3" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-pzJq12tEaaIhqjbzpCuv/OypJY/BPavOofm+dbab+MHLajy277+1lLm6JFcGgF5eskJ6mquGirhXY2GD/8u8Ug=="],
 
     "@radix-ui/react-accordion/@radix-ui/primitive": ["@radix-ui/primitive@1.1.3", "", {}, "sha512-JTF99U/6XIjCBo0wqkU5sK10glYe27MRRsfwoiq5zzOEZLHU3A3KCMa5X/azekYRCJ0HlwI0crAXS/5dEHTzDg=="],
@@ -3201,8 +3205,6 @@
     "pretty-format/react-is": ["react-is@17.0.2", "", {}, "sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w=="],
 
     "prompts/kleur": ["kleur@3.0.3", "", {}, "sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w=="],
-
-    "proxy-smart-ui/@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@github:Max-Health-Inc/shared-ui#5cc5ace", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "brandc": "^0.2.0", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "i18next": "^26.0.0", "i18next-browser-languagedetector": "^8.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-i18next": "^17.0.0" }, "optionalPeers": ["i18next", "i18next-browser-languagedetector", "react-i18next"] }, "Max-Health-Inc-shared-ui-5cc5ace", "sha512-ppLOOSQPPeyEAhl2PUs6vimw7yupvav05PJrq48Gj6eGtXaziUbWFtCHaYcM10ZdSGhkV9C06OIsk1YWNzDMdg=="],
 
     "qrcode/yargs": ["yargs@15.4.1", "", { "dependencies": { "cliui": "^6.0.0", "decamelize": "^1.2.0", "find-up": "^4.1.0", "get-caller-file": "^2.0.1", "require-directory": "^2.1.1", "require-main-filename": "^2.0.0", "set-blocking": "^2.0.0", "string-width": "^4.2.0", "which-module": "^2.0.0", "y18n": "^4.0.0", "yargs-parser": "^18.1.2" } }, "sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A=="],
 
