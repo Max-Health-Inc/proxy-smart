@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-beta.202607231042.705d38ecd] - 2026-07-23
+
+- ✨ Features:
+  - Brand theming: add primaryColor and accentColor support across backend config, org-branding, runtime config, and admin schema; frontend supports editing/preview of these colors.
+  - Runtime theming: propagate and apply brand colors in runtime brand config; session-based theming via OAuth context.
+
+- 🔧 Chores & Improvements:
+  - Frontend: integrate brandc package for theming tokens and update CSS imports; enhance API client to fetch brand context.
+  - Versioning/CI: update to 0.2.13-beta.202607231042.705d38ecd across packages; adjust ESLint and token imports accordingly.
+  - Packaging: bunfig.toml scopes note for brand-token contract; propagate version bumps through nested projects.
+
+- ⚠️ Breaking Changes:
+  - None detected.
+
+- 🐛 Bug Fixes:
+  - None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/842
+
+
 ## [0.2.13-alpha.202607231042.705d38ecd] - 2026-07-23
 
 - ✨ Features
