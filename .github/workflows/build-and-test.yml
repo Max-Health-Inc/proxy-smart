@@ -42,6 +42,9 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    # Hard cap so a hung step (e.g. a `bun install` waiting on registry/git auth)
+    # fails fast instead of running to GitHub's 6h default.
+    timeout-minutes: 40
     outputs:
       backend_success: ${{ steps.backend-build.outcome == 'success' || steps.backend-build-heal.outputs.fixed == 'true' }}
       frontend_success: ${{ steps.frontend-build.outcome == 'success' || steps.frontend-build-heal.outputs.fixed == 'true' }}
@@ -57,8 +60,9 @@ jobs:
 
     # Install Dependencies
     - name: Install Dependencies (Workspace)
+      timeout-minutes: 15
       run: |
-        echo "📦 Installing all dependencies via workspace..."
+        echo "Installing all dependencies via workspace..."
         bun install
 
     # === BACKEND BUILD ===
