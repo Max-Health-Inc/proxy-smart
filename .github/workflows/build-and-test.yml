@@ -37,6 +37,8 @@ on:
 
 permissions:
   contents: read
+  # Needed so bun can install @max-health-inc/shared-ui from GitHub Packages.
+  packages: read
 
 jobs:
   build-and-test:
@@ -61,6 +63,11 @@ jobs:
     # Install Dependencies
     - name: Install Dependencies (Workspace)
       timeout-minutes: 15
+      # GH_PACKAGES_TOKEN lets bun install @max-health-inc/shared-ui from GitHub
+      # Packages (see bunfig.toml). GITHUB_TOKEN with packages:read suffices since
+      # the package is public.
+      env:
+        GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "Installing all dependencies via workspace..."
         bun install

@@ -45,6 +45,8 @@ on:
 permissions:
   contents: read
   id-token: write
+  # Needed so the Docker build can install @max-health-inc/shared-ui from GitHub Packages.
+  packages: read
 
 concurrency:
   group: deploy-production
@@ -106,6 +108,8 @@ jobs:
           build-args: |
             VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
             DEPLOY_ENV=prod
+          secrets: |
+            gh_packages_token=${{ secrets.GITHUB_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
