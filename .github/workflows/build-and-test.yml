@@ -70,7 +70,7 @@ jobs:
         GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "Installing all dependencies via workspace..."
-        bun install --verbose
+        bun install
 
     # === BACKEND BUILD ===
     - name: Build Backend

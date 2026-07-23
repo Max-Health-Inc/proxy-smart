@@ -17,7 +17,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
-    "brandc": "^0.2.0",
+    "brandc": "^0.2.2",
     "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.4.8",
     "@radix-ui/react-avatar": "^1.2.2",
     "@radix-ui/react-dialog": "^1.1.19",
