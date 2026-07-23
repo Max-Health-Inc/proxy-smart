@@ -546,6 +546,8 @@ export function getRuntimeBrandConfig(): BrandConfigType {
     identifier: config.brand.identifier,
     loginTheme: config.brand.loginTheme,
     appStoreUrl: config.brand.appStoreUrl,
+    primaryColor: config.brand.primaryColor,
+    accentColor: config.brand.accentColor,
   }
 
   const merged = !brandOverrides ? envDefaults : { ...envDefaults, ...brandOverrides }

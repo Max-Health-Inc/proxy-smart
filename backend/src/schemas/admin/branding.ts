@@ -44,6 +44,11 @@ export const BrandConfig = t.Object({
   identifier: t.String({ description: 'Brand identifier URI (typically the brand website URL)' }),
   loginTheme: t.Union([t.String(), t.Null()], { description: 'Keycloak login theme name (e.g. keycloak, keycloak.v2)' }),
   appStoreUrl: t.Union([t.String(), t.Null()], { description: 'External App Store URL (e.g. https://apps.example.com). When set, /apps redirects here instead of serving locally.' }),
+  // UI-theming extension (NOT part of the SMART User-access Brand / branding.json).
+  // A CSS colour (hex or any CSS <color>) used to theme auth surfaces (login, patient
+  // picker) via a runtime --primary/--maxhealth override on the brandc contract.
+  primaryColor: t.Optional(t.Union([t.String(), t.Null()], { description: 'Brand primary colour (CSS <color>, e.g. #00d294) for theming auth surfaces. Not published in branding.json.' })),
+  accentColor: t.Optional(t.Union([t.String(), t.Null()], { description: 'Optional brand accent colour (CSS <color>). Not published in branding.json.' })),
 }, { title: 'BrandConfig' })
 
 export type BrandConfigType = Omit<Static<typeof BrandConfig>, 'category'> & { category: BrandCategoryType }
