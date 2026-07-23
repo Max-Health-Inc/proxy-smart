@@ -160,6 +160,8 @@ export const config = {
     get identifier() { return process.env.BRAND_IDENTIFIER || process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
     get loginTheme(): string | null { return process.env.BRAND_LOGIN_THEME || null },
     get appStoreUrl(): string | null { return process.env.BRAND_APP_STORE_URL || null },
+    get primaryColor(): string | null { return process.env.BRAND_PRIMARY_COLOR || null },
+    get accentColor(): string | null { return process.env.BRAND_ACCENT_COLOR || null },
   },
 
   ai: {

@@ -41,6 +41,8 @@ export function parseOrgBrandAttributes(attrs: Record<string, string[]>): Partia
   if (get('website') !== undefined) result.website = get('website')!
   if (get('logo_url') !== undefined) result.logoUrl = get('logo_url') || null
   if (get('logo_license_url') !== undefined) result.logoLicenseUrl = get('logo_license_url') || null
+  if (get('primary_color') !== undefined) result.primaryColor = get('primary_color') || null
+  if (get('accent_color') !== undefined) result.accentColor = get('accent_color') || null
   if (get('aliases') !== undefined) {
     result.aliases = (get('aliases') || '').split(',').map(s => s.trim()).filter(Boolean)
   }
@@ -91,6 +93,8 @@ export function brandToOrgAttributes(settings: Partial<BrandConfigType>): Record
   if (settings.addressState !== undefined) set('address_state', settings.addressState)
   if (settings.addressPostalCode !== undefined) set('address_postal_code', settings.addressPostalCode)
   if (settings.addressCountry !== undefined) set('address_country', settings.addressCountry)
+  if (settings.primaryColor !== undefined) set('primary_color', settings.primaryColor)
+  if (settings.accentColor !== undefined) set('accent_color', settings.accentColor)
   if (settings.identifier !== undefined) set('identifier', settings.identifier)
 
   return attrs
