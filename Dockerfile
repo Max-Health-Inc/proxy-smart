@@ -12,8 +12,10 @@ RUN apt-get update -qq && \
     python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy root package files first
-COPY package.json bun.lock ./
+# Copy root package files first. bunfig.toml is required so bun can map the
+# @max-health-inc scope to GitHub Packages (and read $GH_PACKAGES_TOKEN); without
+# it, `bun install` cannot authenticate @max-health-inc/shared-ui and stalls.
+COPY package.json bun.lock bunfig.toml ./
 
 # Copy root lib (contains shared tarballs like smart-app-launch-generated.tgz)
 COPY lib/ ./lib/
