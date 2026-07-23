@@ -154,6 +154,7 @@
   "homepage": "https://beta.proxy-smart.com",
   "dependencies": {
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
+    "maxhealth.consent-0.1.0-generated": "./lib/maxhealth.consent-0.1.0-generated.tgz",
     "undici": "^8.7.0"
   },
   "overrides": {
