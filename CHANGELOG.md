@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607241531.7c951cea5] - 2026-07-24
+
+- 🔧 Chores & Improvements: Sync package versions across modules
+- 🐛 Bug Fixes: Fix license parsing by avoiding reuse of lint parsing code as license expressions
+- 📚 Documentation: Update CHANGELOG.md for PRs 859 and 860
+- 🔧 Chores & Improvements: CI/CD and testing updates (SMART compliance reports, beta and dev test reports)
+- 🔧 Chores & Improvements: Update version metadata to 0.2.13-alpha.202607241531.7c951cea5
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/862
+
+
 ## [0.2.13-alpha.202607241526.f496667b0] - 2026-07-24
 
 - 🔧 Chores & Improvements: Sync package versions and update beta/alpha version metadata
