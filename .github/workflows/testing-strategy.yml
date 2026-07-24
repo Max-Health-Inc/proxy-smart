@@ -27,6 +27,11 @@ on:
         required: false
         type: string
         default: "dev"
+      run_compliance:
+        description: "Run SMART/Inferno compliance tests (disable per-stage, e.g. beta)"
+        required: false
+        type: boolean
+        default: true
 
     outputs:
       test_status:
@@ -51,6 +56,10 @@ jobs:
   # Run SMART on FHIR 2.2.0 compliance tests via dedicated workflow
   smart-compliance-tests:
     name: SMART 2.2.0 Compliance (${{ inputs.test_stage }})
+    # Skippable per stage via run_compliance (e.g. disabled for beta). When
+    # skipped, test-summary treats compliance as not-applicable and gates on
+    # integration tests alone.
+    if: inputs.run_compliance
     uses: ./.github/workflows/smart-compliance-tests.yml
     with:
       test_suite: 'smart_stu2_2'
@@ -214,16 +223,32 @@ jobs:
           mkdir -p testing/${{ inputs.test_stage }}/reports/summary
           
           # Get test results
+          COMPLIANCE_RESULT="${{ needs.smart-compliance-tests.result }}"
           COMPLIANCE_STATUS="${{ needs.smart-compliance-tests.outputs.status || 'failure' }}"
           COMPLIANCE_PASSED="${{ needs.smart-compliance-tests.outputs.passed || '0' }}"
           COMPLIANCE_FAILED="${{ needs.smart-compliance-tests.outputs.failed || '0' }}"
           INTEGRATION_STATUS="${{ needs.integration-tests.outputs.status || 'failed' }}"
-          
+
+          # Compliance can be intentionally skipped for a stage (e.g. beta). A
+          # skipped job reports no outputs, so treat it as not-applicable and
+          # base the overall result on integration tests alone — never a failure.
+          if [[ "$COMPLIANCE_RESULT" == "skipped" ]]; then
+            COMPLIANCE_STATUS="skipped"
+          fi
+
           echo "SMART Compliance: $COMPLIANCE_STATUS (passed: $COMPLIANCE_PASSED, failed: $COMPLIANCE_FAILED)"
           echo "Integration Tests: $INTEGRATION_STATUS"
-          
+
           # Determine overall status
-          if [[ "$COMPLIANCE_STATUS" == "success" && "$INTEGRATION_STATUS" == "passed" ]]; then
+          if [[ "$COMPLIANCE_STATUS" == "skipped" ]]; then
+            if [[ "$INTEGRATION_STATUS" == "passed" ]]; then
+              OVERALL_STATUS="passed"
+              STATUS_EMOJI="✅"
+            else
+              OVERALL_STATUS="failed"
+              STATUS_EMOJI="❌"
+            fi
+          elif [[ "$COMPLIANCE_STATUS" == "success" && "$INTEGRATION_STATUS" == "passed" ]]; then
             OVERALL_STATUS="passed"
             STATUS_EMOJI="✅"
           elif [[ "$COMPLIANCE_STATUS" == "success" || "$INTEGRATION_STATUS" == "passed" ]]; then
