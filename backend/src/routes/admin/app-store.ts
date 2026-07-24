@@ -3,7 +3,7 @@ import { join } from 'path'
 import { readdirSync, readFileSync, existsSync } from 'fs'
 import { logger } from '@/lib/logger'
 import { getAppStoreConfig, hideApp, showApp, publishApp, unpublishApp } from '@/lib/app-store-config'
-import { resolveStoreIcon } from '@/lib/app-store-icons'
+import { resolveAppIcon } from '@/lib/app-store-icons'
 
 /**
  * Admin App Store management routes.
@@ -36,7 +36,7 @@ function discoverAllApps(): AppStoreAppType[] {
           client_name: manifest.client_name ?? d.name,
           description: manifest.description ?? '',
           category: manifest.category ?? 'other',
-          icon: resolveStoreIcon(manifest.icon, manifest.category),
+          icon: resolveAppIcon(manifest.logoUri ?? manifest.icon, manifest.category).icon,
           hidden: hiddenAppIds.includes(d.name),
           source: 'filesystem' as const,
         }
@@ -60,7 +60,7 @@ function getAllStoreApps(): AppStoreAppType[] {
       client_name: pa.name,
       description: pa.description,
       category: pa.category,
-      icon: resolveStoreIcon(pa.logoUri, pa.category),
+      icon: resolveAppIcon(pa.logoUri, pa.category).icon,
       hidden: config.hiddenAppIds.includes(pa.clientId),
       source: 'registered' as const,
     }))
