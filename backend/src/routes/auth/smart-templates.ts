@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * HTML templates for SMART authorization flow UI pages.
  * Extracted from oauth.ts to keep route files focused on logic.

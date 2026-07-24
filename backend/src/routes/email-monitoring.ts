@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { emailEventsLogger } from '../lib/email-events-logger'
 import { EmailEventsResponse, EmailAnalyticsResponse } from '../schemas/email-monitoring'
 import { createMonitoringRoutes } from './monitoring-factory'

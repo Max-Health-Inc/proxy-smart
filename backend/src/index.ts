@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 // Import paths first to trigger ensureDataDir() side-effect before any store constructors
 import './lib/paths'
 import { config } from './config'
