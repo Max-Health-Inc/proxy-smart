@@ -20,12 +20,12 @@ import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
 import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
-import { emitShareConsent } from '@/lib/consent/shl-consent'
+import { emitShareConsent, isShareConsentRevoked } from '@/lib/consent/shl-consent'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
 import { getPublishedApps } from '@/lib/app-store-config'
 import { resolveClientLaunchUrl } from '@/lib/client-launch-url'
-import { shlSessionStore, type ShareScope } from '@/lib/shl-session-store'
+import { shlSessionStore, type ShareScope, type ShlSession } from '@/lib/shl-session-store'
 import {
   isDicomPathAllowed,
   scopeFhirRequest,
@@ -95,28 +95,44 @@ function sessionSelectiveScope(session: { shareScope?: ShareScope }): SelectiveS
   }
 }
 
+/**
+ * Resolve + authorize an SHL bearer token for the proxy handlers: validates the
+ * session token, checks expiry, and confirms the backing consent has not been
+ * revoked in the consent portal. On failure sets the response status and returns
+ * `{ error }`; on success returns the session. Shared by the FHIR + DICOMweb
+ * proxy handlers so the checks (esp. revocation) live in exactly one place.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function authorizeShlBearer(headers: any, set: any): Promise<{ shlId: string; session: ShlSession } | { error: string }> {
+  const bearerToken = extractBearerToken(headers)
+  if (!bearerToken) {
+    set.status = 401
+    return { error: 'Bearer token required' }
+  }
+  const lookup = shlSessionStore.getByToken(bearerToken)
+  if (!lookup) {
+    set.status = 401
+    return { error: 'Invalid or expired session token' }
+  }
+  const { id: shlId, session } = lookup
+  if (Date.now() > session.expiresAt) {
+    shlSessionStore.delete(shlId)
+    set.status = 410
+    return { error: 'Share link has expired' }
+  }
+  if (await isShareConsentRevoked(shlId, session.fhirServerUrl)) {
+    set.status = 410
+    return { error: 'Share link has been revoked' }
+  }
+  return { shlId, session }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function shlFhirProxyHandler({ request, params, headers, set }: any) {
   try {
-    const bearerToken = extractBearerToken(headers)
-    if (!bearerToken) {
-      set.status = 401
-      return { error: 'Bearer token required' }
-    }
-
-    const lookup = shlSessionStore.getByToken(bearerToken)
-    if (!lookup) {
-      set.status = 401
-      return { error: 'Invalid or expired session token' }
-    }
-
-    const { id: shlId, session } = lookup
-
-    if (Date.now() > session.expiresAt) {
-      shlSessionStore.delete(shlId)
-      set.status = 410
-      return { error: 'Share link has expired' }
-    }
+    const auth = await authorizeShlBearer(headers, set)
+    if ('error' in auth) return auth
+    const { shlId, session } = auth
 
     // Extract the FHIR path after /fhir/ (empty string for base /fhir route)
     const fhirPath = (params as Record<string, string>)?.['*'] || ''
@@ -270,25 +286,9 @@ function buildDicomAuthHeader(server: { authType?: string; authHeader?: string; 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
   try {
-    const bearerToken = extractBearerToken(headers)
-    if (!bearerToken) {
-      set.status = 401
-      return { error: 'Bearer token required' }
-    }
-
-    const lookup = shlSessionStore.getByToken(bearerToken)
-    if (!lookup) {
-      set.status = 401
-      return { error: 'Invalid or expired session token' }
-    }
-
-    const { id: shlId, session } = lookup
-
-    if (Date.now() > session.expiresAt) {
-      shlSessionStore.delete(shlId)
-      set.status = 410
-      return { error: 'Share link has expired' }
-    }
+    const auth = await authorizeShlBearer(headers, set)
+    if ('error' in auth) return auth
+    const { shlId, session } = auth
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       set.status = 405
@@ -559,6 +559,13 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       shlSessionStore.delete(params.id)
       set.status = 410
       return { error: 'SHL has expired' }
+    }
+
+    // Revoked in the consent portal (backing Consent flipped inactive)? Deny.
+    // Same check guards the FHIR + DICOMweb proxy handlers above.
+    if (await isShareConsentRevoked(params.id, entry.fhirServerUrl)) {
+      set.status = 410
+      return { error: 'SHL has been revoked' }
     }
 
     // Passcode validation (per SHL spec)
