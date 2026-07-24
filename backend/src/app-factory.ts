@@ -8,6 +8,7 @@ import { readdirSync, readFileSync, existsSync } from 'fs'
 import { keycloakPlugin } from './lib/keycloak-plugin'
 import { fhirRoutes } from './routes/fhir'
 import { statusRoutes } from './routes/status'
+import { sourceRoutes } from './routes/source'
 import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
@@ -281,6 +282,7 @@ export function createApp() {
         .use(docsRoutes)
         .use(mcpMetadataRoutes)
         .use(statusRoutes)
+        .use(sourceRoutes)
         .use(serverDiscoveryRoutes)
         .use(authRoutes)
         .use(adminRoutes)
