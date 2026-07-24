@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import jwt, { type JwtPayload } from 'jsonwebtoken'
 import jwksClient, { type JwksClient } from 'jwks-rsa'
 import { config } from '../config'

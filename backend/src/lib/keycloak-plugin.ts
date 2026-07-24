@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Elysia } from 'elysia'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import { validateToken } from './auth'

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * App-store icon/logo resolution — single source of truth shared by the public
  * `/apps.json` feed and the admin `/admin/app-store` listing so both surfaces

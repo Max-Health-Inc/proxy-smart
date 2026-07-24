@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Maps between Keycloak's internal clientAuthenticatorType values and
  * standard OAuth 2.0 token_endpoint_auth_method values (RFC 7591).
