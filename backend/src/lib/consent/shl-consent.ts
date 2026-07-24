@@ -18,8 +18,8 @@
  * Revocation-by-expiry is automatic: the Consent's `provision.period.end` equals
  * the SHL's `expiresAt`, so an expired share is already inactive by period.
  */
-import type { MaxHealthShareConsent } from 'maxhealth.consent-0.1.0-generated'
-import { validateMaxHealthShareConsent } from 'maxhealth.consent-0.1.0-generated'
+import type { MaxHealthShareConsent } from '@max-health-inc/consent-fhir'
+import { validateMaxHealthShareConsent } from '@max-health-inc/consent-fhir'
 import { shlSessionStore, type ShlSession } from '@/lib/shl-session-store'
 import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
 import { invalidateConsentCache } from '@/lib/consent/consent-service'
