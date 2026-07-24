@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607241021.3163c8e52] - 2026-07-24
+
+- ✨ Features: honest share model + distinct-device access tracking (shl)
+- 🐛 Bug Fixes: return 404 for no-longer-active links per SHL spec (shl)
+- 🔧 Chores & Improvements: sync package versions; update beta/alpha version metadata (internal tooling and CI)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/854
+
+
 ## [0.2.13-beta.202607231720.f8ff94f16] - 2026-07-23
 
 - ✨ Features: Brand theming support
