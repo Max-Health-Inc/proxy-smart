@@ -7,18 +7,20 @@
  * SHL into a FHIR `Consent` conforming to the `MaxHealthShareConsent` profile
  * (see fhir/input/fsh/consent.fsh, generated into maxhealth.consent-*-generated).
  *
- * The mirror is best-effort: a failure here never blocks SHL creation. The SHL
- * itself keeps working; only its consent-portal reflection is missing, which a
- * later reconciliation can repair.
+ * Revocation runs through this Consent: the consent portal flips its status to
+ * `inactive` (a standard FHIR update) and the SHL proxy denies access once the
+ * backing Consent is non-active. Because revocation now depends on the Consent
+ * existing, the mirror is written with retries and an idempotent conditional
+ * create, sessions are marked once mirrored, and a reconciliation sweep
+ * (`reconcileShareConsents`) repairs any that still slipped through. A mint-time
+ * failure never blocks SHL creation — the sweep catches it.
  *
  * Revocation-by-expiry is automatic: the Consent's `provision.period.end` equals
- * the SHL's `expiresAt`, so an expired share is already inactive by period and
- * needs no status flip. Explicit revoke wiring (portal revoke → kill SHL session
- * + SHL-access enforcement consulting the Consent) is a follow-up.
+ * the SHL's `expiresAt`, so an expired share is already inactive by period.
  */
 import type { MaxHealthShareConsent } from 'maxhealth.consent-0.1.0-generated'
 import { validateMaxHealthShareConsent } from 'maxhealth.consent-0.1.0-generated'
-import type { ShlSession } from '@/lib/shl-session-store'
+import { shlSessionStore, type ShlSession } from '@/lib/shl-session-store'
 import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
 import { invalidateConsentCache } from '@/lib/consent/consent-service'
 import { logger } from '@/lib/logger'
@@ -148,51 +150,95 @@ export async function isShareConsentRevoked(shlId: string, fhirServerUrl: string
   return revoked
 }
 
+const MIRROR_MAX_ATTEMPTS = 3
+
+/** One POST attempt. Returns the created id, or throws so the retry loop can back off. */
+async function writeShareConsent(shlId: string, consent: MaxHealthShareConsent, fhirServerUrl: string): Promise<string | null> {
+  const token = await getServiceAccountToken('openid patient/*.read patient/*.write')
+  const resp = await fetch(`${fhirServerUrl}/Consent`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/fhir+json',
+      Accept: 'application/fhir+json',
+      Authorization: `Bearer ${token}`,
+      // Idempotent create: never write a second Consent for the same SHL, so
+      // retries and the reconciliation sweep can't produce duplicates.
+      'If-None-Exist': `identifier=${SHL_CONSENT_IDENTIFIER_SYSTEM}|${shlId}`,
+    },
+    body: JSON.stringify(consent),
+  })
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '')
+    throw new Error(`Consent write ${resp.status}: ${detail.slice(0, 200)}`)
+  }
+  const created = (await resp.json().catch(() => null)) as { id?: string } | null
+  return created?.id ?? null
+}
+
 /**
- * Mirror a minted SHL into a FHIR Consent (best-effort — never throws).
- * Returns the created Consent id on success, or null if the mirror failed.
+ * Mirror a minted SHL into a FHIR Consent, with retries and idempotent create.
+ * Marks the session mirrored on success so the reconciliation sweep can skip it.
+ * Never throws; returns the Consent id on success or null after exhausting retries
+ * (the sweep will retry later — revocation depends on this Consent existing).
  */
 export async function emitShareConsent(shlId: string, session: ShlSession): Promise<string | null> {
+  const consent = buildShareConsent(shlId, session)
+
+  // Compile-time conformance is enforced by the type; validate at runtime too
+  // so profile drift surfaces as a warning rather than silently bad data.
   try {
-    const consent = buildShareConsent(shlId, session)
-
-    // Compile-time conformance is enforced by the type; validate at runtime too
-    // so profile drift surfaces as a warning rather than silently bad data.
-    try {
-      const { errors } = await validateMaxHealthShareConsent(consent)
-      if (errors.length) {
-        logger.consent.warn('SHL share consent failed profile validation', { shlId, errors })
-      }
-    } catch (err) {
-      logger.consent.debug('SHL share consent validation skipped', { shlId, error: err instanceof Error ? err.message : String(err) })
-    }
-
-    const fhirServerUrl = session.fhirServerUrl || (await getDefaultFhirServerUrl())
-    const token = await getServiceAccountToken('openid patient/*.read patient/*.write')
-
-    const resp = await fetch(`${fhirServerUrl}/Consent`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/fhir+json',
-        Accept: 'application/fhir+json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(consent),
-    })
-
-    if (!resp.ok) {
-      const detail = await resp.text().catch(() => '')
-      logger.consent.warn('SHL share consent write failed', { shlId, status: resp.status, detail: detail.slice(0, 300) })
-      return null
-    }
-
-    const created = (await resp.json().catch(() => null)) as { id?: string } | null
-    // The new active consent must be visible immediately in the portal/engine.
-    invalidateConsentCache(session.patientId)
-    logger.consent.info('SHL mirrored to Consent', { shlId, consentId: created?.id, patientId: session.patientId })
-    return created?.id ?? null
-  } catch (error) {
-    logger.consent.warn('SHL share consent mirror error', { shlId, error: error instanceof Error ? error.message : String(error) })
-    return null
+    const { errors } = await validateMaxHealthShareConsent(consent)
+    if (errors.length) logger.consent.warn('SHL share consent failed profile validation', { shlId, errors })
+  } catch (err) {
+    logger.consent.debug('SHL share consent validation skipped', { shlId, error: err instanceof Error ? err.message : String(err) })
   }
+
+  const fhirServerUrl = session.fhirServerUrl || (await getDefaultFhirServerUrl())
+
+  for (let attempt = 1; attempt <= MIRROR_MAX_ATTEMPTS; attempt++) {
+    try {
+      const consentId = await writeShareConsent(shlId, consent, fhirServerUrl)
+      shlSessionStore.markConsentMirrored(shlId)
+      invalidateConsentCache(session.patientId) // make the new active consent visible immediately
+      logger.consent.info('SHL mirrored to Consent', { shlId, consentId, patientId: session.patientId })
+      return consentId
+    } catch (error) {
+      const last = attempt === MIRROR_MAX_ATTEMPTS
+      logger.consent[last ? 'warn' : 'debug'](`SHL share consent write attempt ${attempt} failed`, {
+        shlId,
+        error: error instanceof Error ? error.message : String(error),
+        willRetry: !last,
+      })
+      if (last) return null
+      await new Promise((r) => setTimeout(r, 200 * attempt)) // linear backoff
+    }
+  }
+  return null
+}
+
+/**
+ * Repair any active SHL sessions whose Consent mirror never landed (mint-time
+ * failure, or shares minted before the mirror existed). Idempotent via the
+ * conditional create; safe to run on a timer.
+ */
+export async function reconcileShareConsents(): Promise<void> {
+  const pending = shlSessionStore.listUnmirroredActive(50)
+  if (!pending.length) return
+  logger.consent.info('SHL consent reconciliation: mirroring pending shares', { count: pending.length })
+  for (const { id, session } of pending) {
+    await emitShareConsent(id, session)
+  }
+}
+
+let reconcilerTimer: ReturnType<typeof setInterval> | null = null
+
+/** Start the periodic Consent-mirror reconciliation sweep (idempotent to call). */
+export function startShareConsentReconciler(intervalMs = 5 * 60_000): void {
+  if (reconcilerTimer) return
+  reconcilerTimer = setInterval(() => {
+    reconcileShareConsents().catch((error) =>
+      logger.consent.debug('SHL consent reconciliation error', { error: error instanceof Error ? error.message : String(error) }),
+    )
+  }, intervalMs)
+  reconcilerTimer.unref?.()
 }

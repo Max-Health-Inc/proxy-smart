@@ -70,6 +70,7 @@ interface ShlRow {
   share_scope: string | null // JSON-serialized ShareScope, or null for "share everything"
   access_count: number
   passcode_hash: string | null
+  consent_mirrored: number // 0 or 1
   created_at: number
 }
 
@@ -100,6 +101,7 @@ function createDatabase(): Database {
       share_scope TEXT,
       access_count INTEGER NOT NULL DEFAULT 0,
       passcode_hash TEXT,
+      consent_mirrored INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
     )
   `)
@@ -114,6 +116,15 @@ function createDatabase(): Database {
   // Idempotent migration: add selective-sharing scope column to pre-existing DBs.
   try {
     db.run('ALTER TABLE shl_sessions ADD COLUMN share_scope TEXT')
+  } catch {
+    /* column already exists */
+  }
+
+  // Idempotent migration: track whether the SHL→Consent mirror was written, so a
+  // reconciliation sweep can repair sessions whose best-effort mirror failed
+  // (revocation depends on the Consent existing).
+  try {
+    db.run('ALTER TABLE shl_sessions ADD COLUMN consent_mirrored INTEGER NOT NULL DEFAULT 0')
   } catch {
     /* column already exists */
   }
@@ -232,6 +243,22 @@ class ShlSessionStore {
   distinctDeviceCount(id: string): number {
     const row = this.db.prepare('SELECT COUNT(*) as cnt FROM shl_accesses WHERE shl_id = ?').get(id) as { cnt: number }
     return row.cnt
+  }
+
+  /** Mark that this session's SHL→Consent mirror was successfully written. */
+  markConsentMirrored(id: string): void {
+    this.db.prepare('UPDATE shl_sessions SET consent_mirrored = 1 WHERE id = ?').run(id)
+  }
+
+  /**
+   * Active sessions whose Consent mirror has not been confirmed written — the
+   * work list for the reconciliation sweep. Bounded by `limit` per pass.
+   */
+  listUnmirroredActive(limit = 50): { id: string; session: ShlSession }[] {
+    const rows = this.db
+      .prepare('SELECT * FROM shl_sessions WHERE consent_mirrored = 0 AND expires_at >= ? ORDER BY created_at LIMIT ?')
+      .all(Date.now(), limit) as ShlRow[]
+    return rows.map((row) => ({ id: row.id, session: this.rowToSession(row) }))
   }
 
   /** Remove all expired entries (and any now-orphaned access rows) */
