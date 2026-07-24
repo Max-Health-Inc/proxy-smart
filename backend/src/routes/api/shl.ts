@@ -555,18 +555,19 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       return { error: 'SHL not found or expired' }
     }
 
-    // Check expiry
+    // Check expiry. SHL spec: a no-longer-active link SHALL return 404.
     if (Date.now() > entry.expiresAt) {
       shlSessionStore.delete(params.id)
-      set.status = 410
-      return { error: 'SHL has expired' }
+      set.status = 404
+      return { error: 'SHL not found or expired' }
     }
 
     // Revoked in the consent portal (backing Consent flipped inactive)? Deny.
-    // Same check guards the FHIR + DICOMweb proxy handlers above.
+    // Same check guards the FHIR + DICOMweb proxy handlers above. Spec: 404 for
+    // a no-longer-active link.
     if (await isShareConsentRevoked(params.id, entry.fhirServerUrl)) {
-      set.status = 410
-      return { error: 'SHL has been revoked' }
+      set.status = 404
+      return { error: 'SHL not found or expired' }
     }
 
     // Passcode validation (per SHL spec)
