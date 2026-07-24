@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607241617.e4a5c5785] - 2026-07-24
+
+- 🔧 Chores & Improvements: CI/CD updates
+  - Upgrade Docker Buildx action to v4
+  - Update Python UV setup action to v8.1.0
+  - Update GitHub Actions runners and configs:
+    - publish-ig.yml: checkout v4 → v6; setup-node v4 → v6 (node 22, GitHub Packages registry)
+    - spdx-headers.yml: checkout v4 → v6 (main and PR paths); fetch-depth 0 for PR path remains
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/863
+
+
 ## [0.2.13-alpha.202607241531.7c951cea5] - 2026-07-24
 
 - 🔧 Chores & Improvements: Sync package versions across modules
