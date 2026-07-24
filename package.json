@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.2.13-beta.202607241617.e4a5c5785",
+  "version": "0.2.13-alpha.202607241629.9c34f2cb0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -157,7 +157,6 @@
   "homepage": "https://beta.proxy-smart.com",
   "dependencies": {
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
-    "maxhealth.consent-0.1.0-generated": "./lib/maxhealth.consent-0.1.0-generated.tgz",
     "undici": "^8.7.0"
   },
   "overrides": {
