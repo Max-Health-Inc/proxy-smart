@@ -26,6 +26,12 @@ import { logger } from '@/lib/logger'
 /** Identifier system that ties a Consent back to its SHL session id. */
 export const SHL_CONSENT_IDENTIFIER_SYSTEM = 'https://maxhealth.tech/fhir/shl-session'
 
+// Short-lived cache so the revocation check costs at most one FHIR round-trip
+// per SHL per window, not one per proxied request. Revocation propagates within
+// this window.
+const REVOCATION_TTL_MS = 30_000
+const revocationCache = new Map<string, { revoked: boolean; at: number }>()
+
 const RESOURCE_TYPES_SYSTEM = 'http://hl7.org/fhir/resource-types'
 
 /**
@@ -109,6 +115,39 @@ export function buildShareConsent(shlId: string, session: ShlSession): MaxHealth
       class: sharedClasses(session),
     },
   }
+}
+
+/**
+ * Has this SHL's backing Consent been revoked? True ONLY when a Consent tied to
+ * this SHL id exists and its status is not `active` (e.g. the patient hit revoke
+ * in the consent portal, flipping it to `inactive`). Fail-open: a missing mirror
+ * or an unreachable FHIR server returns false so a best-effort mirror gap never
+ * breaks an otherwise-valid share — the SHL session TTL remains the hard gate.
+ */
+export async function isShareConsentRevoked(shlId: string, fhirServerUrl: string): Promise<boolean> {
+  const cached = revocationCache.get(shlId)
+  if (cached && Date.now() - cached.at < REVOCATION_TTL_MS) return cached.revoked
+
+  let revoked = false
+  try {
+    const token = await getServiceAccountToken()
+    const query = encodeURIComponent(`${SHL_CONSENT_IDENTIFIER_SYSTEM}|${shlId}`)
+    const resp = await fetch(`${fhirServerUrl}/Consent?identifier=${query}&_count=1`, {
+      headers: { Accept: 'application/fhir+json', Authorization: `Bearer ${token}` },
+    })
+    if (resp.ok) {
+      const bundle = (await resp.json().catch(() => null)) as { entry?: { resource?: { resourceType?: string; status?: string } }[] } | null
+      const resource = bundle?.entry?.[0]?.resource
+      if (resource?.resourceType === 'Consent' && resource.status && resource.status !== 'active') {
+        revoked = true
+      }
+    }
+  } catch (error) {
+    logger.consent.debug('SHL revocation check failed (fail-open)', { shlId, error: error instanceof Error ? error.message : String(error) })
+  }
+
+  revocationCache.set(shlId, { revoked, at: Date.now() })
+  return revoked
 }
 
 /**
