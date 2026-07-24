@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607241629.9c34f2cb0] - 2026-07-24
+
+- 🔧 Chores & Improvements: CI/CD enhancements
+  - Upgrade GitHub Actions runners and actions (Buildx, Python UV setup, publisher workflows)
+  - Increase uv setup action version and bump Docker Buildx action
+
+No user-facing features or bug fixes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/865
+
+
 ## [0.2.13-alpha.202607241617.e4a5c5785] - 2026-07-24
 
 - 🔧 Chores & Improvements: CI/CD updates
