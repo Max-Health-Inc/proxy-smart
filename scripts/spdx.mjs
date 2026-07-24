@@ -2,6 +2,11 @@
 // SPDX-FileCopyrightText: Max Health Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
+// REUSE-IgnoreStart
+// This file's own SPDX header is above; the body below literally contains the
+// SPDX token strings it reads/writes, so it is ignored to stop `reuse lint`
+// from parsing those occurrences as license expressions.
+
 /**
  * SPDX header tool.
  *
@@ -135,3 +140,4 @@ function main() {
 }
 
 main();
+// REUSE-IgnoreEnd
