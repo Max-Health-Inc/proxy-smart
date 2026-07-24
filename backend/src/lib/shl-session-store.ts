@@ -123,6 +123,22 @@ function createDatabase(): Database {
   // Index for expiry cleanup
   db.run('CREATE INDEX IF NOT EXISTS idx_shl_expires_at ON shl_sessions(expires_at)')
 
+  // Per-recipient access tracking: one row per distinct (fingerprinted) device
+  // that has opened the share. Row count = distinct devices; `count` = opens by
+  // that device. Total opens live on the session's access_count. Actual access
+  // events are also emitted as FHIR AuditEvents (see consent/shl-audit).
+  db.run(`
+    CREATE TABLE IF NOT EXISTS shl_accesses (
+      shl_id TEXT NOT NULL,
+      fingerprint TEXT NOT NULL,
+      first_seen INTEGER NOT NULL,
+      last_seen INTEGER NOT NULL,
+      count INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY (shl_id, fingerprint)
+    )
+  `)
+  db.run('CREATE INDEX IF NOT EXISTS idx_shl_accesses_shl_id ON shl_accesses(shl_id)')
+
   return db
 }
 
@@ -182,24 +198,46 @@ class ShlSessionStore {
     return { id: row.id, session: this.rowToSession(row) }
   }
 
-  /** Delete a session by ID */
+  /** Delete a session by ID (and its access rows) */
   delete(id: string): void {
     this.db.prepare('DELETE FROM shl_sessions WHERE id = ?').run(id)
+    this.db.prepare('DELETE FROM shl_accesses WHERE shl_id = ?').run(id)
   }
 
-  /** Delete a session by token */
+  /** Delete a session by token (and its access rows) */
   deleteByToken(token: string): void {
-    this.db.prepare('DELETE FROM shl_sessions WHERE session_token = ?').run(token)
+    const row = this.db.prepare('SELECT id FROM shl_sessions WHERE session_token = ?').get(token) as { id: string } | null
+    if (row) this.delete(row.id)
   }
 
-  /** Increment access count for a session */
+  /** Increment total-open count for a session */
   incrementAccessCount(id: string): void {
     this.db.prepare('UPDATE shl_sessions SET access_count = access_count + 1 WHERE id = ?').run(id)
   }
 
-  /** Remove all expired entries */
+  /**
+   * Record an open by a (fingerprinted) recipient/device. A previously-unseen
+   * fingerprint is a new distinct device; a repeat increments that device's count.
+   */
+  recordAccess(id: string, fingerprint: string): void {
+    const now = Date.now()
+    this.db.prepare(`
+      INSERT INTO shl_accesses (shl_id, fingerprint, first_seen, last_seen, count)
+      VALUES (?, ?, ?, ?, 1)
+      ON CONFLICT(shl_id, fingerprint) DO UPDATE SET last_seen = excluded.last_seen, count = count + 1
+    `).run(id, fingerprint, now, now)
+  }
+
+  /** Number of distinct recipients/devices that have opened this SHL. */
+  distinctDeviceCount(id: string): number {
+    const row = this.db.prepare('SELECT COUNT(*) as cnt FROM shl_accesses WHERE shl_id = ?').get(id) as { cnt: number }
+    return row.cnt
+  }
+
+  /** Remove all expired entries (and any now-orphaned access rows) */
   private purgeExpired(): void {
     const result = this.db.prepare('DELETE FROM shl_sessions WHERE expires_at < ?').run(Date.now())
+    this.db.prepare('DELETE FROM shl_accesses WHERE shl_id NOT IN (SELECT id FROM shl_sessions)').run()
     if (result.changes > 0) {
       logger.auth.debug('SHL store: purged expired sessions', { count: result.changes })
     }
