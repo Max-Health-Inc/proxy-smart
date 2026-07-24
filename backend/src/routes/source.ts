@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Max Health Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
-import { Elysia, t } from 'elysia'
+import { Elysia, t, type Context } from 'elysia'
 import { buildSourceOffer, renderSourceOfferText, type SourceOffer } from '../lib/source-offer'
 
 const SourceOfferResponse = t.Object({
@@ -32,13 +32,20 @@ function wantsText(accept: string): boolean {
 }
 
 /**
- * Negotiate representation. JSON is returned as the typed object (validated
- * against the response schema); a text/plain request returns an explicit
- * Response so it bypasses object-schema coercion.
+ * Content-negotiated handler, extracted from the route chain. Elysia derives
+ * the context type from the instance, so a standalone handler must be typed
+ * with the exported `Context` type (its `set.headers` is `HTTPHeaders`, whose
+ * values are `string | number` — a hand-rolled `Record<string, string>` does
+ * not match). See https://github.com/elysiajs/elysia/issues/95.
+ *
+ * JSON is returned as the typed object (validated against the response schema);
+ * a text/plain request returns an explicit Response so it bypasses
+ * object-schema coercion.
  */
-function negotiateSourceOffer(accept: string): Response | SourceOffer {
+function handleSourceOffer({ headers, set }: Context<{ response: { 200: SourceOffer } }>): Response | SourceOffer {
   const offer = buildSourceOffer()
-  if (wantsText(accept)) {
+  set.headers['cache-control'] = 'public, max-age=300'
+  if (wantsText(headers['accept'] ?? '')) {
     return new Response(renderSourceOfferText(offer), {
       headers: {
         'content-type': 'text/plain; charset=utf-8',
@@ -58,12 +65,9 @@ const detail = {
 }
 
 export const sourceRoutes = new Elysia({ tags: ['server'] })
-  .get('/source', ({ headers, set }) => {
-    set.headers['cache-control'] = 'public, max-age=300'
-    return negotiateSourceOffer(headers['accept'] ?? '')
-  }, { response: { 200: SourceOfferResponse }, detail })
+  .get('/source', handleSourceOffer, { response: { 200: SourceOfferResponse }, detail })
   // Discoverable well-known alias (same payload).
-  .get('/.well-known/agpl-source', ({ headers, set }) => {
-    set.headers['cache-control'] = 'public, max-age=300'
-    return negotiateSourceOffer(headers['accept'] ?? '')
-  }, { response: { 200: SourceOfferResponse }, detail: { ...detail, summary: 'AGPL Source Offer (well-known)' } })
+  .get('/.well-known/agpl-source', handleSourceOffer, {
+    response: { 200: SourceOfferResponse },
+    detail: { ...detail, summary: 'AGPL Source Offer (well-known)' },
+  })
