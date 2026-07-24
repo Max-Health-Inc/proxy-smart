@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-beta.202607241021.3163c8e52] - 2026-07-24
+
+- ✨ Features: Add SHL-Consent reconciliation flow, including startup trigger, explicit reconciliation logic, idempotent mirror handling, and retry mechanism
+- 🧭 Database & API: Introduce consent_mirrored flag, markConsentMirrored method, and listUnmirroredActive for reconciliation sweeps
+- 🧪 Testing: Add tests for reconciliation bookkeeping (backend/test/shl-consent-reconcile.test.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/855
+
+
 ## [0.2.13-alpha.202607241021.3163c8e52] - 2026-07-24
 
 - ✨ Features: honest share model + distinct-device access tracking (shl)
