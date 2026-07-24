@@ -34,6 +34,7 @@
     "date-fns": "^4.3.0",
     "elysia": "^1.4.29",
     "hl7.fhir.uv.ips-generated": "../lib/hl7.fhir.uv.ips-generated.tgz",
+    "maxhealth.consent-0.1.0-generated": "../lib/maxhealth.consent-0.1.0-generated.tgz",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.1.0",
     "kill-the-clipboard": "^1.1.0",

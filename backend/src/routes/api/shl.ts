@@ -19,7 +19,8 @@ import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
-import { getAllServers } from '@/lib/fhir-server-store'
+import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
+import { emitShareConsent } from '@/lib/consent/shl-consent'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
 import { getPublishedApps } from '@/lib/app-store-config'
@@ -43,62 +44,8 @@ const SMART_API_ACCESS = 'application/smart-api-access' as SHLFileContentType
 // ── SHL Session Store (SQLite-persisted, survives restarts) ─────────────────
 // See @/lib/shl-session-store for implementation.
 // The store handles TTL cleanup and provides both ID and token-based lookups.
-
-// ── Service Account Token Cache ─────────────────────────────────────────────
-
-let serviceAccountToken: { token: string; expiresAt: number } | null = null
-
-/** Get a Keycloak service account token (client_credentials grant), cached until near-expiry */
-async function getServiceAccountToken(): Promise<string> {
-  // Return cached token if still valid (with 30s buffer)
-  if (serviceAccountToken && Date.now() < serviceAccountToken.expiresAt - 30_000) {
-    return serviceAccountToken.token
-  }
-
-  const kcBase = config.keycloak.baseUrl
-  const realm = config.keycloak.realm
-  if (!kcBase || !realm) throw new Error('Keycloak not configured')
-
-  const clientId = config.shlExchange.clientId
-  const clientSecret = config.shlExchange.clientSecret
-  if (!clientSecret) throw new Error('SHL_EXCHANGE_CLIENT_SECRET not configured')
-
-  const tokenUrl = `${kcBase}/realms/${realm}/protocol/openid-connect/token`
-  const resp = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope: 'openid patient/*.read',
-    }).toString(),
-  })
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({})) as Record<string, string>
-    logger.auth.error('SHL service account token failed', {
-      status: resp.status,
-      error: err.error,
-      description: err.error_description,
-    })
-    throw new Error(`Service account auth failed: ${err.error_description || resp.statusText}`)
-  }
-
-  const data = await resp.json() as { access_token: string; expires_in: number }
-  serviceAccountToken = {
-    token: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  }
-  return data.access_token
-}
-
-/** Resolve the first available FHIR server URL */
-async function getDefaultFhirServerUrl(): Promise<string> {
-  const servers = await getAllServers()
-  if (servers.length > 0) return servers[0].url
-  return config.fhir.serverBases[0] || 'http://localhost:8081/fhir'
-}
+// Service-account token + default FHIR server URL live in @/lib/shl-service-account
+// so the SHL proxy and the SHL→Consent mirror share one token cache.
 
 // ── Route schemas ───────────────────────────────────────────────────────────
 
@@ -508,7 +455,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         : undefined
 
       // Store session (proxy token → patient data mapping, no real tokens)
-      shlSessionStore.set(shlId, {
+      const session = {
         shl: shl.payload,
         jwe,
         sessionToken,
@@ -520,7 +467,13 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         shareScope,
         accessCount: 0,
         passcodeHash,
-      })
+      }
+      shlSessionStore.set(shlId, session)
+
+      // Mirror the share into a FHIR Consent so active SHLs surface in the
+      // consent portal alongside every other grant. Best-effort: never blocks
+      // SHL creation (see @/lib/consent/shl-consent).
+      await emitShareConsent(shlId, session)
 
       // Build the SHL URI and viewer URL.
       // Open the recipient in the SMART app that MINTED the share, at that app's
