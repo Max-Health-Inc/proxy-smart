@@ -26,6 +26,11 @@ import { logger } from '@/lib/logger'
 /** Identifier system that ties a Consent back to its SHL session id. */
 export const SHL_CONSENT_IDENTIFIER_SYSTEM = 'https://maxhealth.tech/fhir/shl-session'
 
+/** Category coding that marks a Consent as a SMART Health Link share, so UIs can
+ *  surface shares distinctly and filter them out of the practitioner-consent list. */
+export const SHL_CONSENT_CATEGORY_SYSTEM = 'https://maxhealth.tech/fhir/consent-category'
+export const SHL_CONSENT_CATEGORY_CODE = 'smart-health-link'
+
 // Short-lived cache so the revocation check costs at most one FHIR round-trip
 // per SHL per window, not one per proxied request. Revocation propagates within
 // this window.
@@ -35,28 +40,14 @@ const revocationCache = new Map<string, { revoked: boolean; at: number }>()
 const RESOURCE_TYPES_SYSTEM = 'http://hl7.org/fhir/resource-types'
 
 /**
- * Clinical resource types a whole-patient share exposes by default. Used to
- * populate `provision.class` (which the portal renders and the enforcement
- * engine matches on) when the share is not scoped to a single imaging study.
+ * Resource classes the link exposes, as `provision.class` codings — set ONLY for
+ * a study-scoped share (a single ImagingStudy). A whole-patient share returns
+ * undefined so `class` is omitted (empty class = all resources), which the SHL
+ * proxy scope filter enforces. We don't fabricate a resource-type list.
  */
-const DEFAULT_SHARED_TYPES = [
-  'Patient',
-  'Observation',
-  'Condition',
-  'MedicationRequest',
-  'AllergyIntolerance',
-  'Immunization',
-  'Procedure',
-  'DiagnosticReport',
-  'DocumentReference',
-]
-
-/** Resource types this share exposes, as Consent.provision.class codings. */
-function sharedClasses(session: ShlSession) {
-  const codes = session.studyInstanceUID
-    ? ['ImagingStudy']
-    : DEFAULT_SHARED_TYPES.filter((t) => !(session.shareScope?.excludedTypes ?? []).includes(t))
-  return codes.map((code) => ({ system: RESOURCE_TYPES_SYSTEM, code }))
+function sharedClasses(session: ShlSession): { system: string; code: string }[] | undefined {
+  if (!session.studyInstanceUID) return undefined
+  return [{ system: RESOURCE_TYPES_SYSTEM, code: 'ImagingStudy' }]
 }
 
 /**
@@ -66,7 +57,9 @@ function sharedClasses(session: ShlSession) {
 export function buildShareConsent(shlId: string, session: ShlSession): MaxHealthShareConsent {
   const nowIso = new Date().toISOString()
   const patientRef = `Patient/${session.patientId}`
-  const recipientDisplay = session.shl.label?.trim() || 'SMART Health Link recipient'
+  const label = session.shl.label?.trim()
+  const recipientDisplay = label ? `Any holder of the share link (${label})` : 'Any holder of the share link'
+  const classes = sharedClasses(session)
 
   return {
     resourceType: 'Consent',
@@ -80,6 +73,10 @@ export function buildShareConsent(shlId: string, session: ShlSession): MaxHealth
         coding: [
           { system: 'http://terminology.hl7.org/CodeSystem/consentcategorycodes', code: '59284-0', display: 'Patient Consent' },
         ],
+      },
+      // Marks this consent as an SHL share so UIs can surface it distinctly.
+      {
+        coding: [{ system: SHL_CONSENT_CATEGORY_SYSTEM, code: SHL_CONSENT_CATEGORY_CODE, display: 'SMART Health Link share' }],
       },
     ],
     patient: { reference: patientRef },
@@ -105,14 +102,15 @@ export function buildShareConsent(shlId: string, session: ShlSession): MaxHealth
               },
             ],
           },
-          // A link has no pre-known identity; carry a human label for the portal.
+          // Bearer link: no named recipient. R4 requires actor.reference, so we
+          // carry a display describing the grantee class (any holder of the link).
           reference: { display: recipientDisplay },
         },
       ],
       action: [
         { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/consentaction', code: 'access' }] },
       ],
-      class: sharedClasses(session),
+      ...(classes ? { class: classes } : {}),
     },
   }
 }

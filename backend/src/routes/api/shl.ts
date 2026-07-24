@@ -21,6 +21,7 @@ import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
 import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
 import { emitShareConsent, isShareConsentRevoked } from '@/lib/consent/shl-consent'
+import { recordShlOpen } from '@/lib/consent/shl-audit'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
 import { getPublishedApps } from '@/lib/app-store-config'
@@ -547,7 +548,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
    * Returns spec-compliant manifest with JWE-encrypted smart-api-access file.
    * kill-the-clipboard builds URLs as {baseManifestURL}{key}/{id}
    */
-  .post('/:key/:id', async ({ params, body, set }) => {
+  .post('/:key/:id', async ({ params, body, set, request }) => {
     const entry = shlSessionStore.get(params.id)
     if (!entry) {
       set.status = 404
@@ -581,7 +582,11 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       }
     }
 
+    // Count this open, track the (fingerprinted) recipient/device for the
+    // distinct-devices metric, and record a FHIR access AuditEvent (best-effort).
     shlSessionStore.incrementAccessCount(params.id)
+    const ipAddress = (request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '').trim()
+    await recordShlOpen(params.id, entry, { recipient: body.recipient, ipAddress: ipAddress || undefined, userAgent: request.headers.get('user-agent') || undefined })
 
     logger.auth.info('SHL manifest accessed', {
       shlId: params.id,

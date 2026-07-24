@@ -5,7 +5,8 @@
  */
 import { describe, it, expect } from 'bun:test'
 import { validateMaxHealthShareConsent } from 'maxhealth.consent-0.1.0-generated'
-import { buildShareConsent, SHL_CONSENT_IDENTIFIER_SYSTEM } from '../src/lib/consent/shl-consent'
+import { buildShareConsent, SHL_CONSENT_IDENTIFIER_SYSTEM, SHL_CONSENT_CATEGORY_CODE } from '../src/lib/consent/shl-consent'
+import { buildShlAccessAuditEvent } from '../src/lib/consent/shl-audit'
 import type { ShlSession } from '../src/lib/shl-session-store'
 
 function makeSession(overrides: Partial<ShlSession> = {}): ShlSession {
@@ -49,13 +50,48 @@ describe('buildShareConsent', () => {
     expect(codes).toEqual(['ImagingStudy'])
   })
 
-  it('omits de-selected resource types from provision.class', () => {
+  it('omits provision.class for a whole-patient share (no fabricated type list)', () => {
     const consent = buildShareConsent(
-      'shl-scoped',
+      'shl-whole',
       makeSession({ shareScope: { excludedTypes: ['Condition'], excludedIds: [], excludedObservationCategories: [] } }),
     )
-    const codes = consent.provision?.class?.map((c) => c.code) ?? []
-    expect(codes).not.toContain('Condition')
-    expect(codes).toContain('Observation')
+    // Empty class = all resources; the SHL proxy scope filter enforces exclusions.
+    expect(consent.provision?.class).toBeUndefined()
+  })
+
+  it('carries no named recipient — actor is the anonymous link-holder grantee', () => {
+    const consent = buildShareConsent('shl-anon', makeSession({ shl: { url: 'u', key: 'k' } }))
+    const actor = consent.provision?.actor?.[0]
+    expect(actor?.role?.coding?.[0]?.code).toBe('IRCP')
+    expect(actor?.reference?.reference).toBeUndefined()
+    expect(actor?.reference?.display).toBe('Any holder of the share link')
+  })
+
+  it('tags the consent as a SMART Health Link share for UI detection', () => {
+    const consent = buildShareConsent('shl-cat', makeSession())
+    const codes = consent.category?.flatMap((c) => c.coding?.map((x) => x.code) ?? []) ?? []
+    expect(codes).toContain(SHL_CONSENT_CATEGORY_CODE)
+  })
+})
+
+describe('buildShlAccessAuditEvent', () => {
+  it('records a read access attributing the recipient and the SHL entity', () => {
+    const audit = buildShlAccessAuditEvent({
+      shlId: 'shl-a',
+      session: makeSession(),
+      recipient: 'Dr. Jones',
+      ipAddress: '203.0.113.5',
+    })
+    expect(audit.resourceType).toBe('AuditEvent')
+    expect(audit.action).toBe('R')
+    expect(audit.agent[0]?.who?.display).toBe('Dr. Jones')
+    expect(audit.agent[0]?.network?.address).toBe('203.0.113.5')
+    const shlEntity = audit.entity?.find((e) => e.what?.identifier?.value === 'shl-a')
+    expect(shlEntity).toBeDefined()
+  })
+
+  it('falls back to an anonymous recipient when none is supplied', () => {
+    const audit = buildShlAccessAuditEvent({ shlId: 'shl-b', session: makeSession() })
+    expect(audit.agent[0]?.who?.display).toBe('Anonymous share-link recipient')
   })
 })

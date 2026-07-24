@@ -54,7 +54,13 @@ Description: "A patient-initiated data share represented as a Consent. Backs a S
 // Every share expires — period.end maps to the SHL's expiresAt.
 * provision.period 1..1 MS
 * provision.period.end 1..1 MS
-// Who the link is shared with.
+// Granted to any holder of the link (a bearer credential), carried as a single
+// Information Recipient actor. Actual recipients/devices are NOT enumerated here
+// — access is tracked out of band via the SHL session store + AuditEvent, which
+// is where an access log belongs (Consent.provision.actor is the grantee, not a log).
 * provision.actor 1..* MS
-// The resource classes the link exposes.
-* provision.class 1..* MS
+* provision.actor.role MS
+// Resource classes the link exposes. Present only for scoped shares (e.g. a
+// single ImagingStudy); a whole-patient share omits it (empty class = all),
+// so this is optional rather than a fabricated type list.
+* provision.class 0..* MS
