@@ -8,6 +8,26 @@ import type { TSchema } from '@sinclair/typebox'
 
 // ── Route Introspection Types ────────────────────────────────────────────────
 
+/**
+ * MCP tool behavioural hints (per the MCP spec `tools` annotations object).
+ * These are UNTRUSTED hints a client MAY use to shape UX (e.g. warn before a
+ * destructive call) — they are advisory, not a security boundary.
+ *
+ * @see https://modelcontextprotocol.io/specification/2025-11-25/server/tools
+ */
+export interface ToolAnnotations {
+  /** Human-readable display name for the tool. */
+  title?: string
+  /** Tool does not modify state. Default (MCP): false. */
+  readOnlyHint?: boolean
+  /** Tool may perform destructive updates (only meaningful when not read-only). Default (MCP): true. */
+  destructiveHint?: boolean
+  /** Repeated calls with the same args have no additional effect. Default (MCP): false. */
+  idempotentHint?: boolean
+  /** Tool interacts with an open/external world (vs. a closed domain). Default (MCP): true. */
+  openWorldHint?: boolean
+}
+
 /** Metadata extracted from a single Elysia route for use as an MCP tool */
 export interface ToolMetadata {
   /** Original route path (e.g. /admin/users/:id) */
@@ -24,6 +44,8 @@ export interface ToolMetadata {
   public?: boolean
   /** Whether tool is read-only (GET route) */
   readOnly?: boolean
+  /** MCP behavioural hints derived from the HTTP method (see `annotationsForMethod`). */
+  annotations?: ToolAnnotations
 }
 
 /** Metadata extracted from a GET route for use as an MCP resource */

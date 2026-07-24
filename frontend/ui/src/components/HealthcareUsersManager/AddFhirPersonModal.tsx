@@ -57,7 +57,7 @@ export function AddFhirPersonModal({
   );
 
   // Debug logging
-  console.debug('📋 AddFhirPersonModal - Data Check:', {
+  console.debug('AddFhirPersonModal - Data Check:', {
     totalServersProvided: availableServers.length,
     availableServersProvided: availableServers.map(s => ({ name: s.name, status: s.status })),
     userFhirPersons: user.fhirPersons,

@@ -8,6 +8,7 @@ import { readdirSync, readFileSync, existsSync } from 'fs'
 import { keycloakPlugin } from './lib/keycloak-plugin'
 import { fhirRoutes } from './routes/fhir'
 import { statusRoutes } from './routes/status'
+import { sourceRoutes } from './routes/source'
 import { serverDiscoveryRoutes } from './routes/fhir-servers'
 import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
@@ -32,6 +33,7 @@ import { brandBundleService } from './lib/brand-bundle'
 import { getRuntimeBrandConfig } from './lib/runtime-config'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
+import { resolveAppIcon } from './lib/app-store-icons'
 import { setDispatchApp } from './lib/ai/tool-registry'
 
 export interface DiscoveredApp {
@@ -43,6 +45,8 @@ export interface DiscoveredApp {
     scope: string
     category: string
     icon: string
+    /** Logo image URL (SMART client logo_uri) when the app has its own logo. */
+    logoUri?: string
     grant_types: string[]
     token_endpoint_auth_method: string
     hidden: boolean
@@ -72,6 +76,7 @@ function discoverApps({ includeHidden = false } = {}) {
             if (!existsSync(manifestPath)) return null
             try {
                 const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'))
+                const { icon, logoUri } = resolveAppIcon(manifest.logoUri ?? manifest.icon, manifest.category)
                 return {
                     id: d.name,
                     launch_url: `/apps/${d.name}/`,
@@ -80,7 +85,8 @@ function discoverApps({ includeHidden = false } = {}) {
                     description: manifest.description ?? '',
                     scope: manifest.scope ?? '',
                     category: manifest.category ?? 'other',
-                    icon: manifest.icon ?? 'app-window',
+                    icon,
+                    logoUri,
                     grant_types: manifest.grant_types ?? ['authorization_code'],
                     token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
                     hidden: hiddenIds.includes(d.name),
@@ -94,7 +100,9 @@ function discoverApps({ includeHidden = false } = {}) {
     // 2. Published registered apps (from config)
     const publishedApps = getPublishedApps()
         .filter(pa => !hiddenIds.includes(pa.clientId))
-        .map(pa => ({
+        .map(pa => {
+          const { icon, logoUri } = resolveAppIcon(pa.logoUri, pa.category)
+          return {
             id: pa.clientId,
             launch_url: pa.launchUrl,
             client_id: pa.clientId,
@@ -102,12 +110,14 @@ function discoverApps({ includeHidden = false } = {}) {
             description: pa.description,
             scope: '',
             category: pa.category,
-            icon: pa.logoUri || 'app-window',
+            icon,
+            logoUri,
             grant_types: ['authorization_code'],
             token_endpoint_auth_method: 'none',
             hidden: false,
             source: 'registered' as const,
-        }))
+          }
+        })
 
     // Merge, dedup by client_id (filesystem wins if both exist)
     const fsClientIds = new Set(fsApps.map((a) => a.client_id))
@@ -272,6 +282,7 @@ export function createApp() {
         .use(docsRoutes)
         .use(mcpMetadataRoutes)
         .use(statusRoutes)
+        .use(sourceRoutes)
         .use(serverDiscoveryRoutes)
         .use(authRoutes)
         .use(adminRoutes)

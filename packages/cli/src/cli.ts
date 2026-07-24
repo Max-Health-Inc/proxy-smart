@@ -17,6 +17,7 @@ import { requestCommand } from './commands/request'
 import { smartAppsCommand } from './commands/smart-apps'
 import { healthcareUsersCommand } from './commands/healthcare-users'
 import { scopeSetsCommand } from './commands/scope-sets'
+import { smartScopesCommand } from './commands/smart-scopes'
 import { mcpEndpointCommand } from './commands/mcp-endpoint'
 import { shutdownCommand, restartCommand } from './commands/server'
 
@@ -29,6 +30,7 @@ const COMMANDS: Record<string, CommandHandler> = {
   'smart-apps': smartAppsCommand,
   'healthcare-users': healthcareUsersCommand,
   'scope-sets': scopeSetsCommand,
+  'smart-scopes': smartScopesCommand,
   'mcp-endpoint': mcpEndpointCommand,
   shutdown: shutdownCommand,
   restart: restartCommand,

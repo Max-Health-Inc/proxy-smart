@@ -1,0 +1,46 @@
+name: License Compliance
+
+on:
+  pull_request:
+    branches: [main, develop, test]
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  reuse-lint:
+    name: REUSE compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Verifies every file resolves to a license/copyright via REUSE.toml or a
+      # per-file header. The catch-all in REUSE.toml keeps this green today; it
+      # tightens automatically as real headers are added.
+      - name: REUSE lint
+        uses: fsfe/reuse-action@v5
+
+  changed-file-headers:
+    name: SPDX headers on changed files
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      # Incremental enforcement: only files added/changed in this PR must carry a
+      # per-file SPDX header, so legacy files are never a blocker.
+      - name: Check headers on PR-changed source files
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          mapfile -t FILES < <(git diff --name-only --diff-filter=ACMR "$BASE" "$HEAD" \
+            | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|scss|sh|bash|py|yml|yaml|toml)$' \
+            | grep -vE 'node_modules/|dist/|build/|coverage/|\.d\.ts$|api-client(/|\.)|\.tgz$' || true)
+          if [ ${#FILES[@]} -eq 0 ]; then
+            echo "No source files changed."
+            exit 0
+          fi
+          node scripts/spdx.mjs --check "${FILES[@]}"

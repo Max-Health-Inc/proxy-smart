@@ -6,6 +6,233 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607241513.91cfdf6c8] - 2026-07-24
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Update dev SMART compliance report (testing)
+  - Sync package versions
+  - Refactor(source): extract handler using Elysia's exported Context type
+
+Note: Skipped: update/version metadata commits and merge commits per rules.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/859
+
+
+## [0.2.13-alpha.202607241419.b78d263f2] - 2026-07-24
+
+- 🔧 Chores & Improvements: Introduced SHL-Consent reconciliation flow with startup trigger, idempotent mirror handling, retry logic, and updated session storage (consent_mirrored flag). Added DB migration support and API for reconciliation (consent_mirrored column, markConsentMirrored, listUnmirroredActive). Added tests for reconciliation bookkeeping.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/856
+
+
+## [0.2.13-beta.202607241021.3163c8e52] - 2026-07-24
+
+- ✨ Features: Add SHL-Consent reconciliation flow, including startup trigger, explicit reconciliation logic, idempotent mirror handling, and retry mechanism
+- 🧭 Database & API: Introduce consent_mirrored flag, markConsentMirrored method, and listUnmirroredActive for reconciliation sweeps
+- 🧪 Testing: Add tests for reconciliation bookkeeping (backend/test/shl-consent-reconcile.test.ts)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/855
+
+
+## [0.2.13-alpha.202607241021.3163c8e52] - 2026-07-24
+
+- ✨ Features: honest share model + distinct-device access tracking (shl)
+- 🐛 Bug Fixes: return 404 for no-longer-active links per SHL spec (shl)
+- 🔧 Chores & Improvements: sync package versions; update beta/alpha version metadata (internal tooling and CI)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/854
+
+
+## [0.2.13-beta.202607231720.f8ff94f16] - 2026-07-23
+
+- ✨ Features: Brand theming support
+  - Backend: add primaryColor and accentColor to config, propagate to runtime, and expose in session-based brand context for theming
+  - Frontend: BrandSettings supports editing/preview of primaryColor and accentColor; default values added
+  - Client: fetchBrandContext API to apply brand colors to CSS variables on load
+
+- 🔧 Chores & Improvements: Dependency and packaging updates
+  - Bump multiple packages to 0.2.13-beta.202607221520.e50fd77ec
+  - Update ESLint config and integrate brandc package for UI theming
+  - Update token imports in UI CSS and bunfig.toml scoping for brand-token contract
+
+- 📚 Documentation: (none)
+
+- ⚠️ Breaking Changes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/849
+
+
+## [0.2.13-alpha.202607231720.f8ff94f16] - 2026-07-23
+
+- ✨ Features: Brand theming support across backend and frontend
+  - Add primaryColor and accentColor to backend config, org-branding, runtime config, and admin schema
+  - Extend OAuth brand-context endpoint to return theming colors for session-based use
+  - Frontend BrandSettings: enable editing/preview of primaryColor and accentColor with defaults
+  - Patient picker applies brand-context to theme CSS variables on load; new API client fetchBrandContext
+
+- 🔧 Chores & Improvements: Dependency and packaging updates
+  - Bump multiple packages to 0.2.13-beta.202607221520
+  - Update ESLint config and UI to depend on brandc package; update token imports in UI CSS
+  - bunfig.toml scopes note for brand-token contract
+  - Propagate version bumps across nested projects (auth, cli, app-store, etc.)
+
+- 💡 Documentation: (none)
+
+- ⚠️ Breaking Changes: (none)
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/848
+
+
+## [0.2.13-beta.202607231603.838c9317b] - 2026-07-23
+
+- ✨ Features: Frontend BrandSettings now supports editing/preview of primaryColor and accentColor; runtime brand config now propagates and uses these values. Brand-context endpoint extended to resolve and return colors for session-based theming.
+- 🐛 Bug Fixes: None explicitly stated beyond feature-related updates.
+- 📚 Documentation: None.
+- 🔧 Chores & Improvements: Brand theming fields added across backend and runtime configs; theme CSS variables are applied on load; new API client for fetchBrandContext; package version bumps to 0.2.13-beta.202607231603.838c9317b; ESLint and token import updates; bunfig.toml note added for brand-token contract.
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/847
+
+
+## [0.2.13-alpha.202607231603.838c9317b] - 2026-07-23
+
+- ✨ Features: 
+  - Add brand theming support across backend and frontend (primaryColor, accentColor) with propagation to runtime brand config and session-based theming via OAuth endpoint.
+  - Frontend BrandSettings now supports editing/preview of primaryColor and accentColor; default values added.
+  - Patient picker applies brand-context theming to root CSS variables (--primary, --maxhealth) on load.
+  - New API client to fetch brand context.
+
+- 🔧 Chores & Improvements:
+  - Dependency/version bumps to new beta tag across core, frontend, and packages.
+  - ESLint updates and brandc package integration for token imports in UI CSS (brandc/theme.css, brandc/tailwind.css).
+  - bunfig.toml scopes note added for brand-token contract. 
+
+- ⚠️ Breaking Changes: None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/846
+
+
+## [0.2.13-beta.202607231432.7f3c31ebe] - 2026-07-23
+
+- ✨ Features: Brand theming support
+  - backend/config propagation for primaryColor and accentColor; runtime brand config integration
+  - OAuth brand-context endpoint enhanced to provide primary/accent colors for session-based theming
+  - Frontend BrandSettings supports editing/preview of primaryColor and accentColor
+  - Patient picker applies brand-context to theme CSS variables on load
+
+- 🔧 Chores & Improvements: Version sync and dependencies
+  - Bump multiple packages to 0.2.13-beta.202607221520.e50fd77ec (across bun.lock, bunfig, and package.jsons)
+  - Update ESLint config and UI to depend on brandc package; adjust token imports in UI CSS
+  - bunfig.toml scope note added for brand-token contract
+
+- 🔧 Chores & Improvements: Misc maintenance
+  - Propagation of brand color values through config and runtime layers
+  - Frontend/CSS token updates to align with new theming system
+
+- ⚠️ Breaking Changes: None detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/845
+
+
+## [0.2.13-alpha.202607231432.7f3c31ebe] - 2026-07-23
+
+- ✨ Features: 
+  - Brand theming support: add primaryColor and accentColor across backend config, org-branding, runtime config, and admin schema; frontend editor/preview for colors; session-based theming available via updated brand-context endpoint.
+  - Frontend/theme integration: apply brand-context to root CSS variables on load; new API client to fetch brand context.
+
+- 🔧 Chores & Improvements:
+  - Version bumps across multiple packages to 0.2.13-beta.202607221520.e50fd77ec.
+  - Update ESLint config and token imports to align with brandc package (UI theme tokens).
+  - bunfig.toml scopes added for brand-token contract.
+
+- 🐛 Bug Fixes:
+  - Propagation of primary/accent colors between config and runtime brand config; ensure runtime getRuntimeBrandConfig reflects changes.
+
+- 📚 Documentation: (none)
+
+- ⚠️ Breaking Changes: (none)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/844
+
+
+## [0.2.13-beta.202607231042.705d38ecd] - 2026-07-23
+
+- ✨ Features:
+  - Brand theming: add primaryColor and accentColor support across backend config, org-branding, runtime config, and admin schema; frontend supports editing/preview of these colors.
+  - Runtime theming: propagate and apply brand colors in runtime brand config; session-based theming via OAuth context.
+
+- 🔧 Chores & Improvements:
+  - Frontend: integrate brandc package for theming tokens and update CSS imports; enhance API client to fetch brand context.
+  - Versioning/CI: update to 0.2.13-beta.202607231042.705d38ecd across packages; adjust ESLint and token imports accordingly.
+  - Packaging: bunfig.toml scopes note for brand-token contract; propagate version bumps through nested projects.
+
+- ⚠️ Breaking Changes:
+  - None detected.
+
+- 🐛 Bug Fixes:
+  - None detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/842
+
+
+
+- ✨ Features: Brand theming support across backend and frontend
+  - Add primaryColor and accentColor to backend config, org-branding, runtime config, and admin schema
+  - Frontend BrandSettings: edit/preview primaryColor and accentColor with defaults
+  - OAuth brand-context endpoint now resolves and returns primary/accent colors for session-based theming
+  - Patient picker applies brand-context to theme root CSS variables on load
+- 🔧 Chores & Improvements: Dependency and config updates for beta
+  - Bump multiple packages to 0.2.13-beta.202607231042
+  - Update ESLint config and UI to depend on brandc package; update token imports in UI CSS
+  - bunfig.toml: note scopes for brand-token contract
+  - Propagate version bumps across nested projects (auth, cli, app-store, etc.)
+
+Note: No breaking changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/843
+
+
+## [0.2.13-alpha.202607231042.705d38ecd] - 2026-07-23
+
+- ✨ Features
+  - Frontend: brand theming support with editable primaryColor and accentColor; runtime theme integration via brand-context
+  - Backend: brand-context endpoint enhanced to provide primary/accent colors for session-based theming
+
+- 🔧 Chores & Improvements
+  - Dependency and version bumps to 0.2.13-beta.202607221520 (across bun.lock, bunfig, multiple package.jsons)
+  - UI: brandc integration and token imports in CSS (brandc/theme.css, brandc/tailwind.css)
+  - bunfig.toml: added note about brand-token contract scope
+
+- ⚠️ Breaking Changes
+  - None identified
+
+- 📚 Documentation
+  - None
+
+- 🐛 Bug Fixes
+  - None identified
+
+Note: Only changes since last release included; no breaking changes detected.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/841
+
+
+## [0.2.13-beta.202607191927.fe7e4bfa3] - 2026-07-19
+
+- 🔧 Chores & Improvements: CI/CD and version bump housekeeping
+  - chore(testing): update dev SMART compliance report
+  - 🔄 Update version to 0.2.13-alpha.202607191930.ad4938422 (alpha)
+  - 🔄 Update version to 0.2.13-beta.202607191927.fe7e4bfa3 (beta)
+  - chore: sync package versions
+
+- 🐛 Bug Fixes: small compatibility and description length tweaks
+  - fix(keycloak): shorten mcp-resource-server description to fit DB column (<=255)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/824
+
+
 ## [0.2.11-alpha.202606032247.2e8256972] - 2026-06-03
 
 - ⚠️ Breaking Changes: None detected

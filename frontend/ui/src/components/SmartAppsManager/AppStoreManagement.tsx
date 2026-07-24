@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import {
   Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter, Input, Label, Select, SelectContent,
@@ -48,6 +48,11 @@ const ICON_OPTIONS = Object.entries(ICON_MAP).map(([key, Icon]) => ({
   Icon,
   label: key.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' '),
 }));
+
+/** True when the value is an http(s) URL (a real logo image, not an icon key). */
+function isLogoUrl(value: string | undefined | null): boolean {
+  return !!value && /^https?:\/\//i.test(value);
+}
 
 export function AppStoreManagement() {
   const { t } = useTranslation();
@@ -122,6 +127,15 @@ export function AppStoreManagement() {
   const storeAppIds = new Set(apps.map(a => a.clientId));
   // Registered apps not yet in the store
   const publishableApps = registeredApps.filter(a => a.clientId && !storeAppIds.has(a.clientId));
+  // clientId -> logo image URL (SMART client logo_uri). When an app has its own
+  // logo we show that instead of a curated icon, matching the public store.
+  const logoUrlByClientId = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const a of registeredApps) {
+      if (a.clientId && a.logoUri && isLogoUrl(a.logoUri)) map[a.clientId] = a.logoUri;
+    }
+    return map;
+  }, [registeredApps]);
 
   const handleSelectApp = (clientId: string) => {
     setSelectedAppId(clientId);
@@ -218,8 +232,15 @@ export function AppStoreManagement() {
               className={`flex items-center justify-between px-4 py-3 transition-colors ${app.hidden ? 'opacity-50' : ''}`}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                  {renderAppIcon(app)}
+                <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 overflow-hidden">
+                  {logoUrlByClientId[app.clientId] ? (
+                    <img
+                      src={logoUrlByClientId[app.clientId]}
+                      alt=""
+                      className="w-full h-full object-contain"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  ) : renderAppIcon(app)}
                 </div>
                 <div className="min-w-0">
                   <div className="font-medium text-sm text-foreground truncate flex items-center gap-2">
@@ -326,33 +347,51 @@ export function AppStoreManagement() {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>{t('Icon')}</Label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start gap-2 font-normal">
-                        {renderIcon(publishForm.logoUri || getDefaultIconKey(publishForm.category || 'clinical'), 'w-5 h-5')}
-                        <span className="text-muted-foreground text-sm">{t('Choose an icon')}</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-72 p-3" align="start">
-                      <div className="grid grid-cols-6 gap-1">
-                        {ICON_OPTIONS.map(({ key, Icon, label }) => (
-                          <Button
-                            key={key}
-                            variant={publishForm.logoUri === key ? 'default' : 'ghost'}
-                            size="sm"
-                            className="h-9 w-9 p-0"
-                            title={label}
-                            onClick={() => setPublishForm(prev => ({ ...prev, logoUri: key }))}
-                          >
-                            <Icon className="w-4 h-4" />
-                          </Button>
-                        ))}
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                {/* The app's own logo (SMART client logo_uri) takes precedence.
+                    When set, there's nothing to choose — show the logo; otherwise
+                    offer the curated icon picker used for the store tile. */}
+                {isLogoUrl(publishForm.logoUri) ? (
+                  <div className="space-y-2">
+                    <Label>{t('Icon')}</Label>
+                    <div className="flex items-center gap-3 rounded-md border border-border px-3 py-2">
+                      <img
+                        src={publishForm.logoUri}
+                        alt=""
+                        className="w-8 h-8 rounded object-contain"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                      <span className="text-muted-foreground text-sm">{t("Using the app's own logo")}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>{t('Icon')}</Label>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start gap-2 font-normal">
+                          {renderIcon(publishForm.logoUri || getDefaultIconKey(publishForm.category || 'clinical'), 'w-5 h-5')}
+                          <span className="text-muted-foreground text-sm">{t('Choose an icon')}</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-72 p-3" align="start">
+                        <div className="grid grid-cols-6 gap-1">
+                          {ICON_OPTIONS.map(({ key, Icon, label }) => (
+                            <Button
+                              key={key}
+                              variant={publishForm.logoUri === key ? 'default' : 'ghost'}
+                              size="sm"
+                              className="h-9 w-9 p-0"
+                              title={label}
+                              onClick={() => setPublishForm(prev => ({ ...prev, logoUri: key }))}
+                            >
+                              <Icon className="w-4 h-4" />
+                            </Button>
+                          ))}
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>{t('Launch URL')}</Label>
                   <Input

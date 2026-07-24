@@ -13,6 +13,9 @@ import { hasClientAssertion, translateClientAssertion, ClientAssertionError } fr
 import { kcUnavailablePage, authErrorPage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
+import { getAdminClient } from '@/lib/kc-admin-factory'
+import { getOrgBranding } from '@/lib/org-branding'
+import { getAttr } from '@/lib/smart-client-enrichment'
 import {
   handleAuthorize,
   handleCallback,
@@ -359,6 +362,55 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     }
   }, {
     detail: { summary: 'Patient Search (Picker)', description: 'Session-validated Patient search for the patient picker SPA. Proxies to upstream FHIR server without requiring a Bearer token.', tags: ['authentication'] }
+  })
+
+  // ── Brand context (session-validated, for patient picker theming) ─────
+  // Resolves the brand COLOUR for the launch so the picker can theme itself to
+  // the launching organization. Starts from the global brand, then applies the
+  // launching client's org override when resolvable. UI-theming only — this is
+  // NOT the SMART User-access Brand (no logo/portal/endpoints here).
+  .get('/brand-context', async ({ query, set }) => {
+    const sessionKey = query.session as string | undefined
+    if (!sessionKey) {
+      set.status = 400
+      return { error: 'invalid_request', error_description: 'Missing session parameter' }
+    }
+    const session = smartStore.get(sessionKey)
+    if (!session) {
+      set.status = 401
+      return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    // Global brand colour is the default.
+    const brand: { primaryColor: string | null; accentColor: string | null } = {
+      primaryColor: config.brand.primaryColor,
+      accentColor: config.brand.accentColor,
+    }
+
+    // Per-org override: session client → its organization → org brand colour.
+    // Best-effort and non-fatal; falls back to the global brand on any failure.
+    try {
+      const clientId = (session as { clientId?: string }).clientId
+      const admin = clientId ? await getAdminClient() : null
+      if (admin && clientId) {
+        const clients = await admin.clients.find({ clientId })
+        const orgIds = getAttr(clients[0]?.attributes, 'organization_ids')?.split(',').filter(Boolean)
+        if (orgIds && orgIds.length > 0) {
+          const orgBrand = await getOrgBranding(admin, orgIds[0])
+          if (orgBrand.primaryColor) brand.primaryColor = orgBrand.primaryColor
+          if (orgBrand.accentColor) brand.accentColor = orgBrand.accentColor
+        }
+      }
+    } catch (err) {
+      logger.auth.debug('brand-context: per-org resolution failed, using global brand', {
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+
+    set.headers['Cache-Control'] = 'no-store'
+    return brand
+  }, {
+    detail: { summary: 'Brand Context (Picker)', description: 'Session-validated brand colour for theming the patient picker to the launching organization.', tags: ['authentication'] }
   })
 
   // ── Login redirect ────────────────────────────────────────────────────
@@ -744,17 +796,27 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     const bodyObj = body as Record<string, string>
 
     const headers: Record<string, string> = { 'Content-Type': 'application/x-www-form-urlencoded' }
-    const hasClientAuth = bodyObj.client_id || bodyObj.client_secret
+    // A bare `client_id` (public SMART client, e.g. Inferno) is NOT usable
+    // introspection auth: RFC 7662 requires the CALLER to authenticate, and
+    // Keycloak rejects a public client at the introspection endpoint, returning
+    // {"active": false} for an otherwise-valid token. Only real credentials
+    // (client_secret / client_assertion) count as caller auth; otherwise fall
+    // back to the proxy's configured introspection client and strip the partial
+    // client id so Keycloak doesn't see two competing auth methods.
+    const forwardBody: Record<string, string> = { ...bodyObj }
+    const hasClientAuth = bodyObj.client_secret || bodyObj.client_assertion
     if (!hasClientAuth) {
       const auth = keycloakAdapter.getIntrospectionAuth?.()
       if (auth) {
         headers['Authorization'] = `Basic ${Buffer.from(`${auth.clientId}:${auth.clientSecret}`).toString('base64')}`
+        delete forwardBody.client_id
+        delete forwardBody.client_secret
       }
     }
 
     const resp = await fetch(kcUrl, {
       method: 'POST', headers,
-      body: new URLSearchParams(bodyObj).toString()
+      body: new URLSearchParams(forwardBody).toString()
     })
 
     const data = await resp.json()

@@ -3,10 +3,10 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as rds from 'aws-cdk-lib/aws-rds';
+import type * as rds from 'aws-cdk-lib/aws-rds';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
-import * as route53 from 'aws-cdk-lib/aws-route53';
+import type * as route53 from 'aws-cdk-lib/aws-route53';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
@@ -20,7 +20,7 @@ export interface KeycloakStackProps extends cdk.StackProps {
   hostedZone: route53.IHostedZone;
   /**
    * Keycloak container image tag — only used when `imageUri` is not set.
-   * @default '26.0'
+   * @default '26.6.4'
    */
   keycloakVersion?: string;
   /**
@@ -51,7 +51,7 @@ export class KeycloakStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: KeycloakStackProps) {
     super(scope, id, props);
 
-    const keycloakVersion = props.keycloakVersion ?? '26.0';
+    const keycloakVersion = props.keycloakVersion ?? '26.6.4';
     const useCustomImage = Boolean(props.imageUri);
 
     // Container image: ECR custom image (with pre-built proxy-smart theme) or stock quay.io
@@ -246,7 +246,11 @@ export class KeycloakStack extends cdk.Stack {
     this.cluster = new ecs.Cluster(this, 'Cluster', {
       vpc: props.vpc,
       clusterName: 'proxy-smart-keycloak',
-      containerInsightsV2: ecs.ContainerInsights.ENABLED,
+      // Container Insights emits per-task metrics that dominated the CloudWatch
+      // bill (~$27/mo) while avg CPU sits <1%. CloudWatch alarms below still
+      // work off the free ALB/ECS service metrics. Re-enable if deep per-task
+      // profiling is needed.
+      containerInsightsV2: ecs.ContainerInsights.DISABLED,
     });
 
     // Keycloak service with ALB
@@ -256,8 +260,11 @@ export class KeycloakStack extends cdk.Stack {
       {
         cluster: this.cluster,
         serviceName: 'keycloak',
-        cpu: 1024,        // 1 vCPU
-        memoryLimitMiB: 2048,  // 2 GB RAM
+        // Right-sized from 1024/2048: 30d avg CPU 0.4%, peak mem ~33% (~650 MB).
+        // JVM heap lowered to -Xmx768m below so 1 GB container leaves room for
+        // metaspace/off-heap. Autoscaling (below) still covers real bursts.
+        cpu: 512,         // 0.5 vCPU
+        memoryLimitMiB: 1024,  // 1 GB RAM
         desiredCount: 1,
         
         // Place tasks in private subnets (required for DB access — DB SG allows private CIDR)
@@ -282,8 +289,9 @@ export class KeycloakStack extends cdk.Stack {
             KC_METRICS_ENABLED: 'true',
             KC_DB: 'postgres',
             KC_DB_URL: `jdbc:postgresql://${props.database.instanceEndpoint.hostname}:5432/keycloak`,
-            // Limit JVM heap for Fargate memory
-            JAVA_OPTS_KC_HEAP: '-Xms256m -Xmx1024m',
+            // Limit JVM heap for Fargate memory. Heap ≤768m on a 1 GB container
+            // leaves headroom for JVM metaspace/off-heap (avoids OOM kills).
+            JAVA_OPTS_KC_HEAP: '-Xms256m -Xmx768m',
           },
           secrets: {
             KC_DB_USERNAME: ecs.Secret.fromSecretsManager(props.dbSecret, 'username'),

@@ -1,0 +1,37 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Proxy Smart Consent FHIR Implementation Guide
+#
+# Scoped-down Consent profiles for the Max Health consent portal and the
+# proxy's consent-enforcement engine (issue #190).
+#
+# Models two things with one resource type:
+#   - MaxHealthConsent      → org/app data-access consent (patient-privacy)
+#   - MaxHealthShareConsent → a patient-initiated share, backing a SMART
+#                             Health Link (SHL). An SHL IS a consent grant.
+# ──────────────────────────────────────────────────────────────────────────────
+
+id: maxhealth.consent
+canonical: https://maxhealth.tech/fhir/consent
+name: MaxHealthConsent
+title: Max Health Consent Profiles
+status: draft
+version: 0.1.0
+fhirVersion: 4.0.1
+copyrightYear: 2026+
+releaseLabel: ci-build
+
+publisher:
+  name: Max Health Inc.
+  url: https://maxhealth.tech
+
+description: >-
+  Scoped FHIR Consent profiles for the Max Health consent portal and the proxy
+  consent-enforcement engine. Defines a base patient-privacy Consent
+  (organization/app access grants) and a Share Consent that represents a
+  patient-initiated SMART Health Link (SHL) as a time-limited permit provision,
+  so shares surface, revoke, and audit through the same model as every other
+  consent.
+
+parameters:
+  show-hierarchical-table: false
+  apply-publisher: true

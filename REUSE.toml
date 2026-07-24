@@ -1,0 +1,31 @@
+version = 1
+
+SPDX-PackageName = "proxy-smart"
+SPDX-PackageSupplier = "Max Health Inc. <hello@maxhealth.tech>"
+SPDX-PackageDownloadLocation = "https://github.com/Max-Health-Inc/proxy-smart"
+
+# Catch-all: every first-party file is dual-licensed (AGPL-3.0-or-later OR a
+# commercial license). precedence = "aggregate" means a per-file SPDX header,
+# when present, is honored on top of this default rather than overridden, so we
+# can add real per-file headers incrementally without ever breaking `reuse lint`.
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Max Health Inc."
+SPDX-License-Identifier = "AGPL-3.0-or-later OR LicenseRef-Commercial"
+
+# Vendored FHIR Implementation Guide tarballs are third-party artifacts and
+# carry their own upstream licensing; do not assert our copyright over them.
+[[annotations]]
+path = ["lib/*.tgz", "frontend/smart-dicom-template/lib/*.tgz"]
+precedence = "override"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "LicenseRef-VendoredThirdParty"
+
+# Generated API clients are build output derived from our OpenAPI spec; they
+# inherit the project license but hold no separate copyright of their own.
+[[annotations]]
+path = ["frontend/ui/src/lib/api-client/**", "packages/patient-picker/src/lib/api-client.ts"]
+precedence = "override"
+SPDX-FileCopyrightText = "Max Health Inc."
+SPDX-License-Identifier = "AGPL-3.0-or-later OR LicenseRef-Commercial"

@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@proxy-smart/shared-ui';
-import { MoreHorizontal, Edit, Trash2, Users, Power, Globe } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Users, Power, Globe, Check } from 'lucide-react';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
@@ -74,7 +74,7 @@ export function OrgTable({ orgs, onEdit, onDelete, onToggleStatus, onManageMembe
                           >
                             <Globe className="w-3 h-3 mr-1" />
                             {d.name}
-                            {d.verified && <span className="ml-1 text-green-500">✓</span>}
+                            {d.verified && <Check className="inline-block ml-1 w-3.5 h-3.5 text-green-500" />}
                           </Badge>
                         ))
                       )}

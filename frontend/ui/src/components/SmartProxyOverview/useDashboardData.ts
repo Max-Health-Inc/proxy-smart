@@ -399,7 +399,7 @@ export function useDashboardData() {
         if (profile) {
             confirm({
                 title: t('Keycloak Configuration'),
-                message: t('⚠️ Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?'),
+                message: t('Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?'),
                 type: 'warning',
                 confirmText: t('Continue'),
                 cancelText: t('Cancel'),

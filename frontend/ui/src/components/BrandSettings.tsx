@@ -13,6 +13,7 @@ import {
   Image,
   MapPin,
   ExternalLink,
+  Palette,
   Paintbrush,
 } from 'lucide-react';
 import { config } from '@/config';
@@ -42,6 +43,8 @@ interface BrandConfig {
   identifier: string;
   loginTheme: string | null;
   appStoreUrl: string | null;
+  primaryColor?: string | null;
+  accentColor?: string | null;
 }
 
 const DEFAULT_BRAND: BrandConfig = {
@@ -63,6 +66,8 @@ const DEFAULT_BRAND: BrandConfig = {
   identifier: '',
   loginTheme: null,
   appStoreUrl: null,
+  primaryColor: null,
+  accentColor: null,
 };
 
 const CATEGORY_OPTIONS = UserAccessCategoryValueSetConcepts.map(c => ({
@@ -375,6 +380,31 @@ export function BrandSettings() {
               />
               <p className="text-xs text-muted-foreground">
                 {t('External App Store URL. When set, /apps redirects here instead of serving the built-in App Store.')}
+              </p>
+            </div>
+
+            {/* Brand color (theming) */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Palette className="w-3.5 h-3.5" />
+                {t('Brand Color')}
+              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  aria-label={t('Brand Color')}
+                  value={brand.primaryColor || '#00d294'}
+                  onChange={(e) => updateField('primaryColor', e.target.value)}
+                  className="h-9 w-12 shrink-0 cursor-pointer rounded border border-border bg-transparent p-1"
+                />
+                <Input
+                  value={brand.primaryColor || ''}
+                  onChange={(e) => updateField('primaryColor', e.target.value || null)}
+                  placeholder="#00d294"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('Primary colour used to theme the login page and patient picker for this brand. Any CSS colour (e.g. #00d294). Not published in branding.json.')}
               </p>
             </div>
           </CardContent>

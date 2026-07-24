@@ -43,7 +43,11 @@ export async function executeTool(
   args: Record<string, unknown>,
   authToken?: string,
   contextDecorators?: Record<string, unknown>,
-): Promise<{ content: { type: 'text'; text: string }[]; isError?: boolean }> {
+): Promise<{
+  content: { type: 'text'; text: string }[]
+  structuredContent?: Record<string, unknown>
+  isError?: boolean
+}> {
   try {
     // Validate args against merged schema
     const inputSchema = getMergedInputSchema(meta)
@@ -66,7 +70,7 @@ export async function executeTool(
       if (status >= 400) {
         return { content: [{ type: 'text', text }], isError: true }
       }
-      return { content: [{ type: 'text', text }] }
+      return successResult(text)
     }
 
     // ── Synthetic context (legacy fallback) ──────────────────────────────
@@ -86,7 +90,7 @@ export async function executeTool(
     if (responseStatus >= 400) {
       return { content: [{ type: 'text', text }], isError: true }
     }
-    return { content: [{ type: 'text', text }] }
+    return successResult(text)
   } catch (err) {
     return {
       content: [{ type: 'text', text: `Error executing ${toolName}: ${err instanceof Error ? err.message : String(err)}` }],
@@ -261,6 +265,40 @@ function serializeResult(result: unknown, status: number): string {
     return JSON.stringify({ success: true, status })
   }
   return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
+}
+
+/**
+ * Build a successful tool result. Always includes the JSON/text content block
+ * (the universally-supported representation). When the payload parses to a JSON
+ * *object*, it is ALSO attached as `structuredContent` so MCP clients that
+ * support structured output can consume it directly.
+ *
+ * No `outputSchema` is declared at registration, so this is purely additive and
+ * cannot break existing tools: `structuredContent` is only surfaced when the
+ * payload is a plain object (top-level arrays and primitives — which are not
+ * valid MCP `structuredContent` — fall back to text only).
+ */
+function successResult(text: string): {
+  content: { type: 'text'; text: string }[]
+  structuredContent?: Record<string, unknown>
+} {
+  const structured = toStructuredContent(text)
+  return structured
+    ? { content: [{ type: 'text', text }], structuredContent: structured }
+    : { content: [{ type: 'text', text }] }
+}
+
+/** Parse text to a plain JSON object for `structuredContent`, or undefined. */
+function toStructuredContent(text: string): Record<string, unknown> | undefined {
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>
+    }
+  } catch {
+    // Not JSON (or not parseable) — text content is the only representation.
+  }
+  return undefined
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

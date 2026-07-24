@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react"
 import { getPickerParams, getPickerError } from "@/lib/picker-params"
-import { submitPatientSelection } from "@/lib/api-client"
+import { submitPatientSelection, fetchBrandContext } from "@/lib/api-client"
 import { PatientList } from "@/components/PatientList"
 import { formatHumanName, AppHeader, Button, onAuthError, useScene } from "@proxy-smart/shared-ui"
 import { UserSearch, AlertTriangle, CheckCircle2, LogIn } from "lucide-react"
@@ -20,6 +20,17 @@ export default function App() {
     onAuthError((message) => {
       setAuthError(message)
       setTimeout(() => { window.location.href = window.location.origin }, 4000)
+    })
+  }, [])
+
+  // Theme the picker to the launching organization's brand colour (best-effort).
+  // Overrides the brandc contract's --primary/--maxhealth for this launch only.
+  useEffect(() => {
+    fetchBrandContext().then((brand) => {
+      if (!brand?.primaryColor) return
+      const root = document.documentElement
+      root.style.setProperty("--primary", brand.primaryColor)
+      root.style.setProperty("--maxhealth", brand.primaryColor)
     })
   }, [])
 

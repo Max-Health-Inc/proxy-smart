@@ -15,6 +15,9 @@ on:
 permissions:
   contents: write
   pull-requests: read
+  # Propagates down orchestrator -> build-and-test so bun can install
+  # @max-health-inc/shared-ui from GitHub Packages. (release-beta already grants this.)
+  packages: read
 
 concurrency:
   group: releases-alpha

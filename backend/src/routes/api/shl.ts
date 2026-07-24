@@ -19,10 +19,23 @@ import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { logger } from '@/lib/logger'
-import { getAllServers } from '@/lib/fhir-server-store'
+import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
+import { emitShareConsent, isShareConsentRevoked } from '@/lib/consent/shl-consent'
+import { recordShlOpen } from '@/lib/consent/shl-audit'
 import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
-import { shlSessionStore } from '@/lib/shl-session-store'
+import { getPublishedApps } from '@/lib/app-store-config'
+import { resolveClientLaunchUrl } from '@/lib/client-launch-url'
+import { shlSessionStore, type ShareScope, type ShlSession } from '@/lib/shl-session-store'
+import {
+  isDicomPathAllowed,
+  scopeFhirRequest,
+  isSelectiveScopeActive,
+  preScreenSelectiveRequest,
+  applySelectiveFilter,
+  emptySearchBundle,
+  type SelectiveScope,
+} from '@/lib/shl-scope'
 import * as crypto from 'crypto'
 
 // KTC doesn't support smart-api-access yet (in their Future Work).
@@ -32,62 +45,8 @@ const SMART_API_ACCESS = 'application/smart-api-access' as SHLFileContentType
 // ── SHL Session Store (SQLite-persisted, survives restarts) ─────────────────
 // See @/lib/shl-session-store for implementation.
 // The store handles TTL cleanup and provides both ID and token-based lookups.
-
-// ── Service Account Token Cache ─────────────────────────────────────────────
-
-let serviceAccountToken: { token: string; expiresAt: number } | null = null
-
-/** Get a Keycloak service account token (client_credentials grant), cached until near-expiry */
-async function getServiceAccountToken(): Promise<string> {
-  // Return cached token if still valid (with 30s buffer)
-  if (serviceAccountToken && Date.now() < serviceAccountToken.expiresAt - 30_000) {
-    return serviceAccountToken.token
-  }
-
-  const kcBase = config.keycloak.baseUrl
-  const realm = config.keycloak.realm
-  if (!kcBase || !realm) throw new Error('Keycloak not configured')
-
-  const clientId = process.env.SHL_EXCHANGE_CLIENT_ID || 'shl-exchange'
-  const clientSecret = process.env.SHL_EXCHANGE_CLIENT_SECRET
-  if (!clientSecret) throw new Error('SHL_EXCHANGE_CLIENT_SECRET not configured')
-
-  const tokenUrl = `${kcBase}/realms/${realm}/protocol/openid-connect/token`
-  const resp = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope: 'openid patient/*.read',
-    }).toString(),
-  })
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({})) as Record<string, string>
-    logger.auth.error('SHL service account token failed', {
-      status: resp.status,
-      error: err.error,
-      description: err.error_description,
-    })
-    throw new Error(`Service account auth failed: ${err.error_description || resp.statusText}`)
-  }
-
-  const data = await resp.json() as { access_token: string; expires_in: number }
-  serviceAccountToken = {
-    token: data.access_token,
-    expiresAt: Date.now() + data.expires_in * 1000,
-  }
-  return data.access_token
-}
-
-/** Resolve the first available FHIR server URL */
-async function getDefaultFhirServerUrl(): Promise<string> {
-  const servers = await getAllServers()
-  if (servers.length > 0) return servers[0].url
-  return config.fhir.serverBases[0] || 'http://localhost:8081/fhir'
-}
+// Service-account token + default FHIR server URL live in @/lib/shl-service-account
+// so the SHL proxy and the SHL→Consent mirror share one token cache.
 
 // ── Route schemas ───────────────────────────────────────────────────────────
 
@@ -98,6 +57,12 @@ const CreateShlBody = t.Object({
   passcode: t.Optional(t.String({ description: 'Optional passcode to protect the SHL' })),
   expiresInMinutes: t.Optional(t.Number({ description: 'Expiry in minutes (default 60, max 4320 = 72h)', default: 60, minimum: 1 })),
   verifiedOnly: t.Optional(t.Boolean({ description: 'Whether to include only verified resources', default: false })),
+  shareScope: t.Optional(t.Object({
+    excludedTypes: t.Optional(t.Array(t.String(), { description: 'FHIR resource types fully hidden from the recipient (a whole category was deselected)' })),
+    excludedIds: t.Optional(t.Array(t.String(), { description: 'Individually hidden resources as "ResourceType/id"' })),
+    excludedObservationCategories: t.Optional(t.Array(t.String(), { description: 'Observation category codes fully hidden (e.g. vital-signs, laboratory)' })),
+  }, { description: 'Selective sharing: the patient de-selected some records/categories. Omit (or leave empty) to share everything.' })),
+  studyInstanceUID: t.Optional(t.String({ description: 'DICOM Study Instance UID — scope the SHL to a single imaging study' })),
   shortenUrl: t.Optional(t.Boolean({ description: 'Opt-in: shorten the viewer URL via go.maxhealth.tech (stored securely, auto-expires)', default: false })),
   maxUses: t.Optional(t.Number({ description: 'Maximum number of times the shortened URL can be accessed before expiring (only when shortenUrl is true)', minimum: 1 })),
 })
@@ -117,50 +82,116 @@ const ManifestRequest = t.Object({
 
 // ── SHL FHIR proxy handler ──────────────────────────────────────────────────
 
+/** True for FHIR/JSON responses we can safely parse and filter. */
+function isJsonContentType(contentType: string | null): boolean {
+  return !!contentType && /json/i.test(contentType)
+}
+
+/** Build the pure SelectiveScope from a session's persisted shareScope (all-empty when absent). */
+function sessionSelectiveScope(session: { shareScope?: ShareScope }): SelectiveScope {
+  return {
+    excludedTypes: session.shareScope?.excludedTypes ?? [],
+    excludedIds: session.shareScope?.excludedIds ?? [],
+    excludedObservationCategories: session.shareScope?.excludedObservationCategories ?? [],
+  }
+}
+
+/**
+ * Resolve + authorize an SHL bearer token for the proxy handlers: validates the
+ * session token, checks expiry, and confirms the backing consent has not been
+ * revoked in the consent portal. On failure sets the response status and returns
+ * `{ error }`; on success returns the session. Shared by the FHIR + DICOMweb
+ * proxy handlers so the checks (esp. revocation) live in exactly one place.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function authorizeShlBearer(headers: any, set: any): Promise<{ shlId: string; session: ShlSession } | { error: string }> {
+  const bearerToken = extractBearerToken(headers)
+  if (!bearerToken) {
+    set.status = 401
+    return { error: 'Bearer token required' }
+  }
+  const lookup = shlSessionStore.getByToken(bearerToken)
+  if (!lookup) {
+    set.status = 401
+    return { error: 'Invalid or expired session token' }
+  }
+  const { id: shlId, session } = lookup
+  if (Date.now() > session.expiresAt) {
+    shlSessionStore.delete(shlId)
+    set.status = 410
+    return { error: 'Share link has expired' }
+  }
+  if (await isShareConsentRevoked(shlId, session.fhirServerUrl)) {
+    set.status = 410
+    return { error: 'Share link has been revoked' }
+  }
+  return { shlId, session }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function shlFhirProxyHandler({ request, params, headers, set }: any) {
   try {
-    const bearerToken = extractBearerToken(headers)
-    if (!bearerToken) {
-      set.status = 401
-      return { error: 'Bearer token required' }
-    }
-
-    const lookup = shlSessionStore.getByToken(bearerToken)
-    if (!lookup) {
-      set.status = 401
-      return { error: 'Invalid or expired session token' }
-    }
-
-    const { id: shlId, session } = lookup
-
-    if (Date.now() > session.expiresAt) {
-      shlSessionStore.delete(shlId)
-      set.status = 410
-      return { error: 'Share link has expired' }
-    }
+    const auth = await authorizeShlBearer(headers, set)
+    if ('error' in auth) return auth
+    const { shlId, session } = auth
 
     // Extract the FHIR path after /fhir/ (empty string for base /fhir route)
     const fhirPath = (params as Record<string, string>)?.['*'] || ''
 
-    // Scope enforcement: only allow requests scoped to the session's patient
     const url = new URL(request.url)
-    const patientParam = url.searchParams.get('patient')
-    const pathSegments = fhirPath.split('/')
+    // Query string sent upstream. Study-scoped requests may rewrite this to force the scope filter.
+    let queryString = url.search
 
-    if (pathSegments[0] === 'Patient') {
-      if (pathSegments[1] && pathSegments[1] !== session.patientId) {
+    if (session.studyInstanceUID) {
+      // Study-scoped share: default-deny whitelist (Patient self, ImagingStudy search, metadata).
+      const decision = scopeFhirRequest(fhirPath, url.search, {
+        patientId: session.patientId,
+        studyInstanceUID: session.studyInstanceUID,
+      })
+      if (!decision.allowed) {
+        set.status = 403
+        return { error: 'Access denied: outside shared study scope' }
+      }
+      if (decision.rewrittenSearch !== undefined) queryString = decision.rewrittenSearch
+    } else {
+      // Whole-patient share: unchanged legacy patient-scope enforcement.
+      const patientParam = url.searchParams.get('patient')
+      const pathSegments = fhirPath.split('/')
+
+      if (pathSegments[0] === 'Patient') {
+        if (pathSegments[1] && pathSegments[1] !== session.patientId) {
+          set.status = 403
+          return { error: 'Access denied: patient scope mismatch' }
+        }
+      } else if (patientParam && patientParam !== `Patient/${session.patientId}` && patientParam !== session.patientId) {
         set.status = 403
         return { error: 'Access denied: patient scope mismatch' }
       }
-    } else if (patientParam && patientParam !== `Patient/${session.patientId}` && patientParam !== session.patientId) {
-      set.status = 403
-      return { error: 'Access denied: patient scope mismatch' }
     }
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       set.status = 405
       return { error: 'Only read operations are allowed on shared links' }
+    }
+
+    // Selective sharing (record/category de-selection) — whole-patient shares only.
+    // Study-scoped shares have their own stricter whitelist above.
+    const selective = sessionSelectiveScope(session)
+    const selectiveActive = !session.studyInstanceUID && isSelectiveScopeActive(selective)
+    if (selectiveActive) {
+      const pre = preScreenSelectiveRequest(fhirPath, url.search, selective)
+      if (pre.action === 'deny') {
+        set.status = 404
+        set.headers['access-control-allow-origin'] = '*'
+        return { error: 'Resource not found or not shared' }
+      }
+      if (pre.action === 'empty-bundle') {
+        set.status = 200
+        set.headers['content-type'] = 'application/fhir+json'
+        set.headers['access-control-allow-origin'] = '*'
+        set.headers['access-control-allow-headers'] = 'Authorization, Content-Type'
+        return JSON.stringify(emptySearchBundle())
+      }
     }
 
     let serviceToken: string
@@ -173,7 +204,6 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
       return { error: `Service account auth unavailable: ${msg}` }
     }
 
-    const queryString = url.search
     const targetUrl = `${session.fhirServerUrl}/${fhirPath}${queryString}`
 
     let resp: Response
@@ -209,6 +239,25 @@ async function shlFhirProxyHandler({ request, params, headers, set }: any) {
     // Rewrite upstream FHIR URLs to point through the SHL proxy
     const text = await resp.text()
     const proxyBase = `${config.baseUrl}/api/shl/fhir`
+
+    // Post-filter for selective shares: drop de-selected entries from search
+    // Bundles, and 404 a single de-selected read. Defense-in-depth on top of the
+    // pre-screen, and the only line of defense for searches that mix kept + hidden
+    // items (e.g. an Observation search spanning several categories).
+    if (selectiveActive && resp.ok && isJsonContentType(contentType)) {
+      try {
+        const parsed: unknown = JSON.parse(text)
+        const filtered = applySelectiveFilter(parsed, selective)
+        if (filtered.denied) {
+          set.status = 404
+          return { error: 'Resource not found or not shared' }
+        }
+        return JSON.stringify(filtered.body).replaceAll(session.fhirServerUrl, proxyBase)
+      } catch {
+        // Not JSON (or malformed) — fall through to the raw passthrough below.
+      }
+    }
+
     return text.replaceAll(session.fhirServerUrl, proxyBase)
   } catch (error) {
     logger.auth.error('SHL FHIR proxy error', { error })
@@ -238,25 +287,9 @@ function buildDicomAuthHeader(server: { authType?: string; authHeader?: string; 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
   try {
-    const bearerToken = extractBearerToken(headers)
-    if (!bearerToken) {
-      set.status = 401
-      return { error: 'Bearer token required' }
-    }
-
-    const lookup = shlSessionStore.getByToken(bearerToken)
-    if (!lookup) {
-      set.status = 401
-      return { error: 'Invalid or expired session token' }
-    }
-
-    const { id: shlId, session } = lookup
-
-    if (Date.now() > session.expiresAt) {
-      shlSessionStore.delete(shlId)
-      set.status = 410
-      return { error: 'Share link has expired' }
-    }
+    const auth = await authorizeShlBearer(headers, set)
+    if ('error' in auth) return auth
+    const { shlId, session } = auth
 
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       set.status = 405
@@ -272,7 +305,15 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
 
     const dicomPath = (params as Record<string, string>)?.['*'] || ''
     const url = new URL(request.url)
-    const targetUrl = `${dicomServer.baseUrl.replace(/\/+$/, '')}/${dicomPath}${url.search}`
+
+    // Study-scope enforcement: default-deny anything outside the shared study.
+    const decision = isDicomPathAllowed(dicomPath, url.search, session.studyInstanceUID)
+    if (!decision.allowed) {
+      set.status = 403
+      return { error: 'Access denied: outside shared study scope' }
+    }
+    const queryString = decision.rewrittenSearch !== undefined ? decision.rewrittenSearch : url.search
+    const targetUrl = `${dicomServer.baseUrl.replace(/\/+$/, '')}/${dicomPath}${queryString}`
 
     // Build upstream headers
     const upstreamHeaders = new Headers()
@@ -366,8 +407,22 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       // Resolve the upstream FHIR server URL
       const fhirServerUrl = await getDefaultFhirServerUrl()
 
+      // Normalize the selective-sharing scope. Persist it only when it actually
+      // narrows the share; an omitted or all-empty scope stays undefined so the
+      // proxy takes the untouched "share everything" path.
+      const excludedTypes = body.shareScope?.excludedTypes ?? []
+      const excludedIds = body.shareScope?.excludedIds ?? []
+      const excludedObservationCategories = body.shareScope?.excludedObservationCategories ?? []
+      const shareScope: ShareScope | undefined =
+        excludedTypes.length + excludedIds.length + excludedObservationCategories.length > 0
+          ? { excludedTypes, excludedIds, excludedObservationCategories }
+          : undefined
+
       // Build the SMART API Access token response (per SHL spec)
-      // aud points to our FHIR proxy — the viewer never talks to the real FHIR server
+      // aud points to our FHIR proxy — the viewer never talks to the real FHIR server.
+      // `complete` is a non-standard hint for our own viewer: false when the patient
+      // de-selected records, so the recipient can be told the summary is partial
+      // (qualitative only — no counts leak). Only the key holder can read it (JWE).
       const smartApiAccess = JSON.stringify({
         access_token: sessionToken,
         token_type: 'Bearer',
@@ -375,6 +430,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         scope: 'patient/*.read',
         patient: patientId,
         aud: `${config.baseUrl}/api/shl/fhir`,
+        complete: !shareScope,
       })
 
       // Generate SHL using kill-the-clipboard
@@ -400,23 +456,54 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         : undefined
 
       // Store session (proxy token → patient data mapping, no real tokens)
-      shlSessionStore.set(shlId, {
+      const session = {
         shl: shl.payload,
         jwe,
         sessionToken,
         patientId,
+        studyInstanceUID: body.studyInstanceUID,
         fhirServerUrl,
         expiresAt,
         verifiedOnly: body.verifiedOnly ?? false,
+        shareScope,
         accessCount: 0,
         passcodeHash,
-      })
+      }
+      shlSessionStore.set(shlId, session)
 
-      // Build the SHL URI and viewer URL
+      // Mirror the share into a FHIR Consent so active SHLs surface in the
+      // consent portal alongside every other grant. Best-effort: never blocks
+      // SHL creation (see @/lib/consent/shl-consent).
+      await emitShareConsent(shlId, session)
+
+      // Build the SHL URI and viewer URL.
+      // Open the recipient in the SMART app that MINTED the share, at that app's
+      // registered launch URL — so a per-study share minted by the DICOM viewer
+      // opens in the viewer itself instead of an almost-empty patient portal.
+      // The launch URL lives on the app's Keycloak client (`launch_url`, set via
+      // Smart Apps); prefer that, then a published app-store entry, then the
+      // patient portal. No per-env config or manual publish needed.
       const shlinkURI = shl.toURI()
       const shlinkPayload = shlinkURI.replace('shlink:/', '')
-      const portalBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
-      const viewerUrl = `${portalBase.replace(/\/$/, '')}/#${shlinkURI}`
+      const creatingClient = String(tokenPayload.azp ?? tokenPayload.client_id ?? '')
+      const launchUrl =
+        (await resolveClientLaunchUrl(creatingClient)) ??
+        (creatingClient
+          ? getPublishedApps().find((a) => a.clientId === creatingClient)?.launchUrl
+          : undefined)
+      let viewerBase = config.brand.portalUrl || `${config.baseUrl}/apps/patient-portal/`
+      if (launchUrl) {
+        try {
+          // Keep the app's path (its SPA base, e.g. /apps/patient-portal/) — using
+          // only `.origin` drops it and the SHL fragment lands on the host root.
+          // A root-only launch URL carries no app path, so keep the portal fallback.
+          const u = new URL(launchUrl)
+          if (u.pathname && u.pathname !== '/') viewerBase = `${u.origin}${u.pathname}`
+        } catch {
+          // malformed launch URL — keep the portal fallback
+        }
+      }
+      const viewerUrl = `${viewerBase.replace(/\/$/, '')}/#${shlinkURI}`
 
       // Shorten the viewer URL for QR codes / messaging (opt-in, best-effort)
       const shortUrl = body.shortenUrl
@@ -461,18 +548,26 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
    * Returns spec-compliant manifest with JWE-encrypted smart-api-access file.
    * kill-the-clipboard builds URLs as {baseManifestURL}{key}/{id}
    */
-  .post('/:key/:id', async ({ params, body, set }) => {
+  .post('/:key/:id', async ({ params, body, set, request }) => {
     const entry = shlSessionStore.get(params.id)
     if (!entry) {
       set.status = 404
       return { error: 'SHL not found or expired' }
     }
 
-    // Check expiry
+    // Check expiry. SHL spec: a no-longer-active link SHALL return 404.
     if (Date.now() > entry.expiresAt) {
       shlSessionStore.delete(params.id)
-      set.status = 410
-      return { error: 'SHL has expired' }
+      set.status = 404
+      return { error: 'SHL not found or expired' }
+    }
+
+    // Revoked in the consent portal (backing Consent flipped inactive)? Deny.
+    // Same check guards the FHIR + DICOMweb proxy handlers above. Spec: 404 for
+    // a no-longer-active link.
+    if (await isShareConsentRevoked(params.id, entry.fhirServerUrl)) {
+      set.status = 404
+      return { error: 'SHL not found or expired' }
     }
 
     // Passcode validation (per SHL spec)
@@ -488,7 +583,11 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       }
     }
 
+    // Count this open, track the (fingerprinted) recipient/device for the
+    // distinct-devices metric, and record a FHIR access AuditEvent (best-effort).
     shlSessionStore.incrementAccessCount(params.id)
+    const ipAddress = (request.headers.get('x-forwarded-for')?.split(',')[0] || request.headers.get('x-real-ip') || '').trim()
+    await recordShlOpen(params.id, entry, { recipient: body.recipient, ipAddress: ipAddress || undefined, userAgent: request.headers.get('user-agent') || undefined })
 
     logger.auth.info('SHL manifest accessed', {
       shlId: params.id,

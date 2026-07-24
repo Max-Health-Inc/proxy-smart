@@ -11,8 +11,13 @@ linker = "isolated"
 minimumReleaseAge = 0 # Allow all packages regardless of age
 
 [install.scopes]
-# Resolve @max-health-inc packages from GitHub Packages
-"@max-health-inc" = "https://npm.pkg.github.com"
+# Resolve @max-health-inc packages (e.g. shared-ui) from GitHub Packages.
+# GitHub Packages npm requires a token even for public packages, so bun reads
+# it from $GH_PACKAGES_TOKEN. In CI/Docker this is the workflow GITHUB_TOKEN
+# (packages: read); locally, `export GH_PACKAGES_TOKEN=$(gh auth token)`.
+"@max-health-inc" = { url = "https://npm.pkg.github.com", token = "$GH_PACKAGES_TOKEN" }
+# NOTE: the brand-token contract is now the public-npm package `brandc` (renamed
+# from @max-network/css), so no private-registry scope/token is needed for it.
 
 # Security scanner (Socket.dev)
 # [install.security]

@@ -1,4 +1,4 @@
-import { Activity, Shield, Settings } from 'lucide-react';
+import { Activity, Shield, Settings, Bot } from 'lucide-react';
 import { StatCard } from '@proxy-smart/shared-ui';
 import type { SmartApp } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +15,7 @@ export function SmartAppsStatistics({ apps }: SmartAppsStatisticsProps) {
       <StatCard icon={Shield} label={t('EHR Launch')} value={apps.filter(app => app.appType === 'ehr-launch').length} color="emerald" />
       <StatCard icon={Activity} label={t('Standalone')} value={apps.filter(app => app.appType === 'standalone-app').length} color="blue" />
       <StatCard icon={Settings} label={t('Backend Service')} value={apps.filter(app => app.appType === 'backend-service').length} color="orange" />
-      <StatCard icon={Activity} label={t('AI Agents')} value={apps.filter(app => app.appType === 'agent').length} color="violet" iconElement={<span className="text-sm">🤖</span>} />
+      <StatCard icon={Bot} label={t('AI Agents')} value={apps.filter(app => app.appType === 'agent').length} color="violet" />
     </div>
   );
 }

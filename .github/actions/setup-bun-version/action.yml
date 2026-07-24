@@ -31,20 +31,20 @@ runs:
   steps:
   - name: Checkout code
     if: inputs.checkout == 'true'
-    uses: actions/checkout@v4
+    uses: actions/checkout@v6
     with:
       fetch-depth: ${{ inputs.fetch-depth }}
       token: ${{ inputs.token }}
       ref: ${{ inputs.ref }}
 
   - name: Setup Node.js
-    uses: actions/setup-node@v4
+    uses: actions/setup-node@v6
     with:
       node-version: ${{ inputs.node-version }}
 
   - name: Cache Bun binary
     id: cache-bun
-    uses: actions/cache@v4
+    uses: actions/cache@v5
     with:
       path: ~/.bun
       key: ${{ runner.os }}-bun-binary-${{ inputs.bun-version }}
@@ -57,15 +57,18 @@ runs:
       bun-version: ${{ inputs.bun-version }}
 
   - name: Cache Bun dependencies
-    uses: actions/cache@v4
+    uses: actions/cache@v5
     with:
+      # Cache ONLY bun's content-addressable global tarball/bunx caches, never the
+      # project node_modules. Caching node_modules is fragile with bun's isolated
+      # linker: restoring a stale node_modules across a lockfile change (e.g. the
+      # shared-ui github:->registry migration, or an unpublished pinned version)
+      # wedges `bun install`. node_modules is cheap to relink from the global cache.
+      # The v2 key abandons the previously poisoned cache lineage.
       path: |
-        backend/node_modules
-        ui/node_modules
-        node_modules
         ~/.bun/install/cache
         ~/.cache/bunx
         ~/.local/share/bunx
-      key: ${{ runner.os }}-bun-deps-${{ hashFiles('**/bun.lock', '**/package.json') }}
+      key: ${{ runner.os }}-bun-cache-v2-${{ hashFiles('**/bun.lock') }}
       restore-keys: |
-        ${{ runner.os }}-bun-deps-
+        ${{ runner.os }}-bun-cache-v2-

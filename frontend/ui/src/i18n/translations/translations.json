@@ -4499,7 +4499,7 @@
   "— Keycloak Default —": [
     "— Keycloak-Standard —"
   ],
-  "⚠️ Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?": [
-    "⚠️ Warnung: Das Ändern der Keycloak-URL oder Client-Konfiguration kann Sie aus dem System abmelden. Möglicherweise müssen Sie sich nach Änderungen erneut anmelden. Möchten Sie fortfahren?"
+  "Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?": [
+    "Warnung: Das Ändern der Keycloak-URL oder Client-Konfiguration kann Sie aus dem System abmelden. Möglicherweise müssen Sie sich nach Änderungen erneut anmelden. Möchten Sie fortfahren?"
   ]
 }

@@ -11,6 +11,7 @@ import { adminAuditLogger } from './lib/admin-audit-logger'
 import { emailEventsLogger } from './lib/email-events-logger'
 import { authEventsLogger } from './lib/auth-events-logger'
 import { createApp } from './app-factory'
+import { startShareConsentReconciler } from './lib/consent/shl-consent'
 import { existsSync, readFileSync } from 'fs'
 
 // Security guard: refuse to start with dev auth bypass in production
@@ -75,6 +76,9 @@ initializeServer()
 
       app.listen(listenOptions, async () => {
         logger.server.info(`🚀 Server successfully started on port ${config.port}`)
+        // Repair any SHL shares whose Consent mirror never landed, so every
+        // active link stays revocable via the consent portal.
+        startShareConsentReconciler()
         await displayServerEndpoints()
       })
     } catch (listenError) {

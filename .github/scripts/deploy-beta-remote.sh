@@ -399,7 +399,10 @@ JSON
       ensure_audience_mapper 'mcp-resource-audience' 'mcp-resource-server'
 
       # Step 3: attach the scope as a DEFAULT client scope on each SMART app.
-      for SMART_CLIENT in admin-ui mcp-client patient-portal dicom-viewer consent-app dtr-app; do
+      # inferno-test-client is included here (not left to the compliance workflow)
+      # because that workflow cannot authenticate to the beta KC admin API, so its
+      # own scope-attach never runs; this deploy path has working master-admin auth.
+      for SMART_CLIENT in admin-ui mcp-client patient-portal dicom-viewer consent-app dtr-app inferno-test-client; do
         SC_UUID=$(curl -sf "${KC_CLIENTS}?clientId=${SMART_CLIENT}" \
           -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null \
           | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)

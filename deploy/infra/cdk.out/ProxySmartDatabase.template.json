@@ -266,7 +266,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOywrCMBBFv8V9OmpAXPsAcSVY9zJNR43aVDITi4T8u9Sq+Fidy71ncTXo0RgGPWw4M+UpO9sCYi5oTgob3kYyGmJOJngrt4Wvw0XNdu6rSIrJeBKu0OGe/MP3JE+xTR026PckExE0h4rch/C7JOVLhjhHwQKZlo4FnSGVh8KRvG/Mp3/FS03KYgVxXZ+pHVqm1KZVkEuQpFxdEhy5f9UahhoGvSNbm/ngxFYE6453L3X3eB4BAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOywrCMBBFv8V9OmpEXPsAcSVY9zJNR021qWQmioT8u9QXPlbncu9ZXA16OIJeBy+cmfKQHW0BMRc0B4UX3kQyGmJOJngr17lvwklNt+6rSIrJeBKu0eGO/N33JE+xTQ+s0e9IxiJo9jW5D+F3ScqXDHGGggUyLRwLOkMqD4Ujed+YTf6Kl5qUxRriqjlSO7RMqU3LIKcgSbmmJKi4e9Ya9AD6nYqtzXxwYmuC1YM3m8IX2x4BAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartDatabase/CDKMetadata/Default"

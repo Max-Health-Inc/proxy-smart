@@ -268,12 +268,12 @@ def main():
         rel = os.path.relpath(filepath, os.path.join(UI_SRC, '..'))
         try:
             if process_file(filepath):
-                print(f"  ✓ Updated: {rel}")
+                print(f"  Updated: {rel}")
                 updated += 1
             else:
                 print(f"  - Skipped (no user-visible text): {rel}")
         except Exception as e:
-            print(f"  ✗ Error in {rel}: {e}")
+            print(f"  Error in {rel}: {e}")
     
     print(f"\nDone: {updated}/{len(files)} files updated")
 

@@ -90,7 +90,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: Max-Health-Inc
 
@@ -126,6 +126,8 @@ jobs:
           build-args: |
             VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
             DEPLOY_ENV=beta
+          secrets: |
+            gh_packages_token=${{ secrets.GITHUB_TOKEN }}
           cache-from: type=gha,scope=beta-backend-v2
           cache-to: type=gha,mode=max,scope=beta-backend-v2
 

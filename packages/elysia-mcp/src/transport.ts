@@ -125,17 +125,18 @@ export function registerToolsOnServer(server: McpServer, ctx: RegistrationContex
     const inputSchema = getMergedInputSchema(meta)
     const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
     const description = generateToolDescription(toolName, meta)
+    const annotations = meta.annotations
 
     if (zodSchema) {
       server.registerTool(
         toolName,
-        { description, inputSchema: zodSchema },
+        { description, inputSchema: zodSchema, annotations },
         async (args: unknown) => executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, options.contextDecorators),
       )
     } else {
       server.registerTool(
         toolName,
-        { description },
+        { description, annotations },
         async () => executeTool(toolName, meta, {}, tokenRef.current, options.contextDecorators),
       )
     }

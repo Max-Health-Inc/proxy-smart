@@ -18,7 +18,8 @@
 # Required env vars (set in .env.beta):
 #   KC_DB_PASSWORD, POSTGRES_PASSWORD, KEYCLOAK_ADMIN_PASSWORD,
 #   KEYCLOAK_ADMIN_CLIENT_SECRET, VITE_ENCRYPTION_SECRET,
-#   SHL_EXCHANGE_CLIENT_SECRET (optional, defaults to shl-exchange-dev-secret)
+#   SHL_EXCHANGE_CLIENT_SECRET (required — the backend reconciles Keycloak's
+#     shl-exchange client to this value at startup)
 
 services:
   keycloak:
@@ -39,6 +40,9 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: postgres
       KC_DB_PASSWORD: ${KC_DB_PASSWORD:?Set KC_DB_PASSWORD}
+      # Cap the Keycloak DB pool (default 100 would alone exhaust the shared
+      # Postgres). 30 is ample for this single-instance deployment.
+      KC_DB_POOL_MAX_SIZE: "30"
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
     labels:
@@ -73,6 +77,17 @@ services:
     container_name: proxy-smart-postgres-beta
     restart: unless-stopped
     mem_limit: 512m
+    # One Postgres serves four DBs (keycloak, hapi, orthanc, proxy_smart). The
+    # default max_connections=100 is exhausted under concurrent load (Inferno's
+    # OAuth storm + FHIR reads) once Keycloak's pool ramps up, surfacing as
+    # "sorry, too many clients already". Raise the ceiling; the per-service pool
+    # caps below keep actual usage well under it.
+    command:
+      - postgres
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=128MB
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: postgres
@@ -110,7 +125,10 @@ services:
       # ephemeral, per-task container files and diverge under scale-out / restart.
       DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@postgres:5432/proxy_smart
       SHL_EXCHANGE_CLIENT_ID: shl-exchange
-      SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:-shl-exchange-dev-secret}
+      # No public default — a missing secret must fail loudly, not silently
+      # authenticate with a known value. The backend reconciles Keycloak's
+      # shl-exchange client to this at startup (ensureShlExchangeClient).
+      SHL_EXCHANGE_CLIENT_SECRET: ${SHL_EXCHANGE_CLIENT_SECRET:?Set SHL_EXCHANGE_CLIENT_SECRET}
       FHIR_SERVER_BASE: http://hapi-fhir:8080/fhir
       CORS_ORIGINS: https://beta.proxy-smart.com,http://localhost:4567
       DICOMWEB_BASE_URL: http://orthanc:8042/dicom-web
@@ -158,6 +176,9 @@ services:
       spring.datasource.username: postgres
       spring.datasource.password: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
       spring.datasource.driverClassName: org.postgresql.Driver
+      # Bound HAPI's Hikari pool explicitly (default 10) so the shared-Postgres
+      # connection budget stays deterministic under concurrent FHIR load.
+      spring.datasource.hikari.maximum-pool-size: "15"
       spring.jpa.properties.hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
       hapi.fhir.fhir_version: R4
       hapi.fhir.cors.allow_Credentials: "true"

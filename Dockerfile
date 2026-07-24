@@ -12,8 +12,10 @@ RUN apt-get update -qq && \
     python-is-python3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy root package files first
-COPY package.json bun.lock ./
+# Copy root package files first. bunfig.toml is required so bun can map the
+# @max-health-inc scope to GitHub Packages (and read $GH_PACKAGES_TOKEN); without
+# it, `bun install` cannot authenticate @max-health-inc/shared-ui and stalls.
+COPY package.json bun.lock bunfig.toml ./
 
 # Copy root lib (contains shared tarballs like smart-app-launch-generated.tgz)
 COPY lib/ ./lib/
@@ -29,8 +31,14 @@ COPY packages/elysia-mcp/package.json ./packages/elysia-mcp/
 # Strip workspaces not included in Docker build to avoid install failures
 RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/elysia-mcp","packages/patient-picker","frontend/ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
-# Install dependencies for Docker-relevant workspaces only
-RUN bun install
+# Install dependencies for Docker-relevant workspaces only.
+# @max-health-inc/shared-ui resolves from GitHub Packages, which requires a token
+# even for public packages. The token is provided as a BuildKit secret (never
+# baked into an image layer) and exported to $GH_PACKAGES_TOKEN, which bunfig.toml
+# reads for the @max-health-inc scope.
+RUN --mount=type=secret,id=gh_packages_token \
+    GH_PACKAGES_TOKEN="$(cat /run/secrets/gh_packages_token 2>/dev/null || true)" \
+    sh -c 'for a in 1 2 3; do echo "bun install attempt $a"; timeout 360 bun install --network-concurrency=16 && exit 0; echo "attempt $a stalled; retrying with warmer cache"; done; exit 1'
 
 # Copy shared Vite config (imported by all SMART apps via ../../config/vite-config)
 COPY config/ ./config/

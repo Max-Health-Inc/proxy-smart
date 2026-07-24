@@ -39,7 +39,7 @@ function setTabInHash(tab: string) {
 
 export function AdminApp() {
     const [currentView, setCurrentView] = useState<string>(() => getTabFromHash());
-    const { isAuthenticated, loading, profile, clientApis } = useAuth();
+    const { isAuthenticated, loading, profile } = useAuth();
     const { activeTab, setActiveTab } = useAppStore();
     const { t } = useTranslation();
     const [bootstrapBannerDismissed, setBootstrapBannerDismissed] = useState(false);

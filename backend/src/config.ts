@@ -99,7 +99,24 @@ export const config = {
       return `${base}/realms/${this.realm}`
     },
   },
-  
+
+  // SMART Health Link token-exchange client (RFC 8693). Confidential Keycloak
+  // service-account client the SHL flow authenticates as to mint scoped,
+  // short-lived tokens. The secret is the single source of truth — Keycloak is
+  // reconciled to it at startup (see ensureShlExchangeClient), so it must never
+  // be hardcoded in realm-export. Fails closed: no secret ⇒ SHL disabled.
+  shlExchange: {
+    get clientId() {
+      return process.env.SHL_EXCHANGE_CLIENT_ID || 'shl-exchange'
+    },
+    get clientSecret() {
+      return process.env.SHL_EXCHANGE_CLIENT_SECRET || null
+    },
+    get isConfigured() {
+      return !!this.clientSecret
+    },
+  },
+
   fhir: {
     // Support multiple FHIR servers - can be a single URL or comma-separated list
     serverBases: (process.env.FHIR_SERVER_BASE ?? 'http://localhost:8081/fhir').split(',').map(s => s.trim()),
@@ -143,6 +160,8 @@ export const config = {
     get identifier() { return process.env.BRAND_IDENTIFIER || process.env.BRAND_WEBSITE || process.env.BASE_URL || 'http://localhost:8445' },
     get loginTheme(): string | null { return process.env.BRAND_LOGIN_THEME || null },
     get appStoreUrl(): string | null { return process.env.BRAND_APP_STORE_URL || null },
+    get primaryColor(): string | null { return process.env.BRAND_PRIMARY_COLOR || null },
+    get accentColor(): string | null { return process.env.BRAND_ACCENT_COLOR || null },
   },
 
   ai: {
@@ -333,6 +352,25 @@ export const config = {
     },
     get enabled() {
       return process.env.URL_SHORTENER_ENABLED !== 'false'
+    },
+  },
+
+  // AGPL section 13 source offer. This software is dual-licensed
+  // (AGPL-3.0-or-later OR a commercial license); when it runs as a network
+  // service under the AGPL, users interacting with it over the network must be
+  // offered the corresponding source for the exact version deployed. The
+  // /source route and /.well-known/agpl-source discharge that obligation using
+  // these values (env-overridable for downstream self-hosters/forks).
+  source: {
+    get repositoryUrl() {
+      return process.env.SOURCE_REPOSITORY_URL || 'https://github.com/Max-Health-Inc/proxy-smart'
+    },
+    // SPDX expression — single source of truth, mirrors REUSE.toml / package.json.
+    get license() {
+      return process.env.SOURCE_LICENSE || 'AGPL-3.0-or-later OR LicenseRef-Commercial'
+    },
+    get commercialContact() {
+      return process.env.SOURCE_COMMERCIAL_CONTACT || 'hello@maxhealth.tech'
     },
   },
 

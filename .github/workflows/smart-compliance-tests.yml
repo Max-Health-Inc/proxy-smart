@@ -593,7 +593,7 @@ jobs:
             \"redirectUris\": [\"http://localhost:4567/*\", \"http://localhost:4567/custom/smart_stu2_2/redirect\", \"http://localhost:4567/custom/smart_stu2/redirect\"],
             \"webOrigins\": [\"http://localhost:4567\", \"*\"],
             \"fullScopeAllowed\": true,
-            \"defaultClientScopes\": [\"web-origins\", \"acr\", \"profile\", \"roles\", \"email\", \"openid\"],
+            \"defaultClientScopes\": [\"web-origins\", \"acr\", \"profile\", \"roles\", \"email\", \"openid\", \"resource-indicators\"],
             \"attributes\": {\"pkce.code.challenge.method\": \"S256\", \"use.refresh.tokens\": \"true\", \"oauth2.device.authorization.grant.enabled\": \"false\", \"oidc.ciba.grant.enabled\": \"false\", \"backchannel.logout.session.required\": \"true\"}
           }"
           
@@ -661,7 +661,29 @@ jobs:
               fi
             fi
           done
-          
+
+          # ── Step 3b: Attach resource-indicators as a DEFAULT client scope ──
+          # RFC 8707: this scope's audience mapper injects fhir-resource-server into
+          # the token aud so Keycloak's post-processor can bind the requested
+          # `resource` (otherwise token exchange → invalid_target). Keycloak's
+          # admin-API client-create does NOT honor `defaultClientScopes` in the
+          # create body for non-realm-default scopes, so it must be attached
+          # explicitly here (the deploy reconciles the scope itself onto beta).
+          RI_SCOPE_ID=$(curl -sf "$KC_URL/admin/realms/$KC_REALM/client-scopes" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" | jq -r '.[] | select(.name == "resource-indicators") | .id')
+          if [ -n "$RI_SCOPE_ID" ] && [ "$RI_SCOPE_ID" != "null" ]; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+              "$KC_URL/admin/realms/$KC_REALM/clients/$INTERNAL_ID/default-client-scopes/$RI_SCOPE_ID" \
+              -H "Authorization: Bearer $ADMIN_TOKEN")
+            if [ "$HTTP_CODE" = "204" ]; then
+              echo "  ✓ Attached resource-indicators default scope to client"
+            else
+              echo "  WARNING: Failed to attach resource-indicators (HTTP $HTTP_CODE)"
+            fi
+          else
+            echo "  WARNING: resource-indicators scope not found in realm — token exchange will fail with invalid_target"
+          fi
+
           echo "✓ Inferno test client configured with SMART scopes"
           
           # ── Step 4: Verify client configuration ──

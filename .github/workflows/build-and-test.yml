@@ -37,11 +37,16 @@ on:
 
 permissions:
   contents: read
+  # Needed so bun can install @max-health-inc/shared-ui from GitHub Packages.
+  packages: read
 
 jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    # Hard cap so a hung step (e.g. a `bun install` waiting on registry/git auth)
+    # fails fast instead of running to GitHub's 6h default.
+    timeout-minutes: 40
     outputs:
       backend_success: ${{ steps.backend-build.outcome == 'success' || steps.backend-build-heal.outputs.fixed == 'true' }}
       frontend_success: ${{ steps.frontend-build.outcome == 'success' || steps.frontend-build-heal.outputs.fixed == 'true' }}
@@ -57,9 +62,31 @@ jobs:
 
     # Install Dependencies
     - name: Install Dependencies (Workspace)
+      timeout-minutes: 20
+      # GH_PACKAGES_TOKEN lets bun install @max-health-inc/shared-ui from GitHub
+      # Packages (see bunfig.toml). GITHUB_TOKEN with packages:read suffices since
+      # the package is public.
+      env:
+        GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # A cold `bun install` on this runner reliably completes ~most downloads then
+      # wedges on the final few: bun keeps HTTP keep-alive connections and has no
+      # read timeout, so a connection the runner's NAT silently dropped is waited on
+      # forever. Locally (slower network) it never hits that state. Mitigate two
+      # ways: cap network concurrency (fewer stale sockets), and retry with a hard
+      # per-attempt timeout so a wedged attempt is killed and retried on fresh
+      # connections with the cache now partially warm. Last attempt is verbose so a
+      # persistent failure is diagnosable.
       run: |
-        echo "📦 Installing all dependencies via workspace..."
-        bun install
+        echo "Installing all dependencies via workspace..."
+        for attempt in 1 2 3; do
+          echo "::group::bun install attempt $attempt"
+          V=""; [ "$attempt" = "3" ] && V="--verbose"
+          if timeout 360 bun install --network-concurrency=16 $V; then
+            echo "::endgroup::"; echo "install succeeded on attempt $attempt"; exit 0
+          fi
+          echo "::endgroup::"; echo "attempt $attempt stalled/failed; retrying with warmer cache"
+        done
+        echo "bun install failed after 3 attempts" >&2; exit 1
 
     # === BACKEND BUILD ===
     - name: Build Backend

@@ -6,7 +6,7 @@
  */
 
 import type { TSchema } from '@sinclair/typebox'
-import type { ToolMetadata, ResourceMetadata } from './types'
+import type { ToolMetadata, ResourceMetadata, ToolAnnotations } from './types'
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -73,10 +73,41 @@ export function extractRouteTools(app: unknown, options?: IntrospectOptions): Ma
       paramsSchema,
       public: meta?.public ?? false,
       readOnly: isGet,
+      annotations: annotationsForMethod(method),
     })
   }
 
   return tools
+}
+
+/**
+ * Derive MCP tool behavioural hints from the HTTP method, mapping REST
+ * semantics onto the spec's annotation flags. These are advisory hints for
+ * clients (e.g. to confirm before a destructive call), not a security control.
+ *
+ * - GET     → read-only + idempotent
+ * - DELETE  → destructive + idempotent (deleting again yields the same state)
+ * - PUT     → idempotent full-replace; not data-destroying
+ * - PATCH   → partial update; not guaranteed idempotent
+ * - POST    → create; additive, not idempotent, not destructive
+ *
+ * `openWorldHint` is false for every route: these tools act on the app's own
+ * admin surface (a closed domain), not an open/external world.
+ */
+export function annotationsForMethod(method: string): ToolAnnotations {
+  switch (method.toUpperCase()) {
+    case 'GET':
+      return { readOnlyHint: true, idempotentHint: true, openWorldHint: false }
+    case 'DELETE':
+      return { readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: false }
+    case 'PUT':
+      return { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
+    case 'PATCH':
+      return { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
+    case 'POST':
+    default:
+      return { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false }
+  }
 }
 
 /**

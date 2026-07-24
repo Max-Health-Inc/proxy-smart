@@ -190,7 +190,7 @@ export const getStoredToken = async (): Promise<string | null> => {
     // Note: We return the token even if expired - let the server decide validity
     // The API error handler will catch 401s and trigger refresh if needed
   } catch (error) {
-    console.error('❌ Error retrieving stored token:', error);
+    console.error('Error retrieving stored token:', error);
     return null;
   }
 };

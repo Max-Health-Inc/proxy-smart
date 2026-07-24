@@ -43,15 +43,15 @@ export const useAppStore = create<AppState>()(
       setLanguage: async (language: string) => {
         
         try {
-          console.debug('🔄 Attempting to change i18n language to:', language);
+          console.debug('Attempting to change i18n language to:', language);
           await i18n.changeLanguage(language);
-          console.debug('✅ i18n language changed successfully to:', i18n.language);
+          console.debug('i18n language changed successfully to:', i18n.language);
           
           // Update store state
           set({ language });
           window.dispatchEvent(new CustomEvent('languageChanged', { detail: { language } }));
         } catch (error) {
-          console.error('❌ Failed to change language:', error);
+          console.error('Failed to change language:', error);
         }
       },
       

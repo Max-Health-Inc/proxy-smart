@@ -1,26 +1,26 @@
 {
   "name": "proxy-smart",
-  "version": "0.2.13-RELEASE.202606161856.6b78ee484",
+  "version": "0.2.13-alpha.202607241513.91cfdf6c8",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@tailwindcss/vite": "^4.3.0",
-    "@types/fhir": "^0.0.43",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/fhir": "^0.0.44",
     "@vitejs/plugin-react-swc": "^4.3.1",
-    "babelfhir-ts": "^1.5.7",
-    "concurrently": "^10.0.0",
+    "babelfhir-ts": "^1.5.17",
+    "concurrently": "^10.0.3",
     "cross-env": "^10.1.0",
-    "eslint": "^10.4.0",
+    "eslint": "^10.7.0",
     "glob": "^13.0.6",
-    "rollup": "^4.60.4",
+    "rollup": "^4.62.2",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.60.0",
-    "vite": "^8.0.14",
+    "typescript-eslint": "^8.64.0",
+    "vite": "^8.1.5",
     "vitepress": "^1.6.4",
-    "vue": "^3.5.35"
+    "vue": "^3.5.40"
   },
   "description": "Proxy Smart - Healthcare interoperability proxy with Keycloak integration",
   "engines": {
@@ -63,6 +63,7 @@
     "generate:ui": "cd backend && bun run export-openapi && cd ../frontend/ui && bun run generate",
     "generate:ui:normalized": "bun run generate:ui && git add --renormalize frontend/ui/src/lib/api-client/",
     "generate:test": "cd testing && bun run generate",
+    "fhir:build": "node fhir/build.mjs",
     "validate-api": "concurrently \"bun run validate-api:ui\" \"bun run validate-api:test\"",
     "validate-api:ui": "cd frontend/ui && bun run validate-api",
     "validate-api:test": "cd testing && bun run validate-api",
@@ -84,6 +85,9 @@
     "lint:dicom": "cd frontend/smart-dicom-template && bun run lint",
     "lint:infra": "cd deploy/infra && bun run lint",
     "lint:cli": "cd packages/cli && bun run lint",
+    "spdx:check": "node scripts/spdx.mjs --check --staged",
+    "spdx:add": "node scripts/spdx.mjs --add --staged",
+    "reuse:lint": "reuse lint",
     "lint:fix": "concurrently \"bun run lint:fix:backend\" \"bun run lint:fix:ui\" \"bun run lint:fix:dicom\" \"bun run lint:fix:infra\" \"bun run lint:fix:cli\"",
     "lint:fix:backend": "cd backend && bun run lint:fix",
     "lint:fix:ui": "cd frontend/ui && bun run lint:fix",
@@ -153,7 +157,8 @@
   "homepage": "https://beta.proxy-smart.com",
   "dependencies": {
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
-    "undici": "^8.3.0"
+    "maxhealth.consent-0.1.0-generated": "./lib/maxhealth.consent-0.1.0-generated.tgz",
+    "undici": "^8.7.0"
   },
   "overrides": {
     "zod": "4.3.6"

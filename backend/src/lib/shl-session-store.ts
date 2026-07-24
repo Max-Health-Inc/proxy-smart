@@ -14,6 +14,23 @@ import { DATA_DIR } from './paths'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+/**
+ * Selective-sharing scope for a whole-patient share. Absent (or with both lists
+ * empty) means "share everything" — byte-for-byte the legacy behavior. When
+ * present it narrows the share by hiding whole resource types and/or individual
+ * resources. Enforced server-side in the SHL FHIR proxy (see shl-scope.ts), so
+ * deselected records are genuinely unreachable by the recipient, not merely
+ * hidden in the viewer.
+ */
+export interface ShareScope {
+  /** FHIR resource types fully hidden (a whole category was deselected). */
+  excludedTypes: string[]
+  /** Individually hidden resources as `ResourceType/id`. */
+  excludedIds: string[]
+  /** Observation `category` codes fully hidden (e.g. `vital-signs`, `laboratory`). */
+  excludedObservationCategories: string[]
+}
+
 export interface ShlSession {
   /** SHL payload from kill-the-clipboard (for manifest serving) */
   shl: { url: string; key: string; exp?: number; flag?: string; label?: string }
@@ -23,12 +40,16 @@ export interface ShlSession {
   sessionToken: string
   /** Patient ID to scope FHIR requests */
   patientId: string
+  /** Optional DICOM Study Instance UID — when set, scopes the SHL to a single imaging study */
+  studyInstanceUID?: string
   /** Upstream FHIR server base URL */
   fhirServerUrl: string
   /** Expiry timestamp (ms) */
   expiresAt: number
   /** Whether verified-only filter is active */
   verifiedOnly: boolean
+  /** Optional selective-sharing scope (record/category de-selection). */
+  shareScope?: ShareScope
   /** Number of manifest accesses */
   accessCount: number
   /** Optional passcode (hashed) */
@@ -42,11 +63,14 @@ interface ShlRow {
   shl_payload: string // JSON
   jwe: string
   patient_id: string
+  study_instance_uid: string | null
   fhir_server_url: string
   expires_at: number
   verified_only: number // 0 or 1
+  share_scope: string | null // JSON-serialized ShareScope, or null for "share everything"
   access_count: number
   passcode_hash: string | null
+  consent_mirrored: number // 0 or 1
   created_at: number
 }
 
@@ -70,19 +94,61 @@ function createDatabase(): Database {
       shl_payload TEXT NOT NULL,
       jwe TEXT NOT NULL,
       patient_id TEXT NOT NULL,
+      study_instance_uid TEXT,
       fhir_server_url TEXT NOT NULL,
       expires_at INTEGER NOT NULL,
       verified_only INTEGER NOT NULL DEFAULT 0,
+      share_scope TEXT,
       access_count INTEGER NOT NULL DEFAULT 0,
       passcode_hash TEXT,
+      consent_mirrored INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
     )
   `)
+
+  // Idempotent migration: add study-scope column to pre-existing DBs.
+  try {
+    db.run('ALTER TABLE shl_sessions ADD COLUMN study_instance_uid TEXT')
+  } catch {
+    /* column already exists */
+  }
+
+  // Idempotent migration: add selective-sharing scope column to pre-existing DBs.
+  try {
+    db.run('ALTER TABLE shl_sessions ADD COLUMN share_scope TEXT')
+  } catch {
+    /* column already exists */
+  }
+
+  // Idempotent migration: track whether the SHL→Consent mirror was written, so a
+  // reconciliation sweep can repair sessions whose best-effort mirror failed
+  // (revocation depends on the Consent existing).
+  try {
+    db.run('ALTER TABLE shl_sessions ADD COLUMN consent_mirrored INTEGER NOT NULL DEFAULT 0')
+  } catch {
+    /* column already exists */
+  }
 
   // Index for token lookups (FHIR proxy uses this path)
   db.run('CREATE INDEX IF NOT EXISTS idx_shl_session_token ON shl_sessions(session_token)')
   // Index for expiry cleanup
   db.run('CREATE INDEX IF NOT EXISTS idx_shl_expires_at ON shl_sessions(expires_at)')
+
+  // Per-recipient access tracking: one row per distinct (fingerprinted) device
+  // that has opened the share. Row count = distinct devices; `count` = opens by
+  // that device. Total opens live on the session's access_count. Actual access
+  // events are also emitted as FHIR AuditEvents (see consent/shl-audit).
+  db.run(`
+    CREATE TABLE IF NOT EXISTS shl_accesses (
+      shl_id TEXT NOT NULL,
+      fingerprint TEXT NOT NULL,
+      first_seen INTEGER NOT NULL,
+      last_seen INTEGER NOT NULL,
+      count INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY (shl_id, fingerprint)
+    )
+  `)
+  db.run('CREATE INDEX IF NOT EXISTS idx_shl_accesses_shl_id ON shl_accesses(shl_id)')
 
   return db
 }
@@ -108,9 +174,9 @@ class ShlSessionStore {
   set(id: string, session: ShlSession): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO shl_sessions
-        (id, session_token, shl_payload, jwe, patient_id, fhir_server_url, expires_at, verified_only, access_count, passcode_hash, created_at)
+        (id, session_token, shl_payload, jwe, patient_id, study_instance_uid, fhir_server_url, expires_at, verified_only, share_scope, access_count, passcode_hash, created_at)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     stmt.run(
       id,
@@ -118,9 +184,11 @@ class ShlSessionStore {
       JSON.stringify(session.shl),
       session.jwe,
       session.patientId,
+      session.studyInstanceUID ?? null,
       session.fhirServerUrl,
       session.expiresAt,
       session.verifiedOnly ? 1 : 0,
+      session.shareScope ? JSON.stringify(session.shareScope) : null,
       session.accessCount,
       session.passcodeHash ?? null,
       Date.now(),
@@ -141,24 +209,62 @@ class ShlSessionStore {
     return { id: row.id, session: this.rowToSession(row) }
   }
 
-  /** Delete a session by ID */
+  /** Delete a session by ID (and its access rows) */
   delete(id: string): void {
     this.db.prepare('DELETE FROM shl_sessions WHERE id = ?').run(id)
+    this.db.prepare('DELETE FROM shl_accesses WHERE shl_id = ?').run(id)
   }
 
-  /** Delete a session by token */
+  /** Delete a session by token (and its access rows) */
   deleteByToken(token: string): void {
-    this.db.prepare('DELETE FROM shl_sessions WHERE session_token = ?').run(token)
+    const row = this.db.prepare('SELECT id FROM shl_sessions WHERE session_token = ?').get(token) as { id: string } | null
+    if (row) this.delete(row.id)
   }
 
-  /** Increment access count for a session */
+  /** Increment total-open count for a session */
   incrementAccessCount(id: string): void {
     this.db.prepare('UPDATE shl_sessions SET access_count = access_count + 1 WHERE id = ?').run(id)
   }
 
-  /** Remove all expired entries */
+  /**
+   * Record an open by a (fingerprinted) recipient/device. A previously-unseen
+   * fingerprint is a new distinct device; a repeat increments that device's count.
+   */
+  recordAccess(id: string, fingerprint: string): void {
+    const now = Date.now()
+    this.db.prepare(`
+      INSERT INTO shl_accesses (shl_id, fingerprint, first_seen, last_seen, count)
+      VALUES (?, ?, ?, ?, 1)
+      ON CONFLICT(shl_id, fingerprint) DO UPDATE SET last_seen = excluded.last_seen, count = count + 1
+    `).run(id, fingerprint, now, now)
+  }
+
+  /** Number of distinct recipients/devices that have opened this SHL. */
+  distinctDeviceCount(id: string): number {
+    const row = this.db.prepare('SELECT COUNT(*) as cnt FROM shl_accesses WHERE shl_id = ?').get(id) as { cnt: number }
+    return row.cnt
+  }
+
+  /** Mark that this session's SHL→Consent mirror was successfully written. */
+  markConsentMirrored(id: string): void {
+    this.db.prepare('UPDATE shl_sessions SET consent_mirrored = 1 WHERE id = ?').run(id)
+  }
+
+  /**
+   * Active sessions whose Consent mirror has not been confirmed written — the
+   * work list for the reconciliation sweep. Bounded by `limit` per pass.
+   */
+  listUnmirroredActive(limit = 50): { id: string; session: ShlSession }[] {
+    const rows = this.db
+      .prepare('SELECT * FROM shl_sessions WHERE consent_mirrored = 0 AND expires_at >= ? ORDER BY created_at LIMIT ?')
+      .all(Date.now(), limit) as ShlRow[]
+    return rows.map((row) => ({ id: row.id, session: this.rowToSession(row) }))
+  }
+
+  /** Remove all expired entries (and any now-orphaned access rows) */
   private purgeExpired(): void {
     const result = this.db.prepare('DELETE FROM shl_sessions WHERE expires_at < ?').run(Date.now())
+    this.db.prepare('DELETE FROM shl_accesses WHERE shl_id NOT IN (SELECT id FROM shl_sessions)').run()
     if (result.changes > 0) {
       logger.auth.debug('SHL store: purged expired sessions', { count: result.changes })
     }
@@ -182,9 +288,11 @@ class ShlSessionStore {
       jwe: row.jwe,
       sessionToken: row.session_token,
       patientId: row.patient_id,
+      studyInstanceUID: row.study_instance_uid ?? undefined,
       fhirServerUrl: row.fhir_server_url,
       expiresAt: row.expires_at,
       verifiedOnly: row.verified_only === 1,
+      shareScope: row.share_scope ? (JSON.parse(row.share_scope) as ShareScope) : undefined,
       accessCount: row.access_count,
       passcodeHash: row.passcode_hash ?? undefined,
     }

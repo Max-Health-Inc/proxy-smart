@@ -573,7 +573,7 @@
     {
       "clientId": "mcp-resource-server",
       "name": "MCP Resource Server (RFC 8707 resource indicator)",
-      "description": "Non-login resource client. Holds resource_url = the proxy MCP URL so the resource-indicators post-processor can bind a requested MCP resource into aud. The existing mcp-audience mapper continues to bind the literal MCP URL into aud independently; this client only adds RFC 8707 resource-indicator support and does not change the existing /mcp aud behaviour.",
+      "description": "Non-login resource client. Holds resource_url = the proxy MCP URL so the resource-indicators post-processor can bind a requested MCP resource into aud (RFC 8707). The mcp-audience mapper still binds the literal MCP URL into aud independently.",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
       "protocol": "openid-connect",
@@ -744,7 +744,8 @@
         "microprofile-jwt"
       ],
       "attributes": {
-        "access.token.lifespan": "3600"
+        "access.token.lifespan": "3600",
+        "allow.token.introspection.without.audience.check": "true"
       },
       "protocolMappers": [
         {
@@ -1079,10 +1080,9 @@
     {
       "clientId": "shl-exchange",
       "name": "SHL Token Exchange",
-      "description": "Service account for SMART Health Link token exchange (RFC 8693). Mints scoped, short-lived tokens for QR-based patient data sharing.",
+      "description": "Service account for SMART Health Link token exchange (RFC 8693). Secret is reconciled at startup from config (ensureShlExchangeClient) — never stored here.",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
-      "secret": "REPLACE_AT_DEPLOY_TIME",
       "protocol": "openid-connect",
       "publicClient": false,
       "bearerOnly": false,
