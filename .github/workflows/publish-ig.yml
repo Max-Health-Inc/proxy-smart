@@ -53,7 +53,9 @@ jobs:
           FSH_HASH=$(find fhir/input fhir/sushi-config.yaml -type f -print0 \
             | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}')
           KEY="fsh:${FSH_HASH}|babelfhir@${BABELFHIR_VERSION}|base"
-          BASE=$(grep -E '^version:' fhir/sushi-config.yaml | head -1 | awk '{print $2}')
+          # tr -d '\r': sushi-config.yaml is CRLF here (.gitattributes *.yaml eol=crlf);
+          # a stray carriage return in the version breaks the node -e stamp step below.
+          BASE=$(grep -E '^version:' fhir/sushi-config.yaml | head -1 | awk '{print $2}' | tr -d '\r')
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           echo "build key: $KEY"
 
