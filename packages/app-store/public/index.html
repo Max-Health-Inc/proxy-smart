@@ -91,10 +91,13 @@
     }
     .icon {
       border-radius: 16px; display: flex; align-items: center; justify-content: center;
-      transition: transform .15s;
+      transition: transform .15s; position: relative; overflow: hidden;
     }
     .tile:hover .icon { transform: scale(1.06); }
     .icon svg { stroke: currentColor; fill: none; }
+    /* App's own logo (SMART client logo_uri) overlays the fallback SVG; if it
+       fails to load it removes itself (onerror) and the SVG shows through. */
+    .icon img { position: absolute; inset: 18%; width: 64%; height: 64%; object-fit: contain; }
 
     /* Size variants */
     .grid.sm .icon { width: 48px; height: 48px; border-radius: 12px; }
@@ -259,8 +262,12 @@
       g.innerHTML = visible.map((a, i) => {
         const idx = start + i;
         const svg = ICONS[a.icon] || ICONS['app-window'];
+        // Prefer the app's own logo image (logo_uri) when it's a URL; the SVG
+        // stays as the base so a broken image (onerror) falls back gracefully.
+        const isUrl = a.logoUri && /^https?:\/\//i.test(a.logoUri);
+        const logo = isUrl ? `<img src="${encodeURI(a.logoUri)}" alt="" onerror="this.remove()">` : '';
         return `<a href="${encodeURI(a.launch_url)}" class="tile" title="${(a.description||a.client_name).replace(/"/g,'&quot;')}">
-          <div class="icon ${C[idx % 6]}"><svg viewBox="0 0 24 24">${svg}</svg></div>
+          <div class="icon ${C[idx % 6]}"><svg viewBox="0 0 24 24">${svg}</svg>${logo}</div>
           <span class="label">${a.client_name}</span></a>`;
       }).join('');
 
