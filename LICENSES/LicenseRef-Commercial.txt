@@ -1,0 +1,29 @@
+LicenseRef-Commercial
+
+Proxy-Smart Commercial License
+==============================
+
+This software is dual-licensed. In addition to the GNU Affero General Public
+License v3.0 or later (see AGPL-3.0-or-later.txt), a separate commercial license
+is available for proprietary, closed-source, or commercial-SaaS use that is not
+compatible with the obligations of the AGPL (in particular the network-use
+source-disclosure requirement of AGPL section 13).
+
+Under the commercial license you may:
+  - Build proprietary healthcare products on top of this software.
+  - Deploy it as a commercial SaaS service without disclosing your source.
+  - Integrate it into closed-source systems.
+  - Keep your modifications private.
+
+A commercial license must be purchased before any such use. Contact the
+copyright holder to obtain one:
+
+  Contact:  Maximilian Nussbaumer
+  Email:    max@maxwerbung.com
+
+Unless you have a valid, signed commercial license agreement, your use of this
+software is governed exclusively by the AGPL-3.0-or-later terms.
+
+This text is a human-readable reference, not the commercial agreement itself.
+The binding commercial terms are those of the signed agreement between you and
+the copyright holder.
