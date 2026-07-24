@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.13-alpha.202607241419.b78d263f2] - 2026-07-24
+
+- 🔧 Chores & Improvements: Introduced SHL-Consent reconciliation flow with startup trigger, idempotent mirror handling, retry logic, and updated session storage (consent_mirrored flag). Added DB migration support and API for reconciliation (consent_mirrored column, markConsentMirrored, listUnmirroredActive). Added tests for reconciliation bookkeeping.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/856
+
+
 ## [0.2.13-beta.202607241021.3163c8e52] - 2026-07-24
 
 - ✨ Features: Add SHL-Consent reconciliation flow, including startup trigger, explicit reconciliation logic, idempotent mirror handling, and retry mechanism
