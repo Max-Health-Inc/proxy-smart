@@ -1,0 +1,13 @@
+LicenseRef-VendoredThirdParty
+
+Placeholder reference for vendored third-party artifacts (e.g. HL7 FHIR
+Implementation Guide tarballs) that are redistributed unmodified as part of this
+project. These artifacts are the property of their respective upstream authors
+and are governed by the license under which each upstream project publishes them
+(HL7 FHIR specifications and IGs are commonly released under Creative Commons
+CC0-1.0; consult each artifact's upstream distribution for the authoritative
+terms).
+
+This reference exists so the repository is fully REUSE-compliant without this
+project asserting copyright over, or relicensing, third-party material. Replace
+it with the artifact's actual SPDX license identifier once verified upstream.
