@@ -8,14 +8,19 @@ For open source projects, research, and non-commercial use, this software is lic
 
 **Key requirements of AGPL v3:**
 
-- ✅ Use for open source projects
-- ✅ Use for research and education
-- ✅ Modify and distribute freely
-- ⚠️ **Must share source code** when deploying as a web service
-- ⚠️ **All modifications must be open source**
-- ⚠️ **Derivative works must use AGPL v3**
+Permitted:
 
-[📄 View AGPL v3 License](./LICENSE)
+- Use for open source projects
+- Use for research and education
+- Modify and distribute freely
+
+Required:
+
+- **Must share source code** when deploying as a web service
+- **All modifications must be open source**
+- **Derivative works must use AGPL v3**
+
+[View AGPL v3 License](./LICENSE)
 
 ## Commercial License
 
@@ -41,9 +46,9 @@ For commercial use, proprietary applications, and closed-source deployments, a *
 
 For commercial licensing inquiries:
 
-📧 **Email:** max@maxwerbung.com
-🌐 **Website:**
-💼 **Contact:** Maximilian Nussbaumer
+**Company:** Max Health Inc.
+**Email:** hello@maxhealth.tech
+**Website:** https://maxhealth.tech
 
 ---
 

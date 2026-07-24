@@ -1,7 +1,7 @@
 version = 1
 
 SPDX-PackageName = "proxy-smart"
-SPDX-PackageSupplier = "Max Health Inc. <max@maxwerbung.com>"
+SPDX-PackageSupplier = "Max Health Inc. <hello@maxhealth.tech>"
 SPDX-PackageDownloadLocation = "https://github.com/Max-Health-Inc/proxy-smart"
 
 # Catch-all: every first-party file is dual-licensed (AGPL-3.0-or-later OR a

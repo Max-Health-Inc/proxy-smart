@@ -18,8 +18,9 @@ Under the commercial license you may:
 A commercial license must be purchased before any such use. Contact the
 copyright holder to obtain one:
 
-  Contact:  Maximilian Nussbaumer
-  Email:    max@maxwerbung.com
+  Company:  Max Health Inc.
+  Email:    hello@maxhealth.tech
+  Website:  https://maxhealth.tech
 
 Unless you have a valid, signed commercial license agreement, your use of this
 software is governed exclusively by the AGPL-3.0-or-later terms.
