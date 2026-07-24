@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.2.13-beta.202607231720.f8ff94f16",
+  "version": "0.2.13-alpha.202607240758.227492b09",
   "type": "module",
   "scripts": {
     "test": "bun test --isolate",
@@ -34,6 +34,7 @@
     "date-fns": "^4.3.0",
     "elysia": "^1.4.29",
     "hl7.fhir.uv.ips-generated": "../lib/hl7.fhir.uv.ips-generated.tgz",
+    "maxhealth.consent-0.1.0-generated": "../lib/maxhealth.consent-0.1.0-generated.tgz",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.1.0",
     "kill-the-clipboard": "^1.1.0",

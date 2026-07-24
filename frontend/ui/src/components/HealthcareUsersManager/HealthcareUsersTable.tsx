@@ -13,9 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '@proxy-smart/shared-ui';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Users, Server, Plus, MoreHorizontal, Link } from 'lucide-react';
+import { Users, Server, Plus, MoreHorizontal, Link, Monitor } from 'lucide-react';
 import type { FhirPersonAssociation, FhirServer, HealthcareUser } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
+import { isPlumbingRoleName } from './rolePickerHelpers';
 
 interface HealthcareUsersTableProps {
   users: HealthcareUser[];
@@ -40,30 +41,50 @@ function getInitials(name: string): string {
 }
 
 /**
- * Get primary role from user roles
+ * Human-friendly label for a raw role name: hyphens/underscores become spaces
+ * and each word is title-cased (e.g. "gateway-admin" -> "Gateway Admin").
  */
-function getPrimaryRole(realmRoles: string[] | undefined, clientRoles: { [client: string]: string[] } | undefined): string {
-  
-  // Priority order for roles
-  const rolePriority = ['admin', 'administrator', 'practitioner', 'nurse', 'researcher', 'user'];
-  
-  // Check realm roles first
-  for (const role of rolePriority) {
-    if (realmRoles?.includes(role)) {
-      return role;
-    }
-  }
-  
-  // Check client roles
-  for (const client in clientRoles) {
-    for (const role of rolePriority) {
-      if (clientRoles[client]?.includes(role)) {
-        return role;
-      }
-    }
-  }
-  
-  return realmRoles?.[0] || 'user';
+function humanizeRole(role: string): string {
+  return role.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Most-significant roles first, so the leading badge is the meaningful "primary".
+const ROLE_PRIORITY = [
+  'admin', 'administrator', 'realm-admin', 'gateway-admin',
+  'practitioner', 'nurse', 'researcher', 'manage', 'user',
+];
+
+function rolePriorityIndex(name: string): number {
+  const i = ROLE_PRIORITY.indexOf(name.toLowerCase());
+  return i === -1 ? ROLE_PRIORITY.length : i;
+}
+
+interface DisplayRole {
+  name: string;
+  label: string;
+  isConsole: boolean;
+}
+
+/**
+ * Build the de-noised, ordered role list for display: realm roles plus admin
+ * console (admin-ui) roles, with Keycloak plumbing roles (default-roles-*,
+ * offline_access, uma_authorization) filtered out and duplicates removed.
+ * Sorted so the most significant role comes first (the "primary").
+ */
+function getDisplayRoles(
+  realmRoles: string[] | undefined,
+  clientRoles: { [client: string]: string[] } | undefined,
+): DisplayRole[] {
+  const seen = new Set<string>();
+  const roles: DisplayRole[] = [];
+  const add = (name: string, isConsole: boolean) => {
+    if (isPlumbingRoleName(name) || seen.has(name)) return;
+    seen.add(name);
+    roles.push({ name, label: humanizeRole(name), isConsole });
+  };
+  realmRoles?.forEach((r) => add(r, false));
+  clientRoles?.['admin-ui']?.forEach((r) => add(r, true));
+  return roles.sort((a, b) => rolePriorityIndex(a.name) - rolePriorityIndex(b.name));
 }
 
 /**
@@ -86,6 +107,57 @@ function getRoleBadgeColor(role: string): string {
   
   // Default role badge styling
   return 'bg-muted text-muted-foreground border-border';
+}
+
+/**
+ * Roles cell: a single prominent primary badge (category-coloured) followed by
+ * up to two de-noised secondary roles and a "+N" overflow, with plumbing roles
+ * hidden. Admin-console roles are marked with a monitor icon rather than a "UI:"
+ * prefix. Users with only plumbing roles read as a plain "Standard user".
+ */
+function UserRoles({ user }: { user: HealthcareUser }) {
+  const { t } = useTranslation();
+  const roles = getDisplayRoles(user.realmRoles, user.clientRoles);
+
+  if (roles.length === 0) {
+    return <span className="text-sm text-muted-foreground">{t('Standard user')}</span>;
+  }
+
+  const [primary, ...rest] = roles;
+  const visible = rest.slice(0, 2);
+  const overflow = rest.slice(2);
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5" title={roles.map((r) => r.label).join(', ')}>
+      <Badge
+        className={`${getRoleBadgeColor(primary.name)} border-0 shadow-sm font-semibold gap-1`}
+        title={primary.isConsole ? t('Admin console role') : undefined}
+      >
+        {primary.isConsole && <Monitor className="w-3 h-3" />}
+        {primary.label}
+      </Badge>
+      {visible.map((r) => (
+        <Badge
+          key={r.name}
+          variant="outline"
+          className="text-xs font-medium text-muted-foreground border-border gap-1"
+          title={r.isConsole ? t('Admin console role') : undefined}
+        >
+          {r.isConsole && <Monitor className="w-3 h-3" />}
+          {r.label}
+        </Badge>
+      ))}
+      {overflow.length > 0 && (
+        <Badge
+          variant="outline"
+          className="text-xs text-muted-foreground border-border"
+          title={overflow.map((r) => r.label).join(', ')}
+        >
+          +{overflow.length}
+        </Badge>
+      )}
+    </div>
+  );
 }
 
 export function HealthcareUsersTable({
@@ -117,8 +189,7 @@ export function HealthcareUsersTable({
             <TableHeader>
               <TableRow className="border-border/50">
                 <TableHead className="font-semibold text-muted-foreground">{t('User')}</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">{t('Primary Role')}</TableHead>
-                <TableHead className="font-semibold text-muted-foreground">{t('All Roles')}</TableHead>
+                <TableHead className="font-semibold text-muted-foreground">{t('Roles')}</TableHead>
                 <TableHead className="font-semibold text-muted-foreground">{t('Organization')}</TableHead>
                 <TableHead className="font-semibold text-muted-foreground">{t('FHIR Associations')}</TableHead>
                 <TableHead className="font-semibold text-muted-foreground">{t('Status')}</TableHead>
@@ -145,23 +216,7 @@ export function HealthcareUsersTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={`${getRoleBadgeColor(getPrimaryRole(user.realmRoles, user.clientRoles))} border-0 shadow-sm font-medium`}>
-                      {getPrimaryRole(user.realmRoles, user.clientRoles)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {user.realmRoles?.map((role: string) => (
-                        <Badge key={`realm-${role}`} variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                          {role}
-                        </Badge>
-                      ))}
-                      {user.clientRoles?.['admin-ui']?.map((role: string) => (
-                        <Badge key={`client-${role}`} variant="outline" className="text-xs bg-violet-500/10 dark:bg-violet-400/20 text-violet-700 dark:text-violet-300 border-violet-500/20 dark:border-violet-400/20">
-                          UI: {role}
-                        </Badge>
-                      ))}
-                    </div>
+                    <UserRoles user={user} />
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground font-medium">
                     {user.organization}
