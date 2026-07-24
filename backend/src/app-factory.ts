@@ -32,6 +32,7 @@ import { brandBundleService } from './lib/brand-bundle'
 import { getRuntimeBrandConfig } from './lib/runtime-config'
 import { UserAccessBrandBundle } from './schemas'
 import { getHiddenAppIds, getPublishedApps } from './lib/app-store-config'
+import { resolveStoreIcon } from './lib/app-store-icons'
 import { setDispatchApp } from './lib/ai/tool-registry'
 
 export interface DiscoveredApp {
@@ -80,7 +81,7 @@ function discoverApps({ includeHidden = false } = {}) {
                     description: manifest.description ?? '',
                     scope: manifest.scope ?? '',
                     category: manifest.category ?? 'other',
-                    icon: manifest.icon ?? 'app-window',
+                    icon: resolveStoreIcon(manifest.icon, manifest.category),
                     grant_types: manifest.grant_types ?? ['authorization_code'],
                     token_endpoint_auth_method: manifest.token_endpoint_auth_method ?? 'none',
                     hidden: hiddenIds.includes(d.name),
@@ -102,7 +103,7 @@ function discoverApps({ includeHidden = false } = {}) {
             description: pa.description,
             scope: '',
             category: pa.category,
-            icon: pa.logoUri || 'app-window',
+            icon: resolveStoreIcon(pa.logoUri, pa.category),
             grant_types: ['authorization_code'],
             token_endpoint_auth_method: 'none',
             hidden: false,
