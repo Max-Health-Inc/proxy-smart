@@ -24,23 +24,29 @@ jobs:
   changed-file-headers:
     name: SPDX headers on changed files
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    # Incremental enforcement only where new source lands: feature PRs into
+    # develop. The release-train promotions (develop -> test -> main) carry a
+    # large accumulated diff of pre-existing files and must never be gated on
+    # per-file headers; REUSE compliance is covered by the reuse-lint job's
+    # REUSE.toml catch-all regardless.
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
-      # Incremental enforcement: only files added/changed in this PR must carry a
-      # per-file SPDX header, so legacy files are never a blocker.
-      - name: Check headers on PR-changed source files
+      # Only files ADDED in this PR must carry a per-file SPDX header. Modifying
+      # an existing (legacy) file never forces a header migration mid-change;
+      # legacy files are migrated opt-in via `bun run spdx:add`.
+      - name: Check headers on newly added source files
         run: |
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
-          mapfile -t FILES < <(git diff --name-only --diff-filter=ACMR "$BASE" "$HEAD" \
-            | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|scss|sh|bash|py|yml|yaml|toml)$' \
+          mapfile -t FILES < <(git diff --name-only --diff-filter=A "$BASE" "$HEAD" \
+            | grep -E '\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|scss|sh|bash|py)$' \
             | grep -vE 'node_modules/|dist/|build/|coverage/|\.d\.ts$|api-client(/|\.)|\.tgz$' || true)
           if [ ${#FILES[@]} -eq 0 ]; then
-            echo "No source files changed."
+            echo "No newly added source files."
             exit 0
           fi
           node scripts/spdx.mjs --check "${FILES[@]}"
