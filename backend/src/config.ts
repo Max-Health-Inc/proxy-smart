@@ -355,6 +355,25 @@ export const config = {
     },
   },
 
+  // AGPL section 13 source offer. This software is dual-licensed
+  // (AGPL-3.0-or-later OR a commercial license); when it runs as a network
+  // service under the AGPL, users interacting with it over the network must be
+  // offered the corresponding source for the exact version deployed. The
+  // /source route and /.well-known/agpl-source discharge that obligation using
+  // these values (env-overridable for downstream self-hosters/forks).
+  source: {
+    get repositoryUrl() {
+      return process.env.SOURCE_REPOSITORY_URL || 'https://github.com/Max-Health-Inc/proxy-smart'
+    },
+    // SPDX expression — single source of truth, mirrors REUSE.toml / package.json.
+    get license() {
+      return process.env.SOURCE_LICENSE || 'AGPL-3.0-or-later OR LicenseRef-Commercial'
+    },
+    get commercialContact() {
+      return process.env.SOURCE_COMMERCIAL_CONTACT || 'hello@maxhealth.tech'
+    },
+  },
+
   cors: {
     // Support multiple origins - can be a single URL or comma-separated list
     // Defaults to common development origins
