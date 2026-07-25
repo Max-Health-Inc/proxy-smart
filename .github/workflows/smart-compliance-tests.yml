@@ -769,10 +769,12 @@ jobs:
       - name: Resolve Inferno Version
         id: inferno-version
         run: |
-          # Pin to v0.6.4 — last known working release.
-          # v1.0.0 (inferno_core 1.0.2) changed DB/migration internals and breaks our setup.
-          # TODO: Test and migrate to v1.0.0+ (uses `bundle exec inferno migrate` instead of rake)
-          PINNED_TAG="v0.6.4"
+          # Pin to v1.0.0 (inferno_core 1.0.2, tls_test_kit 1.0.0).
+          # The test-kit harness files (Rakefile, config, worker.rb, Procfile) are
+          # unchanged from v0.6.4; only the inferno_core gem was bumped. DB setup now
+          # uses the canonical `bundle exec inferno migrate` (see "Setup Inferno DB"),
+          # matching upstream setup.sh. Requires Ruby >= 3.3.6.
+          PINNED_TAG="v1.0.0"
           echo "Inferno version: $PINNED_TAG (pinned)"
           echo "tag=$PINNED_TAG" >> $GITHUB_OUTPUT
 
@@ -802,7 +804,9 @@ jobs:
         run: |
           cd inferno
           export REDIS_URL="redis://localhost:6379"
-          bundle exec rake db:migrate || bundle exec rake db:setup || true
+          # inferno_core 1.0+ canonical migration (upstream setup.sh). Falls back to
+          # the equivalent rake task, which wraps the same Inferno::Utils::Migration.
+          bundle exec inferno migrate || bundle exec rake db:migrate
 
       - name: Start Inferno
         run: |

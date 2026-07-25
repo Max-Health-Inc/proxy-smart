@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * SMART Health Links (SHL) API Routes — Proxy Architecture
  *
@@ -122,6 +125,7 @@ async function authorizeShlBearer(headers: any, set: any): Promise<{ shlId: stri
     return { error: 'Share link has expired' }
   }
   if (await isShareConsentRevoked(shlId, session.fhirServerUrl)) {
+    shlSessionStore.delete(shlId) // revoked in the consent portal: purge the now-inert session
     set.status = 410
     return { error: 'Share link has been revoked' }
   }
@@ -562,10 +566,9 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       return { error: 'SHL not found or expired' }
     }
 
-    // Revoked in the consent portal (backing Consent flipped inactive)? Deny.
-    // Same check guards the FHIR + DICOMweb proxy handlers above. Spec: 404 for
-    // a no-longer-active link.
+    // Revoked in the consent portal? Deny (spec: 404 for a no-longer-active link).
     if (await isShareConsentRevoked(params.id, entry.fhirServerUrl)) {
+      shlSessionStore.delete(params.id) // purge the now-inert session
       set.status = 404
       return { error: 'SHL not found or expired' }
     }

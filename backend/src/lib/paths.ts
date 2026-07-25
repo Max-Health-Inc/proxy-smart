@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { join } from 'path'
 import { mkdirSync, existsSync, readdirSync, copyFileSync } from 'fs'
 

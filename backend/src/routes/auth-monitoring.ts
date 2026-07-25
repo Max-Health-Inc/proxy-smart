@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { t } from 'elysia'
 import { authEventsLogger } from '../lib/auth-events-logger'
 import { AuthEventsResponse, AuthAnalyticsResponse } from '../schemas/auth-monitoring'

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Shared admin-config store — durable, cluster-safe persistence for
  * runtime-mutable admin configuration (MCP endpoint settings, app-store

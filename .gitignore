@@ -63,3 +63,5 @@ fhir/output/
 fhir/temp/
 fhir/.cache/
 fhir/maxhealth.consent-*.tgz
+# Consent IG is consumed as the published @max-health-inc/consent-fhir, not vendored.
+lib/maxhealth.consent-*.tgz

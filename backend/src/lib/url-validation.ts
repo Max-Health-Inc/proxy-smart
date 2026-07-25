@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * URL validation utilities to prevent SSRF attacks.
  * Blocks requests to internal/private IP ranges and metadata endpoints.

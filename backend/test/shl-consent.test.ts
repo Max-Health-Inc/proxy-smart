@@ -4,7 +4,7 @@
  * consent portal.
  */
 import { describe, it, expect } from 'bun:test'
-import { validateMaxHealthShareConsent } from 'maxhealth.consent-0.1.0-generated'
+import { validateMaxHealthShareConsent } from '@max-health-inc/consent-fhir'
 import { buildShareConsent, SHL_CONSENT_IDENTIFIER_SYSTEM, SHL_CONSENT_CATEGORY_CODE } from '../src/lib/consent/shl-consent'
 import { buildShlAccessAuditEvent } from '../src/lib/consent/shl-audit'
 import type { ShlSession } from '../src/lib/shl-session-store'

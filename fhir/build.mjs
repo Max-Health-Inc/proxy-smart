@@ -40,7 +40,11 @@ for (const f of readdirSync(resources).filter((f) => f.endsWith(".json"))) {
 // (C:\...) are not misread by tar as a "host:path" remote target.
 run(`tar --force-local -czf ${tgzName} -C fsh-generated/package .`, fhirDir);
 
-console.log("\n── Step 3: Generate TypeScript & install ──");
-run(`npx --yes babelfhir-ts@1.5.17 install ./fhir/${tgzName}`);
+console.log("\n── Step 3: Generate TypeScript package (no install) ──");
+// --skip-install: pack the generated package for local inspection only. The
+// backend consumes the PUBLISHED @max-health-inc/consent-fhir (minted by
+// .github/workflows/publish-ig.yml), so we no longer vendor a lib/*.tgz — that
+// avoids the tgz/bun.lock integrity drift that used to break cold CI installs.
+run(`npx --yes babelfhir-ts@1.5.17 install ./fhir/${tgzName} --skip-install`);
 
-console.log("\n✓ Consent FHIR package built and installed.");
+console.log("\n✓ Consent FHIR package generated (lib/). Publish via the publish-ig workflow; do not commit the vendored tgz.");

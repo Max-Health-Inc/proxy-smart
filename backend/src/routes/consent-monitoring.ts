@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Elysia, t } from 'elysia'
 import { consentMetricsLogger } from '../lib/consent-metrics-logger'
 import { logger } from '../lib/logger'

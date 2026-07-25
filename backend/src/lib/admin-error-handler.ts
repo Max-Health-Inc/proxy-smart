@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import type { Context } from 'elysia'
 import { AuthenticationError, UNAUTHORIZED_RESPONSE } from './admin-utils'
 import { logger } from './logger'
