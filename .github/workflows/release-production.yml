@@ -133,8 +133,14 @@ jobs:
           PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
           echo "Previous commit: $PREVIOUS_COMMIT"
 
-          # Create a revert commit instead of force pushing
-          git revert --no-edit HEAD
+          # Create a revert commit instead of force pushing. A test→main promotion
+          # HEAD is a MERGE commit, which git revert needs `-m 1` (mainline parent)
+          # to undo; a plain (version-bump) HEAD must NOT get -m. Detect which.
+          if git rev-parse -q --verify HEAD^2 >/dev/null; then
+            git revert --no-edit -m 1 HEAD
+          else
+            git revert --no-edit HEAD
+          fi
 
           # Push the revert commit (this respects branch protection rules)
           git push origin main
