@@ -55,17 +55,12 @@ export class KeycloakStack extends cdk.Stack {
     const useCustomImage = Boolean(props.imageUri);
 
     // Container image: ECR custom image (with pre-built proxy-smart theme) or stock quay.io.
-    // The ECR repo is owned by CDK (RETAIN) so the least-privileged
-    // github-actions-deploy role only needs to PUSH images, never
-    // ecr:CreateRepository. Run `cdk deploy` once to create the repo before the
-    // first app deploy pushes an image (the previous ad-hoc `aws ecr
-    // create-repository` step in deploy-production.yml is removed).
+    // ECR repo is created externally by the deploy workflow's idempotent
+    // create-repository step (avoids the chicken-and-egg of pushing before a CDK
+    // deploy) and imported here. That step needs the deploy role to allow
+    // ecr:CreateRepository on repository/proxy-smart-*.
     const keycloakRepo = useCustomImage
-      ? new ecr.Repository(this, 'KeycloakRepo', {
-          repositoryName: 'proxy-smart-keycloak',
-          imageScanOnPush: true,
-          removalPolicy: cdk.RemovalPolicy.RETAIN,
-        })
+      ? ecr.Repository.fromRepositoryName(this, 'KeycloakRepo', 'proxy-smart-keycloak')
       : undefined;
     const containerImage = keycloakRepo
       ? ecs.ContainerImage.fromEcrRepository(keycloakRepo, 'latest')

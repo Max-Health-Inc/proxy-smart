@@ -113,9 +113,21 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # The proxy-smart-keycloak ECR repo is provisioned by CDK (keycloak-stack),
-      # so the deploy role only needs push permissions — no ad-hoc
-      # ecr:CreateRepository here. Ensure `cdk deploy` has run once to create it.
+      - name: Create Keycloak ECR repository (idempotent)
+        run: |
+          # Create the repo on first deploy; skip if it already exists. Requires the
+          # github-actions-deploy role to allow ecr:CreateRepository on
+          # repository/proxy-smart-*. On a permission failure we surface an
+          # actionable message rather than a bare AccessDenied.
+          if aws ecr describe-repositories --repository-names "$ECR_KEYCLOAK_REPOSITORY" --region "$AWS_REGION" >/dev/null 2>&1; then
+            echo "ECR repo $ECR_KEYCLOAK_REPOSITORY already exists — skipping create."
+          elif aws ecr create-repository --repository-name "$ECR_KEYCLOAK_REPOSITORY" --region "$AWS_REGION" --image-scanning-configuration scanOnPush=true; then
+            echo "Created ECR repo $ECR_KEYCLOAK_REPOSITORY."
+          else
+            echo "::error::Could not create ECR repo '$ECR_KEYCLOAK_REPOSITORY'. Grant the github-actions-deploy role ecr:CreateRepository on arn:aws:ecr:$AWS_REGION:*:repository/proxy-smart-*."
+            exit 1
+          fi
+
       - name: Build and push Keycloak image
         uses: docker/build-push-action@v7
         with:
