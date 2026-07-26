@@ -83,6 +83,10 @@ jobs:
           ref: ${{ inputs.source_branch }}
 
       - name: Configure AWS credentials
+        # The OIDC token exchange intermittently hangs; without a cap it eats the
+        # whole 30-min job timeout. Fail fast (3 min) so a hung auth is a quick,
+        # cheap re-run instead of a half-hour stall.
+        timeout-minutes: 3
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::579201838740:role/github-actions-deploy
