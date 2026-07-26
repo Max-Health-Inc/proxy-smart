@@ -11,6 +11,7 @@ import { smartAppsRoutes } from './smart-apps'
 import { healthcareUsersRoutes } from './healthcare-users'
 import { rolesRoutes } from './roles'
 import { identityProvidersRoutes } from './identity-providers'
+import { identityProviderMapperRoutes } from './identity-provider-mappers'
 import { smartConfigAdminRoutes } from './smart-config'
 import { clientRegistrationSettingsRoutes } from './client-registration-settings'
 import { keycloakConfigRoutes } from './keycloak-config'
@@ -19,6 +20,7 @@ import { consentAdminRoutes } from './consent'
 import { smartAccessControlAdminRoutes } from './smart-access-control'
 import { accessControlRoutes } from './access-control'
 import { userFederationRoutes } from './user-federation'
+import { userFederationMapperRoutes } from './user-federation-mappers'
 import { brandingAdminRoutes } from './branding'
 import { scopeMappersRoutes } from './scope-mappers'
 import { smartScopesRoutes } from './smart-scopes'
@@ -108,6 +110,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(healthcareUsersRoutes)
   .use(rolesRoutes)
   .use(identityProvidersRoutes)
+  // Brokered-login claim mapping (fhirUser imports for federated users)
+  .use(identityProviderMapperRoutes)
   .use(smartConfigAdminRoutes)
   .use(brandingAdminRoutes)
   .use(clientRegistrationSettingsRoutes)
@@ -122,6 +126,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(accessControlRoutes)
   // LDAP User Federation management
   .use(userFederationRoutes)
+  // LDAP mapper management (which directory attributes reach the Keycloak user)
+  .use(userFederationMapperRoutes)
   // SMART scope protocol mapper management
   .use(scopeMappersRoutes)
   // SMART client scope CRUD management

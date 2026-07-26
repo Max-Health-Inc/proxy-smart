@@ -119,6 +119,9 @@
   "Add Link": [
     "Link hinzufügen"
   ],
+  "Add Mapper": [
+    "Mapper hinzufügen"
+  ],
   "Add Member": [
     "Mitglied hinzufügen"
   ],
@@ -446,6 +449,12 @@
   "Asymmetric Client Authentication": [
     "Asymmetrische Client-Authentifizierung"
   ],
+  "Attribute imports for": [
+    "Attribut-Importe für"
+  ],
+  "Attribute imports use": [
+    "Attribut-Importe verwenden"
+  ],
   "Audience Clients": [
     "Audience-Clients"
   ],
@@ -644,6 +653,9 @@
   "Brief description of the application": [
     "Kurze Beschreibung der Anwendung"
   ],
+  "Brokered users will only carry the standard claims Keycloak imports by default.": [
+    "Vermittelte Benutzer tragen nur die Standard-Claims, die Keycloak von sich aus importiert."
+  ],
   "Browser redirected here on logout (visible to user)": [
     "Browser wird bei Abmeldung hierher umgeleitet (für Benutzer sichtbar)"
   ],
@@ -758,6 +770,18 @@
   "Claim": [
     "Claim"
   ],
+  "Claim Mappers": [
+    "Claim-Mapper"
+  ],
+  "Claim Mapping": [
+    "Claim-Mapping"
+  ],
+  "Claim Mapping Ready": [
+    "Claim-Mapping bereit"
+  ],
+  "Claim mapping complete": [
+    "Claim-Mapping vollständig"
+  ],
   "Clear All Caches": [
     "Alle Caches leeren"
   ],
@@ -826,6 +850,9 @@
   ],
   "Close": [
     "Schließen"
+  ],
+  "Complete": [
+    "Vollständig"
   ],
   "Confidence": [
     "Konfidenz"
@@ -1003,6 +1030,9 @@
   ],
   "Create Group": [
     "Gruppe erstellen"
+  ],
+  "Create Mapper": [
+    "Mapper erstellen"
   ],
   "Create New Person": [
     "Neue Person erstellen"
@@ -1183,6 +1213,9 @@
   ],
   "Delete failed": [
     "Löschen fehlgeschlagen"
+  ],
+  "Delete mapper": [
+    "Mapper löschen"
   ],
   "Delete scope": [
     "Scope löschen"
@@ -1610,6 +1643,9 @@
   "Failed to create LDAP federation": [
     "LDAP-Föderation konnte nicht erstellt werden"
   ],
+  "Failed to create mapper.": [
+    "Mapper konnte nicht erstellt werden."
+  ],
   "Failed to create organization.": [
     "Organisation konnte nicht erstellt werden."
   ],
@@ -1627,6 +1663,9 @@
   ],
   "Failed to delete mapper": [
     "Mapper konnte nicht gelöscht werden"
+  ],
+  "Failed to delete mapper.": [
+    "Mapper konnte nicht gelöscht werden."
   ],
   "Failed to delete organization.": [
     "Organisation konnte nicht gelöscht werden."
@@ -1664,6 +1703,9 @@
   "Failed to load groups": [
     "Gruppen konnten nicht geladen werden"
   ],
+  "Failed to load identity provider mappers.": [
+    "Identity-Provider-Mapper konnten nicht geladen werden."
+  ],
   "Failed to load members": [
     "Mitglieder konnten nicht geladen werden"
   ],
@@ -1684,6 +1726,9 @@
   ],
   "Failed to perform health check: {{error}}": [
     "Gesundheitsprüfung fehlgeschlagen: {{error}}"
+  ],
+  "Failed to provision identity provider mappers.": [
+    "Identity-Provider-Mapper konnten nicht angelegt werden."
   ],
   "Failed to refresh SMART flow mapping": [
     "SMART-Flow-Zuordnung konnte nicht aktualisiert werden"
@@ -2069,6 +2114,9 @@
   "Keycloak is not yet configured on this server.": [
     "Keycloak ist auf diesem Server noch nicht konfiguriert."
   ],
+  "Keycloak offers no claim-to-attribute mapper for this provider, so nothing can be imported automatically.": [
+    "Keycloak bietet für diesen Provider keinen Claim-zu-Attribut-Mapper, daher kann nichts automatisch importiert werden."
+  ],
   "Kisi (Cloud)": [
     "Kisi (Cloud)"
   ],
@@ -2342,6 +2390,18 @@
   "Mapper": [
     "Mapper"
   ],
+  "Mapper Type": [
+    "Mapper-Typ"
+  ],
+  "Mapper created.": [
+    "Mapper erstellt."
+  ],
+  "Mapper deleted.": [
+    "Mapper gelöscht."
+  ],
+  "Mapping": [
+    "Zuordnung"
+  ],
   "Maps this user to a FHIR resource (used in SMART fhirUser claim)": [
     "Ordnet diesen Benutzer einer FHIR-Ressource zu (verwendet im SMART fhirUser-Claim)"
   ],
@@ -2498,6 +2558,12 @@
   "No associations": [
     "Keine Zuordnungen"
   ],
+  "No attribute mappers for this provider type": [
+    "Keine Attribut-Mapper für diesen Provider-Typ"
+  ],
+  "No attribute mapping": [
+    "Keine Attribut-Zuordnung"
+  ],
   "No audit events match your filters": [
     "Keine Audit-Ereignisse entsprechen Ihren Filtern"
   ],
@@ -2573,6 +2639,9 @@
   "No links yet": [
     "Noch keine Verknüpfungen"
   ],
+  "No mappers configured": [
+    "Keine Mapper konfiguriert"
+  ],
   "No matching users found": [
     "Keine passenden Benutzer gefunden"
   ],
@@ -2644,6 +2713,9 @@
   ],
   "Not Set": [
     "Nicht gesetzt"
+  ],
+  "Not applicable": [
+    "Nicht zutreffend"
   ],
   "Not configured": [
     "Nicht konfiguriert"
@@ -2738,6 +2810,9 @@
   "Optional Scopes:": [
     "Optionale Scopes:"
   ],
+  "Optional attribute imports are missing": [
+    "Optionale Attribut-Importe fehlen"
+  ],
   "Optional description": [
     "Optionale Beschreibung"
   ],
@@ -2800,6 +2875,9 @@
   ],
   "Pagination": [
     "Seitennavigation"
+  ],
+  "Partial": [
+    "Teilweise"
   ],
   "Password": [
     "Passwort"
@@ -3007,6 +3085,12 @@
   ],
   "Provides automatic data governance and access control": [
     "Bietet automatische Datensteuerung und Zugriffskontrolle"
+  ],
+  "Provision missing mappers": [
+    "Fehlende Mapper anlegen"
+  ],
+  "Provisioning...": [
+    "Wird angelegt..."
   ],
   "Proxy Smart": [
     "Proxy Smart"
@@ -3262,6 +3346,9 @@
   ],
   "Required Roles": [
     "Erforderliche Rollen"
+  ],
+  "Required attribute imports are missing": [
+    "Erforderliche Attribut-Importe fehlen"
   ],
   "Required for dynamic client registration and advanced features": [
     "Erforderlich für dynamische Client-Registrierung und erweiterte Funktionen"
@@ -3578,11 +3665,17 @@
   "Select a door to add to this group": [
     "Tür auswählen, um sie dieser Gruppe hinzuzufügen"
   ],
+  "Select a mapper type": [
+    "Mapper-Typ auswählen"
+  ],
   "Select a registered app to publish to the public app store.": [
     "Registrierte App auswählen, um sie im öffentlichen App Store zu veröffentlichen."
   ],
   "Select a server from the overview tab to view detailed information": [
     "Server aus der Übersicht auswählen, um Details anzuzeigen"
+  ],
+  "Select a value": [
+    "Wert auswählen"
   ],
   "Select an app...": [
     "App auswählen..."
@@ -3851,6 +3944,9 @@
   "Sync Members from Keycloak": [
     "Mitglieder aus Keycloak synchronisieren"
   ],
+  "Sync Mode": [
+    "Sync-Modus"
+  ],
   "Sync Now": [
     "Jetzt synchronisieren"
   ],
@@ -3943,6 +4039,12 @@
   ],
   "This field is required": [
     "Dieses Feld ist erforderlich"
+  ],
+  "This provider supports no attribute-import mapper type.": [
+    "Dieser Provider unterstützt keinen Attribut-Import-Mapper."
+  ],
+  "This provider type supports no attribute-import mappers": [
+    "Dieser Provider-Typ unterstützt keine Attribut-Import-Mapper"
   ],
   "This server cannot be reached or does not respond with valid FHIR metadata. API endpoints and advanced features are not available for this server.": [
     "Dieser Server ist nicht erreichbar oder antwortet nicht mit gültigen FHIR-Metadaten. API-Endpunkte und erweiterte Funktionen sind für diesen Server nicht verfügbar."
@@ -4271,6 +4373,9 @@
   "Users DN": [
     "Benutzer-DN"
   ],
+  "Users brokered through this provider receive every attribute SMART launches depend on.": [
+    "Über diesen Provider vermittelte Benutzer erhalten alle Attribute, die SMART-Launches benötigen."
+  ],
   "Using asymmetric JWT authentication with registered public key": [
     "Asymmetrische JWT-Authentifizierung mit registriertem öffentlichem Schlüssel"
   ],
@@ -4486,6 +4591,9 @@
   ],
   "{{count}} member(s)": [
     "{{count}} Mitglied(er)"
+  ],
+  "{{count}} missing": [
+    "{{count}} fehlen"
   ],
   "{{count}} scope(s) with missing mappers": [
     "{{count}} Scope(s) mit fehlenden Mappern"

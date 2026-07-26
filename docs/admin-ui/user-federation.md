@@ -59,6 +59,13 @@ Each provider can have attribute mappers that control how LDAP attributes map to
 - LDAP attribute → Keycloak attribute mapping
 - Read/write synchronization direction
 
+Mappers decide which directory attributes reach the Keycloak user, which makes
+them a prerequisite for SMART launches: a directory user without the `fhirUser`
+attribute cannot be resolved to a FHIR resource. Mapper CRUD is available over
+the admin API (see below); `GET /admin/user-federation/:id/mapper-types`
+returns the mapper types the provider supports along with the properties each
+one accepts, so payloads never need hardcoded config keys.
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
@@ -75,3 +82,7 @@ Each provider can have attribute mappers that control how LDAP attributes map to
 | `POST` | `/admin/user-federation/test-connection` | Test LDAP connectivity |
 | `POST` | `/admin/user-federation/test-authentication` | Test bind credentials |
 | `GET` | `/admin/user-federation/:id/mappers` | List attribute mappers |
+| `GET` | `/admin/user-federation/:id/mapper-types` | List supported mapper types with their configurable properties |
+| `POST` | `/admin/user-federation/:id/mappers` | Create a mapper on the provider |
+| `PUT` | `/admin/user-federation/:id/mappers/:mapperId` | Update a mapper (config entries are merged) |
+| `DELETE` | `/admin/user-federation/:id/mappers/:mapperId` | Delete a mapper |
