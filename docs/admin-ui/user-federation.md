@@ -59,6 +59,21 @@ Each provider can have attribute mappers that control how LDAP attributes map to
 - LDAP attribute → Keycloak attribute mapping
 - Read/write synchronization direction
 
+Mappers decide which directory attributes reach the Keycloak user, which makes
+them a prerequisite for SMART launches: a directory user without the `fhirUser`
+attribute cannot be resolved to a FHIR resource.
+
+Open **Mappers** on a provider card to list its mappers as
+`directory attribute → user attribute`, add one (the form is built from the
+properties Keycloak reports for the chosen mapper type, so it adapts to the LDAP
+vendor), or delete one. The card itself shows a summary chip: the mapper count,
+or a warning when nothing writes `fhirUser`.
+
+Unlike identity providers, there is no provisioning action here. The directory
+attribute holding the FHIR reference is deployment-specific -- it may be
+`fhirUser`, an employee number, or a vendor-specific OID -- so the dialog reports
+the gap and leaves the source attribute to the admin rather than guessing.
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
@@ -75,3 +90,7 @@ Each provider can have attribute mappers that control how LDAP attributes map to
 | `POST` | `/admin/user-federation/test-connection` | Test LDAP connectivity |
 | `POST` | `/admin/user-federation/test-authentication` | Test bind credentials |
 | `GET` | `/admin/user-federation/:id/mappers` | List attribute mappers |
+| `GET` | `/admin/user-federation/:id/mapper-types` | List supported mapper types with their configurable properties |
+| `POST` | `/admin/user-federation/:id/mappers` | Create a mapper on the provider |
+| `PUT` | `/admin/user-federation/:id/mappers/:mapperId` | Update a mapper (config entries are merged) |
+| `DELETE` | `/admin/user-federation/:id/mappers/:mapperId` | Delete a mapper |

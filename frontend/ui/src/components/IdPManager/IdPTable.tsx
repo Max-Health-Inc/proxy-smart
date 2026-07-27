@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import {
   Badge,
   Button,
@@ -12,27 +15,34 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@proxy-smart/shared-ui';
-import { 
-  MoreHorizontal, 
-  Shield, 
-  Edit, 
-  TestTube, 
-  FileText, 
-  XCircle, 
-  Loader2, 
-  CheckCircle 
+import {
+  MoreHorizontal,
+  Shield,
+  Edit,
+  TestTube,
+  FileText,
+  XCircle,
+  Loader2,
+  CheckCircle,
+  Shuffle,
+  AlertCircle,
+  Minus
 } from 'lucide-react';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
+import type { IdentityProviderMapperStatus } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 interface IdPTableProps {
   idps: IdentityProviderWithStats[];
   testingConnection: string | null;
   connectionResults: Record<string, { success: boolean; message: string }>;
+  /** Claim-mapping health per provider alias */
+  mapperStatus?: Record<string, IdentityProviderMapperStatus>;
   onToggleStatus: (alias: string) => void;
   onEdit: (idp: IdentityProviderWithStats) => void;
   onTestConnection: (idp: IdentityProviderWithStats) => Promise<void>;
   onViewCertificates: (idp: IdentityProviderWithStats) => void;
+  onManageMappers: (idp: IdentityProviderWithStats) => void;
   onDelete: (alias: string) => void;
 }
 
@@ -40,10 +50,12 @@ export function IdPTable({
   idps,
   testingConnection,
   connectionResults,
+  mapperStatus = {},
   onToggleStatus,
   onEdit,
   onTestConnection,
   onViewCertificates,
+  onManageMappers,
   onDelete
 }: IdPTableProps) {
   const { t } = useTranslation();
@@ -82,6 +94,7 @@ export function IdPTable({
               <TableHead className="font-semibold text-foreground">{t('Provider')}</TableHead>
               <TableHead className="font-semibold text-foreground">{t('Type')}</TableHead>
               <TableHead className="font-semibold text-foreground">{t('Status')}</TableHead>
+              <TableHead className="font-semibold text-foreground">{t('Claim Mapping')}</TableHead>
               <TableHead className="font-semibold text-foreground">{t('Users')}</TableHead>
               <TableHead className="font-semibold text-foreground">{t('Last Used')}</TableHead>
               <TableHead className="w-12"></TableHead>
@@ -132,6 +145,52 @@ export function IdPTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="py-4">
+                  {(() => {
+                    const mappers = alias ? mapperStatus[alias] : undefined;
+                    if (!mappers) {
+                      return <span className="text-sm text-muted-foreground">—</span>;
+                    }
+                    if (mappers.unsupported) {
+                      return (
+                        <span className="flex items-center text-sm text-muted-foreground" title={t('This provider type supports no attribute-import mappers')}>
+                          <Minus className="h-4 w-4 mr-1.5" />
+                          {t('Not applicable')}
+                        </span>
+                      );
+                    }
+                    if (!mappers.healthy) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => onManageMappers(idp)}
+                          className="flex items-center text-sm font-medium text-red-600 dark:text-red-400 hover:underline"
+                        >
+                          <AlertCircle className="h-4 w-4 mr-1.5" />
+                          {t('{{count}} missing', { count: mappers.missingRequired.length })}
+                        </button>
+                      );
+                    }
+                    if (mappers.missingOptional.length > 0) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => onManageMappers(idp)}
+                          className="flex items-center text-sm font-medium text-amber-600 dark:text-amber-400 hover:underline"
+                        >
+                          <AlertCircle className="h-4 w-4 mr-1.5" />
+                          {t('Partial')}
+                        </button>
+                      );
+                    }
+                    return (
+                      <span className="flex items-center text-sm text-green-600 dark:text-green-400">
+                        <CheckCircle className="h-4 w-4 mr-1.5" />
+                        {t('Complete')}
+                      </span>
+                    );
+                  })()}
+                </TableCell>
+                <TableCell className="py-4">
                   <span className="text-sm font-medium text-foreground">{idp.userCount ?? 0}</span>
                   <span className="text-xs text-muted-foreground ml-1">users</span>
                 </TableCell>
@@ -176,6 +235,16 @@ export function IdPTable({
                             <TestTube className="h-4 w-4 mr-2" />
                           )}
                           {testingConnection === alias ? 'Testing...' : 'Test Connection'}
+                        </div>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onManageMappers(idp)}
+                        className="hover:bg-muted/50"
+                        disabled={!alias}
+                      >
+                        <div className="flex items-center">
+                          <Shuffle className="h-4 w-4 mr-2" />
+                          {t('Claim Mappers')}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onViewCertificates(idp)} className="hover:bg-muted/50">

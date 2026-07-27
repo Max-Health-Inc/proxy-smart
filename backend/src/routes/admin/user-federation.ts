@@ -12,7 +12,6 @@ import {
   UserFederationProviderResponse,
   UserFederationSyncResultResponse,
   LdapTestConnectionResponse,
-  UserFederationMapperResponse,
   CountResponse,
   SuccessResponse,
   type CreateUserFederationRequestType,
@@ -22,43 +21,17 @@ import {
   type UserFederationProviderResponseType,
   type UserFederationSyncResultResponseType,
   type LdapTestConnectionResponseType,
-  type UserFederationMapperResponseType,
   type CountResponseType,
   type SuccessResponseType,
   type ErrorResponseType,
 } from '@/schemas'
 import { handleAdminError } from '@/lib/admin-error-handler'
+import { fromKeycloakConfig, toKeycloakConfig } from '@/lib/keycloak-component-config'
 import { config } from '@/config'
 import type ComponentRepresentation from '@keycloak/keycloak-admin-client/lib/defs/componentRepresentation.js'
 
 const PROVIDER_TYPE = 'org.keycloak.storage.UserStorageProvider'
 const LDAP_PROVIDER_ID = 'ldap'
-const MAPPER_TYPE = 'org.keycloak.storage.ldap.mappers.LDAPStorageMapper'
-
-/**
- * Convert flat config object to Keycloak's string-array config format.
- * Keycloak stores component config as { [key]: string[] }.
- */
-const toKeycloakConfig = (cfg: Record<string, unknown>): Record<string, string[]> => {
-  const result: Record<string, string[]> = {}
-  for (const [key, value] of Object.entries(cfg)) {
-    if (value === undefined || value === null) continue
-    result[key] = [String(value)]
-  }
-  return result
-}
-
-/**
- * Flatten Keycloak's string-array config to a simpler object
- */
-const fromKeycloakConfig = (cfg?: Record<string, string | string[]>): Record<string, string> => {
-  if (!cfg) return {}
-  const result: Record<string, string> = {}
-  for (const [key, value] of Object.entries(cfg)) {
-    result[key] = Array.isArray(value) ? value[0] ?? '' : value
-  }
-  return result
-}
 
 const normalizeProvider = (component: ComponentRepresentation): UserFederationProviderResponseType => ({
   id: component.id,
@@ -481,42 +454,4 @@ export const userFederationRoutes = new Elysia({ prefix: '/user-federation' })
     },
   })
 
-  // ==================== List Mappers ====================
-  .get('/:id/mappers', async ({ getAdmin, params, headers, set }): Promise<UserFederationMapperResponseType[] | ErrorResponseType> => {
-    try {
-      const token = extractToken(headers.authorization)
-      if (!token) {
-        set.status = 401
-        return { error: 'Authorization header required' }
-      }
-
-      const admin = await getAdmin(token)
-      const mappers = await admin.components.find({
-        parent: params.id,
-        type: MAPPER_TYPE,
-      })
-      return mappers.map(m => ({
-        id: m.id,
-        name: m.name,
-        providerId: m.providerId,
-        providerType: m.providerType,
-        parentId: m.parentId,
-        config: fromKeycloakConfig(m.config),
-      }))
-    } catch (error) {
-      return handleAdminError(error, set)
-    }
-  }, {
-    params: t.Object({
-      id: t.String({ description: 'User federation provider ID' })
-    }),
-    response: {
-      200: t.Array(UserFederationMapperResponse),
-      ...CommonErrorResponses,
-    },
-    detail: {
-      summary: 'List LDAP Mappers',
-      description: 'Get all attribute mappers for an LDAP federation provider',
-      tags: ['user-federation'],
-    },
-  })
+// Mapper routes for these providers live in ./user-federation-mappers
