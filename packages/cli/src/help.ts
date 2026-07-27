@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Help + version text for the CLI.
  *
@@ -59,6 +62,24 @@ DOMAINS
   scope-sets        list | get <id> | create | delete <id>
   smart-scopes      list | create | batch | delete <scopeId>
   mcp-endpoint      get | update
+  idps              list | get <alias> | create | update <alias> | delete <alias>
+                    mapper-status [alias] | mappers <alias> | mapper-types <alias>
+                    fix-mappers <alias> [--required-only]
+                    create-mapper <alias> | update-mapper <alias> <mapperId>
+                    delete-mapper <alias> <mapperId>
+  user-federation   list | get <id> | create | update <id> | delete <id> --yes
+                    sync <id> [--action triggerFullSync|triggerChangedUsersSync]
+                    mappers <id> | mapper-types <id>
+                    create-mapper <id> | update-mapper <id> <mapperId>
+                    delete-mapper <id> <mapperId>
+
+CLAIM MAPPING CHECKS
+  Brokered and directory users only carry the attributes a mapper imports for
+  them, and a user without fhirUser cannot be launched into a SMART app. Add
+  --strict to fail (exit 1) when an import is missing, so these work as CI gates:
+
+  proxy-smart idps mapper-status --strict
+  proxy-smart user-federation mappers <id> --strict
 
 LIST OUTPUT
   By default, list renders an aligned table whose columns are derived from the
@@ -79,6 +100,10 @@ EXAMPLES
   proxy-smart scope-sets create --data '{"name":"Reader","scopes":["patient/*.read"]}'
   proxy-smart smart-scopes list --smart-only
   proxy-smart smart-scopes batch --data '{"scopes":[{"name":"patient/Binary.cruds"},{"name":"patient/DocumentReference.cruds"}]}'
+  proxy-smart idps mapper-status --strict
+  proxy-smart idps fix-mappers hospital-oidc
+  proxy-smart idps create-mapper hospital-oidc --data '{"name":"npi-import","identityProviderMapper":"oidc-user-attribute-idp-mapper","config":{"claim":"npi","user.attribute":"npi"}}'
+  proxy-smart user-federation mappers <id>
   proxy-smart request GET /admin/smart-config
   proxy-smart restart --yes
 

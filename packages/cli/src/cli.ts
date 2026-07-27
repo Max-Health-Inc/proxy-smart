@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Command dispatcher: parse argv, resolve config, build a session + API
  * client, and route to the matching command handler.
@@ -19,6 +22,8 @@ import { healthcareUsersCommand } from './commands/healthcare-users'
 import { scopeSetsCommand } from './commands/scope-sets'
 import { smartScopesCommand } from './commands/smart-scopes'
 import { mcpEndpointCommand } from './commands/mcp-endpoint'
+import { identityProvidersCommand } from './commands/identity-providers'
+import { userFederationCommand } from './commands/user-federation'
 import { shutdownCommand, restartCommand } from './commands/server'
 
 /** Top-level command name → handler. */
@@ -32,6 +37,8 @@ const COMMANDS: Record<string, CommandHandler> = {
   'scope-sets': scopeSetsCommand,
   'smart-scopes': smartScopesCommand,
   'mcp-endpoint': mcpEndpointCommand,
+  idps: identityProvidersCommand,
+  'user-federation': userFederationCommand,
   shutdown: shutdownCommand,
   restart: restartCommand,
 }
