@@ -8,7 +8,7 @@ To maintain our dual licensing model and ensure we can provide both open source 
 
 ### By submitting a contribution, you agree that:
 
-1. **License Grant**: You grant Maximilian Nussbaumer and the Proxy Smart project a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable license to:
+1. **License Grant**: You grant Max Health Inc. a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable license to:
 
    - Use, reproduce, modify, and distribute your contributions
    - Sublicense your contributions under any license (including proprietary licenses)
