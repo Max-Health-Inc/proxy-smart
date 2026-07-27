@@ -17,6 +17,12 @@
   "429s": [
     "429er"
   ],
+  "A mapper writes the fhirUser attribute": [
+    "Ein Mapper schreibt das Attribut fhirUser"
+  ],
+  "A mapper writes the fhirUser attribute, so imported users resolve to a FHIR resource.": [
+    "Ein Mapper schreibt das Attribut fhirUser, importierte Benutzer lassen sich damit einer FHIR-Ressource zuordnen."
+  ],
   "A shared secret used for symmetric client authentication. Keep this secure and never expose it in client-side code.": [
     "Ein gemeinsames Geheimnis für symmetrische Client-Authentifizierung. Bewahren Sie dies sicher auf und exponieren Sie es niemals in clientseitigem Code."
   ],
@@ -454,6 +460,9 @@
   ],
   "Attribute imports use": [
     "Attribut-Importe verwenden"
+  ],
+  "Attribute mappings for": [
+    "Attribut-Zuordnungen für"
   ],
   "Audience Clients": [
     "Audience-Clients"
@@ -1244,6 +1253,9 @@
   "Details": [
     "Details"
   ],
+  "Directory users carry fhirUser": [
+    "Verzeichnisbenutzer tragen fhirUser"
+  ],
   "Disable": [
     "Deaktivieren"
   ],
@@ -1703,8 +1715,8 @@
   "Failed to load groups": [
     "Gruppen konnten nicht geladen werden"
   ],
-  "Failed to load identity provider mappers.": [
-    "Identity-Provider-Mapper konnten nicht geladen werden."
+  "Failed to load mappers.": [
+    "Mapper konnten nicht geladen werden."
   ],
   "Failed to load members": [
     "Mitglieder konnten nicht geladen werden"
@@ -2033,6 +2045,9 @@
   "Imported users removed": [
     "Importierte Benutzer entfernt"
   ],
+  "Imported users will only carry the attributes Keycloak maps by default.": [
+    "Importierte Benutzer tragen nur die Attribute, die Keycloak standardmäßig zuordnet."
+  ],
   "Inactive": [
     "Inaktiv"
   ],
@@ -2122,6 +2137,9 @@
   ],
   "Kisi Credentials": [
     "Kisi-Anmeldedaten"
+  ],
+  "LDAP Mappers": [
+    "LDAP-Mapper"
   ],
   "LDAP Users": [
     "LDAP-Benutzer"
@@ -2399,6 +2417,12 @@
   "Mapper deleted.": [
     "Mapper gelöscht."
   ],
+  "Mapper types come from Keycloak and differ per LDAP vendor.": [
+    "Die Mapper-Typen stammen von Keycloak und unterscheiden sich je nach LDAP-Anbieter."
+  ],
+  "Mappers": [
+    "Mapper"
+  ],
   "Mapping": [
     "Zuordnung"
   ],
@@ -2638,6 +2662,9 @@
   ],
   "No links yet": [
     "Noch keine Verknüpfungen"
+  ],
+  "No mapper writes fhirUser": [
+    "Kein Mapper schreibt fhirUser"
   ],
   "No mappers configured": [
     "Keine Mapper konfiguriert"
@@ -3157,6 +3184,9 @@
   ],
   "Raw capability statement": [
     "Rohe Capability-Anweisung"
+  ],
+  "Read-only": [
+    "Schreibgeschützt"
   ],
   "Read-only GET endpoints are always available as MCP resources. Enable this to also register them as tools with readOnlyHint so AI models can invoke them directly.": [
     "Schreibgeschützte GET-Endpunkte sind immer als MCP-Ressourcen verfügbar. Aktivieren Sie dies, um sie auch als Tools mit readOnlyHint zu registrieren, damit KI-Modelle sie direkt aufrufen können."
@@ -4376,6 +4406,9 @@
   "Users brokered through this provider receive every attribute SMART launches depend on.": [
     "Über diesen Provider vermittelte Benutzer erhalten alle Attribute, die SMART-Launches benötigen."
   ],
+  "Users imported from this directory will not resolve to a FHIR resource in SMART launches. Add a user-attribute mapper whose user model attribute is fhirUser, reading whichever LDAP attribute your directory stores it in.": [
+    "Aus diesem Verzeichnis importierte Benutzer lassen sich in SMART-Launches keiner FHIR-Ressource zuordnen. Legen Sie einen User-Attribute-Mapper an, dessen User-Model-Attribut fhirUser ist und der das passende LDAP-Attribut Ihres Verzeichnisses liest."
+  ],
   "Using asymmetric JWT authentication with registered public key": [
     "Asymmetrische JWT-Authentifizierung mit registriertem öffentlichem Schlüssel"
   ],
@@ -4538,6 +4571,9 @@
   "ms avg": [
     "ms Durchschn."
   ],
+  "no fhirUser mapper": [
+    "kein fhirUser-Mapper"
+  ],
   "optional": [
     "optional"
   ],
@@ -4588,6 +4624,9 @@
   ],
   "{{count}} location(s) configured": [
     "{{count}} Standort(e) konfiguriert"
+  ],
+  "{{count}} mappers": [
+    "{{count}} Mapper"
   ],
   "{{count}} member(s)": [
     "{{count}} Mitglied(er)"

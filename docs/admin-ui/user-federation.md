@@ -61,10 +61,18 @@ Each provider can have attribute mappers that control how LDAP attributes map to
 
 Mappers decide which directory attributes reach the Keycloak user, which makes
 them a prerequisite for SMART launches: a directory user without the `fhirUser`
-attribute cannot be resolved to a FHIR resource. Mapper CRUD is available over
-the admin API (see below); `GET /admin/user-federation/:id/mapper-types`
-returns the mapper types the provider supports along with the properties each
-one accepts, so payloads never need hardcoded config keys.
+attribute cannot be resolved to a FHIR resource.
+
+Open **Mappers** on a provider card to list its mappers as
+`directory attribute → user attribute`, add one (the form is built from the
+properties Keycloak reports for the chosen mapper type, so it adapts to the LDAP
+vendor), or delete one. The card itself shows a summary chip: the mapper count,
+or a warning when nothing writes `fhirUser`.
+
+Unlike identity providers, there is no provisioning action here. The directory
+attribute holding the FHIR reference is deployment-specific -- it may be
+`fhirUser`, an employee number, or a vendor-specific OID -- so the dialog reports
+the gap and leaves the source attribute to the admin rather than guessing.
 
 ## API Endpoints
 
