@@ -146,6 +146,7 @@
     "deploy/infra",
     "frontend/ui",
     "packages/patient-picker",
+    "packages/cli",
     "frontend/smart-dicom-template"
   ],
   "main": "eslint.config.js",
