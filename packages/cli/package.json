@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/cli",
-  "version": "0.2.14-alpha.202607261706.cebd5793a",
+  "version": "0.2.14-alpha.202607271922.e1042ea3a",
   "private": false,
   "type": "module",
   "description": "Admin CLI for the proxy-smart SMART on FHIR authorization proxy. Authenticates via Keycloak OAuth (device flow or client_credentials) and drives the admin REST API.",
@@ -26,7 +26,7 @@
     "README.md"
   ],
   "scripts": {
-    "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin",
+    "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin,identity-providers,user-federation",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "test:watch": "bun test --watch",
