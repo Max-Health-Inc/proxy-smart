@@ -107,6 +107,32 @@ export const UserFederationMapperResponse = t.Object({
   config: t.Optional(t.Record(t.String(), t.Any({ description: 'Mapper configuration' }))),
 }, { title: 'UserFederationMapperResponse' })
 
+export const UserFederationMapperTypeResponse = t.Object({
+  id: t.String({ description: 'Mapper provider ID used as providerId when creating a mapper' }),
+  helpText: t.Optional(t.String({ description: 'What this mapper type does' })),
+  properties: t.Array(t.Object({
+    name: t.String({ description: 'Config key' }),
+    label: t.Optional(t.String({ description: 'Human readable label' })),
+    helpText: t.Optional(t.String({ description: 'Help text' })),
+    type: t.Optional(t.String({ description: 'Property type (String, boolean, List, ...)' })),
+    defaultValue: t.Optional(t.String({ description: 'Default value, stringified' })),
+    options: t.Optional(t.Array(t.String(), { description: 'Allowed values for List properties' })),
+    secret: t.Optional(t.Boolean({ description: 'Whether the value is secret' })),
+    required: t.Optional(t.Boolean({ description: 'Whether the property must be set' })),
+  }), { description: 'Configurable properties' }),
+}, { title: 'UserFederationMapperTypeResponse' })
+
+export const CreateUserFederationMapperRequest = t.Object({
+  name: t.String({ description: 'Mapper name (unique per federation provider)' }),
+  providerId: t.String({ description: 'LDAP mapper type (e.g. user-attribute-ldap-mapper, group-ldap-mapper)' }),
+  config: t.Record(t.String(), t.String(), { description: 'Mapper configuration keyed by the type\'s property names' }),
+}, { title: 'CreateUserFederationMapperRequest' })
+
+export const UpdateUserFederationMapperRequest = t.Object({
+  name: t.Optional(t.String({ description: 'Mapper name' })),
+  config: t.Optional(t.Record(t.String(), t.String(), { description: 'Configuration entries to merge into the mapper' })),
+}, { title: 'UpdateUserFederationMapperRequest' })
+
 // ==================== Type Exports ====================
 
 export type LdapConfigType = Static<typeof LdapConfig>
@@ -118,3 +144,6 @@ export type UserFederationProviderResponseType = Static<typeof UserFederationPro
 export type UserFederationSyncResultResponseType = Static<typeof UserFederationSyncResultResponse>
 export type LdapTestConnectionResponseType = Static<typeof LdapTestConnectionResponse>
 export type UserFederationMapperResponseType = Static<typeof UserFederationMapperResponse>
+export type UserFederationMapperTypeResponseType = Static<typeof UserFederationMapperTypeResponse>
+export type CreateUserFederationMapperRequestType = Static<typeof CreateUserFederationMapperRequest>
+export type UpdateUserFederationMapperRequestType = Static<typeof UpdateUserFederationMapperRequest>

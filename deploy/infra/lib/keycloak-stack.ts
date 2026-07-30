@@ -54,7 +54,11 @@ export class KeycloakStack extends cdk.Stack {
     const keycloakVersion = props.keycloakVersion ?? '26.6.4';
     const useCustomImage = Boolean(props.imageUri);
 
-    // Container image: ECR custom image (with pre-built proxy-smart theme) or stock quay.io
+    // Container image: ECR custom image (with pre-built proxy-smart theme) or stock quay.io.
+    // ECR repo is created externally by the deploy workflow's idempotent
+    // create-repository step (avoids the chicken-and-egg of pushing before a CDK
+    // deploy) and imported here. That step needs the deploy role to allow
+    // ecr:CreateRepository on repository/proxy-smart-*.
     const keycloakRepo = useCustomImage
       ? ecr.Repository.fromRepositoryName(this, 'KeycloakRepo', 'proxy-smart-keycloak')
       : undefined;

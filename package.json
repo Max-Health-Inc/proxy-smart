@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.2.13-RELEASE.202607242325.dc006a635",
+  "version": "0.2.14-beta.202607280730.085d409ff",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -59,7 +59,9 @@
     "normalize": "git add --renormalize .",
     "normalize:api": "cd frontend/ui && git add --renormalize src/lib/api-client/",
     "generate": "cd backend && bun run export-openapi && cd .. && bun run generate:clients",
-    "generate:clients": "cd frontend/ui && bun run generate",
+    "generate:clients": "bun run generate:clients:ui && bun run generate:clients:cli",
+    "generate:clients:ui": "cd frontend/ui && bun run generate",
+    "generate:clients:cli": "cd packages/cli && bun run generate",
     "generate:ui": "cd backend && bun run export-openapi && cd ../frontend/ui && bun run generate",
     "generate:ui:normalized": "bun run generate:ui && git add --renormalize frontend/ui/src/lib/api-client/",
     "generate:test": "cd testing && bun run generate",
@@ -144,6 +146,7 @@
     "deploy/infra",
     "frontend/ui",
     "packages/patient-picker",
+    "packages/cli",
     "frontend/smart-dicom-template"
   ],
   "main": "eslint.config.js",

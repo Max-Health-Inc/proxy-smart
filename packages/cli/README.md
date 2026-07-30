@@ -105,6 +105,17 @@ scope-sets        list | get <id> | create | delete <id>
 smart-scopes      list | create | batch | delete <scopeId>
 mcp-endpoint      get | update
 
+idps              list | get <alias> | create | update <alias> | delete <alias>
+                  mapper-status [alias] | mappers <alias> | mapper-types <alias>
+                  fix-mappers <alias> [--required-only]
+                  create-mapper <alias> | update-mapper <alias> <mapperId>
+                  delete-mapper <alias> <mapperId>
+user-federation   list | get <id> | create | update <id> | delete <id> --yes
+                  sync <id> [--action triggerFullSync|triggerChangedUsersSync]
+                  mappers <id> | mapper-types <id>
+                  create-mapper <id> | update-mapper <id> <mapperId>
+                  delete-mapper <id> <mapperId>
+
 shutdown --yes        Gracefully stop the proxy server (POST /admin/shutdown)
 restart  --yes        Restart the proxy server (POST /admin/restart)
 ```
@@ -129,9 +140,30 @@ proxy-smart smart-scopes list --smart-only
 proxy-smart smart-scopes batch --data '{"scopes":[{"name":"patient/Binary.cruds"},{"name":"patient/DocumentReference.cruds"}]}'
 proxy-smart healthcare-users list --limit 50
 proxy-smart mcp-endpoint update --data '{"enabled":true,"disabledTools":["delete_admin_smart_apps"]}'
+proxy-smart idps mapper-status --strict
+proxy-smart idps mappers hospital-oidc
+proxy-smart idps fix-mappers hospital-oidc
+proxy-smart user-federation mappers ldap-1 --strict
 proxy-smart request GET /admin/smart-config
 proxy-smart restart --yes
 ```
+
+### Claim mapping as a CI check
+
+Brokered and directory users only carry the attributes a mapper imports for
+them, and a user without `fhirUser` cannot be launched into a SMART app. Both
+mapper listings accept `--strict`, which exits non-zero when a required import
+is missing, so a pipeline can assert a realm is launch-ready:
+
+```bash
+proxy-smart idps mapper-status --strict            # every provider in the realm
+proxy-smart user-federation mappers <id> --strict  # one LDAP provider
+```
+
+`idps fix-mappers <alias>` provisions what is missing and exits non-zero if
+Keycloak rejected any of it. There is deliberately no equivalent for LDAP: the
+directory attribute holding the FHIR reference is deployment-specific, so it
+cannot be guessed.
 
 ## The generated API client
 
@@ -162,10 +194,17 @@ the generator's `--tags` flag (supported by `openapi-ts-fetch==0.2.2`):
 
 ```
 openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client \
-  --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin
+  --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin,identity-providers,user-federation
 ```
 
-It requires `backend/dist/openapi.json` to exist first (step 1 above).
+It requires `backend/dist/openapi.json` to exist first (step 1 above). Adding a
+command for a route under a new tag means adding that tag here first, otherwise
+the route is absent from the generated client.
+
+`bun run generate` from the repo root does both steps for every generated client
+(admin UI and CLI), and is what CI runs. The generated directories are
+gitignored, so a client left out of that script does not exist in a clean
+checkout at all.
 
 ## Why a hand-rolled arg parser?
 

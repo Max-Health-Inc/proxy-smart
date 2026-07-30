@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Button, PageLayout } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
@@ -11,6 +14,7 @@ import { IdPTable } from './IdPTable';
 import { IdPEditDialog } from './IdPEditDialog';
 import { ConnectionTestDialog } from './ConnectionTestDialog';
 import { CertificatesDialog } from './CertificatesDialog';
+import { IdPMappersDialog } from './IdPMappersDialog';
 
 import type {
   IdentityProviderWithStats,
@@ -20,7 +24,7 @@ import type {
   UpdateIdentityProviderRequest,
   CreateIdentityProviderRequest
 } from '@/lib/types/api';
-import type { Organization } from '@/lib/api-client';
+import type { IdentityProviderMapperStatus, Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
 
 const DEFAULT_NAME_ID_FORMAT = 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent';
@@ -120,8 +124,27 @@ export function IdPManager() {
   const [testingConnection, setTestingConnection] = useState<string | null>(null);
   const [connectionResults, setConnectionResults] = useState<Record<string, { success: boolean; message: string; testedAt?: string }>>({});
   const [showCertificates, setShowCertificates] = useState<string | null>(null);
+  const [managingMappers, setManagingMappers] = useState<string | null>(null);
   const [newIdp, setNewIdp] = useState<IdentityProviderFormData>(createEmptyFormData());
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [mapperStatus, setMapperStatus] = useState<Record<string, IdentityProviderMapperStatus>>({});
+
+  // Claim-mapping health per provider — a brokered user only carries the
+  // attributes an IdP mapper imports, so this is surfaced alongside the list.
+  const refreshMapperStatus = useCallback(async () => {
+    if (!isAuthenticated || !clientApis.identityProviders) {
+      setMapperStatus({});
+      return;
+    }
+
+    try {
+      const response = await clientApis.identityProviders.getAdminIdpsMapperStatus();
+      setMapperStatus(Object.fromEntries(response.status.map((entry) => [entry.alias, entry])));
+    } catch (error) {
+      console.error('Failed to load IdP mapper status:', error);
+      setMapperStatus({});
+    }
+  }, [isAuthenticated, clientApis.identityProviders]);
 
   const refreshIdps = useCallback(async () => {
     if (!isAuthenticated || !clientApis.identityProviders) {
@@ -132,12 +155,13 @@ export function IdPManager() {
     try {
       const providers = await clientApis.identityProviders.getAdminIdps();
       setIdps(providers.map(mapResponseToStats));
+      await refreshMapperStatus();
     } catch (error) {
       console.error('Failed to load Identity Providers:', error);
       setIdps([]);
       notify({ type: 'error', message: t('Failed to load Identity Providers. Please try again.') });
     }
-  }, [isAuthenticated, clientApis.identityProviders]);
+  }, [isAuthenticated, clientApis.identityProviders, refreshMapperStatus]);
 
   useEffect(() => {
     setLoading(true);
@@ -314,6 +338,12 @@ export function IdPManager() {
     }
   };
 
+  const handleManageMappers = (idp: IdentityProviderWithStats) => {
+    if (idp.alias) {
+      setManagingMappers(idp.alias);
+    }
+  };
+
   const handleDeleteIdp = async (alias: string) => {
     if (!alias) {
       notify({ type: 'error', message: t('Unable to delete provider without an alias.') });
@@ -399,7 +429,7 @@ export function IdPManager() {
         </div>
       </div>
 
-      <IdPStatisticsCards idps={idps} />
+      <IdPStatisticsCards idps={idps} mapperStatus={mapperStatus} />
 
       <IdPAddForm
         isOpen={showAddForm}
@@ -417,10 +447,12 @@ export function IdPManager() {
         idps={idps}
         testingConnection={testingConnection}
         connectionResults={connectionResults}
+        mapperStatus={mapperStatus}
         onEdit={handleEditIdp}
         onToggleStatus={toggleIdpStatus}
         onTestConnection={handleTestConnection}
         onViewCertificates={handleViewCertificates}
+        onManageMappers={handleManageMappers}
         onDelete={handleDeleteIdp}
       />
 
@@ -448,6 +480,16 @@ export function IdPManager() {
           onClose={() => setShowCertificates(null)}
           showCertificates={showCertificates}
           idps={idps}
+        />
+      )}
+
+      {managingMappers && (
+        <IdPMappersDialog
+          isOpen={!!managingMappers}
+          onClose={() => setManagingMappers(null)}
+          alias={managingMappers}
+          displayName={idps.find((idp) => idp.alias === managingMappers)?.displayName ?? undefined}
+          onChanged={refreshMapperStatus}
         />
       )}
     </PageLayout>

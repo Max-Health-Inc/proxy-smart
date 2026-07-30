@@ -1,5 +1,8 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react';
-import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, StatCard } from '@proxy-smart/shared-ui';
+import { Button } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAuth } from '@/stores/authStore';
@@ -7,323 +10,63 @@ import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Database,
-  Server,
-  Shield,
   RefreshCw,
   Trash2,
   Pencil,
-  Plug,
-  Users,
   ArrowDownUp,
   Unlink,
   CheckCircle2,
   XCircle,
   FolderSync,
+  Shuffle,
 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
+import { LdapMappersDialog } from './LdapMappersDialog';
+import { LdapForm } from './LdapForm';
+import { FederationStatisticsCards } from './FederationStatisticsCards';
+import { defaultFormData, type FederationWithStatus, type FormData } from './types';
 import type {
-  UserFederationProviderResponse,
   CreateUserFederationRequest,
   LdapTestConnectionRequest,
   UserFederationSyncResultResponse,
 } from '@/lib/api-client';
 
-// ==================== Types ====================
 
-interface FederationWithStatus extends UserFederationProviderResponse {
-  status: 'active' | 'inactive' | 'unknown';
+// ==================== Mapper Overview ====================
+
+/** Keycloak user attribute a SMART launch resolves the imported user through */
+const SMART_USER_ATTRIBUTE = 'fhirUser';
+
+interface MapperOverview {
+  count: number;
+  /** Whether some mapper writes the fhirUser user attribute */
+  mapsFhirUser: boolean;
 }
 
-interface FormData {
-  name: string;
-  connectionUrl: string;
-  bindDn: string;
-  bindCredential: string;
-  usersDn: string;
-  usernameLDAPAttribute: string;
-  rdnLDAPAttribute: string;
-  uuidLDAPAttribute: string;
-  userObjectClasses: string;
-  editMode: string;
-  vendor: string;
-  searchScope: string;
-  authType: string;
-  pagination: boolean;
-  importEnabled: boolean;
-  syncRegistrations: boolean;
-  trustEmail: boolean;
-  batchSizeForSync: string;
-  fullSyncPeriod: string;
-  changedSyncPeriod: string;
-  connectionPooling: boolean;
-  startTls: boolean;
-}
+type FederationApi = NonNullable<ReturnType<typeof useAuth>['clientApis']['userFederation']>;
 
-const defaultFormData: FormData = {
-  name: '',
-  connectionUrl: '',
-  bindDn: '',
-  bindCredential: '',
-  usersDn: '',
-  usernameLDAPAttribute: 'uid',
-  rdnLDAPAttribute: 'uid',
-  uuidLDAPAttribute: 'entryUUID',
-  userObjectClasses: 'inetOrgPerson, organizationalPerson',
-  editMode: 'READ_ONLY',
-  vendor: 'other',
-  searchScope: '2',
-  authType: 'simple',
-  pagination: true,
-  importEnabled: true,
-  syncRegistrations: false,
-  trustEmail: false,
-  batchSizeForSync: '1000',
-  fullSyncPeriod: '-1',
-  changedSyncPeriod: '-1',
-  connectionPooling: true,
-  startTls: false,
-};
+/**
+ * Per-provider mapper summary for the cards. Best-effort: a provider whose
+ * mappers cannot be listed simply shows no summary rather than failing the page.
+ */
+async function fetchMapperOverviews(
+  api: FederationApi,
+  ids: string[],
+): Promise<Record<string, MapperOverview>> {
+  const entries = await Promise.all(ids.map(async (id): Promise<[string, MapperOverview] | null> => {
+    try {
+      const mappers = await api.getAdminUserFederationByIdMappers({ id });
+      return [id, {
+        count: mappers.length,
+        mapsFhirUser: mappers.some(mapper =>
+          (mapper.config as Record<string, string> | undefined)?.['user.model.attribute'] === SMART_USER_ATTRIBUTE),
+      }];
+    } catch {
+      return null;
+    }
+  }));
 
-// ==================== Sub-components ====================
-
-function StatisticsCards({ federations }: { federations: FederationWithStatus[] }) {
-  const { t } = useTranslation();
-  const active = federations.filter(f => f.status === 'active').length;
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <StatCard icon={Database} label={t('Total Federations')} value={federations.length} color="blue" />
-      <StatCard icon={Shield} label={t('Active')} value={active} color="green" />
-      <StatCard icon={Server} label={t('Inactive')} value={federations.length - active} color="orange" />
-    </div>
-  );
-}
-
-function SelectField({ label, value, onChange, options }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <div className="space-y-2">
-      <Label className="text-sm font-semibold text-foreground">{label}</Label>
-      <Select value={value} onValueChange={onChange}>
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map(o => (
-            <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-function CheckboxField({ label, description, checked, onChange }: {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex items-start space-x-3 cursor-pointer">
-      <Checkbox
-        checked={checked}
-        onCheckedChange={(v) => onChange(v === true)}
-        className="mt-1"
-      />
-      <div>
-        <div className="text-sm font-medium text-foreground">{label}</div>
-        {description && <div className="text-xs text-muted-foreground">{description}</div>}
-      </div>
-    </label>
-  );
-}
-
-function LdapForm({ form, setForm, onTestConnection, testing }: {
-  form: FormData;
-  setForm: React.Dispatch<React.SetStateAction<FormData>>;
-  onTestConnection: () => void;
-  testing: boolean;
-}) {
-  const { t } = useTranslation();
-  const set = (key: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm(prev => ({ ...prev, [key]: e.target.value }));
-
-  return (
-    <div className="space-y-6">
-      {/* Basic */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Database className="w-5 h-5 text-primary" />
-          {t('Basic Settings')}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Provider Name')} *</Label>
-            <Input value={form.name} onChange={set('name')} placeholder="e.g. Corporate LDAP" />
-          </div>
-          <SelectField
-            label={t('LDAP Vendor')}
-            value={form.vendor}
-            onChange={v => setForm(prev => ({ ...prev, vendor: v }))}
-            options={[
-              { value: 'ad', label: 'Active Directory' },
-              { value: 'rhds', label: 'Red Hat Directory Server' },
-              { value: 'tivoli', label: 'Tivoli' },
-              { value: 'edirectory', label: 'Novell eDirectory' },
-              { value: 'other', label: 'Other' },
-            ]}
-          />
-        </div>
-      </div>
-
-      {/* Connection */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Plug className="w-5 h-5 text-primary" />
-          {t('Connection Settings')}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2 md:col-span-2">
-            <Label className="text-sm font-semibold">{t('Connection URL')} *</Label>
-            <Input value={form.connectionUrl} onChange={set('connectionUrl')} placeholder="ldap://ldap.example.com:389" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Bind DN')}</Label>
-            <Input value={form.bindDn} onChange={set('bindDn')} placeholder="cn=admin,dc=example,dc=com" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Bind Credential')}</Label>
-            <Input type="password" value={form.bindCredential} onChange={set('bindCredential')} placeholder="••••••••" />
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <CheckboxField
-            label={t('Enable StartTLS')}
-            checked={form.startTls}
-            onChange={v => setForm(prev => ({ ...prev, startTls: v }))}
-          />
-          <CheckboxField
-            label={t('Connection Pooling')}
-            checked={form.connectionPooling}
-            onChange={v => setForm(prev => ({ ...prev, connectionPooling: v }))}
-          />
-        </div>
-        <LoadingButton
-          type="button"
-          variant="outline"
-          onClick={onTestConnection}
-          loading={testing}
-          disabled={!form.connectionUrl}
-          className="rounded-xl"
-        >
-          <Plug className="w-4 h-4 mr-2" />
-          {t('Test Connection')}
-        </LoadingButton>
-      </div>
-
-      {/* Users DN & attributes */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
-          {t('LDAP Users')}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2 md:col-span-2">
-            <Label className="text-sm font-semibold">{t('Users DN')} *</Label>
-            <Input value={form.usersDn} onChange={set('usersDn')} placeholder="ou=users,dc=example,dc=com" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Username LDAP Attribute')}</Label>
-            <Input value={form.usernameLDAPAttribute} onChange={set('usernameLDAPAttribute')} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('RDN LDAP Attribute')}</Label>
-            <Input value={form.rdnLDAPAttribute} onChange={set('rdnLDAPAttribute')} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('UUID LDAP Attribute')}</Label>
-            <Input value={form.uuidLDAPAttribute} onChange={set('uuidLDAPAttribute')} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('User Object Classes')}</Label>
-            <Input value={form.userObjectClasses} onChange={set('userObjectClasses')} />
-          </div>
-        </div>
-      </div>
-
-      {/* Sync & Edit Mode */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-          <ArrowDownUp className="w-5 h-5 text-primary" />
-          {t('Sync Settings')}
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <SelectField
-            label={t('Edit Mode')}
-            value={form.editMode}
-            onChange={v => setForm(prev => ({ ...prev, editMode: v }))}
-            options={[
-              { value: 'READ_ONLY', label: 'Read Only' },
-              { value: 'WRITABLE', label: 'Writable' },
-              { value: 'UNSYNCED', label: 'Unsynced' },
-            ]}
-          />
-          <SelectField
-            label={t('Search Scope')}
-            value={form.searchScope}
-            onChange={v => setForm(prev => ({ ...prev, searchScope: v }))}
-            options={[
-              { value: '1', label: 'One Level' },
-              { value: '2', label: 'Subtree' },
-            ]}
-          />
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Batch Size')}</Label>
-            <Input value={form.batchSizeForSync} onChange={set('batchSizeForSync')} />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Full Sync Period (seconds)')}</Label>
-            <Input value={form.fullSyncPeriod} onChange={set('fullSyncPeriod')} placeholder="-1 to disable" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">{t('Changed Users Sync Period (seconds)')}</Label>
-            <Input value={form.changedSyncPeriod} onChange={set('changedSyncPeriod')} placeholder="-1 to disable" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <CheckboxField
-            label={t('Import Users')}
-            description={t('Import users from LDAP into Keycloak database')}
-            checked={form.importEnabled}
-            onChange={v => setForm(prev => ({ ...prev, importEnabled: v }))}
-          />
-          <CheckboxField
-            label={t('Sync Registrations')}
-            description={t('Sync new Keycloak registrations to LDAP')}
-            checked={form.syncRegistrations}
-            onChange={v => setForm(prev => ({ ...prev, syncRegistrations: v }))}
-          />
-          <CheckboxField
-            label={t('Pagination')}
-            description={t('Use paged result controls for LDAP queries')}
-            checked={form.pagination}
-            onChange={v => setForm(prev => ({ ...prev, pagination: v }))}
-          />
-          <CheckboxField
-            label={t('Trust Email')}
-            description={t('Trust email addresses from LDAP without verification')}
-            checked={form.trustEmail}
-            onChange={v => setForm(prev => ({ ...prev, trustEmail: v }))}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return Object.fromEntries(entries.filter((entry): entry is [string, MapperOverview] => entry !== null));
 }
 
 // ==================== Main Component ====================
@@ -339,7 +82,15 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
   const [testingConnection, setTestingConnection] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<UserFederationSyncResultResponse | null>(null);
+  const [mapperOverviews, setMapperOverviews] = useState<Record<string, MapperOverview>>({});
+  const [managingMappers, setManagingMappers] = useState<{ id: string; name?: string } | null>(null);
   const { notify } = useNotificationStore();
+
+  const refreshMapperOverviews = useCallback(async (providers: FederationWithStatus[]) => {
+    if (!clientApis?.userFederation) return;
+    const ids = providers.map(provider => provider.id).filter((id): id is string => !!id);
+    setMapperOverviews(await fetchMapperOverviews(clientApis.userFederation, ids));
+  }, [clientApis]);
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated || !clientApis?.userFederation) {
@@ -348,32 +99,36 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
     }
     try {
       const providers = await clientApis.userFederation.getAdminUserFederation();
-      setFederations(providers.map(p => ({
+      const withStatus = providers.map(p => ({
         ...p,
         status: (p.config as Record<string, string>)?.enabled === 'false' ? 'inactive' as const : 'active' as const,
-      })));
+      }));
+      setFederations(withStatus);
+      await refreshMapperOverviews(withStatus);
     } catch (error) {
       console.error('Failed to load user federations:', error);
       setFederations([]);
       notify({ type: 'error', message: t('Failed to load user federations') });
     }
-  }, [isAuthenticated, clientApis, t, notify]);
+  }, [isAuthenticated, clientApis, t, notify, refreshMapperOverviews]);
 
   useEffect(() => {
     if (!isAuthenticated || !clientApis?.userFederation) return;
     clientApis.userFederation.getAdminUserFederation()
       .then(providers => {
-        setFederations(providers.map(p => ({
+        const withStatus = providers.map(p => ({
           ...p,
           status: (p.config as Record<string, string>)?.enabled === 'false' ? 'inactive' as const : 'active' as const,
-        })));
+        }));
+        setFederations(withStatus);
+        return refreshMapperOverviews(withStatus);
       })
       .catch(error => {
         console.error('Failed to load user federations:', error);
         setFederations([]);
       })
       .finally(() => setLoading(false));
-  }, [isAuthenticated, clientApis]);
+  }, [isAuthenticated, clientApis, refreshMapperOverviews]);
 
   const formToRequest = (f: FormData): CreateUserFederationRequest => ({
     name: f.name,
@@ -599,7 +354,7 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
       )}
 
       {/* Statistics */}
-      <StatisticsCards federations={federations} />
+      <FederationStatisticsCards federations={federations} />
 
       {/* Add / Edit Form */}
       {(showAddForm || editingId) && (
@@ -719,6 +474,25 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
                       <span className="text-xs text-muted-foreground">
                         {(fed.config as Record<string, string>)?.vendor ?? 'other'}
                       </span>
+                      {fed.id && mapperOverviews[fed.id] && (
+                        <button
+                          type="button"
+                          onClick={() => setManagingMappers({ id: fed.id!, name: fed.name })}
+                          className={`inline-flex items-center gap-1 text-xs hover:underline ${
+                            mapperOverviews[fed.id].mapsFhirUser
+                              ? 'text-muted-foreground'
+                              : 'text-amber-600 dark:text-amber-400'
+                          }`}
+                          title={mapperOverviews[fed.id].mapsFhirUser
+                            ? t('A mapper writes the fhirUser attribute')
+                            : t('No mapper writes fhirUser')}
+                        >
+                          <Shuffle className="w-3 h-3" />
+                          {mapperOverviews[fed.id].mapsFhirUser
+                            ? t('{{count}} mappers', { count: mapperOverviews[fed.id].count })
+                            : t('no fhirUser mapper')}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -769,6 +543,16 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => fed.id && setManagingMappers({ id: fed.id, name: fed.name })}
+                    disabled={!fed.id}
+                    className="rounded-xl text-xs"
+                  >
+                    <Shuffle className="w-3 h-3 mr-1" />
+                    {t('Mappers')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => {
                       if (fed.id) {
                         setForm(providerToForm(fed));
@@ -795,6 +579,16 @@ export function UserFederationManager({ embedded }: { embedded?: boolean } = {})
             </div>
           ))}
         </div>
+      )}
+
+      {managingMappers && (
+        <LdapMappersDialog
+          isOpen={!!managingMappers}
+          onClose={() => setManagingMappers(null)}
+          providerId={managingMappers.id}
+          providerName={managingMappers.name}
+          onChanged={() => refreshMapperOverviews(federations)}
+        />
       )}
     </div>
   );

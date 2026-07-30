@@ -20,6 +20,8 @@ import {
 } from '@/schemas'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
+import { ensureIdpAttributeMappers } from '@/lib/idp-mappers'
+import { logger } from '@/lib/logger'
 import type IdentityProviderRepresentation from '@keycloak/keycloak-admin-client/lib/defs/identityProviderRepresentation.js'
 
 const normalizeProvider = (
@@ -139,6 +141,25 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
         ...payload,
         config: payload.config ?? {}
       } as IdentityProviderRepresentation)
+
+      // Brokered users arrive with none of the SMART attributes unless an IdP
+      // mapper imports them, so provision the expected imports up front.
+      // Best-effort: a provider type without attribute mappers is still valid.
+      try {
+        const mapperResult = await ensureIdpAttributeMappers(admin, payload.alias)
+        if (mapperResult.created.length > 0) {
+          logger.admin.info('Provisioned SMART attribute mappers on new identity provider', {
+            alias: payload.alias,
+            created: mapperResult.created
+          })
+        }
+      } catch (mapperError) {
+        logger.admin.warn('Could not provision SMART attribute mappers on new identity provider', {
+          alias: payload.alias,
+          error: mapperError instanceof Error ? mapperError.message : mapperError
+        })
+      }
+
       const created = await admin.identityProviders.findOne({ alias: payload.alias })
       return normalizeProvider((created ?? payload) as IdentityProviderType)
     } catch (error) {

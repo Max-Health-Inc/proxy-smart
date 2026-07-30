@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Wires the generated OpenAPI client to a CLI session.
  *
@@ -13,6 +16,8 @@ import {
   ScopeSetsApi,
   McpManagementApi,
   AdminApi,
+  IdentityProvidersApi,
+  UserFederationApi,
 } from './api-client'
 import { type ResolvedConfig } from './config'
 import { type Session } from './session'
@@ -24,6 +29,8 @@ export interface ApiClient {
   scopeSets: ScopeSetsApi
   mcp: McpManagementApi
   admin: AdminApi
+  identityProviders: IdentityProvidersApi
+  userFederation: UserFederationApi
   /** The proxy base URL these APIs are bound to. */
   basePath: string
 }
@@ -43,6 +50,8 @@ export function createApiClient(config: ResolvedConfig, session: Session): ApiCl
     scopeSets: new ScopeSetsApi(configuration),
     mcp: new McpManagementApi(configuration),
     admin: new AdminApi(configuration),
+    identityProviders: new IdentityProvidersApi(configuration),
+    userFederation: new UserFederationApi(configuration),
     basePath: config.url,
   }
 }

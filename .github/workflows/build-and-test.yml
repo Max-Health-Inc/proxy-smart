@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: Build & Test
 
 on:
@@ -99,7 +102,10 @@ jobs:
       run: |
         echo "🔨 Generating client APIs..."
         pip install --break-system-packages openapi-ts-fetch==0.2.2
-        bun run generate:ui
+        # `generate` covers every generated client (admin UI + CLI). Both are
+        # gitignored, so anything that is not generated here does not exist in
+        # CI at all — the CLI used to be silently absent.
+        bun run generate
 
     # === FRONTEND BUILD ===
     - name: Build Frontend
@@ -134,6 +140,15 @@ jobs:
         echo "🧪 Testing frontend..."
         cd frontend/ui
         bun run test --run
+
+    # === CLI (published from this repo, so it must build and pass here) ===
+    - name: Test CLI
+      if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
+      run: |
+        echo "🧪 Testing CLI..."
+        cd packages/cli
+        bun run typecheck
+        bun run test
 
     - name: Upload Build Artifacts
       if: ${{ !startsWith(github.ref, 'refs/heads/dev/') }}
