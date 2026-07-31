@@ -1127,6 +1127,31 @@
         "validateSignature": "true",
         "clientAuthMethod": "client_secret_post"
       }
+    },
+    {
+      "alias": "maxhealth",
+      "displayName": "Max Health",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "issuer": "https://auth.beta.maxhealth.tech",
+        "authorizationUrl": "https://auth.beta.maxhealth.tech/authorize",
+        "tokenUrl": "https://auth.beta.maxhealth.tech/token",
+        "userInfoUrl": "https://auth.beta.maxhealth.tech/userinfo",
+        "jwksUrl": "https://auth.beta.maxhealth.tech/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "clientId": "proxy-smart",
+        "clientAuthMethod": "none",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "defaultScopes": "openid profile email",
+        "syncMode": "FORCE"
+      }
     }
   ],
   "users": [

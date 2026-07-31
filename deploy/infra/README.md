@@ -79,8 +79,8 @@ bun run infra:bootstrap
 bun run infra:deploy:alpha -- \
   -c hostedZoneId=Z0123456789ABCDEFGHIJ \
   -c hostedZoneName=maxhealth.tech \
-  -c keycloakDomain=auth.alpha.maxhealth.tech \
-  -c backendDomain=api.alpha.maxhealth.tech
+  -c keycloakDomain=auth.beta.maxhealth.tech \
+  -c backendDomain=api.beta.maxhealth.tech
 ```
 
 ## Configuration
