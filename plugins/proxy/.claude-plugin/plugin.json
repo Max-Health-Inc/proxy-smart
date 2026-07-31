@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "proxy",
+  "displayName": "Proxy Smart — SMART on FHIR administration",
+  "description": "Administer YOUR SMART on FHIR authorization proxy from the conversation. Bundles the smart-app-onboarding and smart-launch-debugging skills + the deployment's own MCP server, whose tools are generated from the admin API: register and configure SMART apps, manage scopes and scope sets, healthcare users and practitioner roles, FHIR servers, identity providers, and Keycloak Organizations. Proxy Smart is self-hosted, so set PROXY_SMART_URL to your instance before installing. To try Proxy Smart without deploying one, install proxy-beta instead.",
+  "version": "0.1.0",
+  "author": { "name": "Max Health Inc.", "url": "https://maxhealth.tech" },
+  "homepage": "https://github.com/Max-Health-Inc/proxy-smart",
+  "repository": "https://github.com/Max-Health-Inc/proxy-smart",
+  "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",
+  "keywords": ["smart-on-fhir", "fhir", "oauth2", "keycloak", "healthcare", "interoperability", "mcp"]
+}

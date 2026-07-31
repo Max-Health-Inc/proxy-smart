@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "proxy-smart-beta": {
+      "type": "http",
+      "url": "https://beta.proxy-smart.com/mcp"
+    }
+  }
+}
