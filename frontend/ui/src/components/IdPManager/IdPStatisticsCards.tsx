@@ -19,9 +19,12 @@ export function IdPStatisticsCards({ idps, mapperStatus = {} }: IdPStatisticsCar
   const totalUsers = idps.reduce((acc, idp) => acc + (idp.userCount ?? 0), 0);
   const totalSaml = idps.filter((idp) => (idp.providerId ?? '').toLowerCase() === 'saml').length;
 
-  // Providers that can carry attribute mappers, and how many of those import
-  // everything a SMART launch needs from the brokered identity.
-  const mappable = Object.values(mapperStatus).filter((status) => !status.unsupported);
+  // Providers humans log in through that can carry attribute mappers, and how
+  // many of those import everything a SMART launch needs. Machine trust anchors
+  // (client-assertion federation) are excluded — they would never be "ready".
+  const mappable = Object.values(mapperStatus).filter(
+    (status) => status.userFacing && !status.unsupported,
+  );
   const mapped = mappable.filter((status) => status.healthy).length;
 
   return (

@@ -35,6 +35,7 @@ function createContext(argv: string[]) {
       missingOptional: [],
       healthy: true,
       unsupported: false,
+      userFacing: true,
     }],
     definitions: [],
     timestamp: 'now',
@@ -145,13 +146,33 @@ describe('idps mapper-status --strict', () => {
         alias: 'hospital-oidc', providerId: 'oidc', enabled: true,
         attributeMapperType: 'oidc-user-attribute-idp-mapper', mappers: [],
         missingRequired: ['fhirUser-import'], missingOptional: [],
-        healthy: false, unsupported: false,
+        healthy: false, unsupported: false, userFacing: true,
       }],
       definitions: [],
       timestamp: 'now',
     })
 
     await expect(identityProvidersCommand(ctx)).rejects.toThrow(CliError)
+  })
+
+  it('does not fail on a machine trust anchor that carries no user attributes', async () => {
+    const { ctx } = createContext(['idps', 'mapper-status', '--strict'])
+    const api = ctx.api.identityProviders as unknown as {
+      getAdminIdpsMapperStatus: () => Promise<unknown>
+    }
+    // proxy-smart-signing shape: federates client assertions, never user logins.
+    api.getAdminIdpsMapperStatus = async () => ({
+      status: [{
+        alias: 'proxy-smart-signing', providerId: 'oidc', enabled: true,
+        attributeMapperType: 'oidc-user-attribute-idp-mapper', mappers: [],
+        missingRequired: [], missingOptional: [],
+        healthy: true, unsupported: false, userFacing: false,
+      }],
+      definitions: [],
+      timestamp: 'now',
+    })
+
+    await identityProvidersCommand(ctx)
   })
 })
 
