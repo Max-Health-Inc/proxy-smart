@@ -27,7 +27,6 @@ function config(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     url: 'https://proxy.example.com',
     clientId: 'admin-ui',
     scope: 'openid',
-    directKeycloak: false,
     homeDir: home,
     ...overrides,
   }
@@ -155,18 +154,22 @@ describe('Session.resolveEndpoints prefers the proxy', () => {
     expect(endpoints.userinfoEndpoint).toBe('https://proxy.example.com/auth/userinfo')
   })
 
-  it('discovers from the proxy even when realm + keycloakUrl happen to be set (no escape hatch)', async () => {
+  /**
+   * The proxy is the only authorization server. Even if a caller smuggles
+   * Keycloak settings onto the config object, discovery must still go to the
+   * proxy — there is no branch that would honour them.
+   */
+  it('discovers from the proxy even when stray Keycloak settings are present', async () => {
     const { impl, calls } = discoveryFetch({
       token_endpoint: 'https://proxy.example.com/auth/token',
       device_authorization_endpoint: 'https://proxy.example.com/auth/device',
     })
     const session = new Session(
-      config({ realm: 'app', keycloakUrl: 'https://kc.example.com' }),
+      { ...config(), ...({ realm: 'app', keycloakUrl: 'https://kc.example.com', directKeycloak: true } as object) },
       impl,
     )
     const endpoints = await session.resolveEndpoints()
 
-    // It must NOT build Keycloak endpoints just because realm/keycloakUrl exist.
     expect(calls).toEqual(['https://proxy.example.com/auth/.well-known/openid-configuration'])
     expect(endpoints.tokenEndpoint).toBe('https://proxy.example.com/auth/token')
     expect(endpoints.tokenEndpoint).not.toContain('kc.example.com')
@@ -194,25 +197,6 @@ describe('Session.resolveEndpoints prefers the proxy', () => {
     const { impl } = discoveryFetch({ error: 'not_found' }, 404)
     const session = new Session(config(), impl)
     await expect(session.resolveEndpoints()).rejects.toThrow('proxy')
-  })
-})
-
-describe('Session.resolveEndpoints direct-Keycloak escape hatch', () => {
-  it('builds Keycloak endpoints with no network only when directKeycloak is opted in', async () => {
-    const session = new Session(
-      config({ directKeycloak: true, realm: 'app', keycloakUrl: 'https://kc.example.com' }),
-      failingFetch,
-    )
-    const endpoints = await session.resolveEndpoints()
-    expect(endpoints.tokenEndpoint).toBe('https://kc.example.com/realms/app/protocol/openid-connect/token')
-    expect(endpoints.deviceAuthorizationEndpoint).toBe(
-      'https://kc.example.com/realms/app/protocol/openid-connect/auth/device',
-    )
-  })
-
-  it('rejects the escape hatch when realm or keycloakUrl is missing', async () => {
-    const session = new Session(config({ directKeycloak: true, realm: 'app' }), failingFetch)
-    await expect(session.resolveEndpoints()).rejects.toThrow('Keycloak')
   })
 })
 

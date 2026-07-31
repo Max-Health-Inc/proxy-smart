@@ -62,10 +62,6 @@ describe('overridesFromFlags', () => {
       'cli',
       '--client-secret',
       'shh',
-      '--realm',
-      'app',
-      '--keycloak-url',
-      'https://kc',
       '--scope',
       'openid',
     ])
@@ -73,8 +69,6 @@ describe('overridesFromFlags', () => {
       url: 'https://proxy',
       clientId: 'cli',
       clientSecret: 'shh',
-      realm: 'app',
-      keycloakUrl: 'https://kc',
       scope: 'openid',
     })
   })
@@ -85,12 +79,19 @@ describe('overridesFromFlags', () => {
     expect(overrides.url).toBe('https://proxy')
     expect(overrides.clientId).toBeUndefined()
     expect(overrides.clientSecret).toBeUndefined()
-    // Absent escape hatch must stay undefined so env / file can decide.
-    expect(overrides.directKeycloak).toBeUndefined()
   })
 
-  it('forwards the direct-keycloak escape hatch only when explicitly passed', () => {
-    const optIn = overridesFromFlags(parseArgs(['--direct-keycloak']).flags)
-    expect(optIn.directKeycloak).toBe(true)
+  /**
+   * The proxy is the only authorization server the CLI knows. Keycloak-pointing
+   * flags were removed rather than deprecated, so they must not silently
+   * survive as string overrides on the config object.
+   */
+  it('ignores removed Keycloak-direct flags', () => {
+    const overrides = overridesFromFlags(
+      parseArgs(['--direct-keycloak', '--realm', 'app', '--keycloak-url', 'https://kc']).flags,
+    ) as Record<string, unknown>
+    expect(overrides.directKeycloak).toBeUndefined()
+    expect(overrides.realm).toBeUndefined()
+    expect(overrides.keycloakUrl).toBeUndefined()
   })
 })

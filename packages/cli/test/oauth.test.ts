@@ -11,8 +11,6 @@ import {
   formEncode,
   generatePkcePair,
   isTokenFresh,
-  keycloakDiscoveryUrl,
-  keycloakEndpoints,
   parseDeviceAuthResponse,
   parseOidcMetadata,
   parseTokenSet,
@@ -21,25 +19,16 @@ import {
 } from '../src/oauth'
 
 describe('discovery URL building', () => {
-  it('builds the canonical Keycloak discovery URL and trims trailing slashes', () => {
-    expect(keycloakDiscoveryUrl('https://kc.example.com/', 'master')).toBe(
-      'https://kc.example.com/realms/master/.well-known/openid-configuration',
-    )
-  })
-
   it('builds the proxy discovery URL under /auth', () => {
     expect(proxyDiscoveryUrl('https://proxy.example.com/')).toBe(
       'https://proxy.example.com/auth/.well-known/openid-configuration',
     )
   })
 
-  it('builds canonical Keycloak endpoints without a round-trip', () => {
-    const endpoints = keycloakEndpoints('https://kc.example.com', 'app')
-    expect(endpoints.tokenEndpoint).toBe('https://kc.example.com/realms/app/protocol/openid-connect/token')
-    expect(endpoints.deviceAuthorizationEndpoint).toBe(
-      'https://kc.example.com/realms/app/protocol/openid-connect/auth/device',
+  it('trims trailing slashes so the join stays predictable', () => {
+    expect(proxyDiscoveryUrl('https://proxy.example.com///')).toBe(
+      'https://proxy.example.com/auth/.well-known/openid-configuration',
     )
-    expect(endpoints.userinfoEndpoint).toBe('https://kc.example.com/realms/app/protocol/openid-connect/userinfo')
   })
 })
 

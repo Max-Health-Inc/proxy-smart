@@ -9,7 +9,6 @@ import {
   ENV,
   clearTokenCache,
   configPath,
-  envFlag,
   normalizeUrl,
   readPersistedConfig,
   resolveConfig,
@@ -58,8 +57,8 @@ describe('persisted config round-trip', () => {
   })
 
   it('writes and reads back a config file', () => {
-    writePersistedConfig(home, { url: 'https://proxy', realm: 'app' })
-    expect(readPersistedConfig(home)).toEqual({ url: 'https://proxy', realm: 'app' })
+    writePersistedConfig(home, { url: 'https://proxy', clientId: 'cli' })
+    expect(readPersistedConfig(home)).toEqual({ url: 'https://proxy', clientId: 'cli' })
   })
 
   it('tolerates a corrupt config file', () => {
@@ -97,46 +96,35 @@ describe('resolveConfig precedence', () => {
     expect(config.clientSecret).toBe('flag-secret')
   })
 
-  it('normalizes the keycloak URL when provided', () => {
-    const config = resolveConfig({ keycloakUrl: 'https://kc/' }, env())
-    expect(config.keycloakUrl).toBe('https://kc')
+  it('normalizes the proxy URL', () => {
+    expect(resolveConfig({ url: 'https://proxy/' }, env()).url).toBe('https://proxy')
   })
 
-  it('defaults directKeycloak off so the proxy is the authorization server', () => {
-    expect(resolveConfig({}, env()).directKeycloak).toBe(false)
+  /**
+   * The Keycloak-direct escape hatch is gone. A stale config file or a lingering
+   * PROXY_SMART_REALM in someone's shell must not resurrect it, so the resolved
+   * config carries no Keycloak settings at all.
+   */
+  it('ignores leftover Keycloak settings from env and the config file', () => {
+    writePersistedConfig(home, {
+      url: 'https://proxy',
+      ...({ realm: 'app', keycloakUrl: 'https://kc', directKeycloak: true } as object),
+    })
+    const config = resolveConfig(
+      {},
+      env({ PROXY_SMART_REALM: 'app', PROXY_SMART_KEYCLOAK_URL: 'https://kc', PROXY_SMART_DIRECT_KEYCLOAK: '1' }),
+    ) as Record<string, unknown>
+
+    expect(config.url).toBe('https://proxy')
+    expect(config.realm).toBeUndefined()
+    expect(config.keycloakUrl).toBeUndefined()
+    expect(config.directKeycloak).toBeUndefined()
   })
 
-  it('opts into directKeycloak via the env flag', () => {
-    expect(resolveConfig({}, env({ [ENV.directKeycloak]: '1' })).directKeycloak).toBe(true)
-    expect(resolveConfig({}, env({ [ENV.directKeycloak]: 'true' })).directKeycloak).toBe(true)
-    expect(resolveConfig({}, env({ [ENV.directKeycloak]: '0' })).directKeycloak).toBe(false)
-  })
-
-  it('lets an explicit override win over the env flag', () => {
-    const config = resolveConfig({ directKeycloak: true }, env({ [ENV.directKeycloak]: '0' }))
-    expect(config.directKeycloak).toBe(true)
-  })
-
-  it('reads directKeycloak from the persisted config file when env is unset', () => {
-    writePersistedConfig(home, { directKeycloak: true })
-    expect(resolveConfig({}, env()).directKeycloak).toBe(true)
-    // An explicit env=0 still overrides the file.
-    expect(resolveConfig({}, env({ [ENV.directKeycloak]: '0' })).directKeycloak).toBe(false)
-  })
-})
-
-describe('envFlag', () => {
-  it('treats common truthy strings as true', () => {
-    for (const v of ['1', 'true', 'TRUE', 'yes', 'on', ' on ']) {
-      expect(envFlag(v)).toBe(true)
-    }
-  })
-
-  it('treats everything else (and undefined) as false', () => {
-    for (const v of ['0', 'false', 'no', 'off', '', 'maybe']) {
-      expect(envFlag(v)).toBe(false)
-    }
-    expect(envFlag(undefined)).toBe(false)
+  it('no longer recognizes the Keycloak env vars', () => {
+    expect(Object.values(ENV)).not.toContain('PROXY_SMART_REALM')
+    expect(Object.values(ENV)).not.toContain('PROXY_SMART_KEYCLOAK_URL')
+    expect(Object.values(ENV)).not.toContain('PROXY_SMART_DIRECT_KEYCLOAK')
   })
 })
 

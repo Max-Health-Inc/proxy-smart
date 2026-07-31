@@ -6,8 +6,8 @@
  * deliberately rewrites token/authorize/device endpoints to the proxy itself,
  * see backend/src/routes/auth/index.ts) so every grant flows through the proxy
  * auth layer where audience binding, token enrichment, and access control
- * happen. The canonical Keycloak endpoints (`keycloakEndpoints`) are kept only
- * for the explicit direct-Keycloak escape hatch (config.directKeycloak).
+ * happen. There is no Keycloak-direct path: the proxy validates the audience
+ * fail-closed, so a token minted straight from Keycloak is rejected anyway.
  *
  * Two grants are supported, matching what the backend already accepts:
  *   - urn:ietf:params:oauth:grant-type:device_code (interactive humans)
@@ -108,14 +108,6 @@ export function asTokenError(value: unknown): TokenError | undefined {
 }
 
 /**
- * Build the canonical Keycloak OIDC discovery URL for a realm.
- * Pure — no network.
- */
-export function keycloakDiscoveryUrl(keycloakUrl: string, realm: string): string {
-  return `${keycloakUrl.replace(/\/+$/, '')}/realms/${realm}/.well-known/openid-configuration`
-}
-
-/**
  * Build the proxy's OIDC discovery URL.
  * The proxy serves a Keycloak-mirroring document at /auth/.well-known/...
  * Pure — no network.
@@ -133,19 +125,6 @@ export function endpointsFromMetadata(meta: OidcMetadata): AuthEndpoints {
     tokenEndpoint: meta.token_endpoint,
     deviceAuthorizationEndpoint: meta.device_authorization_endpoint,
     userinfoEndpoint: meta.userinfo_endpoint,
-  }
-}
-
-/**
- * Build canonical Keycloak endpoints directly from a known realm + base URL,
- * without a discovery round-trip. Pure — no network.
- */
-export function keycloakEndpoints(keycloakUrl: string, realm: string): AuthEndpoints {
-  const base = `${keycloakUrl.replace(/\/+$/, '')}/realms/${realm}/protocol/openid-connect`
-  return {
-    tokenEndpoint: `${base}/token`,
-    deviceAuthorizationEndpoint: `${base}/auth/device`,
-    userinfoEndpoint: `${base}/userinfo`,
   }
 }
 

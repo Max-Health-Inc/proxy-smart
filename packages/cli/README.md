@@ -76,18 +76,19 @@ proxy-smart smart-apps list --json
 With a secret present the CLI will even mint a token on demand if none is cached,
 so a bare `proxy-smart <command>` works in CI without an explicit `login` step.
 
-### Direct-Keycloak escape hatch (advanced)
+### There is no Keycloak-direct mode
 
-For debugging you can bypass the proxy and talk to Keycloak directly. This is
-opt-in and requires the realm + Keycloak URL:
+The CLI cannot be pointed at Keycloak instead of the proxy, and that is
+deliberate. The proxy rewrites its discovery document to itself and validates
+the access-token audience fail-closed, so a token minted straight from Keycloak
+is rejected on the very next call. An escape hatch would only ever produce a
+confusing 401.
 
-```bash
-proxy-smart --direct-keycloak --realm app --keycloak-url https://kc.example.com login
-# or: PROXY_SMART_DIRECT_KEYCLOAK=1 PROXY_SMART_REALM=app PROXY_SMART_KEYCLOAK_URL=... proxy-smart login
-```
-
-Tokens minted this way skip the proxy and may be rejected by its fail-closed
-audience checks — use it only when you know you need it.
+Everything that once needed direct Keycloak access — protocol mappers, client
+roles, token audience — is a first-class command; see
+[Token audience and protocol mappers](#token-audience-and-protocol-mappers) and
+[Roles](#roles). Anything not yet wrapped is reachable through
+`proxy-smart request <METHOD> <path>`, which still goes through the proxy.
 
 ## Commands
 
