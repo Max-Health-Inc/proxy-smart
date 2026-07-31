@@ -26,7 +26,7 @@
     "README.md"
   ],
   "scripts": {
-    "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin,identity-providers,user-federation",
+    "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin,identity-providers,user-federation,roles",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "test:watch": "bun test --watch",

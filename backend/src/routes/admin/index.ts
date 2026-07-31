@@ -8,6 +8,7 @@ import { validateAdminToken } from '@/lib/auth'
 import { adminAuthGuard } from '@/lib/admin-auth-guard'
 import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
+import { smartAppMapperRoutes } from './smart-app-mappers'
 import { healthcareUsersRoutes } from './healthcare-users'
 import { rolesRoutes } from './roles'
 import { identityProvidersRoutes } from './identity-providers'
@@ -107,6 +108,8 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
     }
   })
   .use(smartAppsRoutes)
+  // Per-client protocol mappers (what a SMART app's tokens actually contain)
+  .use(smartAppMapperRoutes)
   .use(healthcareUsersRoutes)
   .use(rolesRoutes)
   .use(identityProvidersRoutes)

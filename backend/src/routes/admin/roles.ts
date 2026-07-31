@@ -9,13 +9,17 @@ import {
   UpdateRoleRequest,
   RoleResponse,
   SuccessResponse,
+  ClientRoleParams,
   type RoleResponseType,
   type SuccessResponseType,
   type ErrorResponseType
 } from '@/schemas'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
-import { enrichRole, isTechnicalRole, REPRESENTED_SCOPE_SET_ATTR } from '@/lib/role-metadata'
+import { enrichRole, isTechnicalRole } from '@/lib/role-metadata'
+import { buildRoleAttributes, mergeRoleUpdate } from '@/lib/role-payload'
+import { resolveClientInternalId } from '@/lib/keycloak-client-lookup'
+import { logger } from '@/lib/logger'
 
 /**
  * Healthcare Roles & Permissions Management
@@ -78,20 +82,11 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       }
 
       const admin = await getAdmin(token)
-      const roleData = {
+      await admin.roles.create({
         name: body.name,
         description: body.description,
-        attributes: {
-          smart_role: ['true'],
-          fhir_scopes: body.fhirScopes || [],
-          // Descriptive label only: the scope set this role represents.
-          ...(body.representedScopeSetId
-            ? { [REPRESENTED_SCOPE_SET_ATTR]: [body.representedScopeSetId] }
-            : {})
-        }
-      }
-
-      await admin.roles.create(roleData)
+        attributes: buildRoleAttributes(body)
+      })
       // Return the created role object (fetch by name), enriched with metadata.
       const created = await admin.roles.findOneByName({ name: body.name })
       return created ? enrichRole(created) : {}
@@ -164,32 +159,7 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
         return { error: 'Role not found' }
       }
 
-      // Resolve the represented scope-set attribute:
-      //  - undefined  -> leave as-is
-      //  - ''         -> clear the link
-      //  - non-empty  -> set the link
-      const existingScopeSet = role.attributes?.[REPRESENTED_SCOPE_SET_ATTR]
-      let scopeSetAttr: { [REPRESENTED_SCOPE_SET_ATTR]: string[] } | Record<string, never>
-      if (body.representedScopeSetId === undefined) {
-        scopeSetAttr = existingScopeSet ? { [REPRESENTED_SCOPE_SET_ATTR]: existingScopeSet as string[] } : {}
-      } else if (body.representedScopeSetId === '') {
-        scopeSetAttr = {}
-      } else {
-        scopeSetAttr = { [REPRESENTED_SCOPE_SET_ATTR]: [body.representedScopeSetId] }
-      }
-
-      const { [REPRESENTED_SCOPE_SET_ATTR]: _omit, ...attrsWithoutScopeSet } = role.attributes ?? {}
-      const updateData = {
-        ...role,
-        description: body.description ?? role.description,
-        attributes: {
-          ...attrsWithoutScopeSet,
-          fhir_scopes: body.fhirScopes || role.attributes?.fhir_scopes || [],
-          ...scopeSetAttr
-        }
-      }
-
-      await admin.roles.updateByName({ name: params.roleName }, updateData)
+      await admin.roles.updateByName({ name: params.roleName }, mergeRoleUpdate(role, body))
       return { success: true }
     } catch (error) {
       return handleAdminError(error, set)
@@ -259,14 +229,13 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
       }
 
       const admin = await getAdmin(token)
-      const clients = await admin.clients.find({ clientId: params.clientId })
-
-      if (clients.length === 0) {
+      const internalId = await resolveClientInternalId(admin, params.clientId)
+      if (!internalId) {
         set.status = 404
         return { error: `Client '${params.clientId}' not found` }
       }
 
-      const clientRoles = await admin.clients.listRoles({ id: clients[0].id! })
+      const clientRoles = await admin.clients.listRoles({ id: internalId })
       return clientRoles.map(enrichRole)
     } catch (error) {
       return handleAdminError(error, set)
@@ -282,6 +251,183 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
     detail: {
       summary: 'List Client Roles',
       description: 'Get all roles for a specific Keycloak client (e.g., admin-ui)',
+      tags: ['roles']
+    }
+  })
+
+  .post('/clients/:clientId', async ({ getAdmin, params, body, headers, set }): Promise<RoleResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const internalId = await resolveClientInternalId(admin, params.clientId)
+      if (!internalId) {
+        set.status = 404
+        return { error: `Client '${params.clientId}' not found` }
+      }
+
+      const existing = await admin.clients.findRole({ id: internalId, roleName: body.name })
+      if (existing) {
+        set.status = 409
+        return { error: `Role '${body.name}' already exists on client '${params.clientId}'` }
+      }
+
+      await admin.clients.createRole({
+        id: internalId,
+        name: body.name,
+        description: body.description,
+        attributes: buildRoleAttributes(body)
+      })
+
+      logger.admin.info('Created client role', { clientId: params.clientId, role: body.name })
+
+      const created = await admin.clients.findRole({ id: internalId, roleName: body.name })
+      return created ? enrichRole(created) : {}
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      clientId: t.String({ description: 'Keycloak client ID' })
+    }),
+    body: CreateRoleRequest,
+    response: {
+      200: RoleResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Create Client Role',
+      description: 'Create a role scoped to a specific Keycloak client, resolved by client id',
+      tags: ['roles']
+    }
+  })
+
+  .get('/clients/:clientId/:roleName', async ({ getAdmin, params, headers, set }): Promise<RoleResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const internalId = await resolveClientInternalId(admin, params.clientId)
+      if (!internalId) {
+        set.status = 404
+        return { error: `Client '${params.clientId}' not found` }
+      }
+
+      const role = await admin.clients.findRole({ id: internalId, roleName: params.roleName })
+      if (!role) {
+        set.status = 404
+        return { error: `Role '${params.roleName}' not found on client '${params.clientId}'` }
+      }
+
+      return enrichRole(role)
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: ClientRoleParams,
+    response: {
+      200: RoleResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Get Client Role',
+      description: 'Get a single role on a specific Keycloak client',
+      tags: ['roles']
+    }
+  })
+
+  .put('/clients/:clientId/:roleName', async ({ getAdmin, params, body, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const internalId = await resolveClientInternalId(admin, params.clientId)
+      if (!internalId) {
+        set.status = 404
+        return { error: `Client '${params.clientId}' not found` }
+      }
+
+      const role = await admin.clients.findRole({ id: internalId, roleName: params.roleName })
+      if (!role) {
+        set.status = 404
+        return { error: `Role '${params.roleName}' not found on client '${params.clientId}'` }
+      }
+
+      await admin.clients.updateRole(
+        { id: internalId, roleName: params.roleName },
+        mergeRoleUpdate(role, body)
+      )
+
+      logger.admin.info('Updated client role', { clientId: params.clientId, role: params.roleName })
+
+      return { success: true }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: ClientRoleParams,
+    body: UpdateRoleRequest,
+    response: {
+      200: SuccessResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Update Client Role',
+      description: 'Update a role on a specific Keycloak client. Same descriptive metadata as realm roles.',
+      tags: ['roles']
+    }
+  })
+
+  .delete('/clients/:clientId/:roleName', async ({ getAdmin, params, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const internalId = await resolveClientInternalId(admin, params.clientId)
+      if (!internalId) {
+        set.status = 404
+        return { error: `Client '${params.clientId}' not found` }
+      }
+
+      const role = await admin.clients.findRole({ id: internalId, roleName: params.roleName })
+      if (!role) {
+        set.status = 404
+        return { error: `Role '${params.roleName}' not found on client '${params.clientId}'` }
+      }
+
+      await admin.clients.delRole({ id: internalId, roleName: params.roleName })
+
+      logger.admin.info('Deleted client role', { clientId: params.clientId, role: params.roleName })
+
+      return { success: true }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: ClientRoleParams,
+    response: {
+      200: SuccessResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Delete Client Role',
+      description: 'Delete a role from a specific Keycloak client',
       tags: ['roles']
     }
   })
