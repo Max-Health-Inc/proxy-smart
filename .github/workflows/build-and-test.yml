@@ -150,6 +150,18 @@ jobs:
         bun run typecheck
         bun run test
 
+    # === Shared packages ===
+    # @proxy-smart/auth carries the SMART launch/scope logic the backend imports,
+    # and its suite was never run here — a change to it could only be verified by
+    # hand. Same for elysia-mcp.
+    - name: Test Shared Packages
+      if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
+      run: |
+        echo "🧪 Testing shared packages..."
+        bun run typecheck:packages
+        bun run lint:packages
+        bun run test:packages
+
     - name: Upload Build Artifacts
       if: ${{ !startsWith(github.ref, 'refs/heads/dev/') }}
       uses: actions/upload-artifact@v7

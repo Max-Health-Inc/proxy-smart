@@ -136,6 +136,26 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 - [x] **Context Establishment** ✅ *Implemented*
   - Patient context from selection
   - Encounter context (if applicable)
+  - Triggered by `launch/patient` **or** by any patient-restricted resource scope
+    (`patient/*.rs`), per the spec obligation below
+
+- [x] **Patient context for `patient/` scopes** ✅ *Implemented*
+  - Spec (Scopes and Launch Context, both "Apps that launch from the EHR" and
+    "Standalone apps"): *"If an application requests a FHIR Resource scope which is
+    restricted to a single patient (e.g., `patient/*.rs`), and the authorization
+    results in the EHR granting that scope, the EHR SHALL establish a patient in
+    context."* The EHR *"MAY refuse authorization requests including `patient/` that
+    do not also include a valid `launch` [/ `launch/patient` scope], or it MAY infer
+    the `launch/patient` scope."*
+  - We take the **infer** branch: `hasPatientCompartmentScope` in
+    `@proxy-smart/auth` makes a `patient/` scope trigger the same launch handling
+    as `launch/patient`, so an EHR launch code or the patient picker establishes
+    the context, and `canReturnPatient` lets it reach the app.
+  - ⚠️ **Not implemented:** restricting the *data returned* to the in-context
+    patient. `patient/` scopes are granted and context is established, but the FHIR
+    proxy does not narrow queries to `patient=<context>`; role-based filtering keys
+    off `fhirUser` (patient users only) rather than the `patient` claim. An app that
+    queries outside its compartment is not stopped.
 
 #### Token Exchange *(Enhanced in SMART 2.0+)*
 

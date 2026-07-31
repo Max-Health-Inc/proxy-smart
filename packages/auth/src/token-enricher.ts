@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @proxy-smart/auth — Token Enricher
  *
@@ -18,7 +21,6 @@ import type { ILaunchContextStore } from './stores/interface'
 import {
   canReturnPatient,
   canReturnEncounter,
-  canReturnFhirUser,
   parseScopes,
 } from './smart-scopes'
 import { extractPatientFromFhirUser } from './fhir-user'
@@ -50,7 +52,7 @@ export function enrichTokenResponse(
   input: TokenEnrichInput,
   deps: TokenEnricherDeps,
 ): TokenEnrichment {
-  const { store, logger, config } = deps
+  const { store, logger } = deps
   const enrichment: TokenEnrichment = {}
 
   const grantedScopes = parseScopes(input.grantedScope)
