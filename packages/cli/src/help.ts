@@ -35,17 +35,6 @@ GLOBAL FLAGS
   -h, --help              Show help
   -v, --version           Show version
 
-DIRECT-KEYCLOAK ESCAPE HATCH (advanced)
-  By default the CLI authenticates through the proxy, where audience binding,
-  token enrichment, and access control are applied. The flags below only apply
-  when you opt into bypassing the proxy and talking to Keycloak directly.
-
-  --direct-keycloak       Bypass the proxy and use Keycloak directly
-                          (env: PROXY_SMART_DIRECT_KEYCLOAK=1). Requires both
-                          --realm and --keycloak-url.
-  --realm <realm>         Keycloak realm (env: PROXY_SMART_REALM)
-  --keycloak-url <url>    Keycloak base URL (env: PROXY_SMART_KEYCLOAK_URL)
-
 AUTH
   login                   Sign in (device flow; client_credentials when a
                           secret is set or --ci is passed)

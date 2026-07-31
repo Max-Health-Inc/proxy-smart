@@ -34,7 +34,6 @@ function config(overrides: Partial<ResolvedConfig> = {}): ResolvedConfig {
     url: 'https://proxy.example.com',
     clientId: 'admin-ui',
     scope: 'openid',
-    directKeycloak: false,
     homeDir: home,
     ...overrides,
   }

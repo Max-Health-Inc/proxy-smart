@@ -29,7 +29,7 @@ const SHORT_ALIASES: Record<string, string> = {
  * Flags that are always boolean (never consume the following token as a value).
  * Everything else treats the next non-flag token as its value.
  */
-const BOOLEAN_FLAGS = new Set(['help', 'version', 'json', 'ci', 'yes', 'direct-keycloak'])
+const BOOLEAN_FLAGS = new Set(['help', 'version', 'json', 'ci', 'yes'])
 
 /** Parse an argv array (excluding node/bun + script path) into structured form. */
 export function parseArgs(argv: string[]): ParsedArgs {

@@ -51,11 +51,7 @@ export function overridesFromFlags(flags: ParsedArgs['flags']): ConfigOverrides 
     url: flagString(flags, 'url'),
     clientId: flagString(flags, 'client-id'),
     clientSecret: flagString(flags, 'client-secret'),
-    realm: flagString(flags, 'realm'),
-    keycloakUrl: flagString(flags, 'keycloak-url'),
     scope: flagString(flags, 'scope'),
-    // Only forward an explicit opt-in; absence must fall through to env / file.
-    directKeycloak: flagBool(flags, 'direct-keycloak') ? true : undefined,
   }
 }
 
