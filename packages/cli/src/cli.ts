@@ -19,6 +19,7 @@ import { loginCommand, logoutCommand, whoamiCommand } from './commands/auth'
 import { requestCommand } from './commands/request'
 import { smartAppsCommand } from './commands/smart-apps'
 import { healthcareUsersCommand } from './commands/healthcare-users'
+import { rolesCommand } from './commands/roles'
 import { scopeSetsCommand } from './commands/scope-sets'
 import { smartScopesCommand } from './commands/smart-scopes'
 import { mcpEndpointCommand } from './commands/mcp-endpoint'
@@ -34,6 +35,7 @@ const COMMANDS: Record<string, CommandHandler> = {
   request: requestCommand,
   'smart-apps': smartAppsCommand,
   'healthcare-users': healthcareUsersCommand,
+  roles: rolesCommand,
   'scope-sets': scopeSetsCommand,
   'smart-scopes': smartScopesCommand,
   'mcp-endpoint': mcpEndpointCommand,

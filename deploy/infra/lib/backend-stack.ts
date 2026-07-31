@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
@@ -40,6 +43,30 @@ export interface BackendStackProps extends cdk.StackProps {
    * @default 'proxy_smart'
    */
   databaseName?: string;
+  /**
+   * SMART scope enforcement mode. Validates token scopes against the requested
+   * FHIR resource and operation.
+   * @default 'enforce'
+   */
+  scopeEnforcementMode?: 'enforce' | 'audit-only' | 'disabled';
+  /**
+   * Compartment filtering mode. `enforce` narrows a `patient/`-scoped grant to the
+   * token's `patient` launch context (SMART: "If the app has any patient-level
+   * scopes, they will be scoped to Patient 123") and refuses a patient-scoped
+   * token that carries no context; `audit-only` logs what `enforce` would change.
+   * @default 'audit-only'
+   */
+  roleBasedFilteringMode?: 'enforce' | 'audit-only' | 'disabled';
+  /**
+   * Whether patient consent is checked before proxying FHIR reads.
+   * @default false
+   */
+  consentEnabled?: boolean;
+  /**
+   * Consent decision mode, when consent is enabled.
+   * @default 'audit-only'
+   */
+  consentMode?: 'enforce' | 'audit-only' | 'disabled';
   /**
    * Optional FHIR server URL
    */
@@ -208,6 +235,18 @@ export class BackendStack extends cdk.Stack {
       PGHOST: props.database.instanceEndpoint.hostname,
       PGPORT: '5432',
       PGDATABASE: props.databaseName ?? 'proxy_smart',
+      // Access control posture — explicit, not inherited code defaults. These
+      // decide how much of the SMART access model is actually enforced, and were
+      // previously unset everywhere, so production ran the same implicit defaults
+      // as beta. Values below are today's effective behaviour, so declaring them
+      // changes nothing; changing the posture is now a reviewable edit here.
+      //   ROLE_BASED_FILTERING_MODE=enforce narrows a patient/-scoped grant to the
+      //   token's `patient` launch context and refuses one that has no context.
+      //   audit-only logs what enforce would change without changing it.
+      SCOPE_ENFORCEMENT_MODE: props.scopeEnforcementMode ?? 'enforce',
+      ROLE_BASED_FILTERING_MODE: props.roleBasedFilteringMode ?? 'audit-only',
+      CONSENT_ENABLED: String(props.consentEnabled ?? false),
+      CONSENT_MODE: props.consentMode ?? 'audit-only',
     };
 
     // Add FHIR server if provided

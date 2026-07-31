@@ -18,6 +18,7 @@ import {
   AdminApi,
   IdentityProvidersApi,
   UserFederationApi,
+  RolesApi,
 } from './api-client'
 import { type ResolvedConfig } from './config'
 import { type Session } from './session'
@@ -31,6 +32,7 @@ export interface ApiClient {
   admin: AdminApi
   identityProviders: IdentityProvidersApi
   userFederation: UserFederationApi
+  roles: RolesApi
   /** The proxy base URL these APIs are bound to. */
   basePath: string
 }
@@ -52,6 +54,7 @@ export function createApiClient(config: ResolvedConfig, session: Session): ApiCl
     admin: new AdminApi(configuration),
     identityProviders: new IdentityProvidersApi(configuration),
     userFederation: new UserFederationApi(configuration),
+    roles: new RolesApi(configuration),
     basePath: config.url,
   }
 }

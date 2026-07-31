@@ -151,11 +151,18 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
     `@proxy-smart/auth` makes a `patient/` scope trigger the same launch handling
     as `launch/patient`, so an EHR launch code or the patient picker establishes
     the context, and `canReturnPatient` lets it reach the app.
-  - ⚠️ **Not implemented:** restricting the *data returned* to the in-context
-    patient. `patient/` scopes are granted and context is established, but the FHIR
-    proxy does not narrow queries to `patient=<context>`; role-based filtering keys
-    off `fhirUser` (patient users only) rather than the `patient` claim. An app that
-    queries outside its compartment is not stopped.
+  - **Data restricted to the in-context patient** — implemented, gated by
+    `ROLE_BASED_FILTERING_MODE`:
+    - `enforce` — a `patient/`-scoped grant is narrowed to the token's `patient`
+      claim for every user type (searches gain `patient=Patient/<id>`, `Patient`
+      searches gain `_id=<id>`, cross-patient direct reads are refused), and a
+      patient-scoped token carrying no context is refused outright.
+    - `audit-only` *(current default in every environment)* — logs what `enforce`
+      would change, changing nothing. Review those logs before flipping.
+    - `disabled` — no compartment filtering.
+    - The posture is declared per environment (`docker-compose.beta.yml`,
+      `deploy/infra/lib/backend-stack.ts`) rather than inherited from code
+      defaults, so changing it is a reviewable edit.
 
 #### Token Exchange *(Enhanced in SMART 2.0+)*
 

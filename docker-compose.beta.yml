@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 # Beta deployment stack for OVH VPS (135.125.205.225)
 # Domain: beta.proxy-smart.com
 # Requires the shared Caddy proxy: docker-compose.caddy.yml
@@ -137,6 +140,19 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       PROXY_SIGNING_KEY_FILE: /run/secrets/proxy-signing-key.pem
+      # ── Access control posture (explicit, not inherited defaults) ──────────
+      # These four decide how much of the SMART access model is actually enforced.
+      # They were previously unset in every environment, so beta and production ran
+      # identical implicit defaults. Set to today's effective values: changing the
+      # posture is now a reviewable one-line edit.
+      #   scope enforcement : enforce | audit-only | disabled
+      #   role filtering    : enforce narrows patient/-scoped grants to the token's
+      #                       `patient` context and refuses one without a context;
+      #                       audit-only logs what enforce would change
+      SCOPE_ENFORCEMENT_MODE: ${SCOPE_ENFORCEMENT_MODE:-enforce}
+      ROLE_BASED_FILTERING_MODE: ${ROLE_BASED_FILTERING_MODE:-audit-only}
+      CONSENT_ENABLED: ${CONSENT_ENABLED:-false}
+      CONSENT_MODE: ${CONSENT_MODE:-audit-only}
     volumes:
       - ${PROXY_SIGNING_KEY_PATH:-./proxy-signing-key.pem}:/run/secrets/proxy-signing-key.pem:ro
       - backend_data:/app/backend/data
