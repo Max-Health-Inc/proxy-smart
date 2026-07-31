@@ -83,6 +83,16 @@ Keycloak which types a provider supports and picks the matching one rather than
 assuming, so provider types with no attribute mapper at all are reported as
 **Not applicable** instead of failing.
 
+Two kinds of provider are exempt from these expectations, both shown as
+**Not applicable** rather than unhealthy, because no admin action could ever
+make them green:
+
+- Provider types Keycloak offers no claim-to-attribute mapper for.
+- Machine trust anchors -- providers configured with `supportsClientAssertions`,
+  such as `proxy-smart-signing`. They federate signed client assertions for
+  SMART Backend Services, not people, so no user ever logs in through them and
+  no user attribute is ever imported. See [Federated JWT](../federated-jwt.md).
+
 ### Connection Testing
 
 Test the connection to an identity provider to verify configuration without affecting production logins.

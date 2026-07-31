@@ -277,11 +277,13 @@ export const identityProviderMapperRoutes = new Elysia({ prefix: '/idps' })
 
       const result = await ensureIdpAttributeMappers(admin, params.alias, query.includeOptional !== 'false')
 
-      const message = result.unsupported
-        ? 'This provider type supports no attribute-import mappers'
-        : result.created.length > 0
-          ? `Provisioned ${result.created.length} mapper(s) on ${params.alias}`
-          : 'All expected attribute mappers are already configured'
+      const message = !result.userFacing
+        ? 'This provider federates client assertions, not user logins — no attribute imports apply'
+        : result.unsupported
+          ? 'This provider type supports no attribute-import mappers'
+          : result.created.length > 0
+            ? `Provisioned ${result.created.length} mapper(s) on ${params.alias}`
+            : 'All expected attribute mappers are already configured'
 
       logger.admin.info('IdP mapper fix completed', { ...result })
 

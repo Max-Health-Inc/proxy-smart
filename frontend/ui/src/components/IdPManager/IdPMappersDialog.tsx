@@ -122,6 +122,22 @@ export function IdPMappersDialog({ isOpen, onClose, alias, displayName, onChange
     const definitions = extra?.definitions ?? [];
     const missing = [...(status?.missingRequired ?? []), ...(status?.missingOptional ?? [])];
 
+    // A client-assertion trust anchor brokers machines, not people: attribute
+    // imports would never fire, so it is reported as not applicable.
+    if (status && !status.userFacing) {
+      return (
+        <div className="flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-muted/40">
+          <Info className="w-5 h-5 text-muted-foreground mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-foreground">{t('Machine trust anchor, not a user login')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('This provider federates signed client assertions rather than users, so user attribute imports do not apply to it.')}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     if (status?.unsupported) {
       return (
         <div className="flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-muted/40">

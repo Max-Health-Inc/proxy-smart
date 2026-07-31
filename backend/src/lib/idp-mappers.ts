@@ -226,6 +226,8 @@ export interface IdpMapperStatus {
   healthy: boolean
   /** True when the provider supports no attribute-import mapper type */
   unsupported: boolean
+  /** False for machine trust anchors, where user attributes do not apply */
+  userFacing: boolean
 }
 
 /** A definition is satisfied by any mapper writing the same user attribute. */
@@ -233,11 +235,33 @@ const isSatisfied = (definition: IdpAttributeMapperDefinition, mappers: IdpMappe
   mappers.some((mapper) => mapper.userAttribute === definition.userAttribute)
 
 /**
+ * Whether humans are brokered through this provider.
+ *
+ * An IdP configured for client assertions (`supportsClientAssertions`) is a
+ * machine trust anchor — the federated-JWT flow uses it to verify proxy-signed
+ * client assertions, and no user ever logs in through it. Expecting user
+ * attribute imports there is a permanent false alarm, and a health check that
+ * cannot go green is a health check people learn to ignore.
+ *
+ * Keyed on configuration rather than on an alias, so it holds for any such
+ * provider rather than only for `proxy-smart-signing`.
+ */
+export function isUserFacingProvider(provider: { config?: Record<string, string> | null }): boolean {
+  return flattenMapperConfig(provider.config).supportsClientAssertions !== 'true'
+}
+
+/**
  * Report the SMART attribute-import status of a single identity provider.
  */
 export async function getIdpMapperStatus(
   admin: KcAdminClient,
-  provider: { alias?: string; providerId?: string; displayName?: string; enabled?: boolean },
+  provider: {
+    alias?: string
+    providerId?: string
+    displayName?: string
+    enabled?: boolean
+    config?: Record<string, string> | null
+  },
 ): Promise<IdpMapperStatus> {
   const alias = provider.alias ?? ''
 
@@ -247,13 +271,17 @@ export async function getIdpMapperStatus(
   ])
 
   const mappers = mapperList.map(normalizeIdpMapper)
+  const userFacing = isUserFacingProvider(provider)
   const missingRequired: string[] = []
   const missingOptional: string[] = []
 
-  for (const definition of SMART_IDP_ATTRIBUTE_MAPPERS) {
-    if (isSatisfied(definition, mappers)) continue
-    if (definition.required) missingRequired.push(definition.name)
-    else missingOptional.push(definition.name)
+  // Only providers humans log in through need user attribute imports.
+  if (userFacing) {
+    for (const definition of SMART_IDP_ATTRIBUTE_MAPPERS) {
+      if (isSatisfied(definition, mappers)) continue
+      if (definition.required) missingRequired.push(definition.name)
+      else missingOptional.push(definition.name)
+    }
   }
 
   const unsupported = attributeType === null
@@ -267,10 +295,11 @@ export async function getIdpMapperStatus(
     mappers,
     missingRequired,
     missingOptional,
-    // A provider that cannot carry attribute mappers at all is not "unhealthy" —
-    // there is no action an admin could take to fix it.
-    healthy: unsupported || missingRequired.length === 0,
+    // Neither a machine trust anchor nor a provider that cannot carry attribute
+    // mappers at all is "unhealthy" — there is no action an admin could take.
+    healthy: unsupported || !userFacing || missingRequired.length === 0,
     unsupported,
+    userFacing,
   }
 }
 
@@ -292,6 +321,8 @@ export interface EnsureIdpMappersResult {
   skipped: string[]
   /** True when the provider supports no attribute-import mapper type */
   unsupported: boolean
+  /** False when the provider is a machine trust anchor; nothing is provisioned */
+  userFacing: boolean
   errors: string[]
 }
 
@@ -300,6 +331,7 @@ export interface EnsureIdpMappersResult {
  *
  * Idempotent: a definition already served by an existing mapper (matched on the
  * target user attribute, so admin-renamed mappers still count) is skipped.
+ * Machine trust anchors are left alone — see isUserFacingProvider.
  *
  * @param includeOptional also provision definitions marked optional
  */
@@ -314,7 +346,15 @@ export async function ensureIdpAttributeMappers(
     created: [],
     skipped: [],
     unsupported: false,
+    userFacing: true,
     errors: [],
+  }
+
+  const provider = await admin.identityProviders.findOne({ alias }).catch(() => undefined)
+  if (provider && !isUserFacingProvider(provider)) {
+    result.userFacing = false
+    logger.admin.debug('Skipping attribute mappers on a client-assertion IdP', { alias })
+    return result
   }
 
   const attributeType = await resolveAttributeMapperType(admin, alias)

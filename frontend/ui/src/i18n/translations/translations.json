@@ -2369,6 +2369,9 @@
   "MCP Endpoint": [
     "MCP-Endpunkt"
   ],
+  "Machine trust anchor, not a user login": [
+    "Maschinen-Vertrauensanker, keine Benutzeranmeldung"
+  ],
   "Manage DICOMweb/PACS server connections": [
     "DICOMweb/PACS-Serververbindungen verwalten"
   ],
@@ -4069,6 +4072,12 @@
   ],
   "This field is required": [
     "Dieses Feld ist erforderlich"
+  ],
+  "This provider federates signed client assertions rather than users": [
+    "Dieser Provider föderiert signierte Client-Assertions statt Benutzer"
+  ],
+  "This provider federates signed client assertions rather than users, so user attribute imports do not apply to it.": [
+    "Dieser Provider föderiert signierte Client-Assertions statt Benutzer, daher gelten Benutzerattribut-Importe für ihn nicht."
   ],
   "This provider supports no attribute-import mapper type.": [
     "Dieser Provider unterstützt keinen Attribut-Import-Mapper."

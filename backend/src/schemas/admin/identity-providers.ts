@@ -145,7 +145,10 @@ export const IdentityProviderMapperStatus = t.Object({
   missingRequired: t.Array(t.String(), { description: 'Names of required mappers that are missing' }),
   missingOptional: t.Array(t.String(), { description: 'Names of optional mappers that are missing' }),
   healthy: t.Boolean({ description: 'Whether all required attribute imports are present' }),
-  unsupported: t.Boolean({ description: 'Whether the provider supports attribute-import mappers at all' })
+  unsupported: t.Boolean({ description: 'Whether the provider supports attribute-import mappers at all' }),
+  userFacing: t.Boolean({
+    description: 'False for machine trust anchors (client-assertion federation), where user attributes do not apply'
+  })
 }, { title: 'IdentityProviderMapperStatus' })
 
 export const IdentityProviderMapperStatusResponse = t.Object({
@@ -163,6 +166,7 @@ export const IdentityProviderMapperFixResponse = t.Object({
   created: t.Array(t.String(), { description: 'Names of mappers created by this call' }),
   skipped: t.Array(t.String(), { description: 'Names of mappers that already existed' }),
   unsupported: t.Boolean({ description: 'Whether the provider supports attribute-import mappers at all' }),
+  userFacing: t.Boolean({ description: 'False when the provider is a machine trust anchor; nothing is provisioned' }),
   errors: t.Array(t.String(), { description: 'Any errors encountered' }),
   timestamp: t.String()
 }, { title: 'IdentityProviderMapperFixResponse' })
