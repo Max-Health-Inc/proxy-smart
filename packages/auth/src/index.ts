@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @proxy-smart/auth
  *
@@ -47,7 +50,9 @@ export {
   isScopeGranted,
   filterScopes,
   expandScopesToWildcards,
+  hasPatientCompartmentScope,
   SMART_V2_SCOPE_RE,
+  PATIENT_COMPARTMENT_SCOPE_RE,
 } from './smart-scopes'
 
 // ─── Launch Code ────────────────────────────────────────────────────────────

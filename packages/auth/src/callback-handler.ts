@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @proxy-smart/auth — Callback Handler
  *
@@ -90,7 +93,7 @@ export async function handleCallback(
   // validated it, a session could be poisoned or predate the fix — never
   // emit a code/error to an unvalidated host.
   if (deps.getRegisteredRedirectUris) {
-    let registered: string[] = []
+    let registered: string[]
     try {
       registered = await deps.getRegisteredRedirectUris(session.clientId)
     } catch (err) {
