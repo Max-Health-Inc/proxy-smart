@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "proxy-smart": {
+      "type": "http",
+      "url": "${PROXY_SMART_URL}/mcp"
+    }
+  }
+}
