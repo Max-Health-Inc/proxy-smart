@@ -11,6 +11,25 @@ import { mkdirSync, existsSync, readdirSync, copyFileSync } from 'fs'
  */
 export const DATA_DIR = process.env.DATA_DIR || join(process.cwd(), 'data')
 
+/**
+ * Where the RAG embedding cache is written.
+ *
+ * Path policy belongs HERE, not in the module that happens to use it. `rag-tools.ts` previously
+ * built its own with `join(BACKEND_ROOT, 'logs', 'rag-cache.json')`, where BACKEND_ROOT was three
+ * levels up from the module file — `backend/` in the source tree, but the FILESYSTEM ROOT in the
+ * deployed bundle, whose layout differs. So `search_documentation` died with
+ * `EACCES: permission denied, mkdir '/logs'` (observed 2026-08-01 through the live claude.ai
+ * connector), and a stray `logs/` appeared in developers' repo roots whenever the module was
+ * touched from an unexpected working directory.
+ *
+ * Living here also keeps it out of reach of `mock.module('../src/lib/ai/rag-tools')`, which
+ * replaces that whole module in the MCP endpoint tests — an export added there is invisible to
+ * any suite loaded after the mock.
+ */
+export function ragCachePath(): string {
+  return join(DATA_DIR, 'rag-cache.json')
+}
+
 /** Directory containing seed files baked into the Docker image */
 const SEED_DIR = join(process.cwd(), 'data-seed')
 
