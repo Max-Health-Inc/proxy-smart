@@ -15,7 +15,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import { mkdtempSync, rmSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { readPersistedConfig, writePersistedConfig, type ResolvedConfig } from '../src/config'
+import { readPersistedConfig, resolveConfig, writePersistedConfig, type ResolvedConfig } from '../src/config'
 import { CliError } from '../src/output'
 import {
   Session,
@@ -128,5 +128,18 @@ describe('login persists the target', () => {
     // is why login forgot its target between invocations.
     writePersistedConfig(home, { url: BETA })
     expect(readPersistedConfig(home).url).toBe(BETA)
+  })
+
+  it('does not let the persisted target beat an explicit env var', () => {
+    // Persisting is deliberately NOT enough: env outranks a stored default, which is why
+    // `login --url beta` in a shell with PROXY_SMART_URL=prod still sends bare commands to prod.
+    // Pinned so nobody "fixes" the order and makes an env var silently ignorable.
+    writePersistedConfig(home, { url: BETA })
+    const env = { PROXY_SMART_HOME: home, PROXY_SMART_URL: PROD }
+    expect(resolveConfig({}, env).url).toBe(PROD)
+    // ...and an explicit flag still outranks the env var.
+    expect(resolveConfig({ url: BETA }, env).url).toBe(BETA)
+    // With no env var, the persisted value is what login left behind.
+    expect(resolveConfig({}, { PROXY_SMART_HOME: home }).url).toBe(BETA)
   })
 })
