@@ -1348,6 +1348,10 @@
         "description": "Administrator role"
       },
       {
+        "name": "proxy-smart-admin",
+        "description": "Administer this Proxy Smart deployment (admin API + admin UI). Product-namespaced because the realm is shared: a bare 'admin' role means administrator of SOMETHING, and this realm also carries roles belonging to other Max Health services."
+      },
+      {
         "name": "offline_access",
         "description": "Allow users to obtain offline tokens (refresh tokens that don't expire)",
         "composite": false,
