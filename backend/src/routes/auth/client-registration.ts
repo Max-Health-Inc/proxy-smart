@@ -11,7 +11,15 @@ import {
   STANDARD_OIDC_OPTIONAL_SCOPES,
 } from '@/lib/oauth-scopes'
 import { refreshCorsOrigins } from '@/lib/cors-origins'
-import KcAdminClient from '@keycloak/keycloak-admin-client'
+import { getServiceAccountAdmin } from '@/lib/service-account-admin'
+import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
+import {
+  REGISTRATION_TOKEN_ATTRIBUTE,
+  bearerToken,
+  generateRegistrationAccessToken,
+  hashRegistrationAccessToken,
+  registrationTokenMatches,
+} from '@/lib/registration-access-token'
 import * as crypto from 'crypto'
 import { getClientRegistrationSettings } from '../admin/client-registration-settings'
 import { ClientRegistrationRequest, ClientRegistrationResponse, CommonErrorResponses } from '@/schemas'
@@ -37,6 +45,10 @@ export interface ClientRegistrationResponse {
   client_secret?: string
   client_id_issued_at: number
   client_secret_expires_at?: number
+  /** RFC 7592: bearer token for this client's configuration endpoint. Returned once. */
+  registration_access_token?: string
+  /** RFC 7592: where this client reads or deletes its own registration. */
+  registration_client_uri?: string
   redirect_uris: string[]
   grant_types: string[]
   response_types: string[]
@@ -55,24 +67,46 @@ export interface ClientRegistrationResponse {
   launch_uris?: string[]
 }
 
+/** An authenticated RFC 7592 request, or the error to return for it. */
+type RegistrationAuth =
+  | { client: ClientRepresentation }
+  | { error: { error: string; error_description: string }; status: number }
+
 /**
- * Get admin client using service account credentials for public registration
+ * Resolve and authorise an RFC 7592 request for one client.
+ *
+ * Every failure returns the SAME 401, deliberately: an unknown client_id, a client that was not
+ * dynamically registered, and a wrong token are indistinguishable to the caller. Otherwise this
+ * endpoint becomes an oracle for enumerating which client ids exist.
  */
-async function getServiceAccountAdmin(): Promise<KcAdminClient> {
-  const admin = new KcAdminClient({
-    baseUrl: process.env.KEYCLOAK_BASE_URL!,
-    realmName: process.env.KEYCLOAK_REALM!,
-  })
+async function authenticateRegistration(
+  clientId: string,
+  headers: Record<string, string | undefined>,
+): Promise<RegistrationAuth> {
+  const unauthorized = {
+    error: { error: 'invalid_token', error_description: 'Invalid registration access token' },
+    status: 401,
+  }
+  const presented = bearerToken(headers)
+  if (!presented) return unauthorized
 
-  // For public registration, we need to authenticate with service account
-  // This should use a dedicated service account for client registration
-  await admin.auth({
-    grantType: 'client_credentials',
-    clientId: process.env.KEYCLOAK_ADMIN_CLIENT_ID || 'admin-service',
-    clientSecret: process.env.KEYCLOAK_ADMIN_CLIENT_SECRET,
-  })
+  let client: ClientRepresentation | undefined
+  try {
+    const admin = await getServiceAccountAdmin()
+    ;[client] = await admin.clients.find({ clientId })
+  } catch (error) {
+    logger.admin.warn('RFC 7592: client lookup failed', { clientId, error })
+    return { error: { error: 'server_error', error_description: 'Lookup failed' }, status: 500 }
+  }
 
-  return admin
+  if (!client?.id) return unauthorized
+  // Only dynamically-registered clients have a registration to manage. A first-party client
+  // from realm-export must never be deletable through this path.
+  if (client.attributes?.['dynamic_registration'] !== 'true') return unauthorized
+  if (!registrationTokenMatches(presented, client.attributes?.[REGISTRATION_TOKEN_ATTRIBUTE])) {
+    return unauthorized
+  }
+  return { client }
 }
 
 export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
@@ -239,7 +273,10 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
       }
 
       const clientId = `smart_app_${crypto.randomUUID()}`
-      
+      // RFC 7592: the credential the client will use to read or delete its own registration.
+      // Generated before the client so its hash can go in with the initial attributes.
+      const registrationAccessToken = generateRegistrationAccessToken()
+
       // Build Keycloak client configuration (reusing logic from smart-apps.ts)
       // The proxy intercepts SMART flows by rewriting redirect_uri to its own
       // callback (/auth/smart-callback). Keycloak validates redirect_uris per-client,
@@ -289,6 +326,9 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
           // Dynamic registration metadata
           'dynamic_registration': 'true',
           'registration_date': Date.now().toString(),
+          // RFC 7592: only the hash is kept. The plaintext goes back in the registration
+          // response once and is not recoverable afterwards.
+          [REGISTRATION_TOKEN_ATTRIBUTE]: hashRegistrationAccessToken(registrationAccessToken),
           'approval_required': settings.adminApprovalRequired.toString(),
           'approved': (!settings.adminApprovalRequired).toString(),
           // Client lifetime
@@ -399,6 +439,10 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         client_secret: clientSecret,
         client_id_issued_at: Math.floor(Date.now() / 1000),
         client_secret_expires_at: clientSecret ? 0 : undefined, // 0 means never expires
+        // RFC 7592. Returned exactly once — only its hash is stored, so a client that loses
+        // this can no longer manage its own registration.
+        registration_access_token: registrationAccessToken,
+        registration_client_uri: `${config.baseUrl.replace(/\/+$/, '')}/auth/register/${clientId}`,
         redirect_uris: body.redirect_uris,
         grant_types: isBackendService 
           ? ['authorization_code', 'client_credentials', 'refresh_token']
@@ -457,4 +501,99 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
       description: 'Register a new OAuth2 client dynamically according to RFC 7591. This is a public endpoint that does not require authentication.',
       tags: ['authentication']
     }
+  })
+
+  /**
+   * RFC 7592 client configuration endpoint — read your own registration.
+   *
+   * Authenticated by the `registration_access_token` handed out at registration, NOT by an
+   * end-user token: this is the client managing itself, and there may be no user involved at
+   * all. The token is scoped to exactly one client, so possession of it plus a matching
+   * `clientId` in the path is the whole authorisation check.
+   */
+  .get('/register/:clientId', async ({ params, headers, set }) => {
+    const outcome = await authenticateRegistration(params.clientId, headers)
+    if ('error' in outcome) {
+      set.status = outcome.status
+      set.headers['WWW-Authenticate'] = 'Bearer error="invalid_token"'
+      return outcome.error
+    }
+    const { client } = outcome
+    return {
+      client_id: client.clientId!,
+      client_name: client.name,
+      redirect_uris: client.redirectUris ?? [],
+      grant_types: client.attributes?.['oauth2.device.authorization.grant.enabled'] === 'true'
+        ? ['authorization_code', 'refresh_token', 'urn:ietf:params:oauth:grant-type:device_code']
+        : ['authorization_code', 'refresh_token'],
+      token_endpoint_auth_method: client.publicClient ? 'none' : 'client_secret_basic',
+      registration_client_uri: `${config.baseUrl.replace(/\/+$/, '')}/auth/register/${client.clientId}`,
+    }
+  }, {
+    detail: {
+      summary: 'Read a dynamic client registration (RFC 7592)',
+      description:
+        'Returns the current registration for a dynamically-registered client. Authenticate with the registration_access_token issued at registration, as an OAuth 2.0 Bearer token.',
+      tags: ['authentication'],
+    },
+  })
+
+  /**
+   * RFC 7592 client configuration endpoint — deprovision yourself.
+   *
+   * The reason this exists: without it a dynamically-registered client has NO standard way to
+   * clean up after itself, so every short-lived client an MCP host or a test run creates stays
+   * forever. `lib/dcr-client-reaper.ts` sweeps up the ones that never call this, but a client
+   * that knows it is finished should say so rather than wait a year to be retired.
+   *
+   * 204 on success, per RFC 7592 §2.3.
+   */
+  .delete('/register/:clientId', async ({ params, headers, set }) => {
+    const outcome = await authenticateRegistration(params.clientId, headers)
+    if ('error' in outcome) {
+      set.status = outcome.status
+      set.headers['WWW-Authenticate'] = 'Bearer error="invalid_token"'
+      return outcome.error
+    }
+    try {
+      const admin = await getServiceAccountAdmin()
+      await admin.clients.del({ id: outcome.client.id! })
+      logger.admin.info('Client deprovisioned itself (RFC 7592)', { clientId: params.clientId })
+      set.status = 204
+      return
+    } catch (error) {
+      logger.admin.error('RFC 7592 deregistration failed', { clientId: params.clientId, error })
+      set.status = 500
+      return { error: 'server_error', error_description: 'Failed to delete client' }
+    }
+  }, {
+    detail: {
+      summary: 'Deregister a dynamic client (RFC 7592)',
+      description:
+        'Deletes a dynamically-registered client. Authenticate with the registration_access_token issued at registration. Responds 204 No Content on success.',
+      tags: ['authentication'],
+    },
+  })
+
+  /**
+   * RFC 7592 §2 requires an unsupported method on this endpoint to be refused explicitly rather
+   * than fall through to a 404, which a client cannot distinguish from a wrong client_id.
+   *
+   * PUT is not supported on purpose: updating a registration means re-running the redirect-URI,
+   * scope and client-type validation that registration does, and a second, subtly different
+   * copy of those rules is how the two drift. Re-register, or use the admin API.
+   */
+  .put('/register/:clientId', ({ set }) => {
+    set.status = 405
+    set.headers['Allow'] = 'GET, DELETE'
+    return {
+      error: 'invalid_request',
+      error_description: 'Updating a registration is not supported. Register again, or use the admin API.',
+    }
+  }, {
+    detail: {
+      summary: 'Update a dynamic client registration (unsupported)',
+      description: 'Always responds 405. RFC 7592 requires an explicit refusal for unsupported methods.',
+      tags: ['authentication'],
+    },
   })

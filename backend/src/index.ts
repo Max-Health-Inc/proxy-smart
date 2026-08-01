@@ -15,6 +15,8 @@ import { emailEventsLogger } from './lib/email-events-logger'
 import { authEventsLogger } from './lib/auth-events-logger'
 import { createApp } from './app-factory'
 import { startShareConsentReconciler } from './lib/consent/shl-consent'
+import { startDcrClientReaper } from './lib/dcr-client-reaper'
+import { getServiceAccountAdmin } from './lib/service-account-admin'
 import { existsSync, readFileSync } from 'fs'
 
 // Security guard: refuse to start with dev auth bypass in production
@@ -58,6 +60,10 @@ initializeServer()
     // Initialize Auth events logger and start background polling (every 60s)
     await authEventsLogger.initialize();
     authEventsLogger.start();
+
+    // Retire dynamically-registered clients past the lifetime they were registered with.
+    // Daily, in-process rather than a CI cron so it also runs on customer deployments.
+    startDcrClientReaper(getServiceAccountAdmin);
 
     try {
       // In containerized environments (Docker), listen on all interfaces

@@ -53,6 +53,10 @@ export const ClientRegistrationResponse = t.Object({
   jwks_uri: t.Optional(t.String({ format: 'uri', description: 'JWKS endpoint URL' })),
   jwks: t.Optional(t.Object({}, { description: 'JSON Web Key Set' })),
   token_endpoint_auth_method: t.String({ description: 'Token endpoint authentication method' }),
+  // RFC 7592 client configuration endpoint. Returned once at registration; only a hash of the
+  // token is stored, so it cannot be recovered afterwards.
+  registration_access_token: t.Optional(t.String({ description: 'Bearer token for the client configuration endpoint (RFC 7592)' })),
+  registration_client_uri: t.Optional(t.String({ format: 'uri', description: 'Client configuration endpoint for this client (RFC 7592)' })),
   // SMART extensions
   fhir_versions: t.Optional(t.Array(t.String(), { description: 'Supported FHIR versions' })),
   launch_uris: t.Optional(t.Array(t.String({ format: 'uri' }), { description: 'EHR launch URLs' }))
