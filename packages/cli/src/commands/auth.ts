@@ -7,8 +7,29 @@
  * with the cached bearer token.
  */
 import { flagBool } from '../args'
+import { readPersistedConfig, writePersistedConfig } from '../config'
 import { CliError, printJson, printLine } from '../output'
 import { type CommandContext } from './shared'
+
+/**
+ * Remember the deployment we just authenticated against.
+ *
+ * Resolution order is flag > env > persisted > default, and the default is localhost — so
+ * without this, `login --url https://beta…` authenticated against beta and the very next bare
+ * command targeted localhost instead, presenting a beta token and returning an opaque 401. The
+ * token cache also records its own origin ({@link CachedToken.url}) so a mismatch is refused
+ * rather than merely confusing; this is the half that stops the mismatch arising at all.
+ *
+ * Writing it is best-effort: a read-only or unwritable home must not fail a login that
+ * otherwise succeeded, since the token itself is already cached and usable with `--url`.
+ */
+function rememberDeployment(ctx: CommandContext): void {
+  try {
+    writePersistedConfig(ctx.config.homeDir, { ...readPersistedConfig(ctx.config.homeDir), url: ctx.config.url })
+  } catch {
+    printLine(`Note: could not save ${ctx.config.url} as the default target — pass --url on later commands.`)
+  }
+}
 
 /** `proxy-smart login` — acquire and cache a token. */
 export async function loginCommand(ctx: CommandContext): Promise<void> {
@@ -19,6 +40,7 @@ export async function loginCommand(ctx: CommandContext): Promise<void> {
       throw new CliError('client_credentials login requires a client secret (PROXY_SMART_CLIENT_SECRET or --client-secret).')
     }
     await ctx.session.loginWithClientCredentials()
+    rememberDeployment(ctx)
     printLine(`Authenticated to ${ctx.config.url} via client_credentials as "${ctx.config.clientId}".`)
     return
   }
@@ -34,6 +56,7 @@ export async function loginCommand(ctx: CommandContext): Promise<void> {
     printLine('')
     printLine('Waiting for authorization...')
   })
+  rememberDeployment(ctx)
   printLine(`Authenticated to ${ctx.config.url} as "${ctx.config.clientId}".`)
 }
 
