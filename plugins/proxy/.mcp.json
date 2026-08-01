@@ -2,7 +2,7 @@
   "mcpServers": {
     "proxy-smart": {
       "type": "http",
-      "url": "${PROXY_SMART_URL:-https://api.proxy-smart.com}/mcp"
+      "url": "https://api.proxy-smart.com/mcp"
     }
   }
 }
