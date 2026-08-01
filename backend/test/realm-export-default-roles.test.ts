@@ -55,6 +55,30 @@ describe('realm default role composite', () => {
   })
 })
 
+describe('the generic admin role', () => {
+  const admin = (realm.roles?.realm ?? []).find((r) => r.name === 'admin') as
+    | { name?: string; composite?: boolean; composites?: { realm?: string[] } }
+    | undefined
+
+  it('is a composite that grants the per-product admin role', () => {
+    // "Administrator of everything" belongs in Keycloak as composition, not re-encoded in each
+    // service. Keycloak expands composites into the token's realm_access.roles — demonstrated by
+    // its own `realm-admin`, whose constituents all appear alongside it — so a user granted
+    // `admin` arrives carrying `proxy-smart-admin`, and each service can accept only its own role.
+    expect(admin?.composite).toBe(true)
+    expect(admin?.composites?.realm).toContain('proxy-smart-admin')
+  })
+
+  it('grants only roles this export defines', () => {
+    // This export cannot know about other products' roles (llm-gateway's `gateway-admin` is in no
+    // Proxy Smart export), so each repo contributes its own and the live realm accumulates them.
+    const defined = new Set((realm.roles?.realm ?? []).map((r) => r.name))
+    for (const role of admin?.composites?.realm ?? []) {
+      expect(defined.has(role)).toBe(true)
+    }
+  })
+})
+
 describe('seeded users', () => {
   it('exist, so the assertions below are not vacuous', () => {
     expect(seeded.length).toBeGreaterThan(0)
