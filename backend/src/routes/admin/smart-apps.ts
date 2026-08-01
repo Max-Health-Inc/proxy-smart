@@ -21,6 +21,7 @@ import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappe
 import { refreshCorsOrigins } from '@/lib/cors-origins'
 import { toKeycloakAuthType } from '@/lib/auth-method-mapping'
 import { enrichClient, ensureScopesExist, replaceClientScopes, assignResourceIndicatorsScope } from '@/lib/smart-client-enrichment'
+import { BACKEND_SERVICE_DEFAULT_SCOPES, STANDARD_OIDC_DEFAULT_SCOPES } from '@/lib/oauth-scopes'
 import { invalidateClientConfig } from '@/lib/smart-client-config-cache'
 import { config } from '@/config'
 import * as crypto from 'crypto'
@@ -345,9 +346,9 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
 
       // Assign scopes to the client
       try {
-        const defaultScopesToAssign = body.defaultClientScopes || (isBackendService
-          ? ['openid', 'profile'] // Keep it simple for Backend Services
-          : ['openid', 'profile', 'email'])
+        const defaultScopesToAssign: string[] = body.defaultClientScopes || [
+          ...(isBackendService ? BACKEND_SERVICE_DEFAULT_SCOPES : STANDARD_OIDC_DEFAULT_SCOPES),
+        ]
 
         const optionalScopesToAssign = body.optionalClientScopes || []
 

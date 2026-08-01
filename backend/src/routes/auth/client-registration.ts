@@ -4,7 +4,12 @@
 import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { ensureScopeMappers, SMART_SCOPE_MAPPERS } from '@/lib/smart-scope-mappers'
-import { assignResourceIndicatorsScope } from '@/lib/smart-client-enrichment'
+import { assignResourceIndicatorsScope, assignStandardOidcScopes } from '@/lib/smart-client-enrichment'
+import {
+  KEYCLOAK_BUILTIN_DEFAULT_SCOPES,
+  STANDARD_OIDC_DEFAULT_SCOPES,
+  STANDARD_OIDC_OPTIONAL_SCOPES,
+} from '@/lib/oauth-scopes'
 import { refreshCorsOrigins } from '@/lib/cors-origins'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import * as crypto from 'crypto'
@@ -320,32 +325,16 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         }
       }
 
-      // Assign Keycloak built-in default scopes that every client needs for proper
-      // token enrichment. These are "silent" scopes (include.in.token.scope=false)
-      // that add essential claims (roles, CORS origins, auth context) without
-      // appearing in the OAuth scope parameter. Without these, access tokens lack
-      // realm_access/resource_access claims and the backend cannot enforce RBAC.
-      // This matches the defaultClientScopes on all pre-configured clients in
-      // realm-export.json and Keycloak's own realm-default behavior.
       if (createdClient.id) {
-        const keycloakBuiltinDefaultScopes = ['roles', 'web-origins', 'acr']
         try {
           const allClientScopes = await admin.clientScopes.find()
 
-          for (const scopeName of keycloakBuiltinDefaultScopes) {
-            const matchingScope = allClientScopes.find(s => s.name === scopeName)
-            if (matchingScope?.id) {
-              try {
-                await admin.clients.addDefaultClientScope({
-                  id: createdClient.id,
-                  clientScopeId: matchingScope.id,
-                })
-                logger.admin.debug('Assigned built-in default scope to client', { clientId, scopeName })
-              } catch (scopeError) {
-                logger.admin.warn('Failed to assign built-in default scope', { clientId, scopeName, error: scopeError })
-              }
-            }
-          }
+          // The baseline every client needs regardless of what it registered with: Keycloak's
+          // silent claim scopes (roles / web-origins / acr) plus the standard OIDC scopes the
+          // MCP 401 challenge tells clients to request. Deriving these from the OPTIONAL
+          // `scope` field of the registration request used to leave a client that omitted it
+          // unable to authorize at all — see assignStandardOidcScopes.
+          await assignStandardOidcScopes(admin, createdClient.id, clientId, allClientScopes)
 
           // RFC 8707: attach the resource-indicators default scope so this
           // dynamically-registered client's access-token aud binds to the
@@ -353,42 +342,38 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
           // param → invalid_target). Applies to every DCR client automatically.
           await assignResourceIndicatorsScope(admin, createdClient.id, clientId, allClientScopes)
 
-          // Configure requested scopes - map SMART/OIDC scopes to Keycloak client scopes
+          // Anything the client additionally asked for. SMART/FHIR scopes go to OPTIONAL so the
+          // user has to request them explicitly; the standard OIDC ones are already attached
+          // above, so they are skipped here rather than assigned twice.
           if (body.scope) {
-            logger.admin.debug('Configuring client scopes', { clientId, scope: body.scope })
-            const requestedScopes = body.scope.split(' ')
-            
-            // Standard OIDC scopes that should be default
-            const defaultOidcScopes = ['openid', 'profile', 'email']
-            
-            for (const scopeName of requestedScopes) {
+            logger.admin.debug('Configuring requested client scopes', { clientId, scope: body.scope })
+            const baseline = new Set<string>([
+              ...KEYCLOAK_BUILTIN_DEFAULT_SCOPES,
+              ...STANDARD_OIDC_DEFAULT_SCOPES,
+              ...STANDARD_OIDC_OPTIONAL_SCOPES,
+            ])
+
+            for (const scopeName of body.scope.split(' ')) {
+              if (!scopeName || baseline.has(scopeName)) continue
               const matchingScope = allClientScopes.find(s => s.name === scopeName)
-              if (matchingScope?.id) {
-                try {
-                  if (defaultOidcScopes.includes(scopeName)) {
-                    await admin.clients.addDefaultClientScope({ 
-                      id: createdClient.id, 
-                      clientScopeId: matchingScope.id 
-                    })
-                  } else {
-                    // All SMART/FHIR scopes go to optional so user must explicitly request them
-                    await admin.clients.addOptionalClientScope({ 
-                      id: createdClient.id, 
-                      clientScopeId: matchingScope.id 
-                    })
-                  }
-                  // Auto-provision SMART protocol mappers if needed
-                  if (SMART_SCOPE_MAPPERS[scopeName]) {
-                    await ensureScopeMappers(admin, matchingScope.id, scopeName)
-                  }
-                  logger.admin.debug('Assigned scope to client', { clientId, scopeName })
-                } catch (scopeError) {
-                  logger.admin.warn('Failed to assign scope to client', { clientId, scopeName, error: scopeError })
-                }
-              } else {
+              if (!matchingScope?.id) {
                 // Scope doesn't exist in Keycloak - log but continue
                 // SMART FHIR scopes like patient/*.read may need custom scope creation
                 logger.admin.debug('Scope not found in Keycloak, skipping', { clientId, scopeName })
+                continue
+              }
+              try {
+                await admin.clients.addOptionalClientScope({
+                  id: createdClient.id,
+                  clientScopeId: matchingScope.id,
+                })
+                // Auto-provision SMART protocol mappers if needed
+                if (SMART_SCOPE_MAPPERS[scopeName]) {
+                  await ensureScopeMappers(admin, matchingScope.id, scopeName)
+                }
+                logger.admin.debug('Assigned requested scope to client', { clientId, scopeName })
+              } catch (scopeError) {
+                logger.admin.warn('Failed to assign scope to client', { clientId, scopeName, error: scopeError })
               }
             }
           }
