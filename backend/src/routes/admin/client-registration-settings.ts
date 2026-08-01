@@ -40,6 +40,9 @@ const DEFAULT_SETTINGS: ClientRegistrationSettingsType = {
   allowConfidentialClients: true,
   allowBackendServices: false, // More restricted by default
   adminApprovalRequired: false,
+  // A DCR client is an unknown third party that registered itself; the user should be asked.
+  // Also what makes Keycloak honour a client's own prompt=consent.
+  requireConsent: true,
   rateLimitPerMinute: 10,
   maxRedirectUris: 5,
   allowedRedirectUriPatterns: [
@@ -71,6 +74,9 @@ async function getClientRegistrationSettings(admin: KcAdminClient): Promise<Clie
       allowConfidentialClients: attributes['client_registration.allow_confidential'] !== 'false',
       allowBackendServices: attributes['client_registration.allow_backend_services'] === 'true',
       adminApprovalRequired: attributes['client_registration.admin_approval_required'] === 'true',
+      // Default TRUE: absent attribute means an older realm that predates the setting, and the
+      // safe reading there is 'ask the user', not 'skip consent'.
+      requireConsent: attributes['client_registration.require_consent'] !== 'false',
       rateLimitPerMinute: parseInt(attributes['client_registration.rate_limit'] || '10'),
       maxRedirectUris: parseInt(attributes['client_registration.max_redirect_uris'] || '5'),
       allowedRedirectUriPatterns: attributes['client_registration.allowed_redirect_patterns']?.split('|') || DEFAULT_SETTINGS.allowedRedirectUriPatterns,
@@ -100,6 +106,9 @@ async function saveClientRegistrationSettings(admin: KcAdminClient, settings: Cl
     'client_registration.allow_confidential': settings.allowConfidentialClients.toString(),
     'client_registration.allow_backend_services': settings.allowBackendServices.toString(),
     'client_registration.admin_approval_required': settings.adminApprovalRequired.toString(),
+    // `?? true`: the field is optional on the wire, so a caller that omits it must not crash
+    // the save — and the safe reading of "unspecified" is to keep asking the user.
+    'client_registration.require_consent': (settings.requireConsent ?? true).toString(),
     'client_registration.rate_limit': settings.rateLimitPerMinute.toString(),
     'client_registration.max_redirect_uris': settings.maxRedirectUris.toString(),
     'client_registration.allowed_redirect_patterns': settings.allowedRedirectUriPatterns.join('|'),

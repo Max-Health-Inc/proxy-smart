@@ -43,7 +43,7 @@
   "ssoSessionMaxLifespan": 36000,
   "offlineSessionIdleTimeout": 2592000,
   "offlineSessionMaxLifespan": 5184000,
-  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespanEnabled": true,
   "eventsEnabled": true,
   "eventsListeners": ["jboss-logging"],
   "adminEventsEnabled": true,

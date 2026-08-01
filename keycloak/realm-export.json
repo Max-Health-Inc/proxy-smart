@@ -30,7 +30,7 @@
   "ssoSessionMaxLifespan": 36000,
   "offlineSessionIdleTimeout": 2592000,
   "offlineSessionMaxLifespan": 5184000,
-  "offlineSessionMaxLifespanEnabled": false,
+  "offlineSessionMaxLifespanEnabled": true,
   "eventsEnabled": true,
   "eventsListeners": ["jboss-logging"],
   "adminEventsEnabled": true,
@@ -1345,11 +1345,17 @@
       },
       {
         "name": "admin",
-        "description": "Administrator role"
+        "description": "Administrator of every Max Health product in this realm. A COMPOSITE: it grants the per-product admin roles rather than meaning anything to a service itself, so 'administers everything' is expressed once here instead of re-encoded in each service. Each product adds its own role; this export can only declare the one it owns.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "proxy-smart-admin"
+          ]
+        }
       },
       {
         "name": "proxy-smart-admin",
-        "description": "Administer this Proxy Smart deployment (admin API + admin UI). Product-namespaced because the realm is shared: a bare 'admin' role means administrator of SOMETHING, and this realm also carries roles belonging to other Max Health services."
+        "description": "Administer this Proxy Smart deployment (admin API + admin UI). Product-namespaced because the realm is shared: a bare 'admin' role means administrator of SOMETHING, and this realm also carries roles belonging to other Max Health services (e.g. llm-gateway's gateway-admin)."
       },
       {
         "name": "offline_access",
