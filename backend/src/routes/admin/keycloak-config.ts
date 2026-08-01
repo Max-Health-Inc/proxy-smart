@@ -7,6 +7,8 @@ import { config } from '@/config'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { validateAdminToken } from '@/lib/auth'
 import { handleAdminError } from '@/lib/admin-error-handler'
+import { createAdminClient } from '@/lib/keycloak-plugin'
+import { pickSessionSettings, validateSessionSettings } from '@/lib/session-settings'
 import fs from 'fs'
 import path from 'path'
 import {
@@ -170,6 +172,68 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
     }
   })
   
+  // ─── Realm session lifetimes ────────────────────────────────────────────────
+  //
+  // A realm export applies only at realm CREATION; a running realm lives in Postgres. So every
+  // lifetime change used to split into "edit the export" plus "somebody opens the Keycloak
+  // console", and the second half quietly did not happen — which is how
+  // `offlineSessionMaxLifespanEnabled` stayed false on a live deployment while the export said
+  // otherwise, leaving offline sessions with no ceiling at all.
+
+  .get('/session-settings', async ({ headers, set }) => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+      const admin = await createAdminClient(token)
+      const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+      return pickSessionSettings((realm ?? {}) as Record<string, unknown>)
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    detail: {
+      summary: 'Get Realm Session Lifetimes',
+      description:
+        'The SSO and offline session lifetimes currently in force on the running realm — which may differ from realm-export.json, since an export only applies at realm creation.',
+      tags: ['admin'],
+    },
+  })
+
+  .put('/session-settings', async ({ body, headers, set }) => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) { set.status = 401; return { error: 'Unauthorized', details: 'Bearer token required' } }
+
+      // Only the lifetime fields, never a whole-realm passthrough: a RealmRepresentation has ~200
+      // fields and an extra key riding along would be applied to the realm silently.
+      const requested = pickSessionSettings(body as Record<string, unknown>)
+      const problem = validateSessionSettings(requested)
+      if (problem) {
+        set.status = 400
+        return { error: 'Bad Request', details: problem }
+      }
+
+      const admin = await createAdminClient(token)
+      // Merge onto the CURRENT realm rather than sending the partial alone — Keycloak's realm
+      // update replaces the representation, so posting only these keys would blank the rest.
+      const current = await admin.realms.findOne({ realm: config.keycloak.realm! })
+      await admin.realms.update({ realm: config.keycloak.realm! }, { ...current, ...requested })
+
+      logger.admin.info('Realm session lifetimes updated', { changed: Object.keys(requested) })
+      const updated = await admin.realms.findOne({ realm: config.keycloak.realm! })
+      return pickSessionSettings((updated ?? {}) as Record<string, unknown>)
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    detail: {
+      summary: 'Update Realm Session Lifetimes',
+      description:
+        'Applies SSO/offline session lifetimes to the RUNNING realm. Partial updates are supported. Refuses a ceiling below its idle timeout, a non-positive duration (Keycloak reads 0 as unlimited), and enabling the offline ceiling without setting one.',
+      tags: ['admin'],
+    },
+  })
+
   // Test Keycloak connection without saving
   .post('/test', async ({ body, set, headers }) => {
     try {
