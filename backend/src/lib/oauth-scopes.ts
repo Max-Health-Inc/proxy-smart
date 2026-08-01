@@ -30,8 +30,8 @@
 export const STANDARD_OIDC_DEFAULT_SCOPES = ['openid', 'profile', 'email'] as const
 
 /**
- * Attached as OPTIONAL scopes: available, but only issued when the client asks. `offline_access`
- * is optional on purpose — a refresh token is not something to hand out by default.
+ * Attached as OPTIONAL scopes: available on the client, but only issued when explicitly asked
+ * for. NOT advertised — see {@link MCP_SCOPES_SUPPORTED}.
  */
 export const STANDARD_OIDC_OPTIONAL_SCOPES = ['offline_access'] as const
 
@@ -51,11 +51,33 @@ export const BACKEND_SERVICE_DEFAULT_SCOPES = ['openid', 'profile'] as const
  */
 export const KEYCLOAK_BUILTIN_DEFAULT_SCOPES = ['roles', 'web-origins', 'acr'] as const
 
-/** What the MCP resource metadata advertises as supported (RFC 9728 `scopes_supported`). */
-export const MCP_SCOPES_SUPPORTED: readonly string[] = [
-  ...STANDARD_OIDC_DEFAULT_SCOPES,
-  ...STANDARD_OIDC_OPTIONAL_SCOPES,
-]
+/**
+ * What the MCP resource metadata advertises as supported (RFC 9728 `scopes_supported`).
+ *
+ * DEFAULTS ONLY — `offline_access` is deliberately NOT here, and that is load-bearing.
+ *
+ * An MCP client requests what this list advertises. In Keycloak, `offline_access` does not mean
+ * "give me a refresh token"; it means "give me an OFFLINE token that outlives the SSO session",
+ * and it is gated on the user holding the `offline_access` REALM ROLE. A user without that role
+ * does not get a degraded token — the whole code exchange fails with
+ * `Offline tokens not allowed for the user or client`, after a successful login, which the
+ * client reports as a token-exchange failure against an otherwise healthy server.
+ *
+ * Advertising it therefore told every client to request something a large class of users could
+ * never be granted. And it bought nothing: the authorization_code grant already returns an
+ * ordinary session-bound `refresh_token` without it, which is exactly what an MCP client needs.
+ * Verified against beta 2026-08-01 — a user with no `offline_access` role, requesting only
+ * `openid profile email`, receives a refresh token.
+ *
+ * The scope stays attached to clients as OPTIONAL, so a client that genuinely wants an offline
+ * token can still ask for one and get the role check it deserves. It is just not something we
+ * tell every client to ask for.
+ *
+ * This is the same failure shape as the DCR scope bug in `assignStandardOidcScopes`: advertising
+ * a scope the deployment cannot always grant. Anything added here MUST be grantable to any user
+ * who can log in, not merely configured on the client.
+ */
+export const MCP_SCOPES_SUPPORTED: readonly string[] = [...STANDARD_OIDC_DEFAULT_SCOPES]
 
 /**
  * The `scope` value in the `WWW-Authenticate` challenge on a 401 from the MCP endpoint.

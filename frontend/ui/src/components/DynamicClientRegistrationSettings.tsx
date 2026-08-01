@@ -55,6 +55,7 @@ export function DynamicClientRegistrationSettings() {
     allowConfidentialClients: true,
     allowBackendServices: false,
     adminApprovalRequired: false,
+    requireConsent: true,
     rateLimitPerMinute: 10,
     maxRedirectUris: 5,
     allowedRedirectUriPatterns: DEFAULT_REDIRECT_PATTERNS,
@@ -487,7 +488,25 @@ export function DynamicClientRegistrationSettings() {
                   checked={settings.adminApprovalRequired}
                   onCheckedChange={(checked) => setSettings(prev => ({ ...prev, adminApprovalRequired: checked }))}
                 />
-              </div>            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label htmlFor="requireConsent">{t('User Consent Required')}</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {t('Ask the user before a self-registered client gets access. Also required for a client’s own prompt=consent to be honoured. Backend services are always exempt — they have no user to ask.')}
+                  </p>
+                </div>
+                <Switch
+                  id="requireConsent"
+                  // `?? true` mirrors the server: the field is optional on the wire, and
+                  // unspecified means ask the user.
+                  checked={settings.requireConsent ?? true}
+                  onCheckedChange={(checked) => setSettings(prev => ({ ...prev, requireConsent: checked }))}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rateLimit">{t('Rate Limit (per minute)')}</Label>
                 <Input

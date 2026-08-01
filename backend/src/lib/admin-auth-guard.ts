@@ -26,9 +26,10 @@
  */
 
 import { Elysia } from 'elysia'
-import { extractBearerToken, AuthenticationError } from './admin-utils'
+import { extractBearerToken, AuthenticationError, AuthorizationError } from './admin-utils'
 import { validateToken, validateAdminToken } from './auth'
 import { logger } from './logger'
+import { config } from '../config'
 
 /**
  * Paths (relative to the `/admin` prefix) that are intentionally reachable
@@ -73,17 +74,34 @@ export const adminAuthGuard = new Elysia({ name: 'admin-auth-guard' })
       return { error: 'Unauthorized', details: 'Invalid or expired token' }
     }
 
-    // 403-class: token is valid but lacks an admin role.
+    // 403-class: token is valid but is not an admin token. TWO distinct reasons, reported
+    // separately — they used to share one message, and "Admin permissions required" for what was
+    // actually an audience mismatch is a genuinely misleading thing to hand someone debugging a
+    // client integration.
     try {
       await validateAdminToken(token)
     } catch (error) {
-      if (error instanceof AuthenticationError) {
-        logger.auth.warn('Admin guard rejected token (insufficient permissions)', {
+      if (error instanceof AuthorizationError) {
+        // Right audience, wrong roles: a GRANT problem. The user needs the role.
+        logger.auth.warn('Admin guard rejected token (insufficient roles)', {
           path: pathname,
           error: error.message,
         })
         set.status = 403
-        return { error: 'Forbidden', details: 'Admin permissions required' }
+        return { error: 'Forbidden', details: 'Admin role required for this deployment' }
+      }
+      if (error instanceof AuthenticationError) {
+        // Wrong audience: a CLIENT problem. The token belongs to some other client, so no role
+        // grant would help — naming the accepted clients is what actually unblocks the caller.
+        logger.auth.warn('Admin guard rejected token (not an admin-client token)', {
+          path: pathname,
+          error: error.message,
+        })
+        set.status = 403
+        return {
+          error: 'Forbidden',
+          details: `Token is not for an admin client (expected ${config.keycloak.adminUiClientId} or ${config.keycloak.adminClientId ?? 'the admin service account'})`,
+        }
       }
       // Unexpected non-auth error — fail closed as 401 rather than leaking through.
       logger.auth.error('Admin guard encountered unexpected error', {

@@ -40,6 +40,24 @@ export class AuthenticationError extends Error {
 }
 
 /**
+ * The token is valid and authentic, but its ROLES do not confer admin access.
+ *
+ * Distinct from {@link AuthenticationError} so callers can tell the two apart. They previously
+ * could not: `validateAdminToken` threw AuthenticationError both when the token's audience was
+ * wrong (a client/integration mistake) and when the user simply lacked a role (a grant mistake),
+ * and the admin guard answered both with `403 "Admin permissions required"`. That message sent
+ * this session's own debugging down the wrong path for several turns — a DCR-audienced token was
+ * reported as a missing-role problem when its roles were fine.
+ */
+export class AuthorizationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthorizationError';
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+/**
  * Custom error class for configuration-related errors
  */
 export class ConfigurationError extends Error {

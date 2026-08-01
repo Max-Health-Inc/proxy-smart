@@ -169,4 +169,25 @@ describe('advertised scopes are granted scopes', () => {
       expect(MCP_SCOPES_SUPPORTED).toContain(name)
     }
   })
+
+  it('never advertises a scope that depends on a per-user realm role', () => {
+    // `offline_access` is role-gated in Keycloak. A client requests what the resource metadata
+    // advertises, so listing it told every client to ask for something a user without the role
+    // cannot be granted — and Keycloak fails the WHOLE code exchange rather than degrading:
+    // "Offline tokens not allowed for the user or client", after a successful login.
+    // Observed against beta 2026-08-01 with claude.ai; the code grant already returns an
+    // ordinary refresh token without it, so advertising it bought nothing and broke users.
+    expect(MCP_SCOPES_SUPPORTED).not.toContain('offline_access')
+    for (const name of STANDARD_OIDC_OPTIONAL_SCOPES) {
+      expect(MCP_SCOPES_SUPPORTED).not.toContain(name)
+    }
+  })
+
+  it('still attaches the optional scopes to clients, so they remain requestable', async () => {
+    // Not advertised is not the same as not available: a client that genuinely wants an offline
+    // token can still ask, and gets the role check it deserves.
+    const { admin, optional } = makeAdmin()
+    await assignStandardOidcScopes(admin, 'client-uuid', 'my-client')
+    expect(optional).toEqual([...STANDARD_OIDC_OPTIONAL_SCOPES])
+  })
 })

@@ -296,6 +296,13 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         fullScopeAllowed: true, // Include all user roles in the token (realm_access.roles)
         standardFlowEnabled: true, // Authorization code flow
         serviceAccountsEnabled: isBackendService, // Backend services
+        // Ask the user before an unknown third party gets access. Two reasons this is not
+        // optional-feeling: (1) a DCR client registered ITSELF, so nobody has vetted it, and
+        // (2) Keycloak IGNORES a client's own `prompt=consent` unless the client is flagged this
+        // way — claude.ai sends exactly that and was being silently overridden, so the user was
+        // never shown the choice the client asked to present. Backend services are exempt: there
+        // is no user in a client_credentials flow to consent, and flagging them would break it.
+        consentRequired: settings.requireConsent && !isBackendService,
         redirectUris: allRedirectUris,
         webOrigins: body.redirect_uris.map(uri => {
           try {

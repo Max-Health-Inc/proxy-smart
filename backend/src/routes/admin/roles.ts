@@ -218,6 +218,164 @@ export const rolesRoutes = new Elysia({ prefix: '/roles' })
     }
   })
 
+  // ─── Composites ─────────────────────────────────────────────────────────────
+  //
+  // A COMPOSITE role grants other roles. The realm's default role
+  // (`default-roles-<realm>`) is the one that matters most here: Keycloak assigns it to every
+  // user it creates, including users created by an identity-provider broker, so whatever it
+  // grants is the baseline every account starts with.
+  //
+  // These endpoints exist because that baseline was previously unreadable and unfixable through
+  // the proxy. `offline_access` missing from the default composite lets a user log in and then
+  // fail the token exchange with "Offline tokens not allowed for the user or client" — a failure
+  // that looks like a broken server and is invisible without being able to inspect the composite.
+  // Diagnosing it meant the Keycloak console; repairing it meant raw Keycloak REST. Now neither.
+
+  .get('/:roleName/composites', async ({ getAdmin, params, headers, set }): Promise<RoleResponseType[] | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const role = await admin.roles.findOneByName({ name: params.roleName })
+      if (!role?.id) {
+        set.status = 404
+        return { error: 'Role not found' }
+      }
+
+      // Realm composites only. A composite may also grant CLIENT roles, which are listed per
+      // client and would make this response two different shapes in one array.
+      const composites = await admin.roles.getCompositeRolesForRealm({ id: role.id })
+      return composites.map(enrichRole)
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      roleName: t.String({ description: 'Composite role name, e.g. default-roles-proxy-smart' })
+    }),
+    response: {
+      200: t.Array(RoleResponse),
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'List Realm Roles Granted By A Composite',
+      description:
+        'The realm roles a composite role grants. For `default-roles-<realm>` this is the baseline every user — including brokered users — receives at creation.',
+      tags: ['roles']
+    }
+  })
+
+  .post('/:roleName/composites', async ({ getAdmin, params, body, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const role = await admin.roles.findOneByName({ name: params.roleName })
+      if (!role?.id) {
+        set.status = 404
+        return { error: 'Role not found' }
+      }
+
+      // Resolve every name to a real role BEFORE writing anything: Keycloak accepts a partial
+      // list and silently ignores entries it cannot resolve, so a typo would otherwise report
+      // success while granting nothing.
+      const resolved = []
+      for (const name of body.realmRoles) {
+        const target = await admin.roles.findOneByName({ name })
+        if (!target?.id) {
+          set.status = 400
+          return { error: `Realm role not found: ${name}` }
+        }
+        resolved.push(target)
+      }
+
+      // Idempotent: Keycloak treats re-adding an existing composite as a no-op, so this is safe
+      // to run as a reconcile step.
+      await admin.roles.createComposite({ roleId: role.id }, resolved)
+      logger.admin.info('Composite roles added', {
+        composite: params.roleName,
+        added: body.realmRoles,
+      })
+      return { success: true }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      roleName: t.String({ description: 'Composite role name' })
+    }),
+    body: t.Object({
+      realmRoles: t.Array(t.String(), {
+        minItems: 1,
+        description: 'Realm role names to grant through this composite',
+      })
+    }),
+    response: {
+      200: SuccessResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Grant Realm Roles Through A Composite',
+      description:
+        'Adds realm roles to a composite. Idempotent. Every name is resolved before any write, so an unknown role fails the request rather than being silently skipped.',
+      tags: ['roles']
+    }
+  })
+
+  .delete('/:roleName/composites/:compositeName', async ({ getAdmin, params, headers, set }): Promise<SuccessResponseType | ErrorResponseType> => {
+    try {
+      const token = extractBearerToken(headers)
+      if (!token) {
+        set.status = 401
+        return { error: 'Authorization header required' }
+      }
+
+      const admin = await getAdmin(token)
+      const role = await admin.roles.findOneByName({ name: params.roleName })
+      if (!role?.id) {
+        set.status = 404
+        return { error: 'Role not found' }
+      }
+      const target = await admin.roles.findOneByName({ name: params.compositeName })
+      if (!target?.id) {
+        set.status = 404
+        return { error: `Realm role not found: ${params.compositeName}` }
+      }
+
+      await admin.roles.delCompositeRoles({ id: role.id }, [target])
+      logger.admin.info('Composite role removed', {
+        composite: params.roleName,
+        removed: params.compositeName,
+      })
+      return { success: true }
+    } catch (error) {
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: t.Object({
+      roleName: t.String({ description: 'Composite role name' }),
+      compositeName: t.String({ description: 'Realm role to stop granting' })
+    }),
+    response: {
+      200: SuccessResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Revoke A Realm Role From A Composite',
+      description:
+        'Removes one realm role from a composite. Exists so granting through a composite is reversible without the Keycloak console.',
+      tags: ['roles']
+    }
+  })
+
   // ─── Client Roles ───────────────────────────────────────────────────────────
 
   .get('/clients/:clientId', async ({ getAdmin, params, headers, set }): Promise<RoleResponseType[] | ErrorResponseType> => {

@@ -84,6 +84,15 @@ export const ClientRegistrationSettings = t.Object({
   allowConfidentialClients: t.Boolean({ description: 'Whether confidential clients are allowed' }),
   allowBackendServices: t.Boolean({ description: 'Whether backend service clients are allowed' }),
   adminApprovalRequired: t.Boolean({ description: 'Whether admin approval is required for new registrations' }),
+  // OPTIONAL, and that is about compatibility rather than importance. The admin UI's settings
+  // form is typed by the generated API client, so a REQUIRED new field would fail validation on
+  // every save until that client is regenerated. Optional means existing callers keep working and
+  // omission is read as "leave it alone" — the stored value, or the default, both of which are
+  // true. Writers must tolerate `undefined`; see saveClientRegistrationSettings.
+  requireConsent: t.Optional(t.Boolean({
+    description:
+      'Whether dynamically-registered clients require user consent (default true). A DCR client is by definition an unknown third party that registered itself, so the user should be asked before it receives access — especially for offline_access, whose whole purpose in OIDC is to be consented to. Keycloak also ignores a client\'s own `prompt=consent` unless this is set.',
+  })),
   rateLimitPerMinute: t.Number({ description: 'Rate limit for registration requests per minute' }),
   maxRedirectUris: t.Number({ description: 'Maximum number of redirect URIs allowed per client' }),
   allowedRedirectUriPatterns: t.Array(t.String({ description: 'Allowed redirect URI regex patterns' })),

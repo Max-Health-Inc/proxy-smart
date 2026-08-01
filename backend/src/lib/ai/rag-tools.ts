@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { openai } from '@ai-sdk/openai'
 import { cosineSimilarity, embed, embedMany } from 'ai'
 import { logger } from '../logger'
+import { ragCachePath } from '../paths'
 
 interface RagDocument {
   title: string
@@ -59,7 +60,9 @@ const MIN_CHARS = Number.parseInt(process.env.RAG_MIN_CHUNK_SIZE || '200', 10)
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const BACKEND_ROOT = join(__dirname, '../../..')
 const REPO_ROOT = join(BACKEND_ROOT, '..')
-const CACHE_PATH = join(BACKEND_ROOT, 'logs', 'rag-cache.json')
+// The cache path lives in lib/paths (see ragCachePath): it is path policy, it must follow
+// DATA_DIR rather than this module's location, and keeping it there puts it out of reach of the
+// mock.module stub the MCP endpoint tests install over this module.
 
 /** Resolve docs dir with fallback chain for local dev, monorepo Docker, and standalone Docker. */
 function resolveDocsDir(): string {
@@ -169,7 +172,7 @@ async function buildKnowledgeBase(): Promise<void> {
 
 async function loadCache(): Promise<CacheFile> {
   try {
-    const raw = await readFile(CACHE_PATH, 'utf-8')
+    const raw = await readFile(ragCachePath(), 'utf-8')
     const parsed = JSON.parse(raw) as CacheFile
 
     if (!parsed || parsed.embedding_model !== EMBEDDING_MODEL) {
@@ -183,8 +186,8 @@ async function loadCache(): Promise<CacheFile> {
 }
 
 async function persistCache(cache: CacheFile): Promise<void> {
-  await mkdir(dirname(CACHE_PATH), { recursive: true })
-  await writeFile(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf-8')
+  await mkdir(dirname(ragCachePath()), { recursive: true })
+  await writeFile(ragCachePath(), JSON.stringify(cache, null, 2), 'utf-8')
 }
 
 interface DocFile {
