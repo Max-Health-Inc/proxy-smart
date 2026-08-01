@@ -6,7 +6,7 @@ import jwksClient, { type JwksClient } from 'jwks-rsa'
 import { config } from '../config'
 import { AuthenticationError, AuthorizationError, ConfigurationError } from './admin-utils'
 import { logger } from './logger'
-import { isAudienceAccepted } from './token-audience'
+import { isAudienceAccepted, getMcpResourceAudience } from './token-audience'
 import { hasAdminRole } from './admin-roles'
 
 /** Options for {@link validateToken}. */
@@ -202,8 +202,24 @@ export async function validateAdminToken(token: string): Promise<JwtPayload> {
   // Accept either (matched on aud/azp), still fail-closed. Admin ROLES are still
   // required below. NB: these were historically conflated under adminClientId,
   // which broke webapp login wherever KEYCLOAK_ADMIN_CLIENT_ID=admin-service.
-  const adminAudiences = [config.keycloak.adminUiClientId, config.keycloak.adminClientId]
-    .filter((v): v is string => !!v)
+  //
+  // THIRD accepted audience: the MCP resource itself. The MCP endpoint generates its whole tool
+  // surface from these admin routes, and an MCP client's token is audienced to the MCP resource
+  // (RFC 8707) because the MCP spec REQUIRES it: "MCP servers MUST only accept tokens
+  // specifically intended for themselves and MUST reject tokens that do not include them in the
+  // audience claim". So a spec-conformant MCP client can never present an admin-ui-audienced
+  // token, and without this every create_admin_*/update_admin_*/delete_admin_* tool answered 403
+  // for every MCP client — the entire surface dead by construction.
+  //
+  // This is NOT the cross-resource reuse the spec forbids. The forbidden case is accepting a token
+  // minted for a DIFFERENT resource; here /mcp and /admin are the same resource server, and the
+  // token names it. A FHIR-base-audienced SMART app token is still refused, which is the boundary
+  // that actually matters. Authority remains with ROLES, checked below and unchanged.
+  const adminAudiences = [
+    config.keycloak.adminUiClientId,
+    config.keycloak.adminClientId,
+    getMcpResourceAudience(),
+  ].filter((v): v is string => !!v)
   const payload = adminAudiences.length
     ? await validateToken(token, { audience: adminAudiences })
     : await validateToken(token)
