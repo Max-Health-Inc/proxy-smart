@@ -14,21 +14,31 @@ console. It bundles:
   generated from the backend's admin routes, so the tool surface is whatever that deployment
   exposes rather than a fixed list.
 
-## Point it at your deployment
+## Which deployment it talks to
 
-Proxy Smart is self-hosted: there is no single hosted endpoint, because the whole product is
-the instance you run. Set `PROXY_SMART_URL` before installing, and the plugin builds the
-endpoint from it:
+Out of the box, the hosted production deployment:
+
+```
+https://api.proxy-smart.com/mcp
+```
+
+That is the `resource` production's own discovery document names, so it is what the audience
+claim binds to. `proxy-smart.com` answers as well, but points every client at `api.`, and this
+proxy validates the audience fail-closed — so the `api.` host is the one to use, not the apex.
+
+Proxy Smart is also self-hostable. Set `PROXY_SMART_URL` and the plugin builds the endpoint
+from it instead:
 
 ```bash
 export PROXY_SMART_URL=https://proxy.your-hospital.example
 ```
 
-There is deliberately no default. A default would have to be a demo environment, and an
-assistant silently administering someone else's demo instead of your deployment is a worse
-outcome than a server that reports an unset variable. To explore Proxy Smart without deploying
-one, install [`proxy-beta`](../proxy-beta/README.md), which is pinned to the public beta and
-says what that environment is for.
+Expansion happens in the environment the MCP client runs in. A CLI session picks it up from
+your shell; a hosted client has no environment to read, so there the default is what you get.
+
+To explore the demo environment rather than production, install
+[`proxy-beta`](../proxy-beta/README.md), which is pinned to the public beta and says what that
+environment is for.
 
 You sign in on first use. The endpoint is OAuth-protected and discovers its authorization
 server through RFC 9728, so a plugin-aware client runs the flow itself; clients that cannot
@@ -61,7 +71,7 @@ the `proxy` plugin from the `max-health` marketplace). Restart Codex after insta
 ```json
 {
   "mcpServers": {
-    "proxy-smart": { "url": "https://your-instance.example.com/mcp" }
+    "proxy-smart": { "url": "https://api.proxy-smart.com/mcp" }
   }
 }
 ```
