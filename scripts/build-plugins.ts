@@ -220,8 +220,16 @@ async function skillsFor(t: Target): Promise<SkillInfo[]> {
   return found
 }
 
-/** The `description:` value from YAML frontmatter, with folded-block newlines flattened. */
-function descriptionOf(markdown: string): string {
+/**
+ * The `description:` value from YAML frontmatter, with folded-block newlines flattened.
+ *
+ * Normalises line endings first. `.gitattributes` pins `eol=crlf`, which git applies on EVERY
+ * platform including CI, so these files are CRLF in the working tree everywhere — and a parser
+ * matching `---\n` then finds no frontmatter, silently yields an empty summary, and the README
+ * ends up with a dangling `— ` after each skill name.
+ */
+function descriptionOf(source: string): string {
+  const markdown = source.replace(/\r\n/g, '\n')
   const match = /^---\n([\s\S]*?)\n---/.exec(markdown)
   if (!match) return ''
   const body = match[1]
@@ -283,13 +291,34 @@ async function writeTarget(outDir: string, name: string, t: Target): Promise<voi
   for (const artifact of await artifactsFor(name, t)) {
     const file = join(outDir, artifact.path)
     await mkdir(dirname(file), { recursive: true })
-    await writeFile(file, artifact.content, 'utf8')
+    // CRLF because `.gitattributes` pins `eol=crlf` for .md and .json, and git applies that on
+    // every platform. Writing LF would leave ten files permanently "modified" in every Windows
+    // working tree — which on this repo is worse than cosmetic, since the version-sync
+    // automation sweeps modified tracked files into commits of its own.
+    await writeFile(file, toCrlf(artifact.content), 'utf8')
   }
   const skillsOut = join(outDir, 'skills')
   await rm(skillsOut, { recursive: true, force: true })
   for (const skill of await skillsFor(t)) {
     await cp(skill.sourceDir, join(skillsOut, skill.slug), { recursive: true })
   }
+}
+
+/**
+ * Compare ignoring line endings.
+ *
+ * `.gitattributes` pins `eol=crlf` for .ts/.json/.md, so a Windows checkout has CRLF on disk
+ * while git stores LF and this script writes LF. A byte comparison therefore reports every
+ * generated file as drifted on Windows and none of them on CI, which is the least useful
+ * possible drift guard. What matters is the content, so normalise before comparing.
+ */
+function sameContent(a: string, b: string): boolean {
+  return a.replace(/\r\n/g, '\n') === b.replace(/\r\n/g, '\n')
+}
+
+/** Line endings this repo's `.gitattributes` asks for on the generated file types. */
+function toCrlf(text: string): string {
+  return text.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n')
 }
 
 /** Differences between what is on disk and what the source says it should be. */
@@ -301,7 +330,7 @@ async function driftFor(outDir: string, name: string, t: Target): Promise<string
       drift.push(`${relative(REPO_ROOT, file)} is missing`)
       continue
     }
-    if ((await readFile(file, 'utf8')) !== artifact.content) {
+    if (!sameContent(await readFile(file, 'utf8'), artifact.content)) {
       drift.push(`${relative(REPO_ROOT, file)} differs from the source`)
     }
   }
@@ -315,7 +344,7 @@ async function driftFor(outDir: string, name: string, t: Target): Promise<string
       readFile(join(skill.sourceDir, 'SKILL.md'), 'utf8'),
       readFile(file, 'utf8'),
     ])
-    if (want !== got) drift.push(`${relative(REPO_ROOT, file)} differs from plugins/source`)
+    if (!sameContent(want, got)) drift.push(`${relative(REPO_ROOT, file)} differs from plugins/source`)
   }
   return drift
 }
