@@ -6,6 +6,7 @@ import { config } from '@/config'
 import { logger } from '@/lib/logger'
 import { getProxyJwks } from '@/lib/proxy-signing'
 import { sanitizeDiscoveryDocument } from '@/lib/oidc-discovery'
+import { MCP_SCOPES_SUPPORTED } from '@/lib/oauth-scopes'
 import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
 
 /**
@@ -49,12 +50,9 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
-      scopes_supported: [
-        'openid',
-        'profile',
-        'email',
-        'offline_access'
-      ]
+      // Single source of truth — whatever is advertised here is also granted to every client
+      // the backend provisions (see lib/oauth-scopes).
+      scopes_supported: [...MCP_SCOPES_SUPPORTED]
     }
   }, {
     detail: {
@@ -80,12 +78,9 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       ],
       bearer_methods_supported: ['header'],
       resource_documentation: `${baseUrl}/docs`,
-      scopes_supported: [
-        'openid',
-        'profile',
-        'email',
-        'offline_access'
-      ]
+      // Single source of truth — whatever is advertised here is also granted to every client
+      // the backend provisions (see lib/oauth-scopes).
+      scopes_supported: [...MCP_SCOPES_SUPPORTED]
     }
   }, {
     detail: {

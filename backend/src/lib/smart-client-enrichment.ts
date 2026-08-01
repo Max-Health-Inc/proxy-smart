@@ -5,6 +5,11 @@ import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
 import { toTokenEndpointAuthMethod } from './auth-method-mapping'
 import { logger } from './logger'
+import {
+  KEYCLOAK_BUILTIN_DEFAULT_SCOPES,
+  STANDARD_OIDC_DEFAULT_SCOPES,
+  STANDARD_OIDC_OPTIONAL_SCOPES,
+} from './oauth-scopes'
 import type { SmartAppType } from '@/schemas'
 
 /** Valid literal values for schema-validated enums */
@@ -189,6 +194,95 @@ export async function assignResourceIndicatorsScope(
 }
 
 /**
+ * Attach the baseline scopes every client this deployment provisions needs, whatever it asked
+ * for at registration.
+ *
+ * UNCONDITIONAL ON PURPOSE. Keycloak rejects an authorize request naming a scope the client
+ * does not hold — `invalid_scope`, before the login page — and the MCP 401 challenge tells
+ * clients to name {@link STANDARD_OIDC_DEFAULT_SCOPES}. Deriving the grant from the optional
+ * `scope` field of an RFC 7591 registration request meant a client that omitted it (legitimate,
+ * and correct when you plan to read the scopes out of the resource metadata afterwards) could
+ * not authorize at all.
+ *
+ * Keycloak's admin API cannot do this at create time: `clients.create` honours only the realm's
+ * DEFAULT client scopes and silently ignores a `defaultClientScopes` array in the payload, so
+ * every scope has to be attached afterwards through the explicit endpoints used here.
+ *
+ * Each attachment is independent and best-effort: one scope missing from the realm must not
+ * cost the client the others. Absences are warned about rather than thrown, because the client
+ * already exists by this point and failing the registration would leave an orphan behind.
+ */
+export async function assignStandardOidcScopes(
+  admin: KcAdminClient,
+  clientInternalId: string,
+  clientId: string,
+  allClientScopes?: { id?: string; name?: string }[],
+): Promise<void> {
+  let scopes: { id?: string; name?: string }[]
+  try {
+    scopes = allClientScopes ?? await admin.clientScopes.find()
+  } catch (error) {
+    logger.admin.warn('Could not read realm client scopes; client left without baseline scopes', { clientId, error })
+    return
+  }
+
+  await addClientScopesByName(
+    admin,
+    clientInternalId,
+    clientId,
+    [...KEYCLOAK_BUILTIN_DEFAULT_SCOPES, ...STANDARD_OIDC_DEFAULT_SCOPES],
+    scopes,
+    'default',
+  )
+  await addClientScopesByName(
+    admin,
+    clientInternalId,
+    clientId,
+    STANDARD_OIDC_OPTIONAL_SCOPES,
+    scopes,
+    'optional',
+  )
+}
+
+/**
+ * Attach client scopes to a client by NAME, resolving each against the realm's scope list.
+ *
+ * The shared half of every scope assignment in this file: name → id → add, one at a time so a
+ * scope missing from the realm or rejected by Keycloak costs only itself. `assignStandardOidcScopes`
+ * and {@link replaceClientScopes} differ in what they attach and whether they clear first, not
+ * in how a name becomes an attachment, so that part lives here once.
+ *
+ * A name with no matching realm scope is logged and skipped rather than treated as an error:
+ * `openid` is implicit in some realms, and SMART scopes may legitimately not exist yet.
+ */
+async function addClientScopesByName(
+  admin: KcAdminClient,
+  clientInternalId: string,
+  clientId: string,
+  names: readonly string[],
+  allClientScopes: { id?: string; name?: string }[],
+  kind: 'default' | 'optional',
+): Promise<void> {
+  for (const name of names) {
+    const scope = allClientScopes.find(s => s.name === name)
+    if (!scope?.id) {
+      logger.admin.debug('Scope not present in realm, skipping', { clientId, name, kind })
+      continue
+    }
+    try {
+      if (kind === 'default') {
+        await admin.clients.addDefaultClientScope({ id: clientInternalId, clientScopeId: scope.id })
+      } else {
+        await admin.clients.addOptionalClientScope({ id: clientInternalId, clientScopeId: scope.id })
+      }
+      logger.admin.debug('Assigned scope to client', { clientId, name, kind })
+    } catch (error) {
+      logger.admin.warn('Failed to assign scope to client', { clientId, name, kind, error })
+    }
+  }
+}
+
+/**
  * Auto-create missing SMART client scopes in Keycloak.
  *
  * Handles BOTH resource-level scopes (patient/Observation.read) AND
@@ -252,19 +346,7 @@ export async function replaceClientScopes(
         logger.admin.warn('Failed to remove existing default scope', { clientId, scopeId: scope.id, scopeName: scope.name, error })
       }
     }
-
-    // Add new default scopes (resolve name → ID from the master list)
-    const defaultScopeIds = defaultScopes
-      .map((scopeName: string) => allClientScopes.find(s => s.name === scopeName)?.id)
-      .filter(Boolean) as string[]
-
-    for (const scopeId of defaultScopeIds) {
-      try {
-        await admin.clients.addDefaultClientScope({ id: clientInternalId, clientScopeId: scopeId })
-      } catch (error) {
-        logger.admin.warn('Failed to add new default scope', { clientId, scopeId, error })
-      }
-    }
+    await addClientScopesByName(admin, clientInternalId, clientId, defaultScopes, allClientScopes, 'default')
   }
 
   if (optionalScopes) {
@@ -276,17 +358,6 @@ export async function replaceClientScopes(
         logger.admin.warn('Failed to remove existing optional scope', { clientId, scopeId: scope.id, scopeName: scope.name, error })
       }
     }
-
-    const optionalScopeIds = optionalScopes
-      .map((scopeName: string) => allClientScopes.find(s => s.name === scopeName)?.id)
-      .filter(Boolean) as string[]
-
-    for (const scopeId of optionalScopeIds) {
-      try {
-        await admin.clients.addOptionalClientScope({ id: clientInternalId, clientScopeId: scopeId })
-      } catch (error) {
-        logger.admin.warn('Failed to add new optional scope', { clientId, scopeId, error })
-      }
-    }
+    await addClientScopesByName(admin, clientInternalId, clientId, optionalScopes, allClientScopes, 'optional')
   }
 }

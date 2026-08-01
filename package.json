@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.2.15-RELEASE.202607312344.5981aa10a",
+  "version": "0.2.16-beta.202608010942.c20c9d17b",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -90,6 +90,9 @@
     "lint:infra": "cd deploy/infra && bun run lint",
     "lint:cli": "cd packages/cli && bun run lint",
     "lint:packages": "cd packages/auth && bun run lint && cd ../elysia-mcp && bun run lint",
+    "plugins": "bun run scripts/build-plugins.ts",
+    "plugins:check": "bun run scripts/build-plugins.ts --check",
+    "plugins:customer": "bun run scripts/build-plugins.ts",
     "spdx:check": "node scripts/spdx.mjs --check --staged",
     "spdx:add": "node scripts/spdx.mjs --add --staged",
     "reuse:lint": "reuse lint",

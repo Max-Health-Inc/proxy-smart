@@ -1,0 +1,84 @@
+{
+  "proxy": {
+    "committed": true,
+    "displayName": "Proxy Smart — SMART on FHIR administration",
+    "headline": "administer the hosted SMART on FHIR proxy",
+    "tagline": "Administer the hosted Proxy Smart deployment from the conversation.",
+    "serverKey": "proxy-smart",
+    "url": "https://api.proxy-smart.com/mcp",
+    "homepage": "https://proxy-smart.com",
+    "skills": [
+      "skills"
+    ],
+    "keywords": [
+      "smart-on-fhir",
+      "fhir",
+      "oauth2",
+      "keycloak",
+      "healthcare",
+      "interoperability",
+      "mcp"
+    ],
+    "brandColor": "#2563eb",
+    "category": "Productivity",
+    "endpointHeading": "Which deployment it talks to",
+    "endpointBody": "The Max Health hosted deployment:\n\n```\nhttps://api.proxy-smart.com/mcp\n```\n\n`api.` and not the apex. Production's own RFC 9728 document names that URL as its `resource`,\n`proxy-smart.com` merely points clients there, and the proxy validates the audience fail-closed —\nso a token minted against the apex is refused by the endpoint that issued it.\n\nRunning your own instance instead? You want the `proxy-smart` plugin built for your deployment,\nnot this one. To explore without deploying anything, install `proxy-beta`.",
+    "description": "Administer the hosted Proxy Smart deployment from the conversation. Bundles the smart-app-onboarding and smart-launch-debugging skills + the Proxy Smart MCP server at api.proxy-smart.com, whose tools are generated from the admin API: register and configure SMART apps, manage scopes and scope sets, healthcare users and practitioner roles, FHIR servers, identity providers, and Keycloak Organizations.",
+    "longDescription": "Proxy Smart sits between SMART apps and FHIR servers and handles OAuth 2.0 and SMART App Launch 2.2.0. This plugin connects an assistant to the hosted deployment's admin API over MCP, so registering an app, choosing its scopes and launch type, wiring FHIR server access and Keycloak Organizations, and working out why a launch or token failed all happen in the conversation instead of the console."
+  },
+  "proxy-beta": {
+    "committed": true,
+    "displayName": "Proxy Smart Beta — the public demo deployment",
+    "headline": "the public Proxy Smart deployment",
+    "tagline": "A live SMART on FHIR proxy with seeded data, nothing to install.",
+    "serverKey": "proxy-smart-beta",
+    "url": "https://beta.proxy-smart.com/mcp",
+    "homepage": "https://beta.proxy-smart.com",
+    "skills": [
+      "skills",
+      "skills-beta"
+    ],
+    "keywords": [
+      "smart-on-fhir",
+      "fhir",
+      "oauth2",
+      "keycloak",
+      "demo",
+      "sandbox",
+      "mcp"
+    ],
+    "brandColor": "#2563eb",
+    "category": "Productivity",
+    "endpointHeading": "Demo environment, and only that",
+    "endpointBody": "```\nhttps://beta.proxy-smart.com/mcp\n```\n\nThe beta is public, shared, and reset without notice. Never put real patient data in it, do not\nbuild anything you intend to keep on it, and expect other people's changes alongside yours. The\ncredentials documented in this repository are public credentials for this environment; they are\nnot secrets and must not be reused anywhere else.\n\nIt runs the whole stack — proxy, Keycloak, and a HAPI FHIR server seeded with two patients and\ntwo practitioners, around fifty observations, and the conditions, encounters, medications,\nallergies, immunizations, procedures, reports, imaging studies and questionnaires around them.\nThe registered clients are worth reading as worked examples of each SMART app type.",
+    "description": "Explore a working SMART on FHIR authorization proxy without deploying one. Connects to the public Proxy Smart beta at beta.proxy-smart.com, a full stack with seeded demo patients, and bundles the admin skills plus a tour of the environment. Demo data only: public, shared, and reset without notice.",
+    "longDescription": "beta.proxy-smart.com runs the whole Proxy Smart stack — the authorization proxy, Keycloak, and a HAPI FHIR server with seeded demo patients, practitioners, observations, and imaging studies. This plugin connects to its admin MCP endpoint so you can see how SMART apps, scopes, users, and FHIR servers are wired on a deployment that already works, and try changes against it. It is a public shared environment that is reset without notice, so it is for evaluation only — never put real patient data in it."
+  },
+  "proxy-smart": {
+    "committed": false,
+    "displayName": "Proxy Smart",
+    "headline": "administer your SMART on FHIR proxy",
+    "tagline": "Administer your Proxy Smart deployment from the conversation.",
+    "serverKey": "proxy-smart",
+    "url": "__CUSTOMER_URL__",
+    "homepage": "__CUSTOMER_URL_ORIGIN__",
+    "skills": [
+      "skills"
+    ],
+    "keywords": [
+      "smart-on-fhir",
+      "fhir",
+      "oauth2",
+      "keycloak",
+      "healthcare",
+      "interoperability",
+      "mcp"
+    ],
+    "brandColor": "#2563eb",
+    "category": "Productivity",
+    "endpointHeading": "Your deployment",
+    "endpointBody": "This plugin is built for your instance:\n\n```\n__CUSTOMER_URL__\n```\n\nThat URL is baked in, so the plugin works as shipped. To point it somewhere else — a staging\ninstance, or after a move — set `PROXY_SMART_URL` in the environment your MCP client runs in and\nit takes precedence:\n\n```bash\nexport PROXY_SMART_URL=https://proxy.staging.example\n```\n\nExpansion happens in that client's environment. A CLI session picks it up from your shell; a\nhosted client has no environment to read, so there the built-in URL is what applies.",
+    "description": "Administer your Proxy Smart deployment from the conversation. Bundles the smart-app-onboarding and smart-launch-debugging skills + your deployment's MCP server, whose tools are generated from the admin API: register and configure SMART apps, manage scopes and scope sets, healthcare users and practitioner roles, FHIR servers, identity providers, and Keycloak Organizations.",
+    "longDescription": "Proxy Smart sits between SMART apps and FHIR servers and handles OAuth 2.0 and SMART App Launch 2.2.0. This plugin connects an assistant to your deployment's admin API over MCP, so registering an app, choosing its scopes and launch type, wiring FHIR server access and Keycloak Organizations, and working out why a launch or token failed all happen in the conversation instead of the console."
+  }
+}

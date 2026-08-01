@@ -45,6 +45,7 @@ import {
   getDispatchApp,
 } from '../lib/ai/tool-registry'
 import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/mcp-endpoint-config'
+import { MCP_SCOPE_CHALLENGE } from '../lib/oauth-scopes'
 import { searchDocumentation } from '../lib/ai/rag-tools'
 import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { createAdminClient } from '../lib/keycloak-plugin'
@@ -269,7 +270,9 @@ function unauthorized(): Response {
       status: 401,
       headers: {
         'Content-Type': 'application/json',
-        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="openid profile email"`,
+        // The challenged scopes are the ones every provisioned client is granted by default,
+        // so a client that follows this challenge can actually authorize (see lib/oauth-scopes).
+        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="${MCP_SCOPE_CHALLENGE}"`,
       },
     },
   )
