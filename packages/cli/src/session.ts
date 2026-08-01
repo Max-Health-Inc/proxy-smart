@@ -56,6 +56,20 @@ export interface CachedToken {
   scope?: string
   /** Client id the token was issued for (used to keep refresh consistent). */
   client_id: string
+  /**
+   * The proxy this token was minted against, normalised.
+   *
+   * A token is only valid for the deployment that issued it, and the resolved `--url` can change
+   * between invocations (flag, then env, then persisted config, then localhost). Without this,
+   * `login --url https://beta…` followed by a bare command silently presented a beta token to
+   * whatever the default resolved to and returned an opaque 401. Worse, when the two DO both
+   * accept the token — a shell with PROXY_SMART_URL pointing at production — the command would
+   * succeed against the wrong environment. Recorded so {@link Session.getAccessToken} can refuse.
+   *
+   * Optional because a cache written by an older CLI has no such field; those are trusted as
+   * before rather than forcing a re-login on upgrade.
+   */
+  url?: string
 }
 
 const FORM_HEADERS = { 'content-type': 'application/x-www-form-urlencoded' } as const
@@ -117,7 +131,12 @@ export function writeCachedToken(homeDir: string, token: CachedToken): void {
 }
 
 /** Map a fresh token response onto a persisted CachedToken. */
-export function toCachedToken(tokens: TokenSet, clientId: string, now = Math.floor(Date.now() / 1000)): CachedToken {
+export function toCachedToken(
+  tokens: TokenSet,
+  clientId: string,
+  now = Math.floor(Date.now() / 1000),
+  url?: string,
+): CachedToken {
   return {
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
@@ -125,7 +144,24 @@ export function toCachedToken(tokens: TokenSet, clientId: string, now = Math.flo
     refresh_expires_at: expiresAt(tokens.refresh_expires_in, now),
     scope: tokens.scope,
     client_id: clientId,
+    ...(url === undefined ? {} : { url }),
   }
+}
+
+/**
+ * The cached token is for a DIFFERENT deployment than this invocation targets.
+ *
+ * Returned as a message rather than thrown here so the caller decides; the wording names both
+ * URLs because the whole failure mode is not noticing that they differ.
+ */
+export function deploymentMismatch(cached: CachedToken, targetUrl: string): string | undefined {
+  if (!cached.url || cached.url === targetUrl) return undefined
+  return (
+    `The cached token was issued by ${cached.url}, but this command targets ${targetUrl}.\n` +
+    `A token is only valid for the deployment that issued it. Either:\n` +
+    `  proxy-smart --url ${cached.url} <command>          # use the deployment you logged in to\n` +
+    `  proxy-smart login --url ${targetUrl}               # log in to the one you are targeting`
+  )
 }
 
 /** Callback used to report device-flow progress to the user. */
@@ -213,7 +249,7 @@ export class Session {
     prompt(device)
 
     const tokens = await this.pollForDeviceToken(endpoints.tokenEndpoint, device, pkce.verifier)
-    const cached = toCachedToken(tokens, this.config.clientId)
+    const cached = toCachedToken(tokens, this.config.clientId, undefined, this.config.url)
     writeCachedToken(this.config.homeDir, cached)
     return cached
   }
@@ -228,7 +264,7 @@ export class Session {
       endpoints.tokenEndpoint,
       clientCredentialsBody(this.config.clientId, this.config.clientSecret, this.config.scope),
     )
-    const cached = toCachedToken(tokens, this.config.clientId)
+    const cached = toCachedToken(tokens, this.config.clientId, undefined, this.config.url)
     writeCachedToken(this.config.homeDir, cached)
     return cached
   }
@@ -244,6 +280,14 @@ export class Session {
    */
   async getAccessToken(): Promise<string> {
     const cached = readCachedToken(this.config.homeDir)
+
+    // Refuse a token minted elsewhere BEFORE any network call. Checked first because the
+    // dangerous case is the one that would otherwise succeed: a token both deployments
+    // accept, applied to the wrong one.
+    if (cached) {
+      const mismatch = deploymentMismatch(cached, this.config.url)
+      if (mismatch) throw new CliError(mismatch)
+    }
 
     if (cached && isTokenFresh(cached.expires_at)) {
       return cached.access_token
