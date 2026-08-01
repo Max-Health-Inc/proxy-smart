@@ -19,7 +19,8 @@ import {
   KeycloakConfigResponse,
   type SaveKeycloakConfigRequestType
 } from '@/schemas/admin/keycloak'
-import { ErrorResponse } from '@/schemas'
+import { ErrorResponse, CommonErrorResponses } from '@/schemas'
+import { SessionSettings } from '@/schemas/admin/keycloak'
 
 /**
  * Keycloak Configuration Management
@@ -191,6 +192,7 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
       return handleAdminError(error, set)
     }
   }, {
+    response: { 200: SessionSettings, ...CommonErrorResponses },
     detail: {
       summary: 'Get Realm Session Lifetimes',
       description:
@@ -226,6 +228,8 @@ export const keycloakConfigRoutes = new Elysia({ prefix: '/keycloak-config', tag
       return handleAdminError(error, set)
     }
   }, {
+    body: SessionSettings,
+    response: { 200: SessionSettings, ...CommonErrorResponses },
     detail: {
       summary: 'Update Realm Session Lifetimes',
       description:

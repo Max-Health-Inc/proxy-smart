@@ -41,9 +41,26 @@ export const KeycloakConfigResponse = t.Object({
   adminClientId: t.Union([t.String(), t.Null()], { description: 'Admin client ID (if configured)' })
 }, { title: 'KeycloakConfigResponse' })
 
+/**
+ * Realm SESSION LIFETIME settings.
+ *
+ * Every field optional: a partial update is the normal case (flipping the offline ceiling on
+ * without restating four other lifetimes). Semantic rules — a ceiling must exceed its idle
+ * window, durations must be positive because Keycloak reads 0 as UNLIMITED — are enforced in
+ * lib/session-settings, since they are relationships between fields rather than per-field shapes.
+ */
+export const SessionSettings = t.Object({
+  ssoSessionIdleTimeout: t.Optional(t.Integer({ description: 'Seconds an SSO session may sit idle before expiring' })),
+  ssoSessionMaxLifespan: t.Optional(t.Integer({ description: 'Seconds an SSO session may live regardless of activity' })),
+  offlineSessionIdleTimeout: t.Optional(t.Integer({ description: 'Seconds an offline session may sit idle before expiring' })),
+  offlineSessionMaxLifespan: t.Optional(t.Integer({ description: 'Seconds an offline session may live regardless of activity. Applies only when the ceiling is enabled' })),
+  offlineSessionMaxLifespanEnabled: t.Optional(t.Boolean({ description: 'Whether the offline ceiling is enforced. False leaves offline sessions unbounded by anything but the idle timeout' })),
+}, { title: 'SessionSettings' })
+
 // TypeScript type inference helpers
 export type TestKeycloakConnectionRequestType = Static<typeof TestKeycloakConnectionRequest>
 export type TestKeycloakConnectionResponseType = Static<typeof TestKeycloakConnectionResponse>
 export type SaveKeycloakConfigRequestType = Static<typeof SaveKeycloakConfigRequest>
 export type SaveKeycloakConfigResponseType = Static<typeof SaveKeycloakConfigResponse>
 export type KeycloakConfigResponseType = Static<typeof KeycloakConfigResponse>
+export type SessionSettingsType = Static<typeof SessionSettings>
