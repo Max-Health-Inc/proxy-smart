@@ -4,9 +4,8 @@
  * Responsibilities:
  *   - persist / read the cached token under ~/.proxy-smart/token.json
  *   - discover OAuth endpoints from the proxy's mirrored OIDC discovery
- *     document by default, so tokens are minted through the proxy auth layer
- *     (audience binding, token enrichment, access control). Direct Keycloak is
- *     an explicit opt-in escape hatch (config.directKeycloak).
+ *     document, so tokens are always minted through the proxy auth layer
+ *     (audience binding, token enrichment, access control)
  *   - run the interactive device authorization flow (RFC 8628)
  *   - run the client_credentials flow (CI)
  *   - hand out a valid access token, transparently refreshing when possible
@@ -38,7 +37,6 @@ import {
   expiresAt,
   generatePkcePair,
   isTokenFresh,
-  keycloakEndpoints,
   parseDeviceAuthResponse,
   parseOidcMetadata,
   parseTokenSet,
@@ -158,36 +156,18 @@ export class Session {
   ) {}
 
   /**
-   * Resolve OAuth endpoints.
+   * Resolve OAuth endpoints by discovering them from the proxy's mirrored OIDC
+   * document, so every grant goes through the proxy auth layer (token =
+   * `${proxy}/auth/token`, device = the proxy's `/auth/device`).
    *
-   * Default: discover from the proxy's mirrored OIDC document so every grant
-   * goes through the proxy auth layer (token = `${proxy}/auth/token`, device =
-   * the proxy's `/auth/device`). The proxy deliberately rewrites these
-   * endpoints to itself; tokens minted straight from Keycloak skip the proxy
-   * and are rejected by its fail-closed audience checks.
-   *
-   * Escape hatch: when `config.directKeycloak` is set (and realm + keycloakUrl
-   * are known), build the canonical Keycloak endpoints directly and bypass the
-   * proxy. This is opt-in only and should be reserved for debugging.
+   * There is deliberately no way to point this at Keycloak instead. The proxy
+   * rewrites these endpoints to itself and validates the audience fail-closed,
+   * so a token minted straight from Keycloak is rejected on the very next
+   * call — an escape hatch here only produces a confusing 401.
    */
   async resolveEndpoints(): Promise<AuthEndpoints> {
     if (this.endpoints) return this.endpoints
 
-    // Escape hatch: explicit opt-in to talk to Keycloak directly.
-    if (this.config.directKeycloak) {
-      if (!this.config.realm || !this.config.keycloakUrl) {
-        throw new CliError(
-          'Direct-Keycloak mode requires both a realm and a Keycloak URL ' +
-            `(set ${'PROXY_SMART_REALM'} and ${'PROXY_SMART_KEYCLOAK_URL'}, ` +
-            'or --realm and --keycloak-url).',
-        )
-      }
-      this.endpoints = keycloakEndpoints(this.config.keycloakUrl, this.config.realm)
-      return this.endpoints
-    }
-
-    // Default: discover via the proxy's mirrored OIDC document so the CLI goes
-    // through the proxy auth layer.
     const url = proxyDiscoveryUrl(this.config.url)
     const res = await this.fetchImpl(url, { headers: { accept: 'application/json' } })
     if (!res.ok) {

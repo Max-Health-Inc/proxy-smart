@@ -117,7 +117,9 @@ async function mapperStatus(ctx: CommandContext): Promise<void> {
     alias: entry.alias,
     providerId: entry.providerId,
     enabled: entry.enabled,
-    healthy: entry.healthy,
+    // A machine trust anchor brokers client assertions, not users, so attribute
+    // imports do not apply to it — reported as n/a rather than a pass or a fail.
+    healthy: entry.userFacing ? entry.healthy : 'n/a',
     missingRequired: entry.missingRequired.join(',') || '-',
     missingOptional: entry.missingOptional.join(',') || '-',
     mapperType: entry.attributeMapperType ?? '-',
@@ -125,8 +127,11 @@ async function mapperStatus(ctx: CommandContext): Promise<void> {
   printTable(rows, flagList(ctx.args.flags, 'columns'))
 
   // Non-zero exit on drift so `idps mapper-status` works as a CI gate.
-  if (flagBool(ctx.args.flags, 'strict') && response.status.some(entry => !entry.healthy)) {
-    throw new CliError('One or more identity providers are missing required attribute imports.')
+  const unhealthy = response.status.filter(entry => entry.userFacing && !entry.healthy)
+  if (flagBool(ctx.args.flags, 'strict') && unhealthy.length > 0) {
+    throw new CliError(
+      `Missing required attribute imports on: ${unhealthy.map(entry => entry.alias).join(', ')}.`,
+    )
   }
 }
 

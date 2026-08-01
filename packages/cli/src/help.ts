@@ -35,17 +35,6 @@ GLOBAL FLAGS
   -h, --help              Show help
   -v, --version           Show version
 
-DIRECT-KEYCLOAK ESCAPE HATCH (advanced)
-  By default the CLI authenticates through the proxy, where audience binding,
-  token enrichment, and access control are applied. The flags below only apply
-  when you opt into bypassing the proxy and talking to Keycloak directly.
-
-  --direct-keycloak       Bypass the proxy and use Keycloak directly
-                          (env: PROXY_SMART_DIRECT_KEYCLOAK=1). Requires both
-                          --realm and --keycloak-url.
-  --realm <realm>         Keycloak realm (env: PROXY_SMART_REALM)
-  --keycloak-url <url>    Keycloak base URL (env: PROXY_SMART_KEYCLOAK_URL)
-
 AUTH
   login                   Sign in (device flow; client_credentials when a
                           secret is set or --ci is passed)
@@ -58,6 +47,14 @@ GENERIC
 
 DOMAINS
   smart-apps        list | get <clientId> | create | update <clientId> | delete <clientId>
+                    mappers <clientId> | create-mapper <clientId>
+                    update-mapper <clientId> <mapperId> | delete-mapper <clientId> <mapperId>
+                    add-audience <clientId> <audience> [--name <n>] [--id-token]
+  roles             list [--include-technical] | get <name> | create
+                    update <name> | delete <name> --yes
+                    client-roles <clientId> | client-get <clientId> <name>
+                    client-create <clientId> | client-update <clientId> <name>
+                    client-delete <clientId> <name> --yes
   healthcare-users  list | get <userId> | create | delete <userId>
   scope-sets        list | get <id> | create | delete <id>
   smart-scopes      list | create | batch | delete <scopeId>
@@ -72,6 +69,15 @@ DOMAINS
                     mappers <id> | mapper-types <id>
                     create-mapper <id> | update-mapper <id> <mapperId>
                     delete-mapper <id> <mapperId>
+
+TOKEN AUDIENCE
+  The proxy validates the access-token audience fail-closed, so a client whose
+  tokens carry the wrong aud cannot launch. add-audience writes the audience
+  mapper for you and picks the right Keycloak config key for a realm client id
+  versus a literal URL. It is idempotent, so it is safe to run from a deploy:
+
+  proxy-smart smart-apps add-audience patient-portal fhir-resource-server
+  proxy-smart smart-apps mappers patient-portal
 
 CLAIM MAPPING CHECKS
   Brokered and directory users only carry the attributes a mapper imports for
@@ -100,6 +106,12 @@ EXAMPLES
   proxy-smart scope-sets create --data '{"name":"Reader","scopes":["patient/*.read"]}'
   proxy-smart smart-scopes list --smart-only
   proxy-smart smart-scopes batch --data '{"scopes":[{"name":"patient/Binary.cruds"},{"name":"patient/DocumentReference.cruds"}]}'
+  proxy-smart smart-apps mappers patient-portal
+  proxy-smart smart-apps add-audience patient-portal https://fhir.example.com/R4
+  proxy-smart smart-apps create-mapper patient-portal --data '{"name":"fhirUser","protocolMapper":"oidc-usermodel-attribute-mapper","config":{"user.attribute":"fhirUser","claim.name":"fhirUser","access.token.claim":"true"}}'
+  proxy-smart roles list
+  proxy-smart roles create --data '{"name":"clinician","fhirScopes":["patient/*.read"]}'
+  proxy-smart roles client-roles admin-ui
   proxy-smart idps mapper-status --strict
   proxy-smart idps fix-mappers hospital-oidc
   proxy-smart idps create-mapper hospital-oidc --data '{"name":"npi-import","identityProviderMapper":"oidc-user-attribute-idp-mapper","config":{"claim":"npi","user.attribute":"npi"}}'

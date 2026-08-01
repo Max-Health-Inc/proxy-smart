@@ -57,6 +57,17 @@ export const UpdateRoleRequest = t.Object({
   representedScopeSetId: t.Optional(t.String({ description: 'ID of a scope set this role represents (descriptive label only). Pass an empty string to clear.' }))
 }, { title: 'UpdateRoleRequest' })
 
+/**
+ * Path params for the client-role routes.
+ *
+ * `clientId` is the OAuth client id (not Keycloak's internal UUID) — the routes
+ * resolve it, so callers never have to look the UUID up themselves.
+ */
+export const ClientRoleParams = t.Object({
+  clientId: t.String({ description: 'OAuth2 client ID that owns the role' }),
+  roleName: t.String({ description: 'Client role name' })
+}, { title: 'ClientRoleParams' })
+
 // TypeScript type inference helpers
 export type RoleType = Static<typeof Role>
 export type RoleResponseType = Static<typeof RoleResponse>

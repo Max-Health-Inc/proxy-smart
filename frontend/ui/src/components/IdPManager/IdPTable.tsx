@@ -150,9 +150,14 @@ export function IdPTable({
                     if (!mappers) {
                       return <span className="text-sm text-muted-foreground">—</span>;
                     }
-                    if (mappers.unsupported) {
+                    if (!mappers.userFacing || mappers.unsupported) {
                       return (
-                        <span className="flex items-center text-sm text-muted-foreground" title={t('This provider type supports no attribute-import mappers')}>
+                        <span
+                          className="flex items-center text-sm text-muted-foreground"
+                          title={mappers.userFacing
+                            ? t('This provider type supports no attribute-import mappers')
+                            : t('This provider federates signed client assertions rather than users')}
+                        >
                           <Minus className="h-4 w-4 mr-1.5" />
                           {t('Not applicable')}
                         </span>

@@ -76,18 +76,19 @@ proxy-smart smart-apps list --json
 With a secret present the CLI will even mint a token on demand if none is cached,
 so a bare `proxy-smart <command>` works in CI without an explicit `login` step.
 
-### Direct-Keycloak escape hatch (advanced)
+### There is no Keycloak-direct mode
 
-For debugging you can bypass the proxy and talk to Keycloak directly. This is
-opt-in and requires the realm + Keycloak URL:
+The CLI cannot be pointed at Keycloak instead of the proxy, and that is
+deliberate. The proxy rewrites its discovery document to itself and validates
+the access-token audience fail-closed, so a token minted straight from Keycloak
+is rejected on the very next call. An escape hatch would only ever produce a
+confusing 401.
 
-```bash
-proxy-smart --direct-keycloak --realm app --keycloak-url https://kc.example.com login
-# or: PROXY_SMART_DIRECT_KEYCLOAK=1 PROXY_SMART_REALM=app PROXY_SMART_KEYCLOAK_URL=... proxy-smart login
-```
-
-Tokens minted this way skip the proxy and may be rejected by its fail-closed
-audience checks — use it only when you know you need it.
+Everything that once needed direct Keycloak access — protocol mappers, client
+roles, token audience — is a first-class command; see
+[Token audience and protocol mappers](#token-audience-and-protocol-mappers) and
+[Roles](#roles). Anything not yet wrapped is reachable through
+`proxy-smart request <METHOD> <path>`, which still goes through the proxy.
 
 ## Commands
 
@@ -100,6 +101,14 @@ request <METHOD> <path> [--data <json>]
                       Authenticated escape hatch — call any proxy path
 
 smart-apps        list | get <clientId> | create | update <clientId> | delete <clientId>
+                  mappers <clientId> | create-mapper <clientId>
+                  update-mapper <clientId> <mapperId> | delete-mapper <clientId> <mapperId>
+                  add-audience <clientId> <audience> [--name <n>] [--id-token]
+roles             list [--include-technical] | get <name> | create
+                  update <name> | delete <name> --yes
+                  client-roles <clientId> | client-get <clientId> <name>
+                  client-create <clientId> | client-update <clientId> <name>
+                  client-delete <clientId> <name> --yes
 healthcare-users  list | get <userId> | create | delete <userId>
 scope-sets        list | get <id> | create | delete <id>
 smart-scopes      list | create | batch | delete <scopeId>
@@ -138,6 +147,10 @@ proxy-smart smart-apps create --data @app.json
 proxy-smart scope-sets create --data '{"name":"Reader","scopes":["patient/*.read"]}'
 proxy-smart smart-scopes list --smart-only
 proxy-smart smart-scopes batch --data '{"scopes":[{"name":"patient/Binary.cruds"},{"name":"patient/DocumentReference.cruds"}]}'
+proxy-smart smart-apps mappers patient-portal
+proxy-smart smart-apps add-audience patient-portal fhir-resource-server
+proxy-smart roles list
+proxy-smart roles client-roles admin-ui
 proxy-smart healthcare-users list --limit 50
 proxy-smart mcp-endpoint update --data '{"enabled":true,"disabledTools":["delete_admin_smart_apps"]}'
 proxy-smart idps mapper-status --strict
@@ -147,6 +160,61 @@ proxy-smart user-federation mappers ldap-1 --strict
 proxy-smart request GET /admin/smart-config
 proxy-smart restart --yes
 ```
+
+### Token audience and protocol mappers
+
+A client's protocol mappers decide what its tokens contain, and the proxy
+validates the access-token audience fail-closed — so a client whose `aud` is
+wrong cannot launch at all. `smart-apps mappers` shows what a client emits;
+`smart-apps add-audience` writes the audience mapper:
+
+```bash
+proxy-smart smart-apps mappers patient-portal
+proxy-smart smart-apps add-audience patient-portal fhir-resource-server
+proxy-smart smart-apps add-audience patient-portal https://fhir.example.com/R4
+```
+
+The audience may name another client in the realm or be a literal URL. Keycloak
+stores those under two different config keys (`included.client.audience` versus
+`included.custom.audience`) and silently emits nothing if the wrong one is used;
+the proxy resolves which applies. The call is idempotent, so it is safe to run
+unguarded from a deploy or reconcile step — a second run reports
+`created: false` and changes nothing.
+
+Anything the shorthand does not cover goes through the generic verbs:
+
+```bash
+proxy-smart smart-apps create-mapper patient-portal --data '{
+  "name": "fhirUser",
+  "protocolMapper": "oidc-usermodel-attribute-mapper",
+  "config": {"user.attribute":"fhirUser","claim.name":"fhirUser","access.token.claim":"true"}
+}'
+proxy-smart smart-apps update-mapper patient-portal <mapperId> --data '{"config":{"id.token.claim":"true"}}'
+proxy-smart smart-apps delete-mapper patient-portal <mapperId>
+```
+
+`update-mapper` merges the config entries you pass into the existing mapper, so
+you can flip one key without restating the whole thing.
+
+### Roles
+
+Realm roles and client roles have separate verbs rather than sharing one with a
+`--client` flag: they are different Keycloak resources, and a forgotten flag
+should not silently write the wrong one. Client verbs take the OAuth client id
+and resolve the internal Keycloak id server-side.
+
+```bash
+proxy-smart roles list                       # plumbing roles hidden by default
+proxy-smart roles list --include-technical
+proxy-smart roles create --data '{"name":"clinician","fhirScopes":["patient/*.read"]}'
+proxy-smart roles client-roles admin-ui
+proxy-smart roles client-create admin-ui --data '{"name":"app-admin"}'
+proxy-smart roles client-delete admin-ui app-admin --yes
+```
+
+Roles carry descriptive metadata only. The `fhirScopes` and represented
+scope-set fields are labels for "the scopes this role typically stands for";
+FHIR and MCP access stays scope-based and is never derived from them.
 
 ### Claim mapping as a CI check
 
@@ -194,7 +262,7 @@ the generator's `--tags` flag (supported by `openapi-ts-fetch==0.2.2`):
 
 ```
 openapi-ts-fetch ../../backend/dist/openapi.json ./src/api-client \
-  --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin,identity-providers,user-federation
+  --tags smart-apps,healthcare-users,scope-sets,mcp-management,admin,identity-providers,user-federation,roles
 ```
 
 It requires `backend/dist/openapi.json` to exist first (step 1 above). Adding a

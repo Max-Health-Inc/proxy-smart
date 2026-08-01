@@ -71,6 +71,8 @@ interface MockOptions {
   mappers?: unknown[]
   typesThrow?: boolean
   createThrows?: boolean
+  /** Provider-level config, e.g. supportsClientAssertions for a trust anchor */
+  providerConfig?: Record<string, string>
 }
 
 interface CreateMapperPayload {
@@ -83,11 +85,18 @@ interface CreateMapperPayload {
   }
 }
 
-function createMockAdmin({ types = OIDC_TYPES, mappers = [], typesThrow = false, createThrows = false }: MockOptions = {}) {
+function createMockAdmin({
+  types = OIDC_TYPES,
+  mappers = [],
+  typesThrow = false,
+  createThrows = false,
+  providerConfig = {},
+}: MockOptions = {}) {
   /** Payloads passed to createMapper, in call order */
   const createdPayloads: CreateMapperPayload[] = []
 
   const identityProviders = {
+    findOne: mock(async () => ({ alias: 'hospital-oidc', providerId: 'oidc', config: providerConfig })),
     findMapperTypes: mock(async () => {
       if (typesThrow) throw new Error('not supported')
       return types
@@ -221,6 +230,18 @@ describe('ensureIdpAttributeMappers', () => {
     expect(identityProviders.createMapper).not.toHaveBeenCalled()
   })
 
+  it('provisions nothing on a client-assertion trust anchor', async () => {
+    const { admin, identityProviders } = createMockAdmin({
+      providerConfig: { supportsClientAssertions: 'true' },
+    })
+
+    const result = await ensureIdpAttributeMappers(admin, 'proxy-smart-signing')
+
+    expect(result.userFacing).toBe(false)
+    expect(result.created).toEqual([])
+    expect(identityProviders.createMapper).not.toHaveBeenCalled()
+  })
+
   it('collects per-mapper failures instead of aborting', async () => {
     const { admin } = createMockAdmin({ createThrows: true })
 
@@ -273,6 +294,34 @@ describe('getIdpMapperStatus', () => {
 
     expect(status.unsupported).toBe(true)
     expect(status.healthy).toBe(true)
+  })
+
+  it('exempts client-assertion trust anchors: no human logs in through them', async () => {
+    const { admin } = createMockAdmin()
+
+    const status = await getIdpMapperStatus(admin, {
+      alias: 'proxy-smart-signing',
+      providerId: 'oidc',
+      enabled: true,
+      config: { supportsClientAssertions: 'true' },
+    })
+
+    expect(status.userFacing).toBe(false)
+    expect(status.healthy).toBe(true)
+    expect(status.missingRequired).toEqual([])
+    expect(status.missingOptional).toEqual([])
+  })
+
+  it('still expects imports on a hidden provider that is not a trust anchor', async () => {
+    const { admin } = createMockAdmin()
+
+    const status = await getIdpMapperStatus(admin, {
+      ...provider,
+      config: { hideOnLoginPage: 'true' },
+    })
+
+    expect(status.userFacing).toBe(true)
+    expect(status.missingRequired).toEqual(['fhirUser-import'])
   })
 })
 

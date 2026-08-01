@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * SMART Access Control Tests
  *
@@ -881,6 +884,199 @@ describe('Role-Based Filtering', () => {
         // Condition is in defaults but NOT in our custom override
         expect(result.modifiedQueryString).toBe('')
       })
+    })
+  })
+})
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 3. Patient-Compartment Grants (patient/ scopes → `patient` launch context)
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * SMART App Launch 2.2 names the `patient` launch context as the patient a
+ * patient-level scope is restricted to: "If the app has any patient-level scopes,
+ * they will be scoped to Patient 123." These tests pin that the compartment comes
+ * from that claim for EVERY user type — the practitioner cases are the ones the
+ * previous fhirUser-only rule let through unfiltered.
+ */
+describe('Patient-Compartment Grants', () => {
+  beforeEach(resetEnv)
+  afterEach(resetEnv)
+
+  describe('when mode = enforce', () => {
+    beforeEach(() => setEnv({ ROLE_BASED_FILTERING_MODE: 'enforce' }))
+
+    it('confines a practitioner holding patient/ scopes to the in-context patient', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'openid fhirUser launch patient/Observation.rs',
+          fhirUser: 'Practitioner/dr-smith',
+          patient: 'p-123',
+        },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(true)
+      expect(result.modifiedQueryString).toContain('patient=Patient/p-123')
+    })
+
+    it('accepts a patient context that is already a relative reference', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'patient/Observation.rs',
+          fhirUser: 'Practitioner/dr-smith',
+          patient: 'Patient/p-123',
+        },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.modifiedQueryString).toContain('patient=Patient/p-123')
+    })
+
+    it('restricts a Patient search to the in-context patient', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'patient/Patient.rs',
+          fhirUser: 'Practitioner/dr-smith',
+          patient: 'p-123',
+        },
+        resourcePath: 'Patient',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.modifiedQueryString).toContain('_id=p-123')
+    })
+
+    it('denies reading a different patient directly', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'patient/Patient.rs',
+          fhirUser: 'Practitioner/dr-smith',
+          patient: 'p-123',
+        },
+        resourcePath: 'Patient/p-999',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+    })
+
+    it('denies a patient-scoped token with no patient context', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'openid fhirUser patient/Observation.rs',
+          fhirUser: 'Practitioner/dr-smith',
+        },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(false)
+      expect(result.status).toBe(403)
+      expect(result.body?.error).toBe('access_denied')
+    })
+
+    it('leaves user/ scoped practitioner access unfiltered', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'openid fhirUser user/Observation.rs',
+          fhirUser: 'Practitioner/dr-smith',
+          patient: 'p-123',
+        },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(true)
+      expect(result.modifiedQueryString).toBe('')
+    })
+  })
+
+  describe('when mode = audit-only', () => {
+    beforeEach(() => setEnv({ ROLE_BASED_FILTERING_MODE: 'audit-only' }))
+
+    it('does not narrow the query, so enabling it is observable before it bites', async () => {
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'patient/Observation.rs',
+          fhirUser: 'Practitioner/dr-smith',
+          patient: 'p-123',
+        },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(true)
+      expect(result.modifiedQueryString).toBe('')
+    })
+
+    it('allows a patient-scoped token with no patient context', async () => {
+      const ctx = makeCtx({
+        tokenPayload: { scope: 'patient/Observation.rs', fhirUser: 'Practitioner/dr-smith' },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(true)
+    })
+  })
+
+  describe('when disabled', () => {
+    beforeEach(() => setEnv({ ROLE_BASED_FILTERING_MODE: 'disabled' }))
+
+    it('applies nothing at all', async () => {
+      const ctx = makeCtx({
+        tokenPayload: { scope: 'patient/Observation.rs', fhirUser: 'Practitioner/dr-smith' },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.allowed).toBe(true)
+      expect(result.modifiedQueryString).toBe('')
+    })
+  })
+
+  describe('precedence over the fhirUser rule', () => {
+    beforeEach(() => setEnv({ ROLE_BASED_FILTERING_MODE: 'enforce' }))
+
+    it('uses the patient context, not the patient user, when they disagree', async () => {
+      // A patient user whose token was issued in another patient's context must
+      // not silently read their own chart instead of being refused.
+      const ctx = makeCtx({
+        tokenPayload: {
+          scope: 'patient/Observation.rs',
+          fhirUser: 'Patient/p-own',
+          patient: 'p-context',
+        },
+        resourcePath: 'Observation',
+        method: 'GET',
+      })
+
+      const result = await enforceRoleBasedFiltering(ctx, '')
+
+      expect(result.modifiedQueryString).toContain('patient=Patient/p-context')
+      expect(result.modifiedQueryString).not.toContain('p-own')
     })
   })
 })

@@ -29,6 +29,8 @@ import {
   getSessionAudience,
   signLaunchCode,
   toAbsoluteFhirUser,
+  canReturnPatient,
+  parseScopes,
   type LaunchCodePayload,
   type AuthorizeParams,
   type TokenPayload,
@@ -656,10 +658,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
             }
           }
 
-          // Derive patient from resolved fhirUser if not already set
+          // Derive patient from resolved fhirUser if not already set. Uses the
+          // shared canReturnPatient rule so this agrees with the token and
+          // introspection enrichers — including patient/ scopes, which carry the
+          // same context obligation as launch/patient (SMART 2.2: the EHR SHALL
+          // establish a patient in context when granting them).
           if (!data.patient && data.fhirUser) {
-            const grantedScopes = (data.scope || requestedScope || '').split(' ')
-            if (grantedScopes.includes('launch/patient') || grantedScopes.includes('launch')) {
+            if (canReturnPatient(parseScopes(data.scope || requestedScope))) {
               const patientMatch = data.fhirUser.match(/Patient\/([^/]+)$/)
               if (patientMatch) data.patient = patientMatch[1]
             }

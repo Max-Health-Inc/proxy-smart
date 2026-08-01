@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @proxy-smart/auth — SMART Scopes Utilities
  *
@@ -8,27 +11,75 @@
 /** SMART launch scopes that trigger callback interception */
 const LAUNCH_SCOPES = new Set(['launch', 'launch/patient', 'launch/encounter'])
 
+/**
+ * A FHIR Resource scope restricted to a single patient, e.g. `patient/Observation.rs`.
+ *
+ * SMART App Launch 2.2 puts an obligation on the authorization server for these,
+ * in both "Apps that launch from the EHR" and "Standalone apps":
+ *
+ *   "If an application requests a FHIR Resource scope which is restricted to a
+ *    single patient (e.g., patient/*.rs), and the authorization results in the
+ *    EHR granting that scope, the EHR SHALL establish a patient in context."
+ *
+ *   "The EHR MAY refuse authorization requests including patient/ that do not
+ *    also include a valid launch [/ launch/patient scope], or it MAY infer the
+ *    launch/patient scope."
+ *
+ * We take the infer branch: a `patient/` scope is treated as implying
+ * `launch/patient`, so the existing launch machinery (EHR launch context, or the
+ * patient picker for standalone) establishes the context the SHALL requires.
+ *
+ * Deliberately looser than SMART_V2_SCOPE_RE on the operations part: this asks
+ * "is this grant patient-restricted", not "is every character valid".
+ */
+export const PATIENT_COMPARTMENT_SCOPE_RE = /^patient\/[\w*]+\.[\w*]+$/
+
+/** Whether any granted/requested scope is restricted to a single patient. */
+export function hasPatientCompartmentScope(scopes: Set<string>): boolean {
+  for (const s of scopes) {
+    if (PATIENT_COMPARTMENT_SCOPE_RE.test(s)) return true
+  }
+  return false
+}
+
 /** Parse a space-separated scope string into a Set */
 export function parseScopes(scope: string | undefined | null): Set<string> {
   return new Set((scope || '').split(' ').filter(Boolean))
 }
 
-/** Detect whether the requested scopes indicate a SMART launch flow */
+/**
+ * Detect whether the requested scopes indicate a SMART launch flow.
+ *
+ * Includes patient-restricted resource scopes, because those carry the same
+ * context obligation as an explicit launch scope — see
+ * PATIENT_COMPARTMENT_SCOPE_RE.
+ */
 export function isSmartLaunch(scopes: Set<string>): boolean {
   for (const s of LAUNCH_SCOPES) {
     if (scopes.has(s)) return true
   }
-  return false
+  return hasPatientCompartmentScope(scopes)
 }
 
-/** Detect standalone launch (launch/patient without an EHR launch code) */
+/**
+ * Detect standalone launch: patient context is required but no EHR launch code
+ * supplies it, so the proxy must establish it (patient picker).
+ */
 export function isStandaloneLaunch(scopes: Set<string>, hasLaunchCode: boolean): boolean {
-  return scopes.has('launch/patient') && !hasLaunchCode
+  return (scopes.has('launch/patient') || hasPatientCompartmentScope(scopes)) && !hasLaunchCode
 }
 
-/** Check if the granted scopes allow returning patient context */
+/**
+ * Check if the granted scopes allow returning patient context.
+ *
+ * A patient-restricted resource scope counts: the context established for it
+ * has to reach the app, otherwise the app cannot stay inside the compartment
+ * its own grant is limited to.
+ */
 export function canReturnPatient(grantedScopes: Set<string>): boolean {
-  return grantedScopes.has('launch/patient') || grantedScopes.has('launch')
+  return grantedScopes.has('launch/patient')
+    || grantedScopes.has('launch')
+    || hasPatientCompartmentScope(grantedScopes)
 }
 
 /** Check if the granted scopes allow returning encounter context */

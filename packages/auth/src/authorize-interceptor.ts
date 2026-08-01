@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @proxy-smart/auth — Authorize Interceptor
  *
@@ -136,7 +139,7 @@ export async function handleAuthorize(
   // here (fail-closed) before storing it in the session.
   if (shouldIntercept && deps.getRegisteredRedirectUris) {
     const clientId = params.client_id || ''
-    let registered: string[] = []
+    let registered: string[]
     try {
       registered = await deps.getRegisteredRedirectUris(clientId)
     } catch (err) {

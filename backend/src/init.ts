@@ -651,16 +651,24 @@ async function ensureProxySigningIdp(): Promise<void> {
       validateSignature: 'true',
       clientAuthMethod: 'client_secret_post',
       supportsClientAssertions: 'true',
+      // Backend signing trust anchor, never a user-facing login option.
+      hideOnLoginPage: 'true',
     }
 
     if (getRes.ok) {
-      // IdP exists — check if jwksUrl needs updating
+      // IdP exists — reconcile every expected key, not a subset. A realm seeded
+      // from another environment can otherwise keep that environment's tokenUrl
+      // and authorizationUrl forever: those were not compared, so once issuer
+      // and jwksUrl had been corrected the drift never converged.
       const existing = await getRes.json() as { config?: Record<string, string> }
-      if (existing.config?.jwksUrl === jwksUrl
-        && existing.config?.issuer === config.baseUrl
-        && existing.config?.supportsClientAssertions === 'true') {
+      const drifted = Object.entries(expectedConfig)
+        .filter(([key, value]) => existing.config?.[key] !== value)
+        .map(([key]) => key)
+
+      if (drifted.length === 0) {
         logger.keycloak.info('✅ proxy-smart-signing IdP already configured correctly')
       } else {
+        logger.keycloak.info('Reconciling proxy-smart-signing IdP', { drifted })
 
       // Update IdP config
       const putRes = await fetch(idpUrl, {
@@ -677,12 +685,13 @@ async function ensureProxySigningIdp(): Promise<void> {
           trustEmail: false,
           storeToken: false,
           linkOnly: false,
-          config: expectedConfig,
+          // Merge so config keys we do not manage survive the reconcile.
+          config: { ...existing.config, ...expectedConfig },
         }),
       })
 
       if (putRes.ok) {
-        logger.keycloak.info('✅ proxy-smart-signing IdP updated (jwksUrl/issuer synced)')
+        logger.keycloak.info('✅ proxy-smart-signing IdP updated', { synced: drifted })
       } else {
         const body = await putRes.text()
         logger.keycloak.warn(`Failed to update proxy-smart-signing IdP (${putRes.status}): ${body}`)

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 # deploy-beta-remote.sh — Runs on VPS to deploy the beta stack
 #
 # Required env vars: DEPLOY_DIR, GH_TOKEN, GH_ACTOR
@@ -279,6 +281,111 @@ if [ -n "$KC_IP" ]; then
   fi
 else
   echo '  ⚠️ Keycloak container not found — skipping IDP reconciliation'
+fi
+
+# ── 10a. Environment Isolation For Brokered Identity ──
+# Beta must broker to BETA identity only. A prod IdP registered here means prod
+# credentials and prod personal data reach a non-prod environment, and (for the
+# signing IdP) that beta would trust assertions signed by the prod proxy key.
+#
+# realm-export.json is IGNORE_EXISTING, so an out-of-band IdP added through the
+# admin UI never converges on its own. This block reconciles the declared
+# maxhealth IdP onto the beta host, then asserts no IdP references a foreign
+# environment — reconcile first so a normal deploy self-heals and only genuinely
+# unexpected drift fails the deploy.
+echo '🔒 Verifying brokered identity stays within beta...'
+MH_ISSUER='https://auth.beta.maxhealth.tech'
+# Hosts that must never appear in a beta IdP config (production identity + API).
+FOREIGN_HOSTS='auth.maxhealth.tech api.proxy-smart.com'
+KC_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' \
+  proxy-smart-keycloak-beta 2>/dev/null || true)
+
+if [ -n "${KC_IP:-}" ]; then
+  KC_BASE="http://${KC_IP}:8080/auth"
+  KC_PASS=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' .env.beta | cut -d= -f2)
+  KC_TOKEN=$(curl -sf -X POST "${KC_BASE}/realms/master/protocol/openid-connect/token" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=admin' \
+    -d "password=${KC_PASS}" \
+    -d 'grant_type=password' \
+    -d 'client_id=admin-cli' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+  if [ -n "$KC_TOKEN" ]; then
+    IDP_API="${KC_BASE}/admin/realms/proxy-smart/identity-provider/instances"
+    MH_PAYLOAD=$(cat <<JSON
+{
+  "alias": "maxhealth",
+  "displayName": "Max Health",
+  "providerId": "oidc",
+  "enabled": true,
+  "trustEmail": true,
+  "storeToken": false,
+  "linkOnly": false,
+  "firstBrokerLoginFlowAlias": "first broker login",
+  "config": {
+    "issuer": "${MH_ISSUER}",
+    "authorizationUrl": "${MH_ISSUER}/authorize",
+    "tokenUrl": "${MH_ISSUER}/token",
+    "userInfoUrl": "${MH_ISSUER}/userinfo",
+    "jwksUrl": "${MH_ISSUER}/jwks",
+    "useJwksUrl": "true",
+    "validateSignature": "true",
+    "clientId": "proxy-smart",
+    "clientAuthMethod": "none",
+    "pkceEnabled": "true",
+    "pkceMethod": "S256",
+    "defaultScopes": "openid profile email",
+    "syncMode": "FORCE"
+  }
+}
+JSON
+)
+    # Repoint an existing maxhealth IdP, or create it when absent. Repointing
+    # invalidates federated identity links keyed on the old issuer: affected
+    # users re-link on their next login through first-broker-login.
+    if curl -sf -o /dev/null "${IDP_API}/maxhealth" -H "Authorization: Bearer $KC_TOKEN"; then
+      HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' -X PUT "${IDP_API}/maxhealth" \
+        -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+        -d "$MH_PAYLOAD")
+      [ "$HTTP_CODE" = '204' ] \
+        && echo "  ✅ maxhealth IDP reconciled onto ${MH_ISSUER}" \
+        || echo "  ⚠️ Failed to reconcile maxhealth IDP (HTTP $HTTP_CODE)"
+    else
+      HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' -X POST "${IDP_API}" \
+        -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+        -d "$MH_PAYLOAD")
+      [ "$HTTP_CODE" = '201' ] \
+        && echo "  ✅ maxhealth IDP created on ${MH_ISSUER}" \
+        || echo "  ℹ️ maxhealth IDP not created (HTTP $HTTP_CODE) — declared in realm-export"
+    fi
+
+    # Assert: no IdP in this realm may reference a production host. Fatal —
+    # cross-environment identity is a data-governance problem, not a warning.
+    ALL_IDPS=$(curl -sf "${IDP_API}" -H "Authorization: Bearer $KC_TOKEN" || true)
+    if [ -n "$ALL_IDPS" ]; then
+      LEAKED=''
+      for HOST in $FOREIGN_HOSTS; do
+        # -F: treat dots literally, so auth.beta.maxhealth.tech is not a match
+        # for auth.maxhealth.tech.
+        if printf '%s' "$ALL_IDPS" | grep -qF "$HOST"; then
+          LEAKED="${LEAKED} ${HOST}"
+        fi
+      done
+      if [ -n "$LEAKED" ]; then
+        echo "  ❌ Beta identity providers reference production host(s):${LEAKED}"
+        echo '     Beta must broker to beta identity only. Inspect with:'
+        echo '       proxy-smart --url https://beta.proxy-smart.com idps list --json'
+        exit 1
+      fi
+      echo '  ✅ No identity provider references a production host'
+    else
+      echo '  ⚠️ Could not list identity providers — skipping isolation check'
+    fi
+  else
+    echo '  ⚠️ Could not get Keycloak admin token — skipping isolation check'
+  fi
+else
+  echo '  ⚠️ Keycloak container not found — skipping isolation check'
 fi
 
 # ── 10b. Keycloak Resource-Indicator Reconciliation ──
