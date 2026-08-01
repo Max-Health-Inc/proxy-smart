@@ -55,6 +55,28 @@ describe('realm default role composite', () => {
   })
 })
 
+describe('offline session lifetime', () => {
+  const settings = realm as unknown as Record<string, unknown>
+
+  it('enforces a maximum lifespan, not only an idle timeout', () => {
+    // The composite grants `offline_access`, so offline tokens ARE obtainable — verified against
+    // beta, where `doctor` receives one. With max lifespan disabled, an offline session survives
+    // indefinitely as long as it is used once per idle window, so a connector refreshing weekly
+    // keeps access alive forever. A ceiling was already configured and simply not switched on.
+    expect(settings.offlineSessionMaxLifespanEnabled).toBe(true)
+    expect(typeof settings.offlineSessionMaxLifespan).toBe('number')
+    expect(settings.offlineSessionMaxLifespan as number).toBeGreaterThan(0)
+  })
+
+  it('keeps the ceiling above the idle window, or it would expire sessions early', () => {
+    // A max lifespan shorter than the idle timeout would cut sessions off before the idle rule
+    // ever applied, making the idle setting meaningless and the behaviour hard to reason about.
+    expect(settings.offlineSessionMaxLifespan as number).toBeGreaterThan(
+      settings.offlineSessionIdleTimeout as number,
+    )
+  })
+})
+
 describe('the generic admin role', () => {
   const admin = (realm.roles?.realm ?? []).find((r) => r.name === 'admin') as
     | { name?: string; composite?: boolean; composites?: { realm?: string[] } }
