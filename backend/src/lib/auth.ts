@@ -4,9 +4,10 @@
 import jwt, { type JwtPayload } from 'jsonwebtoken'
 import jwksClient, { type JwksClient } from 'jwks-rsa'
 import { config } from '../config'
-import { AuthenticationError, ConfigurationError } from './admin-utils'
+import { AuthenticationError, AuthorizationError, ConfigurationError } from './admin-utils'
 import { logger } from './logger'
 import { isAudienceAccepted } from './token-audience'
+import { hasAdminRole } from './admin-roles'
 
 /** Options for {@link validateToken}. */
 export interface ValidateTokenOptions {
@@ -208,21 +209,12 @@ export async function validateAdminToken(token: string): Promise<JwtPayload> {
     : await validateToken(token)
   const keycloakPayload = payload as KeycloakJwtPayload
 
-  const realmRoles: string[] = keycloakPayload.realm_access?.roles || []
-  const clientRoles: string[] = keycloakPayload.resource_access?.['admin-ui']?.roles || []
-  const realmManagementRoles: string[] = keycloakPayload.resource_access?.['realm-management']?.roles || []
-
-  // Exact role matching — do NOT use .includes() which allows substring matches
-  const ADMIN_REALM_ROLES = new Set(['admin', 'realm-admin', 'manage-users', 'manage-realm', 'realm-management'])
-  const ADMIN_CLIENT_ROLES = new Set(['admin', 'manage-users', 'manage-clients', 'manage-realm'])
-
-  const hasAdminRole =
-    realmRoles.some((role: string) => ADMIN_REALM_ROLES.has(role)) ||
-    clientRoles.some((role: string) => ADMIN_CLIENT_ROLES.has(role)) ||
-    realmManagementRoles.length > 0 // Any realm-management role implies admin access
-
-  if (!hasAdminRole) {
-    throw new AuthenticationError('User does not have admin permissions')
+  // Role policy lives in lib/admin-roles: one predicate, three claim locations, and the
+  // admin-UI client id read from config so it cannot disagree with the audience check above.
+  if (!hasAdminRole(keycloakPayload)) {
+    // AuthorizationError, not AuthenticationError: the token is authentic and correctly
+    // audienced, the USER just lacks a role. The caller reports these differently.
+    throw new AuthorizationError('User does not have admin permissions')
   }
 
   return payload
