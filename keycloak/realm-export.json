@@ -1245,8 +1245,7 @@
         }
       ],
       "realmRoles": [
-        "user",
-        "offline_access"
+        "default-roles-proxy-smart"
       ]
     },
     {
@@ -1264,7 +1263,7 @@
         }
       ],
       "realmRoles": [
-        "user",
+        "default-roles-proxy-smart",
         "admin",
         "realm-admin"
       ],
@@ -1297,8 +1296,7 @@
         }
       ],
       "realmRoles": [
-        "user",
-        "offline_access"
+        "default-roles-proxy-smart"
       ],
       "clientRoles": {
         "admin-ui": [
