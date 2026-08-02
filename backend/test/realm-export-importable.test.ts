@@ -17,6 +17,18 @@
  * Asserting "no `//` key" alone would only re-fix the instance, so this asserts
  * the shape: a seeded user may only carry fields UserRepresentation declares.
  * The property list is Keycloak's own, copied from the error it printed.
+ *
+ * THE SECOND BUG THIS GUARDS. Two realm-role descriptions grew past 255
+ * characters while documenting why the `admin` composite exists. `--import-realm`
+ * writes straight into Keycloak's schema, where those columns are varchar(255),
+ * so the import aborted and Keycloak again refused to start:
+ *
+ *   ERROR: value too long for type character varying(255)
+ *   [update KEYCLOAK_ROLE set CLIENT=?,...,DESCRIPTION=?,NAME=?,...]
+ *
+ * That took the SMART compliance workflow down for a day, reported as
+ * "proxy-smart realm not found" — which reads as a broken test rig rather than
+ * an over-long string. The reasoning moved to docs/keycloak-features.md.
  */
 import { describe, it, expect } from 'bun:test'
 import { readFileSync } from 'fs'
@@ -43,8 +55,53 @@ const USER_REPRESENTATION_FIELDS = new Set([
   'firstName', 'requiredActions', 'notBefore', 'federatedIdentities',
 ])
 
+/** Keycloak stores these as varchar(255); the import aborts on overflow. */
+const VARCHAR_255 = 255
+
+interface NamedWithDescription {
+  name?: string
+  clientId?: string
+  description?: string
+}
+
+interface RealmRole extends NamedWithDescription {
+  composite?: boolean
+  composites?: { realm?: string[] }
+}
+
 interface RealmExport {
   users?: Record<string, unknown>[]
+  defaultRole?: RealmRole
+  roles?: { realm?: RealmRole[]; client?: Record<string, NamedWithDescription[]> }
+  clients?: NamedWithDescription[]
+  clientScopes?: NamedWithDescription[]
+}
+
+/** Every (label, value) pair the import writes into a varchar(255) column. */
+function boundedFields(realm: RealmExport): { where: string; field: string; value: string }[] {
+  const out: { where: string; field: string; value: string }[] = []
+  const add = (where: string, field: string, value?: string) => {
+    if (typeof value === 'string') out.push({ where, field, value })
+  }
+
+  for (const role of realm.roles?.realm ?? []) {
+    add(`realm role ${role.name}`, 'name', role.name)
+    add(`realm role ${role.name}`, 'description', role.description)
+  }
+  for (const [clientId, roles] of Object.entries(realm.roles?.client ?? {})) {
+    for (const role of roles) {
+      add(`client role ${clientId}/${role.name}`, 'name', role.name)
+      add(`client role ${clientId}/${role.name}`, 'description', role.description)
+    }
+  }
+  for (const client of realm.clients ?? []) {
+    add(`client ${client.clientId}`, 'name', client.name)
+    add(`client ${client.clientId}`, 'description', client.description)
+  }
+  for (const scope of realm.clientScopes ?? []) {
+    add(`client scope ${scope.name}`, 'description', scope.description)
+  }
+  return out
 }
 
 const EXPORTS = EXPORT_PATHS.map((name) => ({
@@ -86,5 +143,52 @@ describe.each(EXPORTS)('$name', ({ realm }) => {
     )
 
     expect(unknown).toEqual([])
+  })
+
+  it('keeps every name and description within Keycloak\'s varchar(255) columns', () => {
+    // A description is a UI label with a hard length cap, not somewhere to put
+    // rationale — that belongs in docs/keycloak-features.md.
+    const tooLong = boundedFields(realm)
+      .filter(({ value }) => value.length > VARCHAR_255)
+      .map(({ where, field, value }) => `${where}.${field} is ${value.length} chars`)
+
+    expect(tooLong).toEqual([])
+  })
+
+  /**
+   * THE THIRD BUG THIS GUARDS. `defaultRole` alone does not produce a working
+   * composite. Keycloak's RealmManager does:
+   *
+   *   realm.setDefaultRole(RepresentationToModel.createRole(realm, rep.getDefaultRole()))
+   *
+   * and `createRole` does NOT wire composites — those are attached by the
+   * separate pass over `roles.realm[]`. A default role declared only under
+   * `realm.defaultRole` is therefore created EMPTY: every user who holds it,
+   * seeded or created at runtime, silently gets none of the roles it names.
+   *
+   * That is how `offline_access` went missing, which surfaces at the token
+   * exchange as "Offline tokens not allowed for the user or client" — after a
+   * successful login, so it reads as a broken server rather than a missing role.
+   */
+  it('declares the default role in roles.realm[] so its composites are wired', () => {
+    const defaultRole = realm.defaultRole
+    if (!defaultRole?.name) return
+
+    const declared = (realm.roles?.realm ?? []).find((role) => role.name === defaultRole.name)
+    expect(declared, `${defaultRole.name} must appear in roles.realm[], not only under defaultRole`).toBeDefined()
+
+    // Same composites in both places, or the two disagree about what a new user gets.
+    expect(declared?.composites?.realm ?? []).toEqual(defaultRole.composites?.realm ?? [])
+  })
+
+  it('resolves every composite child to a declared realm role', () => {
+    const declaredNames = new Set((realm.roles?.realm ?? []).map((role) => role.name))
+    const dangling = (realm.roles?.realm ?? []).flatMap((role) =>
+      (role.composites?.realm ?? [])
+        .filter((child) => !declaredNames.has(child))
+        .map((child) => `${role.name} -> ${child}`),
+    )
+
+    expect(dangling).toEqual([])
   })
 })
