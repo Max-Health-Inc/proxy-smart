@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/e2e",
-  "version": "0.2.18-beta.202608021553.b521b220f",
+  "version": "0.2.18-beta.202608021609.0e3979c8e",
   "private": true,
   "description": "End-to-end Playwright tests for Proxy Smart apps",
   "scripts": {
