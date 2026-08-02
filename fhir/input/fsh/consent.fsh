@@ -1,4 +1,8 @@
 Alias: $consentscope = http://terminology.hl7.org/CodeSystem/consentscope
+// The SHL session identifier system, declared once: it is asserted by the
+// NamingSystem below and again as the fixed value on the identifier slice, and
+// those two must never disagree.
+Alias: $shlSessionSystem = https://maxhealth.tech/fhir/shl-session
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Terminology owned by this IG
@@ -49,7 +53,7 @@ Description: "Identifier system for SMART Health Link session ids, as carried on
 * responsible = "Max Health Inc."
 * description = "Identifies a SMART Health Link session in the proxy's SHL session store. A MaxHealthShareConsent carries exactly one identifier from this system; the proxy matches on it to resolve and revoke the backing share."
 * uniqueId.type = #uri
-* uniqueId.value = "https://maxhealth.tech/fhir/shl-session"
+* uniqueId.value = $shlSessionSystem
 * uniqueId.preferred = true
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -109,7 +113,7 @@ Description: "A patient-initiated data share represented as a Consent. Backs a S
 * identifier ^slicing.description = "Sliced on the identifier system so the SHL session id is required and validatable."
 * identifier contains shlSession 1..1 MS
 * identifier[shlSession].system 1..1
-* identifier[shlSession].system = "https://maxhealth.tech/fhir/shl-session" (exactly)
+* identifier[shlSession].system = $shlSessionSystem (exactly)
 * identifier[shlSession].value 1..1
 * identifier[shlSession] ^short = "SHL session id"
 * identifier[shlSession] ^definition = "The id of the SMART Health Link session this Consent mirrors, in the proxy's SHL session store."

@@ -1156,7 +1156,6 @@
   ],
   "users": [
     {
-      "//": "THE INITIAL ADMIN, and deliberately the only one. Authenticates through the maxhealth IdP — no credentials block, so there is no seeded password to leak and no password login. The IdP sets trustEmail, so the first brokered sign-in links to this account by email; federatedIdentities is intentionally NOT pinned here because the IdP-side user id differs per environment. Holds the `admin` composite, which grants every product's admin role.",
       "username": "max.nussbaumer@maxhealth.tech",
       "email": "max.nussbaumer@maxhealth.tech",
       "firstName": "Maximilian",

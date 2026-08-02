@@ -83,6 +83,25 @@ Caddy provides automatic TLS certificate provisioning via Let's Encrypt.
 - **Realm import**: Auto-imports `keycloak/realm-export.json` on first start
 - **Features**: `cimd`, `token-exchange`, `client-auth-federated`, `resource-indicators` (RFC 8707) enabled at build time
 
+#### Seeded administrator (beta / prod)
+
+`Dockerfile.keycloak` layers `deploy/<env>/realm-export.json` over the base
+export, so that file is what seeds the beta and prod realms. It declares
+`max.nussbaumer@maxhealth.tech` as the initial administrator, and deliberately
+the only one:
+
+- No `credentials` block, so there is no seeded password to leak and no password
+  login. The account authenticates through the maxhealth IdP.
+- The IdP sets `trustEmail`, so the first brokered sign-in links to this account
+  by email. `federatedIdentities` is intentionally not pinned, because the
+  IdP-side user id differs per environment.
+- It holds the `admin` composite, which grants every product's admin role.
+
+Do not add `"//"` pseudo-comment keys to these files. Keycloak parses
+`users[]` into `UserRepresentation`, which rejects unknown fields, and the whole
+realm import fails with `Unrecognized field "//"` — which stops Keycloak from
+starting at all. JSON has no comments; document intent here instead.
+
 ### PostgreSQL
 
 - **Image**: `postgres:16-alpine`
