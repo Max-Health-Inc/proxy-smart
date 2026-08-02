@@ -28,9 +28,24 @@ interface RealmExport {
   roles?: { realm?: { name?: string }[] }
 }
 
-const realm = JSON.parse(
-  readFileSync(join(import.meta.dir, '..', '..', 'keycloak', 'realm-export.json'), 'utf8'),
-) as RealmExport
+const REPO = join(import.meta.dir, '..', '..')
+
+/**
+ * EVERY realm export, not just the dev one.
+ *
+ * Dockerfile.keycloak copies `keycloak/realm-export.json` and then `deploy/<env>/realm-export.json`
+ * over it, so the deploy file is what actually seeds beta and prod. Checking only the dev export
+ * is how three files drifted apart unnoticed: `proxy-smart-admin` and the `admin` composite existed
+ * in one of them, and prod still had no offline-session ceiling.
+ */
+const EXPORTS: { name: string; realm: RealmExport }[] = [
+  'keycloak/realm-export.json',
+  'deploy/beta/realm-export.json',
+  'deploy/prod/realm-export.json',
+].map((name) => ({ name, realm: JSON.parse(readFileSync(join(REPO, name), 'utf8')) as RealmExport }))
+
+/** The dev export, for assertions that are genuinely about dev seeding. */
+const realm = EXPORTS[0].realm
 
 const DEFAULT_ROLE = 'default-roles-proxy-smart'
 const composite = realm.defaultRole?.composites?.realm ?? []
@@ -130,4 +145,78 @@ describe('seeded users', () => {
     const admin = seeded.find((u) => u.username === 'admin')
     expect(admin?.realmRoles).toContain('realm-admin')
   })
+})
+
+describe('every realm export agrees', () => {
+  // Dockerfile.keycloak layers deploy/<env>/realm-export.json OVER keycloak/realm-export.json, so
+  // the deploy file is what actually seeds beta and prod. Asserting only the dev export let three
+  // files drift: two lacked `proxy-smart-admin` and the `admin` composite, and prod shipped with
+  // offline sessions uncapped.
+  for (const { name, realm: r } of EXPORTS) {
+    const settings = r as unknown as Record<string, unknown>
+    const realmRoles = r.roles?.realm ?? []
+    const adminRole = realmRoles.find((x) => x.name === 'admin') as
+      | { composite?: boolean; composites?: { realm?: string[] } }
+      | undefined
+
+    it(`${name}: defines proxy-smart-admin`, () => {
+      expect(realmRoles.some((x) => x.name === 'proxy-smart-admin')).toBe(true)
+    })
+
+    it(`${name}: makes admin a composite granting the product role`, () => {
+      expect(adminRole?.composite).toBe(true)
+      expect(adminRole?.composites?.realm).toContain('proxy-smart-admin')
+    })
+
+    it(`${name}: caps offline sessions`, () => {
+      // Uncapped offline sessions outlive every other control in the realm.
+      expect(settings.offlineSessionMaxLifespanEnabled).toBe(true)
+    })
+
+    it(`${name}: grants offline_access through the default composite`, () => {
+      expect(r.defaultRole?.composites?.realm).toContain('offline_access')
+    })
+  }
+})
+
+describe('the initial administrator on a fresh deploy', () => {
+  // "beta and prod should not have another initial admin than max.nussbaumer@maxhealth.tech".
+  // The dev export is excluded on purpose: CI and local development need the seeded `admin`,
+  // `doctor` and `testuser` accounts, and that realm is never public.
+  const DEPLOYED = EXPORTS.filter(({ name }) => name.startsWith('deploy/'))
+  const SOLE_ADMIN = 'max.nussbaumer@maxhealth.tech'
+
+  it('covers both deployed environments', () => {
+    expect(DEPLOYED.map((e) => e.name)).toEqual([
+      'deploy/beta/realm-export.json',
+      'deploy/prod/realm-export.json',
+    ])
+  })
+
+  for (const { name, realm: r } of DEPLOYED) {
+    const users = r.users ?? []
+    const admins = users.filter((u) => (u.realmRoles ?? []).includes('admin'))
+
+    it(`${name}: seeds exactly one administrator, and it is ${SOLE_ADMIN}`, () => {
+      expect(admins.map((u) => u.username)).toEqual([SOLE_ADMIN])
+    })
+
+    it(`${name}: seeds that admin WITHOUT credentials`, () => {
+      // They authenticate through the maxhealth IdP. A seeded password would be a credential
+      // living in git for the single most privileged account in the realm — the exact shape of
+      // the admin/admin problem this replaces.
+      const admin = admins[0] as { credentials?: unknown[] } | undefined
+      expect(admin?.credentials ?? []).toEqual([])
+    })
+
+    it(`${name}: gives that admin the default composite too`, () => {
+      expect(admins[0]?.realmRoles).toContain('default-roles-proxy-smart')
+    })
+
+    it(`${name}: seeds no other human account`, () => {
+      // Service accounts are machine identities defined by their client, not people.
+      const humans = users.filter((u) => !(u.username ?? '').startsWith('service-account-'))
+      expect(humans.map((u) => u.username)).toEqual([SOLE_ADMIN])
+    })
+  }
 })
