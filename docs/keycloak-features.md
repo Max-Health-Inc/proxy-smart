@@ -109,6 +109,28 @@ Two further rules, both learned the hard way:
 `backend/test/realm-export-importable.test.ts` enforces all of this across every
 export.
 
+### The default role must be declared twice
+
+`default-roles-<realm>` is Keycloak's own role, not ours — every realm gets one, and
+it is the set of roles every newly created user receives automatically. Ours grants
+`offline_access` and `user` (stock would be `offline_access` + `uma_authorization`
+plus the `account` client roles, so this is a deliberate trim).
+
+It has to appear in **both** `realm.defaultRole` **and** `roles.realm[]`. `RealmManager`
+does:
+
+```java
+realm.setDefaultRole(RepresentationToModel.createRole(realm, rep.getDefaultRole()));
+```
+
+and `createRole` does **not** wire composites — those are attached by the separate
+pass over `roles.realm[]`. Declared only under `defaultRole`, the role is created
+**empty**, and every user holding it silently gets nothing.
+
+The symptom is remote from the cause: login succeeds, then the token exchange fails
+with `Offline tokens not allowed for the user or client`, because Keycloak gates the
+`offline_access` *scope* on the user holding the `offline_access` *realm role*.
+
 ### The `admin` composite
 
 `admin` grants the per-product admin roles rather than meaning anything to a service

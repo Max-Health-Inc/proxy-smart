@@ -1340,6 +1340,17 @@
   "roles": {
     "realm": [
       {
+        "name": "default-roles-proxy-smart",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "offline_access",
+            "user"
+          ]
+        }
+      },
+      {
         "name": "user",
         "description": "Default user role"
       },

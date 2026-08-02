@@ -64,9 +64,15 @@ interface NamedWithDescription {
   description?: string
 }
 
+interface RealmRole extends NamedWithDescription {
+  composite?: boolean
+  composites?: { realm?: string[] }
+}
+
 interface RealmExport {
   users?: Record<string, unknown>[]
-  roles?: { realm?: NamedWithDescription[]; client?: Record<string, NamedWithDescription[]> }
+  defaultRole?: RealmRole
+  roles?: { realm?: RealmRole[]; client?: Record<string, NamedWithDescription[]> }
   clients?: NamedWithDescription[]
   clientScopes?: NamedWithDescription[]
 }
@@ -147,5 +153,42 @@ describe.each(EXPORTS)('$name', ({ realm }) => {
       .map(({ where, field, value }) => `${where}.${field} is ${value.length} chars`)
 
     expect(tooLong).toEqual([])
+  })
+
+  /**
+   * THE THIRD BUG THIS GUARDS. `defaultRole` alone does not produce a working
+   * composite. Keycloak's RealmManager does:
+   *
+   *   realm.setDefaultRole(RepresentationToModel.createRole(realm, rep.getDefaultRole()))
+   *
+   * and `createRole` does NOT wire composites — those are attached by the
+   * separate pass over `roles.realm[]`. A default role declared only under
+   * `realm.defaultRole` is therefore created EMPTY: every user who holds it,
+   * seeded or created at runtime, silently gets none of the roles it names.
+   *
+   * That is how `offline_access` went missing, which surfaces at the token
+   * exchange as "Offline tokens not allowed for the user or client" — after a
+   * successful login, so it reads as a broken server rather than a missing role.
+   */
+  it('declares the default role in roles.realm[] so its composites are wired', () => {
+    const defaultRole = realm.defaultRole
+    if (!defaultRole?.name) return
+
+    const declared = (realm.roles?.realm ?? []).find((role) => role.name === defaultRole.name)
+    expect(declared, `${defaultRole.name} must appear in roles.realm[], not only under defaultRole`).toBeDefined()
+
+    // Same composites in both places, or the two disagree about what a new user gets.
+    expect(declared?.composites?.realm ?? []).toEqual(defaultRole.composites?.realm ?? [])
+  })
+
+  it('resolves every composite child to a declared realm role', () => {
+    const declaredNames = new Set((realm.roles?.realm ?? []).map((role) => role.name))
+    const dangling = (realm.roles?.realm ?? []).flatMap((role) =>
+      (role.composites?.realm ?? [])
+        .filter((child) => !declaredNames.has(child))
+        .map((child) => `${role.name} -> ${child}`),
+    )
+
+    expect(dangling).toEqual([])
   })
 })
