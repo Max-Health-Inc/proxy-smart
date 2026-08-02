@@ -1345,7 +1345,7 @@
       },
       {
         "name": "admin",
-        "description": "Administrator of every Max Health product in this realm. A COMPOSITE: it grants the per-product admin roles rather than meaning anything to a service itself, so 'administers everything' is expressed once here instead of re-encoded in each service. Each product adds its own role; this export can only declare the one it owns.",
+        "description": "Administrator of every Max Health product in this realm. A COMPOSITE granting the per-product admin roles; it means nothing to a service by itself. Each product adds its own role. See docs/keycloak-features.md.",
         "composite": true,
         "composites": {
           "realm": [
@@ -1355,7 +1355,7 @@
       },
       {
         "name": "proxy-smart-admin",
-        "description": "Administer this Proxy Smart deployment (admin API + admin UI). Product-namespaced because the realm is shared: a bare 'admin' role means administrator of SOMETHING, and this realm also carries roles belonging to other Max Health services (e.g. llm-gateway's gateway-admin)."
+        "description": "Administer this Proxy Smart deployment (admin API + admin UI). Product-namespaced because the realm is shared with other Max Health services, so a bare admin role would be ambiguous. See docs/keycloak-features.md."
       },
       {
         "name": "offline_access",

@@ -81,3 +81,41 @@ exactly two:
    cross-test pollution and will report false failures.
 7. Deploy to **beta first**; `--import-realm` is a no-op on an existing realm, so realm/client
    config changes in the export do **not** apply to already-provisioned environments.
+
+## Realm export constraints
+
+`--import-realm` writes straight into Keycloak's schema, so the export is bound by
+that schema's column widths. Overflowing one aborts the import, and Keycloak then
+**refuses to start at all** — the failure looks like a broken deployment, not a bad
+JSON value:
+
+```
+ERROR: value too long for type character varying(255)
+[update KEYCLOAK_ROLE set CLIENT=?,...,DESCRIPTION=?,NAME=?,...]
+ERROR: Failed to start server in (development) mode
+```
+
+Practical limits, all `varchar(255)`: role `name` and `description`, client `name`
+and `description`, client-scope `description`.
+
+Two further rules, both learned the hard way:
+
+- **No `"//"` pseudo-comment keys.** JSON has no comments, and Keycloak deserializes
+  `users[]` into `UserRepresentation` with unknown fields rejected. See the seeded
+  administrator note in [deployment.md](deployment.md).
+- **Put the reasoning here, not in the data.** A description is a UI label with a hard
+  length cap, not a place for rationale.
+
+`backend/test/realm-export-importable.test.ts` enforces all of this across every
+export.
+
+### The `admin` composite
+
+`admin` grants the per-product admin roles rather than meaning anything to a service
+itself, so "administers everything" is expressed once instead of re-encoded per
+service. Each product contributes its own role; this repo's export can only declare
+the one it owns (`proxy-smart-admin`).
+
+`proxy-smart-admin` is product-namespaced because the realm is shared: a bare `admin`
+would mean administrator of *something*, and the realm also carries roles belonging to
+other Max Health services (for example llm-gateway's `gateway-admin`).
