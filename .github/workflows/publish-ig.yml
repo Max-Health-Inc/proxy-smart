@@ -4,7 +4,7 @@ name: Publish FHIR IG package
 # Consent IG (fhir/, id maxhealth.consent) to GitHub Packages as
 # @max-health-inc/consent-fhir, so apps (consent portal, this backend) install
 # ONE published package instead of vendoring
-# lib/maxhealth.consent-0.1.0-generated.tgz. Mirrors the dicom-viewer / AIHR
+# lib/maxhealth.consent-<version>-generated.tgz. Mirrors the dicom-viewer / AIHR
 # publish-ig pattern.
 #
 # Input-driven publish: the build key hashes the FSH SOURCES (fhir/input +
@@ -56,6 +56,9 @@ jobs:
           # tr -d '\r': sushi-config.yaml is CRLF here (.gitattributes *.yaml eol=crlf);
           # a stray carriage return in the version breaks the node -e stamp step below.
           BASE=$(grep -E '^version:' fhir/sushi-config.yaml | head -1 | awk '{print $2}' | tr -d '\r')
+          # Exported so the build step names its intermediate FHIR package after
+          # the version the IG actually declares, instead of a hardcoded copy.
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "key=$KEY" >> "$GITHUB_OUTPUT"
           echo "build key: $KEY"
 
@@ -84,6 +87,11 @@ jobs:
 
       - name: Compile FSH (SUSHI) + generate typed package
         if: steps.decide.outputs.publish == 'true'
+        env:
+          # The IG's own version, read from sushi-config.yaml in the decide step.
+          # Only names the intermediate FHIR package; the PUBLISHED npm version is
+          # steps.decide.outputs.version, stamped below.
+          IG_VERSION: ${{ steps.decide.outputs.base }}
         run: |
           # SUSHI emits fsh-generated/resources/ (not a package/ dir), so assemble a
           # FHIR NPM package ourselves: resources + a manifest (canonical lets
@@ -92,11 +100,15 @@ jobs:
           (cd fhir && npx --yes fsh-sushi@latest .)
           rm -rf fhir/pkg && mkdir -p fhir/pkg
           cp fhir/fsh-generated/resources/*.json fhir/pkg/
-          node -e "const fs=require('fs');fs.writeFileSync('fhir/pkg/package.json',JSON.stringify({name:'maxhealth.consent',version:'0.1.0',canonical:'https://maxhealth.tech/fhir/consent',fhirVersions:['4.0.1'],type:'fhir.ig'},null,2))"
-          tar -czf fhir/maxhealth.consent-0.1.0.tgz -C fhir/pkg .
-          npx --yes babelfhir-ts@${BABELFHIR_VERSION} install ./fhir/maxhealth.consent-0.1.0.tgz --skip-install --fhir-version r4 || true
+          node -e "const fs=require('fs');fs.writeFileSync('fhir/pkg/package.json',JSON.stringify({name:'maxhealth.consent',version:'${IG_VERSION}',canonical:'https://maxhealth.tech/fhir/consent',fhirVersions:['4.0.1'],type:'fhir.ig'},null,2))"
+          tar -czf "fhir/maxhealth.consent-${IG_VERSION}.tgz" -C fhir/pkg .
+          # babelfhir caches the extracted package under name@version and reuses it;
+          # a hosted runner is always cold, but clear it anyway so a self-hosted or
+          # retried runner cannot generate from a previous run's FSH.
+          rm -rf "$HOME/.fhir/packages/maxhealth.consent@${IG_VERSION}"
+          npx --yes babelfhir-ts@${BABELFHIR_VERSION} install "./fhir/maxhealth.consent-${IG_VERSION}.tgz" --skip-install --fhir-version r4 || true
           rm -rf dist-ig && mkdir dist-ig
-          tar xzf lib/maxhealth.consent-0.1.0-generated.tgz -C dist-ig --strip-components=1
+          tar xzf "lib/maxhealth.consent-${IG_VERSION}-generated.tgz" -C dist-ig --strip-components=1
 
       - name: Stamp name / version / build key
         if: steps.decide.outputs.publish == 'true'

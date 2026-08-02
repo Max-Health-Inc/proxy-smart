@@ -23,18 +23,38 @@
  */
 import type { MaxHealthShareConsent } from '@max-health-inc/consent-fhir'
 import { validateMaxHealthShareConsent } from '@max-health-inc/consent-fhir'
+// Subpath import: the generated package exposes individual ValueSets under
+// ./valuesets/* and only the registry at the root, same as the smart-app-launch
+// package this repo already consumes that way (see lib/brand-bundle.ts).
+import { MaxHealthConsentCategoryVSConcepts } from '@max-health-inc/consent-fhir/valuesets/ValueSet-MaxHealthConsentCategoryVS'
 import { shlSessionStore, type ShlSession } from '@/lib/shl-session-store'
 import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
 import { invalidateConsentCache } from '@/lib/consent/consent-service'
 import { logger } from '@/lib/logger'
 
-/** Identifier system that ties a Consent back to its SHL session id. */
+/**
+ * Identifier system that ties a Consent back to its SHL session id.
+ *
+ * The IG fixes this exact value on `MaxHealthShareConsent.identifier[shlSession]`
+ * (fhir/input/fsh/consent.fsh), so a drifted literal here fails
+ * `validateMaxHealthShareConsent` rather than silently breaking revocation,
+ * which resolves a share by matching this system. It stays a literal because a
+ * NamingSystem produces no generated constant, and a ValueSet would be the wrong
+ * artifact for an identifier system — `shl-consent.test.ts` pins the agreement.
+ */
 export const SHL_CONSENT_IDENTIFIER_SYSTEM = 'https://maxhealth.tech/fhir/shl-session'
 
-/** Category coding that marks a Consent as a SMART Health Link share, so UIs can
- *  surface shares distinctly and filter them out of the practitioner-consent list. */
-export const SHL_CONSENT_CATEGORY_SYSTEM = 'https://maxhealth.tech/fhir/consent-category'
-export const SHL_CONSENT_CATEGORY_CODE = 'smart-health-link'
+/**
+ * Category coding that marks a Consent as a SMART Health Link share, so UIs can
+ * surface shares distinctly and filter them out of the practitioner-consent list.
+ *
+ * Sourced from the IG's generated ValueSet rather than retyped. The concepts are
+ * a readonly tuple of string-literal types, so destructuring yields the system
+ * and code fully typed with no assertion and no second copy to drift.
+ */
+const [SHARE_CATEGORY_CONCEPT] = MaxHealthConsentCategoryVSConcepts
+export const SHL_CONSENT_CATEGORY_SYSTEM = SHARE_CATEGORY_CONCEPT.system
+export const SHL_CONSENT_CATEGORY_CODE = SHARE_CATEGORY_CONCEPT.code
 
 // Short-lived cache so the revocation check costs at most one FHIR round-trip
 // per SHL per window, not one per proxied request. Revocation propagates within

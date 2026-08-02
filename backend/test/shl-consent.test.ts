@@ -5,7 +5,13 @@
  */
 import { describe, it, expect } from 'bun:test'
 import { validateMaxHealthShareConsent } from '@max-health-inc/consent-fhir'
-import { buildShareConsent, SHL_CONSENT_IDENTIFIER_SYSTEM, SHL_CONSENT_CATEGORY_CODE } from '../src/lib/consent/shl-consent'
+import { MaxHealthConsentCategoryVSConcepts } from '@max-health-inc/consent-fhir/valuesets/ValueSet-MaxHealthConsentCategoryVS'
+import {
+  buildShareConsent,
+  SHL_CONSENT_IDENTIFIER_SYSTEM,
+  SHL_CONSENT_CATEGORY_SYSTEM,
+  SHL_CONSENT_CATEGORY_CODE,
+} from '../src/lib/consent/shl-consent'
 import { buildShlAccessAuditEvent } from '../src/lib/consent/shl-audit'
 import type { ShlSession } from '../src/lib/shl-session-store'
 
@@ -71,6 +77,39 @@ describe('buildShareConsent', () => {
     const consent = buildShareConsent('shl-cat', makeSession())
     const codes = consent.category?.flatMap((c) => c.coding?.map((x) => x.code) ?? []) ?? []
     expect(codes).toContain(SHL_CONSENT_CATEGORY_CODE)
+  })
+})
+
+/**
+ * The IG owns both canonical URLs; the backend must not drift from them.
+ *
+ * The category system/code come from the generated ValueSet, so they cannot
+ * drift by construction. The identifier system is still a literal here (a
+ * NamingSystem produces no generated constant), so these tests are what holds it
+ * to the profile: revocation resolves a share by matching that exact system, and
+ * a silent mismatch would break revocation without failing anything else.
+ */
+describe('share consent conforms to the IG terminology', () => {
+  it('sources the category coding from the IG ValueSet', () => {
+    expect(SHL_CONSENT_CATEGORY_SYSTEM).toBe(MaxHealthConsentCategoryVSConcepts[0].system)
+    expect(SHL_CONSENT_CATEGORY_CODE).toBe(MaxHealthConsentCategoryVSConcepts[0].code)
+  })
+
+  it('rejects a drifted identifier system', async () => {
+    const consent = buildShareConsent('shl-abc', makeSession())
+    consent.identifier = [{ system: 'https://wrong.example/shl-session', value: 'shl-abc' }]
+
+    const { errors } = await validateMaxHealthShareConsent(consent)
+    expect(errors.join(' ')).toContain('identifier:shlSession')
+  })
+
+  it('rejects a share that is missing the share-marker category', async () => {
+    const consent = buildShareConsent('shl-abc', makeSession())
+    // Only the ordinary consent category — no SHL marker.
+    consent.category = [{ coding: [{ system: 'http://loinc.org', code: '57016-8' }] }]
+
+    const { errors } = await validateMaxHealthShareConsent(consent)
+    expect(errors.join(' ')).toContain('category:shareMarker')
   })
 })
 
