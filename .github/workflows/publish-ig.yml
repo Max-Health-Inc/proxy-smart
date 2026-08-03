@@ -27,9 +27,6 @@ permissions:
 
 env:
   PKG_NAME: "@max-health-inc/consent-fhir"
-  # Pin to the same babelfhir-ts fhir/build.mjs uses, so the published package is
-  # byte-consistent with the previously vendored tgz (drop-in for consumers).
-  BABELFHIR_VERSION: "1.5.17"
 
 jobs:
   publish:
@@ -42,6 +39,23 @@ jobs:
           node-version: 22
           registry-url: https://npm.pkg.github.com
           scope: "@max-health-inc"
+
+      # The generator version comes from the root package.json, the same field
+      # fhir/build.mjs reads. It used to be restated here, which let the two
+      # drift: build.mjs decides what a developer inspects locally, this decides
+      # what consumers actually receive, and generator releases change the
+      # output. Fails the run rather than defaulting, because a wrong generator
+      # publishes silently — the version is also part of the build key below, so
+      # a bad value would key the package to a generator that did not build it.
+      - name: Resolve babelfhir-ts version
+        run: |
+          VERSION=$(node -p "require('./package.json').devDependencies['babelfhir-ts'] || ''")
+          case "$VERSION" in
+            [0-9]*.[0-9]*.[0-9]*) ;;
+            *) echo "babelfhir-ts must be pinned exactly in package.json, got '${VERSION}'" >&2; exit 1 ;;
+          esac
+          echo "BABELFHIR_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "babelfhir-ts: $VERSION"
 
       - name: Decide whether to publish (build key vs last published)
         id: decide
