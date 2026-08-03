@@ -13,7 +13,7 @@
         "@tailwindcss/vite": "^4.3.3",
         "@types/fhir": "^0.0.44",
         "@vitejs/plugin-react-swc": "^4.3.1",
-        "babelfhir-ts": "^1.5.17",
+        "babelfhir-ts": "1.5.21",
         "concurrently": "^10.0.3",
         "cross-env": "^10.1.0",
         "eslint": "^10.7.0",
@@ -28,7 +28,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021941.25843989d",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.16",
         "@elysiajs/cors": "^1.4.2",
@@ -36,7 +36,7 @@
         "@elysiajs/openapi": "^1.4.15",
         "@elysiajs/static": "^1.4.10",
         "@keycloak/keycloak-admin-client": "26.6.4",
-        "@max-health-inc/consent-fhir": "^0.1.0",
+        "@max-health-inc/consent-fhir": "^0.1.2",
         "@max-health-inc/elysia-mcp": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@opendataloader/pdf": "^2.5.0",
@@ -76,7 +76,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -87,7 +87,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021941.25843989d",
       "dependencies": {
         "aws-cdk-lib": "^2.261.0",
         "constructs": "^10.7.0",
@@ -105,7 +105,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.3",
         "@cornerstonejs/core": "^5.6.7",
@@ -145,7 +145,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "dependencies": {
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.4.8",
         "@radix-ui/react-avatar": "^1.2.2",
@@ -204,7 +204,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "devDependencies": {
         "@types/node": "^26.1.1",
         "typescript": "6.0.3",
@@ -212,7 +212,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -224,7 +224,7 @@
     },
     "packages/cli": {
       "name": "@proxy-smart/cli",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "bin": {
         "proxy-smart": "./src/index.ts",
       },
@@ -236,7 +236,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@sinclair/typebox": "^0.34.52",
@@ -253,7 +253,7 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.2.14-beta.202607270737.737cca433",
+      "version": "0.2.18-beta.202608021725.e25a9936a",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.4.8",
@@ -649,7 +649,7 @@
 
     "@loxjs/url-join": ["@loxjs/url-join@1.0.2", "", {}, "sha512-BqzK8+iHqxUbPRZV6NBum63CJzE0G6vGG3o+4dqeIzbywdoTg+xHJbksYDkk1P1w3Gj64U20Rgp44HHciLbRzg=="],
 
-    "@max-health-inc/consent-fhir": ["@max-health-inc/consent-fhir@0.1.0", "https://npm.pkg.github.com/download/@max-health-inc/consent-fhir/0.1.0/c46fe9795893512e7574834b61639ef68df4ca0f", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-FgjgJsapXRL3hq9ZJK/AP+dZXNAtnecMcYhLcimbkHIviI7XVTRuLVt8p6S+8sjc3k8vWDkZ950rYj9FawVfDA=="],
+    "@max-health-inc/consent-fhir": ["@max-health-inc/consent-fhir@0.1.2", "https://npm.pkg.github.com/download/@max-health-inc/consent-fhir/0.1.2/0dacd93141c28985b3dce612d3cfdf3920028e9e", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-ywuS9dk4KT2gQYeFZPp6WNoFHu6Zme1BlS78OaVr/LYtmBnMW3Ymz1az4jBJJBu4dAPBy/mnRqeuxP+V6Lk9VA=="],
 
     "@max-health-inc/elysia-mcp": ["@max-health-inc/elysia-mcp@workspace:packages/elysia-mcp"],
 
@@ -1241,7 +1241,7 @@
 
     "aws-cdk-lib": ["aws-cdk-lib@2.261.0", "", { "dependencies": { "@aws-cdk/asset-awscli-v1": "2.2.282", "@aws-cdk/asset-node-proxy-agent-v6": "^2.1.2", "@aws-cdk/cloud-assembly-api": "^2.2.5", "@aws-cdk/cloud-assembly-schema": "^54.0.0", "@balena/dockerignore": "^1.0.2", "case": "1.6.3", "fs-extra": "^11.3.5", "ignore": "^5.3.2", "jsonschema": "^1.5.0", "mime-types": "^2.1.35", "minimatch": "^10.2.5", "punycode": "^2.3.1", "semver": "^7.8.1", "yaml": "1.10.3" }, "peerDependencies": { "constructs": "^10.5.0" } }, "sha512-e52e3Abjg0HkuRWlWwtSv5+ZiMW1rhCDdL9ff7lzWXInU8xdfLJpuoimfa0IJwjiNGyphppgg52Azx9M80OA0g=="],
 
-    "babelfhir-ts": ["babelfhir-ts@1.5.17", "", { "dependencies": { "@types/fhir": "^0.0.43", "consola": "^3.4.2", "fhirpath": "^4.10.0", "tar": "^7.4.3", "tsx": "^4.19.3", "unzipper": "^0.12.3" }, "bin": { "babelfhir-ts": "out/src/bin.js" } }, "sha512-Ej0eaSKkXfNjr+N9/kpWazKnNZAB2kZDa8c0MaSZE3oYTSFHNvhJwx9E7V07gUe2UPkAdFF9UvmMRqzMxUvaZQ=="],
+    "babelfhir-ts": ["babelfhir-ts@1.5.21", "", { "dependencies": { "@types/fhir": "^0.0.44", "consola": "^3.4.2", "tar": "^7.5.22", "tsx": "^4.23.1", "unzipper": "^0.12.5" }, "bin": { "babelfhir-ts": "out/src/bin.js" } }, "sha512-QZz7ehCjRyjaaEJX4JXqCHgU0DKJeCvkQqGY6oywhY50SKi+SuS6PuTy8xIfuNd0gh74Yamqrl1XOhOIM1B/hg=="],
 
     "bail": ["bail@2.0.2", "", {}, "sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw=="],
 
@@ -2445,7 +2445,7 @@
 
     "tapable": ["tapable@2.3.3", "", {}, "sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A=="],
 
-    "tar": ["tar@7.5.16", "", { "dependencies": { "@isaacs/fs-minipass": "^4.0.0", "chownr": "^3.0.0", "minipass": "^7.1.2", "minizlib": "^3.1.0", "yallist": "^5.0.0" } }, "sha512-56adEpPMouktRlBLXiaYFFzZ/3+JXa8P9n7WbR+ibIjtviN55mEaOkiysCnPnWm+7kkui1Dn8J9l+g6zV8731w=="],
+    "tar": ["tar@7.5.22", "", { "dependencies": { "@isaacs/fs-minipass": "^4.0.0", "chownr": "^3.0.0", "minipass": "^7.1.2", "minizlib": "^3.1.0", "yallist": "^5.0.0" } }, "sha512-MFO/QzvtAOmJbkhOaCTvbGcFN9L9b+JunIsDwaKljSOdcLMea3NJ1k9Usz/rjdfSXTq4dfzfeS7W4p4YOAAHeA=="],
 
     "terser": ["terser@5.48.0", "", { "dependencies": { "@jridgewell/source-map": "^0.3.3", "acorn": "^8.15.0", "commander": "^2.20.0", "source-map-support": "~0.5.20" }, "bin": { "terser": "bin/terser" } }, "sha512-J/9An6vs9Us6wKRriSFXBWdRZapREHqFzdNUKk0pmu804EMR6dr6winwo7e5JDxN4xahxQsuysyYFwlwj4XN/Q=="],
 
@@ -2527,7 +2527,7 @@
 
     "unpipe": ["unpipe@1.0.0", "", {}, "sha512-pjy2bYhSsufwWlKwPc+l3cN7+wuJlK6uz0YdJEOlQDbl6jo/YlPi4mb8agUkVC8BF7V8NuzeyPNqRksA3hztKQ=="],
 
-    "unzipper": ["unzipper@0.12.3", "", { "dependencies": { "bluebird": "~3.7.2", "duplexer2": "~0.1.4", "fs-extra": "^11.2.0", "graceful-fs": "^4.2.2", "node-int64": "^0.4.0" } }, "sha512-PZ8hTS+AqcGxsaQntl3IRBw65QrBI6lxzqDEL7IAo/XCEqRTKGfOX56Vea5TH9SZczRVxuzk1re04z/YjuYCJA=="],
+    "unzipper": ["unzipper@0.12.5", "", { "dependencies": { "bluebird": "~3.7.2", "duplexer2": "~0.1.4", "fs-extra": "11.3.1", "graceful-fs": "^4.2.2", "node-int64": "^0.4.0" } }, "sha512-tXYOi9R57Uj/2Z25SOs5RRSzq886MBQj2gY8dPL+xl/kv6s6SvByoKfAtvfVeEuhntWDgjd2o9p2lb4TVPAz0A=="],
 
     "update-browserslist-db": ["update-browserslist-db@1.2.3", "", { "dependencies": { "escalade": "^3.2.0", "picocolors": "^1.1.1" }, "peerDependencies": { "browserslist": ">= 4.21.0" }, "bin": { "update-browserslist-db": "cli.js" } }, "sha512-Js0m9cx+qOgDxo0eMiFGEueWztz+d4+M3rGlmKPT+T4IS/jP4ylw3Nwpu6cpTTP8R1MAC1kF4VbdLt3ARf209w=="],
 
@@ -3171,10 +3171,6 @@
 
     "ast-v8-to-istanbul/estree-walker": ["estree-walker@3.0.3", "", { "dependencies": { "@types/estree": "^1.0.0" } }, "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g=="],
 
-    "babelfhir-ts/@types/fhir": ["@types/fhir@0.0.43", "", {}, "sha512-B6aDaMgnpjj29b+hnbahoUKAvkRDJVlZ1Fhk1bLMoPKpUjd19vyA66/btsd+zxRnxqzJbpH3gO78rMn3FIVqbQ=="],
-
-    "babelfhir-ts/tsx": ["tsx@4.22.4", "", { "dependencies": { "esbuild": "~0.28.0" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "bin": { "tsx": "dist/cli.mjs" } }, "sha512-X8EX+XV4QR5xCsrgxaED954zTDfY8KqlDtskKEL0cHhyS/P8b4IFOvGDQpsC9Q1XnLq915wEfwwY/zzskCtmhg=="],
-
     "bun-types/@types/node": ["@types/node@25.9.1", "", { "dependencies": { "undici-types": ">=7.24.0 <7.24.7" } }, "sha512-xfrlY7UD5rMJk3ZVJP8BNzS28J36YJg+xp+LPXV1TdWxr8uMH5A860QNxYDGQe/ylDSgjxE52Q9VnO7p75tJxg=="],
 
     "cross-fetch/node-fetch": ["node-fetch@2.7.0", "", { "dependencies": { "whatwg-url": "^5.0.0" }, "peerDependencies": { "encoding": "^0.1.0" }, "optionalPeers": ["encoding"] }, "sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A=="],
@@ -3292,6 +3288,8 @@
     "type-is/mime-types": ["mime-types@3.0.2", "", { "dependencies": { "mime-db": "^1.54.0" } }, "sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A=="],
 
     "unifi-access/undici": ["undici@7.19.0", "", {}, "sha512-Heho1hJD81YChi+uS2RkSjcVO+EQLmLSyUlHyp7Y/wFbxQaGb4WXVKD073JytrjXJVkSZVzoE2MCSOKugFGtOQ=="],
+
+    "unzipper/fs-extra": ["fs-extra@11.3.1", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-eXvGGwZ5CL17ZSwHWd3bbgk7UUpF6IFHtP57NYYakPvHOs8GDgDe5KJI36jIJzDkJ6eJjuzRA8eBQb6SkKue0g=="],
 
     "utif/pako": ["pako@1.0.11", "", {}, "sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw=="],
 

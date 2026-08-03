@@ -600,6 +600,86 @@ else
   echo '  ⚠️ Keycloak container not found — skipping device-grant reconciliation'
 fi
 
+# ── 10d. Keycloak Default-Role Composite Reconciliation ──
+# The realm's default role (`default-roles-proxy-smart`) is what EVERY user gets
+# on creation — including brokered users on first sign-in. It must grant
+# `offline_access` and `user`.
+#
+# Keycloak's RealmManager creates the default role via
+# RepresentationToModel.createRole(), which does NOT wire composites; those come
+# from the separate pass over `roles.realm[]`. Realms first imported from an
+# export that declared the role only under `realm.defaultRole` therefore have an
+# EMPTY default role, and --import-realm is a no-op once the realm exists, so
+# fixing the export cannot repair them.
+#
+# The symptom is remote from the cause: login succeeds, the consent screen is
+# granted, and THEN the code exchange fails with
+#   "Offline tokens not allowed for the user or client"
+# because Keycloak gates the `offline_access` scope on the user holding the
+# `offline_access` REALM ROLE. Clients report it as an authorization failure
+# against an otherwise healthy server.
+#
+# Idempotent and non-fatal, like the blocks above.
+echo '🔧 Reconciling Keycloak default-role composite...'
+KC_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{break}}{{end}}' \
+  proxy-smart-keycloak-beta 2>/dev/null || true)
+
+if [ -n "${KC_IP:-}" ]; then
+  KC_BASE="http://${KC_IP}:8080/auth"
+  KC_PASS=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' .env.beta | cut -d= -f2 || true)
+  KC_TOKEN=$(curl -sf -X POST "${KC_BASE}/realms/master/protocol/openid-connect/token" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    -d 'username=admin' \
+    -d "password=${KC_PASS}" \
+    -d 'grant_type=password' \
+    -d 'client_id=admin-cli' 2>/dev/null | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4 || true)
+
+  if [ -n "${KC_TOKEN:-}" ]; then
+    KC_ROLES="${KC_BASE}/admin/realms/proxy-smart/roles"
+    DEFAULT_ROLE='default-roles-proxy-smart'
+
+    # The composite's current children, and the role's own id (needed to POST to it).
+    DR_ID=$(curl -sf "${KC_ROLES}/${DEFAULT_ROLE}" -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null \
+      | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+
+    if [ -z "${DR_ID:-}" ]; then
+      echo "  ⚠️ ${DEFAULT_ROLE} not found — skipping"
+    else
+      EXISTING=$(curl -sf "${KC_ROLES}-by-id/${DR_ID}/composites" \
+        -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null || true)
+
+      ensure_default_child() {
+        CHILD="$1"
+        if printf '%s' "$EXISTING" | grep -q "\"name\":\"${CHILD}\""; then
+          echo "  ✅ default role already grants ${CHILD}"
+          return
+        fi
+        CHILD_ID=$(curl -sf "${KC_ROLES}/${CHILD}" -H "Authorization: Bearer $KC_TOKEN" 2>/dev/null \
+          | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4 || true)
+        if [ -z "${CHILD_ID:-}" ]; then
+          echo "  ⚠️ realm role ${CHILD} not found — cannot add to default role"
+          return
+        fi
+        HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' -X POST \
+          "${KC_ROLES}-by-id/${DR_ID}/composites" \
+          -H "Authorization: Bearer $KC_TOKEN" -H 'Content-Type: application/json' \
+          -d "[{\"id\":\"${CHILD_ID}\",\"name\":\"${CHILD}\"}]" 2>/dev/null || true)
+        if [ "${HTTP_CODE:-}" = '204' ]; then
+          echo "  ✅ Added ${CHILD} to the default role composite"
+        else
+          echo "  ⚠️ Failed to add ${CHILD} to default role (HTTP ${HTTP_CODE:-none})"
+        fi
+      }
+      ensure_default_child 'offline_access'
+      ensure_default_child 'user'
+    fi
+  else
+    echo '  ⚠️ Could not get Keycloak admin token — skipping default-role reconciliation'
+  fi
+else
+  echo '  ⚠️ Keycloak container not found — skipping default-role reconciliation'
+fi
+
 # ── 11. Seed Data ──
 echo '🏥 Seeding HAPI FHIR with sample data...'
 HAPI_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{if .IPAddress}}{{.IPAddress}}{{end}}{{end}}' \

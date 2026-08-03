@@ -1156,6 +1156,18 @@
   ],
   "users": [
     {
+      "username": "max.nussbaumer@maxhealth.tech",
+      "email": "max.nussbaumer@maxhealth.tech",
+      "firstName": "Maximilian",
+      "lastName": "Nussbaumer",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "default-roles-proxy-smart",
+        "admin"
+      ]
+    },
+    {
       "username": "service-account-admin-service",
       "enabled": true,
       "serviceAccountClientId": "admin-service",
@@ -1191,12 +1203,33 @@
   "roles": {
     "realm": [
       {
+        "name": "default-roles-proxy-smart",
+        "description": "${role_default-roles}",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "offline_access",
+            "user"
+          ]
+        }
+      },
+      {
         "name": "user",
         "description": "Default user role"
       },
       {
         "name": "admin",
-        "description": "Administrator role"
+        "description": "Administrator of every Max Health product in this realm. A COMPOSITE: it grants the per-product admin roles rather than meaning anything to a service itself, so 'administers everything' is expressed once here instead of re-encoded in each service.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "proxy-smart-admin"
+          ]
+        }
+      },
+      {
+        "name": "proxy-smart-admin",
+        "description": "Administer this Proxy Smart deployment (admin API + admin UI). Product-namespaced because the realm is shared with other Max Health services."
       },
       {
         "name": "offline_access",

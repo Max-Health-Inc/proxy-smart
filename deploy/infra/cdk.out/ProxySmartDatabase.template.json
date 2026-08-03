@@ -17,14 +17,14 @@
     "SecurityGroupIngress": [
      {
       "CidrIp": "10.0.2.0/24",
-      "Description": "Allow PostgreSQL from private subnet eu-central-1a",
+      "Description": "Allow PostgreSQL from private subnet us-east-1a",
       "FromPort": 5432,
       "IpProtocol": "tcp",
       "ToPort": 5432
      },
      {
       "CidrIp": "10.0.3.0/24",
-      "Description": "Allow PostgreSQL from private subnet eu-central-1b",
+      "Description": "Allow PostgreSQL from private subnet us-east-1b",
       "FromPort": 5432,
       "IpProtocol": "tcp",
       "ToPort": 5432
@@ -266,7 +266,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOywrCMBBFv8V9OmpEXPsAcSVY9zJNR021qWQmioT8u9QXPlbncu9ZXA16OIJeBy+cmfKQHW0BMRc0B4UX3kQyGmJOJngr17lvwklNt+6rSIrJeBKu0eGO/N33JE+xTQ+s0e9IxiJo9jW5D+F3ScqXDHGGggUyLRwLOkMqD4Ujed+YTf6Kl5qUxRriqjlSO7RMqU3LIKcgSbmmJKi4e9Ya9AD6nYqtzXxwYmuC1YM3m8IX2x4BAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WOywrCMBBFv8V9OmoE9z5AXAnWvUzTUaM2lczEIiH/LrUqPlbncu9ZXA16PIRBDxvOTHnKzraAmAuak8KGt5GMhpiTCd7KbeHrcFGznfsqkmIynoQrdLgn//A9yVNsU4cN+j3JRATNoSL3IfwuSfmSIc5RsECmpWNBZ0jloXAk7xvz6V/xUpOyWEFc12dqh5YptWkV5BIkKVeXBEfuX7UGPYJh78jWZj44sRXBuuMdI/ASwx4BAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartDatabase/CDKMetadata/Default"

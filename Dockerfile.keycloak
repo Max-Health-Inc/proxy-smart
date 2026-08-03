@@ -47,7 +47,17 @@ RUN JAVA_TOOL_OPTIONS="-Xmx512m" /opt/keycloak/bin/kc.sh build \
     --features=cimd,resource-indicators \
     --http-relative-path=/auth
 
-# Start Keycloak in production mode with realm import and optimized settings
+# Start Keycloak in production mode with realm import and optimized settings.
 # --optimized tells KC to use the pre-built config from `kc.sh build` above,
 # preventing a re-build that would strip the --features flag.
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", "--optimized", "--import-realm"]
+#
+# ENTRYPOINT is the binary ONLY; the arguments live in CMD. That split matters:
+# Docker APPENDS CMD to an exec-form ENTRYPOINT, and ECS task definitions set
+# `command`, which replaces CMD. With the arguments baked into ENTRYPOINT, an
+# ECS `command: ["start","--optimized"]` produced
+#     kc.sh start --optimized --import-realm start --optimized
+# which Keycloak rejects. Keeping args in CMD lets any runtime override them
+# cleanly, and callers that override MUST pass --import-realm themselves (the
+# ECS task definition in deploy/infra/lib/keycloak-stack.ts does).
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+CMD ["start", "--optimized", "--import-realm"]

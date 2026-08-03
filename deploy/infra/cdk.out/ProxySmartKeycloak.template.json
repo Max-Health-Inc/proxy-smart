@@ -749,7 +749,7 @@
        "StartPeriod": 300,
        "Timeout": 10
       },
-      "Image": "quay.io/keycloak/keycloak:26.0",
+      "Image": "quay.io/keycloak/keycloak:26.6.4",
       "LogConfiguration": {
        "LogDriver": "awslogs",
        "Options": {
@@ -757,7 +757,7 @@
          "Ref": "KeycloakServiceTaskDefwebLogGroupCB61FCD4"
         },
         "awslogs-stream-prefix": "KeycloakService",
-        "awslogs-region": "eu-central-1"
+        "awslogs-region": "us-east-1"
        }
       },
       "Name": "web",
@@ -1420,7 +1420,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtM1FsWfP+0CBAB3iAHssGJnW2CiSIVEJCkH/fZCcOkk37Il35yPNk9TI5uGz/HgHp7BSw35laCdTz6D2Ak7hOQVUHjkcwIJGL1NfuehGO6MsFHqmkRQwLq7uohXrFc3iBOOxkakb7S/ctd1aLKgNwSkCJmezQBVk6kwMjL7OOMPv4DUwbiHsv+JIloq9GN4rzjKQRX+lnXt79EdSOIeYYa/AwM7UsZ2LlusCzxMwo7dBttNkyv7k7NrB8AUMWIXDu4FoIDAp42DYVQdZXbL+u7vGuuHXPgqM9ux5w1fft+A18g/v4jSHX2jZvKkXFT3x62L5v/BNewzhL/nRVj0L7yLjw71M7QaV80Nxzqgvj4DgINPGmXqotf50htRroTPKwjgdZFo7vWzwhrOASzKI7IICQ1bLdLmXkq+ud6vMZetB7cnqfu67/PtGyEIZF4cTsPotU2vAH4qngpwLfIo8RRYbDC56hVlYN6B8CR+OTSObe/np7iUQrXy0TAeUm7n+Ac1bdQ5EAwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SXW/bMAz8LX1XtNXF9u55HygQoEMcYI8FI9MaG0UyJCpBIei/D5JTJ+mGPfHufKR5khrZfL6XH+/gFFZq2K8M7WTqGdRewCk8p4DKI4cDWNDoZeorF91oZ5SFQs80kgLGxdVdtGK9olmcYDw2MnWj/YW7tluLBbUhOEXA5GwWqIJMnYmB0dcZZ/gdvAbGLYT9VxzJUrEXw3vFWQay6K+0c2+P/kgK5xAz7BUY2Jk6tnPRcl3geQJm9DbIdppM2Z+cXTsYvoABq3B4NxANBCZlHAy76iCrS9Z/d9dYN/zaR4HRnj1v+Or7FrxG/uFdnObwCy2bN/Wioid+XSz/F75pjyH8JT/aqmfhXWT89CBTu0Hl/FCcM+rLIyA4yLRxph5qrT+dIfVa6IyyME4HmdZOLxu84Szgkgwiu6DAkNUyXe6l5Kvr3Spz2XpQe7K6n/su/74RslDGxeEErH7L1Brwh+KpIOcCnyJPkcUGg4teYRbWDShfwodj08jmQd7fvQSilY+W6YByM9c/s9aD90QDAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartKeycloak/CDKMetadata/Default"

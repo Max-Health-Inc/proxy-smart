@@ -1,5 +1,5 @@
 {
-  "version": "53.0.0",
+  "version": "54.0.0",
   "artifacts": {
     "ProxySmartVpc.assets": {
       "type": "cdk:asset-manifest",
@@ -11,7 +11,7 @@
     },
     "ProxySmartVpc": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://579201838740/eu-central-1",
+      "environment": "aws://579201838740/us-east-1",
       "properties": {
         "templateFile": "ProxySmartVpc.template.json",
         "terminationProtection": false,
@@ -20,16 +20,16 @@
           "Project": "proxy-smart"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/76a2d27a9ab2edcd4b5e21a8e276241ef8f8ce8265675e95799d301745cb36e6.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-us-east-1/747e35502f21031f7a9a80dc3057330e474cb9137a118c5024c4afdaa3b35804.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "ProxySmartVpc.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-eu-central-1",
+          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -50,7 +50,7 @@
     },
     "ProxySmartDatabase": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://579201838740/eu-central-1",
+      "environment": "aws://579201838740/us-east-1",
       "properties": {
         "templateFile": "ProxySmartDatabase.template.json",
         "terminationProtection": false,
@@ -59,16 +59,16 @@
           "Project": "proxy-smart"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/b741b4215413bfab8c62afea635519dc6673699a1d7862c05b3234e7cbf4227b.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-us-east-1/3b611be4bd1df5403c82ccb8ad59fb77d3f7c883273813fdd98669022be3d5b9.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "ProxySmartDatabase.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-eu-central-1",
+          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -90,7 +90,7 @@
     },
     "ProxySmartKeycloak": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://579201838740/eu-central-1",
+      "environment": "aws://579201838740/us-east-1",
       "properties": {
         "templateFile": "ProxySmartKeycloak.template.json",
         "terminationProtection": false,
@@ -101,16 +101,16 @@
           "Project": "proxy-smart"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/2d01923eed8ea63be2c1bec6cbd8e38f81d73163968db8bfb2195c00d65ec62a.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-us-east-1/737380e34b56aa5f63a70db8001fb54b89d46f758759a9cceba27bdf554d23a7.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "ProxySmartKeycloak.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-eu-central-1",
+          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -133,7 +133,7 @@
     },
     "ProxySmartBackend": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://579201838740/eu-central-1",
+      "environment": "aws://579201838740/us-east-1",
       "properties": {
         "templateFile": "ProxySmartBackend.template.json",
         "terminationProtection": false,
@@ -144,16 +144,16 @@
           "Project": "proxy-smart"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/67da8749ab6ee4b3719d152d0986e4b577352c2e39b9e26a328d20aab6726cd2.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-us-east-1/4d42c91e16e6da75775bcb1e7145b9604c33fe0e8e3a4b847b80af5e4c7483d7.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "ProxySmartBackend.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-eu-central-1",
+          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -177,7 +177,7 @@
     },
     "ProxySmartFhir": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://579201838740/eu-central-1",
+      "environment": "aws://579201838740/us-east-1",
       "properties": {
         "templateFile": "ProxySmartFhir.template.json",
         "terminationProtection": false,
@@ -188,16 +188,16 @@
           "Project": "proxy-smart"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-eu-central-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-eu-central-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-eu-central-1/2221bb4fd2bb0438f2623a7860c5667593447b71873576902245ff3e49fbbd92.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-deploy-role-579201838740-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-cfn-exec-role-579201838740-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-579201838740-us-east-1/d626d827b04ec7c530958f4df77b7df23880c9bc7a2fe0925d7b9135aba830a6.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "ProxySmartFhir.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-eu-central-1",
+          "arn": "arn:${AWS::Partition}:iam::579201838740:role/cdk-hnb659fds-lookup-role-579201838740-us-east-1",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -660,12 +660,16 @@
             "recommendedValue": true,
             "explanation": "Use AL2023 as the default imageType for EC2 Batch compute environments instead of the deprecated AL2"
           },
+          "@aws-cdk/aws-eks:defaultToAL2023": {
+            "recommendedValue": true,
+            "explanation": "Use AL2023 as the default AMI type for EKS managed node groups using non-GPU instance types instead of the deprecated AL2"
+          },
           "@aws-cdk/core:annotationsInValidationReport": {
             "recommendedValue": true,
             "explanation": "Include construct annotations (warnings and errors) in the policy validation report"
           },
           "@aws-cdk/core:defaultCrossStackReferences": {
-            "recommendedValue": "strong",
+            "recommendedValue": "weak",
             "explanation": "Controls whether cross-region stack references are strong, weak, or both",
             "unconfiguredBehavesLike": {
               "v2": "strong"
@@ -675,5 +679,5 @@
       }
     }
   },
-  "minimumCliVersion": "2.1125.0"
+  "minimumCliVersion": "2.1132.0"
 }

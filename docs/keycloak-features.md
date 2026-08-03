@@ -81,3 +81,63 @@ exactly two:
    cross-test pollution and will report false failures.
 7. Deploy to **beta first**; `--import-realm` is a no-op on an existing realm, so realm/client
    config changes in the export do **not** apply to already-provisioned environments.
+
+## Realm export constraints
+
+`--import-realm` writes straight into Keycloak's schema, so the export is bound by
+that schema's column widths. Overflowing one aborts the import, and Keycloak then
+**refuses to start at all** — the failure looks like a broken deployment, not a bad
+JSON value:
+
+```
+ERROR: value too long for type character varying(255)
+[update KEYCLOAK_ROLE set CLIENT=?,...,DESCRIPTION=?,NAME=?,...]
+ERROR: Failed to start server in (development) mode
+```
+
+Practical limits, all `varchar(255)`: role `name` and `description`, client `name`
+and `description`, client-scope `description`.
+
+Two further rules, both learned the hard way:
+
+- **No `"//"` pseudo-comment keys.** JSON has no comments, and Keycloak deserializes
+  `users[]` into `UserRepresentation` with unknown fields rejected. See the seeded
+  administrator note in [deployment.md](deployment.md).
+- **Put the reasoning here, not in the data.** A description is a UI label with a hard
+  length cap, not a place for rationale.
+
+`backend/test/realm-export-importable.test.ts` enforces all of this across every
+export.
+
+### The default role must be declared twice
+
+`default-roles-<realm>` is Keycloak's own role, not ours — every realm gets one, and
+it is the set of roles every newly created user receives automatically. Ours grants
+`offline_access` and `user` (stock would be `offline_access` + `uma_authorization`
+plus the `account` client roles, so this is a deliberate trim).
+
+It has to appear in **both** `realm.defaultRole` **and** `roles.realm[]`. `RealmManager`
+does:
+
+```java
+realm.setDefaultRole(RepresentationToModel.createRole(realm, rep.getDefaultRole()));
+```
+
+and `createRole` does **not** wire composites — those are attached by the separate
+pass over `roles.realm[]`. Declared only under `defaultRole`, the role is created
+**empty**, and every user holding it silently gets nothing.
+
+The symptom is remote from the cause: login succeeds, then the token exchange fails
+with `Offline tokens not allowed for the user or client`, because Keycloak gates the
+`offline_access` *scope* on the user holding the `offline_access` *realm role*.
+
+### The `admin` composite
+
+`admin` grants the per-product admin roles rather than meaning anything to a service
+itself, so "administers everything" is expressed once instead of re-encoded per
+service. Each product contributes its own role; this repo's export can only declare
+the one it owns (`proxy-smart-admin`).
+
+`proxy-smart-admin` is product-namespaced because the realm is shared: a bare `admin`
+would mean administrator of *something*, and the realm also carries roles belonging to
+other Max Health services (for example llm-gateway's `gateway-admin`).
