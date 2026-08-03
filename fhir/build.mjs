@@ -37,7 +37,33 @@ function igVersion() {
   return match[1].trim();
 }
 
+/**
+ * The generator version, read from the root package.json.
+ *
+ * SINGLE SOURCE. This value also lives in .github/workflows/publish-ig.yml,
+ * which reads the same field — deliberately, because the two must agree: this
+ * script decides what you inspect locally, the workflow decides what consumers
+ * actually get. A drifted pair means the published types were built by a
+ * different generator than the one you tested against, and generator releases
+ * do change the output (1.5.21 added reference target-type validation and
+ * changed several contained-resource constraints).
+ *
+ * Pinned exactly rather than with a caret: the workflow keys its publish
+ * decision on this string, so a range would let the effective version move
+ * without the build key changing.
+ */
+function generatorVersion() {
+  const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf-8"));
+  const version = pkg.devDependencies?.["babelfhir-ts"];
+  if (!version) throw new Error("babelfhir-ts is not in the root package.json devDependencies");
+  if (!/^\d+\.\d+\.\d+/.test(version)) {
+    throw new Error(`babelfhir-ts must be pinned exactly, got "${version}"`);
+  }
+  return version;
+}
+
 const PKG_VERSION = igVersion();
+const BABELFHIR_VERSION = generatorVersion();
 const tgzName = `${PKG_NAME}-${PKG_VERSION}.tgz`;
 
 function run(cmd, cwd = root) {
@@ -71,6 +97,6 @@ console.log("\n── Step 3: Generate TypeScript package (no install) ──");
 // backend consumes the PUBLISHED @max-health-inc/consent-fhir (minted by
 // .github/workflows/publish-ig.yml), so we no longer vendor a lib/*.tgz — that
 // avoids the tgz/bun.lock integrity drift that used to break cold CI installs.
-run(`npx --yes babelfhir-ts@1.5.17 install ./fhir/${tgzName} --skip-install`);
+run(`npx --yes babelfhir-ts@${BABELFHIR_VERSION} install ./fhir/${tgzName} --skip-install`);
 
 console.log("\n✓ Consent FHIR package generated (lib/). Publish via the publish-ig workflow; do not commit the vendored tgz.");
