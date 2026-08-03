@@ -160,11 +160,33 @@ jobs:
       # synthesized template is byte-identical each run, CDK reports no changes,
       # and the service never picks the new image up — the same failure in a
       # different disguise.
+      # This repo is a bun workspace with no package-lock.json, so `npm ci` cannot
+      # work here — deploy/infra is a workspace member and aws-cdk is one of its
+      # devDependencies. Install from the root the same way every other workflow
+      # does, then run the workspace-local cdk.
+      - name: Set up Bun
+        uses: ./.github/actions/setup-bun-version
+        with:
+          checkout: 'false'
+
+      - name: Install infra dependencies
+        timeout-minutes: 10
+        # GH_PACKAGES_TOKEN lets bun resolve @max-health-inc/* from GitHub Packages
+        # (see bunfig.toml); the job already has packages:read.
+        env:
+          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # --filter scopes the install to this one workspace member. A full
+        # workspace install is what build-and-test.yml needs a retry loop for (a
+        # cold `bun install` wedges on held-open sockets on these runners); infra
+        # only needs aws-cdk + aws-cdk-lib + constructs, so scoping keeps it small
+        # enough to avoid that rather than re-implementing the workaround here.
+        # --frozen-lockfile so a deploy can never quietly resolve something new.
+        run: bun install --filter proxy-smart-infra --frozen-lockfile --network-concurrency=16
+
       - name: Deploy Keycloak stack (points the task definition at the new image)
         working-directory: deploy/infra
         run: |
-          npm ci
-          npx cdk deploy ProxySmartKeycloak \
+          bunx cdk deploy ProxySmartKeycloak \
             -c keycloakImageUri="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}" \
             --require-approval never \
             --progress events
