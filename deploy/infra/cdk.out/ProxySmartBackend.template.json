@@ -526,6 +526,22 @@
         "Value": "proxy_smart"
        },
        {
+        "Name": "SCOPE_ENFORCEMENT_MODE",
+        "Value": "enforce"
+       },
+       {
+        "Name": "ROLE_BASED_FILTERING_MODE",
+        "Value": "audit-only"
+       },
+       {
+        "Name": "CONSENT_ENABLED",
+        "Value": "false"
+       },
+       {
+        "Name": "CONSENT_MODE",
+        "Value": "audit-only"
+       },
+       {
         "Name": "FHIR_SERVER_BASE",
         "Value": "http://hapi-fhir.proxy-smart.internal:8080/fhir"
        }
@@ -535,7 +551,7 @@
        "Fn::Join": [
         "",
         [
-         "579201838740.dkr.ecr.eu-central-1.",
+         "579201838740.dkr.ecr.us-east-1.",
          {
           "Ref": "AWS::URLSuffix"
          },
@@ -550,7 +566,7 @@
          "Ref": "BackendServiceTaskDefwebLogGroup614D1BFF"
         },
         "awslogs-stream-prefix": "BackendService",
-        "awslogs-region": "eu-central-1"
+        "awslogs-region": "us-east-1"
        }
       },
       "Name": "web",
@@ -748,7 +764,7 @@
           {
            "Ref": "AWS::Partition"
           },
-          ":ecr:eu-central-1:579201838740:repository/proxy-smart-backend"
+          ":ecr:us-east-1:579201838740:repository/proxy-smart-backend"
          ]
         ]
        }
@@ -1266,7 +1282,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4r2uai2LPrbUWBABvsAHssGJn22CiSIVIJAsP/PkhOnaQr9sS785HmSSp08fBVf76DI69Mu1tZ2uqxETA7BUd+GdEEXePgmcSH0yMwKkYTUHgPDnoMemwyV1XnZjQpg0GoIwOCi6u6aMl6RSd1hO5Q6LHq3G/cltVaLahk9oZAyLtJoWE9VjayYMgzzvAHhB4EN8C7b9iRo2RPhveKdwLkMFxp594Gw4EMziFm2BiwsLV5bOWjk7zAywAiGBzrchhs2p+8W3toH8GCM9i+G4gWWMhYD+02O8j1KevH3TnWDb/2EQu6s+cNX33fQOhRnoKPwxx+oWnzIl9UDCSnxfJ/4XsfkPkf+dllfVLBR8GHez2WNRof2uScUZMeAcFej7W3+VBz/eUtmVOiM5qU9T3rce37ZYM3PCm4JIMong1Ycr0eL/eS8uX1bpW5bAKYHbm+mfsu/74RJmWsj+0RxPzRY2kh7JMng2lK8GeUIYqqkX0MBiflfIv6lT8dikIX9/rL3SsTrUJ0QnvU9Vz/AkHlwWJXAwAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S0W7bMAz8lr4r2upie3e9rSgQYIMdYI8FI9MeG0UyRCpBYPjfB8mpk3TFnnh3PtI8SYUuvt7rz3dw5JVpdytLWz02Aman4MgvI5qgaxw8k/hwegRGxWgCCu/BQY9Bj03mqurcjCZlMAh1ZEBwcVUXLVmv6KSO0B0KPVad+43bslqrBZXM3hAIeTcpNKzHykYWDHnGGf6A0IPgBnj3DTtylOzJ8F7xToAchivt3NtgOJDBOcQMGwMWtjaPrXx0khd4GUAEg2NdDoNN+5N3aw/tI1hwBtt3A9ECCxnrod1mB7k+Zf24O8e64dc+YkF39rzhq+8bCD3KU/BxmMMvNG1e5IuKgeS0WP4vfO8DMv8jP7usTyr4KPjlQY9ljcaHNjln1KRHQLDXY+1tPtRcf3lL5pTojCZlfc96XPt+2eANTwouySCKZwOWXK/Hy72kfHm9W2UumwBmR65v5r7Lv2+ESRnrY3sEMX/0WFoI++TJYJoS/BlliKJqZB+DwUk536J+5U+HotDFg76/e2WiVYhOaI+6nutfK5le9FcDAAA="
    },
    "Metadata": {
     "aws:cdk:path": "ProxySmartBackend/CDKMetadata/Default"
@@ -1308,7 +1324,7 @@
     "Fn::Join": [
      "",
      [
-      "579201838740.dkr.ecr.eu-central-1.",
+      "579201838740.dkr.ecr.us-east-1.",
       {
        "Ref": "AWS::URLSuffix"
       },
