@@ -62,8 +62,20 @@ export class KeycloakStack extends cdk.Stack {
     const keycloakRepo = useCustomImage
       ? ecr.Repository.fromRepositoryName(this, 'KeycloakRepo', 'proxy-smart-keycloak')
       : undefined;
+
+    // Use the TAG the caller actually passed in `imageUri`, not a fixed 'latest'.
+    //
+    // Pinning the tag here made `imageUri` a boolean in disguise: whatever the
+    // deploy passed, the synthesized template always said `:latest`, so it was
+    // byte-identical between releases, CDK reported "no changes", and the
+    // running task definition never moved to the newly pushed image. Reading the
+    // tag makes each release produce a real template diff, which is what causes
+    // ECS to roll.
+    //
+    // Split on the LAST colon so a registry host carrying a port survives.
+    const imageTag = useCustomImage ? (props.imageUri!.split(':').pop() || 'latest') : 'latest';
     const containerImage = keycloakRepo
-      ? ecs.ContainerImage.fromEcrRepository(keycloakRepo, 'latest')
+      ? ecs.ContainerImage.fromEcrRepository(keycloakRepo, imageTag)
       : ecs.ContainerImage.fromRegistry(`quay.io/keycloak/keycloak:${keycloakVersion}`);
 
     // Separate Keycloak admin credentials (don't reuse DB credentials)
@@ -306,7 +318,13 @@ export class KeycloakStack extends cdk.Stack {
           },
           // Custom image uses kc.sh build at Docker build time → --optimized avoids re-build.
           // Stock image has no pre-built config so must use plain 'start'.
-          command: useCustomImage ? ['start', '--optimized'] : ['start'],
+          //
+          // This REPLACES the image's CMD, so --import-realm has to be repeated
+          // here: Dockerfile.keycloak keeps it in CMD (not ENTRYPOINT) precisely
+          // so overriding is possible, which means an override that omits it
+          // silently stops importing the realm. The stock image has no baked
+          // export, so importing would be a no-op there.
+          command: useCustomImage ? ['start', '--optimized', '--import-realm'] : ['start'],
         },
         
         // Health check — check management port 9000 where KC26 serves /health/ready

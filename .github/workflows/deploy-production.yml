@@ -147,6 +147,28 @@ jobs:
           cache-from: type=gha,scope=prod-keycloak
           cache-to: type=gha,mode=max,scope=prod-keycloak
 
+      # Point the Keycloak task definition at the image we just pushed.
+      #
+      # THE BUG THIS FIXES. The image was built and pushed on every release and
+      # then thrown away: nothing ever ran `cdk deploy`, so `keycloakImageUri`
+      # was never set, the stack kept resolving to the stock quay.io image, and
+      # the `--force-new-deployment` below merely restarted the SAME task
+      # definition. Production ran stock Keycloak with no realm import and no
+      # proxy-smart theme while CI reported a green deploy.
+      #
+      # Tagged with the version, never `latest`: with a constant URI the
+      # synthesized template is byte-identical each run, CDK reports no changes,
+      # and the service never picks the new image up — the same failure in a
+      # different disguise.
+      - name: Deploy Keycloak stack (points the task definition at the new image)
+        working-directory: deploy/infra
+        run: |
+          npm ci
+          npx cdk deploy ProxySmartKeycloak \
+            -c keycloakImageUri="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}" \
+            --require-approval never \
+            --progress events
+
       - name: Force new ECS deployment
         run: |
           echo "🚀 Forcing new deployment on ECS service..."
