@@ -183,10 +183,24 @@ jobs:
         # --frozen-lockfile so a deploy can never quietly resolve something new.
         run: bun install --filter proxy-smart-infra --frozen-lockfile --network-concurrency=16
 
+      # --exclusively is NOT optional. Without it CDK reports
+      #   "Including dependency stacks: ProxySmartDatabase, ProxySmartVpc"
+      # and a step whose only job is to move a container image tag becomes a
+      # CloudFormation update against the production RDS instance and the VPC.
+      # This deploys the Keycloak stack and nothing else.
+      #
+      # REQUIRES CDK PERMISSIONS ON THE DEPLOY ROLE. github-actions-deploy was
+      # scoped for ECR push + ECS update, so a plain cdk deploy fails with
+      #   AccessDeniedException: ... not authorized to perform: ssm:GetParameter
+      #   on .../cdk-bootstrap/hnb659fds/version
+      # It needs, at minimum:
+      #   ssm:GetParameter  on arn:aws:ssm:*:*:parameter/cdk-bootstrap/hnb659fds/*
+      #   sts:AssumeRole    on arn:aws:iam::*:role/cdk-hnb659fds-*
       - name: Deploy Keycloak stack (points the task definition at the new image)
         working-directory: deploy/infra
         run: |
           bunx cdk deploy ProxySmartKeycloak \
+            --exclusively \
             -c keycloakImageUri="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}" \
             --require-approval never \
             --progress events
