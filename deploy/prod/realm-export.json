@@ -3,6 +3,7 @@
   "enabled": true,
   "organizationsEnabled": true,
   "displayName": "Proxy Smart",
+  "loginTheme": "proxy-smart",
   "attributes": {
     "userProfileEnabled": "true"
   },
