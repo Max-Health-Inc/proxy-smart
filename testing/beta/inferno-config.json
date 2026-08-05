@@ -2,6 +2,7 @@
   "test_stage": "beta",
   "description": "Beta testing against VPS deployed instance (Docker Compose + Caddy)",
   "target": "deployed",
+  "mode": "conformance",
   "deployed_url": "https://beta.proxy-smart.com",
   "fhir_server": {
     "name": "Proxy Smart FHIR Server (VPS Beta)",
@@ -47,8 +48,7 @@
     "scopes": "launch/patient openid fhirUser offline_access patient/*.read user/*.read"
   },
   "test_user": {
-    "username": "doctor",
-    "password": "DevD0c!2024"
+    "username": "doctor"
   },
   "test_settings": {
     "timeout": 60,

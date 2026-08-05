@@ -1,50 +1,12 @@
 {
   "test_stage": "production",
-  "description": "Production testing against AWS deployed instance",
+  "description": "Production consent-enforcement probe - authenticated, but mutates nothing (see mode).",
   "target": "deployed",
+  "mode": "enforcement",
   "deployed_url": "https://api.proxy-smart.com",
   "fhir_server": {
     "name": "Proxy Smart FHIR Server (AWS Production)",
     "url": "https://api.proxy-smart.com/proxy-smart-backend/hapi-fhir-server/R4"
-  },
-  "inferno": {
-    "url": "http://localhost:4567",
-    "test_suite": "smart_stu2_2",
-    "sequences": [
-      "UsCoreR4CapabilityStatement",
-      "USCore311Patient",
-      "USCore311AllergyIntolerance",
-      "USCore311CareTeam",
-      "USCore311Condition",
-      "USCore311Device",
-      "USCore311DiagnosticReport",
-      "USCore311DocumentReference",
-      "USCore311Encounter",
-      "USCore311Goal",
-      "USCore311Immunization",
-      "USCore311Location",
-      "USCore311Medication",
-      "USCore311MedicationRequest",
-      "USCore311Observation",
-      "USCore311Organization",
-      "USCore311Practitioner",
-      "USCore311PractitionerRole",
-      "USCore311Procedure",
-      "USCore311Provenance",
-      "SMARTDiscovery",
-      "SMARTStandalonePatientApp",
-      "SMARTEHRPatientApp",
-      "BulkDataGroupExport",
-      "BulkDataPatientExport",
-      "BulkDataSystemExport"
-    ],
-    "test_focus": "full_onc_certification",
-    "database": {
-      "url": "postgresql://inferno:inferno@localhost:5433/inferno"
-    },
-    "redis": {
-      "url": "redis://localhost:6379"
-    }
   },
   "keycloak": {
     "url": "https://auth.proxy-smart.com",
@@ -54,18 +16,18 @@
     "url": "https://api.proxy-smart.com"
   },
   "client": {
-    "client_id": "inferno-test-client",
-    "scopes": "launch/patient openid fhirUser offline_access patient/*.read user/*.read system/*.read"
+    "client_id": "ci-enforcement-probe"
   },
   "test_user": {
-    "username": "doctor",
-    "password": "DevD0c!2024"
+    "username": "ci-enforcement-probe"
+  },
+  "probe": {
+    "comment": "Patient id the probe requests. Deliberately never created: consent is evaluated before the request is proxied upstream, so an id with no Consent resource must be denied. If enforcement regresses to audit-only the request falls through and returns 404 instead of 403, failing the probe.",
+    "patient_id": "ci-enforcement-probe-no-consent"
   },
   "test_settings": {
     "timeout": 120,
     "retries": 10,
-    "validate_ssl": true,
-    "bulk_data": true,
-    "security_testing": true
+    "validate_ssl": true
   }
 }

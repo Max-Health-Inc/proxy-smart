@@ -163,6 +163,11 @@ jobs:
 
       - name: Load test configuration
         id: config
+        env:
+          # Referenced through env rather than inlined, so the value is never
+          # interpolated into the script text. Selected by stage below.
+          PROD_TEST_USER_PASSWORD: ${{ secrets.PROD_TEST_USER_PASSWORD }}
+          BETA_TEST_USER_PASSWORD: ${{ secrets.BETA_TEST_USER_PASSWORD }}
         run: |
           CONFIG_FILE="testing/${{ env.TEST_STAGE }}/inferno-config.json"
           echo "Loading config from: $CONFIG_FILE"
@@ -175,14 +180,59 @@ jobs:
           # Determine if testing local or deployed
           TARGET=$(jq -r '.target // "local"' "$CONFIG_FILE")
           echo "target=$TARGET" >> $GITHUB_OUTPUT
-          
-          # Extract values from config
-          INFERNO_URL=$(jq -r '.inferno.url' "$CONFIG_FILE")
+
+          # mode decides how much this stage is allowed to touch its environment.
+          #
+          #   conformance  provision fixtures (realm client, client scopes, FHIR
+          #                resources) and run the full Inferno suite. Only valid where
+          #                the realm is disposable and the data is synthetic.
+          #   enforcement  what production runs. Mutates nothing: no realm writes, no
+          #                seeded FHIR resources, no bulk export, no broad US Core
+          #                sweep across a live clinical store. It asserts the one
+          #                property that cannot be proven anywhere else — that consent
+          #                is actually enforced on THIS deployment's config and data.
+          #
+          # Where the password comes from is a separate axis, keyed off target rather
+          # than mode: any DEPLOYED environment takes it from a CI secret, because this
+          # repository is public. Only a local throwaway stack may carry one in-file.
+          MODE=$(jq -r '.mode // "conformance"' "$CONFIG_FILE")
+          echo "mode=$MODE" >> $GITHUB_OUTPUT
+
+          # Extract values from config. Enforcement mode runs no Inferno suite, so the
+          # inferno block is absent by design rather than missing.
+          INFERNO_URL=$(jq -r '.inferno.url // empty' "$CONFIG_FILE")
           TEST_SUITE=$(jq -r '.inferno.test_suite // "smart_stu2_2"' "$CONFIG_FILE")
-          CLIENT_ID=$(jq -r '.client.client_id' "$CONFIG_FILE")
-          KC_USERNAME=$(jq -r '.test_user.username' "$CONFIG_FILE")
-          KC_PASSWORD=$(jq -r '.test_user.password' "$CONFIG_FILE")
+          CLIENT_ID=$(jq -r '.client.client_id // empty' "$CONFIG_FILE")
+          KC_USERNAME=$(jq -r '.test_user.username // empty' "$CONFIG_FILE")
+          KC_PASSWORD=$(jq -r '.test_user.password // empty' "$CONFIG_FILE")
           KC_REALM=$(jq -r '.keycloak.realm' "$CONFIG_FILE")
+
+          # A deployed environment's password comes from CI, never from this repository.
+          if [ "$TARGET" = "deployed" ]; then
+            if [ -n "$KC_PASSWORD" ]; then
+              echo "ERROR: $CONFIG_FILE targets a deployed environment but carries a literal test_user password."
+              echo "  This repository is public — put it in a CI secret instead."
+              exit 1
+            fi
+            case "${{ env.TEST_STAGE }}" in
+              production) KC_PASSWORD="$PROD_TEST_USER_PASSWORD"; SECRET_NAME=PROD_TEST_USER_PASSWORD ;;
+              beta)       KC_PASSWORD="$BETA_TEST_USER_PASSWORD"; SECRET_NAME=BETA_TEST_USER_PASSWORD ;;
+              *)          echo "ERROR: no CI secret is mapped for deployed stage '${{ env.TEST_STAGE }}'"; exit 1 ;;
+            esac
+            if [ -z "$KC_PASSWORD" ]; then
+              echo "ERROR: deployed stage '${{ env.TEST_STAGE }}' requires the $SECRET_NAME secret."
+              exit 1
+            fi
+            # Keep it out of the log even if a later step echoes an output.
+            echo "::add-mask::$KC_PASSWORD"
+          fi
+
+          # Fail loudly rather than silently degrading to an unauthenticated run that
+          # still reports success.
+          if [ -z "$KC_USERNAME" ] || [ -z "$CLIENT_ID" ]; then
+            echo "ERROR: $CONFIG_FILE has no test_user.username or client.client_id"
+            exit 1
+          fi
           
           # Handle both local (port) and deployed (url) configs
           if [ "$TARGET" = "deployed" ]; then
@@ -506,8 +556,11 @@ jobs:
           echo "DEPLOYED_KC_REALM=$KC_REALM" >> $GITHUB_ENV
 
       # Ensure inferno-test-client and SMART scopes exist on deployed Keycloak
+      # Deletes and recreates the test client and creates client scopes, so it is
+      # gated to conformance stages — a compliance run must not rewrite the realm
+      # of an environment holding real records.
       - name: Ensure Inferno Test Client (Deployed)
-        if: steps.config.outputs.target == 'deployed'
+        if: steps.config.outputs.target == 'deployed' && steps.config.outputs.mode == 'conformance'
         run: |
           KC_URL="${{ steps.config.outputs.kc_url }}"
           KC_REALM="${{ steps.config.outputs.kc_realm }}"
@@ -743,11 +796,13 @@ jobs:
 
       # Setup Node.js for Playwright
       - name: Setup Node.js
+        if: steps.config.outputs.mode == 'conformance'
         uses: actions/setup-node@v6
         with:
           node-version: '20'
 
       - name: Install Playwright package
+        if: steps.config.outputs.mode == 'conformance'
         run: |
           # Install Playwright in a separate directory to avoid workspace package.json issues
           mkdir -p /tmp/playwright-setup
@@ -756,6 +811,7 @@ jobs:
           npm install playwright
 
       - name: Cache Playwright browsers
+        if: steps.config.outputs.mode == 'conformance'
         id: playwright-cache
         uses: actions/cache@v5
         with:
@@ -765,29 +821,32 @@ jobs:
             playwright-${{ runner.os }}-chromium-
 
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        if: steps.config.outputs.mode == 'conformance' && steps.playwright-cache.outputs.cache-hit != 'true'
         run: |
           cd /tmp/playwright-setup
           npx playwright install chromium --with-deps
 
       - name: Install Playwright system deps
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        if: steps.config.outputs.mode == 'conformance' && steps.playwright-cache.outputs.cache-hit == 'true'
         run: |
           cd /tmp/playwright-setup
           npx playwright install-deps chromium
 
       - name: Copy Playwright to workspace
+        if: steps.config.outputs.mode == 'conformance'
         run: |
           mkdir -p $GITHUB_WORKSPACE/node_modules
           cp -r /tmp/playwright-setup/node_modules/playwright* $GITHUB_WORKSPACE/node_modules/ || true
 
       - name: Setup Ruby
+        if: steps.config.outputs.mode == 'conformance'
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3'
           bundler-cache: false
 
       - name: Resolve Inferno Version
+        if: steps.config.outputs.mode == 'conformance'
         id: inferno-version
         run: |
           # Pin to v1.0.0 (inferno_core 1.0.2, tls_test_kit 1.0.0).
@@ -800,6 +859,7 @@ jobs:
           echo "tag=$PINNED_TAG" >> $GITHUB_OUTPUT
 
       - name: Cache Inferno
+        if: steps.config.outputs.mode == 'conformance'
         id: inferno-cache
         uses: actions/cache@v5
         with:
@@ -808,7 +868,7 @@ jobs:
           key: inferno-${{ steps.inferno-version.outputs.tag }}-ruby3.3-v2
 
       - name: Setup Inferno
-        if: steps.inferno-cache.outputs.cache-hit != 'true'
+        if: steps.config.outputs.mode == 'conformance' && steps.inferno-cache.outputs.cache-hit != 'true'
         run: |
           TAG="${{ steps.inferno-version.outputs.tag }}"
           git clone --branch "$TAG" --depth 1 https://github.com/inferno-framework/smart-app-launch-test-kit.git inferno
@@ -816,12 +876,14 @@ jobs:
       # Always run bundle install — the cache only stores the git clone, not installed gems.
       # bundle install is fast (~5s) when Gemfile.lock hasn't changed.
       - name: Install Inferno Gems
+        if: steps.config.outputs.mode == 'conformance'
         run: |
           cd inferno
           bundle config set --local path 'vendor/bundle'
           bundle install --jobs 4
 
       - name: Setup Inferno DB
+        if: steps.config.outputs.mode == 'conformance'
         run: |
           cd inferno
           export REDIS_URL="redis://localhost:6379"
@@ -830,6 +892,7 @@ jobs:
           bundle exec inferno migrate || bundle exec rake db:migrate
 
       - name: Start Inferno
+        if: steps.config.outputs.mode == 'conformance'
         run: |
           cd inferno
           # Inferno uses SQLite internally — do NOT set DATABASE_URL
@@ -980,8 +1043,11 @@ jobs:
           echo "=== Keycloak setup verified ==="
 
       # Seed FHIR resources for deployed mode (local mode seeds in earlier step)
+      # Writes a synthetic Practitioner and Patient into the target's FHIR store, so
+      # it is gated to conformance stages. The enforcement probe needs no fixture:
+      # it asserts a denial, which is evaluated before anything is proxied upstream.
       - name: Seed FHIR Test Resources (Deployed)
-        if: steps.config.outputs.target == 'deployed'
+        if: steps.config.outputs.target == 'deployed' && steps.config.outputs.mode == 'conformance'
         continue-on-error: true
         run: |
           BACKEND_URL="${{ steps.config.outputs.backend_url }}"
@@ -1110,8 +1176,106 @@ jobs:
           
           echo "✓ All services warmed up and responding"
 
+      # The production check. Asserts the properties that are specific to THIS
+      # deployment's configuration rather than to the build, and writes nothing.
+      #
+      # Consent enforcement is the reason this exists. It cannot be proven on beta:
+      # it depends on the deployed CONSENT_ENABLED/CONSENT_MODE, on this realm and on
+      # this data, and the failure is silent — audit-only logs the denial and then
+      # serves the record anyway (backend/src/routes/fhir.ts). A deploy that lost
+      # those variables looks completely healthy from the outside.
+      - name: Consent Enforcement Probe
+        id: enforcement-probe
+        if: steps.config.outputs.mode == 'enforcement'
+        env:
+          KC_PASSWORD: ${{ steps.config.outputs.kc_password }}
+        run: |
+          set -uo pipefail
+          BACKEND_URL="${{ steps.config.outputs.backend_url }}"
+          KC_URL="${{ steps.config.outputs.kc_url }}"
+          KC_REALM="${{ steps.config.outputs.kc_realm }}"
+          CLIENT_ID="${{ steps.config.outputs.client_id }}"
+          KC_USERNAME="${{ steps.config.outputs.kc_username }}"
+          FHIR_BASE="${{ steps.config.outputs.fhir_url }}"
+          PROBE_PATIENT=$(jq -r '.probe.patient_id' "testing/${{ env.TEST_STAGE }}/inferno-config.json")
+
+          FAILURES=0
+          pass() { echo "  PASS: $1"; }
+          fail() { echo "::error::$1"; FAILURES=$((FAILURES+1)); }
+
+          echo "### 1. FHIR capability statement reachable (unauthenticated) ###"
+          # /metadata short-circuits before consent and before auth, but it does open
+          # the upstream connection — so this is the check that catches a backend that
+          # is up but cannot reach its database.
+          CODE=$(curl -s -o /tmp/meta.json -w "%{http_code}" --max-time 30 "$FHIR_BASE/metadata")
+          if [ "$CODE" = "200" ] && [ "$(jq -r '.resourceType' /tmp/meta.json)" = "CapabilityStatement" ]; then
+            pass "/metadata returned a CapabilityStatement"
+          else
+            fail "/metadata returned HTTP $CODE (expected 200 CapabilityStatement)"
+          fi
+
+          echo "### 2. Issuer is self-consistent ###"
+          # Guards the split-brain issuer: Keycloak derives scheme and port from the
+          # request unless KC_HOSTNAME pins a full URL, so a misconfigured deployment
+          # mints tokens whose iss no client will accept.
+          ISS=$(curl -s --max-time 30 "$KC_URL/realms/$KC_REALM/.well-known/openid-configuration" | jq -r '.issuer // empty')
+          if [ "$ISS" = "$KC_URL/realms/$KC_REALM" ]; then
+            pass "issuer is $ISS"
+          else
+            fail "issuer is '$ISS', expected '$KC_URL/realms/$KC_REALM'"
+          fi
+
+          echo "### 3. Unauthenticated FHIR read is rejected ###"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$FHIR_BASE/Patient/$PROBE_PATIENT")
+          if [ "$CODE" = "401" ] || [ "$CODE" = "403" ]; then
+            pass "unauthenticated read returned $CODE"
+          else
+            fail "unauthenticated read returned $CODE (expected 401/403)"
+          fi
+
+          echo "### 4. Consent is ENFORCED, not merely audited ###"
+          # Token comes from the backend's own /auth/token: the public Keycloak token
+          # endpoint is deliberately WAF-blocked, and the backend reaches Keycloak
+          # internally over Cloud Map.
+          TOKEN=$(curl -s --max-time 30 -X POST "$BACKEND_URL/auth/token" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data-urlencode "grant_type=password" \
+            --data-urlencode "client_id=$CLIENT_ID" \
+            --data-urlencode "username=$KC_USERNAME" \
+            --data-urlencode "password=$KC_PASSWORD" \
+            --data-urlencode "scope=openid fhirUser user/*.read" | jq -r '.access_token // empty')
+
+          if [ -z "$TOKEN" ]; then
+            fail "could not obtain a token for $KC_USERNAME — the probe identity is broken, so enforcement is UNVERIFIED"
+          else
+            pass "obtained a token for $KC_USERNAME"
+            # This patient is never created. Consent is evaluated before the request is
+            # proxied upstream, so with no Consent resource the only correct answer is a
+            # 403. A 404 means the request reached the FHIR server, i.e. consent did not
+            # block it — which is exactly the regression this probe exists to catch.
+            CODE=$(curl -s -o /tmp/probe.json -w "%{http_code}" --max-time 30 \
+              -H "Authorization: Bearer $TOKEN" "$FHIR_BASE/Patient/$PROBE_PATIENT")
+            ERR=$(jq -r '.error // empty' /tmp/probe.json 2>/dev/null)
+            if [ "$CODE" = "403" ] && { [ "$ERR" = "consent_denied" ] || [ "$ERR" = "ial_verification_failed" ]; }; then
+              pass "access without consent was denied (403 $ERR)"
+            elif [ "$CODE" = "403" ]; then
+              fail "got 403 but error was '$ERR' — expected consent_denied, so the denial came from something other than consent"
+            else
+              fail "access without consent returned HTTP $CODE, expected 403 consent_denied. Consent is NOT being enforced on this deployment (check CONSENT_ENABLED / CONSENT_MODE)."
+            fi
+          fi
+
+          echo ""
+          if [ "$FAILURES" -gt 0 ]; then
+            echo "## Production Enforcement Probe - FAILED ($FAILURES)" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "## Production Enforcement Probe - PASSED" >> $GITHUB_STEP_SUMMARY
+          echo "Consent enforcement, issuer consistency and FHIR reachability verified. Nothing was written." >> $GITHUB_STEP_SUMMARY
+
       # Run Inferno tests via Playwright automation
       - name: Run SMART Compliance Tests
+        if: steps.config.outputs.mode == 'conformance'
         id: inferno-tests
         run: |
           echo "=== SMART 2.2.0 Compliance Testing with Inferno ==="
@@ -1346,7 +1510,7 @@ jobs:
             "run_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
             "passed": ${{ steps.inferno-tests.outputs.passed || 0 }},
             "failed": ${{ steps.inferno-tests.outputs.failed || 0 }},
-            "status": "${{ steps.inferno-tests.outcome || 'unknown' }}"
+            "status": "${{ steps.config.outputs.mode == 'enforcement' && steps.enforcement-probe.outcome || steps.inferno-tests.outcome || 'unknown' }}"
           }
           EOF
           
