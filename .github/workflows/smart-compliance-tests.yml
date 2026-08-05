@@ -163,6 +163,11 @@ jobs:
 
       - name: Load test configuration
         id: config
+        env:
+          # Referenced through env rather than inlined, so the value is never
+          # interpolated into the script text. Selected by stage below.
+          PROD_TEST_USER_PASSWORD: ${{ secrets.PROD_TEST_USER_PASSWORD }}
+          BETA_TEST_USER_PASSWORD: ${{ secrets.BETA_TEST_USER_PASSWORD }}
         run: |
           CONFIG_FILE="testing/${{ env.TEST_STAGE }}/inferno-config.json"
           echo "Loading config from: $CONFIG_FILE"
@@ -179,17 +184,17 @@ jobs:
           # mode decides how much this stage is allowed to touch its environment.
           #
           #   conformance  provision fixtures (realm client, client scopes, FHIR
-          #                resources), log in as a standing test user whose password
-          #                lives in the config file, and run the full Inferno suite.
-          #                Only valid where the realm is disposable and the data is
-          #                synthetic.
-          #   enforcement  what production runs. Authenticates, but the password comes
-          #                from a CI secret rather than this repository, and the run
-          #                mutates nothing: no realm writes, no seeded FHIR resources,
-          #                no bulk export, no broad US Core sweep across a live
-          #                clinical store. It asserts the one property that cannot be
-          #                proven anywhere else — that consent is actually enforced on
-          #                THIS deployment's config, realm and data.
+          #                resources) and run the full Inferno suite. Only valid where
+          #                the realm is disposable and the data is synthetic.
+          #   enforcement  what production runs. Mutates nothing: no realm writes, no
+          #                seeded FHIR resources, no bulk export, no broad US Core
+          #                sweep across a live clinical store. It asserts the one
+          #                property that cannot be proven anywhere else — that consent
+          #                is actually enforced on THIS deployment's config and data.
+          #
+          # Where the password comes from is a separate axis, keyed off target rather
+          # than mode: any DEPLOYED environment takes it from a CI secret, because this
+          # repository is public. Only a local throwaway stack may carry one in-file.
           MODE=$(jq -r '.mode // "conformance"' "$CONFIG_FILE")
           echo "mode=$MODE" >> $GITHUB_OUTPUT
 
@@ -202,16 +207,20 @@ jobs:
           KC_PASSWORD=$(jq -r '.test_user.password // empty' "$CONFIG_FILE")
           KC_REALM=$(jq -r '.keycloak.realm' "$CONFIG_FILE")
 
-          # In enforcement mode the password must come from CI, never the repository.
-          if [ "$MODE" = "enforcement" ]; then
+          # A deployed environment's password comes from CI, never from this repository.
+          if [ "$TARGET" = "deployed" ]; then
             if [ -n "$KC_PASSWORD" ]; then
-              echo "ERROR: $CONFIG_FILE declares mode=enforcement but carries a literal test_user password."
-              echo "  The password for a deployed environment belongs in a CI secret."
+              echo "ERROR: $CONFIG_FILE targets a deployed environment but carries a literal test_user password."
+              echo "  This repository is public — put it in a CI secret instead."
               exit 1
             fi
-            KC_PASSWORD="${{ secrets.PROD_TEST_USER_PASSWORD }}"
+            case "${{ env.TEST_STAGE }}" in
+              production) KC_PASSWORD="$PROD_TEST_USER_PASSWORD"; SECRET_NAME=PROD_TEST_USER_PASSWORD ;;
+              beta)       KC_PASSWORD="$BETA_TEST_USER_PASSWORD"; SECRET_NAME=BETA_TEST_USER_PASSWORD ;;
+              *)          echo "ERROR: no CI secret is mapped for deployed stage '${{ env.TEST_STAGE }}'"; exit 1 ;;
+            esac
             if [ -z "$KC_PASSWORD" ]; then
-              echo "ERROR: mode=enforcement requires the PROD_TEST_USER_PASSWORD secret."
+              echo "ERROR: deployed stage '${{ env.TEST_STAGE }}' requires the $SECRET_NAME secret."
               exit 1
             fi
             # Keep it out of the log even if a later step echoes an output.

@@ -74,16 +74,22 @@ describe.each(STAGES)('$name', ({ config }) => {
   })
 })
 
+const DEPLOYED = STAGES.filter((s) => s.config.target === 'deployed')
+
+describe.each(DEPLOYED)('$name — deployed', ({ config }) => {
+  it('carries no password', () => {
+    // This repository is public, so a deployed environment's password belongs in a
+    // CI secret. Keyed off target rather than mode: beta still runs the full
+    // conformance suite and still needs a login, but its credential is no more
+    // publishable than production's. The workflow selects the secret by stage and
+    // refuses to run if the config supplies one instead.
+    expect(config.test_user?.password).toBeUndefined()
+  })
+})
+
 const ENFORCEMENT = STAGES.filter((s) => s.config.mode === 'enforcement')
 
 describe.each(ENFORCEMENT)('$name — enforcement mode', ({ config }) => {
-  it('carries no password', () => {
-    // This repository is public. A deployed environment's password belongs in a CI
-    // secret; the workflow reads PROD_TEST_USER_PASSWORD and refuses to run if the
-    // config supplies one instead.
-    expect(config.test_user?.password).toBeUndefined()
-  })
-
   it('declares the patient the probe requests', () => {
     // Deliberately never created. Consent is evaluated before the request is proxied
     // upstream, so with no Consent resource the only correct answer is 403. If
