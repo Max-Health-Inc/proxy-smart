@@ -144,6 +144,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}
           build-args: |
             DEPLOY_ENV=prod
+            KC_RELATIVE_PATH=/
           cache-from: type=gha,scope=prod-keycloak
           cache-to: type=gha,mode=max,scope=prod-keycloak
 
