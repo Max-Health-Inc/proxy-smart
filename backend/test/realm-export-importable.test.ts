@@ -123,6 +123,53 @@ function* everyKey(value: unknown, path = '$'): Generator<{ key: string; path: s
   }
 }
 
+/**
+ * Seed accounts that exist ONLY for local development and CI.
+ *
+ * They carry plaintext passwords in keycloak/realm-export.json, which is
+ * deliberate: the dev realm is a throwaway container and the per-stage
+ * inferno-config.json files authenticate with them. Because this repository is
+ * public, those credentials are for local use only and must not seed a deployed
+ * environment.
+ */
+const DEV_SEED_USERNAMES = ['admin', 'doctor', 'testuser']
+
+/**
+ * Exports that seed a REAL environment. keycloak/realm-export.json is excluded:
+ * it is the dev/CI seed and is allowed to carry dev passwords.
+ */
+const DEPLOY_EXPORTS = EXPORTS.filter((e) => e.name.startsWith('deploy/'))
+
+/**
+ * A deployed environment must not be seeded with dev accounts or passwords.
+ *
+ * Worth pinning because the failure is invisible: `--import-realm` skips a realm
+ * that already exists, so a realm first created from the dev export keeps those
+ * accounts even after the deploy export is changed to declare a single IdP-only
+ * admin with no credentials. The exports then disagree with reality and nothing
+ * reports it.
+ *
+ * Asserts the shape rather than any one account, so this holds for the next
+ * environment too.
+ */
+describe.each(DEPLOY_EXPORTS)('$name — deployed environment', ({ realm }) => {
+  it('seeds no user with a plaintext password', () => {
+    const withPasswords = (realm.users ?? [])
+      .filter((u) => Array.isArray(u.credentials) && (u.credentials as unknown[]).length > 0)
+      .map((u) => String(u.username ?? '<unnamed>'))
+
+    expect(withPasswords).toEqual([])
+  })
+
+  it('seeds none of the dev/CI accounts', () => {
+    const seeds = (realm.users ?? [])
+      .map((u) => String(u.username ?? ''))
+      .filter((name) => DEV_SEED_USERNAMES.includes(name))
+
+    expect(seeds).toEqual([])
+  })
+})
+
 describe.each(EXPORTS)('$name', ({ realm }) => {
   it('carries no pseudo-comment keys anywhere', () => {
     // Not scoped to users: Keycloak tolerates unknown fields on some
