@@ -128,29 +128,12 @@ function discoverApps({ includeHidden = false } = {}) {
 }
 
 /**
- * Elysia constructor options for the app.
+ * Elysia constructor options. Exported so the request-integrity test exercises the
+ * real config — a test building its own Elysia would pass regardless.
  *
- * Exported so the request-integrity test can exercise the REAL configuration —
- * a test that built its own Elysia would pass no matter what is set here, which
- * is exactly how the sanitize regression below went unnoticed.
- *
- * NOTE the absence of `sanitize`. It previously ran Bun.escapeHTML over every
- * string in every request body, corrupting data on the way in:
- *
- *   sent   {"a":"b<>&"}
- *   stored {&amp;quot;a&amp;quot;:&amp;quot;b&amp;lt;&amp;gt;&amp;amp;&amp;quot;}
- *
- * Twice, because escapeHTML also escapes `&`, so a second pass re-escapes the
- * entities the first one produced. That broke SMART Backend Services outright: an
- * inline JWKS registered through /admin/smart-apps was stored unparseable, and
- * client_assertion auth then failed with "has no registered JWKS" for a client
- * that plainly had one. It equally mangles any password, URL or description
- * containing & < > " ' — the stored value stops matching what was sent.
- *
- * Escaping on ingest is the wrong layer for a JSON API: HTML escaping belongs to
- * an HTML rendering context, not to stored data. The admin UI is React, which
- * escapes at render and uses no dangerouslySetInnerHTML; anything that does emit
- * HTML must encode at that point instead.
+ * No `sanitize` here on purpose. It ran Bun.escapeHTML over every request-body
+ * string (twice, since it escapes `&` too), corrupting inline JWKS, passwords and
+ * URLs on ingest. Escaping belongs at HTML render, not at JSON ingest.
  */
 export const ELYSIA_OPTIONS = {
     name: config.name,

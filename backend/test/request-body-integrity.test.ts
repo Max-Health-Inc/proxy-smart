@@ -2,24 +2,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * A request body must reach the handler byte-for-byte as it was sent.
+ * A request body must reach the handler byte-for-byte.
  *
- * THE BUG THIS GUARDS. app-factory.ts configured Elysia with
- * `sanitize: (value) => Bun.escapeHTML(value)`, which rewrote every string in
- * every request body before any handler saw it — and did so twice, because
- * escapeHTML escapes `&` as well, so a second pass re-escaped its own output:
- *
- *   sent    {"a":"b<>&"}
- *   handler {&amp;quot;a&amp;quot;:&amp;quot;b&amp;lt;&amp;gt;&amp;amp;&amp;quot;}
- *
- * It presented as SMART Backend Services being broken: an inline JWKS registered
- * through /admin/smart-apps was stored unparseable, so client_assertion auth
- * failed with "Client not found or has no registered JWKS" for a client that
- * plainly had one. The same corruption silently applied to passwords, URLs with
- * query strings, and any description containing & < > " or '.
- *
- * Asserted at the framework boundary rather than on one route, because the
- * setting was global and a route-level test would not have caught it.
+ * Guards a global `sanitize: Bun.escapeHTML` that corrupted every request-body
+ * string (twice — it escapes `&` too). It broke SMART Backend Services outright:
+ * inline JWKS stored unparseable, so client_assertion failed with "has no
+ * registered JWKS". Passwords and query-string URLs were mangled the same way.
+ * Asserted at the framework boundary, since the setting was global.
  */
 import { describe, it, expect } from 'bun:test'
 import { Elysia, t } from 'elysia'

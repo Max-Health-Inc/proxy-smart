@@ -6,10 +6,13 @@
  * token `aud` and token exchange fails with `invalid_target`.
  */
 import { describe, it, expect } from 'bun:test'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import {
   assignResourceIndicatorsScope,
   RESOURCE_INDICATORS_SCOPE,
 } from '../src/lib/smart-client-enrichment'
+import { RESOURCE_AUDIENCE_CLIENT_IDS } from '../src/lib/kc-system-provisioning'
 
 /** Minimal KcAdminClient stub recording addDefaultClientScope calls. */
 function makeAdmin(realmScopes: { id?: string; name?: string }[]) {
@@ -50,6 +53,9 @@ describe('assignResourceIndicatorsScope', () => {
   })
 
   it('is a safe no-op when the scope is absent from the realm', async () => {
+    // Correct locally, but it is why production went unnoticed: nothing CREATED
+    // the scope, so this branch ran for every client. ensureResourceIndicatorsScope
+    // now guarantees it exists first.
     const { admin, added } = makeAdmin([{ id: 'scope-openid', name: 'openid' }])
 
     await assignResourceIndicatorsScope(admin, 'client-uuid', 'my-client')
@@ -68,5 +74,30 @@ describe('assignResourceIndicatorsScope', () => {
     await expect(
       assignResourceIndicatorsScope(admin, 'client-uuid', 'my-client'),
     ).resolves.toBeUndefined()
+  })
+})
+
+/** The reconciler creates the scope; the export declares it. They must agree. */
+describe.each(['keycloak/realm-export.json', 'deploy/prod/realm-export.json'])('%s', (path) => {
+  interface Scope {
+    name?: string
+    protocolMappers?: { protocolMapper?: string; config?: Record<string, string> }[]
+  }
+  const repo = join(import.meta.dir, '..', '..')
+  const scope = (JSON.parse(readFileSync(join(repo, path), 'utf8')).clientScopes as Scope[] | undefined)
+    ?.find((s) => s.name === RESOURCE_INDICATORS_SCOPE)
+
+  it('declares the resource-indicators scope', () => {
+    expect(scope).toBeDefined()
+  })
+
+  it('maps exactly the audiences the reconciler creates', () => {
+    const audiences = (scope?.protocolMappers ?? [])
+      .filter((m) => m.protocolMapper === 'oidc-audience-mapper')
+      .map((m) => m.config?.['included.client.audience'])
+      .filter(Boolean)
+      .sort()
+
+    expect(audiences).toEqual([...RESOURCE_AUDIENCE_CLIENT_IDS].sort())
   })
 })
