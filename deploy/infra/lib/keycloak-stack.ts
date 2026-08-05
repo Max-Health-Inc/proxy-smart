@@ -10,7 +10,23 @@ import type * as route53 from 'aws-cdk-lib/aws-route53';
 import * as elbv2 from 'aws-cdk-lib/aws-elasticloadbalancingv2';
 import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import type { Construct } from 'constructs';
+
+/**
+ * Cloud Map namespace used for internal service discovery.
+ *
+ * Created by FhirStack (which registers hapi-fhir into it) and imported here by
+ * attributes rather than passed as a prop: bin/infra.ts instantiates this stack
+ * BEFORE FhirStack, so a prop would be a circular ordering problem, and a real
+ * cross-stack reference would couple two stacks that are otherwise independent.
+ * Importing by name/id adds no CloudFormation dependency.
+ */
+const INTERNAL_NAMESPACE_NAME = 'proxy-smart.internal';
+const INTERNAL_NAMESPACE_ID = 'ns-qqkxevmqx3i3mmpf';
+
+/** DNS label registered in that namespace → keycloak.proxy-smart.internal */
+const INTERNAL_SERVICE_NAME = 'keycloak';
 
 export interface KeycloakStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
@@ -353,6 +369,49 @@ export class KeycloakStack extends cdk.Stack {
         
         minHealthyPercent: 100,
       }
+    );
+
+    // Register the tasks in Cloud Map so other services can reach Keycloak
+    // DIRECTLY at keycloak.proxy-smart.internal:8080, bypassing the ALB.
+    //
+    // THE BUG THIS FIXES. The backend was configured with the PUBLIC
+    // KEYCLOAK_BASE_URL (https://auth.proxy-smart.com), so its server-to-server
+    // calls went out through the NAT gateway and back in through this ALB — and
+    // therefore through the WAF, whose BlockSensitiveEndpoints rule (priority 0)
+    // blocks /protocol/openid-connect/token and /admin*. Every admin-token
+    // request returned an HTML 403. Confirmed from WAF sampled requests:
+    //   BLOCK  POST /realms/proxy-smart/protocol/openid-connect/token  3.66.160.214
+    // With getRegisteredRedirectUris failing closed on an empty allowlist, that
+    // one block turned into /auth/authorize rejecting every redirect_uri (403),
+    // dead CORS refresh, dead event polling, and a user-facing
+    // "Authentication unavailable".
+    //
+    // The WAF rules are RIGHT — those endpoints should not be reachable from the
+    // internet. The mistake was routing internal traffic through the public edge.
+    this.service.service.enableCloudMap({
+      cloudMapNamespace: servicediscovery.PrivateDnsNamespace.fromPrivateDnsNamespaceAttributes(
+        this,
+        'InternalNamespace',
+        {
+          namespaceName: INTERNAL_NAMESPACE_NAME,
+          namespaceId: INTERNAL_NAMESPACE_ID,
+          namespaceArn: `arn:aws:servicediscovery:${this.region}:${this.account}:namespace/${INTERNAL_NAMESPACE_ID}`,
+        },
+      ),
+      name: INTERNAL_SERVICE_NAME,
+      dnsRecordType: servicediscovery.DnsRecordType.A,
+      dnsTtl: cdk.Duration.seconds(30),
+    });
+
+    // Allow other services in the VPC to reach the container port directly.
+    // Scoped to the VPC CIDR rather than the backend's security group because
+    // BackendStack is created after this one, so its SG cannot be referenced
+    // without introducing a cross-stack cycle. Tasks sit in private subnets, so
+    // this is not internet-reachable.
+    this.service.service.connections.allowFrom(
+      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Port.tcp(8080),
+      'Internal service-to-service access to Keycloak (bypasses ALB + WAF)',
     );
 
     // Configure ALB health check — use /realms/master (port 8080) since
