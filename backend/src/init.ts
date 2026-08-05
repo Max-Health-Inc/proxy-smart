@@ -8,7 +8,11 @@ import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
 import { resolveKcRealmIssuer } from './lib/proxy-signing'
 import { getAdminClient } from './lib/kc-admin-factory'
-import { ensureShlExchangeClient, ensureIntrospectionClientConfig } from './lib/kc-system-provisioning'
+import {
+  ensureShlExchangeClient,
+  ensureIntrospectionClientConfig,
+  ensureResourceServerClients,
+} from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -949,6 +953,9 @@ async function ensureSystemClients(): Promise<void> {
   }
   await ensureShlExchangeClient(admin)
   await ensureIntrospectionClientConfig(admin)
+  // RFC 8707 resource clients, whose resource_url must match this environment's
+  // baseUrl — production was still carrying dev localhost URLs.
+  await ensureResourceServerClients(admin)
 }
 
 export async function initializeServer(): Promise<void> {
