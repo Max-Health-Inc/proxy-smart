@@ -61,6 +61,16 @@ export interface BackendStackProps extends cdk.StackProps {
    */
   databaseName?: string;
   /**
+   * Internal DICOMweb base URL (Orthanc via Cloud Map).
+   *
+   * Only the default for a single unregistered PACS: a server registered through
+   * /admin/dicom-servers carries its own URL and credentials in runtime config,
+   * and buildServerAuthHeader() takes precedence over this. Credentials are
+   * deliberately NOT wired here — that would make the backend depend on the PACS
+   * stack, which depends on the backend's cluster.
+   */
+  dicomWebBaseUrl?: string;
+  /**
    * SMART scope enforcement mode. Validates token scopes against the requested
    * FHIR resource and operation.
    * @default 'enforce'
@@ -277,6 +287,7 @@ export class BackendStack extends cdk.Stack {
       ROLE_BASED_FILTERING_MODE: props.roleBasedFilteringMode ?? 'audit-only',
       CONSENT_ENABLED: String(props.consentEnabled ?? false),
       CONSENT_MODE: props.consentMode ?? 'audit-only',
+      ...(props.dicomWebBaseUrl ? { DICOMWEB_BASE_URL: props.dicomWebBaseUrl } : {}),
     };
 
     // Add FHIR server if provided
