@@ -14,9 +14,14 @@
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import { config } from '../config'
 import { logger } from './logger'
+import { RESOURCE_INDICATORS_SCOPE } from './smart-client-enrichment'
+import { ensureMappersOnScope } from './smart-scope-mappers'
 
 /** Keycloak client attribute: let this client introspect tokens it isn't in the aud of. */
 const ALLOW_INTROSPECTION_WITHOUT_AUDIENCE = 'allow.token.introspection.without.audience.check'
+
+/** Audiences the resource-indicators scope maps. fhir-* is export-owned but still needs a mapper. */
+export const RESOURCE_AUDIENCE_CLIENT_IDS = ['fhir-resource-server', 'mcp-resource-server'] as const
 
 /**
  * Keycloak client attribute the RFC 8707 post-processor binds into `aud` when a
@@ -150,6 +155,111 @@ export async function ensureResourceServerClients(admin: KcAdminClient): Promise
       })
     }
   }
+}
+
+/**
+ * Ensure the RFC 8707 `resource-indicators` client scope exists.
+ *
+ * Only the realm-export declared it, and --import-realm skips existing realms, so
+ * production never got it. assignResourceIndicatorsScope() then silently no-ops and
+ * every proxy-registered client (including Claude's DCR client) loses its audience
+ * binding — MCP connect fails at the token step, after the user has consented.
+ */
+export async function ensureResourceIndicatorsScope(admin: KcAdminClient): Promise<void> {
+  const audienceMapper = (clientId: string) => ({
+    name: `${clientId}-audience`,
+    protocol: 'openid-connect',
+    protocolMapper: 'oidc-audience-mapper',
+    consentRequired: false,
+    config: {
+      'included.client.audience': clientId,
+      'id.token.claim': 'false',
+      'access.token.claim': 'true',
+    },
+  })
+  // Plumbing, not a requestable scope: hidden from token scope and consent.
+  const attributes = { 'include.in.token.scope': 'false', 'display.on.consent.screen': 'false' }
+  const description =
+    'RFC 8707 resource indicators: pre-populates access-token aud with resource-client ids so ' +
+    'the resource-indicators post-processor can set aud to the requested resource.'
+
+  try {
+    const existing = await admin.clientScopes.findOneByName({ name: RESOURCE_INDICATORS_SCOPE })
+
+    if (!existing?.id) {
+      await admin.clientScopes.create({
+        name: RESOURCE_INDICATORS_SCOPE,
+        description,
+        protocol: 'openid-connect',
+        attributes,
+        protocolMappers: RESOURCE_AUDIENCE_CLIENT_IDS.map(audienceMapper),
+      })
+      logger.keycloak.info('Created resource-indicators client scope', {
+        audiences: RESOURCE_AUDIENCE_CLIENT_IDS,
+      })
+      const created = await admin.clientScopes.findOneByName({ name: RESOURCE_INDICATORS_SCOPE })
+      if (created?.id) await attachResourceIndicatorsToExistingClients(admin, created.id)
+      return
+    }
+
+    // Repair rather than skip: /admin/smart-scopes can create the name but drops
+    // protocolMappers, so a scope that exists is not necessarily one that works.
+    const added = await ensureMappersOnScope(
+      admin,
+      existing.id,
+      RESOURCE_INDICATORS_SCOPE,
+      RESOURCE_AUDIENCE_CLIENT_IDS.map(audienceMapper),
+    )
+
+    if (existing.attributes?.['include.in.token.scope'] !== 'false') {
+      await admin.clientScopes.update({ id: existing.id }, {
+        name: RESOURCE_INDICATORS_SCOPE,
+        description,
+        protocol: 'openid-connect',
+        attributes: { ...(existing.attributes ?? {}), ...attributes },
+      })
+    }
+
+    if (added) logger.keycloak.info('Repaired resource-indicators client scope', { added })
+
+    await attachResourceIndicatorsToExistingClients(admin, existing.id)
+  } catch (error) {
+    logger.keycloak.warn('Failed to ensure resource-indicators client scope', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
+ * Attach the scope to clients that already existed when it was created.
+ *
+ * New clients get it at registration (assignResourceIndicatorsScope), but a realm
+ * that gained the scope late leaves everything created before it without one.
+ * Derived from the `smart_app` attribute rather than a hardcoded client list, so
+ * it cannot drift as apps are added.
+ */
+async function attachResourceIndicatorsToExistingClients(
+  admin: KcAdminClient,
+  scopeId: string,
+): Promise<void> {
+  const clients = await admin.clients.find()
+  const managed = clients.filter((c) => c.id && c.attributes?.smart_app !== undefined)
+
+  let attached = 0
+  for (const client of managed) {
+    try {
+      const current = await admin.clients.listDefaultClientScopes({ id: client.id! })
+      if (current.some((s) => s.name === RESOURCE_INDICATORS_SCOPE)) continue
+      await admin.clients.addDefaultClientScope({ id: client.id!, clientScopeId: scopeId })
+      attached++
+    } catch (error) {
+      logger.keycloak.warn('Could not attach resource-indicators to client', {
+        clientId: client.clientId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+  if (attached) logger.keycloak.info('Attached resource-indicators to existing clients', { attached })
 }
 
 /**

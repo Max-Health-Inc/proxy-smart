@@ -12,6 +12,7 @@ import {
   ensureShlExchangeClient,
   ensureIntrospectionClientConfig,
   ensureResourceServerClients,
+  ensureResourceIndicatorsScope,
 } from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -956,6 +957,8 @@ async function ensureSystemClients(): Promise<void> {
   // RFC 8707 resource clients, whose resource_url must match this environment's
   // baseUrl — production was still carrying dev localhost URLs.
   await ensureResourceServerClients(admin)
+  // After the resource clients — the scope's mappers name them as audiences.
+  await ensureResourceIndicatorsScope(admin)
 }
 
 export async function initializeServer(): Promise<void> {

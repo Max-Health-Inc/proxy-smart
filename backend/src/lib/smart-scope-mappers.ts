@@ -85,8 +85,33 @@ export async function ensureScopeMappers(
 ): Promise<number> {
   const requiredMappers = SMART_SCOPE_MAPPERS[scopeName]
   if (!requiredMappers || requiredMappers.length === 0) return 0
+  return ensureMappersOnScope(admin, scopeId, scopeName, requiredMappers.map(toProtocolMapper))
+}
 
-  // Fetch existing mappers on this scope
+/** A Keycloak protocol mapper as the admin API accepts it. */
+export interface ProtocolMapper {
+  name: string
+  protocol: string
+  protocolMapper: string
+  consentRequired?: boolean
+  config: Record<string, string>
+}
+
+/**
+ * Add whichever of `required` are missing from a scope, matched by name.
+ *
+ * Idempotent, and per-mapper non-fatal. Shared with the RFC 8707 audience mappers
+ * in kc-system-provisioning, which are a different mapper type but need the same
+ * "a scope that exists is not necessarily a scope that works" reconciliation.
+ *
+ * @returns how many were actually created
+ */
+export async function ensureMappersOnScope(
+  admin: KcAdminClient,
+  scopeId: string,
+  scopeName: string,
+  required: ProtocolMapper[],
+): Promise<number> {
   let existingMappers: { name?: string }[] = []
   try {
     existingMappers = await admin.clientScopes.listProtocolMappers({ id: scopeId })
@@ -97,24 +122,20 @@ export async function ensureScopeMappers(
   const existingNames = new Set(existingMappers.map((m) => m.name))
   let created = 0
 
-  for (const def of requiredMappers) {
-    if (existingNames.has(def.name)) {
-      logger.admin.debug('Mapper already exists, skipping', { scopeName, mapper: def.name })
+  for (const mapper of required) {
+    if (existingNames.has(mapper.name)) {
+      logger.admin.debug('Mapper already exists, skipping', { scopeName, mapper: mapper.name })
       continue
     }
 
     try {
-      await admin.clientScopes.addProtocolMapper({ id: scopeId }, toProtocolMapper(def))
-      logger.admin.info('Auto-provisioned SMART protocol mapper', {
-        scopeName,
-        mapper: def.name,
-        claim: def.claimName,
-      })
+      await admin.clientScopes.addProtocolMapper({ id: scopeId }, mapper)
+      logger.admin.info('Auto-provisioned protocol mapper', { scopeName, mapper: mapper.name })
       created++
     } catch (error) {
       logger.admin.warn('Failed to auto-provision mapper', {
         scopeName,
-        mapper: def.name,
+        mapper: mapper.name,
         error: error instanceof Error ? error.message : error,
       })
     }
