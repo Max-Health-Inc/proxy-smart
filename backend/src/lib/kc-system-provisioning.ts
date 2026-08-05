@@ -25,7 +25,7 @@ const ALLOW_INTROSPECTION_WITHOUT_AUDIENCE = 'allow.token.introspection.without.
 const RESOURCE_URL_ATTR = 'resource_url'
 
 /**
- * Non-login "resource server" clients that exist only to hold a `resource_url`.
+ * Non-login "resource server" client that exists only to hold a `resource_url`.
  *
  * WHY THIS IS RECONCILED AT RUNTIME. These were created by hand (and by
  * .github/scripts/deploy-beta-remote.sh section 10b) with URLs baked in per
@@ -36,25 +36,58 @@ const RESOURCE_URL_ATTR = 'resource_url'
  *
  * on the live production system. `http://localhost:8445/mcp` can never match
  * getMcpResourceAudience() in production, so audience binding silently pointed at
- * nothing. Deriving the URLs from config instead means they are correct in every
+ * nothing. Deriving the URL from config instead means it is correct in every
  * environment by construction, and cannot drift from what the proxy validates.
  */
+/**
+ * ONLY the MCP resource client is reconciled here. `fhir-resource-server` is
+ * deliberately excluded, and that exclusion is load-bearing.
+ *
+ * Keycloak matches the token request's `resource` parameter against `resource_url`
+ * EXACTLY. The FHIR resource identifier is the full proxy FHIR base, which
+ * includes the server id and FHIR version chosen at runtime:
+ *
+ *   http://localhost:8445/proxy-smart-backend/hapi-fhir-server/R4
+ *
+ * None of that is derivable from static config — `config.name` is the package
+ * name (`proxy-smart`), not the URL segment (`proxy-smart-backend`), and the
+ * server id and version come from the runtime FHIR-server registry.
+ * getFhirResourceAudiences() looks similar but is a VALIDATION PREFIX, matched at
+ * a path boundary; it is not a resource identifier.
+ *
+ * An earlier version of this function derived the FHIR url from those pieces and
+ * overwrote the correct value with `${baseUrl}/${name}/` on every startup, so
+ * every token exchange requesting the FHIR resource failed:
+ *
+ *   POST /auth/token → 400 {"error":"invalid_target"}
+ *
+ * The FHIR client's resource_url therefore stays owned by the realm export and
+ * the deploy script, which set it per environment.
+ */
 const RESOURCE_SERVER_CLIENTS = [
-  {
-    clientId: 'fhir-resource-server',
-    name: 'FHIR Resource Server (RFC 8707 resource indicator)',
-    description: 'Non-login resource client. Holds resource_url = the proxy FHIR base.',
-    /** Must equal the FHIR audience the proxy accepts (getFhirResourceAudiences). */
-    resourceUrl: () => `${config.baseUrl}/${config.name}/`,
-  },
   {
     clientId: 'mcp-resource-server',
     name: 'MCP Resource Server (RFC 8707 resource indicator)',
     description: 'Non-login resource client. Holds resource_url = the proxy MCP URL.',
-    /** Must equal getMcpResourceAudience(). */
+    /**
+     * Exactly getMcpResourceAudience() — a single unambiguous URL with no runtime
+     * component, which is why this one is safe to derive.
+     */
     resourceUrl: () => `${config.baseUrl}${config.mcp.path}`,
   },
 ] as const
+
+/** Client ids this module owns. Exported so tests can assert the scope. */
+export const RESOURCE_SERVER_CLIENT_IDS = RESOURCE_SERVER_CLIENTS.map((c) => c.clientId)
+
+/**
+ * The resource_url this module would set for a given client id.
+ * Exported so a test can compare it against the realm export, which is the check
+ * that would have caught the invalid_target regression.
+ */
+export function resourceServerUrlFor(clientId: string): string | undefined {
+  return RESOURCE_SERVER_CLIENTS.find((c) => c.clientId === clientId)?.resourceUrl()
+}
 
 /**
  * Ensure the RFC 8707 resource-server clients exist with the CURRENT environment's
