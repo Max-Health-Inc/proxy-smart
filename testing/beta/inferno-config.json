@@ -48,8 +48,7 @@
     "scopes": "launch/patient openid fhirUser offline_access patient/*.read user/*.read"
   },
   "test_user": {
-    "username": "doctor",
-    "password": "DevD0c!2024"
+    "username": "doctor"
   },
   "test_settings": {
     "timeout": 60,
