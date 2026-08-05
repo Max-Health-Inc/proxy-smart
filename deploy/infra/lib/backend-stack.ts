@@ -18,7 +18,24 @@ import type { Construct } from 'constructs';
 
 export interface BackendStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
+  /**
+   * Server-to-server Keycloak URL — the INTERNAL address, not the public one.
+   *
+   * The backend's admin-REST and client-credentials calls must not leave the
+   * VPC: the public edge sits behind a WAF that deliberately blocks
+   * /protocol/openid-connect/token and /admin*, so routing internal traffic
+   * through it returns HTML 403s and fails the redirect_uri allowlist closed.
+   */
   keycloakUrl: string;
+  /**
+   * Browser-facing Keycloak URL, and the issuer the backend validates against.
+   *
+   * Keycloak pins the issuer via KC_HOSTNAME regardless of which address a
+   * request arrives on, so tokens keep saying https://auth.proxy-smart.com even
+   * when minted over the internal path. This must match that, or every token
+   * fails issuer validation.
+   */
+  keycloakPublicUrl: string;
   domainName: string;  // e.g., api.proxy-smart.com
   apexDomain?: string; // e.g., proxy-smart.com (landing page on root domain)
   hostedZone: route53.IHostedZone;
@@ -227,6 +244,11 @@ export class BackendStack extends cdk.Stack {
       ].join(','),
       // Keycloak config
       KEYCLOAK_BASE_URL: props.keycloakUrl,
+      // Consumed by config.keycloak.publicUrl → expectedIssuer and every browser
+      // redirect. Without it those would fall back to KEYCLOAK_BASE_URL, which is
+      // now an internal address that no browser can reach and that no token's
+      // `iss` will ever match.
+      KEYCLOAK_PUBLIC_URL: props.keycloakPublicUrl,
       KEYCLOAK_REALM: 'proxy-smart',
       // Database connection (admin-config + mTLS stores). Credentials come from
       // Secrets Manager below as PGUSER/PGPASSWORD; the backend assembles
