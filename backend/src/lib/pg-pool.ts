@@ -21,9 +21,65 @@
  * when no database is configured.
  */
 
-import { Pool } from 'pg'
+import { readFileSync } from 'fs'
+import { Pool, type PoolConfig } from 'pg'
+import { logger } from './logger'
 
 let pool: Pool | null = null
+
+/**
+ * TLS settings for the pool.
+ *
+ * THE BUG THIS FIXES. node-pg defaults to `ssl: false` — it never even attempts
+ * TLS. RDS Postgres 15+ ships `rds.force_ssl = 1` by default, so every query from
+ * production was rejected before it ran:
+ *
+ *   no pg_hba.conf entry for host "10.0.3.67", user "keycloak",
+ *   database "proxy_smart", no encryption
+ *
+ * That took the FHIR proxy down entirely, because resolving a FHIR server reads
+ * the admin-config store. Keycloak against the SAME instance was fine, which is
+ * what made it confusing: the PostgreSQL JDBC driver defaults to
+ * `sslmode=prefer`, so it negotiates TLS without being asked. node-pg does not.
+ *
+ * Configured explicitly here rather than through `?sslmode=` on the URL, because
+ * pg 8.x maps `require` onto verify-full semantics and warns that pg 9 will change
+ * that. An explicit object behaves the same across versions.
+ *
+ *   PGSSLROOTCERT  path to a CA bundle → verified TLS (what production uses; the
+ *                  Amazon RDS bundle is baked into the image by Dockerfile)
+ *   PGSSLMODE=no-verify  → encrypted but UNVERIFIED, for an environment with a
+ *                  self-signed certificate. Warns, because it accepts any cert.
+ *   neither        → no TLS, for local dev and the beta compose Postgres, which
+ *                  is a container on a private network without force_ssl.
+ */
+function resolveSslConfig(): PoolConfig['ssl'] {
+  const caPath = process.env.PGSSLROOTCERT
+  if (caPath) {
+    try {
+      return { ca: readFileSync(caPath, 'utf-8'), rejectUnauthorized: true }
+    } catch (error) {
+      // Deliberately fail loudly rather than silently downgrading: a missing
+      // bundle in production would otherwise turn verified TLS into no TLS, and
+      // the resulting pg_hba rejection is far harder to read than this.
+      throw new Error(
+        `PGSSLROOTCERT is set to "${caPath}" but could not be read: ` +
+          `${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
+      )
+    }
+  }
+
+  if (process.env.PGSSLMODE === 'no-verify') {
+    logger.security.warn(
+      'Postgres TLS is enabled but the server certificate is NOT verified (PGSSLMODE=no-verify). ' +
+        'Set PGSSLROOTCERT to a CA bundle to verify it.',
+    )
+    return { rejectUnauthorized: false }
+  }
+
+  return undefined
+}
 
 /**
  * Resolve the PostgreSQL connection string from the environment, or null when
@@ -61,6 +117,10 @@ export function getSharedPool(): Pool {
   // Explicit cap (node-pg default is also 10) keeps the shared-Postgres
   // connection budget deterministic: the backend never opens more than this,
   // so it cannot contribute to "sorry, too many clients already" exhaustion.
-  pool = new Pool({ connectionString, max: 10 })
+  const ssl = resolveSslConfig()
+  pool = new Pool({ connectionString, max: 10, ...(ssl ? { ssl } : {}) })
+  logger.security.info('Postgres pool created', {
+    tls: ssl ? (process.env.PGSSLROOTCERT ? 'verified' : 'unverified') : 'disabled',
+  })
   return pool
 }

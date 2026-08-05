@@ -243,6 +243,14 @@ export class BackendStack extends cdk.Stack {
         'https://maxhealth.tech',
       ].join(','),
       // Keycloak config
+      // Verified TLS to RDS. RDS Postgres 15+ sets rds.force_ssl=1, and node-pg
+      // attempts no TLS unless told to — without this the pool is rejected with
+      // "no pg_hba.conf entry ... no encryption", which took the FHIR proxy down
+      // (resolving a FHIR server reads the admin-config store). The bundle is
+      // baked into the image by Dockerfile; lib/pg-pool.ts throws if it is set
+      // but unreadable, so a broken image fails loudly instead of silently
+      // downgrading to plaintext.
+      PGSSLROOTCERT: '/etc/ssl/certs/rds-global-bundle.pem',
       KEYCLOAK_BASE_URL: props.keycloakUrl,
       // Consumed by config.keycloak.publicUrl → expectedIssuer and every browser
       // redirect. Without it those would fall back to KEYCLOAK_BASE_URL, which is
