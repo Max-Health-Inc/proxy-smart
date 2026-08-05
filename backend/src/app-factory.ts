@@ -127,18 +127,44 @@ function discoverApps({ includeHidden = false } = {}) {
     return [...fsApps, ...publishedApps.filter(pa => !fsClientIds.has(pa.client_id))]
 }
 
+/**
+ * Elysia constructor options for the app.
+ *
+ * Exported so the request-integrity test can exercise the REAL configuration —
+ * a test that built its own Elysia would pass no matter what is set here, which
+ * is exactly how the sanitize regression below went unnoticed.
+ *
+ * NOTE the absence of `sanitize`. It previously ran Bun.escapeHTML over every
+ * string in every request body, corrupting data on the way in:
+ *
+ *   sent   {"a":"b<>&"}
+ *   stored {&amp;quot;a&amp;quot;:&amp;quot;b&amp;lt;&amp;gt;&amp;amp;&amp;quot;}
+ *
+ * Twice, because escapeHTML also escapes `&`, so a second pass re-escapes the
+ * entities the first one produced. That broke SMART Backend Services outright: an
+ * inline JWKS registered through /admin/smart-apps was stored unparseable, and
+ * client_assertion auth then failed with "has no registered JWKS" for a client
+ * that plainly had one. It equally mangles any password, URL or description
+ * containing & < > " ' — the stored value stops matching what was sent.
+ *
+ * Escaping on ingest is the wrong layer for a JSON API: HTML escaping belongs to
+ * an HTML rendering context, not to stored data. The admin UI is React, which
+ * escapes at render and uses no dangerouslySetInnerHTML; anything that does emit
+ * HTML must encode at that point instead.
+ */
+export const ELYSIA_OPTIONS = {
+    name: config.name,
+    serve: {
+        idleTimeout: 120
+    },
+    websocket: {
+        idleTimeout: 120
+    },
+    aot: true,
+} as const
+
 export function createApp() {
-    const app = new Elysia({
-        name: config.name,
-        serve: {
-            idleTimeout: 120
-        },
-        websocket: {
-            idleTimeout: 120
-        },
-        aot: true,
-        sanitize: (value) => Bun.escapeHTML(value)
-    })
+    const app = new Elysia({ ...ELYSIA_OPTIONS })
         .use(cors({
             origin: (request: Request) => {
                 // DICOMweb uses Bearer tokens, not cookies — safe to allow any origin.
