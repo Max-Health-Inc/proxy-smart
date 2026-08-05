@@ -8,7 +8,11 @@ import { refreshCorsOrigins } from './lib/cors-origins'
 import { loadRuntimeConfig } from './lib/runtime-config'
 import { resolveKcRealmIssuer } from './lib/proxy-signing'
 import { getAdminClient } from './lib/kc-admin-factory'
-import { ensureShlExchangeClient, ensureIntrospectionClientConfig } from './lib/kc-system-provisioning'
+import {
+  ensureShlExchangeClient,
+  ensureIntrospectionClientConfig,
+  ensureResourceServerClients,
+} from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
 // Global state to track Keycloak connectivity
@@ -406,6 +410,74 @@ async function ensureKeycloakEventLogging(): Promise<void> {
   } catch (error) {
     // Non-fatal — realm-export.json already has the config for fresh provisioning
     logger.keycloak.warn('Could not auto-enable Keycloak event logging', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
+ * Theme baked into the custom Keycloak image (Dockerfile.keycloak copies
+ * keycloak/themes/proxy-smart). A thin override of `keycloak.v2` that adds
+ * brand.css + idp-icons.css — see keycloak/themes/proxy-smart/login/theme.properties.
+ */
+const LOGIN_THEME = 'proxy-smart'
+
+/**
+ * Ensure the realm actually USES the login theme shipped in the image.
+ *
+ * Having the theme on disk is not enough — the realm has to select it, and no
+ * realm-export sets `loginTheme`, so every realm has been falling back to stock
+ * `keycloak.v2`. Production rendered the default sign-in page with none of our
+ * branding: it loaded login/keycloak.v2/css/styles.css and neither brand.css nor
+ * idp-icons.css.
+ *
+ * Reconciled here rather than in the export because `--import-realm` is a no-op
+ * once a realm exists, so an export-only fix would reach fresh realms and never
+ * prod or beta. This runs on every startup and covers all three.
+ *
+ * Non-fatal and idempotent: a wrong or missing theme is cosmetic, and Keycloak
+ * silently falls back to the default if the theme is absent from the image.
+ */
+async function ensureLoginTheme(): Promise<void> {
+  if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
+    logger.keycloak.debug('Skipping login theme check — no admin credentials configured')
+    return
+  }
+
+  try {
+    const admin = new KcAdminClient({
+      baseUrl: config.keycloak.baseUrl!,
+      realmName: config.keycloak.realm!,
+    })
+
+    await admin.auth({
+      grantType: 'client_credentials',
+      clientId: config.keycloak.adminClientId,
+      clientSecret: config.keycloak.adminClientSecret,
+    })
+
+    const realm = await admin.realms.findOne({ realm: config.keycloak.realm! })
+    if (!realm) {
+      logger.keycloak.warn('Could not read realm — skipping login theme check')
+      return
+    }
+
+    if (realm.loginTheme === LOGIN_THEME) {
+      logger.keycloak.info('✅ Login theme already set', { loginTheme: LOGIN_THEME })
+      return
+    }
+
+    await admin.realms.update(
+      { realm: config.keycloak.realm! },
+      { loginTheme: LOGIN_THEME },
+    )
+
+    logger.keycloak.info('✅ Login theme set on realm', {
+      loginTheme: LOGIN_THEME,
+      previous: realm.loginTheme ?? '(default)',
+    })
+  } catch (error) {
+    logger.keycloak.warn('Could not set login theme on realm', {
       error: error instanceof Error ? error.message : String(error),
     })
   }
@@ -881,6 +953,9 @@ async function ensureSystemClients(): Promise<void> {
   }
   await ensureShlExchangeClient(admin)
   await ensureIntrospectionClientConfig(admin)
+  // RFC 8707 resource clients, whose resource_url must match this environment's
+  // baseUrl — production was still carrying dev localhost URLs.
+  await ensureResourceServerClients(admin)
 }
 
 export async function initializeServer(): Promise<void> {
@@ -938,6 +1013,9 @@ export async function initializeServer(): Promise<void> {
 
       // Ensure Keycloak Organizations feature is enabled on the realm
       await ensureOrganizationsEnabled()
+
+      // Point the realm at the branded login theme shipped in the image
+      await ensureLoginTheme()
 
       // Ensure User Profile has all custom SMART attributes declared (KC 26+ requirement)
       await ensureUserProfileAttributes()

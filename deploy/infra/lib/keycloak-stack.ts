@@ -314,7 +314,23 @@ export class KeycloakStack extends cdk.Stack {
           image: containerImage,
           containerPort: 8080,
           environment: {
-            KC_HOSTNAME: props.domainName,
+            // MUST be a full URL, not a bare hostname — it pins the token issuer.
+            //
+            // Keycloak's HostnameV2Provider.getFrontUriBuilder():
+            //   if (hostnameUrl != null) builder = UriBuilder.fromUri(hostnameUrl);
+            //   else { builder = originalUriInfo.getBaseUriBuilder();
+            //          if (hostname != null) builder.host(hostname); }
+            //
+            // So a bare hostname replaces only the HOST and inherits scheme+port
+            // from the incoming request. Once the backend started calling Keycloak
+            // over http://keycloak.proxy-smart.internal:8080, that produced two
+            // different issuers for one realm:
+            //   browser mint   https://auth.proxy-smart.com/realms/proxy-smart
+            //   internal mint  http://auth.proxy-smart.com:8080/realms/proxy-smart
+            // which fails config.keycloak.expectedIssuer, so anything validating an
+            // internally-minted token rejects it. A full URL pins scheme and port
+            // regardless of how the request arrived.
+            KC_HOSTNAME: `https://${props.domainName}`,
             KC_HOSTNAME_STRICT: 'false',
             // Must equal the custom image's build-time --http-relative-path
             // (Dockerfile.keycloak, KC_RELATIVE_PATH — '/' for production). A

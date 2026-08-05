@@ -19,6 +19,107 @@ import { logger } from './logger'
 const ALLOW_INTROSPECTION_WITHOUT_AUDIENCE = 'allow.token.introspection.without.audience.check'
 
 /**
+ * Keycloak client attribute the RFC 8707 post-processor binds into `aud` when a
+ * token request carries a matching `resource` parameter.
+ */
+const RESOURCE_URL_ATTR = 'resource_url'
+
+/**
+ * Non-login "resource server" clients that exist only to hold a `resource_url`.
+ *
+ * WHY THIS IS RECONCILED AT RUNTIME. These were created by hand (and by
+ * .github/scripts/deploy-beta-remote.sh section 10b) with URLs baked in per
+ * environment. Production never ran that script, so its clients still carried
+ * DEV defaults — an access token minted there came back with
+ *
+ *   aud: ["http://localhost:8445/mcp", "realm-management"]
+ *
+ * on the live production system. `http://localhost:8445/mcp` can never match
+ * getMcpResourceAudience() in production, so audience binding silently pointed at
+ * nothing. Deriving the URLs from config instead means they are correct in every
+ * environment by construction, and cannot drift from what the proxy validates.
+ */
+const RESOURCE_SERVER_CLIENTS = [
+  {
+    clientId: 'fhir-resource-server',
+    name: 'FHIR Resource Server (RFC 8707 resource indicator)',
+    description: 'Non-login resource client. Holds resource_url = the proxy FHIR base.',
+    /** Must equal the FHIR audience the proxy accepts (getFhirResourceAudiences). */
+    resourceUrl: () => `${config.baseUrl}/${config.name}/`,
+  },
+  {
+    clientId: 'mcp-resource-server',
+    name: 'MCP Resource Server (RFC 8707 resource indicator)',
+    description: 'Non-login resource client. Holds resource_url = the proxy MCP URL.',
+    /** Must equal getMcpResourceAudience(). */
+    resourceUrl: () => `${config.baseUrl}${config.mcp.path}`,
+  },
+] as const
+
+/**
+ * Ensure the RFC 8707 resource-server clients exist with the CURRENT environment's
+ * resource URLs.
+ *
+ * Idempotent: creates what is missing, and updates `resource_url` when it drifts
+ * (for example after a domain change, or on an environment seeded from another's
+ * export). Non-fatal — a failure leaves the realm untouched and logs a warning,
+ * because audience binding degrading is preferable to the backend refusing to boot.
+ */
+export async function ensureResourceServerClients(admin: KcAdminClient): Promise<void> {
+  for (const spec of RESOURCE_SERVER_CLIENTS) {
+    const resourceUrl = spec.resourceUrl()
+    try {
+      const existing = await admin.clients.find({ clientId: spec.clientId, max: 1 })
+
+      if (existing.length === 0) {
+        await admin.clients.create({
+          clientId: spec.clientId,
+          name: spec.name,
+          description: spec.description,
+          enabled: true,
+          protocol: 'openid-connect',
+          clientAuthenticatorType: 'client-secret',
+          publicClient: false,
+          bearerOnly: false,
+          // A resource client is never logged into and never mints tokens; it
+          // exists purely as a named audience.
+          standardFlowEnabled: false,
+          implicitFlowEnabled: false,
+          directAccessGrantsEnabled: false,
+          serviceAccountsEnabled: false,
+          authorizationServicesEnabled: false,
+          fullScopeAllowed: false,
+          attributes: { [RESOURCE_URL_ATTR]: resourceUrl },
+        })
+        logger.keycloak.info('Created resource-server client', { clientId: spec.clientId, resourceUrl })
+        continue
+      }
+
+      const client = existing[0]
+      if (client.attributes?.[RESOURCE_URL_ATTR] === resourceUrl) {
+        logger.keycloak.debug('Resource-server client already correct', { clientId: spec.clientId })
+        continue
+      }
+
+      await admin.clients.update(
+        { id: client.id! },
+        { clientId: spec.clientId, attributes: { ...(client.attributes ?? {}), [RESOURCE_URL_ATTR]: resourceUrl } },
+      )
+      logger.keycloak.info('Reconciled resource_url on resource-server client', {
+        clientId: spec.clientId,
+        resourceUrl,
+        previous: client.attributes?.[RESOURCE_URL_ATTR] ?? '(unset)',
+      })
+    } catch (error) {
+      logger.keycloak.warn('Failed to reconcile resource-server client', {
+        clientId: spec.clientId,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+}
+
+/**
  * Ensure the proxy's introspection client (admin-service) may introspect tokens
  * whose `aud` does not list it.
  *
