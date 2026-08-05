@@ -206,6 +206,22 @@ jobs:
             --require-approval never \
             --progress events
 
+      # Ordering matters and is not incidental: Keycloak must be registered in
+      # Cloud Map (step above) BEFORE the backend switches KEYCLOAK_BASE_URL to
+      # keycloak.proxy-smart.internal, or the backend starts against a name that
+      # does not resolve yet.
+      #
+      # Also --exclusively. Without it this pulls in ProxySmartDatabase and
+      # ProxySmartVpc, turning an env-var change into a CloudFormation update of
+      # the production RDS instance.
+      - name: Deploy Backend stack (Keycloak URL split — internal vs public)
+        working-directory: deploy/infra
+        run: |
+          bunx cdk deploy ProxySmartBackend \
+            --exclusively \
+            --require-approval never \
+            --progress events
+
       - name: Force new ECS deployment
         run: |
           echo "🚀 Forcing new deployment on ECS service..."

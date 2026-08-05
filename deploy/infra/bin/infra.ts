@@ -99,7 +99,10 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   env,
   description: 'Proxy Smart - Backend API on ECS Fargate',
   vpc: vpcStack.vpc,
-  keycloakUrl: `https://${config.keycloakDomain}`,
+  // Internal for server-to-server (Cloud Map, registered by KeycloakStack), so
+  // admin + token calls never traverse the public ALB and its WAF.
+  keycloakUrl: 'http://keycloak.proxy-smart.internal:8080',
+  keycloakPublicUrl: `https://${config.keycloakDomain}`,
   domainName: config.backendDomain,
   apexDomain: config.hostedZoneName,
   hostedZone,
