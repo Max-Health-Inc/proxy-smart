@@ -12,6 +12,7 @@ import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import type { Construct } from 'constructs';
+import { VPC_CIDR } from './vpc-stack.js';
 
 /**
  * Cloud Map namespace used for internal service discovery.
@@ -408,8 +409,13 @@ export class KeycloakStack extends cdk.Stack {
     // BackendStack is created after this one, so its SG cannot be referenced
     // without introducing a cross-stack cycle. Tasks sit in private subnets, so
     // this is not internet-reachable.
+    //
+    // VPC_CIDR is the literal, deliberately NOT props.vpc.vpcCidrBlock: that
+    // attribute is a CFN reference and would require a new Export from
+    // ProxySmartVpc, which --exclusively never deploys. First attempt rolled
+    // back with "No export named ProxySmartVpc:ExportsOutputFnGetAtt...".
     this.service.service.connections.allowFrom(
-      ec2.Peer.ipv4(props.vpc.vpcCidrBlock),
+      ec2.Peer.ipv4(VPC_CIDR),
       ec2.Port.tcp(8080),
       'Internal service-to-service access to Keycloak (bypasses ALB + WAF)',
     );
