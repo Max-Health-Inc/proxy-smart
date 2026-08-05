@@ -2,6 +2,7 @@
   "test_stage": "alpha",
   "description": "Alpha testing with local CI stack (dev-only release, not deployed)",
   "target": "local",
+  "mode": "conformance",
   "fhir_server": {
     "name": "HAPI FHIR (Local CI)",
     "port": 8081

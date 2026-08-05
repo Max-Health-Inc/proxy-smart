@@ -34,6 +34,16 @@ const config = {
   kisiEnabled: app.node.tryGetContext('kisiEnabled') === 'true',
   kisiBaseUrl: app.node.tryGetContext('kisiBaseUrl'),
   unifiAccessEnabled: app.node.tryGetContext('unifiAccessEnabled') === 'true',
+  // Consent enforcement. Deliberately defaults ON here, inverting the backend's
+  // own default: config.ts falls back to CONSENT_ENABLED=false / audit-only so a
+  // developer running the stack locally is not blocked by consent they have no
+  // way to grant. That default is wrong for a deployment holding real records —
+  // audit-only logs the denial and then serves the data anyway
+  // (backend/src/routes/fhir.ts), so an unset variable fails open and silently.
+  // Overridable for a stage that genuinely needs to observe before enforcing:
+  //   cdk deploy -c consentMode=audit-only
+  consentEnabled: app.node.tryGetContext('consentEnabled') !== 'false',
+  consentMode: (app.node.tryGetContext('consentMode') || 'enforce') as 'enforce' | 'audit-only' | 'disabled',
   // Production settings
   natGateways: app.node.tryGetContext('natGateways') ? parseInt(app.node.tryGetContext('natGateways')) : 1,
   multiAzDatabase: app.node.tryGetContext('multiAzDatabase') !== 'false',
@@ -115,6 +125,8 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   kisiEnabled: config.kisiEnabled,
   kisiBaseUrl: config.kisiBaseUrl,
   unifiAccessEnabled: config.unifiAccessEnabled,
+  consentEnabled: config.consentEnabled,
+  consentMode: config.consentMode,
 });
 backendStack.addDependency(keycloakStack);
 backendStack.addDependency(databaseStack);
