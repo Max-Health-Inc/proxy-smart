@@ -299,6 +299,14 @@ export class KeycloakStack extends cdk.Stack {
           environment: {
             KC_HOSTNAME: props.domainName,
             KC_HOSTNAME_STRICT: 'false',
+            // Must equal the custom image's build-time --http-relative-path
+            // (Dockerfile.keycloak, KC_RELATIVE_PATH — '/' for production). A
+            // mismatch makes Keycloak re-build at startup WITHOUT the pinned
+            // cimd/resource-indicators features, which then crashes realm import.
+            // Stated explicitly rather than relying on the default so the
+            // contract with the Dockerfile is visible on both sides; the ALB
+            // health-check path below also assumes root.
+            KC_HTTP_RELATIVE_PATH: '/',
             KC_HTTP_ENABLED: 'true',
             KC_PROXY_HEADERS: 'xforwarded',
             KC_HEALTH_ENABLED: 'true',
@@ -348,7 +356,14 @@ export class KeycloakStack extends cdk.Stack {
     );
 
     // Configure ALB health check — use /realms/master (port 8080) since
-    // KC26 serves /health/ready on management port 9000 which ALB can't reach
+    // KC26 serves /health/ready on management port 9000 which ALB can't reach.
+    //
+    // The path is root-relative and therefore tied to KC_HTTP_RELATIVE_PATH
+    // above. This is what failed the first custom-image rollout: the image was
+    // built with --http-relative-path=/auth, so /realms/master 404'd, the target
+    // went unhealthy, the ECS circuit breaker tripped and CloudFormation rolled
+    // back. Keycloak itself had started fine. If the relative path ever becomes
+    // non-root here, this path has to gain the same prefix.
     this.service.targetGroup.configureHealthCheck({
       path: '/realms/master',
       healthyHttpCodes: '200',
