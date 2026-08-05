@@ -2,22 +2,6 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import type { Construct } from 'constructs';
 
-/**
- * The VPC's CIDR, as a compile-time literal.
- *
- * Other stacks that need it MUST import this rather than reading
- * `vpc.vpcCidrBlock`. That attribute is a CloudFormation reference, so using it
- * makes the consuming stack depend on a new `Export` from ProxySmartVpc — and
- * the production deploy runs each stack with `--exclusively`, so the VPC stack
- * never deploys to publish it. The result is a rollback with:
- *
- *   No export named ProxySmartVpc:ExportsOutputFnGetAtt...CidrBlock... found
- *
- * A literal renders inline and needs no export, keeping the stacks independently
- * deployable. It is still declared once, here, next to the VPC that uses it.
- */
-export const VPC_CIDR = '10.0.0.0/16';
-
 export interface VpcStackProps extends cdk.StackProps {
   /**
    * Number of NAT Gateways. Use 2 for production HA.
@@ -41,7 +25,7 @@ export class VpcStack extends cdk.Stack {
     super(scope, id, props);
 
     this.vpc = new ec2.Vpc(this, 'ProxySmartVpc', {
-      ipAddresses: ec2.IpAddresses.cidr(VPC_CIDR),
+      ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/16'),
       maxAzs: 2,
       // Cost optimization: 1 NAT instead of 2
       // ⚠️ For production HA, set natGateways: 2 (one per AZ)
