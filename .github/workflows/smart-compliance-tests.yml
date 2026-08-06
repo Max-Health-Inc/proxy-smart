@@ -166,7 +166,7 @@ jobs:
         env:
           # Referenced through env rather than inlined, so the value is never
           # interpolated into the script text. Selected by stage below.
-          PROD_TEST_USER_PASSWORD: ${{ secrets.PROD_TEST_USER_PASSWORD }}
+          PROD_PROBE_PRIVATE_KEY: ${{ secrets.PROD_PROBE_PRIVATE_KEY }}
           BETA_TEST_USER_PASSWORD: ${{ secrets.BETA_TEST_USER_PASSWORD }}
         run: |
           CONFIG_FILE="testing/${{ env.TEST_STAGE }}/inferno-config.json"
@@ -207,38 +207,49 @@ jobs:
           KC_PASSWORD=$(jq -r '.test_user.password // empty' "$CONFIG_FILE")
           KC_REALM=$(jq -r '.keycloak.realm' "$CONFIG_FILE")
 
-          # A deployed environment's password comes from CI, never from this repository.
+          # Patient the enforcement probe requests — deliberately never created.
+          echo "probe_patient_id=$(jq -r '.probe.patient_id // empty' "$CONFIG_FILE")" >> $GITHUB_OUTPUT
+
+          # A deployed environment's credential comes from CI, never from this
+          # repository. Which credential depends on the mode: enforcement signs a
+          # private_key_jwt assertion (no client here permits a password grant),
+          # conformance logs in as a test user for the Inferno launch flow.
+          CREDENTIAL=""
           if [ "$TARGET" = "deployed" ]; then
             if [ -n "$KC_PASSWORD" ]; then
               echo "ERROR: $CONFIG_FILE targets a deployed environment but carries a literal test_user password."
               echo "  This repository is public — put it in a CI secret instead."
               exit 1
             fi
-            case "${{ env.TEST_STAGE }}" in
-              production) KC_PASSWORD="$PROD_TEST_USER_PASSWORD"; SECRET_NAME=PROD_TEST_USER_PASSWORD ;;
-              beta)       KC_PASSWORD="$BETA_TEST_USER_PASSWORD"; SECRET_NAME=BETA_TEST_USER_PASSWORD ;;
-              *)          echo "ERROR: no CI secret is mapped for deployed stage '${{ env.TEST_STAGE }}'"; exit 1 ;;
-            esac
+            if [ "$MODE" = "enforcement" ]; then
+              CREDENTIAL="$PROD_PROBE_PRIVATE_KEY"; SECRET_NAME=PROD_PROBE_PRIVATE_KEY
+            else
+              case "${{ env.TEST_STAGE }}" in
+                beta) CREDENTIAL="$BETA_TEST_USER_PASSWORD"; SECRET_NAME=BETA_TEST_USER_PASSWORD ;;
+                *)    echo "ERROR: no CI secret is mapped for deployed stage '${{ env.TEST_STAGE }}'"; exit 1 ;;
+              esac
+              KC_PASSWORD="$CREDENTIAL"
+            fi
             # Not-yet-configured is not the same as failing, and must not block a
             # release: the credential is a test fixture, not a property of the build.
             # Skipped loudly rather than silently — a green run that verified nothing
             # is the outcome worth avoiding.
-            if [ -z "$KC_PASSWORD" ]; then
+            if [ -z "$CREDENTIAL" ]; then
               echo "::warning title=Compliance checks skipped::$SECRET_NAME is not set, so the ${{ env.TEST_STAGE }} authenticated checks did not run. Consent enforcement is UNVERIFIED on this deployment."
               echo "credentials_missing=true" >> $GITHUB_OUTPUT
             else
               echo "credentials_missing=false" >> $GITHUB_OUTPUT
               # Keep it out of the log even if a later step echoes an output.
-              echo "::add-mask::$KC_PASSWORD"
+              echo "::add-mask::$CREDENTIAL"
             fi
           else
             echo "credentials_missing=false" >> $GITHUB_OUTPUT
           fi
 
-          # Fail loudly rather than silently degrading to an unauthenticated run that
-          # still reports success.
-          if [ -z "$KC_USERNAME" ] || [ -z "$CLIENT_ID" ]; then
-            echo "ERROR: $CONFIG_FILE has no test_user.username or client.client_id"
+          # Fail loudly rather than silently degrading to a run that still reports
+          # success. Enforcement mode needs no test user — it authenticates as a client.
+          if [ -z "$CLIENT_ID" ] || { [ "$MODE" = "conformance" ] && [ -z "$KC_USERNAME" ]; }; then
+            echo "ERROR: $CONFIG_FILE has no client.client_id (or no test_user.username for conformance)"
             exit 1
           fi
           
@@ -1192,94 +1203,23 @@ jobs:
       # this data, and the failure is silent — audit-only logs the denial and then
       # serves the record anyway (backend/src/routes/fhir.ts). A deploy that lost
       # those variables looks completely healthy from the outside.
+      # The production check: asserts what belongs to THIS deployment rather than
+      # to the build, and writes nothing. Extracted to a script because it signs a
+      # private_key_jwt assertion — every client this codebase provisions has
+      # directAccessGrantsEnabled=false, so a password grant is not available.
       - name: Consent Enforcement Probe
         id: enforcement-probe
         if: steps.config.outputs.mode == 'enforcement' && steps.config.outputs.credentials_missing != 'true'
+        run: node .github/scripts/consent-enforcement-probe.mjs
         env:
-          KC_PASSWORD: ${{ steps.config.outputs.kc_password }}
-        run: |
-          set -uo pipefail
-          BACKEND_URL="${{ steps.config.outputs.backend_url }}"
-          KC_URL="${{ steps.config.outputs.kc_url }}"
-          KC_REALM="${{ steps.config.outputs.kc_realm }}"
-          CLIENT_ID="${{ steps.config.outputs.client_id }}"
-          KC_USERNAME="${{ steps.config.outputs.kc_username }}"
-          FHIR_BASE="${{ steps.config.outputs.fhir_url }}"
-          PROBE_PATIENT=$(jq -r '.probe.patient_id' "testing/${{ env.TEST_STAGE }}/inferno-config.json")
-
-          FAILURES=0
-          pass() { echo "  PASS: $1"; }
-          fail() { echo "::error::$1"; FAILURES=$((FAILURES+1)); }
-
-          echo "### 1. FHIR capability statement reachable (unauthenticated) ###"
-          # /metadata short-circuits before consent and before auth, but it does open
-          # the upstream connection — so this is the check that catches a backend that
-          # is up but cannot reach its database.
-          CODE=$(curl -s -o /tmp/meta.json -w "%{http_code}" --max-time 30 "$FHIR_BASE/metadata")
-          if [ "$CODE" = "200" ] && [ "$(jq -r '.resourceType' /tmp/meta.json)" = "CapabilityStatement" ]; then
-            pass "/metadata returned a CapabilityStatement"
-          else
-            fail "/metadata returned HTTP $CODE (expected 200 CapabilityStatement)"
-          fi
-
-          echo "### 2. Issuer is self-consistent ###"
-          # Guards the split-brain issuer: Keycloak derives scheme and port from the
-          # request unless KC_HOSTNAME pins a full URL, so a misconfigured deployment
-          # mints tokens whose iss no client will accept.
-          ISS=$(curl -s --max-time 30 "$KC_URL/realms/$KC_REALM/.well-known/openid-configuration" | jq -r '.issuer // empty')
-          if [ "$ISS" = "$KC_URL/realms/$KC_REALM" ]; then
-            pass "issuer is $ISS"
-          else
-            fail "issuer is '$ISS', expected '$KC_URL/realms/$KC_REALM'"
-          fi
-
-          echo "### 3. Unauthenticated FHIR read is rejected ###"
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$FHIR_BASE/Patient/$PROBE_PATIENT")
-          if [ "$CODE" = "401" ] || [ "$CODE" = "403" ]; then
-            pass "unauthenticated read returned $CODE"
-          else
-            fail "unauthenticated read returned $CODE (expected 401/403)"
-          fi
-
-          echo "### 4. Consent is ENFORCED, not merely audited ###"
-          # Token comes from the backend's own /auth/token: the public Keycloak token
-          # endpoint is deliberately WAF-blocked, and the backend reaches Keycloak
-          # internally over Cloud Map.
-          TOKEN=$(curl -s --max-time 30 -X POST "$BACKEND_URL/auth/token" \
-            -H "Content-Type: application/x-www-form-urlencoded" \
-            --data-urlencode "grant_type=password" \
-            --data-urlencode "client_id=$CLIENT_ID" \
-            --data-urlencode "username=$KC_USERNAME" \
-            --data-urlencode "password=$KC_PASSWORD" \
-            --data-urlencode "scope=openid fhirUser user/*.read" | jq -r '.access_token // empty')
-
-          if [ -z "$TOKEN" ]; then
-            fail "could not obtain a token for $KC_USERNAME — the probe identity is broken, so enforcement is UNVERIFIED"
-          else
-            pass "obtained a token for $KC_USERNAME"
-            # This patient is never created. Consent is evaluated before the request is
-            # proxied upstream, so with no Consent resource the only correct answer is a
-            # 403. A 404 means the request reached the FHIR server, i.e. consent did not
-            # block it — which is exactly the regression this probe exists to catch.
-            CODE=$(curl -s -o /tmp/probe.json -w "%{http_code}" --max-time 30 \
-              -H "Authorization: Bearer $TOKEN" "$FHIR_BASE/Patient/$PROBE_PATIENT")
-            ERR=$(jq -r '.error // empty' /tmp/probe.json 2>/dev/null)
-            if [ "$CODE" = "403" ] && { [ "$ERR" = "consent_denied" ] || [ "$ERR" = "ial_verification_failed" ]; }; then
-              pass "access without consent was denied (403 $ERR)"
-            elif [ "$CODE" = "403" ]; then
-              fail "got 403 but error was '$ERR' — expected consent_denied, so the denial came from something other than consent"
-            else
-              fail "access without consent returned HTTP $CODE, expected 403 consent_denied. Consent is NOT being enforced on this deployment (check CONSENT_ENABLED / CONSENT_MODE)."
-            fi
-          fi
-
-          echo ""
-          if [ "$FAILURES" -gt 0 ]; then
-            echo "## Production Enforcement Probe - FAILED ($FAILURES)" >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
-          echo "## Production Enforcement Probe - PASSED" >> $GITHUB_STEP_SUMMARY
-          echo "Consent enforcement, issuer consistency and FHIR reachability verified. Nothing was written." >> $GITHUB_STEP_SUMMARY
+          BACKEND_URL: ${{ steps.config.outputs.backend_url }}
+          FHIR_URL: ${{ steps.config.outputs.fhir_url }}
+          KC_URL: ${{ steps.config.outputs.kc_url }}
+          KC_REALM: ${{ steps.config.outputs.kc_realm }}
+          PROBE_CLIENT_ID: ${{ steps.config.outputs.client_id }}
+          PROBE_PATIENT_ID: ${{ steps.config.outputs.probe_patient_id }}
+          PROBE_PRIVATE_KEY: ${{ secrets.PROD_PROBE_PRIVATE_KEY }}
+          PROBE_KID: ${{ secrets.PROD_PROBE_KID }}
 
       - name: Report skipped checks
         if: steps.config.outputs.credentials_missing == 'true'
