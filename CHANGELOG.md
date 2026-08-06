@@ -13,6 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/929
 
 
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+  - Update dev SMART compliance report (testing)
+  - Update dev SMART compliance report (testing)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/930
+
+
 ## [0.2.22-beta.202608050846.e7ba4062e] - 2026-08-05
 
 - 🔧 Chores & Improvements: Version bump housekeeping (update to 0.2.23-alpha; skip CI)
