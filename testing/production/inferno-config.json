@@ -18,9 +18,6 @@
   "client": {
     "client_id": "ci-enforcement-probe"
   },
-  "test_user": {
-    "username": "ci-enforcement-probe"
-  },
   "probe": {
     "comment": "Patient id the probe requests. Deliberately never created: consent is evaluated before the request is proxied upstream, so an id with no Consent resource must be denied. If enforcement regresses to audit-only the request falls through and returns 404 instead of 403, failing the probe.",
     "patient_id": "ci-enforcement-probe-no-consent"
