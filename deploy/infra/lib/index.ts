@@ -16,3 +16,6 @@ export type { BackupStackProps } from './backup-stack.js';
 
 export { FhirStack } from './fhir-stack.js';
 export type { FhirStackProps } from './fhir-stack.js';
+
+export { PacsStack, PACS_INTERNAL_DICOMWEB_URL } from './pacs-stack.js';
+export type { PacsStackProps } from './pacs-stack.js';

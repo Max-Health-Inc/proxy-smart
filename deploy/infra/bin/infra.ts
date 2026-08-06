@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import * as cdk from 'aws-cdk-lib';
 import * as route53 from 'aws-cdk-lib/aws-route53';
-import { 
-  VpcStack, 
-  DatabaseStack, 
-  KeycloakStack, 
+import {
+  VpcStack,
+  DatabaseStack,
+  KeycloakStack,
   BackendStack,
   FhirStack,
+  PacsStack,
+  PACS_INTERNAL_DICOMWEB_URL,
 } from '../lib/index.js';
 
 const app = new cdk.App();
@@ -127,6 +129,9 @@ const backendStack = new BackendStack(app, 'ProxySmartBackend', {
   unifiAccessEnabled: config.unifiAccessEnabled,
   consentEnabled: config.consentEnabled,
   consentMode: config.consentMode,
+  // Literal, not pacsStack.internalUrl — a Cloud Map name, so using the constant
+  // avoids a cross-stack dependency in the wrong direction.
+  dicomWebBaseUrl: PACS_INTERNAL_DICOMWEB_URL,
 });
 backendStack.addDependency(keycloakStack);
 backendStack.addDependency(databaseStack);
@@ -140,7 +145,23 @@ const fhirStack = new FhirStack(app, 'ProxySmartFhir', {
 });
 fhirStack.addDependency(backendStack);
 
-// 6. Backup Stack (optional - enable when Keycloak is running)
+// 6. PACS Stack (internal only — Orthanc index on the shared RDS, pixel data in S3)
+const pacsStack = new PacsStack(app, 'ProxySmartPacs', {
+  env,
+  description: 'Proxy Smart - Orthanc PACS (internal, DICOMweb via Cloud Map, S3 storage)',
+  vpc: vpcStack.vpc,
+  cluster: backendStack.cluster,
+  // Shares the Keycloak/backend instance rather than adding a third: the index is
+  // small, and this one is already Multi-AZ. Needs `CREATE DATABASE orthanc;` once
+  // — see PacsStackProps.databaseName.
+  database: databaseStack.database,
+  dbSecret: databaseStack.secret,
+  namespace: fhirStack.namespace,
+});
+pacsStack.addDependency(fhirStack);
+pacsStack.addDependency(databaseStack);
+
+// 7. Backup Stack (optional - enable when Keycloak is running)
 // Uncomment after initial deployment:
 /*
 const backupStack = new BackupStack(app, 'ProxySmartBackup', {
