@@ -9,6 +9,10 @@ on:
       - "ai/dev/*"
       - "ai/test/*"
       - "ai/checklist/*"
+  # Manual re-trigger. Needed because a push that happens while Actions is stopped
+  # (quota, outage) is never replayed, leaving the branch promoted but PR-less with
+  # no way to recover short of an empty commit. Run it from the branch to promote.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -156,7 +160,11 @@ jobs:
 
   pr-to-test:
     name: Create/Update PR from develop → test
-    if: github.ref == 'refs/heads/develop' && !contains(github.event.head_commit.message, '🔄 Update version') && !contains(github.event.head_commit.message, '🤖 Update client APIs') && !contains(github.event.head_commit.message, 'proxy-smart-releaser')
+    # Unconditional: the PR must exist for whatever is on develop, whoever pushed
+    # it. Previously this job skipped on automation commits, so a real change
+    # followed by a version-sync left no PR at all. The loop guard now sits on the
+    # only step that pushes (Resolve version conflicts), which is where it belongs.
+    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
 
     steps:
@@ -171,57 +179,6 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ steps.generate_token.outputs.token }}
-
-      # Gate: wait for Alpha Release to complete on this commit.
-      # Alpha Release runs in parallel with this workflow on the same push event.
-      # It internally calls Build & Test as a nested job.
-      # We must not enable auto-merge if the release/build FAILED.
-      # "skipped" is acceptable (version bump commits are excluded by design).
-      - name: Wait for Alpha Release check
-        run: |
-          SHA="${{ github.sha }}"
-          CHECK_PREFIX="Alpha Release"
-          MAX_WAIT=600  # 10 min — Alpha Release typically finishes in ~3 min
-          POLL_INTERVAL=15
-          ELAPSED=0
-
-          echo "Waiting for '$CHECK_PREFIX' on $SHA..."
-
-          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            # Match any check run whose name starts with "Alpha Release"
-            # GitHub nests job names as "Workflow / Job / Nested Job"
-            CHECKS=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" \
-              --jq "[.check_runs[] | select(.name | startswith(\"$CHECK_PREFIX\"))]" \
-              2>/dev/null || echo "[]")
-
-            COUNT=$(echo "$CHECKS" | jq 'length')
-            COMPLETED=$(echo "$CHECKS" | jq '[.[] | select(.status == "completed")] | length')
-            FAILED=$(echo "$CHECKS" | jq '[.[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out")] | length')
-
-            echo "  [$CHECK_PREFIX] found=$COUNT completed=$COMPLETED failed=$FAILED (${ELAPSED}s)"
-
-            if [ "$COUNT" -gt 0 ] && [ "$COUNT" -eq "$COMPLETED" ]; then
-              if [ "$FAILED" -gt 0 ]; then
-                echo "❌ Alpha Release failed ($FAILED check(s) failed) — aborting."
-                echo "   A failing build must not be promoted to test."
-                exit 1
-              fi
-              # success or skipped — both are fine
-              echo "✅ Alpha Release completed ($COMPLETED checks passed) — proceeding."
-              break
-            fi
-
-            # If check doesn't exist yet (not_found), keep waiting — it may not have registered yet
-            sleep "$POLL_INTERVAL"
-            ELAPSED=$((ELAPSED + POLL_INTERVAL))
-          done
-
-          if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
-            echo "⚠️ Timed out after ${MAX_WAIT}s — Alpha Release still not completed."
-            echo "   Proceeding with PR creation (auto-merge requires branch protection checks anyway)."
-          fi
-        env:
-          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       - name: Check if PR already exists
         id: check-pr
@@ -295,8 +252,11 @@ jobs:
       # the PR will have merge conflicts on package.json version strings.
       # Resolve by merging test into develop, keeping develop's versions.
       # version-operations will re-stamp the correct beta version after merge anyway.
+      # THE LOOP GUARD. This step pushes to develop, which re-triggers this
+      # workflow. Skipping on our own absorb commit is what stops it recursing —
+      # it used to sit on the job, which also suppressed PR creation entirely.
       - name: Resolve version conflicts with test
-        if: steps.check-diff.outputs.has_changes == 'true' && steps.check-diff.outputs.commits_behind != '0'
+        if: steps.check-diff.outputs.has_changes == 'true' && steps.check-diff.outputs.commits_behind != '0' && !contains(github.event.head_commit.message, 'proxy-smart-releaser')
         run: |
           echo "::group::Resolve version conflicts"
           echo "Develop is ${{ steps.check-diff.outputs.commits_behind }} commits behind test — absorbing..."
@@ -358,10 +318,6 @@ jobs:
             Commits ahead of test: ${{ steps.check-diff.outputs.commits_ahead }}
             Commits behind test: ${{ steps.check-diff.outputs.commits_behind }}
             TODOs remaining in codebase: ${{ steps.check-diff.outputs.todo_count }}"
-
-          # Enable auto-merge — PR will merge once all required checks pass
-          PR_NUMBER=$(gh pr list --base test --head develop --state open --json number --jq '.[0].number')
-          gh pr merge $PR_NUMBER --auto --merge || echo "⚠️ Auto-merge could not be enabled (may need repo setting)"
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
@@ -385,17 +341,79 @@ jobs:
             TODOs remaining in codebase: ${{ steps.check-diff.outputs.todo_count }}
             
             _Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')_"
-          
-          # Ensure auto-merge is enabled
-          gh pr merge $PR_NUMBER --auto --merge || echo "⚠️ Auto-merge already enabled or could not be set"
-          
+
           echo "Updated PR #$PR_NUMBER with latest commit and TODO counts"
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+
+      # Gate for AUTO-MERGE only, deliberately after the PR exists. It used to run
+      # first, so a 10-minute wait delayed the PR itself and an absorb commit (which
+      # never has an Alpha Release) burned the whole timeout. Creating a PR is always
+      # safe; only merging it needs a green build.
+      - name: Wait for Alpha Release check
+        # Nothing to gate when there is no diff, and an absorb commit never gets an
+        # Alpha Release — waiting on one would just burn the full timeout.
+        if: steps.check-diff.outputs.has_changes == 'true' && !contains(github.event.head_commit.message, 'proxy-smart-releaser')
+        run: |
+          SHA="${{ github.sha }}"
+          CHECK_PREFIX="Alpha Release"
+          MAX_WAIT=600  # 10 min — Alpha Release typically finishes in ~3 min
+          POLL_INTERVAL=15
+          ELAPSED=0
+
+          echo "Waiting for '$CHECK_PREFIX' on $SHA..."
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            # Match any check run whose name starts with "Alpha Release"
+            # GitHub nests job names as "Workflow / Job / Nested Job"
+            CHECKS=$(gh api "repos/${{ github.repository }}/commits/$SHA/check-runs" \
+              --jq "[.check_runs[] | select(.name | startswith(\"$CHECK_PREFIX\"))]" \
+              2>/dev/null || echo "[]")
+
+            COUNT=$(echo "$CHECKS" | jq 'length')
+            COMPLETED=$(echo "$CHECKS" | jq '[.[] | select(.status == "completed")] | length')
+            FAILED=$(echo "$CHECKS" | jq '[.[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out")] | length')
+
+            echo "  [$CHECK_PREFIX] found=$COUNT completed=$COMPLETED failed=$FAILED (${ELAPSED}s)"
+
+            if [ "$COUNT" -gt 0 ] && [ "$COUNT" -eq "$COMPLETED" ]; then
+              if [ "$FAILED" -gt 0 ]; then
+                echo "❌ Alpha Release failed ($FAILED check(s) failed) — aborting."
+                echo "   A failing build must not be promoted to test."
+                exit 1
+              fi
+              # success or skipped — both are fine
+              echo "✅ Alpha Release completed ($COMPLETED checks passed) — proceeding."
+              break
+            fi
+
+            # If check doesn't exist yet (not_found), keep waiting — it may not have registered yet
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+            echo "⚠️ Timed out after ${MAX_WAIT}s — Alpha Release still not completed."
+            echo "   Proceeding with PR creation (auto-merge requires branch protection checks anyway)."
+          fi
+        env:
+          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+
+      - name: Enable auto-merge
+        if: steps.check-diff.outputs.has_changes == 'true'
+        run: |
+          PR_NUMBER=$(gh pr list --base test --head develop --state open --json number --jq '.[0].number')
+          if [ -z "$PR_NUMBER" ]; then echo "No open PR — nothing to auto-merge"; exit 0; fi
+          gh pr merge $PR_NUMBER --auto --merge || echo "⚠️ Auto-merge could not be enabled (may need repo setting)"
         env:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
   pr-to-main:
     name: Create/Update PR from test → main
-    if: github.ref == 'refs/heads/test' && !contains(github.event.head_commit.message, '🔄 Update version') && !contains(github.event.head_commit.message, '🤖 Update client APIs') && !contains(github.event.head_commit.message, 'proxy-smart-releaser')
+    # Unconditional, same reasoning as pr-to-test: the last push to test is often
+    # `chore: absorb main branch ... [proxy-smart-releaser]`, and skipping on it
+    # meant no test → main PR was ever opened for the work underneath.
+    if: github.ref == 'refs/heads/test'
     runs-on: ubuntu-latest
 
     steps:
@@ -459,8 +477,9 @@ jobs:
           GH_TOKEN: ${{ steps.generate_token.outputs.token }}
 
       # Same as pr-to-test: resolve version conflicts by merging main into test
+      # Loop guard — this step pushes to test. See pr-to-test.
       - name: Resolve version conflicts with main
-        if: steps.check-diff.outputs.has_changes == 'true' && steps.check-diff.outputs.commits_behind != '0'
+        if: steps.check-diff.outputs.has_changes == 'true' && steps.check-diff.outputs.commits_behind != '0' && !contains(github.event.head_commit.message, 'proxy-smart-releaser')
         run: |
           echo "::group::Resolve version conflicts"
           echo "Test is ${{ steps.check-diff.outputs.commits_behind }} commits behind main — absorbing..."

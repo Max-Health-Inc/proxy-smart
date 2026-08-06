@@ -237,10 +237,18 @@ Production releases are created when code merges from `test` into `main`:
 When code is pushed to `develop`, the `create-pr.yml` workflow automatically:
 
 1. Creates (or updates) a PR from `develop` → `test`
-2. Enables GitHub auto-merge on the PR
-3. The PR merges automatically once all required checks pass
+2. Waits for `Alpha Release` to finish on that commit
+3. Enables GitHub auto-merge, so the PR merges once all required checks pass
 
 Similarly, when code merges to `test`, a PR from `test` → `main` is created -- but this one requires manual review before merge.
+
+The PR is created on **every** push to `develop` and `test`, including bot commits.
+Only the steps that push a branch (version-conflict resolution) skip themselves on
+`[proxy-smart-releaser]` commits, which is what prevents the workflow re-triggering
+itself. Guarding the whole job instead used to mean a real change followed by a
+version-sync commit produced no PR at all, because the sync commit was the last
+push. The `Alpha Release` wait is likewise skipped for those commits -- they never
+produce an alpha release, so waiting on one only burned the timeout.
 
 ### Version Conflict Auto-Resolution
 
