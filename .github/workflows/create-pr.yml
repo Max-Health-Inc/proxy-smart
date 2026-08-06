@@ -9,6 +9,10 @@ on:
       - "ai/dev/*"
       - "ai/test/*"
       - "ai/checklist/*"
+  # Manual re-trigger. Needed because a push that happens while Actions is stopped
+  # (quota, outage) is never replayed, leaving the branch promoted but PR-less with
+  # no way to recover short of an empty commit. Run it from the branch to promote.
+  workflow_dispatch:
 
 permissions:
   contents: write
