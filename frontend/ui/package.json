@@ -14,7 +14,10 @@
     "preview": "vite preview",
     "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/lib/api-client",
     "test": "vitest",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "i18n:sync": "python node_modules/@max-network/i18n/tools/extract-and-sync.py",
+    "i18n:scan": "python node_modules/@max-network/i18n/tools/scan-hardcoded.py",
+    "i18n:translate": "node node_modules/@max-network/i18n/tools/translate-batch.js"
   },
   "dependencies": {
     "brandc": "^0.2.2",
@@ -45,6 +48,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@max-network/i18n": "^0.4.1",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
