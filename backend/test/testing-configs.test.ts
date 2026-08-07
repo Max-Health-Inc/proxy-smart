@@ -68,9 +68,11 @@ describe.each(STAGES)('$name', ({ config }) => {
   })
 
   it('names the identity it authenticates as', () => {
-    // Both modes authenticate; they differ in where the password comes from.
-    expect(config.test_user?.username).toBeTruthy()
+    // Both modes authenticate, but as different kinds of principal: conformance
+    // logs in as a user for the launch flow, enforcement signs a client assertion
+    // (no client this codebase provisions permits a password grant).
     expect(config.client?.client_id).toBeTruthy()
+    if (config.mode === 'conformance') expect(config.test_user?.username).toBeTruthy()
   })
 })
 
