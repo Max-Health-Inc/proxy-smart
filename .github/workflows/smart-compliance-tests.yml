@@ -327,12 +327,12 @@ jobs:
       - name: Install dependencies
         if: steps.config.outputs.target != 'deployed'
         timeout-minutes: 20
-        # GH_PACKAGES_TOKEN lets bun install @max-health-inc/* from GitHub Packages
-        # (see bunfig.toml). GITHUB_TOKEN with packages:read suffices as the packages
-        # are public. Without it a cold `bun install` wedges on registry auth and the
-        # job burns its whole timeout before ever reaching the Inferno steps.
+        # Must be the PAT: @max-network/i18n is private and owned by another org, so
+        # the repo-scoped GITHUB_TOKEN gets 403 on it (see bunfig.toml). Without a
+        # usable token a cold `bun install` wedges on registry auth and the job burns
+        # its whole timeout before ever reaching the Inferno steps.
         env:
-          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
         # A cold bun install on GitHub runners reliably completes most downloads then
         # wedges on the final few (keep-alive connections with no read timeout). Bound
         # each attempt and retry with a warmer cache — mirrors build-and-test.yml.

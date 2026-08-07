@@ -113,7 +113,7 @@ jobs:
             VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
             DEPLOY_ENV=prod
           secrets: |
-            gh_packages_token=${{ secrets.GITHUB_TOKEN }}
+            gh_packages_token=${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -172,10 +172,10 @@ jobs:
 
       - name: Install infra dependencies
         timeout-minutes: 10
-        # GH_PACKAGES_TOKEN lets bun resolve @max-health-inc/* from GitHub Packages
-        # (see bunfig.toml); the job already has packages:read.
+        # Must be the PAT: @max-network/i18n is private and owned by another org,
+        # so the repo-scoped GITHUB_TOKEN gets 403 on it (see bunfig.toml).
         env:
-          GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
         # --filter scopes the install to this one workspace member. A full
         # workspace install is what build-and-test.yml needs a retry loop for (a
         # cold `bun install` wedges on held-open sockets on these runners); infra
