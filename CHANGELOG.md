@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.31-beta.202608071218.dc88343db] - 2026-08-07
+
+- 🔧 Chores & Improvements: Dependency and tooling updates, including bun.lock bumps across multiple packages and registry config tweaks
+- 🔧 Chores & Improvements: Frontend i18n tooling cleanup and script removals; translations.json updated, large-scale tooling trimmed
+- 🔧 Chores & Improvements: Frontend UI i18n scripts added (i18n:sync, i18n:scan, i18n:translate) and devDependency on @max-network/i18n
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/936
+
+
 ## [0.2.30-beta.202608061003.8c8a24a2f] - 2026-08-07
 
 - 🔧 Chores & Improvements: Update dev SMART compliance report (testing)
