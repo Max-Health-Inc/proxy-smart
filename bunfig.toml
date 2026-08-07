@@ -16,6 +16,10 @@ minimumReleaseAge = 0 # Allow all packages regardless of age
 # it from $GH_PACKAGES_TOKEN. In CI/Docker this is the workflow GITHUB_TOKEN
 # (packages: read); locally, `export GH_PACKAGES_TOKEN=$(gh auth token)`.
 "@max-health-inc" = { url = "https://npm.pkg.github.com", token = "$GH_PACKAGES_TOKEN" }
+# @max-network/i18n ships the shared translation tooling (tools/*.py) that maintains
+# frontend/ui/src/i18n/translations/translations.json. Separate org, same registry and
+# token. Locally: `export GH_PACKAGES_TOKEN=$(gh auth token)`.
+"@max-network" = { url = "https://npm.pkg.github.com", token = "$GH_PACKAGES_TOKEN" }
 # NOTE: the brand-token contract is now the public-npm package `brandc` (renamed
 # from @max-network/css), so no private-registry scope/token is needed for it.
 

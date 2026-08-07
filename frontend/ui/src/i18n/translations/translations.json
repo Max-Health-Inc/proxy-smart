@@ -2,6 +2,9 @@
   "_languages": [
     "de"
   ],
+  "). The authorization server fetches metadata from that URL instead of requiring traditional Dynamic Client Registration.": [
+    "). Der Autorisierungsserver ruft die Metadaten von dieser URL ab, anstatt eine klassische dynamische Client-Registrierung zu verlangen."
+  ],
   "* (All resources)": [
     "* (Alle Ressourcen)"
   ],
@@ -82,6 +85,9 @@
   ],
   "Active Admins": [
     "Aktive Admins"
+  ],
+  "Active Directory": [
+    "Active Directory"
   ],
   "Active Scopes": [
     "Aktive Bereiche"
@@ -245,11 +251,17 @@
   "Admin audit events are pushed in real time as they occur.": [
     "Admin-Audit-Ereignisse werden in Echtzeit übermittelt."
   ],
+  "Admin console role": [
+    "Rolle der Verwaltungskonsole"
+  ],
   "Administrative": [
     "Administrativ"
   ],
   "Administrator": [
     "Administrator"
+  ],
+  "Advanced: customize roles": [
+    "Erweitert: Rollen anpassen"
   ],
   "Agent": [
     "Agent"
@@ -323,6 +335,12 @@
   "All users are already members": [
     "Alle Benutzer sind bereits Mitglieder"
   ],
+  "Allow HTTP Scheme": [
+    "HTTP-Schema erlauben"
+  ],
+  "Allow MCP clients (VS Code, Claude) to use URL-based client IDs": [
+    "MCP-Clients (VS Code, Claude) URL-basierte Client-IDs erlauben"
+  ],
   "Allow Offline Access": [
     "Offline-Zugriff erlauben"
   ],
@@ -368,14 +386,14 @@
   "App Store": [
     "App Store"
   ],
+  "App Store URL": [
+    "App-Store-URL"
+  ],
   "App Store Visibility": [
     "App-Store-Sichtbarkeit"
   ],
   "App Type": [
     "App-Typ"
-  ],
-  "Application": [
-    "Anwendung"
   ],
   "Application \"{{name}}\" {{action}} successfully": [
     "Anwendung \"{{name}}\" erfolgreich {{action}}"
@@ -421,6 +439,9 @@
   ],
   "Are you sure you want to shutdown the server? This will stop all services. Please provide a reason for this action:": [
     "Möchten Sie den Server wirklich herunterfahren? Alle Dienste werden gestoppt. Bitte geben Sie einen Grund an:"
+  ],
+  "Ask the user before a self-registered client gets access. Also required for a client’s own prompt=consent to be honoured. Backend services are always exempt — they have no user to ask.": [
+    "Den Benutzer fragen, bevor ein selbstregistrierter Client Zugriff erhält. Ebenfalls erforderlich, damit das clienteigene prompt=consent berücksichtigt wird. Backend-Dienste sind stets ausgenommen — sie haben keinen Benutzer, den man fragen könnte."
   ],
   "Assign": [
     "Zuweisen"
@@ -593,8 +614,8 @@
   "Base URL:": [
     "Basis-URL:"
   ],
-  "Based on the user\\": [
-    "Basierend auf dem Benutzer\\"
+  "Based on the user's Person resource links": [
+    "Basierend auf den Person-Ressourcenverknüpfungen des Benutzers"
   ],
   "Basic Auth": [
     "Basic Auth"
@@ -628,6 +649,9 @@
   ],
   "Bootstrap Admin Account": [
     "Bootstrap-Admin-Konto"
+  ],
+  "Brand Color": [
+    "Markenfarbe"
   ],
   "Brand Identifier": [
     "Markenkennung"
@@ -691,6 +715,9 @@
   ],
   "CA Certificate": [
     "CA-Zertifikat"
+  ],
+  "CIMD allows OAuth clients to register by providing a URL as their client_id (e.g.": [
+    "CIMD ermöglicht OAuth-Clients die Registrierung, indem sie eine URL als client_id angeben (z. B."
   ],
   "Cache Hit Rate": [
     "Cache-Trefferquote"
@@ -818,6 +845,9 @@
   "Client ID": [
     "Client-ID"
   ],
+  "Client ID Metadata Document (CIMD)": [
+    "Client-ID-Metadatendokument (CIMD)"
+  ],
   "Client ID with admin permissions for dynamic registration": [
     "Client-ID mit Admin-Berechtigungen für dynamische Registrierung"
   ],
@@ -862,6 +892,9 @@
   ],
   "Complete": [
     "Vollständig"
+  ],
+  "Composite": [
+    "Zusammengesetzt"
   ],
   "Confidence": [
     "Konfidenz"
@@ -1058,6 +1091,9 @@
   "Create Provider": [
     "Anbieter erstellen"
   ],
+  "Create Role": [
+    "Rolle erstellen"
+  ],
   "Create SMART Scope": [
     "SMART-Scope erstellen"
   ],
@@ -1196,6 +1232,9 @@
   "Default Scopes:": [
     "Standard-Scopes:"
   ],
+  "Define roles and the typical scopes they represent": [
+    "Rollen definieren und die typischen Scopes, die sie repräsentieren"
+  ],
   "Define what data this application can access": [
     "Definieren Sie, auf welche Daten diese Anwendung zugreifen kann"
   ],
@@ -1226,6 +1265,12 @@
   "Delete mapper": [
     "Mapper löschen"
   ],
+  "Delete role": [
+    "Rolle löschen"
+  ],
+  "Delete role \"{{name}}\"? This cannot be undone.": [
+    "Rolle „{{name}}“ löschen? Dies kann nicht rückgängig gemacht werden."
+  ],
   "Delete scope": [
     "Scope löschen"
   ],
@@ -1250,8 +1295,14 @@
   "Description": [
     "Beschreibung"
   ],
+  "Descriptive label of the typical scopes this role represents. Not enforced.": [
+    "Beschreibende Bezeichnung der typischen Scopes, die diese Rolle repräsentiert. Nicht erzwungen."
+  ],
   "Details": [
     "Details"
+  ],
+  "Dev only — allow http:// client IDs": [
+    "Nur für Entwicklung — http://-Client-IDs erlauben"
   ],
   "Directory users carry fhirUser": [
     "Verzeichnisbenutzer tragen fhirUser"
@@ -1282,6 +1333,9 @@
   ],
   "Domains": [
     "Domänen"
+  ],
+  "Domains whose client_id metadata documents are accepted": [
+    "Domains, deren client_id-Metadatendokumente akzeptiert werden"
   ],
   "Door Access": [
     "Türzugang"
@@ -1382,11 +1436,17 @@
   "Edit Profile": [
     "Profil bearbeiten"
   ],
+  "Edit Role": [
+    "Rolle bearbeiten"
+  ],
   "Edit SMART Application": [
     "SMART-Anwendung bearbeiten"
   ],
   "Edit Scope Set": [
     "Scope-Set bearbeiten"
+  ],
+  "Edit role": [
+    "Rolle bearbeiten"
   ],
   "Email": [
     "E-Mail"
@@ -1405,6 +1465,9 @@
   ],
   "Enable": [
     "Aktivieren"
+  ],
+  "Enable CIMD": [
+    "CIMD aktivieren"
   ],
   "Enable Consent Enforcement": [
     "Einwilligungsdurchsetzung aktivieren"
@@ -1466,8 +1529,8 @@
   "Enter the Person resource ID to link to this user": [
     "Person-Ressource-ID eingeben, um sie mit diesem Benutzer zu verknüpfen"
   ],
-  "Enter the base URL of the FHIR server. The server name and details will be automatically retrieved from the server\\": [
-    "Geben Sie die Basis-URL des FHIR-Servers ein. Name und Details werden automatisch vom Server abgerufen\\"
+  "Enter the base URL of the FHIR server. The server name and details will be automatically retrieved from the server's metadata.": [
+    "Geben Sie die Basis-URL des FHIR-Servers ein. Servername und Details werden automatisch aus den Metadaten des Servers abgerufen."
   ],
   "Enter your Kisi API key": [
     "Geben Sie Ihren Kisi-API-Schlüssel ein"
@@ -1556,11 +1619,14 @@
   "Exposed Tools": [
     "Bereitgestellte Tools"
   ],
+  "External App Store URL. When set, /apps redirects here instead of serving the built-in App Store.": [
+    "Externe App-Store-URL. Wenn gesetzt, leitet /apps hierhin weiter, anstatt den integrierten App-Store auszuliefern."
+  ],
   "External Audiences": [
     "Externe Audiences"
   ],
-  "External resource servers that use this proxy as their authorization server (e.g. third-party MCP servers). Entries starting with \\": [
-    "Externe Ressourcen-Server, die diesen Proxy als Autorisierungsserver verwenden (z.B. MCP-Server von Drittanbietern). Einträge beginnend mit \\"
+  "External resource servers that use this proxy as their authorization server (e.g. third-party MCP servers). Entries starting with '.' match all subdomains (e.g. '.maxhealth.tech' matches dicom.maxhealth.tech).": [
+    "Externe Ressourcenserver, die diesen Proxy als Autorisierungsserver verwenden (z. B. MCP-Server von Drittanbietern). Einträge, die mit '.' beginnen, gelten für alle Subdomains (z. B. '.maxhealth.tech' trifft auf dicom.maxhealth.tech zu)."
   ],
   "FHIR & DICOM Server Management": [
     "FHIR- & DICOM-Server-Verwaltung"
@@ -1916,6 +1982,15 @@
   "Health": [
     "Zustand"
   ],
+  "Health Data Aggregator": [
+    "Gesundheitsdaten-Aggregator"
+  ],
+  "Health Information Network": [
+    "Gesundheitsinformationsnetz"
+  ],
+  "Health Insurance": [
+    "Krankenversicherung"
+  ],
   "Health check completed: Server is {{status}}": [
     "Gesundheitsprüfung abgeschlossen: Server ist {{status}}"
   ],
@@ -1924,6 +1999,9 @@
   ],
   "Healthcare Administrator": [
     "Gesundheitsadministrator"
+  ],
+  "Healthcare Provider": [
+    "Leistungserbringer"
   ],
   "Healthcare Users": [
     "Gesundheitsbenutzer"
@@ -2035,6 +2113,9 @@
   ],
   "Imaging": [
     "Bildgebung"
+  ],
+  "Imaging Center": [
+    "Radiologiezentrum"
   ],
   "Import Users": [
     "Benutzer importieren"
@@ -2162,6 +2243,9 @@
   "LDAP federation updated successfully": [
     "LDAP-Föderation erfolgreich aktualisiert"
   ],
+  "Laboratory": [
+    "Labor"
+  ],
   "Language": [
     "Sprache"
   ],
@@ -2194,6 +2278,9 @@
   ],
   "Latency": [
     "Latenz"
+  ],
+  "Launch": [
+    "Start"
   ],
   "Launch URL": [
     "Start-URL"
@@ -2245,6 +2332,9 @@
   ],
   "Linked Identity Providers": [
     "Verknüpfte Identity Provider"
+  ],
+  "Linked to a scope set or scopes": [
+    "Mit einem Scope-Set oder Scopes verknüpft"
   ],
   "Loading Admin Panel...": [
     "Admin-Panel wird geladen..."
@@ -2330,6 +2420,9 @@
   "Loading registration settings...": [
     "Registrierungseinstellungen werden geladen..."
   ],
+  "Loading roles...": [
+    "Rollen werden geladen..."
+  ],
   "Loading users...": [
     "Benutzer werden geladen..."
   ],
@@ -2344,6 +2437,9 @@
   ],
   "Locked": [
     "Gesperrt"
+  ],
+  "Login Events": [
+    "Anmeldeereignisse"
   ],
   "Logo": [
     "Logo"
@@ -2708,6 +2804,9 @@
   "No role-based filtering is applied.": [
     "Keine rollenbasierte Filterung wird angewendet."
   ],
+  "No roles found": [
+    "Keine Rollen gefunden"
+  ],
   "No scope checking is performed.": [
     "Keine Scope-Prüfung wird durchgeführt."
   ],
@@ -2731,6 +2830,12 @@
   ],
   "No trend data available": [
     "Keine Trenddaten verfügbar"
+  ],
+  "No trusted domains configured. Add domains to enable CIMD.": [
+    "Keine vertrauenswürdigen Domains konfiguriert. Fügen Sie Domains hinzu, um CIMD zu aktivieren."
+  ],
+  "No typical scopes set": [
+    "Keine typischen Scopes festgelegt"
   ],
   "Non-deterministic": [
     "Nicht-deterministisch"
@@ -2761,6 +2866,9 @@
   ],
   "Notification Email": [
     "Benachrichtigungs-E-Mail"
+  ],
+  "Novell eDirectory": [
+    "Novell eDirectory"
   ],
   "Nurse": [
     "Pflegekraft"
@@ -2812,6 +2920,9 @@
   ],
   "Offline": [
     "Offline"
+  ],
+  "One Level": [
+    "Eine Ebene"
   ],
   "Online": [
     "Online"
@@ -2915,6 +3026,9 @@
   "Password (Optional)": [
     "Passwort (Optional)"
   ],
+  "Password Resets": [
+    "Passwortzurücksetzungen"
+  ],
   "Path": [
     "Pfad"
   ],
@@ -2993,6 +3107,9 @@
   "Pharmacist": [
     "Apotheker"
   ],
+  "Pharmacy": [
+    "Apotheke"
+  ],
   "Physical Access": [
     "Physischer Zugang"
   ],
@@ -3010,6 +3127,12 @@
   ],
   "Please wait while we verify your credentials...": [
     "Bitte warten Sie, während wir Ihre Anmeldedaten überprüfen..."
+  ],
+  "Plumbing, hidden by default": [
+    "Interne Technik, standardmäßig ausgeblendet"
+  ],
+  "Policy:": [
+    "Richtlinie:"
   ],
   "Portal Description": [
     "Portal-Beschreibung"
@@ -3041,6 +3164,9 @@
   "Practitioner": [
     "Behandelnder"
   ],
+  "Pre-selects a sensible role bundle. Expand the advanced section below to customize.": [
+    "Wählt ein sinnvolles Rollenpaket vor. Öffnen Sie den erweiterten Bereich unten zum Anpassen."
+  ],
   "Predictive Forecast": [
     "Vorhersageprognose"
   ],
@@ -3058,6 +3184,9 @@
   ],
   "Primary Role": [
     "Primäre Rolle"
+  ],
+  "Primary colour used to theme the login page and patient picker for this brand. Any CSS colour (e.g. #00d294). Not published in branding.json.": [
+    "Primärfarbe für die Gestaltung der Anmeldeseite und der Patientenauswahl dieser Marke. Beliebige CSS-Farbe (z. B. #00d294). Wird nicht in branding.json veröffentlicht."
   ],
   "Privacy Policy URI": [
     "Datenschutzrichtlinien-URI"
@@ -3079,6 +3208,9 @@
   ],
   "Profile Settings": [
     "Profileinstellungen"
+  ],
+  "Profile:": [
+    "Profil:"
   ],
   "Projected OAuth flows in the next hour": [
     "Prognostizierte OAuth-Flows in der nächsten Stunde"
@@ -3188,6 +3320,12 @@
   "Raw capability statement": [
     "Rohe Capability-Anweisung"
   ],
+  "Read": [
+    "Lesen"
+  ],
+  "Read Only": [
+    "Nur Lesen"
+  ],
   "Read-only": [
     "Schreibgeschützt"
   ],
@@ -3263,11 +3401,17 @@
   "Recommended action": [
     "Empfohlene Aktion"
   ],
+  "Red Hat Directory Server": [
+    "Red Hat Directory Server"
+  ],
   "Redirect URI": [
     "Redirect-URI"
   ],
   "Redirect URIs": [
     "Redirect-URIs"
+  ],
+  "Redirect URIs must match client_id domain": [
+    "Redirect-URIs müssen zur client_id-Domain passen"
   ],
   "Redirect URL": [
     "Redirect-URL"
@@ -3350,6 +3494,9 @@
   "Removing...": [
     "Wird entfernt..."
   ],
+  "Represented scope set": [
+    "Repräsentiertes Scope-Set"
+  ],
   "Request Volume": [
     "Anfragevolumen"
   ],
@@ -3385,6 +3532,9 @@
   ],
   "Required for dynamic client registration and advanced features": [
     "Erforderlich für dynamische Client-Registrierung und erweiterte Funktionen"
+  ],
+  "Required for: VS Code MCP, Claude Desktop, and other MCP 2025-11-25 clients.": [
+    "Erforderlich für: VS Code MCP, Claude Desktop und andere MCP-2025-11-25-Clients."
   ],
   "Requirement": [
     "Anforderung"
@@ -3428,6 +3578,9 @@
   "Restart Server": [
     "Server neu starten"
   ],
+  "Restrict Same Domain": [
+    "Auf gleiche Domain beschränken"
+  ],
   "Restrict which users can access this app based on their FHIR user type or assigned roles. Leave empty for no restrictions.": [
     "Zugriff auf diese App basierend auf FHIR-Benutzertyp oder zugewiesenen Rollen einschränken. Leer lassen für keine Einschränkungen."
   ],
@@ -3461,6 +3614,12 @@
   "Role Management": [
     "Rollenverwaltung"
   ],
+  "Role name": [
+    "Rollenname"
+  ],
+  "Role name cannot be changed": [
+    "Der Rollenname kann nicht geändert werden"
+  ],
   "Role violations are logged but data is not filtered.": [
     "Rollenverstöße werden protokolliert, aber Daten werden nicht gefiltert."
   ],
@@ -3473,11 +3632,23 @@
   "Role-based": [
     "Rollenbasiert"
   ],
+  "Roles": [
+    "Rollen"
+  ],
+  "Roles control access to this admin console and act as labels for clinical intent. The scopes shown below are the typical scopes a role represents; they are descriptive only and are not enforced as FHIR data access.": [
+    "Rollen steuern den Zugriff auf diese Verwaltungskonsole und dienen als Bezeichnungen für die klinische Absicht. Die unten gezeigten Scopes sind die typischen Scopes, die eine Rolle repräsentiert; sie sind rein beschreibend und werden nicht als FHIR-Datenzugriff erzwungen."
+  ],
+  "Roles control access to this admin console and act as labels for clinical intent. They are not enforced as FHIR data access.": [
+    "Rollen steuern den Zugriff auf diese Verwaltungskonsole und dienen als Bezeichnungen für die klinische Absicht. Sie werden nicht als FHIR-Datenzugriff erzwungen."
+  ],
   "SAML 2.0": [
     "SAML 2.0"
   ],
   "SAML Providers": [
     "SAML-Anbieter"
+  ],
+  "SMART": [
+    "SMART"
   ],
   "SMART App Launch 2.2.0 User-Access Brands": [
     "SMART App Launch 2.2.0 User-Access Brands"
@@ -3704,8 +3875,14 @@
   "Select a registered app to publish to the public app store.": [
     "Registrierte App auswählen, um sie im öffentlichen App Store zu veröffentlichen."
   ],
+  "Select a scope set...": [
+    "Scope-Set auswählen..."
+  ],
   "Select a server from the overview tab to view detailed information": [
     "Server aus der Übersicht auswählen, um Details anzuzeigen"
+  ],
+  "Select a user type to pre-fill roles...": [
+    "Benutzertyp auswählen, um Rollen vorzubelegen..."
   ],
   "Select a value": [
     "Wert auswählen"
@@ -3745,9 +3922,6 @@
   ],
   "Server": [
     "Server"
-  ],
-  "Server Access": [
-    "Serverzugang"
   ],
   "Server Access Configuration": [
     "Serverzugangs-Konfiguration"
@@ -3842,11 +4016,17 @@
   "Set Default": [
     "Als Standard festlegen"
   ],
+  "Set a description and the scope set whose scopes this role typically represents. This is a label only and does not grant access.": [
+    "Legen Sie eine Beschreibung und das Scope-Set fest, dessen Scopes diese Rolle typischerweise repräsentiert. Dies ist nur eine Bezeichnung und gewährt keinen Zugriff."
+  ],
   "Setup Dynamic Registration": [
     "Dynamische Registrierung einrichten"
   ],
   "Show": [
     "Anzeigen"
+  ],
+  "Show technical roles": [
+    "Technische Rollen anzeigen"
   ],
   "Showing first 100 events of {{total}}": [
     "Zeige die ersten 100 Ereignisse von {{total}}"
@@ -3905,6 +4085,9 @@
   "Standalone Launch Clients": [
     "Standalone-Launch-Clients"
   ],
+  "Standard user": [
+    "Standardbenutzer"
+  ],
   "State": [
     "Status"
   ],
@@ -3934,6 +4117,9 @@
   ],
   "Subject:": [
     "Betreff:"
+  ],
+  "Subtree": [
+    "Teilbaum"
   ],
   "Success": [
     "Erfolg"
@@ -4015,6 +4201,12 @@
   ],
   "TLS everywhere: secure client-to-proxy and proxy-to-FHIR connections.": [
     "TLS überall: Client-zu-Proxy- und Proxy-zu-FHIR-Verbindungen absichern."
+  ],
+  "Technical": [
+    "Technisch"
+  ],
+  "Technical Roles": [
+    "Technische Rollen"
   ],
   "Template": [
     "Vorlage"
@@ -4115,6 +4307,9 @@
   "Tip: If fetching fails in browser, the server may not allow CORS for your origin. Try a proxy or server-side check.": [
     "Tipp: Wenn der Abruf im Browser fehlschlägt, erlaubt der Server möglicherweise kein CORS für Ihren Ursprung. Versuchen Sie einen Proxy oder serverseitige Prüfung."
   ],
+  "Tivoli": [
+    "Tivoli"
+  ],
   "To link an IdP, edit it in the Identity Providers tab and select this organization.": [
     "Um einen IdP zu verknüpfen, bearbeiten Sie ihn im Identity-Provider-Tab und wählen Sie diese Organisation."
   ],
@@ -4163,6 +4358,9 @@
   "Total Decisions": [
     "Entscheidungen gesamt"
   ],
+  "Total Events": [
+    "Ereignisse gesamt"
+  ],
   "Total Federations": [
     "Föderationen gesamt"
   ],
@@ -4202,6 +4400,9 @@
   "Trust email addresses from LDAP without verification": [
     "E-Mail-Adressen aus LDAP ohne Verifizierung vertrauen"
   ],
+  "Trusted Domains": [
+    "Vertrauenswürdige Domains"
+  ],
   "Try Again": [
     "Erneut versuchen"
   ],
@@ -4211,11 +4412,14 @@
   "Type": [
     "Typ"
   ],
-  "Type & Auth": [
-    "Typ & Authentifizierung"
-  ],
   "Type:": [
     "Typ:"
+  ],
+  "Typical scopes": [
+    "Typische Scopes"
+  ],
+  "Typical scopes for this role": [
+    "Typische Scopes für diese Rolle"
   ],
   "UI Display Override": [
     "UI-Anzeige-Überschreibung"
@@ -4229,8 +4433,8 @@
   "URIs": [
     "URIs"
   ],
-  "URL endpoint where the proxy can fetch your app\\": [
-    "URL-Endpunkt, unter dem der Proxy Ihre App abrufen kann"
+  "URL endpoint where the proxy can fetch your app's public keys for JWT verification": [
+    "URL-Endpunkt, unter dem der Proxy die öffentlichen Schlüssel Ihrer App zur JWT-Verifizierung abrufen kann"
   ],
   "UUID LDAP Attribute": [
     "UUID-LDAP-Attribut"
@@ -4292,8 +4496,14 @@
   "Unsupported Servers": [
     "Nicht unterstützte Server"
   ],
+  "Unsynced": [
+    "Nicht synchronisiert"
+  ],
   "Update": [
     "Aktualisieren"
+  ],
+  "Update CIMD": [
+    "CIMD aktualisieren"
   ],
   "Update Provider": [
     "Anbieter aktualisieren"
@@ -4310,8 +4520,8 @@
   "Update the DICOMweb/PACS server configuration.": [
     "DICOMweb/PACS-Server-Konfiguration aktualisieren."
   ],
-  "Update the URL for \"{{name}}\". The server name and details will be automatically retrieved from the server\\": [
-    "URL für „{{name}}\" aktualisieren. Servername und Details werden automatisch vom Server abgerufen"
+  "Update the URL for \"{{name}}\". The server name and details will be automatically retrieved from the server's metadata.": [
+    "URL für „{{name}}“ aktualisieren. Servername und Details werden automatisch aus den Metadaten des Servers abgerufen."
   ],
   "Update user information and permissions": [
     "Benutzerinformationen und Berechtigungen aktualisieren"
@@ -4346,11 +4556,14 @@
   "Use strong certificate passwords and rotate certificates regularly": [
     "Starke Zertifikatpasswörter verwenden und Zertifikate regelmäßig rotieren"
   ],
-  "Use these tools if you\\": [
-    "Verwenden Sie diese Tools, wenn Sie"
+  "Use these tools if you're experiencing login timeout or \"Code not valid\" errors": [
+    "Verwenden Sie diese Werkzeuge, wenn Anmelde-Timeouts oder „Code not valid“-Fehler auftreten"
   ],
   "User": [
     "Benutzer"
+  ],
+  "User Consent Required": [
+    "Benutzereinwilligung erforderlich"
   ],
   "User Federation": [
     "Benutzerföderation"
@@ -4370,6 +4583,9 @@
   "User Person Server Access": [
     "Benutzer-Person-Serverzugang"
   ],
+  "User Person Servers": [
+    "Benutzer-Person-Server"
+  ],
   "User Restrictions": [
     "Benutzereinschränkungen"
   ],
@@ -4381,6 +4597,9 @@
   ],
   "User sync failed": [
     "Benutzersynchronisierung fehlgeschlagen"
+  ],
+  "User type": [
+    "Benutzertyp"
   ],
   "User-Person Linked Servers": [
     "Benutzer-Person-verknüpfte Server"
@@ -4420,6 +4639,9 @@
   ],
   "Using asymmetric JWT authentication with registered public key": [
     "Asymmetrische JWT-Authentifizierung mit registriertem öffentlichem Schlüssel"
+  ],
+  "Using the app's own logo": [
+    "Eigenes Logo der App wird verwendet"
   ],
   "Valid": [
     "Gültig"
@@ -4466,6 +4688,9 @@
   "Visible Tabs": [
     "Sichtbare Tabs"
   ],
+  "Visible roles": [
+    "Sichtbare Rollen"
+  ],
   "Visual Scope Builder": [
     "Visueller Scope-Builder"
   ],
@@ -4480,6 +4705,9 @@
   ],
   "Warning:": [
     "Warnung:"
+  ],
+  "Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?": [
+    "Warnung: Das Ändern der Keycloak-URL oder Client-Konfiguration kann Sie aus dem System abmelden. Möglicherweise müssen Sie sich nach Änderungen erneut anmelden. Möchten Sie fortfahren?"
   ],
   "Watchlist": [
     "Beobachtungsliste"
@@ -4499,11 +4727,20 @@
   "Welcome back, {{name}}": [
     "Willkommen zurück, {{name}}"
   ],
+  "What is this role for?": [
+    "Wofür ist diese Rolle gedacht?"
+  ],
   "Which admin resources are most modified": [
     "Welche Admin-Ressourcen am häufigsten geändert werden"
   ],
   "Which types of OAuth2 clients can register": [
     "Welche Arten von OAuth2-Clients sich registrieren können"
+  ],
+  "With Typical Scopes": [
+    "Mit typischen Scopes"
+  ],
+  "Writable": [
+    "Beschreibbar"
   ],
   "Yes": [
     "Ja"
@@ -4646,6 +4883,9 @@
   "{{count}} scope(s) with missing mappers": [
     "{{count}} Scope(s) mit fehlenden Mappern"
   ],
+  "{{count}} users": [
+    "{{count}} Benutzer"
+  ],
   "{{online}} online, {{offline}} offline": [
     "{{online}} online, {{offline}} offline"
   ],
@@ -4654,8 +4894,5 @@
   ],
   "— Keycloak Default —": [
     "— Keycloak-Standard —"
-  ],
-  "Warning: Changing the Keycloak URL or client configuration may log you out of the system. You may need to log in again after making changes. Do you want to continue?": [
-    "Warnung: Das Ändern der Keycloak-URL oder Client-Konfiguration kann Sie aus dem System abmelden. Möglicherweise müssen Sie sich nach Änderungen erneut anmelden. Möchten Sie fortfahren?"
   ]
 }
