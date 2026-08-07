@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Admin UI",
   "description": "A web-based administration interface for managing healthcare applications and resources via Proxy Smart.",
   "private": true,
-  "version": "0.2.30-RELEASE.202608061003.8c8a24a2f",
+  "version": "0.2.31-alpha.202608071218.dc88343db",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,10 @@
     "preview": "vite preview",
     "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/lib/api-client",
     "test": "vitest",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "i18n:sync": "python node_modules/@max-network/i18n/tools/extract-and-sync.py",
+    "i18n:scan": "python node_modules/@max-network/i18n/tools/scan-hardcoded.py",
+    "i18n:translate": "node node_modules/@max-network/i18n/tools/translate-batch.js"
   },
   "dependencies": {
     "brandc": "^0.2.2",
@@ -45,6 +48,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@max-network/i18n": "^0.4.1",
     "@tailwindcss/typography": "^0.5.20",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",

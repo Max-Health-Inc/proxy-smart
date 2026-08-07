@@ -13,8 +13,8 @@ RUN apt-get update -qq && \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy root package files first. bunfig.toml is required so bun can map the
-# @max-health-inc scope to GitHub Packages (and read $GH_PACKAGES_TOKEN); without
-# it, `bun install` cannot authenticate @max-health-inc/shared-ui and stalls.
+# @max-health-inc and @max-network scopes to GitHub Packages (and read
+# $GH_PACKAGES_TOKEN); without it `bun install` cannot authenticate them and stalls.
 COPY package.json bun.lock bunfig.toml ./
 
 # Copy root lib (contains shared tarballs like smart-app-launch-generated.tgz)
