@@ -66,11 +66,11 @@ jobs:
     # Install Dependencies
     - name: Install Dependencies (Workspace)
       timeout-minutes: 20
-      # GH_PACKAGES_TOKEN lets bun install @max-health-inc/shared-ui from GitHub
-      # Packages (see bunfig.toml). GITHUB_TOKEN with packages:read suffices since
-      # the package is public.
+      # GH_PACKAGES_TOKEN lets bun install our scopes from GitHub Packages (see
+      # bunfig.toml). It must be the PAT: @max-network/i18n is private and owned by
+      # another org, so the repo-scoped GITHUB_TOKEN gets 403 on it.
       env:
-        GH_PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
       # A cold `bun install` on this runner reliably completes ~most downloads then
       # wedges on the final few: bun keeps HTTP keep-alive connections and has no
       # read timeout, so a connection the runner's NAT silently dropped is waited on
