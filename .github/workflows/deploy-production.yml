@@ -112,8 +112,10 @@ jobs:
           build-args: |
             VITE_ENCRYPTION_SECRET=${{ secrets.VITE_ENCRYPTION_SECRET }}
             DEPLOY_ENV=prod
+          # No GITHUB_TOKEN fallback: @max-network is another org and refuses it, so
+          # falling back only trades a clear error for an 18-minute stall.
           secrets: |
-            gh_packages_token=${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+            gh_packages_token=${{ secrets.GH_PACKAGES_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -172,17 +174,12 @@ jobs:
 
       - name: Install infra dependencies
         timeout-minutes: 10
-        # Must be the PAT: @max-network/i18n is private and owned by another org,
-        # so the repo-scoped GITHUB_TOKEN gets 403 on it (see bunfig.toml).
-        env:
-          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-        # --filter scopes the install to this one workspace member. A full
-        # workspace install is what build-and-test.yml needs a retry loop for (a
-        # cold `bun install` wedges on held-open sockets on these runners); infra
-        # only needs aws-cdk + aws-cdk-lib + constructs, so scoping keeps it small
-        # enough to avoid that rather than re-implementing the workaround here.
+        # --filter scopes the install to deploy/infra (aws-cdk and friends);
         # --frozen-lockfile so a deploy can never quietly resolve something new.
-        run: bun install --filter proxy-smart-infra --frozen-lockfile --network-concurrency=16
+        uses: ./.github/actions/bun-install
+        with:
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+          args: --filter proxy-smart-infra --frozen-lockfile
 
       # --exclusively is NOT optional. Without it CDK reports
       #   "Including dependency stacks: ProxySmartDatabase, ProxySmartVpc"

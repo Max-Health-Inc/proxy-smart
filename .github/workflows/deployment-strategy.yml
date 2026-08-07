@@ -31,33 +31,9 @@ on:
       deployment_target:
         description: "Target platform where app was deployed"
         value: ${{ jobs.output-deployment-urls.outputs.deployment_target }}
-    secrets:
-      VPS_SSH_KEY:
-        required: false
-      VPS_HOST:
-        required: false
-      VPS_USER:
-        required: false
-      DISCORD_WEBHOOK_URL:
-        required: false
-      VITE_ENCRYPTION_SECRET:
-        required: false
-      BETA_POSTGRES_PASSWORD:
-        required: false
-      BETA_KEYCLOAK_ADMIN_PASSWORD:
-        required: false
-      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET:
-        required: false
-      BETA_SHL_EXCHANGE_CLIENT_SECRET:
-        required: false
-      OPENAI_API_KEY:
-        required: false
-      RESEND_API_KEY:
-        required: false
-      APP_ID:
-        required: false
-      APP_PRIVATE_KEY:
-        required: false
+    # No `secrets:` block: both callers pass `secrets: inherit`, and the subset this
+    # used to declare drifted — GH_PACKAGES_TOKEN was missing, so the production
+    # image build never received it.
 
 permissions:
   contents: read
@@ -72,20 +48,7 @@ jobs:
     with:
       app_version: ${{ inputs.app_version }}
       source_branch: ${{ inputs.source_branch }}
-    secrets:
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-      VPS_HOST: ${{ secrets.VPS_HOST }}
-      VPS_USER: ${{ secrets.VPS_USER }}
-      BETA_POSTGRES_PASSWORD: ${{ secrets.BETA_POSTGRES_PASSWORD }}
-      BETA_KEYCLOAK_ADMIN_PASSWORD: ${{ secrets.BETA_KEYCLOAK_ADMIN_PASSWORD }}
-      BETA_KEYCLOAK_ADMIN_CLIENT_SECRET: ${{ secrets.BETA_KEYCLOAK_ADMIN_CLIENT_SECRET }}
-      BETA_SHL_EXCHANGE_CLIENT_SECRET: ${{ secrets.BETA_SHL_EXCHANGE_CLIENT_SECRET }}
-      VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
-      BETA_ORTHANC_PASSWORD: ${{ secrets.BETA_ORTHANC_PASSWORD }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-      APP_ID: ${{ secrets.APP_ID }}
-      APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+    secrets: inherit
 
   deploy-production:
     name: Deploy Production (AWS)
@@ -94,8 +57,7 @@ jobs:
     with:
       app_version: ${{ inputs.app_version }}
       source_branch: ${{ inputs.source_branch }}
-    secrets:
-      VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+    secrets: inherit
 
   output-deployment-urls:
     name: Output Deployment URLs
