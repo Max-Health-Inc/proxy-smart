@@ -327,26 +327,9 @@ jobs:
       - name: Install dependencies
         if: steps.config.outputs.target != 'deployed'
         timeout-minutes: 20
-        # Must be the PAT: @max-network/i18n is private and owned by another org, so
-        # the repo-scoped GITHUB_TOKEN gets 403 on it (see bunfig.toml). Without a
-        # usable token a cold `bun install` wedges on registry auth and the job burns
-        # its whole timeout before ever reaching the Inferno steps.
-        env:
-          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-        # A cold bun install on GitHub runners reliably completes most downloads then
-        # wedges on the final few (keep-alive connections with no read timeout). Bound
-        # each attempt and retry with a warmer cache — mirrors build-and-test.yml.
-        run: |
-          echo "Installing all dependencies via workspace..."
-          for attempt in 1 2 3; do
-            echo "::group::bun install attempt $attempt"
-            V=""; [ "$attempt" = "3" ] && V="--verbose"
-            if timeout 360 bun install --network-concurrency=16 $V; then
-              echo "::endgroup::"; echo "install succeeded on attempt $attempt"; exit 0
-            fi
-            echo "::endgroup::"; echo "attempt $attempt stalled/failed; retrying with warmer cache"
-          done
-          echo "bun install failed after 3 attempts" >&2; exit 1
+        uses: ./.github/actions/bun-install
+        with:
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
       - name: Build Patient Picker
         if: steps.config.outputs.target != 'deployed'

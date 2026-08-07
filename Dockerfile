@@ -31,14 +31,13 @@ COPY packages/elysia-mcp/package.json ./packages/elysia-mcp/
 # Strip workspaces not included in Docker build to avoid install failures
 RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/elysia-mcp","packages/patient-picker","frontend/ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
-# Install dependencies for Docker-relevant workspaces only.
-# @max-health-inc/shared-ui resolves from GitHub Packages, which requires a token
-# even for public packages. The token is provided as a BuildKit secret (never
-# baked into an image layer) and exported to $GH_PACKAGES_TOKEN, which bunfig.toml
-# reads for the @max-health-inc scope.
+# Install dependencies for Docker-relevant workspaces only. The registry token comes
+# in as a BuildKit secret so it never lands in an image layer; the retry loop and the
+# fail-fast token check are shared with CI.
+COPY scripts/bun-install.sh ./scripts/
 RUN --mount=type=secret,id=gh_packages_token \
     GH_PACKAGES_TOKEN="$(cat /run/secrets/gh_packages_token 2>/dev/null || true)" \
-    sh -c 'for a in 1 2 3; do echo "bun install attempt $a"; timeout 360 bun install --network-concurrency=16 && exit 0; echo "attempt $a stalled; retrying with warmer cache"; done; exit 1'
+    sh ./scripts/bun-install.sh
 
 # Copy shared Vite config (imported by all SMART apps via ../../config/vite-config)
 COPY config/ ./config/

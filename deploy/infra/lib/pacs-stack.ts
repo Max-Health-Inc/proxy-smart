@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
-import * as rds from 'aws-cdk-lib/aws-rds';
+import type * as rds from 'aws-cdk-lib/aws-rds';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
-import { Construct } from 'constructs';
+import type { Construct } from 'constructs';
 
 /** Internal DICOMweb URL. A literal so the backend stack needs no dependency on this one. */
 export const PACS_INTERNAL_DICOMWEB_URL = 'http://orthanc.proxy-smart.internal:8042/dicom-web';
