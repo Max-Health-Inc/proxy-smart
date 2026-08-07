@@ -1,0 +1,21 @@
+name: 'Bun Install'
+description: 'Workspace install with the registry token and the cold-cache retry loop'
+
+inputs:
+  token:
+    description: 'GitHub Packages token. Must be the PAT — GITHUB_TOKEN is refused by @max-network.'
+    required: true
+  args:
+    description: 'Extra arguments for bun install (e.g. --frozen-lockfile)'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        GH_PACKAGES_TOKEN: ${{ inputs.token }}
+        # Via env, not interpolated into the command line: unquoted so it still word-splits.
+        BUN_INSTALL_ARGS: ${{ inputs.args }}
+      run: sh ./scripts/bun-install.sh $BUN_INSTALL_ARGS

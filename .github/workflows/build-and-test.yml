@@ -66,30 +66,9 @@ jobs:
     # Install Dependencies
     - name: Install Dependencies (Workspace)
       timeout-minutes: 20
-      # GH_PACKAGES_TOKEN lets bun install our scopes from GitHub Packages (see
-      # bunfig.toml). It must be the PAT: @max-network/i18n is private and owned by
-      # another org, so the repo-scoped GITHUB_TOKEN gets 403 on it.
-      env:
-        GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
-      # A cold `bun install` on this runner reliably completes ~most downloads then
-      # wedges on the final few: bun keeps HTTP keep-alive connections and has no
-      # read timeout, so a connection the runner's NAT silently dropped is waited on
-      # forever. Locally (slower network) it never hits that state. Mitigate two
-      # ways: cap network concurrency (fewer stale sockets), and retry with a hard
-      # per-attempt timeout so a wedged attempt is killed and retried on fresh
-      # connections with the cache now partially warm. Last attempt is verbose so a
-      # persistent failure is diagnosable.
-      run: |
-        echo "Installing all dependencies via workspace..."
-        for attempt in 1 2 3; do
-          echo "::group::bun install attempt $attempt"
-          V=""; [ "$attempt" = "3" ] && V="--verbose"
-          if timeout 360 bun install --network-concurrency=16 $V; then
-            echo "::endgroup::"; echo "install succeeded on attempt $attempt"; exit 0
-          fi
-          echo "::endgroup::"; echo "attempt $attempt stalled/failed; retrying with warmer cache"
-        done
-        echo "bun install failed after 3 attempts" >&2; exit 1
+      uses: ./.github/actions/bun-install
+      with:
+        token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
     # The plugin directories under plugins/ are generated from plugins/source, and the
     # marketplace fetches them straight out of the repo — so a hand-edit here would be served
