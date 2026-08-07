@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import * as cdk from 'aws-cdk-lib';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as ecsPatterns from 'aws-cdk-lib/aws-ecs-patterns';
@@ -13,6 +16,7 @@ import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import * as servicediscovery from 'aws-cdk-lib/aws-servicediscovery';
 import type { Construct } from 'constructs';
 import { VPC_CIDR } from './vpc-stack.js';
+import { managedRuleGroups } from './waf-rules.js';
 
 /**
  * Cloud Map namespace used for internal service discovery.
@@ -189,44 +193,10 @@ export class KeycloakStack extends cdk.Stack {
             sampledRequestsEnabled: true,
           },
         },
-        // Priority 1-2: OWASP managed rules — filter malicious requests on allowed paths
-        {
-          name: 'AWSManagedRulesCommonRuleSet',
-          priority: 1,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesCommonRuleSet',
-              excludedRules: [
-                // Keycloak login forms can trigger these on legitimate form POSTs
-                { name: 'SizeRestrictions_BODY' },
-                { name: 'CrossSiteScripting_BODY' },
-              ],
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: 'CommonRuleSetMetrics',
-            sampledRequestsEnabled: true,
-          },
-        },
-        {
-          name: 'AWSManagedRulesKnownBadInputsRuleSet',
-          priority: 2,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesKnownBadInputsRuleSet',
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: 'KnownBadInputsMetrics',
-            sampledRequestsEnabled: true,
-          },
-        },
+        // Priority 1-2: OWASP managed rules — filter malicious requests on allowed
+        // paths. Shared with the backend ACL (see waf-rules.ts) because both front
+        // the same OAuth flow and must agree on what a legitimate request looks like.
+        ...managedRuleGroups({ startPriority: 1 }),
         // Priority 10: Allow only browser-facing paths (matches beta Caddy config)
         // Allowed: login page, logout, certs, broker, login-actions, discovery, theme assets
         {

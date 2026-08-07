@@ -15,6 +15,7 @@ import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import type * as rds from 'aws-cdk-lib/aws-rds';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import type { Construct } from 'constructs';
+import { managedRuleGroups } from './waf-rules.js';
 
 export interface BackendStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
@@ -191,40 +192,9 @@ export class BackendStack extends cdk.Stack {
         metricName: 'BackendWafMetrics',
         sampledRequestsEnabled: true,
       },
-      rules: [
-        {
-          name: 'AWSManagedRulesCommonRuleSet',
-          priority: 1,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesCommonRuleSet',
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: 'CommonRuleSetMetrics',
-            sampledRequestsEnabled: true,
-          },
-        },
-        {
-          name: 'AWSManagedRulesKnownBadInputsRuleSet',
-          priority: 2,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesKnownBadInputsRuleSet',
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: 'KnownBadInputsMetrics',
-            sampledRequestsEnabled: true,
-          },
-        },
-      ],
+      // Shared with the Keycloak ACL — both front the same OAuth/MCP flow, so an
+      // exclusion that only one of them carries just moves the block one hop.
+      rules: managedRuleGroups({ startPriority: 1 }),
     });
 
     // ECS Cluster
