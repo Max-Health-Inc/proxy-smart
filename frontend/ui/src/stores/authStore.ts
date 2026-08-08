@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
@@ -14,6 +17,7 @@ import {
   clearAuthorizationCodeData
 } from '@/lib/storage';
 import type { UserProfile } from '@/lib/types/api';
+import { logger } from '@/lib/logger';
 
 interface TokenData {
   access_token: string;
@@ -162,7 +166,7 @@ export const useAuthStore = create<AuthState>()(
             
             // Set up auth error handler
             setAuthErrorHandler(async () => {
-              if (import.meta.env.DEV) console.log('Auth error handler triggered, logging out...');
+              logger.info('Auth error handler triggered, logging out');
               await get().logout();
             });
             
@@ -175,7 +179,7 @@ export const useAuthStore = create<AuthState>()(
 
           // Tokens expired, try to refresh if we have refresh token
           if (tokens.refresh_token) {
-            if (import.meta.env.DEV) console.log('Tokens expired, attempting refresh...');
+            logger.info('Tokens expired, attempting refresh');
             try {
               await get().refreshTokens();
               set({ isInitializing: false });
@@ -217,7 +221,7 @@ export const useAuthStore = create<AuthState>()(
             }
           } else {
             // No refresh token, clear everything
-            if (import.meta.env.DEV) console.log('No refresh token available, clearing auth state');
+            logger.info('No refresh token available, clearing auth state');
             await clearTokens();
             set({ 
               isAuthenticated: false, 
@@ -249,7 +253,7 @@ export const useAuthStore = create<AuthState>()(
         
         // Set up auth error handler each time we update clients
         setAuthErrorHandler(async () => {
-          if (import.meta.env.DEV) console.log('Auth error handler triggered, logging out...');
+          logger.info('Auth error handler triggered, logging out');
           await get().logout();
         });
       },      // Actions
@@ -384,7 +388,7 @@ export const useAuthStore = create<AuthState>()(
           // Update API clients with refreshed token
           await get().updateClientApis();
           
-          if (import.meta.env.DEV) console.debug('Tokens refreshed successfully');
+          logger.debug('Tokens refreshed successfully');
         } catch (error) {
           console.error('Token refresh failed:', error);
           set({ loading: false });
@@ -397,7 +401,7 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         const tokens = await getStoredTokens();
         
-        if (import.meta.env.DEV) console.log('Initiating logout with tokens:', {
+        logger.info('Initiating logout with tokens', {
           hasAccessToken: !!tokens?.access_token,
           hasIdToken: !!tokens?.id_token,
           hasRefreshToken: !!tokens?.refresh_token

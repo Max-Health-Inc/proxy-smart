@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogEntry {
@@ -49,9 +52,10 @@ function push(level: LogLevel, msg: string, data?: unknown) {
   if (buffer.length > MAX_BUFFER) buffer.splice(0, buffer.length - MAX_BUFFER);
   persist(buffer);
 
-  // Only mirror debug/info to console when debug mode is active
+  // The one sanctioned console boundary; everything else goes through logger.
   const alwaysLog = level === 'warn' || level === 'error';
   if (alwaysLog || window.__DEBUG_ENABLED__) {
+    // eslint-disable-next-line no-console
     (console[level] || console.log)(`[${entry.ts}] [${level}] ${msg}`, data ?? '');
   }
 }

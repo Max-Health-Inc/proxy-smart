@@ -1,6 +1,10 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import i18n, { supportedLanguages } from '../lib/i18n';
+import { logger } from '@/lib/logger';
 
 // Get the initial language from browser or default to 'en'
 const getInitialLanguage = (): string => {
@@ -43,9 +47,9 @@ export const useAppStore = create<AppState>()(
       setLanguage: async (language: string) => {
         
         try {
-          console.debug('Attempting to change i18n language to:', language);
+          logger.debug('Changing i18n language', { language });
           await i18n.changeLanguage(language);
-          console.debug('i18n language changed successfully to:', i18n.language);
+          logger.debug('i18n language changed', { language: i18n.language });
           
           // Update store state
           set({ language });

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import React, { useState } from 'react';
 import {
   Badge,
@@ -18,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
   Checkbox,
+  Switch,
 } from '@proxy-smart/shared-ui';
 import { Shield, Server, Database, Trash2, Link2, Unlink, Plus, Undo2, Info } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
@@ -618,7 +622,17 @@ function RoleManagementSection({
   rolesMeta?: RolesMeta;
 }) {
   const noScopes = t('No typical scopes set');
-  const pickableRealmRoles = availableRealmRoles.filter(r => !isPlumbingRoleName(r));
+
+  // Hidden by default, but reachable: losing `default-roles-proxy-smart` costs a
+  // user `offline_access`, which fails token exchange after a successful login.
+  const [showTechnical, setShowTechnical] = useState(false);
+  const technicalRealmRoles = availableRealmRoles.filter(isPlumbingRoleName);
+  const pickableRealmRoles = showTechnical
+    ? availableRealmRoles
+    : availableRealmRoles.filter(r => !isPlumbingRoleName(r));
+  // Shown even when the toggle is off — that is what people come here to check.
+  const assignedTechnical = technicalRealmRoles.filter(r => formData.realmRoles.includes(r));
+
   return (
     <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
       <div className="flex items-center gap-2">
@@ -645,7 +659,22 @@ function RoleManagementSection({
 
       {/* Realm Roles */}
       <div>
-        <Label className="mb-2 block">{t('Realm Roles')}</Label>
+        <div className="flex items-center justify-between mb-2 gap-3">
+          <Label>{t('Realm Roles')}</Label>
+          {technicalRealmRoles.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Label htmlFor="edit-show-technical" className="text-xs text-muted-foreground font-normal">
+                {t('Show technical roles')}
+              </Label>
+              <Switch id="edit-show-technical" checked={showTechnical} onCheckedChange={setShowTechnical} />
+            </div>
+          )}
+        </div>
+        {!showTechnical && assignedTechnical.length > 0 && (
+          <p className="text-xs text-muted-foreground mb-2">
+            {t('Also assigned')}: {assignedTechnical.join(', ')}
+          </p>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {pickableRealmRoles.map((role) => {
             const meta = rolesMeta?.[role];
@@ -664,7 +693,14 @@ function RoleManagementSection({
                   }}
                 />
                 <div className="min-w-0">
-                  <Label htmlFor={`edit-realm-${role}`} className="text-sm capitalize">{role}</Label>
+                  <Label htmlFor={`edit-realm-${role}`} className="text-sm capitalize">
+                    {role}
+                    {isPlumbingRoleName(role) && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground font-normal">
+                        {t('technical')}
+                      </span>
+                    )}
+                  </Label>
                   {meta?.description && <p className="text-xs text-muted-foreground truncate">{meta.description}</p>}
                   {(meta?.representedScopes?.length ?? 0) > 0 && (
                     <p className="text-xs text-muted-foreground truncate">{t('Typical scopes')}: {meta!.representedScopes!.join(', ')}</p>

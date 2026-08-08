@@ -1,9 +1,13 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import React, { useState, useEffect } from 'react';
 import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@proxy-smart/shared-ui';
 import { useAuthStore } from '../stores/authStore';
 import { getItem, removeItem, getSessionItem, removeSessionItem, clearAuthorizationCodeData } from '@/lib/storage';
 import { AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 
 interface TokenData {
   access_token: string;
@@ -91,7 +95,7 @@ export const AuthDebugPanel: React.FC = () => {
       // Update storage info
       await updateStorageInfo();
       
-      console.log('Session data and authorization codes cleared successfully');
+      logger.info('Session data and authorization codes cleared');
     } catch (error) {
       console.error('Failed to clear session data:', error);
     }
