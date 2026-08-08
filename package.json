@@ -48,7 +48,7 @@
     "skipPrefixes": [
       "backend/public"
     ],
-    "minCoverage": 8
+    "minCoverage": 95
   },
   "scripts": {
     "dev": "concurrently \"bun run dev:backend\" \"bun run dev:ui\"",
