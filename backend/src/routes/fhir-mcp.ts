@@ -17,11 +17,9 @@
  */
 
 import { Elysia } from 'elysia'
-import {
-  McpServer,
-  WebStandardStreamableHTTPServerTransport,
-} from '@modelcontextprotocol/server'
-import { originGuard, closeWhenFinished } from '@max-health-inc/elysia-mcp'
+import { McpServer } from '@modelcontextprotocol/server'
+import { createMcpHttpHandler } from '@maxhealth.tech/mcp-http'
+import type { McpHandler } from '@maxhealth.tech/mcp-http'
 import { config } from '../config'
 import { isOriginAllowed } from '../lib/cors-origins'
 import { validateToken } from '../lib/auth'
@@ -29,92 +27,105 @@ import { getServerInfoByName, ensureServersInitialized } from '../lib/fhir-serve
 import { registerFhirToolsForServer } from '../lib/ai/fhir-tools'
 
 // Stateless: no session store, no TTL sweeper, no max-session ceiling. Each
-// request is served by a fresh server + transport bound to the bearer on THAT
-// request, so there is nothing to expire, nothing to route back to a particular
-// instance, and nothing for a deploy to invalidate.
+// request is served by a fresh server bound to the bearer on THAT request, so
+// there is nothing to expire, nothing to route back to a particular instance,
+// and nothing for a deploy to invalidate.
+//
+// The HTTP edge — Origin gate, Bearer gate, RFC 9728 challenge, CORS, the
+// Streamable HTTP lifecycle — is @maxhealth.tech/mcp-http rather than hand
+// written here. It tracks the 2026-07-28 protocol through the SDK's own
+// handler, which this endpoint did not implement at all.
+
+/** A token that parses but does not validate. Mapped to a 401 in `onError`. */
+class McpUnauthorizedError extends Error {}
+
+/**
+ * Allowed-origin bridge.
+ *
+ * mcp-http asks for the origin to echo (or null to refuse); we answer from the
+ * repo's own allow-list. A request with no Origin is allowed upstream, which
+ * keeps non-browser clients working.
+ */
+function allowedOrigin(req: Request): string | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null
+  return isOriginAllowed(origin) ? origin : null
+}
+
+/**
+ * One handler per FHIR server, built lazily and reused.
+ *
+ * `mcpPath` has to match the mounted path exactly, and this endpoint is
+ * per-server, so the handler is keyed by server id rather than built once.
+ */
+const handlers = new Map<string, McpHandler>()
+
+function handlerFor(serverId: string): McpHandler {
+  const existing = handlers.get(serverId)
+  if (existing) return existing
+
+  const handler = createMcpHttpHandler({
+    mcpPath: `/fhir/${serverId}/mcp`,
+    authorizationServer: config.keycloak.expectedIssuer ?? undefined,
+    cors: { origin: allowedOrigin },
+    createServer: async (token) => {
+      // Validated for its own sake: the payload is not needed once sessions are
+      // gone, but the token must be proven good before it is forwarded to FHIR
+      // as this request's identity.
+      try {
+        await validateToken(token ?? '')
+      } catch {
+        throw new McpUnauthorizedError('Invalid or expired token')
+      }
+
+      const server = new McpServer({
+        name: `proxy-smart-fhir-${serverId}`,
+        version: config.version || '1.0.0',
+      })
+      // Scoped to this server, and to the scopes on THIS request's token.
+      registerFhirToolsForServer(server, { current: token ?? undefined }, serverId)
+      return server
+    },
+    // A createServer throw is an internal error upstream, which would turn a bad
+    // token into a 500. Map it back to the 401 the client can act on.
+    onError: (err) =>
+      err instanceof McpUnauthorizedError
+        ? new Response(
+            JSON.stringify({ error: 'unauthorized', message: err.message }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+          )
+        : undefined,
+  })
+
+  handlers.set(serverId, handler)
+  return handler
+}
 
 // ── Route ────────────────────────────────────────────────────────────────────
 
 export const fhirMcpRoutes = new Elysia()
-  .all('/fhir/:server_id/mcp', async ({ params, request, set }) => {
+  .all('/fhir/:server_id/mcp', async ({ params, request }) => {
     const { server_id } = params
 
-    // Origin gate before anything else — see originGuard.
-    const refused = originGuard(request, isOriginAllowed)
-    if (refused) return refused
-
-    // Ensure servers initialized
+    // Server resolution stays here: it is this endpoint's own concern, and both
+    // answers are about the server rather than the MCP exchange, so they are
+    // settled before the protocol handler is involved.
     await ensureServersInitialized()
 
-    // Validate server exists and has MCP enabled
     const serverInfo = await getServerInfoByName(server_id)
     if (!serverInfo) {
-      set.status = 404
-      return { error: 'not_found', message: `FHIR server '${server_id}' not found` }
+      return Response.json(
+        { error: 'not_found', message: `FHIR server '${server_id}' not found` },
+        { status: 404 },
+      )
     }
     if (!serverInfo.mcpEnabled) {
-      set.status = 403
-      return { error: 'mcp_disabled', message: `MCP endpoint is not enabled for server '${server_id}'` }
+      return Response.json(
+        { error: 'mcp_disabled', message: `MCP endpoint is not enabled for server '${server_id}'` },
+        { status: 403 },
+      )
     }
 
-    // Validate Bearer token
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
-      const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
-      set.status = 401
-      set.headers['www-authenticate'] = `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource"`
-      return { error: 'unauthorized', message: 'Bearer token required' }
-    }
-
-    const token = authHeader.slice(7)
-    try {
-      // Validated for its own sake: the payload is not needed once sessions are
-      // gone (there is no owner to bind a session to), but the token must still
-      // be proven good before it is forwarded to FHIR as this request's identity.
-      await validateToken(token)
-    } catch {
-      set.status = 401
-      return { error: 'unauthorized', message: 'Invalid or expired token' }
-    }
-
-    // Session operations have nothing to operate on — see the note above.
-    if (request.method === 'GET' || request.method === 'DELETE') {
-      set.status = 405
-      set.headers['allow'] = 'POST'
-      return { error: 'method_not_allowed', message: 'This endpoint is stateless' }
-    }
-
-    // Parse request body for MCP protocol
-    let body: unknown
-    try {
-      body = await request.json()
-    } catch {
-      set.status = 400
-      return { error: 'invalid_request', message: 'Invalid JSON body' }
-    }
-
-    const tokenRef: { current?: string } = { current: token }
-    const server = new McpServer({
-      name: `proxy-smart-fhir-${server_id}`,
-      version: config.version || '1.0.0',
-    })
-
-    // Scoped to this server, and to the scopes on THIS request's token.
-    registerFhirToolsForServer(server, tokenRef, server_id)
-
-    const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined })
-    await server.connect(transport)
-
-    const raw = await transport.handleRequest(new Request(request.url, {
-      method: request.method,
-      headers: request.headers,
-      body: JSON.stringify(body),
-    }))
-    const response = closeWhenFinished(raw, transport, server)
-
-    set.status = response.status
-    for (const [key, value] of response.headers) {
-      set.headers[key] = value
-    }
-    return response.body ? await response.text() : ''
+    // Everything from here — Origin, Bearer, method, transport — is mcp-http.
+    return handlerFor(server_id)(request)
   })
