@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * MCP OAuth Metadata Routes — Integration Tests
  *
@@ -338,7 +341,22 @@ describe('Discovery docs do not leak Keycloak-direct endpoints', () => {
     '/.well-known/oauth-authorization-server/auth',
   ] as const
 
+  // RFC 8414 §3.3: a metadata document's `issuer` MUST match the URL it was
+  // retrieved from. Every one of these is served FROM the proxy origin, so every
+  // one of them must name the proxy — including the OIDC-mirror variants, which
+  // used to pass Keycloak's realm issuer straight through while rewriting only the
+  // endpoints. That published Keycloak's identity with the proxy's endpoints, and
+  // it is the issuer a client later compares the RFC 9207 `iss` against.
   for (const path of DISCOVERY_PATHS) {
+    it(`${path} advertises the proxy as issuer, never Keycloak`, async () => {
+      const app = createApp()
+      const res = await app.handle(new Request(`http://localhost${path}`))
+      expect(res.status).toBe(200)
+      const body = await res.json()
+      expect(body.issuer).toBe(TEST_BASE_URL)
+      expect(body.issuer).not.toContain(TEST_REALM)
+    })
+
     it(`${path} contains no /protocol/openid-connect/ substring`, async () => {
       const app = createApp()
       const res = await app.handle(new Request(`http://localhost${path}`))
