@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp - Transport & Session Management
  *
@@ -13,6 +16,38 @@ import type { ToolMetadata, ResourceMetadata, AuthResult, McpSession, ElysiaMcpO
 import { typeboxToZod, getMergedInputSchema } from './typebox-to-zod'
 import { pathToResourceUri } from './introspect'
 import { executeTool, executeResource } from './executor'
+
+// ── HTTP header contract ─────────────────────────────────────────────────────
+
+/**
+ * Request headers a Streamable HTTP client sends, which a CORS preflight must allow.
+ *
+ * `Mcp-Method` and `Mcp-Name` are REQUIRED of clients from MCP 2026-07-28 (Streamable
+ * HTTP, "Standard Request Headers") so intermediaries can route and inspect a request
+ * without parsing the JSON-RPC body. A server that omits them from
+ * Access-Control-Allow-Headers fails the preflight of any browser-based client that
+ * sends them — which, being required, is every conformant one.
+ */
+export const MCP_REQUEST_HEADERS = [
+  'Mcp-Session-Id',
+  'Mcp-Protocol-Version',
+  'Mcp-Method',
+  'Mcp-Name',
+] as const
+
+/**
+ * Response headers a browser-based client must be able to READ, which only
+ * Access-Control-Expose-Headers grants — the allow-list above does not.
+ *
+ * `Mcp-Session-Id` comes back on the initialize response and every subsequent request
+ * must echo it. Without it exposed, a cross-origin client can never continue a session
+ * and re-initializes on every call. `Last-Event-ID` is the SSE resumption cursor.
+ */
+export const MCP_EXPOSED_RESPONSE_HEADERS = [
+  'Mcp-Session-Id',
+  'Mcp-Protocol-Version',
+  'Last-Event-ID',
+] as const
 
 // ── Default logger ───────────────────────────────────────────────────────────
 

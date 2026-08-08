@@ -4,6 +4,7 @@
 import { Elysia } from 'elysia'
 import { openapi, fromTypes } from '@elysiajs/openapi'
 import { cors } from '@elysiajs/cors'
+import { MCP_REQUEST_HEADERS, MCP_EXPOSED_RESPONSE_HEADERS } from '@max-health-inc/elysia-mcp'
 import { isOriginAllowed, refreshIfStale } from './lib/cors-origins'
 import staticPlugin from '@elysiajs/static'
 import { join } from 'path'
@@ -164,7 +165,15 @@ export function createApp() {
             },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Mcp-Session-Id', 'Mcp-Protocol-Version']
+            // MCP header names come from the transport package rather than a literal
+            // here, which is how Mcp-Method / Mcp-Name (required of clients since MCP
+            // 2026-07-28) went missing from the allow-list.
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', ...MCP_REQUEST_HEADERS],
+            // Without this the cors plugin echoes the REQUEST headers, so a
+            // cross-origin client never sees Mcp-Session-Id on the initialize response
+            // and re-initializes on every call. Content-Disposition is here for the
+            // same reason — the monitoring dashboards read it to name CSV downloads.
+            exposeHeaders: [...MCP_EXPOSED_RESPONSE_HEADERS, 'Content-Disposition'],
         }))
         .use(openapi({
             path: '/swagger',

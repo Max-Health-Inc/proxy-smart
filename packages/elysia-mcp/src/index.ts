@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp
  *
@@ -210,6 +213,8 @@ export {
   createMcpRequestHandler,
   registerToolsOnServer,
   registerResourcesOnServer,
+  MCP_REQUEST_HEADERS,
+  MCP_EXPOSED_RESPONSE_HEADERS,
 } from './transport'
 
 export type { RegistrationContext } from './transport'
