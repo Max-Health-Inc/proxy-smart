@@ -151,7 +151,12 @@ export function registerReadResourceTool(
           ...((query as Record<string, string> | undefined) ?? {}),
         }
 
-        const text = await pkgExecuteResource(match.meta, params, tokenRef.current, contextDecorators)
+        // This tool collapses every GET route, so it carries the admin list
+        // responses — the uniform, high-token payloads TOON's tabular form
+        // actually collapses. 'auto' keeps JSON wherever TOON would be larger.
+        const text = await pkgExecuteResource(match.meta, params, tokenRef.current, contextDecorators, {
+          textFormat: 'auto',
+        })
         return { content: [{ type: 'text' as const, text }] }
       } catch (err) {
         return {

@@ -54,6 +54,13 @@ import { getAccessControlInstance } from '../lib/access-control/plugin'
 // got `404 Session not found` — on an environment that redeploys many times a
 // day, that is most of them.
 
+// Admin list endpoints are the high-token responses an agent hits most, and are
+// uniform enough for TOON's tabular form to collapse the repeated keys. 'auto'
+// emits whichever of JSON and TOON is shorter per payload, so the nested and
+// single-object responses TOON handles badly keep their JSON. structuredContent
+// stays JSON either way.
+const TOOL_TEXT_OPTIONS = { textFormat: 'auto' } as const
+
 // Domain-specific context decorators injected into tool/resource execution.
 // The dispatch app (resolved lazily — it is registered after this module loads)
 // routes execution through the real Elysia pipeline so guards, response-schema
@@ -99,14 +106,14 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
           toolName,
           { description, inputSchema: toolSchema, annotations },
           async (args: unknown) =>
-            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators),
+            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators, TOOL_TEXT_OPTIONS),
         )
       } else {
         server.registerTool(
           toolName,
           { description, annotations },
           async () =>
-            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators),
+            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators, TOOL_TEXT_OPTIONS),
         )
       }
     }

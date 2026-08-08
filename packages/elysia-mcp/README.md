@@ -78,6 +78,27 @@ These are advisory hints a client may use to shape its UX, such as confirming be
 
 `executeResource` follows the same shape for resource reads.
 
+Both accept an optional `ExecuteOptions` as their last argument, currently carrying only `textFormat`.
+
+## Text encoding
+
+The `content[].text` block is what a client feeds to the model, and for list endpoints it is the bulk of an agent's context. `chooseToolText(serialized, format)` decides how it is encoded. `ToolTextFormat` is `'json'` (the default, compact JSON, what every existing caller gets) or `'auto'`.
+
+Under `'auto'` the payload is encoded as both JSON and [TOON](https://github.com/toon-format/toon) and the shorter one wins. TOON collapses a uniform array of flat objects into a header plus rows, the way CSV does, which is a large saving on list responses. It cannot do that when objects carry nested maps or arrays, and falls back to an indented form that is *larger* than compact JSON. Measured against this API's own shapes with `gpt-tokenizer`:
+
+| Response | JSON | TOON | |
+|---|---|---|---|
+| roles list (30, flat) | 894 | 515 | −42% |
+| smart scopes (40, flat) | 973 | 700 | −28% |
+| healthcare users (nested) | 3433 | 3808 | +11%, worse |
+| single object | 78 | 85 | +9%, worse |
+
+Picking by measurement rather than by a shape heuristic matters: a heuristic would have to re-derive the encoder's own rules about when the tabular form engages, and drift from them as the encoder changes. Comparing the two outputs is correct by construction for any shape, so `'auto'` can never produce a larger text block than `'json'` would.
+
+Length is compared in characters, not tokens. A tokenizer in the hot path is a heavy dependency, and TOON's saving is structural — repeated keys and delimiters removed — so the two move together.
+
+`structuredContent` is unaffected and always JSON. The MCP spec requires it to be a JSON object, so machine consumers never see TOON regardless of this setting.
+
 ## CORS
 
 Streamable HTTP has a header contract a host's CORS layer has to honour, and getting it wrong fails browser clients at preflight rather than at call time.

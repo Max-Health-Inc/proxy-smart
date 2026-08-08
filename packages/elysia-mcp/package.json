@@ -19,7 +19,8 @@
     ".": "./src/index.ts",
     "./introspect": "./src/introspect.ts",
     "./transport": "./src/transport.ts",
-    "./typebox-schema": "./src/typebox-schema.ts"
+    "./typebox-schema": "./src/typebox-schema.ts",
+    "./text-format": "./src/text-format.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -27,6 +28,9 @@
     "test:watch": "bun test --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@toon-format/toon": "^4.1.1"
   },
   "peerDependencies": {
     "@modelcontextprotocol/server": ">=2.0.0",

@@ -23,9 +23,20 @@
 import { Value } from '@sinclair/typebox/value'
 import type { ToolMetadata, ResourceMetadata } from './types'
 import { getMergedInputSchema } from './typebox-schema'
+import { chooseToolText, type ToolTextFormat } from './text-format'
 
 /** Context-decorator key carrying the Elysia app used for pipeline dispatch. */
 export const DISPATCH_APP_KEY = '__app'
+
+/** Per-call execution options. */
+export interface ExecuteOptions {
+  /**
+   * Encoding for the text block a client feeds to the model. Defaults to
+   * `json`, so this is opt-in and no existing caller changes behaviour.
+   * See {@link chooseToolText}.
+   */
+  textFormat?: ToolTextFormat
+}
 
 /** Minimal shape of an Elysia app we depend on for pipeline dispatch. */
 interface DispatchableApp {
@@ -46,6 +57,7 @@ export async function executeTool(
   args: Record<string, unknown>,
   authToken?: string,
   contextDecorators?: Record<string, unknown>,
+  options?: ExecuteOptions,
 ): Promise<{
   content: { type: 'text'; text: string }[]
   structuredContent?: Record<string, unknown>
@@ -73,7 +85,7 @@ export async function executeTool(
       if (status >= 400) {
         return { content: [{ type: 'text', text }], isError: true }
       }
-      return successResult(text)
+      return successResult(text, options?.textFormat)
     }
 
     // ── Synthetic context (legacy fallback) ──────────────────────────────
@@ -93,7 +105,7 @@ export async function executeTool(
     if (responseStatus >= 400) {
       return { content: [{ type: 'text', text }], isError: true }
     }
-    return successResult(text)
+    return successResult(text, options?.textFormat)
   } catch (err) {
     return {
       content: [{ type: 'text', text: `Error executing ${toolName}: ${err instanceof Error ? err.message : String(err)}` }],
@@ -115,6 +127,7 @@ export async function executeResource(
   pathParams: Record<string, string>,
   authToken?: string,
   contextDecorators?: Record<string, unknown>,
+  options?: ExecuteOptions,
 ): Promise<string> {
   try {
     const app = getDispatchApp(contextDecorators)
@@ -124,7 +137,7 @@ export async function executeResource(
       // pathParams are pre-resolved by the caller; feed them as args so the
       // shared URL builder interpolates them into the concrete path.
       const { text } = await dispatchThroughPipeline(app, meta.path, 'GET', pathParams, authToken)
-      return text
+      return chooseToolText(text, options?.textFormat)
     }
 
     // ── Synthetic context (legacy fallback) ──────────────────────────────
@@ -147,7 +160,8 @@ export async function executeResource(
     if (result === undefined || result === null) {
       return JSON.stringify({ success: true })
     }
-    return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
+    const serialized = typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
+    return chooseToolText(serialized, options?.textFormat)
   } catch (err) {
     return JSON.stringify({ error: `Resource read failed: ${err instanceof Error ? err.message : String(err)}` })
   }
@@ -271,8 +285,8 @@ function serializeResult(result: unknown, status: number): string {
 }
 
 /**
- * Build a successful tool result. Always includes the JSON/text content block
- * (the universally-supported representation). When the payload parses to a JSON
+ * Build a successful tool result. Always includes a text content block (the
+ * universally-supported representation). When the payload parses to a JSON
  * *object*, it is ALSO attached as `structuredContent` so MCP clients that
  * support structured output can consume it directly.
  *
@@ -280,15 +294,23 @@ function serializeResult(result: unknown, status: number): string {
  * cannot break existing tools: `structuredContent` is only surfaced when the
  * payload is a plain object (top-level arrays and primitives — which are not
  * valid MCP `structuredContent` — fall back to text only).
+ *
+ * `structuredContent` is derived from the ORIGINAL serialized JSON, never from
+ * the text block: under `textFormat: 'auto'` the two can be different encodings
+ * of the same data, and the structured half is required by the spec to be JSON.
  */
-function successResult(text: string): {
+function successResult(
+  text: string,
+  textFormat?: ToolTextFormat,
+): {
   content: { type: 'text'; text: string }[]
   structuredContent?: Record<string, unknown>
 } {
   const structured = toStructuredContent(text)
+  const rendered = chooseToolText(text, textFormat)
   return structured
-    ? { content: [{ type: 'text', text }], structuredContent: structured }
-    : { content: [{ type: 'text', text }] }
+    ? { content: [{ type: 'text', text: rendered }], structuredContent: structured }
+    : { content: [{ type: 'text', text: rendered }] }
 }
 
 /** Parse text to a plain JSON object for `structuredContent`, or undefined. */
