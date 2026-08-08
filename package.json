@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.1-beta.202608080909.7c5548376",
+  "version": "0.3.2-alpha.202608080958.1d8c5f755",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -42,8 +42,12 @@
   "private": true,
   "doccheck": {
     "workspace": "frontend/ui",
-    "skipSegments": ["lib"],
-    "skipPrefixes": ["backend/public"],
+    "skipSegments": [
+      "lib"
+    ],
+    "skipPrefixes": [
+      "backend/public"
+    ],
     "minCoverage": 8
   },
   "scripts": {
