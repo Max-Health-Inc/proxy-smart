@@ -13,6 +13,7 @@
 import type RoleRepresentation from '@keycloak/keycloak-admin-client/lib/defs/roleRepresentation.js'
 import { getScopeSet } from './scope-sets-store'
 import type { RoleResponseType } from '@/schemas'
+import { adminRealmRoles, adminClientRoles } from './admin-roles'
 
 /**
  * Attribute key under which a role stores the ID of the scope set it represents.
@@ -59,8 +60,21 @@ function arrayAttr(role: RoleRepresentation, key: string): string[] {
 }
 
 /**
+ * Whether holding this role confers admin access, per `hasAdminRole`.
+ *
+ * Read from the same predicate the auth path uses, so the UI cannot claim a role
+ * grants admin when it does not. The sets are env-overridable, which is exactly
+ * why the UI must be told rather than deciding for itself.
+ */
+export function grantsAdminAccess(role: RoleRepresentation): boolean {
+  if (!role.name) return false
+  return (role.clientRole ? adminClientRoles() : adminRealmRoles()).has(role.name)
+}
+
+/**
  * Enrich a raw Keycloak role with descriptive metadata for the admin UI:
  *  - isTechnical flag (so the UI can hide plumbing roles)
+ *  - grantsAdmin flag (so the UI can show what actually confers access)
  *  - the represented scope set (name + resolved scopes), purely as a label
  *
  * The represented scopes are resolved from the linked scope set when present,
@@ -91,6 +105,7 @@ export function enrichRole(role: RoleRepresentation): RoleResponseType {
     clientRole: role.clientRole,
     attributes: role.attributes as RoleResponseType['attributes'],
     isTechnical: isTechnicalRole(role),
+    grantsAdmin: grantsAdminAccess(role),
     ...(representedScopeSetId ? { representedScopeSetId } : {}),
     ...(representedScopeSetName ? { representedScopeSetName } : {}),
     ...(representedScopes.length > 0 ? { representedScopes } : {})

@@ -14,7 +14,7 @@ import { Elysia } from 'elysia'
 import { keycloakPlugin } from '@/lib/keycloak-plugin'
 import { extractBearerToken, getValidatedAdmin } from '@/lib/admin-utils'
 import { handleAdminError } from '@/lib/admin-error-handler'
-import { validateToken } from '@/lib/auth'
+import { validateAdminToken } from '@/lib/auth'
 import { logger } from '@/lib/logger'
 import {
   ProfileResponse,
@@ -40,7 +40,7 @@ export const profileAdminRoutes = new Elysia({ prefix: '/profile', tags: ['admin
     }
 
     try {
-      const payload = await validateToken(token)
+      const payload = await validateAdminToken(token)
       const sub = payload.sub
       if (!sub) {
         set.status = 401
@@ -87,7 +87,7 @@ export const profileAdminRoutes = new Elysia({ prefix: '/profile', tags: ['admin
     }
 
     try {
-      const payload = await validateToken(token)
+      const payload = await validateAdminToken(token)
       const sub = payload.sub
       if (!sub) {
         set.status = 401
@@ -148,7 +148,7 @@ export const profileAdminRoutes = new Elysia({ prefix: '/profile', tags: ['admin
     }
 
     try {
-      const payload = await validateToken(token)
+      const payload = await validateAdminToken(token)
       const sub = payload.sub
       if (!sub) {
         set.status = 401
