@@ -1,479 +1,107 @@
-# MCP HTTP Server Documentation
+# MCP HTTP Server
 
-This document describes the MCP (Model Context Protocol) HTTP transport implementation in the Proxy Smart backend, following Microsoft's MCP specification and best practices.
+Proxy Smart serves the Model Context Protocol over Streamable HTTP. The transport is the official [`@modelcontextprotocol/server`](https://www.npmjs.com/package/@modelcontextprotocol/server) SDK, wrapped by [`@maxhealth.tech/mcp-http`](https://github.com/Max-Health-Inc/mcp-http) for the OAuth gate, CORS, and observability. Protocol semantics — the 2026-07-28 revision, `server/discover`, MRTR, `resultType` — come from the SDK, so this repository does not reimplement them.
 
-## Overview
+There are two endpoints, and they are different servers:
 
-A client discovers the server through OAuth metadata aligned with RFC 9728 and RFC 8414, authenticates with a bearer token, and calls tools over the same endpoint it used to list them. Authorization is not merely presence of a token: scopes and realm roles are both checked, so the tools a caller sees are the ones that caller is entitled to.
+| Endpoint | Tools | Registered by |
+|---|---|---|
+| `/mcp` | The backend's own admin API, derived from the Elysia route table | [`backend/src/routes/mcp-endpoint.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/routes/mcp-endpoint.ts) |
+| `/fhir/{server_id}/mcp` | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update`, `fhir_delete`, `fhir_capabilities`, bound to one configured FHIR server | [`backend/src/routes/fhir-mcp.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/routes/fhir-mcp.ts) |
 
-The tool list is not static. Tools are derived from the backend's Elysia route registry, so the set changes as the backend does, and clients holding a `GET /mcp` stream are notified over Server-Sent Events rather than having to poll. The same stream carries execution status, timing, and error detail for calls in flight.
+Both speak JSON-RPC 2.0 over `POST`. Neither accepts the ad-hoc `{"type":"listTools"}` envelope that earlier revisions of this document described; use an MCP client, or `tools/list` and `tools/call` directly.
 
-Two behaviors exist because the tool list can move underneath a client. A 404 on a call is treated as a stale cache and triggers a refresh rather than an error, and 5xx responses are retried. Sessions are optional: a client that wants state to stick across requests sends an `MCP-Session-Id` header, and one that does not simply omits it.
+## Statelessness
 
-## Architecture
+Both endpoints are stateless. `mcp-http` leaves the SDK's `legacy` mode at `'stateless'`, so a 2025-era client is served one fresh server instance per request rather than being turned away, and the 2026-07-28 revision has no sessions at all.
 
-### Transport Layer
+This is deliberate. The session store that used to live in `mcp-endpoint.ts` held transports in process memory, so every redeploy silently invalidated every live connection and the next request got `404 Session not found`. On an environment that redeploys many times a day, that was most of them. There is no `Mcp-Session-Id` to send and none to honour.
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Client (UI, AI SDK, External Tools)                        │
-└────────────┬────────────────────────────────────────────────┘
-             │
-             │ Bearer Token (OAuth 2.0)
-             │
-┌────────────▼────────────────────────────────────────────────┐
-│  MCP Streamable HTTP Server (/mcp)                         │
-│                                                              │
-│  POST /mcp  ──► listTools | callTool (JSON or SSE stream)  │
-│  GET  /mcp  ──► Optional SSE stream (live updates)         │
-└────────────┬────────────────────────────────────────────────┘
-             │
-             │ Extract tools from Elysia route registry
-             │
-┌────────────▼────────────────────────────────────────────────┐
-│  Tool Registry & Executor                                   │
-│                                                              │
-│  • Extract route schemas (TypeBox)                          │
-│  • Validate inputs at runtime                              │
-│  • Execute handlers directly                               │
-│  • Track execution metrics (duration, status)              │
-└─────────────────────────────────────────────────────────────┘
-```
+One consequence worth planning around: because a server is built per request from the caller's token, the tool list a caller sees is filtered by that token's roles, and `listChanged` is advertised as `false` on both `tools` and `resources`. Clients should not expect push notifications about tool changes.
 
-### OAuth Discovery Flow
+## Authorization
 
-The server exposes RFC 9728-aligned OAuth metadata for secure client discovery:
+### Discovery
 
-1. **Protected Resource Metadata** (`/.well-known/oauth-protected-resource`)
-   ```json
-   {
-     "resource": "https://example.com/mcp",
-     "authorization_servers": ["https://keycloak.example.com/auth/realms/master"],
-     "bearer_methods_supported": ["header"],
-     "scopes_supported": ["read:mcp", "execute:mcp"]
-   }
-   ```
-
-2. **Authorization Server Metadata** (`/.well-known/openid-configuration`)
-   - Provides token endpoint, JWKS URI, and supported grant types
-   - Clients use this to obtain access tokens
-
-3. **Client Token Acquisition**
-   - Client authenticates (e.g., client credentials flow)
-   - Obtains access token from authorization server
-   - Includes token in Authorization header: `Bearer <access_token>`
-
-## API Endpoints
-
-### POST /mcp
-
-Modern Streamable HTTP endpoint for tool discovery and invocation. Can return simple JSON responses or optionally stream via SSE.
-
-#### Request Body
-
-```typescript
-type McpRequest = 
-  | { type: 'listTools' }
-  | { 
-      type: 'callTool'
-      name: string              // Tool name to invoke
-      args?: Record<string, any> // Tool arguments
-      id?: string               // Optional call ID for tracking
-    }
-```
-
-#### listTools Response
-
-<!-- doccheck: skip — response shape sketch, type names stand in for values -->
-```typescript
-{
-  tools: [
-    {
-      type: 'function',
-      function: {
-        name: string
-        description: string
-        parameters: object   // JSON Schema of input parameters
-        strict?: boolean     // Strict schema validation (OpenAI-compatible)
-      }
-    }
-  ]
-}
-```
-
-**Example:**
-```bash
-curl -X POST https://example.com/mcp \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"type":"listTools"}'
-```
-
-#### callTool Response
-
-<!-- doccheck: skip — response shape sketch, type names stand in for values -->
-```typescript
-{
-  content: [
-    {
-      type: 'text',
-      text: string  // Tool execution result
-    }
-  ],
-  duration: number  // Execution time in milliseconds
-}
-```
-
-**Example:**
-```bash
-curl -X POST https://example.com/mcp \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type":"callTool",
-    "name":"get_user_details",
-    "args":{"userId":"user123"},
-    "id":"call-abc123"
-  }'
-```
-
-### Error Responses
-
-#### 401 Unauthorized
-Token is missing, invalid, or audience doesn't match.
-
-```json
-{
-  "error": "unauthorized",
-  "code": "invalid_audience"
-}
-```
-
-**WWW-Authenticate Header:**
-```
-Bearer realm="Proxy Smart MCP", error="invalid_token", 
-  resource_metadata="https://example.com/.well-known/oauth-protected-resource"
-```
-
-#### 403 Forbidden / Insufficient Scope
-User lacks required scope or role.
-
-```json
-{
-  "error": "insufficient_scope",
-  "code": "read:mcp"
-}
-```
-
-Or:
-
-```json
-{
-  "error": "forbidden",
-  "code": "admin_required"
-}
-```
-
-#### 404 Tool Not Found
-Tool name doesn't exist.
-
-```json
-{
-  "error": "tool_not_found",
-  "code": "get_user_details"
-}
-```
-
-#### 500 Execution Failed
-Tool raised an exception during execution.
-
-```json
-{
-  "error": "execution_failed",
-  "details": "User not found in database"
-}
-```
-
-### GET /mcp
-
-Optional SSE endpoint for real-time server→client notifications. Clients can subscribe to this to receive live updates about tool changes and execution progress.
-
-#### Headers
+A client that gets a 401 follows the pointer in `WWW-Authenticate` to the protected-resource metadata, and from there to the authorization server.
 
 ```
-Accept: text/event-stream
-Authorization: Bearer <token>
-[Optional] token=<query_param_for_SSE>  // For browsers without custom headers
+GET /.well-known/oauth-protected-resource
+  → resource, authorization_servers[], bearer_methods_supported, scopes_supported
+
+GET /.well-known/oauth-authorization-server
+  → authorization_endpoint, token_endpoint, registration_endpoint, jwks_uri, …
 ```
 
-#### Event Types
+Both are served by [`backend/src/routes/auth/mcp-metadata.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/routes/auth/mcp-metadata.ts). `authorization_servers` points at the proxy's own base URL, not directly at Keycloak, because the proxy owns the `registration_endpoint` and fronts `/auth/authorize` and `/auth/token` to add SMART launch-context enrichment and audience enforcement. The AS metadata sets `issuer` to the proxy base URL for the same reason, and advertises `authorization_response_iss_parameter_supported: true` (RFC 9207) so clients that string-compare `iss` against the document match.
 
-##### ready
-Sent when connection is established.
+Path-insertion variants are served too, since MCP clients try them first: `/.well-known/oauth-protected-resource/*`, `/.well-known/oauth-authorization-server/auth`, and `/.well-known/openid-configuration/auth`.
 
-```json
-{
-  "event": "ready",
-  "data": {
-    "sub": "user-id",
-    "ts": 1729520000000
-  }
-}
-```
+`/.well-known/jwks.json` merges Keycloak's realm keys with the proxy's own signing key, so a client validating a token never has to know Keycloak exists.
 
-##### ping
-Heartbeat to keep connection alive (every 15 seconds).
-
-```json
-{
-  "event": "ping",
-  "data": {}
-}
-```
-
-##### tools_list_changed
-Emitted when the set of available tools changes (e.g., hot reload, dynamic registration).
-
-```json
-{
-  "event": "message",
-  "data": {
-    "type": "tools_list_changed",
-    "count": 42,
-    "hash": "abc123ff",
-    "timestamp": "2025-10-21T14:30:00Z"
-  }
-}
-```
-
-Clients should invalidate their tool cache and call `listTools` again.
-
-##### tool_call_started
-Emitted when a tool execution begins.
-
-```json
-{
-  "event": "message",
-  "data": {
-    "type": "tool_call_started",
-    "toolName": "get_user_details",
-    "toolCallId": "call-xyz789",
-    "timestamp": "2025-10-21T14:30:05Z"
-  }
-}
-```
-
-##### tool_call_completed
-Emitted when a tool execution finishes (success or failure).
-
-```json
-{
-  "event": "message",
-  "data": {
-    "type": "tool_call_completed",
-    "toolName": "get_user_details",
-    "success": true,
-    "duration": 150,
-    "timestamp": "2025-10-21T14:30:05.150Z"
-  }
-}
-```
-
-Or with error:
-
-```json
-{
-  "event": "message",
-  "data": {
-    "type": "tool_call_completed",
-    "toolName": "delete_resource",
-    "success": false,
-    "duration": 50,
-    "error": "Permission denied: only admins can delete",
-    "timestamp": "2025-10-21T14:30:05.050Z"
-  }
-}
-```
-
-**Example:**
-```bash
-curl -H "Authorization: Bearer <token>" \
-  -H "Accept: text/event-stream" \
-  https://example.com/mcp
-```
-
-## Client Implementation Guide
-
-### 1. Basic Synchronous Client
-
-```typescript
-import McpHttpClient from './mcp-http-client';
-
-const client = new McpHttpClient({
-  baseUrl: 'https://example.com',
-  discovery: {
-    protectedResource: 'https://example.com/.well-known/oauth-protected-resource'
-  },
-  tokenGrant: {
-    type: 'client_credentials',
-    clientId: 'my-client',
-    clientSecret: 'my-secret'
-  }
-});
-
-// List available tools
-const tools = await client.listTools();
-console.log('Available tools:', tools.map(t => t.name));
-
-// Call a tool
-const result = await client.callTool({
-  name: 'get_user_details',
-  arguments: { userId: 'user123' }
-});
-console.log('Result:', result);
-```
-
-### 2. Streaming Client with Live Updates
-
-```typescript
-import McpStreamableHttpClient from './mcp-streamable-http-client';
-
-const client = new McpStreamableHttpClient({
-  baseUrl: 'https://example.com',
-  discovery: {
-    protectedResource: 'https://example.com/.well-known/oauth-protected-resource'
-  },
-  tokenGrant: {
-    type: 'client_credentials',
-    clientId: 'my-client',
-    clientSecret: 'my-secret'
-  },
-  requestTimeoutMs: 30000,
-  maxRetries: 1
-});
-
-// Subscribe to server updates
-const sseController = await client.subscribeToUpdates();
-
-// Set up message handler
-// (In a real app, integrate with event bus or reactive framework)
-
-// List tools (with automatic caching)
-const tools = await client.listTools();
-
-// Call a tool (auto-refresh on 404, then retry)
-const result = await client.callTool(
-  'get_user_details',
-  { userId: 'user123' },
-  'call-abc123'  // Optional call ID
-);
-
-// Clean up
-sseController.abort();
-```
-
-### 3. Resilience Patterns
-
-The client implements several resilience strategies:
-
-#### Tool Cache with TTL
-```typescript
-// Tools are cached for 60 seconds by default
-const tools = await client.listTools();
-// Subsequent calls within 60s hit the cache
-
-// Manually refresh
-await client.refreshTools();
-```
-
-#### Automatic Retry on 404
-```typescript
-// If callTool gets 404 (tool not found):
-// 1. Refresh the tools list
-// 2. Retry the call once
-const result = await client.callTool('some_tool', { ...args });
-```
-
-#### SSE-Driven Cache Invalidation
-```typescript
-// When server emits tools_list_changed:
-// Client automatically invalidates cache
-// Next listTools() call fetches fresh list
-```
-
-#### 5xx Retry with Backoff
-```typescript
-// On 5xx errors, client retries with exponential backoff
-// maxRetries: 1 → max 2 attempts
-// Backoff: 2^attempt * 200ms (capped)
-```
-
-## Client Authentication & Registration
-
-### OAuth Discovery Flow
-
-MCP clients discover how to authenticate via a two-step metadata chain defined by RFC 9728 and RFC 8414:
+### The 401 challenge
 
 ```
-1. GET /.well-known/oauth-protected-resource
-   → Returns: authorization_servers[], resource (canonical URL), scopes_supported
-
-2. GET /.well-known/oauth-authorization-server  (from authorization_servers[0])
-   → Returns: authorization_endpoint, token_endpoint, registration_endpoint, ...
+WWW-Authenticate: Bearer resource_metadata="{BASE_URL}/.well-known/oauth-protected-resource", scope="openid profile email"
 ```
 
-Both endpoints are served by `backend/src/routes/auth/mcp-metadata.ts` and proxy to Keycloak's actual OIDC configuration.
+Two details differ from what `mcp-http` emits on its own, and `withChallenge` in `mcp-endpoint.ts` rewrites the header to supply them. The pointer is built from `config.baseUrl` rather than `req.url`, so a spoofed `Host` behind a proxy that does not normalise it cannot aim a client at an attacker's metadata document. And `scope` is added, because a client following the challenge needs to know what to ask for.
 
-### Client Registration Priority (MCP Spec)
+The order of checks matters and is not the order `mcp-http` uses:
 
-When an MCP client (e.g. VS Code, Claude Desktop) connects, it resolves a `client_id` in this order:
+1. **Master switch** — a disabled endpoint answers 404 before anything else.
+2. **Origin** — a disallowed `Origin` is refused with 403. A DNS-rebound request must be refused outright, not handed a challenge it can act on.
+3. **Missing `Authorization`** — 401 with the challenge above, on *any* method. Upstream answers `GET` with 405 and no challenge, which leaves a registering client nothing to follow.
+4. **Token validation** — then the SDK handler.
 
-1. **Pre-registered client** -- Client already has a known `client_id` (e.g. hardcoded or from prior registration)
-2. **Client ID Metadata Document (CIMD)** -- Client sends its `client_id` as a URL (e.g. `https://vscode.dev/mcp-client`); Keycloak fetches the metadata document from that URL and processes the request without prior registration. Requires Keycloak `--features=cimd`.
-3. **Dynamic Client Registration (DCR)** -- Client calls `registration_endpoint` (`/auth/register`) to auto-register
-4. **Prompt user** -- Fallback: ask the user to provide a `client_id` manually
+### Scopes
 
-Our server advertises both CIMD and DCR via `client_registration_types_supported` in the AS metadata. Keycloak handles CIMD natively (option 2), and our `/auth/register` proxy handles DCR (option 3).
+`scopes_supported` is exactly `MCP_SCOPES_SUPPORTED` in [`backend/src/lib/oauth-scopes.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/lib/oauth-scopes.ts), which is the standard OIDC default set — `openid profile email`. There is no `read:mcp` or `execute:mcp`; earlier drafts of this document described scopes that were never implemented.
 
-#### CIMD Setup (Keycloak Admin Console)
+That set is deliberately narrow. Whatever is advertised here is also granted to every client the backend provisions, so anything added must be grantable to any user who can log in. `offline_access` was removed for exactly this reason: it is gated on a realm role, and a user without that role does not get a degraded token — the whole code exchange fails after a successful login. The `authorization_code` grant already returns a session-bound refresh token without it.
 
-To enable CIMD for MCP clients like VS Code, configure a client policy in Keycloak:
+`MCP_SCOPE_CHALLENGE` (the `scope` in the 401) is the same list, for the same reason: challenging for an optional scope tells a client to request something it may deliberately not have been granted.
 
-1. **Enable the feature**: Keycloak must be started with `--features=cimd` (already configured in all deployment compose files and Dockerfile).
-2. **Create a Client Profile** (`Realm Settings → Client Policies → Profiles`):
-   - Add the `client-id-metadata-document` executor
-   - Set **Trusted domains** (e.g. `vscode.dev`, `127.0.0.1`)
-   - Set **Restrict same domain**: `OFF` (VS Code uses localhost redirects)
-   - Set **Only Allow Confidential Client**: `OFF` (VS Code is a public client)
-3. **Create a Client Policy** (`Realm Settings → Client Policies → Policies`):
-   - Add the `client-id-uri` condition
-   - Set **URI scheme**: `https`
-   - Set **Trusted domains**: `vscode.dev` (or whatever MCP clients you support)
-   - Associate the profile from step 2
+### Audience binding
 
-With this configuration, when an MCP client sends `client_id=https://vscode.dev/mcp-client`, Keycloak fetches the metadata and issues tokens without DCR. The resulting JWT is validated identically by the proxy.
+`/mcp` accepts a token whose `aud` (or `azp`) is one of:
 
-### Pre-registered Clients (Keycloak)
+- the MCP endpoint resource itself, per RFC 8707 resource indicators (`getMcpResourceAudience()`)
+- the admin web app client (`adminUiClientId`)
+- the backend admin service account (`adminClientId`)
 
-| Client ID | Type | Flow | Use Case |
-|-----------|------|------|----------|
-| `mcp-client` | Public | Authorization Code + PKCE | VS Code, Claude Desktop, browser-based MCP clients |
+A patient-facing SMART app token, whose audience is the FHIR base, is rejected. `adminUiClientId` must be accepted independently of `adminClientId`, because on beta and production the latter is the service account.
 
-### VS Code MCP Configuration
+Validation is fail-closed on audience. If Keycloak is not configured with the audience mappers, tokens are rejected rather than waved through.
 
-VS Code's `.vscode/mcp.json` schema for `http` type servers supports only: `type`, `url`, `headers`, `dev`. There is **no `clientId` field** -- VS Code handles OAuth internally.
+`/fhir/{server_id}/mcp` validates the token but does not pin the audience, because it forwards that same token to the FHIR server as the caller's identity; scope and consent enforcement happen in the shared FHIR proxy path.
 
-When connecting to our MCP endpoint, VS Code will:
-1. Fetch `/.well-known/oauth-protected-resource` → gets AS URL
-2. Fetch `/.well-known/oauth-authorization-server` → gets `registration_endpoint`
-3. Call `/auth/register` (DCR) → receives a dynamically registered `client_id`
-4. Open browser for Authorization Code + PKCE flow
-5. Exchange code for tokens and connect
+### Roles
 
-If DCR fails, VS Code falls back to prompting the user -- enter `mcp-client` when asked.
+`/mcp` reads realm roles and client roles off the validated token and unions them. A tool or resource whose route is not marked `meta.public` is registered only when the caller holds `admin`. Because registration happens per request, a non-admin never sees the tool in `tools/list` at all — this is a visibility filter, not just a call-time rejection.
+
+## Client registration
+
+An MCP client resolves a `client_id` in this order:
+
+1. **Pre-registered** — the client already has one. `mcp-client` is provisioned as a public client using authorization code + PKCE.
+2. **Client ID Metadata Document (CIMD)** — the client sends its `client_id` as a URL and Keycloak fetches the metadata. Requires Keycloak `--features=cimd`.
+3. **Dynamic Client Registration (DCR)** — the client calls `registration_endpoint`, which is the proxy's `/auth/register` (RFC 7591), not Keycloak's native one. Keycloak's requires initial access tokens and a trusted-host policy.
+4. **Prompt the user** — fallback; enter `mcp-client` when asked.
+
+Both CIMD and DCR are advertised via `client_registration_types_supported`. `token_endpoint_auth_methods_supported` is patched to include `none`, which Keycloak's own OIDC document omits despite supporting public clients — DCR creates public clients with `token_endpoint_auth_method=none`, so without this a client reads the metadata and concludes it cannot authenticate.
+
+### CIMD setup (Keycloak admin console)
+
+1. Start Keycloak with `--features=cimd` (already set in every deployment compose file and the Dockerfile).
+2. **Client profile** (`Realm Settings → Client Policies → Profiles`) — add the `client-id-metadata-document` executor, set trusted domains (e.g. `vscode.dev`, `127.0.0.1`), **Restrict same domain** off (VS Code redirects to localhost), **Only Allow Confidential Client** off (VS Code is public).
+3. **Client policy** (`Realm Settings → Client Policies → Policies`) — add the `client-id-uri` condition, URI scheme `https`, trusted domains matching step 2, and associate the profile.
+
+### VS Code
+
+`.vscode/mcp.json` for an `http` server accepts `type`, `url`, `headers`, and `dev`. There is no `clientId` field; VS Code runs OAuth itself.
 
 ```jsonc
-// .vscode/mcp.json
 {
   "servers": {
     "proxy-smart": {
@@ -484,305 +112,118 @@ If DCR fails, VS Code falls back to prompting the user -- enter `mcp-client` whe
 }
 ```
 
-### Dynamic Client Registration (DCR)
+## Tools
 
-The `/auth/register` endpoint proxies RFC 7591 requests to Keycloak. Dynamically registered clients appear in Keycloak with auto-generated IDs (e.g., `vscode-copilot-...`). These are public clients with standard flow enabled, suitable for browser-based auth.
+### Where they come from
 
-DCR is confirmed working on all environments. Existing dynamically registered VS Code clients can be seen in Keycloak's admin console.
+Tools on `/mcp` are derived from the Elysia route table by [`@max-health-inc/elysia-mcp`](../packages/elysia-mcp/README.md), which reads path, method, body/query/params schemas, the handler reference, and the route's `meta.public` flag. Only routes under the configured prefixes are considered, so a route is never exposed merely by existing. Naming, resource URIs, and the annotations derived from each HTTP verb are documented in that package; [Backend API Tools](./BACKEND_API_TOOLS.md) summarises them.
 
-### Grant Types by Client
+Execution goes back through the real Elysia pipeline via a registered dispatch app, so route guards, response-schema coercion, and lifecycle hooks such as admin audit logging all run. A synthetic-context fallback exists for the case where no dispatch app is registered, and the `getAdmin` / `getAccessControl` decorators serve that path.
 
-| Grant Type | Client | When Used |
-|-----------|--------|-----------|
-| `authorization_code` + PKCE | `mcp-client`, DCR clients | Interactive (VS Code, Claude Desktop, browsers) |
-| `urn:ietf:params:oauth:grant-type:token-exchange` | Backend internal | Token exchange for downstream FHIR calls |
+Two tools are hand-written rather than derived:
 
-## Security Considerations
+- **`search_documentation`** — semantic search over the platform documentation knowledge base.
+- **`read_resource`** — a single tool that collapses every read-only `GET` route. It takes a `path` and optional `query` map, and its description enumerates the paths the caller is allowed to read. Registered only when `exposeResourcesAsTools` is on. Collapsing hundreds of `get_*` tools into one keeps the tool list inside what a client will actually load.
 
-### 1. Token Validation
+`GET` routes are additionally registered as MCP **resources** — fixed URIs for static paths, RFC 6570 templates for parameterized ones.
 
-The server validates all incoming tokens:
-- **Signature verification** against JWKS endpoint
-- **Audience (aud) claim** must match canonical resource or server URL
-- **Expiration (exp)** must be in the future
-- **Issued at (iat)** must be reasonable
+### Response encoding
 
-### 2. Scope-Based Access Control
+Tool text is emitted as whichever of JSON and TOON is shorter for that payload (`textFormat: 'auto'`). Admin list endpoints are the high-token responses an agent hits most and are uniform enough for TOON's tabular form to collapse the repeated keys; nested and single-object responses, which TOON handles badly, keep their JSON. `structuredContent` is always JSON.
 
-Tools are exposed via scope claims in the token:
-- `read:mcp` - Required to call any tool
-- Tool-specific scopes (future): `execute:tool_xyz`
+### Controlling exposure
 
-### 3. Role-Based Authorization
+Exposure is configured through the admin UI (**AI Tools → MCP Endpoint**) and persisted by [`backend/src/lib/mcp-endpoint-config.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/lib/mcp-endpoint-config.ts) — PostgreSQL when `DATABASE_URL` is set, otherwise `DATA_DIR/mcp-endpoint.json`.
 
-Non-public tools require specific roles:
-```typescript
-if (!meta.public && !isAdmin(jwt)) {
-  // Deny access
-  return { error: 'forbidden', code: 'admin_required' };
-}
-```
+| Field | Meaning |
+|---|---|
+| `enabled` | Master switch. When false, `/mcp` answers 404. |
+| `enabledTools` | Allowlist. When non-null it wins outright: only these are exposed. |
+| `disabledTools` | Blocklist, used when `enabledTools` is null. |
+| `exposeResourcesAsTools` | Whether `read_resource` is registered. |
 
-### 4. CORS & CSP
+Three tools are protected and stay exposed regardless of configuration, so you cannot lock yourself out of the endpoint that would let you undo it: `get_admin_mcp-endpoint`, `update_admin_mcp-endpoint`, and `update_admin_mcp-endpoint_tools_toolName`.
 
-The server enforces strict CORS policies:
-- Only allow requests from trusted origins
-- Avoid exposing sensitive error details to clients
-- Use CSP headers to prevent XSS
+Reads are synchronous and come from a short-TTL cache, so a write from one task is observed by every task within seconds.
 
-### 5. Rate Limiting (Recommended)
+## Per-server FHIR endpoint
 
-Clients should implement rate limiting:
-```typescript
-// Example: Token bucket per user per minute
-const rateLimit = new Map<string, number>();
-if ((rateLimit.get(userId) ?? 0) > 100) {
-  throw new Error('Rate limit exceeded');
-}
-```
+`/fhir/{server_id}/mcp` exposes FHIR operations bound to one configured server. `server_id` is the server's name in the FHIR server store; the tools take no `serverName` parameter.
+
+The endpoint answers 404 if the server is unknown and 403 if its `mcpEnabled` flag is off, both before the protocol handler runs — those are facts about the server, not about the request. Origin and challenge handling then mirror `/mcp`, with the challenge pointing at the path-scoped metadata document (`/.well-known/oauth-protected-resource/fhir/{server_id}/mcp`).
+
+| Tool | Annotations |
+|---|---|
+| `fhir_read` | read-only, idempotent |
+| `fhir_search` | read-only, idempotent |
+| `fhir_capabilities` | read-only, idempotent |
+| `fhir_create` | — |
+| `fhir_update` | idempotent |
+| `fhir_delete` | destructive, idempotent |
+
+Every call inherits auth, consent, scope enforcement, and capability-aware normalization from the shared FHIR proxy, so the caller's SMART scopes decide what actually succeeds: `patient/*.read` or `user/*.read` for the read tools, `*.write` for create and update.
+
+`fhirVersion` is optional on every tool and defaults to the server's primary version.
 
 ## Configuration
 
-### Environment Variables
+| Variable | Description | Default |
+|---|---|---|
+| `MCP_ENDPOINT_PATH` | Path the endpoint is mounted at | `/mcp` |
+| `DATA_DIR` | Where `mcp-endpoint.json` lives when `DATABASE_URL` is unset | — |
+| `DATABASE_URL` | When set, endpoint config is stored in PostgreSQL instead | — |
+
+Whether the endpoint is enabled is **not** an environment variable — the file- or database-backed config is the single source of truth, so it can be toggled from the admin UI without a redeploy.
+
+Everything else the endpoint needs comes from the existing Keycloak and base-URL configuration: `BASE_URL`, `KEYCLOAK_URL`, `KEYCLOAK_REALM`, and the admin client settings. See [Environment Variables](./environment-variables.md).
+
+## Manual testing
 
 ```bash
-# OAuth/OIDC
-KEYCLOAK_URL=https://keycloak.example.com
-KEYCLOAK_REALM=master
-KEYCLOAK_CLIENT_ID=my-backend-client
-KEYCLOAK_CLIENT_SECRET=...
+TOKEN=...   # an access token whose aud matches the MCP resource
 
-# MCP Server
-MCP_CANONICAL_RESOURCE=https://example.com/mcp
-MCP_RESOURCE_BASE=https://example.com
-MCP_SCOPE_CHALLENGE=read:mcp
+# Discovery, unauthenticated
+curl -i https://example.com/mcp                      # 401 + WWW-Authenticate
+curl https://example.com/.well-known/oauth-protected-resource
 
-# AI/Internal
-OPENAI_MODEL=gpt-4-turbo         # Or gpt-5-mini, etc.
-OPENAI_API_KEY=...
+# List tools
+curl -X POST https://example.com/mcp \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "MCP-Protocol-Version: 2026-07-28" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+
+# Call one
+curl -X POST https://example.com/mcp \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "MCP-Protocol-Version: 2026-07-28" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
+       "params":{"name":"read_resource","arguments":{"path":"/admin/healthcare-users"}}}'
 ```
 
-### Code Configuration
-
-```typescript
-// backend/src/config.ts
-export const config = {
-  mcp: {
-    canonicalResource: process.env.MCP_CANONICAL_RESOURCE,
-    resourceBase: process.env.MCP_RESOURCE_BASE,
-    scopeChallenge: process.env.MCP_SCOPE_CHALLENGE,
-  },
-};
-```
-
-## Deployment
-
-### Docker
-
-```dockerfile
-# Already included in docker-compose.development.yml
-services:
-  backend:
-    environment:
-      - OPENAI_API_KEY=sk-...
-    ports:
-      - "3000:3000"
-    depends_on:
-      - keycloak
-```
-
-### Kubernetes
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: proxy-smart-mcp
-spec:
-  selector:
-    app: proxy-smart
-  ports:
-    - port: 443
-      targetPort: 3000
-      protocol: TCP
-  type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: proxy-smart
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: proxy-smart
-  template:
-    metadata:
-      labels:
-        app: proxy-smart
-    spec:
-      containers:
-      - name: backend
-        image: proxy-smart-backend:latest
-        env:
-        - name: OPENAI_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: openai
-              key: api-key
-        ports:
-        - containerPort: 3000
-        livenessProbe:
-          httpGet:
-            path: /admin/ai/health
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /admin/ai/chat
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-```
-
-## Testing
-
-### Integration Tests
+Automated coverage lives in `backend/test/mcp-endpoint.test.ts` and `backend/test/fhir-mcp-tools.test.ts`.
 
 ```bash
-# Run full test suite
 bun run test:backend
-
-# Run specific MCP tests
-bun run test:backend -- --grep "mcp-http"
 ```
-
-### Manual Testing with cURL
-
-```bash
-# 1. Get OAuth token
-TOKEN=$(curl -X POST https://keycloak.example.com/auth/realms/master/protocol/openid-connect/token \
-  -d "client_id=my-client&client_secret=...&grant_type=client_credentials" \
-  | jq -r '.access_token')
-
-# 2. List tools
-curl -X POST https://example.com/mcp \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"type":"listTools"}'
-
-# 3. Call a tool
-curl -X POST https://example.com/mcp \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "type":"callTool",
-    "name":"get_admin_users",
-    "args":{}
-  }'
-
-# 4. Stream events
-curl -H "Authorization: Bearer $TOKEN" \
-  -H "Accept: text/event-stream" \
-  https://example.com/mcp
-```
-
-## Performance
-
-### Benchmarks
-
-On a modern machine (M1 MacBook), typical latencies:
-
-| Operation | Latency | Notes |
-|-----------|---------|-------|
-| OAuth discovery | 5–10ms | Cached after first call |
-| listTools (cached) | 1–2ms | From in-memory cache |
-| listTools (fresh) | 20–50ms | Introspects Elysia routes |
-| callTool (simple) | 10–30ms | Depends on tool complexity |
-| callTool (w/ network) | 100–500ms | External API calls |
-| SSE connection | 5–15ms | Negligible overhead |
-
-### Optimization Tips
-
-1. **Tool Discovery Caching** - Clients cache tools for 60s; adjust as needed
-2. **Request Batching** - Group multiple tool calls to reduce latency
-3. **Connection Pooling** - Reuse HTTP/2 connections
-4. **Token Caching** - Cache access tokens until 30s before expiry
 
 ## Troubleshooting
 
-### "Invalid audience" Error
+**401 on every call, token looks valid.** The `aud` claim does not match. `/mcp` requires the MCP resource audience, `adminUiClientId`, or `adminClientId`. A SMART app token aimed at the FHIR base will not work here. Validation is fail-closed, so a missing Keycloak audience mapper looks identical to a forged token.
 
-**Cause:** Token's `aud` claim doesn't match `MCP_CANONICAL_RESOURCE` or `MCP_RESOURCE_BASE`.
+**`invalid_target` from Keycloak.** The realm is missing the resource-indicator scope, or the client was created outside the proxy. Every client the backend provisions gets it automatically.
 
-**Fix:**
-```bash
-# Check token payload
-jwt decode $TOKEN
+**A tool is missing from `tools/list`.** Either the caller is not `admin` and the route is not `meta.public`, or the tool is filtered by `enabledTools` / `disabledTools`. Both are per-request, so re-listing with a different token gives a different answer.
 
-# Ensure `aud` includes:
-# - MCP_CANONICAL_RESOURCE
-# - MCP_RESOURCE_BASE
-# - Backend URL
-```
+**`404 Session not found`.** From a client pinning `Mcp-Session-Id`. The endpoint is stateless; drop the header.
 
-### 404 Tool Not Found
-
-**Cause:** Tool name is misspelled or tool registration failed.
-
-**Fix:**
-```bash
-# List available tools
-curl -X POST https://example.com/mcp \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"type":"listTools"}' | jq '.tools[].function.name'
-```
-
-### SSE Connection Drops
-
-**Cause:** Network timeout or server restart.
-
-**Fix:**
-- Clients should auto-reconnect with exponential backoff
-- Use heartbeat ping to detect stale connections
-- Implement health checks in your infrastructure
-
-### "Insufficient Scope" Error
-
-**Cause:** Token lacks required scope.
-
-**Fix:**
-```bash
-# Re-request token with scope
-curl -X POST https://keycloak.example.com/auth/realms/master/protocol/openid-connect/token \
-  -d "scope=read:mcp execute:mcp&..." 
-```
+**Client cannot register.** Check that `/auth/register` is reachable and that the AS metadata advertises it. If DCR fails, VS Code falls back to prompting — enter `mcp-client`.
 
 ## References
 
-- [Model Context Protocol (MCP) Specification](https://modelcontextprotocol.io/)
-- [RFC 9728: OAuth 2.0 Resource Metadata](https://tools.ietf.org/html/rfc9728)
-- [RFC 8414: OAuth 2.0 Authorization Server Metadata](https://tools.ietf.org/html/rfc8414)
-- [RFC 7591: OAuth 2.0 Dynamic Client Registration](https://tools.ietf.org/html/rfc7591)
-- [OAuth Client ID Metadata Document (CIMD)](https://www.ietf.org/archive/id/draft-ietf-oauth-client-id-metadata-document-01.html)
-- [RFC 6750: OAuth 2.0 Bearer Token Usage](https://tools.ietf.org/html/rfc6750)
-- [Keycloak MCP Integration Guide](https://www.keycloak.org/securing-apps/mcp-authz-server)
-- [Microsoft MCP Learn Docs](https://learn.microsoft.com/en-us/semantic-kernel/concepts/mcp/)
-- [Elysia Web Framework](https://elysiajs.com/)
-
-## Contributing
-
-To extend the MCP HTTP server:
-
-1. Add new routes under `backend/src/routes/admin/` or `backend/src/routes/`
-2. Export route schemas from `backend/src/schemas/`
-3. Routes are automatically discovered and exposed via MCP
-4. Test with `bun run test:backend`
-5. Routes are automatically discovered and exposed via the built-in MCP endpoint
-
----
-
-**Last Updated:** October 21, 2025  
-**Version:** 0.0.1-alpha  
-**License:** AGPL-3.0-or-later
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [`@maxhealth.tech/mcp-http`](https://github.com/Max-Health-Inc/mcp-http) — the HTTP edge, shared across the organization
+- [`@max-health-inc/elysia-mcp`](../packages/elysia-mcp/README.md) — route table to tools
+- [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728) protected resource metadata · [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) AS metadata · [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) resource indicators · [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) DCR · [RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207) issuer identification
+- [Keycloak as an MCP authorization server](https://www.keycloak.org/securing-apps/mcp-authz-server)
