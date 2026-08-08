@@ -72,6 +72,7 @@ interface HealthcareUserEditFormProps {
   availableClientRoles: Record<string, string[]>;
   getAllAvailableRoles: () => string[];
   rolesMeta?: RolesMeta;
+  clientRolesMeta?: RolesMeta;
   federatedIdentities?: FederatedIdentity[];
   availableIdPs?: IdentityProviderResponse[];
 }
@@ -102,6 +103,7 @@ export function HealthcareUserEditForm({
   availableClientRoles,
   getAllAvailableRoles,
   rolesMeta,
+  clientRolesMeta,
   federatedIdentities,
   availableIdPs,
 }: HealthcareUserEditFormProps) {
@@ -253,6 +255,7 @@ export function HealthcareUserEditForm({
             availableClientRoles={availableClientRoles}
             getAllAvailableRoles={getAllAvailableRoles}
             rolesMeta={rolesMeta}
+            clientRolesMeta={clientRolesMeta}
           />
 
           <DialogFooter>
@@ -612,6 +615,7 @@ function RoleManagementSection({
   availableClientRoles,
   getAllAvailableRoles,
   rolesMeta,
+  clientRolesMeta,
 }: {
   t: (key: string) => string;
   formData: EditUserFormData;
@@ -620,8 +624,18 @@ function RoleManagementSection({
   availableClientRoles: Record<string, string[]>;
   getAllAvailableRoles: () => string[];
   rolesMeta?: RolesMeta;
+  clientRolesMeta?: RolesMeta;
 }) {
   const noScopes = t('No typical scopes set');
+
+  // Which of the ticked roles actually confer admin, per the backend's own
+  // predicate. Realm and admin-UI client roles are equivalent to that check, so
+  // they are reported together rather than as two unrelated lists.
+  const adminGrants = [
+    ...formData.realmRoles.filter(r => rolesMeta?.[r]?.grantsAdmin),
+    ...(formData.clientRoles['admin-ui'] ?? []).filter(r => clientRolesMeta?.[r]?.grantsAdmin),
+  ];
+  const hasAdmin = adminGrants.length > 0;
 
   // Hidden by default, but reachable: losing `default-roles-proxy-smart` costs a
   // user `offline_access`, which fails token exchange after a successful login.
@@ -644,6 +658,21 @@ function RoleManagementSection({
       <div className="flex items-start gap-2 text-xs text-muted-foreground">
         <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
         <span>{t('Roles control access to this admin console and act as labels for clinical intent. They are not enforced as FHIR data access.')}</span>
+      </div>
+
+      {/* The question the two lists below are really being read to answer. */}
+      <div className={`flex items-start gap-2 rounded-lg border p-3 text-xs ${hasAdmin ? 'border-primary/30 bg-primary/10' : 'border-border bg-muted/40'}`}>
+        <Shield className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${hasAdmin ? 'text-primary' : 'text-muted-foreground'}`} />
+        <div className="min-w-0">
+          <p className="font-medium">
+            {hasAdmin ? t('Has admin console access') : t('No admin console access')}
+          </p>
+          <p className="text-muted-foreground">
+            {hasAdmin
+              ? `${t('Granted by')}: ${adminGrants.join(', ')}`
+              : t('Tick a role marked "grants admin" below. A realm role and an Admin UI role are equivalent — one is enough.')}
+          </p>
+        </div>
       </div>
 
       {/* Primary Role */}
@@ -695,6 +724,11 @@ function RoleManagementSection({
                 <div className="min-w-0">
                   <Label htmlFor={`edit-realm-${role}`} className="text-sm capitalize">
                     {role}
+                    {meta?.grantsAdmin && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-primary font-normal">
+                        {t('grants admin')}
+                      </span>
+                    )}
                     {isPlumbingRoleName(role) && (
                       <span className="ml-2 text-[10px] uppercase tracking-wide text-muted-foreground font-normal">
                         {t('technical')}
@@ -714,10 +748,13 @@ function RoleManagementSection({
 
       {/* Client Roles */}
       <div>
-        <Label className="mb-2 block">{t('Admin UI Roles')}</Label>
+        <Label className="mb-1 block">{t('Admin UI Roles')}</Label>
+        <p className="text-xs text-muted-foreground mb-2">
+          {t('Client-level roles on the admin-ui client. For console access these are equivalent to the realm roles above — a role here or there, not both.')}
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {availableClientRoles['admin-ui']?.map((role) => {
-            const meta = rolesMeta?.[role];
+            const meta = clientRolesMeta?.[role];
             const subtitle = roleSubtitle(meta, noScopes);
             return (
               <div key={role} className="flex items-start space-x-2" title={subtitle}>
@@ -737,7 +774,14 @@ function RoleManagementSection({
                   }}
                 />
                 <div className="min-w-0">
-                  <Label htmlFor={`edit-client-${role}`} className="text-sm capitalize">{role.replace('-', ' ')}</Label>
+                  <Label htmlFor={`edit-client-${role}`} className="text-sm capitalize">
+                    {role.replace('-', ' ')}
+                    {meta?.grantsAdmin && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wide text-primary font-normal">
+                        {t('grants admin')}
+                      </span>
+                    )}
+                  </Label>
                   {meta?.description && <p className="text-xs text-muted-foreground truncate">{meta.description}</p>}
                 </div>
               </div>
