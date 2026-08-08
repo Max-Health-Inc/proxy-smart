@@ -4,20 +4,11 @@ This document describes the MCP (Model Context Protocol) HTTP transport implemen
 
 ## Overview
 
-The MCP HTTP server provides a standards-compliant interface for clients to:
-- **Discover available tools** via RFC 9728-aligned OAuth metadata
-- **Call tools securely** with OAuth 2.0 bearer token authentication
-- **Receive live updates** via Server-Sent Events (SSE) for tool availability changes
-- **Manage sessions** with optional state stickiness across requests
+A client discovers the server through OAuth metadata aligned with RFC 9728 and RFC 8414, authenticates with a bearer token, and calls tools over the same endpoint it used to list them. Authorization is not merely presence of a token: scopes and realm roles are both checked, so the tools a caller sees are the ones that caller is entitled to.
 
-### Key Features
+The tool list is not static. Tools are derived from the backend's Elysia route registry, so the set changes as the backend does, and clients holding a `GET /mcp` stream are notified over Server-Sent Events rather than having to poll. The same stream carries execution status, timing, and error detail for calls in flight.
 
-- ✅ **OAuth 2.0 Discovery** - RFC 9728/RFC 8414 compliant resource and authorization server metadata
-- ✅ **Bearer Token Auth** - Token validation with scope-based access control and role-based authorization
-- ✅ **Server-Sent Events** - Real-time notifications for tool list changes and execution status
-- ✅ **Session Management** - Optional session stickiness via MCP-Session-Id header
-- ✅ **Request Resilience** - Built-in retry logic on 5xx errors and automatic tool cache refresh on 404
-- ✅ **Tool Execution Tracking** - Execution timings, status (started/completed/failed), and error details
+Two behaviors exist because the tool list can move underneath a client. A 404 on a call is treated as a stale cache and triggers a refresh rather than an error, and 5xx responses are retried. Sessions are optional: a client that wants state to stick across requests sends an `MCP-Session-Id` header, and one that does not simply omits it.
 
 ## Architecture
 

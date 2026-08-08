@@ -4,8 +4,6 @@
 
 Da Vinci Documentation Templates & Rules (DTR) application. A SMART on FHIR app for prior authorization documentation, questionnaire rendering, and CQL-based auto-population.
 
-## Overview
-
 The DTR App implements the [Da Vinci DTR IG](http://hl7.org/fhir/us/davinci-dtr/) workflow: it launches from an EHR or standalone, fetches payer-defined Questionnaires, auto-populates answers using CQL expressions and patient data, and submits completed documentation for prior authorization.
 
 ```
@@ -15,15 +13,9 @@ The DTR App implements the [Da Vinci DTR IG](http://hl7.org/fhir/us/davinci-dtr/
 └───────────┘                  └──────────────┘             └─────────────┘
 ```
 
-## Features
+The workflow starts from a clinical service, finds the payer questionnaires that apply to it, and renders them through [AEHRC Smart Forms](https://github.com/aehrc/smart-forms). Answers that can be derived from the patient record are populated by CQL before the practitioner sees the form, so the manual step is review rather than transcription. Completed documentation is reviewed once more and submitted as a prior authorization request, and submitted requests stay visible with their status.
 
-- **EHR Launch and Standalone Launch** with automatic launch mode detection
-- **Patient Search** to select a patient context when launched standalone
-- **Questionnaire Browser** for discovering available payer questionnaires
-- **FHIR Questionnaire Renderer** powered by AEHRC Smart Forms
-- **Prior Authorization Workflow** with service selection, documentation, and submission
-- **PA Request List** showing submitted and pending prior auth requests
-- **Patient Banner** displaying current patient context
+Launch mode is detected rather than configured (see [Launch Modes](#launch-modes) below): an EHR launch arrives with its patient context already set, and a standalone launch opens patient search first.
 
 ## SMART Configuration
 

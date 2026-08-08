@@ -42,70 +42,17 @@ The backend stores the full Keycloak client configuration and adds SMART-specifi
 - **Web origins** -- CORS origins for browser-based apps
 - **Logo URI** -- displayed in consent screens and app store
 
-## App Store Integration
-
-Published apps appear in the `/admin/app-store/` catalog:
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/admin/app-store/` | List all apps with visibility status |
-| POST | `/admin/app-store/publish` | Publish an app to the catalog |
-| POST | `/admin/app-store/:appId/hide` | Hide app from users |
-| POST | `/admin/app-store/:appId/show` | Make app visible again |
-| POST | `/admin/app-store/:appId/unpublish` | Remove from catalog |
-
-## Related
-
-- [Scope Management](./scope-management.md) -- configure which scopes exist
-- [Launch Contexts](./launch-context.md) -- set per-user launch context attributes
-- [FHIR Servers](./fhir-servers.md) -- the upstream servers apps will access
-- **🔔 Notification Services**: Push notification support
-
-## 📱 Mobile Application Support
-
-### Mobile-Specific Features
-- **📱 App Store Links**: iOS/Android app store integration
-- **🔗 Deep Linking**: Native app launch support
-- **📲 Push Notifications**: Mobile notification delivery
-- **🔒 Certificate Pinning**: Enhanced mobile security
-
-### Progressive Web Apps (PWA)
-- **🌐 Web App Manifest**: PWA configuration
-- **⚡ Service Workers**: Offline capability
-- **🏠 Home Screen**: Install to home screen
-- **📱 Native Experience**: App-like behavior
-
-## 🎯 Best Practices
-
-### Application Design
-1. **🎯 Scope Minimization**: Request only necessary permissions
-2. **🔒 Security First**: Implement strong security measures
-3. **👥 User Experience**: Prioritize intuitive interface design
-4. **📊 Performance**: Optimize for speed and efficiency
-
-### Launch Context
-1. **🎯 Context Relevance**: Ensure context matches workflow
-2. **⚡ Fast Loading**: Minimize context resolution time
-3. **🔄 Context Persistence**: Maintain context across sessions
-4. **📊 Context Validation**: Verify context accuracy
-
-### Ongoing Management
-1. **📊 Monitor Usage**: Track application performance
-2. **🔄 Regular Updates**: Keep applications current
-3. **🛡️ Security Reviews**: Periodic security assessments
-4. **👥 User Feedback**: Collect and act on user input
-
-The SMART Apps management system provides comprehensive tools for healthcare application lifecycle management, ensuring secure, compliant, and efficient integration within the healthcare ecosystem.
-
 ## Sub-Tabs
 
-The SMART Apps page contains three sub-tabs:
+The SMART Apps page contains three sub-tabs.
 
 ### Registered Apps
-The main view for managing manually registered SMART client applications (documented above).
+
+The main view for managing manually registered SMART client applications, documented above.
 
 ### App Store
-Controls the visibility and publication of SMART apps:
+
+Publication and visibility are separate actions, which is what lets an app be pulled from view without losing its catalog entry:
 
 | Action | Description |
 |---|---|
@@ -117,11 +64,14 @@ Controls the visibility and publication of SMART apps:
 API endpoints: `GET /admin/app-store/`, `POST /admin/app-store/publish`, `POST /admin/app-store/:appId/hide`, `POST /admin/app-store/:appId/show`, `POST /admin/app-store/:appId/unpublish`.
 
 ### Dynamic Client Registration
-Manages RFC 7591 Dynamic Client Registration settings:
 
-- **View settings** -- current DCR policy configuration
-- **Update settings** -- modify registration requirements and defaults
-- **Reset to defaults** -- restore factory DCR settings
+Manages the RFC 7591 Dynamic Client Registration policy: which requirements and defaults apply to clients that register themselves rather than being entered here by an administrator. The policy can be viewed, updated, or reset to its factory defaults.
 
 API endpoints: `GET /admin/client-registration/settings`, `PUT /admin/client-registration/settings`, `POST /admin/client-registration/reset-defaults`.
+
+## Related
+
+- [Scope Management](./scope-management.md) -- configure which scopes exist
+- [Launch Contexts](./launch-context.md) -- set per-user launch context attributes
+- [FHIR Servers](./fhir-servers.md) -- the upstream servers apps will access
 

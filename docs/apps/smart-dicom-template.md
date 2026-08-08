@@ -2,9 +2,7 @@
 
 Starter kit for building SMART on FHIR imaging algorithm apps. Clone this template, implement your algorithm in `src/algorithm.ts`, and deploy as a registered SMART app on Proxy Smart.
 
-## Overview
-
-The SMART DICOM Template provides the full boilerplate for a SMART-launched imaging app: authentication, DICOMweb study retrieval, Cornerstone3D image loading, and a pluggable algorithm interface. Partners implement one function and get a production-ready SMART app.
+Everything a SMART-launched imaging app needs is already wired: authentication, DICOMweb study retrieval, Cornerstone3D image loading, and the UI that drives them. What is left is one function.
 
 ```
 ┌────────────────────┐  SMART launch  ┌──────────────┐  DICOMweb  ┌──────┐
@@ -18,14 +16,7 @@ The SMART DICOM Template provides the full boilerplate for a SMART-launched imag
    └─────────────┘
 ```
 
-## Features
-
-- **SMART App Launch 2.2.0** with PKCE via `SmartAppShell`
-- **DICOMweb Integration** via `@babelfhir-ts/dicomweb` for study/series/instance retrieval
-- **Cornerstone3D** for WADO-RS pixel data loading with OAuth token injection
-- **Algorithm Runner UI** -- study selector, run button, and result card display
-- **Pluggable Algorithm** -- implement `runAlgorithm()` and get a complete UI
-- **Shared UI Components** from `@proxy-smart/shared-ui` (SmartAppShell, Card, Button, Spinner)
+`runAlgorithm()` receives a study's image IDs and its FHIR metadata and returns a finding. The template supplies the rest: `SmartAppShell` runs the OAuth 2.0 and PKCE launch, `@babelfhir-ts/dicomweb` retrieves studies, series, and instances, and Cornerstone3D loads WADO-RS pixel data with the access token injected into each request. The study selector, run control, and result card are already built against that interface, so a returned result renders without any UI work.
 
 ## Quick Start
 
