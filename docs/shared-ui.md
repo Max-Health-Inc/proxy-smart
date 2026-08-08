@@ -75,6 +75,7 @@ export default function App() {
 
 **With onAuthenticated callback:**
 
+<!-- doccheck: skip — JSX usage sketch with an elided prop list -->
 ```tsx
 const [launchMode, setLaunchMode] = useState<LaunchMode>("standalone")
 const onAuthenticated = useCallback(() => setLaunchMode(smartAuth.getLaunchMode()), [])

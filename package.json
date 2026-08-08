@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.1-beta.202608080834.e4dd5c08f",
+  "version": "0.3.1-alpha.202608080900.da2df3824",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -105,9 +105,12 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "check": "bun run typecheck && bun run lint && bun run check:badges",
+    "check": "bun run typecheck && bun run lint && bun run check:badges && bun run check:docs && bun run check:docs:coverage",
     "check:badges": "node scripts/check-badges.mjs",
     "check:badges:online": "node scripts/check-badges.mjs --online",
+    "check:docs": "node scripts/check-doc-examples.mjs",
+    "check:docs:coverage": "node scripts/check-docs-coverage.mjs --min=8",
+    "check:docs:missing": "node scripts/check-docs-coverage.mjs --list",
     "clean": "bun run clean:backend && bun run clean:ui",
     "clean:backend": "cd backend && rm -rf node_modules dist",
     "clean:ui": "cd frontend/ui && rm -rf node_modules dist",
