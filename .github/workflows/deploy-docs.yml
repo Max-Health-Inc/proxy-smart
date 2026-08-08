@@ -6,10 +6,17 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/deploy-docs.yml'
+  # The compliance report is no longer committed, so a docs-only trigger would
+  # leave the published report frozen at whatever the last docs edit shipped.
+  # Refresh Pages whenever a compliance run finishes instead.
+  workflow_run:
+    workflows: ['SMART Compliance Tests (Inferno)']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read   # Read compliance-report-* artifacts from the compliance workflow
   pages: write
   id-token: write
 
@@ -41,6 +48,36 @@ jobs:
         env:
           VITEPRESS_BASE: /proxy-smart/
         run: bunx vitepress build docs
+
+      # Fold the compliance reports into the site from the compliance workflow's
+      # artifacts. Each stage lands at /compliance/<stage>/, so summary.json is
+      # fetchable and the raw Inferno output stays linkable.
+      #
+      # A missing or expired artifact must not fail the docs deploy: the reports
+      # are supplementary, and a stage that has not run in 90 days simply has no
+      # report to show. Each stage is independent for the same reason.
+      - name: Attach compliance reports
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          DIST=docs/.vitepress/dist/compliance
+          mkdir -p "$DIST"
+          for stage in dev beta production; do
+            id=$(gh api "repos/$REPO/actions/artifacts?name=compliance-report-$stage&per_page=1" \
+                   --jq '.artifacts[0].id // empty' 2>/dev/null || true)
+            if [ -z "$id" ]; then
+              echo "no compliance-report-$stage artifact, skipping"
+              continue
+            fi
+            if gh api "repos/$REPO/actions/artifacts/$id/zip" > "/tmp/$stage.zip" 2>/dev/null \
+               && unzip -qo "/tmp/$stage.zip" -d "$DIST/$stage"; then
+              echo "attached $stage report (artifact $id)"
+            else
+              echo "could not attach $stage report (artifact $id)"
+            fi
+          done
+          find "$DIST" -maxdepth 2 -type f | sort
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

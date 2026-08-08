@@ -28,9 +28,19 @@ const SHIELDS = 'img.shields.io';
 const ACTIONS_BADGE = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/actions\/workflows\/([^/]+)\/badge\.svg/;
 const SEMVER = /\d+\.\d+\.\d+/g;
 
-/** A badge or link occurrence, with enough context to report a line. */
-function locate(source, index) {
-  return source.slice(0, index).split(/\r?\n/).length;
+/**
+ * Path prefixes a document declares as produced at deploy time rather than
+ * living in the repo, e.g. `<!-- linkcheck: external /compliance/ -->`.
+ *
+ * Scoped to the prefixes a page names, so it cannot silently excuse an ordinary
+ * broken link elsewhere in that page.
+ */
+function externalPrefixes(source) {
+  const prefixes = [];
+  for (const m of source.matchAll(/<!--\s*linkcheck:\s*external\s+([^>]+?)\s*-->/gi)) {
+    prefixes.push(...m[1].split(/\s+/).filter(Boolean));
+  }
+  return prefixes;
 }
 
 /** GitHub heading slug: lowercase, drop punctuation/emoji, spaces to hyphens. */
@@ -125,6 +135,7 @@ function checkDoc(file, source, ctx) {
   const add = (line, rule, message) => findings.push({ file, line, rule, message });
   const { images, links } = extract(source);
   const slugs = headingSlugs(source);
+  const external = externalPrefixes(source);
 
   for (const image of images) {
     if (!isBadge(image.url)) continue;
@@ -169,6 +180,7 @@ function checkDoc(file, source, ctx) {
       continue;
     }
     if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith('//')) continue;
+    if (external.some((p) => href.startsWith(p))) continue;
     if (!resolveLink(file, href)) {
       add(link.line, 'dead-relative-link', `${href} does not exist`);
     }
