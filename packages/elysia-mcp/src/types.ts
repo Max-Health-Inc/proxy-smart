@@ -130,17 +130,7 @@ export interface ElysiaMcpOptions {
    */
   contextDecorators?: Record<string, unknown>
 
-  /**
-   * Maximum number of concurrent sessions.
-   * @default 100
-   */
-  maxSessions?: number
 
-  /**
-   * Session TTL in milliseconds.
-   * @default 1_800_000 (30 minutes)
-   */
-  sessionTtlMs?: number
 
   /**
    * Custom tool name generator. Converts (path, method) to a tool name.
@@ -186,15 +176,3 @@ export interface Logger {
   debug?(message: string, data?: Record<string, unknown>): void
 }
 
-// ── Session ──────────────────────────────────────────────────────────────────
-
-export interface McpSession {
-  transport: unknown
-  server: unknown
-  /** Mutable token ref -- updated on every authenticated request */
-  tokenRef: { current?: string }
-  /** Timestamp of last activity (for TTL eviction) */
-  lastActivity: number
-  /** Subject (user ID) bound at creation -- prevents session hijacking */
-  boundSub?: string
-}

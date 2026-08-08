@@ -12,9 +12,8 @@ import {
   McpServer,
   ResourceTemplate,
   WebStandardStreamableHTTPServerTransport,
-  isInitializeRequest,
 } from '@modelcontextprotocol/server'
-import type { ToolMetadata, ResourceMetadata, AuthResult, McpSession, ElysiaMcpOptions, Logger } from './types'
+import type { ToolMetadata, ResourceMetadata, AuthResult, ElysiaMcpOptions, Logger } from './types'
 import { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
 import { pathToResourceUri } from './introspect'
 import { executeTool, executeResource } from './executor'
@@ -91,85 +90,50 @@ export function originGuard(
   )
 }
 
-// ── Default logger ───────────────────────────────────────────────────────────
+// (The SessionManager that lived here is gone: this transport is stateless.
+// It held transports in PROCESS MEMORY, which made every deploy invalidate every
+// live connection and forced sticky routing across instances — see SEP-2575.)
 
-const defaultLogger: Logger = {
-  info: (msg, data) => console.log(`[elysia-mcp] ${msg}`, data ?? ''),
-  warn: (msg, data) => console.warn(`[elysia-mcp] ${msg}`, data ?? ''),
-  error: (msg, data) => console.error(`[elysia-mcp] ${msg}`, data ?? ''),
-  debug: (msg, data) => console.debug(`[elysia-mcp] ${msg}`, data ?? ''),
-}
-
-// ── Session Store ────────────────────────────────────────────────────────────
-
-export class SessionManager {
-  private sessions = new Map<string, McpSession>()
-  private cleanupTimer: ReturnType<typeof setInterval> | null = null
-
-  constructor(
-    private maxSessions: number = 100,
-    private ttlMs: number = 30 * 60_000,
-    private logger: Logger = defaultLogger,
-  ) {
-    // Periodic cleanup every 5 minutes
-    this.cleanupTimer = setInterval(() => this.evictExpired(), 5 * 60_000)
-    if (typeof this.cleanupTimer === 'object' && 'unref' in this.cleanupTimer) {
-      (this.cleanupTimer as { unref: () => void }).unref()
-    }
+/**
+ * Tie a per-request server + transport lifetime to the response body.
+ *
+ * `handleRequest` resolves as soon as the Response OBJECT exists, which for a
+ * streamed (SSE) reply is before a single byte of body has been written. Closing
+ * the transport there truncates the reply to an empty 200 — which is exactly what
+ * happened the first time this was written with a `finally` block.
+ *
+ * A bodyless response is released immediately; a streamed one is piped through a
+ * pass-through whose `flush` fires only after the last chunk, so the transport
+ * stays open for precisely as long as it is still writing. Without any release at
+ * all the process accumulates one dead server per request.
+ */
+export function closeWhenFinished(
+  response: Response,
+  transport: { close(): Promise<void> },
+  server: { close(): Promise<void> },
+): Response {
+  const release = () => {
+    void transport.close().catch(() => {})
+    void server.close().catch(() => {})
   }
 
-  get(sessionId: string): McpSession | undefined {
-    return this.sessions.get(sessionId)
+  if (!response.body) {
+    release()
+    return response
   }
 
-  has(sessionId: string): boolean {
-    return this.sessions.has(sessionId)
-  }
+  const instrumented = response.body.pipeThrough(
+    new TransformStream({
+      transform(chunk, controller) { controller.enqueue(chunk) },
+      flush: release,
+    }),
+  )
 
-  set(sessionId: string, session: McpSession): void {
-    // Enforce max session limit -- evict oldest
-    if (this.sessions.size >= this.maxSessions) {
-      let oldestSid: string | null = null
-      let oldestTime = Infinity
-      for (const [sid, sess] of this.sessions) {
-        if (sess.lastActivity < oldestTime) {
-          oldestTime = sess.lastActivity
-          oldestSid = sid
-        }
-      }
-      if (oldestSid) {
-        this.sessions.delete(oldestSid)
-        this.logger.info('Evicted oldest MCP session', { sessionId: oldestSid })
-      }
-    }
-    this.sessions.set(sessionId, session)
-  }
-
-  delete(sessionId: string): boolean {
-    return this.sessions.delete(sessionId)
-  }
-
-  get size(): number {
-    return this.sessions.size
-  }
-
-  private evictExpired(): void {
-    const now = Date.now()
-    for (const [sid, session] of this.sessions) {
-      if (now - session.lastActivity > this.ttlMs) {
-        this.sessions.delete(sid)
-        this.logger.info('MCP session expired (TTL)', { sessionId: sid })
-      }
-    }
-  }
-
-  destroy(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer)
-      this.cleanupTimer = null
-    }
-    this.sessions.clear()
-  }
+  return new Response(instrumented, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  })
 }
 
 // ── Tool/Resource Registration ───────────────────────────────────────────────
@@ -272,16 +236,15 @@ export interface McpRequestHandlerOptions {
   tools: Map<string, ToolMetadata>
   resources: Map<string, ResourceMetadata>
   options: ElysiaMcpOptions
-  sessionManager: SessionManager
   logger: Logger
 }
 
 /**
  * Create the core MCP request handler function.
- * Handles session creation, lookup, authentication, and request dispatch.
+ * Authenticates, gates on Origin, and serves each request statelessly.
  */
 export function createMcpRequestHandler(handlerOpts: McpRequestHandlerOptions) {
-  const { tools, resources, options, sessionManager, logger } = handlerOpts
+  const { tools, resources, options } = handlerOpts
   const serverName = options.name ?? 'elysia-mcp-server'
   const serverVersion = options.version ?? '1.0.0'
 
@@ -310,98 +273,48 @@ export function createMcpRequestHandler(handlerOpts: McpRequestHandlerOptions) {
       auth = result
     }
 
-    const sessionId = request.headers.get('mcp-session-id')
-
-    // ── Existing session ─────────────────────────────────────────────────
-    if (sessionId && sessionManager.has(sessionId)) {
-      const session = sessionManager.get(sessionId)!
-
-      // Verify session belongs to same user (prevent hijacking)
-      if (session.boundSub && auth.sub && session.boundSub !== auth.sub) {
-        return new Response(
-          JSON.stringify({
-            jsonrpc: '2.0',
-            error: { code: -32001, message: 'Session belongs to a different user' },
-            id: null,
-          }),
-          { status: 403, headers: { 'Content-Type': 'application/json' } },
-        )
-      }
-
-      // Update token & TTL
-      if (auth.token) session.tokenRef.current = auth.token
-      session.lastActivity = Date.now()
-
-      return (session.transport as WebStandardStreamableHTTPServerTransport).handleRequest(request)
-    }
-
-    // ── Unknown session ID -> 404 (MCP spec) ─────────────────────────────
-    if (sessionId) {
+    // ── Session operations: 405, because there are no sessions ───────────
+    // Stateless serving (sessionIdGenerator: undefined) means GET and DELETE —
+    // the 2025-era session verbs — have nothing to act on. The Streamable HTTP
+    // spec makes a 405 here benign: the client proceeds without the standalone
+    // stream, and terminateSession() resolves normally.
+    if (request.method === 'GET' || request.method === 'DELETE') {
       return new Response(
         JSON.stringify({
           jsonrpc: '2.0',
-          error: { code: -32000, message: 'Session not found' },
+          error: { code: -32000, message: 'Method not allowed: this endpoint is stateless' },
           id: null,
         }),
-        { status: 404, headers: { 'Content-Type': 'application/json' } },
+        { status: 405, headers: { 'Content-Type': 'application/json', Allow: 'POST' } },
       )
     }
 
-    // ── New session (initialization) ─────────────────────────────────────
-    if (request.method === 'POST') {
-      const body = await request.json()
-
-      if (isInitializeRequest(body)) {
-        const tokenRef = { current: auth.token }
-
-        const transport = new WebStandardStreamableHTTPServerTransport({
-          sessionIdGenerator: () => crypto.randomUUID(),
-          onsessioninitialized: (sid) => {
-            sessionManager.set(sid, {
-              transport,
-              server,
-              tokenRef,
-              lastActivity: Date.now(),
-              boundSub: auth.sub,
-            })
-            logger.info('MCP session initialized', { sessionId: sid, sub: auth.sub })
-          },
-          onsessionclosed: (sid) => {
-            sessionManager.delete(sid)
-            logger.info('MCP session closed', { sessionId: sid })
-          },
-        })
-
-        transport.onclose = () => {
-          if (transport.sessionId) {
-            sessionManager.delete(transport.sessionId)
-          }
-        }
-
-        const server = new McpServer(
-          { name: serverName, version: serverVersion },
-          { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
-        )
-
-        // Bridge introspected routes -> MCP tools & resources
-        const regCtx: RegistrationContext = { tools, resources, options, userRoles: auth.roles, tokenRef }
-        registerToolsOnServer(server, regCtx)
-        registerResourcesOnServer(server, regCtx)
-
-        await server.connect(transport)
-        return transport.handleRequest(request, { parsedBody: body })
-      }
+    if (request.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Bad Request' }, id: null }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } },
+      )
     }
 
-    // Bad request
-    return new Response(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        error: { code: -32000, message: 'Bad Request: No valid session or initialization request' },
-        id: null,
-      }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    // ── Serve on a fresh server + transport ──────────────────────────────
+    const body = await request.json()
+    const tokenRef = { current: auth.token }
+
+    const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined })
+    const server = new McpServer(
+      { name: serverName, version: serverVersion },
+      { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
     )
+
+    // Bridge introspected routes -> MCP tools & resources, filtered by the roles
+    // on THIS request's token rather than the ones captured when a session opened.
+    const regCtx: RegistrationContext = { tools, resources, options, userRoles: auth.roles, tokenRef }
+    registerToolsOnServer(server, regCtx)
+    registerResourcesOnServer(server, regCtx)
+
+    await server.connect(transport)
+    const response = await transport.handleRequest(request, { parsedBody: body })
+    return closeWhenFinished(response, transport, server)
   }
 }
 

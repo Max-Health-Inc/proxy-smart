@@ -21,14 +21,13 @@ import {
   McpServer,
   ResourceTemplate,
   WebStandardStreamableHTTPServerTransport,
-  isInitializeRequest,
 } from '@modelcontextprotocol/server'
 import { isOriginAllowed } from '@/lib/cors-origins'
 
 import {
-  SessionManager,
   typeboxToSchema,
   originGuard,
+  closeWhenFinished,
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
@@ -39,7 +38,6 @@ import type { ToolMetadata, ResourceMetadata } from '@max-health-inc/elysia-mcp'
 import { config } from '../config'
 import { validateToken } from '../lib/auth'
 import { getMcpResourceAudience } from '../lib/token-audience'
-import { logger } from '../lib/logger'
 import {
   getToolRegistry,
   isToolRegistryInitialized,
@@ -55,13 +53,11 @@ import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
 
-// ── Session management (delegated to package) ────────────────────────────────
-
-const sessionManager = new SessionManager(100, 30 * 60_000, {
-  info: (msg, data) => logger.server.info(msg, data),
-  warn: (msg, data) => logger.warn('mcp', msg, data),
-  error: (msg, data) => logger.error('mcp', msg, data),
-})
+// No session store: this endpoint is stateless (see handleMcpRequest). The
+// SessionManager that used to live here held transports in PROCESS MEMORY, so
+// every deploy silently invalidated every live connection and the next request
+// got `404 Session not found` — on an environment that redeploys many times a
+// day, that is most of them.
 
 // Domain-specific context decorators injected into tool/resource execution.
 // The dispatch app (resolved lazily — it is registered after this module loads)
@@ -300,74 +296,62 @@ async function handleMcpRequest(request: Request): Promise<Response> {
   const refused = originGuard(request, isOriginAllowed)
   if (refused) return refused
 
-  // Authenticate
+  // Authenticate. Every request carries its own bearer, which is what makes the
+  // stateless posture below safe: authorization is re-established per request
+  // rather than captured once and refreshed into a long-lived session.
   const auth = await authenticateRequest(request)
   if (auth instanceof Response) return auth
 
-  const sessionId = request.headers.get('mcp-session-id')
-
-  // ── Existing session ───────────────────────────────────────────────────
-  if (sessionId && sessionManager.has(sessionId)) {
-    const session = sessionManager.get(sessionId)!
-    if (session.boundSub && auth.sub && session.boundSub !== auth.sub) {
-      return new Response(
-        JSON.stringify({ jsonrpc: '2.0', error: { code: -32001, message: 'Session belongs to a different user' }, id: null }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } },
-      )
-    }
-    if (auth.token) session.tokenRef.current = auth.token
-    session.lastActivity = Date.now()
-    return (session.transport as WebStandardStreamableHTTPServerTransport).handleRequest(request)
-  }
-
-  // ── Unknown session ID -> 404 ──────────────────────────────────────────
-  if (sessionId) {
+  // ── Session operations: 405, because there are no sessions ─────────────
+  // The established stateless idiom (SDK v2: "Because serving is per-request and
+  // stateless, GET and DELETE (2025 session operations) are answered with 405").
+  // A 405 here is benign by design — the Streamable HTTP spec has the client
+  // proceed without the standalone stream, and terminateSession() resolve
+  // normally. Nothing is lost because nothing was being resumed.
+  if (request.method === 'GET' || request.method === 'DELETE') {
     return new Response(
-      JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Session not found' }, id: null }),
-      { status: 404, headers: { 'Content-Type': 'application/json' } },
+      JSON.stringify({
+        jsonrpc: '2.0',
+        error: { code: -32000, message: 'Method not allowed: this endpoint is stateless' },
+        id: null,
+      }),
+      { status: 405, headers: { 'Content-Type': 'application/json', Allow: 'POST' } },
     )
   }
 
-  // ── New session (initialization) ───────────────────────────────────────
-  if (request.method === 'POST') {
-    const body = await request.json()
-
-    if (isInitializeRequest(body)) {
-      const tokenRef = { current: auth.token }
-
-      const transport = new WebStandardStreamableHTTPServerTransport({
-        sessionIdGenerator: () => crypto.randomUUID(),
-        onsessioninitialized: (sid) => {
-          sessionManager.set(sid, { transport, server, tokenRef, lastActivity: Date.now(), boundSub: auth.sub })
-          logger.server.info('MCP session initialized', { sessionId: sid, sub: auth.sub })
-        },
-        onsessionclosed: (sid) => {
-          sessionManager.delete(sid)
-          logger.server.info('MCP session closed', { sessionId: sid })
-        },
-      })
-
-      transport.onclose = () => {
-        if (transport.sessionId) sessionManager.delete(transport.sessionId)
-      }
-
-      const server = new McpServer(
-        { name: config.displayName, version: config.version },
-        { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
-      )
-
-      registerTools(server, auth.roles, tokenRef)
-      registerResources(server, auth.roles, tokenRef)
-
-      await server.connect(transport)
-      return transport.handleRequest(request, { parsedBody: body })
-    }
+  if (request.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Bad Request' }, id: null }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } },
+    )
   }
 
-  return new Response(
-    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Bad Request: No valid session or initialization request' }, id: null }),
-    { status: 400, headers: { 'Content-Type': 'application/json' } },
+  // ── Serve the request on a fresh server + transport ────────────────────
+  // `sessionIdGenerator: undefined` is what makes the transport stateless: it
+  // mints no Mcp-Session-Id, so the client never has a session to lose and never
+  // has to be routed back to the instance that holds it.
+  const body = await request.json()
+  const tokenRef = { current: auth.token }
+
+  const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined })
+  const server = new McpServer(
+    { name: config.displayName, version: config.version },
+    { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
   )
+
+  // Tools are filtered by the roles on THIS request's token, so a token that lost
+  // a role stops seeing those tools immediately rather than at session expiry.
+  registerTools(server, auth.roles, tokenRef)
+  registerResources(server, auth.roles, tokenRef)
+
+  await server.connect(transport)
+  const response = await transport.handleRequest(request, { parsedBody: body })
+
+  // Release the transport when the RESPONSE IS DONE, not when handleRequest
+  // returns. handleRequest resolves as soon as the Response object exists, which
+  // for a streamed (SSE) reply is before a single byte of body has been written —
+  // closing there truncates it to an empty 200.
+  return closeWhenFinished(response, transport, server)
 }
 
 // ── Elysia route ─────────────────────────────────────────────────────────────

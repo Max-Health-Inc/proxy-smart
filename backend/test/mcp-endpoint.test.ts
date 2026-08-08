@@ -173,27 +173,17 @@ async function parseResponse(res: Response): Promise<Record<string, unknown>> {
 }
 
 /**
- * Full MCP handshake: initialize → extract session ID → send notifications/initialized.
- * Returns the session ID for subsequent requests.
+ * The endpoint is STATELESS: each POST is served by a fresh server + transport,
+ * so there is no handshake to carry forward and no session id to thread through.
+ * Kept as a helper so the tests still read as "given an initialized client".
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function initializeSession(app: any, token = 'valid-token') {
   const initRes = await app.handle(mcpPost(jsonRpcInitialize(), { token }))
   expect(initRes.status).toBe(200)
-  const sessionId = initRes.headers.get('mcp-session-id')!
-  expect(sessionId).toBeTruthy()
-
-  // MCP spec requires notifications/initialized before any other requests
-  const notifRes = await app.handle(
-    mcpPost(
-      { jsonrpc: '2.0', method: 'notifications/initialized' },
-      { token, sessionId },
-    ),
-  )
-  expect(notifRes.status).toBeGreaterThanOrEqual(200)
-  expect(notifRes.status).toBeLessThan(300)
-
-  return { sessionId, initRes }
+  // The defining assertion of the stateless posture.
+  expect(initRes.headers.get('mcp-session-id')).toBeNull()
+  return { sessionId: undefined as string | undefined, initRes }
 }
 
 // ── Tests ────────────────────────────────────────────────────────────────────
@@ -396,21 +386,7 @@ describe('MCP Endpoint — /mcp', () => {
 
   // ── Session lifecycle ────────────────────────────────────────────────────
 
-  describe('Session lifecycle', () => {
-    it('creates a session on valid initialize — returns 200 + Mcp-Session-Id header', async () => {
-      const app = createApp()
-      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
-      // Response may be 200 (JSON) or 200 (SSE) — the MCP SDK decides
-      expect(res.status).toBe(200)
-      const sessionId = res.headers.get('mcp-session-id')
-      expect(sessionId).toBeTruthy()
-      expect(typeof sessionId).toBe('string')
-      // Verify the init response is valid JSON-RPC
-      const body = await parseResponse(res)
-      expect(body.jsonrpc).toBe('2.0')
-      expect(body.result).toBeDefined()
-    })
-
+  describe('Request lifecycle', () => {
     it('initialize returns JSON-RPC result with serverInfo and protocolVersion', async () => {
       const app = createApp()
       const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
@@ -435,33 +411,6 @@ describe('MCP Endpoint — /mcp', () => {
       const capabilities = result.capabilities as Record<string, unknown>
       expect(capabilities.tools).toBeDefined()
       expect(capabilities.resources).toBeDefined()
-    })
-
-    it('returns 400 for non-initialize POST without Mcp-Session-Id', async () => {
-      const app = createApp()
-      const res = await app.handle(
-        mcpPost(
-          { jsonrpc: '2.0', method: 'tools/list', params: {}, id: 2 },
-          { token: 'valid-token' },
-        ),
-      )
-      expect(res.status).toBe(400)
-      const body = await res.json()
-      expect(body.jsonrpc).toBe('2.0')
-      expect(body.error.code).toBe(-32000)
-    })
-
-    // BUG: Spec says unknown session → 404 Not Found (spec §Session Management rule 3)
-    // Code currently falls through to 400 Bad Request.
-    it('returns 404 for unknown session ID (spec: server MUST respond with 404)', async () => {
-      const app = createApp()
-      const res = await app.handle(
-        mcpPost(
-          { jsonrpc: '2.0', method: 'tools/list', params: {}, id: 2 },
-          { token: 'valid-token', sessionId: 'non-existent-session-id' },
-        ),
-      )
-      expect(res.status).toBe(404)
     })
 
     it('accepts ping on an established session', async () => {
@@ -597,58 +546,69 @@ describe('MCP Endpoint — /mcp', () => {
   // Spec: "Clients that no longer need a particular session SHOULD send an HTTP DELETE
   //        to the MCP endpoint with the Mcp-Session-Id header"
 
-  describe('DELETE /mcp (session teardown)', () => {
-    it('DELETE with valid session ID tears down the session', async () => {
+  describe('Stateless posture', () => {
+    // The endpoint used to hold transports in PROCESS MEMORY keyed by
+    // Mcp-Session-Id. Every deploy invalidated every live connection and the next
+    // request got 404 Session not found — on an environment that redeploys many
+    // times a day, that is most of them. SEP-2575 removes the model entirely.
+
+    it('never mints an Mcp-Session-Id', async () => {
       const app = createApp()
-      const { sessionId } = await initializeSession(app)
+      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+      expect(res.status).toBe(200)
+      expect(res.headers.get('mcp-session-id')).toBeNull()
+    })
 
-      // Tear down
-      const delRes = await app.handle(mcpDelete({ token: 'valid-token', sessionId }))
-      // Spec says server processes it (200/202/204/405 are all valid)
-      expect(delRes.status).toBeGreaterThanOrEqual(200)
-      expect(delRes.status).toBeLessThan(500)
-
-      // After teardown, session ID should no longer be valid → 404
-      const afterRes = await app.handle(
-        mcpPost(
-          { jsonrpc: '2.0', method: 'ping', id: 99 },
-          { token: 'valid-token', sessionId },
-        ),
+    it('serves a request with no prior handshake at all', async () => {
+      // The property that makes redeploys survivable: a request carries
+      // everything needed to serve it.
+      const app = createApp()
+      const res = await app.handle(
+        mcpPost({ jsonrpc: '2.0', method: 'tools/list', params: {}, id: 7 }, { token: 'valid-token' }),
       )
-      expect(afterRes.status).toBe(404)
+      expect(res.status).toBe(200)
+      const body = await parseResponse(res)
+      const result = body.result as { tools?: unknown[] }
+      expect(Array.isArray(result.tools)).toBe(true)
+    })
+
+    it('ignores a stale Mcp-Session-Id rather than 404ing on it', async () => {
+      // A client reconnecting after a deploy still holds the old id. It must not
+      // be punished for that — there is nothing to look up any more.
+      const app = createApp()
+      const res = await app.handle(
+        mcpPost({ jsonrpc: '2.0', method: 'tools/list', params: {}, id: 8 }, {
+          token: 'valid-token',
+          sessionId: 'a-session-that-died-with-the-last-deploy',
+        }),
+      )
+      expect(res.status).toBe(200)
+    })
+
+    it('answers GET (standalone stream) with 405 and Allow: POST', async () => {
+      // Spec-sanctioned and benign: the client proceeds without the stream.
+      const app = createApp()
+      const res = await app.handle(mcpGet({ token: 'valid-token' }))
+      expect(res.status).toBe(405)
+      expect(res.headers.get('allow')).toBe('POST')
+    })
+
+    it('answers DELETE (session teardown) with 405', async () => {
+      const app = createApp()
+      const res = await app.handle(mcpDelete({ token: 'valid-token' }))
+      expect(res.status).toBe(405)
+    })
+
+    it('two initializations are independent', async () => {
+      const app = createApp()
+      const a = await app.handle(mcpPost(jsonRpcInitialize(1), { token: 'valid-token' }))
+      const b = await app.handle(mcpPost(jsonRpcInitialize(2), { token: 'valid-token' }))
+      expect(a.status).toBe(200)
+      expect(b.status).toBe(200)
+      expect(a.headers.get('mcp-session-id')).toBeNull()
+      expect(b.headers.get('mcp-session-id')).toBeNull()
     })
   })
-
-  // ── Multiple sessions ──────────────────────────────────────────────────
-
-  describe('Multiple sessions', () => {
-    it('two different initializations produce different session IDs', async () => {
-      const app = createApp()
-      const { sessionId: sid1 } = await initializeSession(app)
-      const { sessionId: sid2 } = await initializeSession(app)
-      expect(sid1).not.toBe(sid2)
-    })
-
-    it('requests on one session do not affect another', async () => {
-      const app = createApp()
-      const { sessionId: sid1 } = await initializeSession(app)
-      const { sessionId: sid2 } = await initializeSession(app)
-
-      // Ping on session 1
-      const res1 = await app.handle(
-        mcpPost({ jsonrpc: '2.0', method: 'ping', id: 10 }, { token: 'valid-token', sessionId: sid1 }),
-      )
-      expect(res1.status).toBe(200)
-
-      // Ping on session 2
-      const res2 = await app.handle(
-        mcpPost({ jsonrpc: '2.0', method: 'ping', id: 11 }, { token: 'valid-token', sessionId: sid2 }),
-      )
-      expect(res2.status).toBe(200)
-    })
-  })
-
-  // ── JSON-RPC batch support ─────────────────────────────────────────────
 
   describe('JSON-RPC batch', () => {
     it('accepts a JSON-RPC batch array on an established session', async () => {
