@@ -50,24 +50,6 @@ export interface CallbackResult {
 }
 
 /**
- * Add the RFC 9207 `iss` parameter to an authorization response.
- *
- * Once the proxy intercepts the callback it IS the authorization server from the
- * client's point of view, so every response it sends back — code or error — must
- * identify itself. Clients compare this against the `issuer` they recorded from
- * the proxy's authorization server metadata using simple string comparison with no
- * normalization (MCP 2026-07-28, RFC 9207 §2.4), so it must be `baseUrl` verbatim,
- * not the upstream IdP's realm issuer and not a normalized variant of either.
- *
- * RFC 9207 §2 requires it on error responses too; omitting it there is what lets a
- * mix-up attack fall back to an unattributed failure.
- */
-function withIssuer(url: URL, config: SmartProxyConfig): URL {
-  url.searchParams.set('iss', config.baseUrl)
-  return url
-}
-
-/**
  * Process an IdP callback (smart-callback).
  *
  * Validates the session by state param, handles IdP errors by forwarding
@@ -144,7 +126,7 @@ export async function handleCallback(
     if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
     store.delete(sessionKey)
     return {
-      result: { type: 'redirect', url: withIssuer(clientUrl, config).href },
+      result: { type: 'redirect', url: clientUrl.href },
       session,
     }
   }
@@ -218,7 +200,7 @@ export async function handleCallback(
   })
 
   return {
-    result: { type: 'redirect', url: withIssuer(clientUrl, config).href },
+    result: { type: 'redirect', url: clientUrl.href },
     session,
   }
 }
@@ -232,7 +214,7 @@ export function handlePatientSelect(
   params: { session?: string; code?: string; patient?: string },
   deps: CallbackHandlerDeps,
 ): SmartProxyResult {
-  const { config, store, logger } = deps
+  const { store, logger } = deps
 
   if (!params.session || !params.code || !params.patient) {
     return { type: 'error', status: 400, error: 'invalid_request', error_description: 'Missing required parameters (session, code, patient)' }
@@ -253,7 +235,7 @@ export function handlePatientSelect(
     const clientUrl = new URL(session.clientRedirectUri)
     clientUrl.searchParams.set('code', params.code)
     if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
-    return { type: 'redirect', url: withIssuer(clientUrl, config).href }
+    return { type: 'redirect', url: clientUrl.href }
   }
 
   store.update(params.session, { patient: params.patient, needsPatientPicker: false })
@@ -268,5 +250,5 @@ export function handlePatientSelect(
   clientUrl.searchParams.set('code', params.code)
   if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
 
-  return { type: 'redirect', url: withIssuer(clientUrl, config).href }
+  return { type: 'redirect', url: clientUrl.href }
 }
