@@ -33,6 +33,7 @@ export default defineConfig({
           { text: 'Overview', link: '/' },
           { text: 'Deployment', link: '/deployment' },
           { text: 'Environment Variables', link: '/environment-variables' },
+          { text: 'Packages', link: '/packages' },
         ],
       },
       {
