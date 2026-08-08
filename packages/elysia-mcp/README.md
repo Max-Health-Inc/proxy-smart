@@ -30,6 +30,16 @@ Subpath entries expose the pieces individually: `./introspect`, `./transport`, `
 
 `IntrospectOptions` controls both. `prefixes` limits which routes are considered and defaults to `['/admin/', '/api/']`, so nothing is exposed merely by existing. `toolNameGenerator` and `resourceNameGenerator` override the naming functions below.
 
+## Output schemas
+
+A route's declared success response becomes the tool's `responseSchema`, extracted by `extractResponseSchema`. Elysia accepts either a bare schema or a status-keyed map (`{ 200: t.Array(Role), ...CommonErrorResponses }`); only the success entry is taken, because the error entries describe bodies that never reach `structuredContent` — a non-2xx dispatch returns as `isError` text instead. A declaration with no success entry, or only `204`, yields nothing to advertise.
+
+`typeboxToOutputSchema` converts it for registration. Unlike an input schema it permits a non-object root, which matters because list routes declare `t.Array(...)` and those are the largest responses on the surface.
+
+Advertising this is what makes `structuredContent` worth its bytes. Without an output schema the structured half is an untyped copy of the text block and a client has nothing to validate against; with one it is typed and checkable. It is safe to advertise precisely because Elysia coerces the response to the same schema inside the pipeline, so the body a tool call returns already conforms — which the spec requires of any result whose tool declares an output schema.
+
+Against this repo's own admin surface: 169 tools extracted, 164 carry a declared success schema, all 164 convert, and 19 of them are array-rooted.
+
 ## Naming
 
 `pathToToolName(path, method)` prefixes the flattened path with a verb derived from the method: `GET` becomes `get`, `POST` becomes `create`, `PUT` and `PATCH` become `update`, `DELETE` becomes `delete`. Slashes become underscores and `:` is stripped from parameters. Hyphens in a path segment survive.
@@ -109,7 +119,9 @@ Streamable HTTP has a header contract a host's CORS layer has to honour, and get
 
 ## Types
 
-`ToolMetadata` carries a route's `path`, `method`, `handler`, its `schema` and `paramsSchema`, and the `public`, `readOnly` and `annotations` flags. `ResourceMetadata` is the `GET`-only equivalent, adding `pathParams`. `ToolAnnotations` is the MCP annotations object described above.
+`ToolMetadata` carries a route's `path`, `method`, `handler`, its `schema`, `paramsSchema` and `responseSchema`, and the `public`, `readOnly` and `annotations` flags. `ResourceMetadata` is the `GET`-only equivalent, adding `pathParams`. `ToolAnnotations` is the MCP annotations object described above.
+
+`StructuredContent` is what a successful result attaches: a JSON object or array. Arrays are included deliberately. The 2025 wire shape requires `structuredContent` to be an object, but reconciling that belongs to the SDK — `projectCallToolResult` wraps a non-object value as `{result:…}` for a 2025-era client and passes it through on 2026. Dropping arrays here instead would discard the structured half of the list responses that carry the most data, and would contradict an advertised array-rooted output schema. Primitives are still omitted: they carry nothing the text block does not.
 
 ## Related
 

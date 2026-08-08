@@ -43,6 +43,19 @@ export interface ToolMetadata {
   schema?: TSchema
   /** Path params schema (TypeBox) */
   paramsSchema?: TSchema
+  /**
+   * Success-response schema (TypeBox), when the route declares one.
+   *
+   * Registered as the tool's MCP `outputSchema`, which is what makes
+   * `structuredContent` worth its bytes: without it the structured half is an
+   * untyped copy of the text block, and a client has no way to validate it.
+   *
+   * Safe to advertise precisely because Elysia coerces the response to this
+   * schema in the pipeline, so the body a tool call returns already conforms —
+   * which matters, as the spec requires structured results to match a declared
+   * output schema.
+   */
+  responseSchema?: TSchema
   /** Whether tool requires no authentication */
   public?: boolean
   /** Whether tool is read-only (GET route) */

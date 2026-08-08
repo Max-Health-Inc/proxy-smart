@@ -23,6 +23,7 @@ export type { ToolMetadata, ToolAnnotations, ResourceMetadata } from './types'
 export {
   extractRouteTools,
   extractRouteResources,
+  extractResponseSchema,
   annotationsForMethod,
   pathToToolName,
   pathToResourceName,
@@ -31,9 +32,15 @@ export {
 
 export type { IntrospectOptions } from './introspect'
 
-export { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
+export { typeboxToSchema, typeboxToOutputSchema, getMergedInputSchema } from './typebox-schema'
 
-export { executeTool, executeResource, DISPATCH_APP_KEY, type ExecuteOptions } from './executor'
+export {
+  executeTool,
+  executeResource,
+  DISPATCH_APP_KEY,
+  type ExecuteOptions,
+  type StructuredContent,
+} from './executor'
 
 export { chooseToolText, type ToolTextFormat } from './text-format'
 
