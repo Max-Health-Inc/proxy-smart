@@ -313,6 +313,25 @@ async function handleMcpRequest(request: Request): Promise<Response> {
   if (!loadMcpEndpointConfig().enabled) {
     return Response.json({ error: 'MCP endpoint is disabled' }, { status: 404 })
   }
+
+  // Origin still first: a rebound request must be REFUSED, not handed a
+  // challenge it can act on.
+  const origin = request.headers.get('origin')
+  if (origin && !isOriginAllowed(origin)) {
+    return Response.json(
+      { jsonrpc: '2.0', error: { code: -32000, message: 'Origin not allowed' }, id: null },
+      { status: 403 },
+    )
+  }
+
+  // Then the challenge, before the method gate. An MCP client discovers
+  // authorization by making an UNAUTHENTICATED request and reading the 401's
+  // WWW-Authenticate; upstream answers GET with 405 and no challenge, which
+  // leaves a registering client with nothing to follow.
+  if (!request.headers.get('authorization')) {
+    return withChallenge(new Response(null, { status: 401 }))
+  }
+
   return withChallenge(await mcpHandler()(request))
 }
 
