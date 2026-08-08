@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.1-beta.202608080834.e4dd5c08f] - 2026-08-08
+
+- 🔧 Chores & Improvements: CI/CD and testing updates
+  - chore(testing): update dev SMART compliance report
+  - 🔧 Chores & Improvements: version metadata changes (internal)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/949
+
+
 ## [0.2.33-beta.202608080800.fdbdc247a] - 2026-08-08
 
 - 🔧 Chores & Improvements: Update development/testing tooling and version identifier
