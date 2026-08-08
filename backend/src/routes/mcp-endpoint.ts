@@ -18,12 +18,11 @@
 import { Elysia } from 'elysia'
 import * as z from 'zod'
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server'
-import { handleMcpPost } from '@maxhealth.tech/mcp-http'
+import { createMcpHttpHandler } from '@maxhealth.tech/mcp-http'
 import { isOriginAllowed } from '@/lib/cors-origins'
 
 import {
   typeboxToSchema,
-  originGuard,
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
@@ -224,15 +223,36 @@ interface AuthResult {
   token?: string
 }
 
-async function authenticateRequest(request: Request): Promise<AuthResult | Response> {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return unauthorized()
-  }
+/** A token that fails validation. Mapped to a 401 in `onError`. */
+class McpUnauthorizedError extends Error {}
 
-  const token = authHeader.substring(7).trim()
-  if (!token) return unauthorized()
+/** mcp-http wants the origin to echo, or null to refuse. No Origin stays allowed. */
+function allowedOrigin(req: Request): string | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null
+  return isOriginAllowed(origin) ? origin : null
+}
 
+/**
+ * Rewrite the 401 challenge on the way out.
+ *
+ * Two things upstream does not do. It derives the pointer from `req.url`, so a
+ * spoofed Host behind a proxy that does not normalise it would aim the client at
+ * an attacker's metadata; config.baseUrl is trusted. And it omits `scope`, which
+ * is what lets a client following the challenge actually authorize.
+ */
+function withChallenge(res: Response): Response {
+  if (res.status !== 401) return res
+  const baseUrl = (config.baseUrl || 'http://localhost:8445').replace(/\/+$/, '')
+  const headers = new Headers(res.headers)
+  headers.set(
+    'WWW-Authenticate',
+    `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="${MCP_SCOPE_CHALLENGE}"`,
+  )
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers })
+}
+
+async function authenticateToken(token: string): Promise<AuthResult> {
   try {
     // MCP tokens are bound to the MCP endpoint resource (RFC 8707) or one of the
     // proxy's own clients (matched on aud/azp): the admin WEBAPP client
@@ -250,86 +270,26 @@ async function authenticateRequest(request: Request): Promise<AuthResult | Respo
     ).flatMap((r) => r?.roles ?? [])
     return { roles: [...new Set([...realmRoles, ...clientRoles])], sub: payload.sub, token }
   } catch {
-    return unauthorized()
+    throw new McpUnauthorizedError('Unauthorized')
   }
-}
-
-function unauthorized(): Response {
-  const baseUrl = config.baseUrl || 'http://localhost:8445'
-  return new Response(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      error: { code: -32001, message: 'Unauthorized -- Bearer token required' },
-      id: null,
-    }),
-    {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        // The challenged scopes are the ones every provisioned client is granted by default,
-        // so a client that follows this challenge can actually authorize (see lib/oauth-scopes).
-        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="${MCP_SCOPE_CHALLENGE}"`,
-      },
-    },
-  )
 }
 
 // ── Core request handler ─────────────────────────────────────────────────────
 
-async function handleMcpRequest(request: Request): Promise<Response> {
-  // Master switch — file-backed config is the single source of truth
-  const endpointCfg = loadMcpEndpointConfig()
-  const effectiveEnabled = endpointCfg.enabled
-  if (!effectiveEnabled) {
-    return new Response(JSON.stringify({ error: 'MCP endpoint is disabled' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
+/** Built once; the tool registry is read per request inside createServer. */
+let handler: ReturnType<typeof createMcpHttpHandler> | null = null
 
-  // Origin gate before authentication: a rebound request must be REFUSED, not
-  // merely denied a readable response (MCP Streamable HTTP security warning).
-  const refused = originGuard(request, isOriginAllowed)
-  if (refused) return refused
-
-  // Authenticate. Every request carries its own bearer, which is what makes the
-  // stateless posture below safe: authorization is re-established per request
-  // rather than captured once and refreshed into a long-lived session.
-  const auth = await authenticateRequest(request)
-  if (auth instanceof Response) return auth
-
-  // ── Session operations: 405, because there are no sessions ─────────────
-  // The established stateless idiom (SDK v2: "Because serving is per-request and
-  // stateless, GET and DELETE (2025 session operations) are answered with 405").
-  // A 405 here is benign by design — the Streamable HTTP spec has the client
-  // proceed without the standalone stream, and terminateSession() resolve
-  // normally. Nothing is lost because nothing was being resumed.
-  if (request.method === 'GET' || request.method === 'DELETE') {
-    return new Response(
-      JSON.stringify({
-        jsonrpc: '2.0',
-        error: { code: -32000, message: 'Method not allowed: this endpoint is stateless' },
-        id: null,
-      }),
-      { status: 405, headers: { 'Content-Type': 'application/json', Allow: 'POST' } },
-    )
-  }
-
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Bad Request' }, id: null }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
-
-  // Transport only. The gates above stay local: this endpoint answers with a
-  // JSON-RPC error, not an OAuth one, and refuses a rebound Origin before
-  // authenticating — mcp-http's full edge inverts both.
-  const tokenRef = { current: auth.token }
-
-  return handleMcpPost({
-    req: request,
-    createServer: () => {
+function mcpHandler() {
+  if (handler) return handler
+  // Fail closed: mcp-http reads an absent authorizationServer as a public
+  // endpoint and drops the Bearer gate.
+  handler = createMcpHttpHandler({
+    mcpPath: config.mcp?.path ?? '/mcp',
+    authorizationServer: config.keycloak.expectedIssuer ?? config.baseUrl,
+    cors: { origin: allowedOrigin },
+    createServer: async (token) => {
+      const auth = await authenticateToken(token ?? '')
+      const tokenRef = { current: auth.token }
       const server = new McpServer(
         { name: config.displayName, version: config.version },
         { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
@@ -339,7 +299,21 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       registerResources(server, auth.roles, tokenRef)
       return server
     },
+    // A createServer throw is a 500 upstream; a bad token deserves a 401.
+    onError: (err) =>
+      err instanceof McpUnauthorizedError
+        ? new Response(null, { status: 401 })
+        : undefined,
   })
+  return handler
+}
+
+async function handleMcpRequest(request: Request): Promise<Response> {
+  // Master switch — file-backed config is the single source of truth.
+  if (!loadMcpEndpointConfig().enabled) {
+    return Response.json({ error: 'MCP endpoint is disabled' }, { status: 404 })
+  }
+  return withChallenge(await mcpHandler()(request))
 }
 
 // ── Elysia route ─────────────────────────────────────────────────────────────

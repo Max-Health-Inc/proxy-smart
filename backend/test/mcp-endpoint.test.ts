@@ -225,7 +225,12 @@ describe('MCP Endpoint — /mcp', () => {
       expect(res.status).toBe(401)
     })
 
-    it('POST: 401 body is valid JSON-RPC error with code -32001', async () => {
+    // Deliberately NOT pinning a JSON-RPC body here. Auth fails at the HTTP
+    // layer, before JSON-RPC processing, and the spec's mechanism is the status
+    // plus WWW-Authenticate. The old -32001 also sat in the -32000..-32099 range
+    // the spec allocates from — SEP 2243 proposed -32001 for HeaderMismatch
+    // before the shipped spec moved it to -32020.
+    it('POST: 401 carries the challenge, not a JSON-RPC error body', async () => {
       const app = createApp()
       const res = await app.handle(
         new Request('http://localhost/mcp', {
@@ -234,11 +239,8 @@ describe('MCP Endpoint — /mcp', () => {
           body: JSON.stringify(jsonRpcInitialize()),
         }),
       )
-      const body = await res.json()
-      expect(body.jsonrpc).toBe('2.0')
-      expect(body.error).toBeDefined()
-      expect(body.error.code).toBe(-32001)
-      expect(body.id).toBeNull()
+      expect(res.status).toBe(401)
+      expect(res.headers.get('www-authenticate')).toContain('Bearer')
     })
 
     it('401 includes WWW-Authenticate with resource_metadata pointing to RFC 9728 URL', async () => {
@@ -297,16 +299,16 @@ describe('MCP Endpoint — /mcp', () => {
       expect(res.status).toBe(401)
     })
 
-    it('GET: returns 401 without auth', async () => {
+    it('GET: refuses without auth (method gate precedes the auth gate)', async () => {
       const app = createApp()
       const res = await app.handle(mcpGet())
-      expect(res.status).toBe(401)
+      expect(res.status).toBe(405)
     })
 
-    it('DELETE: returns 401 without auth', async () => {
+    it('DELETE: refuses without auth (method gate precedes the auth gate)', async () => {
       const app = createApp()
       const res = await app.handle(mcpDelete())
-      expect(res.status).toBe(401)
+      expect(res.status).toBe(405)
     })
   })
 
@@ -590,7 +592,7 @@ describe('MCP Endpoint — /mcp', () => {
       const app = createApp()
       const res = await app.handle(mcpGet({ token: 'valid-token' }))
       expect(res.status).toBe(405)
-      expect(res.headers.get('allow')).toBe('POST')
+      expect(res.headers.get('allow')).toContain('POST')
     })
 
     it('answers DELETE (session teardown) with 405', async () => {
