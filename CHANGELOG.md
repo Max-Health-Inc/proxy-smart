@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.32-RELEASE.202608071630.8c09b932d] - 2026-08-07
+
+- ✨ Features: Introduced centralized WAF rule management
+  - Add waf-rules.ts with shareable managedRuleGroups for WAF usage across BackendStack and KeycloakStack
+  - Remove inline AWSManagedRules…RuleSet configurations in stacks in favor of centralized managedRuleGroups (with exclusions)
+
+- 🔧 Chores & Improvements: Code organization and imports
+  - KeycloakStack and BackendStack now import managedRuleGroups from waf-rules.ts
+  - Minor header/IP edits; add SPDX headers and additional imports
+  - Preserve metrics configuration via shared exclusions
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/939
+
+
 ## [0.2.31-beta.202608071218.dc88343db] - 2026-08-07
 
 - 🔧 Chores & Improvements: Dependency and tooling updates, including bun.lock bumps across multiple packages and registry config tweaks
