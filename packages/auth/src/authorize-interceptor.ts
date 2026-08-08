@@ -135,7 +135,29 @@ export async function handleAuthorize(
   // for — the latter so the callback can carry the proxy's own `iss`. See
   // SmartProxyConfig.interceptedResourceUrls.
   const targetsInterceptedResource = !!aud && (config.interceptedResourceUrls ?? []).includes(aud)
-  const shouldIntercept = (smartLaunch || targetsInterceptedResource) && !!params.redirect_uri
+
+  // A CIMD client (OAuth Client ID Metadata Document, MCP 2025-11-25) identifies
+  // itself with a URL instead of an IdP client id, and its registered redirect URIs
+  // live in THAT DOCUMENT — the IdP has no record of the client at all. Interception
+  // rewrites redirect_uri to the proxy callback, which means the proxy takes over
+  // validating it; for a CIMD client it cannot, so `getRegisteredRedirectUris` finds
+  // nothing and the fail-closed check below rejects a perfectly good authorize
+  // request with 400 before the user ever reaches a login page.
+  //
+  // That is not hypothetical: it took the beta MCP connector down. Claude registers
+  // via CIMD, so every authorize naming the MCP resource turned into
+  //   400 {"error":"invalid_request","error_description":"redirect_uri does not match…"}
+  // Without interception the URL client_id passes through to Keycloak, which resolves
+  // the document itself (--features=cimd) and validates the redirect_uri properly.
+  //
+  // So CIMD clients are left alone. They keep the IdP's `iss` rather than the
+  // proxy's, which is the pre-existing RFC 9207 gap — closing it for them means
+  // fetching and validating the metadata document here, which is a network call in
+  // the authorize path and its own design decision.
+  const isCimdClient = /^https?:\/\//i.test(params.client_id ?? '')
+
+  const shouldIntercept =
+    !isCimdClient && (smartLaunch || targetsInterceptedResource) && !!params.redirect_uri
 
   // ── Validate redirect_uri against the client's registered URIs ────────
   // RFC 6749 §3.1.2.3 / §10.6: reject any redirect_uri that is not an EXACT
