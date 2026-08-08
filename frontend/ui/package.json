@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "brandc": "^0.6.1",
-    "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.0",
+    "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
     "@radix-ui/react-avatar": "^1.2.2",
     "@radix-ui/react-dialog": "^1.1.19",
     "@radix-ui/react-label": "^2.1.11",
