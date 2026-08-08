@@ -109,6 +109,24 @@ export const fhirMcpRoutes = new Elysia()
       )
     }
 
-    // Origin, Bearer, method and transport are all mcp-http from here.
+    // Origin first: a rebound request must be refused, not challenged.
+    const origin = request.headers.get('origin')
+    if (origin && !isOriginAllowed(origin)) {
+      return new Response(null, { status: 403 })
+    }
+
+    // Then the challenge, before the method gate. A client discovers
+    // authorization from an unauthenticated request; upstream answers GET with
+    // 405 and no WWW-Authenticate, leaving it nothing to follow.
+    if (!request.headers.get('authorization')) {
+      const baseUrl = (config.baseUrl || 'http://localhost:8445').replace(/\/+$/, '')
+      return new Response(null, {
+        status: 401,
+        headers: {
+          'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource/fhir/${server_id}/mcp"`,
+        },
+      })
+    }
+
     return handlerFor(server_id)(request)
   })

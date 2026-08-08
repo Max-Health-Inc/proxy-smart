@@ -299,16 +299,21 @@ describe('MCP Endpoint — /mcp', () => {
       expect(res.status).toBe(401)
     })
 
-    it('GET: refuses without auth (method gate precedes the auth gate)', async () => {
+    // Discovery depends on this: an MCP client registering against the endpoint
+    // makes an unauthenticated request and follows the challenge. A 405 without
+    // WWW-Authenticate leaves it nothing to follow, which broke connectors.
+    it('GET: 401 with a challenge, so discovery works', async () => {
       const app = createApp()
       const res = await app.handle(mcpGet())
-      expect(res.status).toBe(405)
+      expect(res.status).toBe(401)
+      expect(res.headers.get('www-authenticate')).toContain('resource_metadata=')
     })
 
-    it('DELETE: refuses without auth (method gate precedes the auth gate)', async () => {
+    it('DELETE: 401 with a challenge, so discovery works', async () => {
       const app = createApp()
       const res = await app.handle(mcpDelete())
-      expect(res.status).toBe(405)
+      expect(res.status).toBe(401)
+      expect(res.headers.get('www-authenticate')).toContain('resource_metadata=')
     })
   })
 

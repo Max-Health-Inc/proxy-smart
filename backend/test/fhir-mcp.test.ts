@@ -121,9 +121,19 @@ describe('FHIR MCP endpoint — Bearer gate', () => {
   })
 })
 
-describe('FHIR MCP endpoint — stateless method handling', () => {
-  it.each(['GET', 'DELETE'])('refuses %s, advertising POST', async (method) => {
+describe('FHIR MCP endpoint — discovery', () => {
+  // A 405 without WWW-Authenticate leaves a registering client nothing to
+  // follow. Discovery has to work on any method.
+  it.each(['GET', 'DELETE'])('%s without a token gets a challenge, not 405', async (method) => {
     const res = await call(new Request(URL_ENABLED, { method }))
+    expect(res.status).toBe(401)
+    expect(res.headers.get('www-authenticate')).toContain('resource_metadata=')
+  })
+
+  it.each(['GET', 'DELETE'])('%s with a token is refused as stateless', async (method) => {
+    const res = await call(
+      new Request(URL_ENABLED, { method, headers: { Authorization: 'Bearer good-token' } }),
+    )
     expect(res.status).toBe(405)
     expect(res.headers.get('allow')).toContain('POST')
   })
