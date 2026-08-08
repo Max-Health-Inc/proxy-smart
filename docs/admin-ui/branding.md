@@ -2,18 +2,16 @@
 
 The Brand Management section lets you configure **User-Access Brands** as defined in [SMART App Launch 2.2.0 Section 8](https://hl7.org/fhir/smart-app-launch/STU2.2/brands.html). Brands help patients and app developers identify your organization when choosing healthcare providers in SMART-enabled applications.
 
-## 🎨 Overview
+Proxy Smart publishes a **FHIR Brand Bundle** at `/branding.json` and references it from `.well-known/smart-configuration` through the `user_access_brand_bundle` and `user_access_brand_identifier` fields. Every brand property is editable from the Admin UI, and no restart is needed for a change to take effect.
 
-Proxy Smart automatically publishes a **FHIR Brand Bundle** at `/branding.json` and references it from `.well-known/smart-configuration` via the `user_access_brand_bundle` and `user_access_brand_identifier` fields. The Admin UI gives you a visual editor for all brand properties without restarting the server.
-
-### How It Works
+## How It Works
 
 1. **Environment variables** provide default brand values at startup (e.g. `BRAND_NAME`, `BRAND_WEBSITE`)
 2. **Admin overrides** are persisted in Keycloak realm attributes (prefix `brand_settings.`)
 3. At runtime, admin overrides take precedence over env defaults
 4. The FHIR Brand Bundle is rebuilt automatically when settings change
 
-## 🏢 Brand Identity
+## Brand Identity
 
 Core fields that identify your organization in the SMART ecosystem:
 
@@ -39,7 +37,7 @@ Categories follow the [FHIR organization-type CodeSystem](http://hl7.org/fhir/co
 | `network` | Health Information Network |
 | `aggregator` | Data Aggregator |
 
-## 🖼️ Logo & Branding
+## Logo & Branding
 
 Logo URLs are included in the FHIR Organization resource via the `organization-brand` extension.
 
@@ -52,7 +50,7 @@ Logo URLs are included in the FHIR Organization resource via the `organization-b
 
 > **Tip**: Per the SMART spec, logos should be SVG (preferred) or at least 1024 px PNG with a transparent background for best results across apps.
 
-## 🌐 Patient Portal
+## Patient Portal
 
 Portal settings are published via the `organization-portal` FHIR extension. App developers use these to help patients connect to your patient-facing portal.
 
@@ -62,7 +60,7 @@ Portal settings are published via the `organization-portal` FHIR extension. App 
 | **Portal URL** | `BRAND_PORTAL_URL` | Portal login or home URL |
 | **Portal Description** | `BRAND_PORTAL_DESCRIPTION` | Markdown description of the portal |
 
-## 📍 Organization Address
+## Organization Address
 
 Address fields are included in the FHIR Organization resource for geographic identification.
 
@@ -73,7 +71,7 @@ Address fields are included in the FHIR Organization resource for geographic ide
 | **Postal Code** | `BRAND_ADDRESS_POSTAL_CODE` | ZIP or postal code |
 | **Country** | `BRAND_ADDRESS_COUNTRY` | ISO country code (e.g. `US`) |
 
-## 🔌 Admin API
+## Admin API
 
 Brand settings can also be managed programmatically via the REST API.
 
@@ -140,7 +138,7 @@ Content-Type: application/json
 
 A successful update clears the Brand Bundle cache so the next request to `/branding.json` returns fresh data.
 
-## 📦 FHIR Brand Bundle
+## FHIR Brand Bundle
 
 The published bundle at `/branding.json` is a FHIR `Bundle` (type `collection`) containing:
 
@@ -196,7 +194,7 @@ The `/.well-known/smart-configuration` response automatically includes:
 }
 ```
 
-## ⚙️ Configuration Precedence
+## Configuration Precedence
 
 Brand settings resolve in the following order (first non-null wins):
 
@@ -206,7 +204,7 @@ Brand settings resolve in the following order (first non-null wins):
 
 This means you can deploy with env vars for a quick setup and later fine-tune through the Admin UI without restarting.
 
-## 🔄 Cache Behavior
+## Cache Behavior
 
 - The Brand Bundle is cached for **60 seconds** and supports `ETag` / `If-None-Match` for conditional requests
 - Saving brand settings via the Admin UI or API **immediately clears the cache**

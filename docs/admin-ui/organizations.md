@@ -6,17 +6,11 @@ The Organizations page manages Keycloak organizations within your realm. Organiz
 
 Navigate to **Organizations** in the admin sidebar.
 
-## Features
+## Organization List
 
-### Organization List
+The main view lists every organization with its name, domain, and member count, searchable by name or domain, with edit and delete available inline.
 
-The main view displays all organizations with:
-- Organization name and domain
-- Member count
-- Quick actions (edit, delete)
-- Search by name or domain
-
-### Creating an Organization
+## Creating an Organization
 
 Click **Add Organization** to create a new organization:
 
@@ -27,28 +21,13 @@ Click **Add Organization** to create a new organization:
 | **Description** | Optional description |
 | **Attributes** | Custom key-value attributes |
 
-### Editing an Organization
+## Editing an Organization
 
-Click an organization to open the edit dialog with two tabs:
+Clicking an organization opens a dialog with two tabs. **General** edits the same fields as creation: name, domains, description, and attributes. **Branding** sets a logo URL, name, website, and portal details that override the global brand, which is how a sub-organization appears as its own entry in the SMART User-Access Brand Bundle instead of inheriting the parent's identity.
 
-#### General Tab
-- Update name, domains, description, and attributes
-- View and manage organization metadata
+## Member Management
 
-#### Branding Tab
-- Configure organization-specific branding that overrides the global brand settings
-- Set custom logo URL, name, website, and portal details
-- Organization branding is used in the SMART User-Access Brand Bundle to differentiate sub-organizations
-
-### Member Management
-
-Within an organization, you can manage membership:
-
-- **View members** -- list all users belonging to the organization
-- **Add member** -- assign an existing Keycloak user to the organization
-- **Remove member** -- revoke a user's organization membership
-
-Members inherit the organization's branding and any organization-scoped access policies.
+Membership is assignment, not creation: an existing Keycloak user is added to or removed from the organization. Members inherit the organization's branding and any organization-scoped access policies, so moving a user between organizations changes what patient apps display for them.
 
 ## API Endpoints
 

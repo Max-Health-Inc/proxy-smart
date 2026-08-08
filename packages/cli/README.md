@@ -233,6 +233,108 @@ Keycloak rejected any of it. There is deliberately no equivalent for LDAP: the
 directory attribute holding the FHIR reference is deployment-specific, so it
 cannot be guessed.
 
+## Programmatic API
+
+`src/index.ts` is both the `bin` and the package entry point, so everything the
+CLI is built from is importable. This is useful when you want the CLI's auth and
+config handling in a deploy script without shelling out to it.
+
+```ts
+import { resolveConfig, Session, createApiClient } from '@proxy-smart/cli'
+
+const config = resolveConfig({ url: 'https://proxy.example.com' })
+const session = new Session(config)
+const api = createApiClient(config, session)
+
+const apps = await api.smartApps.getAdminSmartApps()
+```
+
+### Configuration
+
+`resolveConfig(overrides?, env?)` applies the precedence order above and returns
+a `ResolvedConfig` with `url`, `clientId`, `clientSecret`, `scope` and `homeDir`.
+Both arguments are injectable, so it is testable without touching the real
+environment. `ConfigOverrides` is the flag-shaped input; `PersistedConfig` is the
+narrower shape written to disk.
+
+`ENV` is the single source of truth for the recognised variable names, and
+`DEFAULT_PROXY_URL`, `DEFAULT_CLIENT_ID` and `DEFAULT_SCOPE` are the built-in
+fallbacks. `DEFAULT_CLIENT_ID` is `admin-ui` rather than a dedicated CLI client:
+the backend already accepts tokens whose `azp` is `admin-ui`, and that client has
+the device grant enabled in every realm export, so a device-flow token passes the
+admin API with no extra audience configuration.
+
+`normalizeUrl` strips a trailing slash. `resolveHomeDir`, `configPath` and
+`tokenCachePath` locate the CLI home and its two files.
+`readPersistedConfig` and `writePersistedConfig` read and write `config.json`
+(created `0600`), and `clearTokenCache` removes the cached token.
+
+### Session and token cache
+
+`Session` manages OAuth endpoints and token acquisition for one invocation,
+memoizing discovery. Its constructor takes `ResolvedConfig` plus three injectable
+seams — `fetchImpl`, `SleepImpl` and `NowImpl` — which exist so tests can drive
+the device-flow poll loop without sleeping in real time.
+
+| Method | Purpose |
+|---|---|
+| `resolveEndpoints()` | Discover and memoize the proxy's OIDC endpoints |
+| `loginWithDeviceFlow(prompt)` | RFC 8628 device flow; `prompt` is a `DevicePrompt` receiving the `DeviceAuthResponse` to display |
+| `loginWithClientCredentials()` | Non-interactive grant; requires a client secret |
+| `getAccessToken()` | Return a valid bearer token, refreshing or minting as needed |
+| `logout()` | Clear the cached token |
+
+`CachedToken` is the on-disk record. `readCachedToken` tolerates a missing,
+partial or corrupt file by returning `undefined` rather than throwing, and
+`writeCachedToken` writes to a unique temp file and renames it into place, so a
+concurrent reader sees either the old token or the new one and never a torn file.
+`toCachedToken` maps a fresh `TokenSet` onto that record.
+
+`deploymentMismatch(cached, targetUrl)` guards the failure mode that motivated
+recording a URL in the cache at all. A token is only valid for the deployment
+that issued it, and the resolved `--url` can change between invocations, so
+`login --url https://beta…` followed by a bare command used to present a beta
+token to whatever the default resolved to. The dangerous case is not the opaque
+401: it is two deployments that both accept the token, where the command quietly
+succeeds against the wrong environment. It returns a message naming both URLs, or
+`undefined` when they agree.
+
+### OAuth helpers
+
+`proxyDiscoveryUrl(proxyUrl)` builds the discovery URL, and
+`endpointsFromMetadata(meta)` reduces the document to the `AuthEndpoints` the CLI
+needs. `parseOidcMetadata`, `parseDeviceAuthResponse` and `parseTokenSet` validate
+untrusted responses into `OidcMetadata`, `DeviceAuthResponse` and `TokenSet`, and
+`asTokenError` recognises an OAuth error body, returning a `TokenError` or
+`undefined`.
+
+`deviceAuthBody`, `deviceTokenBody`, `clientCredentialsBody` and
+`refreshTokenBody` build the form-encoded request bodies for each grant;
+`formEncode` is the shared encoder.
+
+`generatePkcePair(randomImpl?)` produces a `PkcePair`, `deriveCodeChallenge`
+computes the S256 challenge from a verifier, and `PKCE_METHOD_S256` is the method
+name. `expiresAt(expiresIn, now?)` converts a relative lifetime to an absolute
+epoch second, and `isTokenFresh(expiresAt, skewSeconds?, now?)` answers whether a
+token is still usable, defaulting to 30 seconds of clock skew.
+
+### Argument parsing
+
+`parseArgs(argv)` returns `ParsedArgs` with the command, positional arguments and
+flags. `flagString`, `flagBool` and `flagList` read a single flag out of that map
+with the right coercion. `overridesFromFlags(flags)` turns the global flags into
+`ConfigOverrides`, and `run(argv)` is the whole CLI, returning a process exit
+code.
+
+### API client
+
+`createApiClient(config, session)` returns an `ApiClient` bundling the generated
+API surfaces (`smartApps`, `healthcareUsers`, `scopeSets`, `mcp`, `admin`,
+`identityProviders`, `userFederation`, `roles`) plus the `basePath` they are bound
+to. All of them share one `Configuration` whose `accessToken` callback delegates
+to the session, so every call lazily obtains and transparently refreshes its own
+bearer token and no caller has to think about token lifetime.
+
 ## The generated API client
 
 `src/api-client/` is a **generated copy**, produced from the backend's exported

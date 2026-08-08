@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp - Route Introspection
  *
@@ -31,6 +34,45 @@ export interface IntrospectOptions {
   resourceNameGenerator?: (path: string) => string
 }
 
+// ── Response schema ──────────────────────────────────────────────────────────
+
+/** Preferred success statuses, in the order a route is most likely to declare them. */
+const SUCCESS_STATUSES = ['200', '201', '202']
+
+/**
+ * Pull the success-response schema out of a route's `response` declaration.
+ *
+ * Elysia accepts either a bare schema or a status-keyed map
+ * (`{ 200: t.Array(Role), ...CommonErrorResponses }`). Only the success entry
+ * describes what a successful tool call returns; the error entries describe
+ * bodies that never reach `structuredContent`, because a non-2xx dispatch is
+ * returned as `isError` text instead.
+ */
+export function extractResponseSchema(response: unknown): TSchema | undefined {
+  if (response === null || typeof response !== 'object') return undefined
+  const entries = response as Record<string, unknown>
+  const keys = Object.keys(entries)
+  if (keys.length === 0) return undefined
+
+  // A schema is itself an object, so the two shapes are told apart by their
+  // keys: a status map is keyed entirely by status codes, a schema never is.
+  if (!keys.every((k) => /^\d{3}$/.test(k))) return response as TSchema
+
+  for (const status of SUCCESS_STATUSES) {
+    const hit = entries[status]
+    if (hit && typeof hit === 'object') return hit as TSchema
+  }
+  // Any other 2xx (204 carries no body worth advertising, so it is not sought
+  // above, but a route using an unusual success code should still be covered).
+  for (const key of keys) {
+    if (key.startsWith('2') && key !== '204') {
+      const hit = entries[key]
+      if (hit && typeof hit === 'object') return hit as TSchema
+    }
+  }
+  return undefined
+}
+
 // ── Route extraction ─────────────────────────────────────────────────────────
 
 /**
@@ -49,8 +91,8 @@ export function extractRouteTools(app: unknown, options?: IntrospectOptions): Ma
   for (const route of routes) {
     const path = (route as { path?: unknown }).path
     const method = (route as { method?: unknown }).method
-    const hooks = (route as { hooks?: { body?: TSchema; params?: TSchema; query?: TSchema } }).hooks
-    const legacySchema = (route as { schema?: { body?: TSchema; params?: TSchema; query?: TSchema } }).schema
+    const hooks = (route as { hooks?: { body?: TSchema; params?: TSchema; query?: TSchema; response?: unknown } }).hooks
+    const legacySchema = (route as { schema?: { body?: TSchema; params?: TSchema; query?: TSchema; response?: unknown } }).schema
     const handler = (route as { handler?: unknown }).handler
     const meta = (route as { meta?: { public?: boolean } }).meta
 
@@ -61,6 +103,7 @@ export function extractRouteTools(app: unknown, options?: IntrospectOptions): Ma
     const bodySchema = hooks?.body ?? legacySchema?.body
     const paramsSchema = hooks?.params ?? legacySchema?.params
     const querySchema = hooks?.query ?? legacySchema?.query
+    const responseSchema = extractResponseSchema(hooks?.response ?? legacySchema?.response)
 
     const isGet = method === 'GET'
     const toolName = nameGen(path, method)
@@ -71,6 +114,7 @@ export function extractRouteTools(app: unknown, options?: IntrospectOptions): Ma
       handler,
       schema: isGet ? querySchema : bodySchema,
       paramsSchema,
+      responseSchema,
       public: meta?.public ?? false,
       readOnly: isGet,
       annotations: annotationsForMethod(method),

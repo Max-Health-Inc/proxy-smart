@@ -63,7 +63,10 @@ function getPrimaryRole(realmRoles: string[] = [], clientRoles: Record<string, s
  * Fetch client roles for a Keycloak client (e.g., 'admin-ui') from the backend.
  * Uses the new GET /admin/roles/clients/:clientId endpoint.
  */
-async function fetchClientRoles(clientId: string): Promise<string[]> {
+// Returns the full roles, not just names: client roles carry their own
+// description and grantsAdmin flag, and indexing them by name against the realm
+// metadata made a client role borrow a realm role's description.
+async function fetchClientRoles(clientId: string): Promise<RoleResponse[]> {
   const token = await getStoredToken();
   if (!token) return [];
   try {
@@ -71,8 +74,7 @@ async function fetchClientRoles(clientId: string): Promise<string[]> {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return [];
-    const roles: { name?: string }[] = await res.json();
-    return roles.map(r => r.name).filter((n): n is string => !!n);
+    return await res.json() as RoleResponse[];
   } catch {
     return [];
   }
@@ -148,6 +150,9 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
   // Full role metadata (description + typical scopes), keyed by role name, so the
   // pickers can show rich subtitles instead of bare names.
   const [rolesMeta, setRolesMeta] = useState<Record<string, RoleResponse>>({});
+  // Kept separate from rolesMeta: realm and client roles share names (`admin`),
+  // so one map would let whichever loaded last describe both.
+  const [clientRolesMeta, setClientRolesMeta] = useState<Record<string, RoleResponse>>({});
 
   // Identity providers and per-user federated identities
   const [availableIdPs, setAvailableIdPs] = useState<IdentityProviderResponse[]>([]);
@@ -188,7 +193,14 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
           .map(r => r.name)
           .filter((n): n is string => !!n);
         setAvailableRealmRoles(realmRoleNames);
-        setAvailableClientRoles({ 'admin-ui': adminUiRoles });
+        setAvailableClientRoles({
+          'admin-ui': adminUiRoles.map(r => r.name).filter((n): n is string => !!n),
+        });
+        const clientMeta: Record<string, RoleResponse> = {};
+        for (const role of adminUiRoles) {
+          if (role.name) clientMeta[role.name] = role;
+        }
+        setClientRolesMeta(clientMeta);
 
         // Index full metadata by role name (realm roles carry description + scopes).
         const meta: Record<string, RoleResponse> = {};
@@ -536,6 +548,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
         availableClientRoles={availableClientRoles}
         getAllAvailableRoles={getAllAvailableRoles}
         rolesMeta={rolesMeta}
+        clientRolesMeta={clientRolesMeta}
         federatedIdentities={editingUserFederatedIdentities}
         availableIdPs={availableIdPs}
       />

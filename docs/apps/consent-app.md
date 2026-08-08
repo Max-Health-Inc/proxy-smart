@@ -4,9 +4,7 @@
 
 SMART on FHIR application for managing patient consent. Practitioners can create, review, and revoke FHIR Consent resources linked to Patient records.
 
-## Overview
-
-The Consent App launches via SMART App Launch (standalone or EHR launch), authenticates with Proxy Smart, and reads/writes FHIR Consent and related resources through the proxy. It supports both practitioner and patient workflows.
+It launches via SMART App Launch (standalone or EHR launch), authenticates with Proxy Smart, and reads and writes FHIR Consent resources through the proxy. Both practitioner and patient workflows are supported.
 
 ```
 ┌──────────────┐   SMART launch   ┌──────────────┐   FHIR R4   ┌─────────────┐
@@ -15,15 +13,9 @@ The Consent App launches via SMART App Launch (standalone or EHR launch), authen
 └──────────────┘                  └──────────────┘             └─────────────┘
 ```
 
-## Features
+A practitioner builds a Consent resource by choosing its scope, period, and provision rules, then reviews it alongside the patient's existing consents. The detail view expands the full provision breakdown and the audit timeline behind each decision, which is what makes a revocation defensible after the fact. Access requests run through the same app: a request for consent-based access is raised, reviewed, and approved or denied in place.
 
-- **SMART App Launch 2.2.0** with PKCE, token refresh, and session expiry handling
-- **Consent Builder** for creating new Consent resources with scope, period, and provision rules
-- **Consent List** with filtering by status, patient, and date
-- **Consent Detail** view with full provision breakdown and audit timeline
-- **Practitioner Dashboard** with consent statistics and quick actions
-- **Patient Detail** showing all consents linked to a patient
-- **Access Request Management** for handling consent-based access requests
+Session handling comes from `SmartAppShell`, so PKCE, token refresh, and expiry are not this app's concern.
 
 ## SMART Configuration
 

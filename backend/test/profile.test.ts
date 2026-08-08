@@ -19,8 +19,11 @@ const updates: { id: string; body: Record<string, unknown> }[] = []
 const passwordResets: { id: string; value: string }[] = []
 let resetShouldThrow: Error | null = null
 
+// validateAdminToken, not validateToken: the route is an admin route, and the
+// bare validator is fail-closed on audience, which 401'd every real admin token.
 mock.module('../src/lib/auth', () => ({
   validateToken: mock(async () => ({ sub: tokenSub, realm_access: { roles: ['admin'] } })),
+  validateAdminToken: mock(async () => ({ sub: tokenSub, realm_access: { roles: ['admin'] } })),
 }))
 
 const fakeAdmin = {

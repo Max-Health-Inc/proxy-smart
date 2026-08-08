@@ -23,6 +23,7 @@ import { isOriginAllowed } from '@/lib/cors-origins'
 
 import {
   typeboxToSchema,
+  typeboxToOutputSchema,
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
@@ -53,6 +54,13 @@ import { getAccessControlInstance } from '../lib/access-control/plugin'
 // every deploy silently invalidated every live connection and the next request
 // got `404 Session not found` — on an environment that redeploys many times a
 // day, that is most of them.
+
+// Admin list endpoints are the high-token responses an agent hits most, and are
+// uniform enough for TOON's tabular form to collapse the repeated keys. 'auto'
+// emits whichever of JSON and TOON is shorter per payload, so the nested and
+// single-object responses TOON handles badly keep their JSON. structuredContent
+// stays JSON either way.
+const TOOL_TEXT_OPTIONS = { textFormat: 'auto' } as const
 
 // Domain-specific context decorators injected into tool/resource execution.
 // The dispatch app (resolved lazily — it is registered after this module loads)
@@ -88,6 +96,11 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
 
       const inputSchema = getMergedInputSchema(meta)
       const toolSchema = inputSchema ? typeboxToSchema(inputSchema) : undefined
+      // Advertising the route's declared success-response schema is what turns
+      // structuredContent from an untyped copy of the text block into something
+      // a client can validate. Safe because Elysia coerces the response to this
+      // same schema in the pipeline, so the body already conforms.
+      const outputSchema = typeboxToOutputSchema(meta.responseSchema)
       const description = generateDescription(toolName, meta)
       // Behavioural hints derived from the HTTP verb (destructiveHint for
       // delete_*, idempotentHint for update_*/PUT, etc.) so MCP clients can
@@ -97,16 +110,16 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       if (toolSchema) {
         server.registerTool(
           toolName,
-          { description, inputSchema: toolSchema, annotations },
+          { description, inputSchema: toolSchema, ...(outputSchema ? { outputSchema } : {}), annotations },
           async (args: unknown) =>
-            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators),
+            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators, TOOL_TEXT_OPTIONS),
         )
       } else {
         server.registerTool(
           toolName,
-          { description, annotations },
+          { description, ...(outputSchema ? { outputSchema } : {}), annotations },
           async () =>
-            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators),
+            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators, TOOL_TEXT_OPTIONS),
         )
       }
     }

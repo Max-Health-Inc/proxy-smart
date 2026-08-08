@@ -330,7 +330,7 @@ describe('executeTool', () => {
     expect(result.structuredContent).toEqual({ id: 'abc', ok: true })
   })
 
-  it('omits structuredContent for non-object (array) results', async () => {
+  it('surfaces array results as structuredContent too', async () => {
     const meta: ToolMetadata = {
       path: '/admin/list',
       method: 'POST',
@@ -339,9 +339,24 @@ describe('executeTool', () => {
 
     const result = await executeTool('create_admin_list', meta, {})
     expect(result.isError).toBeUndefined()
-    // arrays are not valid MCP structuredContent — text only
-    expect(result.structuredContent).toBeUndefined()
+    // Arrays used to be dropped here because the 2025 wire shape requires
+    // structuredContent to be an object. Reconciling that is the SDK's job:
+    // projectCallToolResult wraps a non-object value as `{result:…}` for a
+    // 2025-era client and passes it through on 2026. Dropping them here
+    // discarded the structured half of the largest (list) responses, and would
+    // contradict an advertised array-rooted outputSchema.
+    expect(result.structuredContent).toEqual([1, 2, 3])
     expect(JSON.parse(result.content[0].text)).toEqual([1, 2, 3])
+  })
+
+  it('still omits structuredContent for primitives and unparseable text', async () => {
+    // A bare primitive carries nothing the text block does not already, so it
+    // would only add a `{result:…}` wrap on 2025-era clients for no gain.
+    const primitive: ToolMetadata = { path: '/admin/n', method: 'POST', handler: () => 42 }
+    expect((await executeTool('create_admin_n', primitive, {})).structuredContent).toBeUndefined()
+
+    const plain: ToolMetadata = { path: '/admin/s', method: 'POST', handler: () => 'not json' }
+    expect((await executeTool('create_admin_s', plain, {})).structuredContent).toBeUndefined()
   })
 })
 

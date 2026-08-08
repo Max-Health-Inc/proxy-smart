@@ -407,13 +407,9 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                 {!showPreferences ? (
                   // Main Menu
                   <>
-                    <DropdownMenuItem className="flex items-center space-x-3 p-3 hover:bg-muted/80 cursor-pointer rounded-xl mx-2 my-1 transition-all duration-300 transform hover:scale-105">
-                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                        <User className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <span className="font-semibold text-foreground">{t('Profile Settings')}</span>
-                    </DropdownMenuItem>
-                    
+                    {/* One entry, under the name that was already here. It used to
+                        render with no handler, so a second "My Profile" was added
+                        beside it rather than wiring it up. */}
                     <DropdownMenuItem
                       onClick={() => onTabChange('profile')}
                       className="flex items-center space-x-3 p-3 hover:bg-muted/80 cursor-pointer rounded-xl mx-2 my-1 transition-all duration-300 transform hover:scale-105"
@@ -421,7 +417,7 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                       <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
                         <User className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <span className="font-semibold text-foreground">{t('My Profile')}</span>
+                      <span className="font-semibold text-foreground">{t('Profile Settings')}</span>
                     </DropdownMenuItem>
 
                     <DropdownMenuItem 

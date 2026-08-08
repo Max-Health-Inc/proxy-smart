@@ -33,6 +33,9 @@ export const RoleResponse = t.Object({
   isTechnical: t.Optional(t.Boolean({
     description: 'True for plumbing roles (offline_access, default-roles-*, uma_authorization) the UI hides by default'
   })),
+  grantsAdmin: t.Optional(t.Boolean({
+    description: 'True when holding this role confers admin access (same predicate the auth path uses). Realm and admin-UI client locations are equivalent.'
+  })),
   representedScopeSetId: t.Optional(t.String({
     description: 'ID of a scope set this role represents (descriptive label only, not enforced)'
   })),

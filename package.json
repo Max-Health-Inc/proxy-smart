@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.4-RELEASE.202608082103.a47eb328a",
+  "version": "0.3.5-beta.202608082338.d0bccdbb2",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -48,7 +48,7 @@
     "skipPrefixes": [
       "backend/public"
     ],
-    "minCoverage": 8
+    "minCoverage": 95
   },
   "scripts": {
     "dev": "concurrently \"bun run dev:backend\" \"bun run dev:ui\"",

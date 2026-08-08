@@ -280,33 +280,13 @@ Bot-generated commits are filtered to prevent infinite loops:
 
 These workflows still run when triggered via `workflow_dispatch`, `workflow_call`, or schedule.
 
-## Best Practices
+## Working with versions
 
-### 1. Version Consistency
+Let the pre-commit hook do the synchronizing, and use `bun run version:check` to confirm the tree is consistent before you commit rather than after CI tells you it was not. Bumps follow semantic versioning: patch for bug fixes, minor for backwards-compatible additions, major for breaking changes.
 
-- Always ensure versions are consistent before committing
-- Use `bun run version:check` regularly
-- Let the pre-commit hook handle synchronization
+`bun run version:set` exists for hotfixes and for pinning a specific version. Because it bypasses the normal bump, run `version:check` afterwards and say in the commit message why the version was set by hand.
 
-### 2. Version Bumping
-
-- Use semantic versioning principles:
-  - **Patch**: Bug fixes, non-breaking changes
-  - **Minor**: New features, backwards compatible
-  - **Major**: Breaking changes
-
-### 3. Manual Interventions
-
-- Use `bun run version:set` for hotfixes or specific versions
-- Always validate with `bun run version:check` after manual changes
-- Document reason for manual version changes
-
-### 4. Release Workflow
-
-1. **Development**: Work on feature branches, merge to `develop` (auto alpha versions)
-2. **Staging**: Auto-PR promotes `develop` → `test` (auto-merge, beta versions, VPS deploy)
-3. **Production**: PR promotes `test` → `main` (manual review, production versions)
-4. **Hotfixes**: Direct to `main` with manual version bump
+Versions flow through the branches automatically. Feature branches merge into `develop`, which produces alpha versions; an auto-PR promotes `develop` to `test`, which auto-merges and produces beta versions deployed to the VPS; a reviewed PR promotes `test` to `main` for production versions. Hotfixes go straight to `main` and are the one case where the version bump is manual.
 
 ## Troubleshooting
 
@@ -387,13 +367,4 @@ The version management system is deeply integrated with the CI/CD pipeline:
 7. **Compliance**: SMART Inferno compliance tests run on real code merges
 8. **Deploy**: Beta releases deploy to the staging VPS automatically
 
-## Conclusion
-
-This version management system provides:
-- **Consistency**: All packages stay synchronized
-- **Automation**: Minimal manual intervention required
-- **Flexibility**: Supports various release types and workflows
-- **Reliability**: Git hooks and CI/CD validation prevent errors
-- **Transparency**: Clear versioning scheme for all environments
-
-By following this system, you can maintain clean, consistent versioning across the entire monorepo while supporting complex release workflows.
+The point of all this is that no package version is ever set by hand in normal operation. The pre-commit hook keeps the monorepo synchronized, CI validation catches the cases it cannot, and the branch a commit lands on determines the release type. What is left to decide is the size of the bump.

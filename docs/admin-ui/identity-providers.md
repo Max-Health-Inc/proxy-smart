@@ -6,17 +6,11 @@ The Identity Providers page manages external authentication sources (SAML, OIDC,
 
 Navigate to **Identity Providers** in the admin sidebar.
 
-## Features
+## Provider List
 
-### Provider List
+The main view shows each configured provider by alias and display name, with its protocol (SAML, OIDC, Google, Microsoft, and so on) and enabled state, above a count of enabled versus total.
 
-The main view shows all configured identity providers with:
-- Provider alias and display name
-- Provider type (SAML, OIDC, Google, Microsoft, etc.)
-- Enabled/disabled status
-- Provider count summary (enabled vs total)
-
-### Adding a Provider
+## Adding a Provider
 
 Click **Add Identity Provider** to configure a new external authentication source:
 
@@ -33,22 +27,11 @@ Click **Add Identity Provider** to configure a new external authentication sourc
 | **First Broker Login Flow** | Authentication flow for first-time federated users |
 | **Post Broker Login Flow** | Authentication flow after broker login |
 
-### Provider Configuration
+## Provider Configuration
 
-Each provider type has specific configuration fields in the `config` object:
+The remaining fields live in the provider's `config` object and depend on its protocol. OIDC providers take the authorization, token, and logout URLs, a client ID and secret, the issuer and JWKS URL, and the scopes and PKCE method to request. SAML providers take the SSO service URL and entity ID, the signing and encryption certificates, and the NameID format and binding type.
 
-#### OIDC Providers
-- Authorization URL, Token URL, Logout URL
-- Client ID and Client Secret
-- Scopes, PKCE method
-- Issuer, JWKS URL
-
-#### SAML Providers
-- SSO Service URL, Entity ID
-- Signing and encryption certificates
-- NameID format, binding type
-
-### Claim Mappers
+## Claim Mappers
 
 A user who authenticates through an external IdP arrives in Keycloak with only
 the claims a mapper imports for them. That matters for SMART: `fhirUser` is read
@@ -93,14 +76,13 @@ make them green:
   SMART Backend Services, not people, so no user ever logs in through them and
   no user attribute is ever imported. See [Federated JWT](../federated-jwt.md).
 
-### Connection Testing
+## Connection Testing
 
-Test the connection to an identity provider to verify configuration without affecting production logins.
+A provider's connection can be tested from its row, which verifies the configuration without putting a production login at risk.
 
-### Editing and Deleting
+## Editing and Deleting
 
-- Click a provider to edit its configuration
-- Delete removes the provider and breaks any linked user accounts
+Clicking a provider opens its configuration for editing. Deleting one also breaks every user account linked through it, so it is not a reversible cleanup.
 
 ## API Endpoints
 
@@ -123,8 +105,6 @@ Test the connection to an identity provider to verify configuration without affe
 
 ## Common Use Cases
 
-- **Enterprise SSO** -- Connect to hospital Active Directory via SAML or OIDC
-- **Social Login** -- Allow patients to sign in with Google or Apple accounts
-- **Multi-organization** -- Different identity providers per organization for federated access
-- **Identity Brokering** -- Chain multiple providers through Keycloak's brokering flows
-- **Federated SMART launches** -- Import `fhirUser` from the external identity so brokered users resolve to a FHIR resource
+The usual case is enterprise SSO: a hospital's Active Directory connected over SAML or OIDC so clinicians keep their existing credentials. Patient-facing deployments often add social login through Google or Apple alongside it, and a multi-organization realm can point each organization at its own provider. Keycloak's brokering flows allow chaining several providers where the trust path is indirect.
+
+In every one of these, the `fhirUser` import mapper is what turns a brokered identity into something that can launch a SMART app.
