@@ -10,6 +10,7 @@
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@max-health-inc/config": "^3.2.0",
         "@tailwindcss/vite": "^4.3.3",
         "@types/fhir": "^0.0.44",
         "@vitejs/plugin-react-swc": "^4.3.1",
@@ -28,7 +29,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.2.33-beta.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.16",
         "@elysiajs/cors": "^1.4.2",
@@ -76,7 +77,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -87,7 +88,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.2.33-beta.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "dependencies": {
         "aws-cdk-lib": "^2.261.0",
         "constructs": "^10.7.0",
@@ -105,13 +106,13 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.3",
         "@cornerstonejs/core": "^5.6.7",
         "@cornerstonejs/dicom-image-loader": "^5.6.7",
         "@fontsource-variable/geist": "^5.3.0",
-        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.0",
+        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
         "@radix-ui/react-dialog": "^1.1.19",
         "@radix-ui/react-slot": "^1.3.0",
         "@tailwindcss/vite": "^4.3.3",
@@ -146,9 +147,9 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "dependencies": {
-        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.0",
+        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
         "@radix-ui/react-avatar": "^1.2.2",
         "@radix-ui/react-dialog": "^1.1.19",
         "@radix-ui/react-label": "^2.1.11",
@@ -206,7 +207,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "devDependencies": {
         "@types/node": "^26.1.1",
         "typescript": "6.0.3",
@@ -214,7 +215,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -226,7 +227,7 @@
     },
     "packages/cli": {
       "name": "@proxy-smart/cli",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "bin": {
         "proxy-smart": "./src/index.ts",
       },
@@ -238,7 +239,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "devDependencies": {
         "@modelcontextprotocol/server": "^2.0.0",
         "@sinclair/typebox": "^0.34.52",
@@ -253,10 +254,10 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.2.33-alpha.202608080725.016825365",
+      "version": "0.3.1-beta.202608080909.7c5548376",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
-        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.0",
+        "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
         "@tailwindcss/vite": "^4.3.3",
         "@types/fhir": "^0.0.44",
         "brandc": "^0.6.1",
@@ -650,6 +651,8 @@
 
     "@loxjs/url-join": ["@loxjs/url-join@1.0.2", "", {}, "sha512-BqzK8+iHqxUbPRZV6NBum63CJzE0G6vGG3o+4dqeIzbywdoTg+xHJbksYDkk1P1w3Gj64U20Rgp44HHciLbRzg=="],
 
+    "@max-health-inc/config": ["@max-health-inc/config@3.2.0", "https://npm.pkg.github.com/download/@max-health-inc/config/3.2.0/71eb068cf19ce93cde8cd62d1029549f1d07c426", { "peerDependencies": { "@eslint/js": ">=9", "eslint": ">=9", "globals": ">=15", "typescript-eslint": ">=8" }, "bin": { "doccheck": "doccheck/cli.js" } }, "sha512-RNFcyTh0ElbDrnQOn+xY6i30LkutjyYxDg8RwlDXSjR3HsMG9EO8FJTtEsfXClZnnnFVsK5vovCXDWuUp4+wUw=="],
+
     "@max-health-inc/consent-fhir": ["@max-health-inc/consent-fhir@0.1.2", "https://npm.pkg.github.com/download/@max-health-inc/consent-fhir/0.1.2/0dacd93141c28985b3dce612d3cfdf3920028e9e", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": "^0.0.41" }, "peerDependencies": { "fhirpath": "^3.0.0 || ^4.0.0" } }, "sha512-ywuS9dk4KT2gQYeFZPp6WNoFHu6Zme1BlS78OaVr/LYtmBnMW3Ymz1az4jBJJBu4dAPBy/mnRqeuxP+V6Lk9VA=="],
 
     "@max-health-inc/elysia-mcp": ["@max-health-inc/elysia-mcp@workspace:packages/elysia-mcp"],
@@ -732,7 +735,7 @@
 
     "@proxy-smart/eslint-config": ["@proxy-smart/eslint-config@workspace:config/eslint"],
 
-    "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@0.9.0", "https://npm.pkg.github.com/download/@max-health-inc/shared-ui/0.9.0/b40a6a9f5919d3a36e228615522f7dc8bd623343", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "brandc": "^0.6.0", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "i18next": "^26.0.0", "i18next-browser-languagedetector": "^8.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-i18next": "^17.0.0" } }, "sha512-1MZ4QSlhqqJmpyouTkWhZddJhY0JFyPQk2d5uTlsaxZOJFMIpR3qi5PiI/d/KhT1HYmpLIHtDw/dOHwME2rM7Q=="],
+    "@proxy-smart/shared-ui": ["@max-health-inc/shared-ui@0.9.1", "https://npm.pkg.github.com/download/@max-health-inc/shared-ui/0.9.1/1cc9ea8f0ed484453bc16cb58ed5fefc397a35a5", { "dependencies": { "@radix-ui/react-slot": "^1.2.4", "brandc": "^0.6.0", "class-variance-authority": "^0.7.1", "clsx": "^2.1.1", "lucide-react": "^1.14.0", "radix-ui": "^1.4.3", "sonner": "^2.0.7", "tailwind-merge": "^3.5.0" }, "peerDependencies": { "i18next": "^26.0.0", "i18next-browser-languagedetector": "^8.0.0", "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0", "react-i18next": "^17.0.0" } }, "sha512-ew3G2M4X4SwQeiotWeKTYtmjQrHVLDKs7CSNwMcsT370DkzS4YZoFY0gLdxcXDLqltWFTOMPGScH0pQe3EVuAA=="],
 
     "@radix-ui/number": ["@radix-ui/number@1.1.1", "", {}, "sha512-MkKCwxlXTgz6CFoJx3pCwn07GKp36+aZyu/u2Ln2VrA5DcdyCZkASEDBTd8x5whTQQL5CiYf4prXKLcgQdv29g=="],
 

@@ -82,7 +82,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write  # Required to commit test reports
+  contents: read   # The report is an artifact now, so nothing here writes to the repo
   packages: read   # Needed so bun can install @max-health-inc/* from GitHub Packages (see bunfig.toml)
 
 env:
@@ -1431,18 +1431,20 @@ jobs:
           path: test-results/
           retention-days: 30
 
-      # Commit test report to repository
-      - name: Commit Test Report
+      # Publish the report as a CI artifact rather than committing it.
+      #
+      # This used to copy the report onto develop and push it. That put a few
+      # hundred lines of regenerated logs into every promotion PR, so a release
+      # that changed no source at all still looked like a real diff, and it
+      # needed contents: write plus an app token to get past branch protection.
+      # deploy-docs.yml publishes it to Pages from the artifact instead.
+      - name: Assemble Compliance Report
         if: always()
         run: |
-          # Create report directory
           REPORT_DIR="testing/${TEST_STAGE}/report"
           mkdir -p "$REPORT_DIR"
-          
-          # Copy test results to report directory
           cp -r test-results/* "$REPORT_DIR/" 2>/dev/null || true
-          
-          # Create summary report
+
           cat > "$REPORT_DIR/summary.json" << EOF
           {
             "test_suite": "${TEST_SUITE}",
@@ -1456,59 +1458,19 @@ jobs:
             "status": "${{ steps.config.outputs.mode == 'enforcement' && steps.enforcement-probe.outcome || steps.inferno-tests.outcome || 'unknown' }}"
           }
           EOF
-          
-          # Configure git
-          git config user.name "proxy-smart-releaser[bot]"
-          git config user.email "proxy-smart-releaser[bot]@users.noreply.github.com"
-          
-          # Ensure we use the app token for push (survives branch switches)
-          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git"
-          
-          # Save report files before branch switch
-          cp -r "$REPORT_DIR" /tmp/report-backup
-          
-          # Clean up report files before switching branches (they're backed up in /tmp)
-          rm -rf "$REPORT_DIR"
-          
-          # Discard generated lockfile changes and stash any other modifications before switching branches
-          git checkout -- bun.lock 2>/dev/null || true
-          git stash --include-untracked 2>/dev/null || true
-          
-          # Checkout develop branch and pull latest (to avoid race conditions with version updates)
-          git fetch origin develop
-          git checkout develop
-          git pull origin develop --rebase || true
-          git stash pop 2>/dev/null || true
-          
-          # Restore and add report directory after branch switch
-          mkdir -p "$REPORT_DIR"
-          cp -r /tmp/report-backup/* "$REPORT_DIR/"
-          git add "$REPORT_DIR"
-          git diff --staged --quiet || git commit -m "chore(testing): update ${TEST_STAGE} SMART compliance report [skip ci]
-          
-          Test Suite: ${TEST_SUITE}
-          Passed: ${{ steps.inferno-tests.outputs.passed || 0 }}
-          Failed: ${{ steps.inferno-tests.outputs.failed || 0 }}
-          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          
-          # Push changes to develop with retry on conflict
-          for i in 1 2 3; do
-            if git push origin develop; then
-              echo "✓ Report pushed successfully"
-              break
-            else
-              echo "Push failed, retrying after pull..."
-              git stash
-              git pull origin develop --rebase || git rebase --abort
-              git stash pop || true
-              git add "$REPORT_DIR"
-              git diff --staged --quiet || git commit -m "chore(testing): update ${TEST_STAGE} SMART compliance report [skip ci]"
-            fi
-          done
         env:
           TEST_STAGE: ${{ env.TEST_STAGE }}
           TEST_SUITE: ${{ env.TEST_SUITE }}
-          APP_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+
+      # 90 days, not the default 30: Pages serves whatever the newest run left
+      # here, so the artifact has to outlive a quiet period in the pipeline.
+      - name: Upload Compliance Report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: compliance-report-${{ env.TEST_STAGE }}
+          path: testing/${{ env.TEST_STAGE }}/report/
+          retention-days: 90
 
       # Auto-create issue and assign Copilot Cloud Agent on failure
       - name: Copilot Self-Heal (Create Issue)

@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.1-RELEASE.202608080909.7c5548376] - 2026-08-08
+
+- 🔧 Chores & Improvements: CI/docs checks added; doc-check tooling introduced (typecheck doc examples, doc coverage) and integrated into build/check scripts; ignore artifacts (.doccheck/, lib/maxhealth.consent-*.tgz); docs tweaks to skip doccheck in specific MD files
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/955
+
+
+## [0.3.1-beta.202608080909.7c5548376] - 2026-08-08
+
+- 🔧 Chores & Improvements: Update and maintain dev SMART compliance report references for testing
+- 🔧 Chores & Improvements: Version metadata update for pre-release 0.3.1-beta.202608080909.7c5548376
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/953
+
+
 ## [0.3.1-beta.202608080900.da2df3824] - 2026-08-08
 
 - 🔧 Chores & Improvements: Internal updates and maintenance

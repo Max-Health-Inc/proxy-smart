@@ -1,12 +1,13 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.1-RELEASE.202608080909.7c5548376",
+  "version": "0.3.2-beta.202608080958.1d8c5f755",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@max-health-inc/config": "^3.2.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/fhir": "^0.0.44",
     "@vitejs/plugin-react-swc": "^4.3.1",
@@ -39,6 +40,16 @@
   ],
   "license": "AGPL-3.0-or-later",
   "private": true,
+  "doccheck": {
+    "workspace": "frontend/ui",
+    "skipSegments": [
+      "lib"
+    ],
+    "skipPrefixes": [
+      "backend/public"
+    ],
+    "minCoverage": 8
+  },
   "scripts": {
     "dev": "concurrently \"bun run dev:backend\" \"bun run dev:ui\"",
     "dev:backend": "cd backend && bun run dev",
@@ -106,11 +117,11 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "check": "bun run typecheck && bun run lint && bun run check:badges && bun run check:docs && bun run check:docs:coverage",
-    "check:badges": "node scripts/check-badges.mjs",
-    "check:badges:online": "node scripts/check-badges.mjs --online",
-    "check:docs": "node scripts/check-doc-examples.mjs",
-    "check:docs:coverage": "node scripts/check-docs-coverage.mjs --min=8",
-    "check:docs:missing": "node scripts/check-docs-coverage.mjs --list",
+    "check:badges": "doccheck badges",
+    "check:badges:online": "doccheck badges --online",
+    "check:docs": "doccheck examples",
+    "check:docs:coverage": "doccheck coverage",
+    "check:docs:missing": "doccheck coverage --list",
     "clean": "bun run clean:backend && bun run clean:ui",
     "clean:backend": "cd backend && rm -rf node_modules dist",
     "clean:ui": "cd frontend/ui && rm -rf node_modules dist",
