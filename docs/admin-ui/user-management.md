@@ -42,7 +42,7 @@ Use the federated-identities endpoints to:
 
 ## Launch Contexts
 
-Per-user SMART launch context is managed via the [Launch Contexts](./launch-contexts.md) API. This controls what `patient`, `encounter`, `fhirUser`, and other context values are injected into tokens for that user.
+Per-user SMART launch context is managed via the [Launch Contexts](./launch-context.md) API. This controls what `patient`, `encounter`, `fhirUser`, and other context values are injected into tokens for that user.
 
 ## Roles
 
@@ -75,7 +75,7 @@ Organizations support per-org branding overrides via the `/:orgId/branding` endp
 
 - [Identity Providers](./identity-providers.md) -- configure the external IdPs users can link to
 - [Scope Management](./scope-management.md) -- what scopes apps can request on behalf of users
-- [Launch Contexts](./launch-contexts.md) -- per-user SMART context attributes
+- [Launch Contexts](./launch-context.md) -- per-user SMART context attributes
 - **Anonymization**: Privacy-preserving analytics
 
 ## 🛠️ Integration Capabilities

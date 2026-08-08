@@ -6,7 +6,7 @@
 
 <!-- Version & Spec Badges -->
 <p align="center">
-  <a href="https://github.com/max-health-inc/proxy-smart/releases"><img src="https://img.shields.io/badge/v0.0.2-alpha-blue.svg" alt="Version"></a>
+  <a href="https://github.com/Max-Health-Inc/proxy-smart/releases"><img src="https://img.shields.io/github/v/release/Max-Health-Inc/proxy-smart?include_prereleases&label=release&color=blue" alt="Version"></a>
   <a href="http://hl7.org/fhir/smart-app-launch/"><img src="https://img.shields.io/badge/SMART%20App%20Launch-2.2.0-green.svg" alt="SMART App Launch 2.2.0"></a>
   <a href="https://hl7.org/fhir/R4/"><img src="https://img.shields.io/badge/FHIR-R4%2FR4B-orange.svg" alt="FHIR R4/R4B"></a>
 </p>
@@ -236,7 +236,8 @@ Base memory per Keycloak pod: **1,250 MB** (includes caches for 10,000 sessions)
 
 ### AI & MCP
 - [MCP HTTP Server](docs/MCP_HTTP_SERVER.md)
-- [MCP Integration](docs/AI_MCP_INTEGRATION.md)
+- [Backend MCP HTTP Client](docs/BACKEND_MCP_HTTP_CLIENT.md)
+- [Backend MCP Streamable Client](docs/BACKEND_MCP_STREAMABLE_CLIENT.md)
 - [Backend API Tools](docs/BACKEND_API_TOOLS.md)
 - [Claude Code / Codex plugin](plugins/proxy/README.md)
 - [Plugin for the public beta](plugins/proxy-beta/README.md)
