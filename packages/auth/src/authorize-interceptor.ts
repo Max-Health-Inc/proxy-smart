@@ -129,7 +129,13 @@ export async function handleAuthorize(
   const url = new URL(idpAuthUrl)
 
   const sessionKey = crypto.randomUUID()
-  const shouldIntercept = smartLaunch && !!params.redirect_uri
+
+  // Intercept for SMART launches (they need launch context and the picker) and for
+  // any request naming a resource the proxy is the discovered authorization server
+  // for — the latter so the callback can carry the proxy's own `iss`. See
+  // SmartProxyConfig.interceptedResourceUrls.
+  const targetsInterceptedResource = !!aud && (config.interceptedResourceUrls ?? []).includes(aud)
+  const shouldIntercept = (smartLaunch || targetsInterceptedResource) && !!params.redirect_uri
 
   // ── Validate redirect_uri against the client's registered URIs ────────
   // RFC 6749 §3.1.2.3 / §10.6: reject any redirect_uri that is not an EXACT
@@ -188,9 +194,10 @@ export async function handleAuthorize(
 
     store.set(sessionKey, session)
 
-    logger?.info('SMART launch session created — intercepting callback', {
+    logger?.info('Authorization session created — intercepting callback', {
       sessionKey: sessionKey.slice(0, 8) + '...',
       clientId: session.clientId,
+      reason: smartLaunch ? 'smart-launch' : 'proxy-issued-resource',
       needsPatientPicker: session.needsPatientPicker,
       hasLaunchCode: !!resolvedLaunchContext,
     })

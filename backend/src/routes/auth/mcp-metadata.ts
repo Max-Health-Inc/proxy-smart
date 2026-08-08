@@ -143,6 +143,12 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         // Point to our own DCR endpoint instead of Keycloak's native one
         // (Keycloak's requires initial access tokens / trusted host policy)
         registration_endpoint: `${baseUrl}/auth/register`,
+        // RFC 9207. The proxy intercepts the callback for the MCP resource (see
+        // smartProxyConfig.interceptedResourceUrls) and redirects to the client with
+        // `iss` = this document's `issuer`, so clients that compare the two by simple
+        // string comparison (MCP 2026-07-28) match. Advertising it is REQUIRED of any
+        // server that emits it.
+        authorization_response_iss_parameter_supported: true,
         // MCP 2025-11-25: advertise both CIMD and DCR client registration approaches
         // CIMD (OAuth Client ID Metadata Document) is handled by Keycloak via --features=cimd
         // DCR (Dynamic Client Registration) is handled by our /auth/register proxy endpoint
@@ -301,6 +307,12 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
         device_authorization_endpoint: `${baseUrl}/auth/device`,
         jwks_uri: `${baseUrl}/.well-known/jwks.json`,
         registration_endpoint: `${baseUrl}/auth/register`,
+        // RFC 9207. The proxy intercepts the callback for the MCP resource (see
+        // smartProxyConfig.interceptedResourceUrls) and redirects to the client with
+        // `iss` = this document's `issuer`, so clients that compare the two by simple
+        // string comparison (MCP 2026-07-28) match. Advertising it is REQUIRED of any
+        // server that emits it.
+        authorization_response_iss_parameter_supported: true,
         client_registration_types_supported: ['client_id_metadata_document', 'dynamic_client_registration'],
         scopes_supported: oidcConfig.scopes_supported,
         response_types_supported: oidcConfig.response_types_supported,
