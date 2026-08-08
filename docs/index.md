@@ -4,41 +4,33 @@ layout: home
 hero:
   name: Proxy Smart
   text: Healthcare Interoperability Proxy
-  tagline: SMART App Launch 2.2.0, OAuth 2.0, MCP Server & AI-Powered Admin
+  tagline: An authorization layer between SMART apps and FHIR servers that stores no clinical data.
   actions:
     - theme: brand
       text: Get Started
-      link: /admin-ui/dashboard
+      link: /deployment
     - theme: alt
-      text: MCP & AI
-      link: /MCP_HTTP_SERVER
+      text: Architecture
+      link: /fhir-proxy
 
 features:
+  - title: Stateless by design
+    details: Requests pass through to your FHIR servers. Nothing clinical is persisted here, so the proxy is never the system of record.
   - title: SMART App Launch 2.2.0
-    details: Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, and refresh token rotation.
-  - title: Stateless FHIR Proxy
-    details: No clinical data stored -- requests pass through to your FHIR servers with full audit logging.
-  - title: 6 SMART Apps
-    details: Patient Portal, Consent Manager, DTR/Prior Auth, Patient Picker, DICOM Algorithm Template, and Admin UI.
-  - title: MCP Server
-    details: Streamable HTTP endpoint at /mcp exposing all admin tools and documentation search to AI clients.
-  - title: Shared UI Library
-    details: "@proxy-smart/shared-ui -- reusable components, SmartAppShell, hooks, and MaxHealth design system."
-  - title: Medical Imaging
-    details: DICOMweb proxy with QIDO-RS & WADO-RS, Cornerstone3D viewer, and SMART DICOM algorithm template.
-  - title: Docker & AWS CDK
-    details: Docker Compose for dev/staging. AWS CDK (ECS Fargate, RDS, WAF, ALB) for production.
+    details: OAuth 2.0 with PKCE, JWT validation, scope enforcement, and refresh token rotation, verified against Inferno.
+  - title: Administered, not configured
+    details: Apps, users, servers, scopes, and identity providers are managed through a React admin UI backed by Keycloak.
+  - title: Readable by agents
+    details: The same admin surface is exposed over MCP at /mcp, so an AI client can operate the platform through the tools the UI uses.
 ---
 
-# Proxy Smart -- Documentation
+# Proxy Smart
 
-Comprehensive documentation for the Proxy Smart platform: a stateless FHIR proxy with OAuth 2.0, SMART App Launch 2.2.0, and an intelligent admin interface.
+Proxy Smart sits between SMART on FHIR applications and the FHIR servers that hold the records. It terminates the OAuth flow, validates and narrows scopes, enforces consent, and forwards what survives. Clinical data is never stored on the way through, which keeps the proxy out of the compliance surface that holding records would create.
 
-## Platform Overview
+Around that core sit a set of SMART apps built on a shared component library, an admin dashboard for the platform itself, and an MCP endpoint that exposes the admin API to AI clients.
 
-Proxy Smart sits between SMART apps and FHIR servers, handling authentication and authorization without storing clinical data. The platform includes 6 frontend apps, an MCP server, and a shared component library.
-
-### Architecture
+## Where it sits
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -60,7 +52,11 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
      └─────────┘ └─────────┘ └──────────┘
 ```
 
-### Apps
+Keycloak is the identity provider; the proxy never issues its own tokens. FHIR servers and DICOMweb endpoints are registered at runtime through the admin UI rather than baked into configuration.
+
+## Apps
+
+Three apps ship from this repository:
 
 | App | Port | Location | Purpose |
 |-----|------|----------|---------|
@@ -68,7 +64,7 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 | [Patient Picker](./apps/patient-picker.md) | 5176 | `packages/patient-picker/` | Patient selection during standalone SMART launch |
 | [SMART DICOM Template](./apps/smart-dicom-template.md) | 5180 | `frontend/smart-dicom-template/` | Starter kit for imaging algorithm SMART apps |
 
-#### External Apps (separate repositories)
+Three more live in their own repositories and release on their own cadence:
 
 | App | Port | Repository | Purpose |
 |-----|------|------------|---------|
@@ -76,72 +72,15 @@ Proxy Smart sits between SMART apps and FHIR servers, handling authentication an
 | [Consent Manager](./apps/consent-app.md) | 5174 | [max-health-inc/consent-app](https://github.com/Max-Health-Inc/consent-app) | FHIR Consent resource management |
 | [DTR / Prior Auth](./apps/dtr-app.md) | 5175 | [max-health-inc/dtr-app](https://github.com/Max-Health-Inc/dtr-app) | Da Vinci DTR questionnaires and PA workflow |
 
-> **Deployment**: External apps deploy independently from their own CI pipelines. Each app builds its static assets and pushes them into a shared `apps_static` Docker volume mounted at `/app/backend/public/apps`. The backend serves them at `/apps/{app-name}/`. This decouples app release cycles from the core platform.
+Each external app builds its static assets in its own CI and pushes them into a shared `apps_static` Docker volume mounted at `/app/backend/public/apps`. The backend serves them from `/apps/{app-name}/`. That decoupling is deliberate: an app can ship without a platform release.
 
-### Key Features
+## Where to start
 
-- **SMART App Launch 2.2.0** -- Full OAuth 2.0 with PKCE, JWT validation, scope-based access control, refresh token rotation
-- **Stateless FHIR Proxy** -- No clinical data stored; requests pass through to your FHIR servers
-- **Shared UI Library** -- `@proxy-smart/shared-ui` with `SmartAppShell`, design system, hooks
-- **Admin Dashboard** -- React UI for managing apps, users, servers, scopes, and identity providers
-- **MCP Server** -- Streamable HTTP endpoint at `/mcp` exposing all admin tools
-- **Consent Management** -- Patient consent app for authorization flows
-- **DTR App** -- Da Vinci Documentation, Templates & Rules
-- **Medical Imaging** -- DICOMweb proxy (QIDO-RS & WADO-RS) with Cornerstone3D viewer
-- **Access Control** -- Physical access integrations (Kisi, UniFi Access)
-- **Docker & CDK** -- Docker Compose for dev/staging, AWS CDK for production (ECS Fargate, RDS, WAF)
+If you are deploying the platform, read [Deployment](./deployment.md) and then [Environment Variables](./environment-variables.md). If you are integrating an app against it, [OAuth & Authentication](./oauth-authentication.md) and the [FHIR Proxy](./fhir-proxy.md) describe the two surfaces you will talk to. If you are assessing spec conformance, the [SMART 2.2.0 Checklist](./SMART_2.2.0_CHECKLIST.md) tracks implementation status and [Compliance Reports](./compliance-reports.md) publishes the Inferno results from each environment.
 
-## Documentation
+Everything else is in the sidebar.
 
-### Apps (in this repo)
-
-- [Admin UI](./apps/admin-ui.md) -- Platform administration
-- [Patient Picker](./apps/patient-picker.md) -- Patient selection for standalone launch
-- [SMART DICOM Template](./apps/smart-dicom-template.md) -- Imaging algorithm starter kit
-
-### Apps (external repositories)
-
-- [Patient Portal](./apps/patient-portal.md) -- Health records, imaging, IPS viewer
-- [Consent Manager](./apps/consent-app.md) -- FHIR Consent resource management
-- [DTR / Prior Auth](./apps/dtr-app.md) -- Da Vinci DTR workflow
-
-### Shared UI
-
-- [Shared UI Library](./shared-ui.md) -- `@proxy-smart/shared-ui`, SmartAppShell, design system, hooks
-
-### Admin UI
-
-- [Dashboard Overview](./admin-ui/dashboard.md) -- System overview and health monitoring
-- [User Management](./admin-ui/user-management.md) -- Healthcare users and FHIR associations
-- [SMART Apps](./admin-ui/smart-apps.md) -- Application registration and management
-- [FHIR Servers](./admin-ui/fhir-servers.md) -- Server configuration and monitoring
-- [Scope Management](./admin-ui/scope-management.md) -- FHIR permissions and templates
-- [Access Control](./admin-ui/access-control.md) -- Physical door management (Kisi, UniFi Access)
-- [Monitoring & Observability](./admin-ui/monitoring.md) -- OAuth, FHIR health, consent, and audit monitoring
-
-### MCP
-
-- [MCP HTTP Server](./MCP_HTTP_SERVER.md) -- Streamable HTTP endpoint architecture and usage
-- [Backend API Tools](./BACKEND_API_TOOLS.md) -- Auto-generated tools from Elysia routes
-- [Backend MCP HTTP Client](./BACKEND_MCP_HTTP_CLIENT.md) -- HTTP-based MCP client
-- [Backend MCP Streamable Client](./BACKEND_MCP_STREAMABLE_CLIENT.md) -- Streamable HTTP MCP client
-
-### Imaging & DICOMweb
-
-- [DICOMweb Proxy](./dicomweb-proxy.md) -- QIDO-RS & WADO-RS proxy endpoints, authentication, and deployment
-- [Patient Portal Imaging](./patient-portal-imaging.md) -- ImagingStudy cards, Cornerstone3D viewer, and DICOMweb client library
-
-### SMART on FHIR
-
-- [SMART 2.2.0 Implementation Checklist](./SMART_2.2.0_CHECKLIST.md) -- Spec compliance status
-
-### Guides
-
-- [Deployment](./deployment.md) -- Docker Compose, production, AWS CDK
-- [Environment Variables](./environment-variables.md) -- Configuration reference
-- [Version Management](./tutorials/version-management.md) -- Branching, versioning, and releases
-
-## Additional Resources
+## External references
 
 - [SMART App Launch Framework](https://hl7.org/fhir/smart-app-launch/)
 - [FHIR R4 Specification](https://hl7.org/fhir/R4/)

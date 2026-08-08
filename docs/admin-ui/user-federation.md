@@ -6,17 +6,11 @@ User Federation manages LDAP directory connections for importing and synchronizi
 
 Navigate to **Users** in the admin sidebar, then select the **User Federation** tab.
 
-## Features
+## Provider List
 
-### Provider List
+Each configured LDAP provider shows its name and connection URL, its enabled state, how many users it has imported, and when it last synced.
 
-Displays all configured LDAP federation providers with:
-- Provider name and connection URL
-- Sync status and last sync time
-- User count (imported users)
-- Enabled/disabled status
-
-### Adding an LDAP Provider
+## Adding an LDAP Provider
 
 Click **Add Provider** to configure a new LDAP connection:
 
@@ -35,29 +29,17 @@ Click **Add Provider** to configure a new LDAP connection:
 | **Import Users** | Whether to import users into Keycloak's local database |
 | **Sync Registrations** | Sync newly registered Keycloak users back to LDAP |
 
-### Connection Testing
+## Connection Testing
 
-Before saving, you can test the LDAP connection:
+Two checks are available before saving, and they fail differently: **Test Connection** covers network reachability and the TLS handshake, while **Test Authentication** goes further and confirms the bind DN and credential are accepted. A connection that passes the first and fails the second is a credential problem, not a network one.
 
-- **Test Connection** -- Verifies network connectivity and TLS handshake
-- **Test Authentication** -- Verifies bind credentials are accepted
+## Synchronization
 
-### Synchronization
+A full sync imports every user matching the filter; a changed-users sync imports only those modified since the last run, which is the one to schedule on a large directory. Two teardown actions differ in an important way: **Remove Imported** deletes the users that came from this provider, while **Unlink Users** keeps them in Keycloak and only severs the federation link.
 
-Once configured, synchronize users from LDAP:
+## Mapper Configuration
 
-- **Full Sync** -- Import all users matching the filter
-- **Changed Users Sync** -- Import only users modified since the last sync
-- **Remove Imported** -- Remove all users imported from this provider
-- **Unlink Users** -- Unlink imported users from the federation provider (keeps the users)
-
-### Mapper Configuration
-
-Each provider can have attribute mappers that control how LDAP attributes map to Keycloak user attributes. View the mapper list for any provider to see:
-
-- Mapper name and type
-- LDAP attribute → Keycloak attribute mapping
-- Read/write synchronization direction
+Attribute mappers control which LDAP attributes reach the Keycloak user, listed per provider as `directory attribute → user attribute` with the mapper's type and synchronization direction.
 
 Mappers decide which directory attributes reach the Keycloak user, which makes
 them a prerequisite for SMART launches: a directory user without the `fhirUser`

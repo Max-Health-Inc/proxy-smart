@@ -8,7 +8,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 **Current Version**: 2.2.0 (STU 2.2) - Published 2024-04-30
 **FHIR Version**: Compatible with FHIR DSTU2+, artifacts for R4/R4B
 
-## 📅 Version History & Feature Introduction
+## Version History & Feature Introduction
 
 ### SMART 1.0 (STU 1) - November 2018
 **Foundation Release**
@@ -46,21 +46,21 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 🔍 Discovery & Configuration
+## Discovery & Configuration
 
 ### .well-known/smart-configuration Endpoint
 **(SMART 1.0+ Core Feature)**
 
-- [x] **Required Fields** ✅ *Implemented in `backend/src/lib/smart-config.ts`*
+- [x] **Required Fields** *Implemented in `backend/src/lib/smart-config.ts`*
   - `authorization_endpoint` - OAuth 2.0 authorization endpoint
   - `token_endpoint` - OAuth 2.0 token endpoint
   - `capabilities` - Array of supported capabilities
-- [x] **Optional Fields** ✅ *Implemented*
+- [x] **Optional Fields** *Implemented*
   - `revocation_endpoint` - Token revocation endpoint
   - `introspection_endpoint` - Token introspection endpoint *(SMART 2.0+)*
   - `management_endpoint` - App management endpoint
   - `registration_endpoint` - Dynamic client registration
-- [x] **SMART-Specific Fields** ✅ *Implemented*
+- [x] **SMART-Specific Fields** *Implemented*
   - `scopes_supported` - List of supported scopes
   - `response_types_supported` - Supported OAuth response types
   - `code_challenge_methods_supported` - PKCE methods *(SMART 2.0+)*
@@ -69,28 +69,28 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 ### Capability Advertisement
 
 #### SMART 1.0 Core Capabilities
-- [x] **App Launch Capabilities** ✅ *Implemented*
+- [x] **App Launch Capabilities** *Implemented*
   - `launch-ehr` - EHR launch support
   - `launch-standalone` - Standalone launch support
   - `client-public` - Public client support
   - `client-confidential-symmetric` - Symmetric client authentication
 
 #### SMART 2.0+ Enhanced Capabilities
-- [x] **Enhanced Authentication** ✅ *Implemented*
+- [x] **Enhanced Authentication** *Implemented*
   - `client-confidential-asymmetric` - Asymmetric client authentication *(Preferred)*
-- [x] **Authorization Methods** ✅ *Implemented*
+- [x] **Authorization Methods** *Implemented*
   - `authorize-post` - Support for POST-based authorization requests
-- [x] **Context Capabilities** ✅ *Implemented*
+- [x] **Context Capabilities** *Implemented*
   - `context-ehr-patient` - Patient context in EHR launch
   - `context-ehr-encounter` - Encounter context in EHR launch
   - `context-standalone-patient` - Patient selection in standalone
   - `context-standalone-encounter` - Encounter selection in standalone
-- [x] **UI Integration Context** ✅ *Implemented*
+- [x] **UI Integration Context** *Implemented*
   - `context-banner` - Support for "need patient banner" (`need_patient_banner` token param)
   - `context-style` - Support for SMART style URL *(Experimental)*
-- [x] **Single Sign-on** ✅ *Implemented*
+- [x] **Single Sign-on** *Implemented*
   - `sso-openid-connect` - Support for SMART's OpenID Connect profile
-- [x] **Permission Capabilities** ✅ *Implemented*
+- [x] **Permission Capabilities** *Implemented*
   - `permission-offline` - Refresh token support
   - `permission-online` - Online refresh tokens *(SMART 2.0+ Experimental)*
   - `permission-patient` - Patient-level access
@@ -100,17 +100,17 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 🚀 Authorization Patterns
+## Authorization Patterns
 
 ### 1. SMART App Launch (User-Facing Apps)
 **(SMART 1.0+ Core Feature)**
 
 #### EHR Launch Flow *(SMART 1.0+)*
 
-- [x] **Launch Parameters** ✅ *Implemented in `backend/src/routes/auth/oauth.ts`*
+- [x] **Launch Parameters** *Implemented in `backend/src/routes/auth/oauth.ts`*
   - `iss` - FHIR server URL
   - `launch` - Launch context token
-- [x] **Authorization Request** ✅ *Implemented*
+- [x] **Authorization Request** *Implemented*
   - `response_type=code`
   - `client_id` - Registered client identifier
   - `redirect_uri` - Callback URL
@@ -119,27 +119,27 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
   - `aud` - FHIR server URL
   - `launch` - Launch context (EHR launch)
   - `code_challenge` + `code_challenge_method` - PKCE *(SMART 2.0+ Required)*
-- [x] **Authorization Response** ✅ *Implemented*
+- [x] **Authorization Response** *Implemented*
   - Authorization code return
   - State validation
   - Error handling
 
 #### Standalone Launch Flow *(SMART 1.0+)*
 
-- [x] **Patient Selection** ✅ *Implemented in UI*
+- [x] **Patient Selection** *Implemented in UI*
   - Patient picker interface
   - Search functionality
   - Selection persistence
-- [x] **Authorization Request (Standalone)** ✅ *Implemented*
+- [x] **Authorization Request (Standalone)** *Implemented*
   - Same as EHR launch but without `launch` parameter
   - Patient selection during auth flow
-- [x] **Context Establishment** ✅ *Implemented*
+- [x] **Context Establishment** *Implemented*
   - Patient context from selection
   - Encounter context (if applicable)
   - Triggered by `launch/patient` **or** by any patient-restricted resource scope
     (`patient/*.rs`), per the spec obligation below
 
-- [x] **Patient context for `patient/` scopes** ✅ *Implemented*
+- [x] **Patient context for `patient/` scopes** *Implemented*
   - Spec (Scopes and Launch Context, both "Apps that launch from the EHR" and
     "Standalone apps"): *"If an application requests a FHIR Resource scope which is
     restricted to a single patient (e.g., `patient/*.rs`), and the authorization
@@ -166,11 +166,11 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 #### Token Exchange *(Enhanced in SMART 2.0+)*
 
-- [x] **Authorization Code Exchange** ✅ *Implemented*
+- [x] **Authorization Code Exchange** *Implemented*
   - Code for token exchange
   - Client authentication (if confidential)
   - **PKCE verification** *(SMART 2.0+ Required)*
-- [x] **Token Response** ✅ *Implemented with SMART context*
+- [x] **Token Response** *Implemented with SMART context*
   - `access_token` - Bearer token for API access
   - `token_type` - Always "Bearer"
   - `expires_in` - Token lifetime
@@ -184,15 +184,15 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 #### Client Credentials Grant
 
-- [x] **Client Authentication** ✅ *Implemented*
+- [x] **Client Authentication** *Implemented*
   - JWT-based authentication (preferred)
   - Client secret authentication (alternative)
-- [x] **Token Request** ✅ *Implemented*
+- [x] **Token Request** *Implemented*
   - `grant_type=client_credentials`
   - `scope` - System-level scopes
   - `client_assertion_type` - JWT assertion type
   - `client_assertion` - Signed JWT
-- [x] **Token Response** ✅ *Implemented*
+- [x] **Token Response** *Implemented*
   - `access_token` - System-level access token
   - `token_type` - "Bearer"
   - `expires_in` - Token lifetime
@@ -200,43 +200,43 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 🔐 Client Authentication
+## Client Authentication
 
 ### Asymmetric Authentication (Preferred - SMART 2.0+)
 
-- [x] **JWT Creation** ✅ *Implemented*
+- [x] **JWT Creation** *Implemented*
   - `iss` - Client ID
   - `sub` - Client ID
   - `aud` - Token endpoint URL
   - `jti` - Unique token identifier
   - `exp` - Expiration time
-- [x] **Key Management** ✅ *Implemented via Keycloak*
+- [x] **Key Management** *Implemented via Keycloak*
   - RSA or EC key pairs
   - Key rotation support
   - JWKS endpoint for public keys
-- [x] **Signature Validation** ✅ *Implemented*
+- [x] **Signature Validation** *Implemented*
   - Algorithm verification (RS256, ES256)
   - Key retrieval and caching
   - Signature verification
 
 ### Symmetric Authentication (SMART 1.0+)
 
-- [x] **Client Secret Methods** ✅ *Implemented*
+- [x] **Client Secret Methods** *Implemented*
   - HTTP Basic authentication
   - POST body parameters
   - Client secret validation
-- [x] **Security Considerations** ✅ *Implemented*
+- [x] **Security Considerations** *Implemented*
   - Secure secret storage
   - Secret rotation capabilities
   - Rate limiting protection
 
 ---
 
-## 🎫 Scopes & Permissions
+## Scopes & Permissions
 
 ### Legacy SMART v1 Scope Syntax (SMART 1.0)
 
-- [x] **Backward Compatibility** ✅ *Implemented in `smart-config.ts`*
+- [x] **Backward Compatibility** *Implemented in `smart-config.ts`*
   - `patient/*.read` - Read access patterns
   - `user/*.read` - User read access
   - `patient/*.write` - Write access patterns
@@ -244,11 +244,11 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### SMART v2 Scope Syntax (SMART 2.0+)
 
-- [x] **Resource Scopes** ✅ *Implemented*
+- [x] **Resource Scopes** *Implemented*
   - `patient/[Resource].[cruds]` - Patient-specific access
   - `user/[Resource].[cruds]` - User-accessible resources
   - `system/[Resource].[cruds]` - System-wide access
-- [x] **Interaction Types** ✅ *Implemented*
+- [x] **Interaction Types** *Implemented*
   - `c` - Create (POST)
   - `r` - Read (GET)
   - `u` - Update (PUT)
@@ -258,61 +258,61 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 ### Launch Context Scopes (Enhanced in SMART 2.1/2.2)
 
 #### Basic Context (SMART 1.0+)
-- [x] **Patient Context** ✅ *Implemented*
+- [x] **Patient Context** *Implemented*
   - `launch/patient` - Patient context required
   - Patient ID in token response
-- [x] **Encounter Context** ✅ *Implemented*
+- [x] **Encounter Context** *Implemented*
   - `launch/encounter` - Encounter context required
   - Encounter ID in token response
-- [x] **Other Contexts** ✅ *Implemented*
+- [x] **Other Contexts** *Implemented*
   - `launch` - General launch context
   - Custom context parameters
 
 #### Enhanced fhirContext (SMART 2.1+)
-- [x] **SMART 2.1 Enhancements** ✅ *Implemented in token response*
+- [x] **SMART 2.1 Enhancements** *Implemented in token response*
   - More detailed context when launching apps
   - PractitionerRole support for fhirUser
-- [x] **SMART 2.2 Enhancements** ✅ *Implemented*
+- [x] **SMART 2.2 Enhancements** *Implemented*
   - Canonical reference support
   - Identifier reference support
 
 ### Special Scopes
 
-- [x] **Offline Access (SMART 1.0+)** ✅ *Implemented*
+- [x] **Offline Access (SMART 1.0+)** *Implemented*
   - `offline_access` - Refresh token issuance
   - Long-term access without user presence
-- [x] **Online Access (SMART 2.0+ Experimental)** ✅ *Implemented*
+- [x] **Online Access (SMART 2.0+ Experimental)** *Implemented*
   - `online_access` - Refresh token valid while user is online
   - Scope negotiation may grant online or offline token
-- [x] **OpenID Connect (SMART 1.0+)** ✅ *Implemented*
+- [x] **OpenID Connect (SMART 1.0+)** *Implemented*
   - `openid` - Identity token issuance
   - `profile` - User profile information
   - `fhirUser` - FHIR User resource reference
 
 ---
 
-## 🔍 Token Introspection (SMART 2.0+)
+## Token Introspection (SMART 2.0+)
 
 ### RFC 7662 Implementation
 
-- [x] **Introspection Endpoint** ✅ *Implemented in `oauth.ts`*
+- [x] **Introspection Endpoint** *Implemented in `oauth.ts`*
   - Token validation service
   - Metadata exposure
   - Client authentication required
-- [x] **Response Format** ✅ *Implemented via Keycloak*
+- [x] **Response Format** *Implemented via Keycloak*
   - `active` - Token validity status
   - `scope` - Granted scopes
   - `client_id` - Client identifier
   - `username` - User identifier (if applicable)
   - `exp` - Expiration timestamp
-- [x] **SMART Extensions** ✅ *Implemented in token response*
+- [x] **SMART Extensions** *Implemented in token response*
   - `patient` - Patient context
   - `encounter` - Encounter context
   - `fhirUser` - User FHIR resource
 
 ---
 
-## 🎨 User-Access Brands
+## User-Access Brands
 
 > **Note**: Per SMART 2.2.0 spec, `user_access_brand_bundle` and `user_access_brand_identifier` are **RECOMMENDED** in `.well-known/smart-configuration`.
 
@@ -342,7 +342,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 💾 App State Persistence (SMART 2.1+ Experimental)
+## App State Persistence (SMART 2.1+ Experimental)
 
 > **Note**: Advertise via `smart-app-state` capability in `.well-known/smart-configuration`.
 
@@ -379,7 +379,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 📋 Task-Based App Launch (SMART 2.1+)
+## Task-Based App Launch (SMART 2.1+)
 
 > **Note**: Allows EHRs to request app launches via FHIR Task resources.
 
@@ -400,17 +400,17 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 🧪 Testing & Compliance
+## Testing & Compliance
 
 ### SMART App Launch Test Suite
 
-- [x] **Inferno Testing** ✅ *Automated in CI*
+- [x] **Inferno Testing** *Automated in CI*
   - Official SMART test suite (Inferno v0.4.38+)
   - Automated compliance verification via `smart-compliance-tests.yml`
   - Runs on every merge to `test`/`main` and weekly via cron
   - Puppeteer-based OAuth automation for unattended test execution
   - Reports committed to `testing/{stage}/inferno-report/`
-- [x] **Test Categories** ✅ *Partially implemented*
+- [x] **Test Categories** *Partially implemented*
   - EHR launch flows
   - Standalone launch flows
   - Backend services
@@ -419,11 +419,11 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### Custom Test Implementation
 
-- [x] **Unit Tests** ✅ *Implemented*
+- [x] **Unit Tests** *Implemented*
   - OAuth flow components
   - Scope validation
   - Token management
-- [x] **Integration Tests** ✅ *Implemented*
+- [x] **Integration Tests** *Implemented*
   - End-to-end flows
   - FHIR server integration
   - Client application testing
@@ -434,7 +434,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 📋 Implementation Priority Matrix by Version
+## Implementation Priority Matrix by Version
 
 ### SMART 1.0 Foundation (High Priority - Core Functionality)
 
@@ -491,7 +491,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## ✅ Implementation Roadmap by Release Stage
+## Implementation Roadmap by Release Stage
 
 ### Alpha Release (Current: v0.0.2-alpha)
 **Focus: Core OAuth and SMART Foundation**
@@ -521,7 +521,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 #### v0.1.0 - SMART 2.2.0 Compliance
 - [ ] User-access branding support
 - [ ] App state persistence (experimental)
-- [x] Inferno test suite compliance ✅ *Automated in CI*
+- [x] Inferno test suite compliance *Automated in CI*
 
 #### v1.0.0 - Production Ready
 - [ ] Performance optimization
@@ -531,11 +531,11 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 🔧 Development & Deployment
+## Development & Deployment
 
 ### Development Environment
 
-- [x] **Local Development Setup** ✅ *Implemented*
+- [x] **Local Development Setup** *Implemented*
   - Docker Compose for local testing
   - Hot reload configuration
   - Environment variable management
@@ -543,17 +543,17 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### Production Deployment
 
-- [x] **Infrastructure Requirements** ✅ *Implemented*
+- [x] **Infrastructure Requirements** *Implemented*
   - HTTPS enforcement (required for OAuth)
   - Reverse proxy configuration
   - Load balancing for high availability
   - Database clustering and backups
-- [x] **Security Configuration** ✅ *Implemented*
+- [x] **Security Configuration** *Implemented*
   - JWT signing keys management
   - Client certificate validation
   - Rate limiting implementation
   - CORS policy configuration
-- [x] **Monitoring & Logging** ✅ *Implemented*
+- [x] **Monitoring & Logging** *Implemented*
   - OAuth flow monitoring
   - Performance metrics collection
   - Security event logging
@@ -561,12 +561,12 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### Quality Assurance
 
-- [x] **Code Quality** ✅ *Implemented*
+- [x] **Code Quality** *Implemented*
   - ESLint/TSLint configuration
   - TypeScript strict mode
   - Code coverage targets (>90%)
   - Automated code review
-- [x] **Documentation** ✅ *Implemented*
+- [x] **Documentation** *Implemented*
   - API documentation (OpenAPI/Swagger)
   - Integration guides
   - Troubleshooting guides
@@ -574,7 +574,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ---
 
-## 📊 Compliance & Certification
+## Compliance & Certification
 
 ### Specification Compliance
 
@@ -603,7 +603,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
 
 ### Certification Readiness
 
-- [x] **SMART App Launch Certification** ✅ *In progress*
+- [x] **SMART App Launch Certification** *In progress*
   - Inferno test suite compliance (automated, 55+ tests passing)
   - Official certification submission
   - Test result documentation

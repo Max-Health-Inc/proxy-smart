@@ -4,9 +4,7 @@
 
 International Patient Portal built on IPS (International Patient Summary) and IPA (International Patient Access) standards. Patients can view their health summary, medical imaging, and clinical documents through a SMART on FHIR interface.
 
-## Overview
-
-The Patient Portal launches via SMART App Launch, authenticates the patient, and presents their health data using standardized FHIR profiles. It supports IPS document rendering, DICOM image viewing with Cornerstone3D, and navigation across clinical resources.
+It launches via SMART App Launch, authenticates the patient, and presents their health data through standardized FHIR profiles rather than a vendor-specific shape, which is what makes the same portal usable against a different server.
 
 ```
 ┌────────────────┐  SMART launch  ┌──────────────┐  FHIR R4   ┌─────────────┐
@@ -16,14 +14,9 @@ The Patient Portal launches via SMART App Launch, authenticates the patient, and
 └────────────────┘                └──────────────┘            └─────────────┘
 ```
 
-## Features
+The summary view is built from the patient's IPS document, retrieved through the FHIR `$summary` operation and broken into navigable sections. Individual resources (allergies, conditions, medications, immunizations, observations) are read through IPA-compliant queries, so a server that implements the profile serves this portal without adapter code.
 
-- **International Patient Summary (IPS)** rendering from `$summary` operation
-- **IPA-compliant Patient Access** for allergies, conditions, medications, immunizations, and observations
-- **DICOM Image Viewer** powered by Cornerstone3D with stack scrolling, zoom, pan, and window/level
-- **Study Browser** for navigating imaging studies, series, and instances via DICOMweb
-- **EHR Launch and Standalone Launch** with automatic context detection
-- **Responsive Layout** for desktop and mobile devices
+Imaging is a first-class view rather than a link out. Studies are browsed down through series to instances over DICOMweb, and pixel data is rendered in-browser by Cornerstone3D with the usual stack scrolling, zoom, pan, and window/level controls.
 
 ## SMART Configuration
 

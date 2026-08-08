@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
@@ -64,10 +67,13 @@ export default defineConfig({
         text: 'SMART Apps',
         collapsed: false,
         items: [
+          { text: 'Admin UI', link: '/apps/admin-ui' },
           { text: 'Consent App', link: '/apps/consent-app' },
           { text: 'DTR App', link: '/apps/dtr-app' },
+          { text: 'Patient Picker', link: '/apps/patient-picker' },
           { text: 'Patient Portal', link: '/apps/patient-portal' },
           { text: 'SMART DICOM Template', link: '/apps/smart-dicom-template' },
+          { text: 'Shared UI Library', link: '/shared-ui' },
         ],
       },
       {
