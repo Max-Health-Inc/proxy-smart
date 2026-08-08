@@ -10,6 +10,7 @@ import { ErrorResponse, ServerOperationResponse } from '@/schemas'
 import { smartAppsRoutes } from './smart-apps'
 import { smartAppMapperRoutes } from './smart-app-mappers'
 import { healthcareUsersRoutes } from './healthcare-users'
+import { profileAdminRoutes } from './profile'
 import { rolesRoutes } from './roles'
 import { identityProvidersRoutes } from './identity-providers'
 import { identityProviderMapperRoutes } from './identity-provider-mappers'
@@ -110,6 +111,7 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(smartAppsRoutes)
   // Per-client protocol mappers (what a SMART app's tokens actually contain)
   .use(smartAppMapperRoutes)
+  .use(profileAdminRoutes)
   .use(healthcareUsersRoutes)
   .use(rolesRoutes)
   .use(identityProvidersRoutes)
