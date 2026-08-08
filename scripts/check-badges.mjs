@@ -22,16 +22,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-// Generated, vendored or published trees: their markdown is not ours to fix.
-// Matched per path SEGMENT, so nested copies (packages/*/node_modules) are caught.
-const SKIP_SEGMENTS = new Set([
-  'node_modules', 'dist', 'build', 'coverage', '.git', 'lib', '.doccheck',
-]);
-const SKIP_PREFIXES = [path.join('backend', 'public')];
+import { ROOT, markdownFiles, lineOf } from './lib/docs-files.mjs';
 
 const SHIELDS = 'img.shields.io';
 const ACTIONS_BADGE = /^https?:\/\/github\.com\/([^/]+)\/([^/]+)\/actions\/workflows\/([^/]+)\/badge\.svg/;
@@ -70,7 +61,7 @@ function extract(source) {
   const links = [];
 
   for (const m of source.matchAll(/!\[([^\]]*)\]\(([^)\s]+)[^)]*\)/g)) {
-    images.push({ alt: m[1], url: m[2], href: null, line: locate(source, m.index) });
+    images.push({ alt: m[1], url: m[2], href: null, line: lineOf(source, m.index) });
   }
   for (const m of source.matchAll(/<a\s+[^>]*href="([^"]+)"[^>]*>\s*<img\s+([^>]+)>/g)) {
     const attrs = m[2];
@@ -78,25 +69,25 @@ function extract(source) {
       alt: /alt="([^"]*)"/.exec(attrs)?.[1] ?? null,
       url: /src="([^"]+)"/.exec(attrs)?.[1] ?? '',
       href: m[1],
-      line: locate(source, m.index),
+      line: lineOf(source, m.index),
     });
   }
   // Bare <img> not wrapped in a link.
   for (const m of source.matchAll(/<img\s+([^>]+)>/g)) {
     const url = /src="([^"]+)"/.exec(m[1])?.[1] ?? '';
-    if (images.some((i) => i.url === url && i.line === locate(source, m.index))) continue;
+    if (images.some((i) => i.url === url && i.line === lineOf(source, m.index))) continue;
     images.push({
       alt: /alt="([^"]*)"/.exec(m[1])?.[1] ?? null,
       url,
       href: null,
-      line: locate(source, m.index),
+      line: lineOf(source, m.index),
     });
   }
   for (const m of source.matchAll(/<a\s+[^>]*href="([^"]+)"/g)) {
-    links.push({ href: m[1], line: locate(source, m.index) });
+    links.push({ href: m[1], line: lineOf(source, m.index) });
   }
   for (const m of source.matchAll(/(?<!!)\[[^\]]*\]\(([^)\s]+)[^)]*\)/g)) {
-    links.push({ href: m[1], line: locate(source, m.index) });
+    links.push({ href: m[1], line: lineOf(source, m.index) });
   }
   return { images, links };
 }
@@ -215,18 +206,6 @@ const CANARY_RULES = [
 function runCanary(ctx) {
   const rules = new Set(checkDoc('__canary.md', CANARY_DOC, ctx).map((f) => f.rule));
   return CANARY_RULES.filter((r) => !rules.has(r));
-}
-
-function markdownFiles(dir = ROOT, found = []) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const abs = path.join(dir, entry.name);
-    const rel = path.relative(ROOT, abs);
-    if (SKIP_SEGMENTS.has(entry.name)) continue;
-    if (SKIP_PREFIXES.some((s) => rel === s || rel.startsWith(`${s}${path.sep}`))) continue;
-    if (entry.isDirectory()) markdownFiles(abs, found);
-    else if (entry.name.toLowerCase().endsWith('.md')) found.push(rel.split(path.sep).join('/'));
-  }
-  return found;
 }
 
 async function checkOnline(urls) {

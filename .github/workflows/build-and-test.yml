@@ -154,6 +154,14 @@ jobs:
     - name: Check Badges and Doc Links
       run: bun run check:badges
 
+    # Fenced ts/tsx examples are compiled against the real packages, so a rename
+    # breaks the docs the same way it breaks the code. --min is a ratchet: it
+    # only stops coverage falling, and is raised as packages get documented.
+    - name: Typecheck Doc Examples
+      run: |
+        bun run check:docs
+        bun run check:docs:coverage
+
     - name: Upload Build Artifacts
       if: ${{ !startsWith(github.ref, 'refs/heads/dev/') }}
       uses: actions/upload-artifact@v7

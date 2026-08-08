@@ -93,6 +93,7 @@ type McpRequest =
 
 #### listTools Response
 
+<!-- doccheck: skip — response shape sketch, type names stand in for values -->
 ```typescript
 {
   tools: [
@@ -119,6 +120,7 @@ curl -X POST https://example.com/mcp \
 
 #### callTool Response
 
+<!-- doccheck: skip — response shape sketch, type names stand in for values -->
 ```typescript
 {
   content: [
@@ -543,7 +545,7 @@ Clients should implement rate limiting:
 ```typescript
 // Example: Token bucket per user per minute
 const rateLimit = new Map<string, number>();
-if (rateLimit.get(userId) > 100) {
+if ((rateLimit.get(userId) ?? 0) > 100) {
   throw new Error('Rate limit exceeded');
 }
 ```
