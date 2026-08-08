@@ -1,6 +1,3 @@
-// SPDX-FileCopyrightText: Max Health Inc.
-// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
-
 /**
  * @proxy-smart/auth — Core Types
  *
@@ -154,29 +151,6 @@ export interface SmartProxyConfig {
   launchCodeSecret: string
   /** Launch code TTL in seconds (default: 300) */
   launchCodeTtlSeconds?: number
-  /**
-   * RFC 8707 resource URLs whose clients discovered THIS PROXY as their
-   * authorization server, and for which the proxy must therefore own the
-   * authorization response.
-   *
-   * A request naming one of these as its `resource` gets its callback intercepted
-   * even when it carries no SMART scopes, so the redirect back to the client comes
-   * from the proxy and can carry `iss` = {@link baseUrl}.
-   *
-   * WHY THIS EXISTS. MCP clients discover the authorization server via
-   * `/.well-known/oauth-authorization-server`, where this proxy advertises
-   * `issuer` = its own base URL because RFC 8414 §3.3 requires the issuer to match
-   * the URL the document was fetched from. Without interception the IdP redirects
-   * straight to the client and the response carries the IdP's `iss`
-   * (`https://idp.example.com/realms/x`), which is not the recorded issuer. MCP
-   * 2026-07-28 has clients compare the two with SIMPLE STRING COMPARISON and
-   * forbids any normalization, so the mismatch is fatal — and it was invisible
-   * before that revision, which did not mention RFC 9207 at all.
-   *
-   * SMART launches are intercepted regardless (they need launch context and the
-   * patient picker), so this list only has to name the non-SMART resources.
-   */
-  interceptedResourceUrls?: string[]
 }
 
 // ─── Logger ─────────────────────────────────────────────────────────────────

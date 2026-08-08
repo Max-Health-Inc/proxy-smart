@@ -11,7 +11,6 @@
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
 import { launchContextStore } from '@/lib/launch-context-store'
-import { getMcpResourceAudience } from '@/lib/token-audience'
 import {
   KeycloakAdapter,
   type SmartProxyConfig,
@@ -34,11 +33,6 @@ export const smartProxyConfig: SmartProxyConfig = {
   callbackPath: '/auth/smart-callback',
   get launchCodeSecret() { return config.smart.launchSecret },
   get launchCodeTtlSeconds() { return config.smart.launchCodeTtlSeconds },
-  // The MCP endpoint is the one non-SMART resource whose clients discover THIS
-  // proxy as their authorization server, so its callback must come from us and
-  // carry our `iss`. Derived from the same helper the /mcp audience check uses,
-  // so the two cannot drift.
-  get interceptedResourceUrls() { return [getMcpResourceAudience()] },
 }
 
 /** Session store — re-use the existing backend singleton (same ILaunchContextStore interface) */
