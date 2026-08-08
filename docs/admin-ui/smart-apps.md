@@ -57,7 +57,7 @@ Published apps appear in the `/admin/app-store/` catalog:
 ## Related
 
 - [Scope Management](./scope-management.md) -- configure which scopes exist
-- [Launch Contexts](./launch-contexts.md) -- set per-user launch context attributes
+- [Launch Contexts](./launch-context.md) -- set per-user launch context attributes
 - [FHIR Servers](./fhir-servers.md) -- the upstream servers apps will access
 - **🔔 Notification Services**: Push notification support
 
