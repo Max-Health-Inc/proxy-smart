@@ -20,6 +20,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/939
 
 
+
+- 🔧 Chores & Improvements: Centralize WAF rules via waf-rules.ts; remove inline AWSManagedRules configurations and import shareable managedRuleGroups in KeycloakStack and BackendStack; preserve existing metrics exclusions and add SPDX headers.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/941
+
+
 ## [0.2.31-beta.202608071218.dc88343db] - 2026-08-07
 
 - 🔧 Chores & Improvements: Dependency and tooling updates, including bun.lock bumps across multiple packages and registry config tweaks
