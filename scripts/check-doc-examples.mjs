@@ -30,7 +30,13 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { ROOT, markdownFiles } from './lib/docs-files.mjs';
 
-const WORK = path.join(ROOT, '.doccheck');
+// The work dir sits inside the UI workspace on purpose: react, @types/react and
+// @proxy-smart/shared-ui are installed THERE, so ordinary node resolution finds
+// them. Compiling at the repo root instead needed a `paths` entry per package,
+// and that silently broke React's own types — `React.ComponentProps<"button">`
+// resolved without className/children, so every tsx example was checked against
+// a degraded surface while appearing to pass.
+const WORK = path.join(ROOT, 'frontend', 'ui', '.doccheck');
 const MAX_PASSES = 6;
 
 /** Diagnostics meaning "the example invented this name". */
@@ -160,7 +166,6 @@ function emit(block, declare, stubs, wrapped) {
 const BODY_MARK = '// __doccheck_body__';
 
 function tsconfig() {
-  const ui = path.relative(WORK, path.join(ROOT, 'frontend', 'ui', 'node_modules')).replace(/\\/g, '/');
   return JSON.stringify(
     {
       compilerOptions: {
@@ -174,19 +179,10 @@ function tsconfig() {
         noImplicitAny: false,
         noEmit: true,
         skipLibCheck: true,
-        // Backend examples legitimately use process.env, so give them real node
-        // and react types rather than stubbing the globals away.
-        typeRoots: [`${ui}/@types`],
+        // Backend examples legitimately use process.env. No `paths` and no
+        // `typeRoots`: every package the examples import is resolvable from here
+        // by node's own algorithm, which is what keeps React's types intact.
         types: ['node'],
-        // No `baseUrl`: deprecated in TS 6, and TS5101 aborts the run before any
-        // type checking. `paths` resolves relative to this file without it.
-        paths: {
-          '@proxy-smart/*': [`${ui}/@proxy-smart/*`],
-          react: [`${ui}/react`],
-          'react/*': [`${ui}/react/*`],
-          'react-dom': [`${ui}/react-dom`],
-          'lucide-react': [`${ui}/lucide-react`],
-        },
       },
       include: ['*.ts', '*.tsx', '*.d.ts'],
     },
