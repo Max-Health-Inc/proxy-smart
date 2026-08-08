@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: Deploy Docs to GitHub Pages
 
 on:
@@ -8,7 +11,8 @@ on:
       - '.github/workflows/deploy-docs.yml'
   # The compliance report is no longer committed, so a docs-only trigger would
   # leave the published report frozen at whatever the last docs edit shipped.
-  # Refresh Pages whenever a compliance run finishes instead.
+  # Refresh Pages whenever a compliance run produces a newer report instead —
+  # the `check` job below decides whether it actually did.
   workflow_run:
     workflows: ['SMART Compliance Tests (Inferno)']
     types: [completed]
@@ -16,18 +20,80 @@ on:
 
 permissions:
   contents: read
-  actions: read   # Read compliance-report-* artifacts from the compliance workflow
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
+  # Every release tag runs the compliance workflow, and its alpha run is routinely
+  # cancelled by concurrency while bot version-bump commits skip the job outright.
+  # Both complete without uploading a report, so publishing on any `completed`
+  # event rebuilt the whole site for content that had not moved.
+  check:
+    name: Check for changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # List compliance-report-* artifacts from the compliance workflow
+    # Only success/failure assemble a report (the upload step is `if: always()`).
+    if: >-
+      github.event_name != 'workflow_run' ||
+      contains(fromJSON('["success", "failure"]'), github.event.workflow_run.conclusion)
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+    steps:
+      # A push here already passed the docs/** path filter, and a dispatch is an
+      # explicit request — neither needs to prove anything changed. For a compliance
+      # run, compare the newest report artifact against what Pages currently serves:
+      # summary.json carries the run_id that produced it, so an unchanged id means
+      # the live site is already up to date.
+      - name: Decide whether to rebuild
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "${{ github.event_name }}" != "workflow_run" ]; then
+            echo "${{ github.event_name }} — rebuilding"
+            echo "build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Unset when Pages has never been configured; every stage then reads as
+          # unpublished and the build runs, which is the right fallback.
+          SITE=$(gh api "repos/$REPO/pages" --jq '.html_url' 2>/dev/null || true)
+          SITE="${SITE%/}"
+
+          BUILD=false
+          for stage in dev beta production; do
+            latest=$(gh api "repos/$REPO/actions/artifacts?name=compliance-report-$stage&per_page=1" \
+                       --jq '.artifacts[] | select(.expired == false) | .workflow_run.id' 2>/dev/null || true)
+            if [ -z "$latest" ]; then
+              echo "$stage: no live artifact"
+              continue
+            fi
+            published=$(curl -sf --max-time 15 "$SITE/compliance/$stage/summary.json" 2>/dev/null \
+                          | jq -r '.run_id // empty' 2>/dev/null || true)
+            if [ "$latest" = "$published" ]; then
+              echo "$stage: run $latest already published"
+            else
+              echo "$stage: run $latest supersedes published '${published:-none}'"
+              BUILD=true
+            fi
+          done
+
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          [ "$BUILD" = "true" ] || echo "::notice title=Docs deploy skipped::No docs change and no newer compliance report."
+
   build:
     name: Build VitePress
+    needs: check
+    if: needs.check.outputs.build == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read   # Read compliance-report-* artifacts from the compliance workflow
     steps:
       - uses: actions/checkout@v6
         with:
@@ -71,7 +137,7 @@ jobs:
           mkdir -p "$DIST"
           for stage in dev beta production; do
             id=$(gh api "repos/$REPO/actions/artifacts?name=compliance-report-$stage&per_page=1" \
-                   --jq '.artifacts[0].id // empty' 2>/dev/null || true)
+                   --jq '.artifacts[] | select(.expired == false) | .id' 2>/dev/null || true)
             if [ -z "$id" ]; then
               echo "no compliance-report-$stage artifact, skipping"
               continue
@@ -94,6 +160,9 @@ jobs:
     name: Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
