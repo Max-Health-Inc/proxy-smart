@@ -26,52 +26,38 @@ import { validateToken } from '../lib/auth'
 import { getServerInfoByName, ensureServersInitialized } from '../lib/fhir-server-store'
 import { registerFhirToolsForServer } from '../lib/ai/fhir-tools'
 
-// Stateless: no session store, no TTL sweeper, no max-session ceiling. Each
-// request is served by a fresh server bound to the bearer on THAT request, so
-// there is nothing to expire, nothing to route back to a particular instance,
-// and nothing for a deploy to invalidate.
-//
-// The HTTP edge — Origin gate, Bearer gate, RFC 9728 challenge, CORS, the
-// Streamable HTTP lifecycle — is @maxhealth.tech/mcp-http rather than hand
-// written here. It tracks the 2026-07-28 protocol through the SDK's own
-// handler, which this endpoint did not implement at all.
+// Stateless: each request is served by a fresh server bound to the bearer on
+// THAT request. The HTTP edge is @maxhealth.tech/mcp-http, which tracks the
+// 2026-07-28 protocol through the SDK's own handler.
 
 /** A token that parses but does not validate. Mapped to a 401 in `onError`. */
 class McpUnauthorizedError extends Error {}
 
-/**
- * Allowed-origin bridge.
- *
- * mcp-http asks for the origin to echo (or null to refuse); we answer from the
- * repo's own allow-list. A request with no Origin is allowed upstream, which
- * keeps non-browser clients working.
- */
+/** mcp-http wants the origin to echo, or null to refuse. No Origin stays allowed. */
 function allowedOrigin(req: Request): string | null {
   const origin = req.headers.get('origin')
   if (!origin) return null
   return isOriginAllowed(origin) ? origin : null
 }
 
-/**
- * One handler per FHIR server, built lazily and reused.
- *
- * `mcpPath` has to match the mounted path exactly, and this endpoint is
- * per-server, so the handler is keyed by server id rather than built once.
- */
+/** `mcpPath` must match the mount exactly, and the mount is per-server. */
 const handlers = new Map<string, McpHandler>()
 
 function handlerFor(serverId: string): McpHandler {
   const existing = handlers.get(serverId)
   if (existing) return existing
 
+  // Fail closed. mcp-http reads an absent authorizationServer as "public
+  // endpoint" and drops the Bearer gate, so an unconfigured issuer must not be
+  // allowed to reach it.
+  const authorizationServer = config.keycloak.expectedIssuer ?? config.baseUrl
+
   const handler = createMcpHttpHandler({
     mcpPath: `/fhir/${serverId}/mcp`,
-    authorizationServer: config.keycloak.expectedIssuer ?? undefined,
+    authorizationServer,
     cors: { origin: allowedOrigin },
     createServer: async (token) => {
-      // Validated for its own sake: the payload is not needed once sessions are
-      // gone, but the token must be proven good before it is forwarded to FHIR
-      // as this request's identity.
+      // Proven good before it is forwarded to FHIR as this request's identity.
       try {
         await validateToken(token ?? '')
       } catch {
@@ -86,8 +72,7 @@ function handlerFor(serverId: string): McpHandler {
       registerFhirToolsForServer(server, { current: token ?? undefined }, serverId)
       return server
     },
-    // A createServer throw is an internal error upstream, which would turn a bad
-    // token into a 500. Map it back to the 401 the client can act on.
+    // A createServer throw is a 500 upstream; a bad token deserves a 401.
     onError: (err) =>
       err instanceof McpUnauthorizedError
         ? new Response(
@@ -107,9 +92,7 @@ export const fhirMcpRoutes = new Elysia()
   .all('/fhir/:server_id/mcp', async ({ params, request }) => {
     const { server_id } = params
 
-    // Server resolution stays here: it is this endpoint's own concern, and both
-    // answers are about the server rather than the MCP exchange, so they are
-    // settled before the protocol handler is involved.
+    // Settled before the protocol handler: both answers are about the server.
     await ensureServersInitialized()
 
     const serverInfo = await getServerInfoByName(server_id)
@@ -126,6 +109,6 @@ export const fhirMcpRoutes = new Elysia()
       )
     }
 
-    // Everything from here — Origin, Bearer, method, transport — is mcp-http.
+    // Origin, Bearer, method and transport are all mcp-http from here.
     return handlerFor(server_id)(request)
   })

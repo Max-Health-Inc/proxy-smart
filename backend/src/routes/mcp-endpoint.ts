@@ -17,17 +17,13 @@
 
 import { Elysia } from 'elysia'
 import * as z from 'zod'
-import {
-  McpServer,
-  ResourceTemplate,
-  WebStandardStreamableHTTPServerTransport,
-} from '@modelcontextprotocol/server'
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server'
+import { handleMcpPost } from '@maxhealth.tech/mcp-http'
 import { isOriginAllowed } from '@/lib/cors-origins'
 
 import {
   typeboxToSchema,
   originGuard,
-  closeWhenFinished,
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
@@ -326,32 +322,24 @@ async function handleMcpRequest(request: Request): Promise<Response> {
     )
   }
 
-  // ── Serve the request on a fresh server + transport ────────────────────
-  // `sessionIdGenerator: undefined` is what makes the transport stateless: it
-  // mints no Mcp-Session-Id, so the client never has a session to lose and never
-  // has to be routed back to the instance that holds it.
-  const body = await request.json()
+  // Transport only. The gates above stay local: this endpoint answers with a
+  // JSON-RPC error, not an OAuth one, and refuses a rebound Origin before
+  // authenticating — mcp-http's full edge inverts both.
   const tokenRef = { current: auth.token }
 
-  const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined })
-  const server = new McpServer(
-    { name: config.displayName, version: config.version },
-    { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
-  )
-
-  // Tools are filtered by the roles on THIS request's token, so a token that lost
-  // a role stops seeing those tools immediately rather than at session expiry.
-  registerTools(server, auth.roles, tokenRef)
-  registerResources(server, auth.roles, tokenRef)
-
-  await server.connect(transport)
-  const response = await transport.handleRequest(request, { parsedBody: body })
-
-  // Release the transport when the RESPONSE IS DONE, not when handleRequest
-  // returns. handleRequest resolves as soon as the Response object exists, which
-  // for a streamed (SSE) reply is before a single byte of body has been written —
-  // closing there truncates it to an empty 200.
-  return closeWhenFinished(response, transport, server)
+  return handleMcpPost({
+    req: request,
+    createServer: () => {
+      const server = new McpServer(
+        { name: config.displayName, version: config.version },
+        { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
+      )
+      // Filtered by the roles on THIS request's token.
+      registerTools(server, auth.roles, tokenRef)
+      registerResources(server, auth.roles, tokenRef)
+      return server
+    },
+  })
 }
 
 // ── Elysia route ─────────────────────────────────────────────────────────────
