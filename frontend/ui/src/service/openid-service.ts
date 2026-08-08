@@ -1,6 +1,10 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { config } from '@/config';
 import { AuthenticationApi, Configuration } from '../lib/api-client';
 import type { TokenRequest } from '../lib/api-client';
+import { logger } from '@/lib/logger';
 
 interface OpenIDConfig {
   baseUrl: string;
@@ -22,7 +26,7 @@ class OpenIDService {
       scope: 'openid profile email',
     };
 
-    console.debug('OpenID Service Config:', this.config);
+    logger.debug('OpenID service configured', this.config);
 
     // Create API client
     const apiConfig = new Configuration({
@@ -61,11 +65,11 @@ class OpenIDService {
     // Add IdP hint if provided (Keycloak-specific parameter)
     if (idpHint) {
       authUrl.searchParams.set('kc_idp_hint', idpHint);
-      console.debug('Using Identity Provider hint:', idpHint);
+      logger.debug('Using identity provider hint', { idpHint });
     }
 
-    console.debug('Generated Authorization URL:', authUrl.href);
-    console.debug('Redirect URI:', this.config.redirectUri);
+    logger.debug('Generated authorization URL', { url: authUrl.href });
+    logger.debug('Redirect URI', { redirectUri: this.config.redirectUri });
 
     return {
       url: authUrl.href,
@@ -83,8 +87,8 @@ class OpenIDService {
     refresh_token?: string;
     expires_in?: number;
   }> {
-    console.debug('OpenID Service: Starting token exchange...');
-    console.debug('Token exchange request details:', {
+    logger.debug('Starting token exchange');
+    logger.debug('Token exchange request', {
       codeLength: code.length,
       codeVerifierLength: codeVerifier.length,
       clientId: this.config.clientId,
@@ -106,7 +110,7 @@ class OpenIDService {
         tokenRequest: tokenRequest,
       });
 
-      console.debug('Token response received:', {
+      logger.debug('Token response received', {
         hasAccessToken: !!response.accessToken,
         hasIdToken: !!response.idToken,
         hasRefreshToken: !!response.refreshToken,
@@ -187,7 +191,7 @@ class OpenIDService {
     refresh_token?: string;
     expires_in?: number;
   }> {
-    console.debug('OpenID Service: Starting token refresh...');
+    logger.debug('Starting token refresh');
     
     try {
       const response = await this.authApi.postAuthToken({
@@ -199,7 +203,7 @@ class OpenIDService {
         },
       });
 
-      console.debug('Refresh token response received:', {
+      logger.debug('Refresh token response received', {
         hasAccessToken: !!response.accessToken,
         hasIdToken: !!response.idToken,
         hasRefreshToken: !!response.refreshToken,
