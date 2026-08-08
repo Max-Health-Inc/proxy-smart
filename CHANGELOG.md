@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.4-beta.202608081721.cb4b3a46e] - 2026-08-08
+
+- ✨ Features: 
+  - feat(admin-ui): let the user editor show and assign technical roles
+
+- 🔧 Chores & Improvements:
+  - refactor(admin-ui): route console logging through the buffered logger
+  - refactor(mcp): serve the per-server FHIR endpoint through @maxhealth.tech/mcp-http
+  - chore: sync package versions
+
+- 🐛 Bug Fixes:
+  - fix(mcp): fail closed on the Bearer gate, and serve /mcp through mcp-http
+
+Note: Skipped update/metadata/merge commits per guidelines.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/970
+
+
 ## [0.3.2-beta.202608080958.1d8c5f755] - 2026-08-08
 
 - 🔧 Chores & Improvements: Sync package versions (quotentiroler)
