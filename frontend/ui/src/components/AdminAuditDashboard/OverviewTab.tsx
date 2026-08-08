@@ -1,4 +1,5 @@
 import { Badge, StatCard } from '@proxy-smart/shared-ui';
+import { formatChartTimestamp } from '@/lib/utils'
 import { EmptyState } from '@/components/ui/empty-state';
 import {
   BarChart3,
@@ -64,7 +65,7 @@ export function OverviewTab({ analytics }: OverviewTabProps) {
                   />
                   <YAxis allowDecimals={false} className="text-muted-foreground" />
                   <Tooltip
-                    labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }}
+                    labelFormatter={(label) => formatChartTimestamp(label)}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',

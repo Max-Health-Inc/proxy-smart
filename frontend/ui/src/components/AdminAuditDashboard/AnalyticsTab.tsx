@@ -1,4 +1,5 @@
 import { CHART_COLORS } from '@proxy-smart/shared-ui';
+import { formatChartTimestamp } from '@/lib/utils'
 import {
   TrendingUp,
   Zap,
@@ -58,7 +59,7 @@ export function AnalyticsTab({ analytics, actionPieData, resourcePieData }: Anal
                 />
                 <YAxis allowDecimals={false} className="text-muted-foreground" />
                 <Tooltip
-                  labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }}
+                  labelFormatter={(label) => formatChartTimestamp(label)}
                   contentStyle={{
                     backgroundColor: 'var(--card)',
                     border: '1px solid var(--border)',
