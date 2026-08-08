@@ -25,7 +25,7 @@
     "@keycloak/keycloak-admin-client": "26.6.4",
     "@max-health-inc/consent-fhir": "^0.1.2",
     "@max-health-inc/elysia-mcp": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@opendataloader/pdf": "^2.5.0",
     "@proxy-smart/app-store": "workspace:*",
     "@proxy-smart/auth": "workspace:*",

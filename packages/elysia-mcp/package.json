@@ -3,7 +3,7 @@
   "version": "0.2.33-alpha.202608080725.016825365",
   "private": false,
   "type": "module",
-  "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Zod bridge, Streamable HTTP transport, session management.",
+  "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge, Streamable HTTP transport, session management.",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
@@ -19,7 +19,7 @@
     ".": "./src/index.ts",
     "./introspect": "./src/introspect.ts",
     "./transport": "./src/transport.ts",
-    "./typebox-to-zod": "./src/typebox-to-zod.ts"
+    "./typebox-schema": "./src/typebox-schema.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -29,17 +29,15 @@
     "lint:fix": "eslint . --fix"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": ">=1.20.0",
+    "@modelcontextprotocol/server": ">=2.0.0",
     "@sinclair/typebox": ">=0.34.0",
-    "elysia": ">=1.2.0",
-    "zod": ">=4.0.0"
+    "elysia": ">=1.2.0"
   },
   "devDependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "@sinclair/typebox": "^0.34.52",
     "elysia": "^1.4.29",
-    "typescript": "6.0.3",
-    "zod": "4.3.6"
+    "typescript": "6.0.3"
   },
   "keywords": [
     "elysia",
@@ -47,7 +45,6 @@
     "model-context-protocol",
     "bun",
     "typebox",
-    "zod",
     "introspection",
     "auto-generate",
     "tools",

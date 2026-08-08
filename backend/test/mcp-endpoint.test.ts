@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * MCP Streamable HTTP Endpoint — Integration Tests (TDD)
  *
@@ -38,6 +41,14 @@ mock.module('../src/lib/keycloak-plugin', () => ({
 
 mock.module('../src/lib/access-control/plugin', () => ({
   getAccessControlInstance: () => ({}),
+}))
+
+// Deterministic origin policy for the DNS-rebinding guard.
+mock.module('../src/lib/cors-origins', () => ({
+  isOriginAllowed: (origin: string) => origin === 'https://app.example.com',
+  getAllowedOrigins: () => ['https://app.example.com'],
+  refreshIfStale: () => {},
+  refreshCorsOrigins: async () => {},
 }))
 
 // Mock RAG tools — return a known result so we can test search_documentation tool
@@ -98,11 +109,14 @@ function jsonRpcInitialize(id = 1) {
 
 function mcpPost(
   body: unknown,
-  opts: { token?: string; sessionId?: string } = {},
+  opts: { token?: string; sessionId?: string; origin?: string } = {},
 ) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/json, text/event-stream',
+  }
+  if (opts.origin) {
+    headers['Origin'] = opts.origin
   }
   if (opts.token !== undefined) {
     headers['Authorization'] = `Bearer ${opts.token}`
@@ -310,6 +324,51 @@ describe('MCP Endpoint — /mcp', () => {
   // The file-backed config is the single source of truth. When it disables MCP,
   // the endpoint returns 404. (The beforeEach re-arms enabled: true before each test.)
 
+  describe('Origin validation (DNS rebinding)', () => {
+    // MCP Streamable HTTP, Security Warning: servers MUST validate Origin on all
+    // incoming connections and MUST answer 403 when it is present and invalid.
+    // A CORS policy is not enough — it only makes the response unreadable, while
+    // the request still executes.
+
+    it('refuses a disallowed Origin with 403, before authentication', async () => {
+      const app = createApp()
+      const res = await app.handle(
+        // A valid token: the 403 must not depend on the request being unauthenticated.
+        mcpPost(jsonRpcInitialize(), { token: 'valid-token', origin: 'https://evil.example.com' }),
+      )
+
+      expect(res.status).toBe(403)
+      const body = await res.json() as Record<string, unknown>
+      expect((body.error as Record<string, unknown>).message).toContain('Origin')
+    })
+
+    it('allows a permitted Origin', async () => {
+      const app = createApp()
+      const res = await app.handle(
+        mcpPost(jsonRpcInitialize(), { token: 'valid-token', origin: 'https://app.example.com' }),
+      )
+
+      expect(res.status).toBe(200)
+    })
+
+    it('allows a request with no Origin at all (non-browser client)', async () => {
+      const app = createApp()
+      const res = await app.handle(mcpPost(jsonRpcInitialize(), { token: 'valid-token' }))
+
+      expect(res.status).toBe(200)
+    })
+
+    it('refuses a disallowed Origin even without a token', async () => {
+      const app = createApp()
+      const res = await app.handle(
+        mcpPost(jsonRpcInitialize(), { origin: 'https://evil.example.com' }),
+      )
+
+      // 403, not the 401 the missing token would otherwise produce.
+      expect(res.status).toBe(403)
+    })
+  })
+
   describe('Disabled endpoint', () => {
     it('returns 404 when file-config disables MCP', async () => {
       saveMcpEndpointConfig({ enabled: false, disabledTools: [], enabledTools: null, exposeResourcesAsTools: true, updatedAt: new Date().toISOString() })
@@ -483,7 +542,7 @@ describe('MCP Endpoint — /mcp', () => {
       expect(mockSearchDocumentation).toHaveBeenCalledWith('SMART on FHIR', 3)
     })
 
-    it('tools/call with unknown tool name returns isError: true', async () => {
+    it('tools/call with unknown tool name returns a JSON-RPC protocol error', async () => {
       const app = createApp()
       const { sessionId } = await initializeSession(app)
 
@@ -503,13 +562,16 @@ describe('MCP Endpoint — /mcp', () => {
       )
       expect(callRes.status).toBe(200)
       const body = await parseResponse(callRes)
-      // MCP spec: "If a client calls a tool that does not exist, the server
-      // SHOULD return an error in the result" (not a JSON-RPC error)
-      expect(body.result).toBeDefined()
-      const result = body.result as Record<string, unknown>
-      expect(result.isError).toBe(true)
-      const content = result.content as Array<Record<string, unknown>>
-      expect(Array.isArray(content)).toBe(true)
+      // An unknown tool is a PROTOCOL error, not a tool-execution error: the spec
+      // (2026-07-28, Tools > Error Handling) lists "Unknown tool" under protocol
+      // errors returned as a JSON-RPC error with code -32602, and reserves
+      // `isError: true` in the result for failures a model can self-correct from.
+      // SDK v1 returned the isError form here; v2 returns the spec form.
+      expect(body.result).toBeUndefined()
+      const error = body.error as Record<string, unknown>
+      expect(error).toBeDefined()
+      expect(error.code).toBe(-32602)
+      expect(String(error.message)).toContain('nonexistent_tool_xyz')
     })
 
     it('token is refreshed on each request via tokenRef', async () => {
