@@ -29,7 +29,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.16",
         "@elysiajs/cors": "^1.4.2",
@@ -57,7 +57,7 @@
         "pg": "^8.22.0",
         "resend": "^6.17.2",
         "unifi-access": "^1.5.3",
-        "zod": "4.3.6",
+        "zod": "^4.4.3",
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -77,7 +77,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -88,7 +88,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "dependencies": {
         "aws-cdk-lib": "^2.261.0",
         "constructs": "^10.7.0",
@@ -106,7 +106,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.3",
         "@cornerstonejs/core": "^5.6.7",
@@ -124,7 +124,6 @@
         "lucide-react": "^1.25.0",
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
-        "shadcn": "^4.13.1",
         "tailwind-merge": "^3.6.0",
         "tailwindcss": "^4.3.3",
       },
@@ -139,6 +138,7 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.3",
         "globals": "^17.7.0",
+        "shadcn": "^4.13.1",
         "tw-animate-css": "^1.4.0",
         "typescript": "6.0.3",
         "typescript-eslint": "^8.64.0",
@@ -147,7 +147,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "dependencies": {
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
         "@radix-ui/react-avatar": "^1.2.2",
@@ -207,7 +207,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "devDependencies": {
         "@types/node": "^26.1.1",
         "typescript": "6.0.3",
@@ -215,7 +215,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -227,7 +227,7 @@
     },
     "packages/cli": {
       "name": "@proxy-smart/cli",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "bin": {
         "proxy-smart": "./src/index.ts",
       },
@@ -239,7 +239,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "devDependencies": {
         "@modelcontextprotocol/server": "^2.0.0",
         "@sinclair/typebox": "^0.34.52",
@@ -254,7 +254,7 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.3.1-beta.202608080909.7c5548376",
+      "version": "0.3.4-beta.202608081329.9f7c97362",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
@@ -266,7 +266,6 @@
         "lucide-react": "^1.25.0",
         "react": "^19.2.6",
         "react-dom": "^19.2.6",
-        "shadcn": "^4.13.1",
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.6.0",
         "tailwindcss": "^4.3.3",
@@ -282,13 +281,11 @@
         "eslint-plugin-react-hooks": "^7.1.1",
         "eslint-plugin-react-refresh": "^0.5.3",
         "globals": "^17.7.0",
+        "shadcn": "^4.13.1",
         "typescript": "~6.0.3",
         "vite": "^8.1.5",
       },
     },
-  },
-  "overrides": {
-    "zod": "4.3.6",
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],
@@ -2631,7 +2628,7 @@
 
     "yoctocolors": ["yoctocolors@2.1.2", "", {}, "sha512-CzhO+pFNo8ajLM2d2IW/R93ipy99LWjtwblvC1RsoSUMZgyLbYFr221TnSNT7GjGdYui6P459mw9JH/g/zW2ug=="],
 
-    "zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+    "zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "zod-to-json-schema": ["zod-to-json-schema@3.25.2", "", { "peerDependencies": { "zod": "^3.25.28 || ^4" } }, "sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA=="],
 
@@ -2677,7 +2674,13 @@
 
     "@max-health-inc/consent-fhir/@types/fhir": ["@types/fhir@0.0.41", "", {}, "sha512-MAQAFufNZBZ6V0F94Nhknmmh/E3iMXFK4n/L8RkSNjKtOJnvaAJERivNOj35VVx9VCQBJbE0BHSzikfBahoRhA=="],
 
+    "@modelcontextprotocol/core/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+
     "@modelcontextprotocol/sdk/ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
+
+    "@modelcontextprotocol/sdk/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+
+    "@modelcontextprotocol/server/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
 
     "@originjs/vite-plugin-commonjs/esbuild": ["esbuild@0.14.54", "", { "optionalDependencies": { "@esbuild/linux-loong64": "0.14.54", "esbuild-android-64": "0.14.54", "esbuild-android-arm64": "0.14.54", "esbuild-darwin-64": "0.14.54", "esbuild-darwin-arm64": "0.14.54", "esbuild-freebsd-64": "0.14.54", "esbuild-freebsd-arm64": "0.14.54", "esbuild-linux-32": "0.14.54", "esbuild-linux-64": "0.14.54", "esbuild-linux-arm": "0.14.54", "esbuild-linux-arm64": "0.14.54", "esbuild-linux-mips64le": "0.14.54", "esbuild-linux-ppc64le": "0.14.54", "esbuild-linux-riscv64": "0.14.54", "esbuild-linux-s390x": "0.14.54", "esbuild-netbsd-64": "0.14.54", "esbuild-openbsd-64": "0.14.54", "esbuild-sunos-64": "0.14.54", "esbuild-windows-32": "0.14.54", "esbuild-windows-64": "0.14.54", "esbuild-windows-arm64": "0.14.54" }, "bin": { "esbuild": "bin/esbuild" } }, "sha512-Cy9llcy8DvET5uznocPyqL3BFRrFXSVqbgpMJ9Wz8oVjZlh/zUSNbPRbov0VX7VxN2JH1Oa0uNxZ7eLRb62pJA=="],
 
@@ -3189,6 +3192,8 @@
 
     "enquirer/strip-ansi": ["strip-ansi@6.0.1", "", { "dependencies": { "ansi-regex": "^5.0.1" } }, "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A=="],
 
+    "eslint-plugin-react-hooks/zod": ["zod@4.3.6", "", {}, "sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg=="],
+
     "express/cookie": ["cookie@0.7.2", "", {}, "sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w=="],
 
     "express/mime-types": ["mime-types@3.0.2", "", { "dependencies": { "mime-db": "^1.54.0" } }, "sha512-Lbgzdk0h4juoQ9fCKXW4by0UJqj+nOOrI9MJ1sSj4nI8aI2eo1qmvQEie4VD1glsS250n15LsWsYtCugiStS5A=="],
@@ -3282,6 +3287,8 @@
     "shadcn/commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
     "shadcn/undici": ["undici@7.28.0", "", {}, "sha512-cRZYrTDwWznlnRiPjggAGxZXanty6M8RV1ff8Wm4LWXBp7/IG8v5DnOm74DtUBp9OONpK75YlPnIjQqX0dBDtA=="],
+
+    "shadcn/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "shelljs/glob": ["glob@7.2.3", "", { "dependencies": { "fs.realpath": "^1.0.0", "inflight": "^1.0.4", "inherits": "2", "minimatch": "^3.1.1", "once": "^1.3.0", "path-is-absolute": "^1.0.0" } }, "sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q=="],
 

@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.3.4-beta.202608081354.8d12f64df",
+  "version": "0.3.4-alpha.202608081645.9f2ad782b",
   "type": "module",
   "scripts": {
     "test": "bun test --isolate",
@@ -43,7 +43,7 @@
     "pg": "^8.22.0",
     "resend": "^6.17.2",
     "unifi-access": "^1.5.3",
-    "zod": "4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
