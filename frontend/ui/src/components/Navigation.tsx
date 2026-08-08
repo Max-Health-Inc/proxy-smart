@@ -414,6 +414,16 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                       <span className="font-semibold text-foreground">{t('Profile Settings')}</span>
                     </DropdownMenuItem>
                     
+                    <DropdownMenuItem
+                      onClick={() => onTabChange('profile')}
+                      className="flex items-center space-x-3 p-3 hover:bg-muted/80 cursor-pointer rounded-xl mx-2 my-1 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <span className="font-semibold text-foreground">{t('My Profile')}</span>
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem 
                       onSelect={(e) => {
                         e.preventDefault();

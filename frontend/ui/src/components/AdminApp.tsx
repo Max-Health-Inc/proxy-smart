@@ -1,8 +1,12 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { SmartAppsManager } from './SmartAppsManager/SmartAppsManager';
 import { ServersManager } from './ServersManager';
 import { SmartConfigManager } from './SmartConfigManager';
 import { SmartProxyOverview } from './SmartProxyOverview';
 import { McpEndpointSettings } from './McpEndpointSettings';
+import { ProfileSettings } from './ProfileSettings';
 import { useState, useEffect } from 'react';
 import { Navigation } from './Navigation';
 import { UsersAndFederationManager } from './UsersAndFederationManager';
@@ -148,6 +152,7 @@ export function AdminApp() {
                             {currentTab === 'branding' && <BrandSettings />}
                             {currentTab === 'organizations' && <OrganizationsManager />}
                             {currentTab === 'auth-flows' && <AuthFlowsManager />}
+                            {currentTab === 'profile' && <ProfileSettings />}
                         </Panel>
                     </div>
                 </div>
