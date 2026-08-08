@@ -17,10 +17,14 @@
  */
 
 import { Elysia } from 'elysia'
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
+import {
+  McpServer,
+  WebStandardStreamableHTTPServerTransport,
+  isInitializeRequest,
+} from '@modelcontextprotocol/server'
+import { originGuard } from '@max-health-inc/elysia-mcp'
 import { config } from '../config'
+import { isOriginAllowed } from '../lib/cors-origins'
 import { validateToken } from '../lib/auth'
 import { logger } from '../lib/logger'
 import { getServerInfoByName, ensureServersInitialized } from '../lib/fhir-server-store'
@@ -57,6 +61,10 @@ if (cleanupInterval.unref) cleanupInterval.unref()
 export const fhirMcpRoutes = new Elysia()
   .all('/fhir/:server_id/mcp', async ({ params, request, set }) => {
     const { server_id } = params
+
+    // Origin gate before anything else — see originGuard.
+    const refused = originGuard(request, isOriginAllowed)
+    if (refused) return refused
 
     // Ensure servers initialized
     await ensureServersInitialized()

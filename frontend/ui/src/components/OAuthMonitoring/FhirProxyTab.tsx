@@ -163,21 +163,21 @@ export function FhirProxyTab({ fhirProxyAnalytics }: FhirProxyTabProps) {
                 <Bar
                   dataKey="success"
                   stackId="a"
-                  fill="var(--color-green-500, #22c55e)"
+                  fill="var(--success)"
                   name={t('Success')}
                   radius={[0, 0, 0, 0]}
                 />
                 <Bar
                   dataKey="errors"
                   stackId="a"
-                  fill="var(--color-red-500, #ef4444)"
+                  fill="var(--destructive)"
                   name={t('Errors')}
                   radius={[0, 0, 0, 0]}
                 />
                 <Bar
                   dataKey="rateLimited"
                   stackId="a"
-                  fill="var(--color-orange-500, #f97316)"
+                  fill="var(--warning)"
                   name={t('429s')}
                   radius={[4, 4, 0, 0]}
                 />

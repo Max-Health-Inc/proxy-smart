@@ -416,8 +416,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                             }}
                           />
                           <Legend />
-                          <Bar dataKey="permit" name={t('Permit')} fill="#10b981" stackId="a" />
-                          <Bar dataKey="deny" name={t('Deny')} fill="#ef4444" stackId="a" />
+                          <Bar dataKey="permit" name={t('Permit')} fill="var(--success)" stackId="a" />
+                          <Bar dataKey="deny" name={t('Deny')} fill="var(--destructive)" stackId="a" />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
@@ -454,8 +454,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                             }}
                           />
                           <Legend />
-                          <Bar dataKey="permit" name={t('Permit')} fill="#10b981" stackId="a" />
-                          <Bar dataKey="deny" name={t('Deny')} fill="#ef4444" stackId="a" />
+                          <Bar dataKey="permit" name={t('Permit')} fill="var(--success)" stackId="a" />
+                          <Bar dataKey="deny" name={t('Deny')} fill="var(--destructive)" stackId="a" />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
@@ -644,8 +644,8 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                             }}
                           />
                           <Legend />
-                          <Line type="monotone" dataKey="permit" name={t('Permit')} stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="deny" name={t('Deny')} stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="permit" name={t('Permit')} stroke="var(--success)" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="deny" name={t('Deny')} stroke="var(--destructive)" strokeWidth={2} dot={{ r: 3 }} />
                           <Line type="monotone" dataKey="total" name={t('Total')} stroke="var(--primary)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                         </LineChart>
                       </ResponsiveContainer>

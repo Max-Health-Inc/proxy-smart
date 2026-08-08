@@ -204,7 +204,7 @@ export {
 
 export type { IntrospectOptions } from './introspect'
 
-export { typeboxToZod, getMergedInputSchema } from './typebox-to-zod'
+export { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
 
 export { executeTool, executeResource, DISPATCH_APP_KEY } from './executor'
 
@@ -213,6 +213,7 @@ export {
   createMcpRequestHandler,
   registerToolsOnServer,
   registerResourcesOnServer,
+  originGuard,
   MCP_REQUEST_HEADERS,
   MCP_EXPOSED_RESPONSE_HEADERS,
 } from './transport'

@@ -23,14 +23,15 @@ export default function App() {
     })
   }, [])
 
-  // Theme the picker to the launching organization's brand colour (best-effort).
-  // Overrides the brandc contract's --primary/--maxhealth for this launch only.
+  // Theme the picker to the launching org's brand colour for this launch only.
+  // --maxhealth is the deprecated alias of --main; set both so either follows.
   useEffect(() => {
     fetchBrandContext().then((brand) => {
       if (!brand?.primaryColor) return
       const root = document.documentElement
-      root.style.setProperty("--primary", brand.primaryColor)
-      root.style.setProperty("--maxhealth", brand.primaryColor)
+      for (const token of ["--primary", "--main", "--maxhealth"]) {
+        root.style.setProperty(token, brand.primaryColor)
+      }
     })
   }, [])
 

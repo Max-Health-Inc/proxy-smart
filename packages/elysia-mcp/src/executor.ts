@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp - Tool & Resource Execution
  *
@@ -19,7 +22,7 @@
 
 import { Value } from '@sinclair/typebox/value'
 import type { ToolMetadata, ResourceMetadata } from './types'
-import { getMergedInputSchema } from './typebox-to-zod'
+import { getMergedInputSchema } from './typebox-schema'
 
 /** Context-decorator key carrying the Elysia app used for pipeline dispatch. */
 export const DISPATCH_APP_KEY = '__app'
