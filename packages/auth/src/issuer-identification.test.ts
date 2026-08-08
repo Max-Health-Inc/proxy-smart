@@ -129,13 +129,14 @@ describe('callback interception for proxy-issued resources', () => {
     expect(url.searchParams.get('client_id')).toBe(CIMD_ID)
   })
 
-  test('rejects a CIMD client whose document does not list the redirect_uri', async () => {
+  test('rejects a CIMD client whose document lists OTHER redirect_uris', async () => {
     const store = new MemoryStore()
     const deps: AuthorizeInterceptorDeps = {
       ...authorizeDeps(store),
-      // Document fetched but the requested URI is not in it — or the document
-      // could not be verified at all, which the resolver reports the same way.
-      getRegisteredRedirectUris: async () => [],
+      // Document fetched and valid, but the requested URI is not in it. A valid
+      // document always has at least one entry (the resolver rejects empty ones),
+      // so a NON-EMPTY list that excludes the request is the real "not allowed".
+      getRegisteredRedirectUris: async () => ['https://somewhere-else.example.com/cb'],
     }
 
     const { result } = await handleAuthorize(
@@ -147,6 +148,30 @@ describe('callback interception for proxy-issued resources', () => {
     if (result.type !== 'error') return
     expect(result.status).toBe(400)
     expect(result.error_description).toContain('redirect_uri')
+  })
+
+  test('passes a CIMD client through unintercepted when the document cannot be read', async () => {
+    // An empty list can only mean "unresolvable" — the resolver rejects documents
+    // with no redirect_uris. Rejecting here would turn a bot-protected client host
+    // or a transient outage into a failed login, for a request that worked before
+    // interception existed. Stand aside and let the IdP validate instead.
+    const store = new MemoryStore()
+    const CIMD_ID = 'https://claude.ai/api/mcp/client-metadata.json'
+    const deps: AuthorizeInterceptorDeps = {
+      ...authorizeDeps(store),
+      getRegisteredRedirectUris: async () => [],
+    }
+
+    const { result, sessionKey } = await handleAuthorize(
+      mcpAuthorizeParams({ client_id: CIMD_ID }),
+      deps,
+    )
+
+    expect(sessionKey).toBeUndefined()
+    if (result.type !== 'redirect') throw new Error('expected pass-through redirect')
+    const url = new URL(result.url)
+    expect(url.searchParams.get('client_id')).toBe(CIMD_ID)
+    expect(url.searchParams.get('redirect_uri')).toBe(REGISTERED_REDIRECT)
   })
 
   test('does NOT intercept a non-SMART request for an unlisted resource', async () => {
