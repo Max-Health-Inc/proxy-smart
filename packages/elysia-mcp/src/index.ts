@@ -33,6 +33,8 @@ export type { IntrospectOptions } from './introspect'
 
 export { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
 
-export { executeTool, executeResource, DISPATCH_APP_KEY } from './executor'
+export { executeTool, executeResource, DISPATCH_APP_KEY, type ExecuteOptions } from './executor'
+
+export { chooseToolText, type ToolTextFormat } from './text-format'
 
 export { MCP_REQUEST_HEADERS, MCP_EXPOSED_RESPONSE_HEADERS } from './headers'

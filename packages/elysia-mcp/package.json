@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/elysia-mcp",
-  "version": "0.3.5-beta.202608082149.6b26c3524",
+  "version": "0.3.5-beta.202608082215.f64c3f40d",
   "private": false,
   "type": "module",
   "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge, Streamable HTTP transport, session management.",
@@ -19,7 +19,8 @@
     ".": "./src/index.ts",
     "./introspect": "./src/introspect.ts",
     "./transport": "./src/transport.ts",
-    "./typebox-schema": "./src/typebox-schema.ts"
+    "./typebox-schema": "./src/typebox-schema.ts",
+    "./text-format": "./src/text-format.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -27,6 +28,9 @@
     "test:watch": "bun test --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@toon-format/toon": "^4.1.1"
   },
   "peerDependencies": {
     "@modelcontextprotocol/server": ">=2.0.0",
