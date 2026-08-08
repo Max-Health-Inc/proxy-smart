@@ -2,22 +2,64 @@
 set -euo pipefail
 
 # Sync version strings across all package.json files before pushing.
+#
 # We deliberately do NOT auto-rebase here — rebasing causes version-string
 # conflicts on every merge because CI stamps different alpha/beta versions
 # on develop vs test.  If you need to rebase, do it manually.
+#
+# This hook only ever touches the package.json files that `version.js sync`
+# actually rewrote. Two earlier behaviours are gone, and both were dangerous:
+#
+#   git add -u          staged EVERY tracked modification, so an unrelated
+#                       work-in-progress in the tree was silently committed
+#                       and pushed under the message "sync package versions".
+#
+#   git checkout -- .   ran whenever the sync produced no diff, and DISCARDED
+#                       every uncommitted change in the tree. It existed only to
+#                       clean up no-op rewrites from a sync that always wrote
+#                       every file; version.js now writes only real changes, so
+#                       there is nothing to clean up.
 
 echo "Syncing package versions before push..."
 
-node scripts/version.js sync
-if ! git diff --quiet; then
-  echo "⚠️  Version drift detected — syncing..."
-  git add -u
-  git commit --no-verify -m "chore: sync package versions"
-  echo "✅ Versions synced"
-else
-  # version.js may rewrite files with identical content but different line endings
-  # (CRLF vs LF) — discard those no-op rewrites to keep the tree clean
-  git checkout -- .
+# Ask what WOULD change before touching anything, so a refusal below leaves the
+# tree exactly as the developer left it.
+changed="$(node scripts/version.js sync --porcelain --dry-run)"
+
+if [ -z "$changed" ]; then
+  echo "✅ Versions already in sync"
+  exit 0
 fi
+
+# Any manifest the sync wants to rewrite that is ALREADY modified carries an edit
+# that is not ours to commit. Refuse to fold it into a "sync versions" commit:
+# failing the push is recoverable, a misattributed commit is not.
+dirty="$(git diff --name-only HEAD || true)"
+conflicts=""
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+  if printf '%s\n' "$dirty" | grep -qxF -- "$file"; then
+    conflicts="${conflicts}  ${file}"$'\n'
+  fi
+done <<< "$changed"
+
+if [ -n "$conflicts" ]; then
+  echo "❌ Version sync wants to rewrite files you have already modified:" >&2
+  printf '%s' "$conflicts" >&2
+  echo "   Commit or stash those changes, then push again." >&2
+  echo "   Nothing was written." >&2
+  exit 1
+fi
+
+echo "⚠️  Version drift detected — syncing..."
+node scripts/version.js sync --porcelain > /dev/null
+
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+  git add -- "$file"
+done <<< "$changed"
+
+git commit --no-verify -m "chore: sync package versions"
+echo "✅ Versions synced"
 
 exit 0

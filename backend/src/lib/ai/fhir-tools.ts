@@ -13,8 +13,7 @@
  * - Server name is hardcoded per endpoint — not user-selectable
  * - FHIR version defaults to the first supported version (usually R4)
  */
-
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import type { McpServer } from '@modelcontextprotocol/server'
 import * as z from 'zod'
 import { config } from '../../config'
 import { getAllServers, getServerInfoByName } from '../fhir-server-store'
@@ -221,11 +220,11 @@ export function registerFhirToolsForServer(server: McpServer, tokenRef: { curren
     {
       description:
         'Read a single FHIR resource by type and ID (e.g. Patient/123). Returns the full JSON resource.',
-      inputSchema: {
-        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation", "MedicationRequest")'),
-        id: z.string().describe('Logical ID of the resource'),
-        fhirVersion: z.string().optional().describe(fhirVersionDescription),
-      },
+      inputSchema: z.object({
+              resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation", "MedicationRequest")'),
+              id: z.string().describe('Logical ID of the resource'),
+              fhirVersion: z.string().optional().describe(fhirVersionDescription),
+            }),
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ resourceType, id, fhirVersion }) => {
@@ -251,11 +250,11 @@ export function registerFhirToolsForServer(server: McpServer, tokenRef: { curren
     {
       description:
         'Search FHIR resources using standard FHIR search parameters. Returns a Bundle of matching resources.',
-      inputSchema: {
-        resourceType: z.string().describe('FHIR resource type to search (e.g. "Patient", "Observation")'),
-        queryParams: z.string().optional().describe('FHIR search parameters as a query string (e.g. "name=John&birthdate=gt1990-01-01")'),
-        fhirVersion: z.string().optional().describe(fhirVersionDescription),
-      },
+      inputSchema: z.object({
+              resourceType: z.string().describe('FHIR resource type to search (e.g. "Patient", "Observation")'),
+              queryParams: z.string().optional().describe('FHIR search parameters as a query string (e.g. "name=John&birthdate=gt1990-01-01")'),
+              fhirVersion: z.string().optional().describe(fhirVersionDescription),
+            }),
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ resourceType, queryParams, fhirVersion }) => {
@@ -280,11 +279,11 @@ export function registerFhirToolsForServer(server: McpServer, tokenRef: { curren
     'fhir_create',
     {
       description: 'Create a new FHIR resource. Provide the full resource JSON including resourceType.',
-      inputSchema: {
-        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
-        resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON to create'),
-        fhirVersion: z.string().optional().describe(fhirVersionDescription),
-      },
+      inputSchema: z.object({
+              resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
+              resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON to create'),
+              fhirVersion: z.string().optional().describe(fhirVersionDescription),
+            }),
     },
     async ({ resourceType, resource, fhirVersion }) => {
       if (!tokenRef.current) {
@@ -308,12 +307,12 @@ export function registerFhirToolsForServer(server: McpServer, tokenRef: { curren
     'fhir_update',
     {
       description: 'Update an existing FHIR resource by type and ID (PUT semantics).',
-      inputSchema: {
-        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
-        id: z.string().describe('Logical ID of the resource to update'),
-        resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON (must include id)'),
-        fhirVersion: z.string().optional().describe(fhirVersionDescription),
-      },
+      inputSchema: z.object({
+              resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
+              id: z.string().describe('Logical ID of the resource to update'),
+              resource: z.record(z.string(), z.unknown()).describe('The full FHIR resource JSON (must include id)'),
+              fhirVersion: z.string().optional().describe(fhirVersionDescription),
+            }),
     },
     async ({ resourceType, id, resource, fhirVersion }) => {
       if (!tokenRef.current) {
@@ -338,11 +337,11 @@ export function registerFhirToolsForServer(server: McpServer, tokenRef: { curren
     'fhir_delete',
     {
       description: 'Delete a FHIR resource by type and ID.',
-      inputSchema: {
-        resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
-        id: z.string().describe('Logical ID of the resource to delete'),
-        fhirVersion: z.string().optional().describe(fhirVersionDescription),
-      },
+      inputSchema: z.object({
+              resourceType: z.string().describe('FHIR resource type (e.g. "Patient", "Observation")'),
+              id: z.string().describe('Logical ID of the resource to delete'),
+              fhirVersion: z.string().optional().describe(fhirVersionDescription),
+            }),
     },
     async ({ resourceType, id, fhirVersion }) => {
       if (!tokenRef.current) {
@@ -366,9 +365,9 @@ export function registerFhirToolsForServer(server: McpServer, tokenRef: { curren
     'fhir_capabilities',
     {
       description: 'Get the CapabilityStatement (metadata) of this FHIR server.',
-      inputSchema: {
-        fhirVersion: z.string().optional().describe(fhirVersionDescription),
-      },
+      inputSchema: z.object({
+              fhirVersion: z.string().optional().describe(fhirVersionDescription),
+            }),
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ fhirVersion }) => {

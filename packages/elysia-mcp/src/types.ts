@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp - Core Types
  *
@@ -95,6 +98,14 @@ export interface ElysiaMcpOptions {
    * If omitted, all requests are unauthenticated (public).
    */
   authenticate?: (request: Request) => Promise<AuthResult | null>
+
+  /**
+   * The host's CORS origin policy, used to refuse a disallowed `Origin` with 403
+   * (see `originGuard`). Pass the SAME predicate the host's CORS layer uses —
+   * two allow-lists that can disagree are worse than one.
+   * If omitted, no origin check runs.
+   */
+  isOriginAllowed?: (origin: string) => boolean
 
   /**
    * Filter which tools are exposed. Return true to include.

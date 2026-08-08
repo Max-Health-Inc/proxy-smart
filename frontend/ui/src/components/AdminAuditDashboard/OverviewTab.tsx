@@ -73,8 +73,8 @@ export function OverviewTab({ analytics }: OverviewTabProps) {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="success" name={t('Success')} fill="#10b981" stackId="a" />
-                  <Bar dataKey="failure" name={t('Failure')} fill="#ef4444" stackId="a" />
+                  <Bar dataKey="success" name={t('Success')} fill="var(--success)" stackId="a" />
+                  <Bar dataKey="failure" name={t('Failure')} fill="var(--destructive)" stackId="a" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

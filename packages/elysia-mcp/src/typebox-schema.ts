@@ -1,48 +1,41 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
- * @max-health-inc/elysia-mcp - TypeBox to Zod Bridge
+ * @max-health-inc/elysia-mcp - TypeBox to Standard Schema Bridge
  *
- * Converts TypeBox schemas (Elysia's type system) to Zod schemas
- * (MCP SDK's type system) via the JSON Schema intermediary.
+ * Converts TypeBox schemas (Elysia's type system) into the Standard Schema the
+ * MCP SDK's `registerTool` takes, via the JSON Schema both sides already speak.
  *
- * TypeBox schemas ARE valid JSON Schema (with extra Symbol metadata).
- * We strip Symbols via JSON roundtrip, then use Zod v4's z.fromJSONSchema().
+ * TypeBox schemas ARE valid JSON Schema, carrying extra Symbol metadata that a
+ * JSON roundtrip strips. So the conversion is a roundtrip and a handoff — there
+ * is nothing to translate.
+ *
+ * This used to walk the properties itself, calling `z.fromJSONSchema` per field
+ * and re-deriving `.optional()` from `required` and `.describe()` from
+ * `description` — rebuilding, field by field, semantics the JSON Schema already
+ * carried. It also produced a raw Zod shape, which is the DEPRECATED form of
+ * `registerTool`'s `inputSchema` in SDK v2 and only worked because the SDK
+ * auto-wraps it.
  */
 
+import { fromJsonSchema, type StandardSchemaWithJSON } from '@modelcontextprotocol/server'
 import type { TSchema, TProperties } from '@sinclair/typebox'
 import { Type } from '@sinclair/typebox'
-import * as z from 'zod'
 import type { ToolMetadata } from './types'
 
 /**
- * Convert a TypeBox schema to a Zod shape (Record<string, z.ZodType>)
- * suitable for MCP SDK's `registerTool` inputSchema parameter.
+ * Convert a TypeBox schema to the Standard Schema `registerTool` expects.
  *
- * Returns undefined if conversion fails or schema isn't an object type.
+ * Returns undefined when the schema is not an object type or cannot be read, so
+ * the caller registers the tool with no input schema rather than a broken one.
  */
-export function typeboxToZod(schema: unknown): Record<string, z.ZodType> | undefined {
+export function typeboxToSchema(schema: unknown): StandardSchemaWithJSON | undefined {
   try {
     // JSON roundtrip strips TypeBox's Symbol metadata, yielding pure JSON Schema
     const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
-    if (jsonSchema.type !== 'object') return undefined
-
-    const properties = jsonSchema.properties as Record<string, Record<string, unknown>> | undefined
-    if (!properties) return undefined
-
-    const required = new Set((jsonSchema.required as string[] | undefined) ?? [])
-    const shape: Record<string, z.ZodType> = {}
-
-    for (const [key, propSchema] of Object.entries(properties)) {
-      let fieldSchema = z.fromJSONSchema(propSchema)
-      if (!required.has(key)) {
-        fieldSchema = fieldSchema.optional()
-      }
-      if (propSchema.description && typeof propSchema.description === 'string') {
-        fieldSchema = fieldSchema.describe(propSchema.description)
-      }
-      shape[key] = fieldSchema
-    }
-
-    return shape
+    if (jsonSchema.type !== 'object' || !jsonSchema.properties) return undefined
+    return fromJsonSchema(jsonSchema)
   } catch {
     return undefined
   }

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp
  *
@@ -201,7 +204,7 @@ export {
 
 export type { IntrospectOptions } from './introspect'
 
-export { typeboxToZod, getMergedInputSchema } from './typebox-to-zod'
+export { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
 
 export { executeTool, executeResource, DISPATCH_APP_KEY } from './executor'
 
@@ -210,6 +213,9 @@ export {
   createMcpRequestHandler,
   registerToolsOnServer,
   registerResourcesOnServer,
+  originGuard,
+  MCP_REQUEST_HEADERS,
+  MCP_EXPOSED_RESPONSE_HEADERS,
 } from './transport'
 
 export type { RegistrationContext } from './transport'

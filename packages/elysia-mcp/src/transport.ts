@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp - Transport & Session Management
  *
@@ -5,14 +8,88 @@
  * lifecycle (creation, TTL eviction, max session limits, hijack protection).
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
+import {
+  McpServer,
+  ResourceTemplate,
+  WebStandardStreamableHTTPServerTransport,
+  isInitializeRequest,
+} from '@modelcontextprotocol/server'
 import type { ToolMetadata, ResourceMetadata, AuthResult, McpSession, ElysiaMcpOptions, Logger } from './types'
-import { typeboxToZod, getMergedInputSchema } from './typebox-to-zod'
+import { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
 import { pathToResourceUri } from './introspect'
 import { executeTool, executeResource } from './executor'
+
+// ── HTTP header contract ─────────────────────────────────────────────────────
+
+/**
+ * Request headers a Streamable HTTP client sends, which a CORS preflight must allow.
+ *
+ * `Mcp-Method` and `Mcp-Name` are REQUIRED of clients from MCP 2026-07-28 (Streamable
+ * HTTP, "Standard Request Headers") so intermediaries can route and inspect a request
+ * without parsing the JSON-RPC body. A server that omits them from
+ * Access-Control-Allow-Headers fails the preflight of any browser-based client that
+ * sends them — which, being required, is every conformant one.
+ */
+export const MCP_REQUEST_HEADERS = [
+  'Mcp-Session-Id',
+  'Mcp-Protocol-Version',
+  'Mcp-Method',
+  'Mcp-Name',
+] as const
+
+/**
+ * Response headers a browser-based client must be able to READ, which only
+ * Access-Control-Expose-Headers grants — the allow-list above does not.
+ *
+ * `Mcp-Session-Id` comes back on the initialize response and every subsequent request
+ * must echo it. Without it exposed, a cross-origin client can never continue a session
+ * and re-initializes on every call. `Last-Event-ID` is the SSE resumption cursor.
+ */
+export const MCP_EXPOSED_RESPONSE_HEADERS = [
+  'Mcp-Session-Id',
+  'Mcp-Protocol-Version',
+  'Last-Event-ID',
+] as const
+
+/**
+ * Refuse a request whose `Origin` the host does not allow.
+ *
+ * MCP Streamable HTTP, Security Warning: *"Servers MUST validate the `Origin`
+ * header on all incoming connections to prevent DNS rebinding attacks. If the
+ * `Origin` header is present and invalid, servers MUST respond with HTTP 403
+ * Forbidden."*
+ *
+ * A CORS policy alone does not satisfy this. Omitting `Access-Control-Allow-Origin`
+ * only makes the RESPONSE unreadable to the page — the request still reaches the
+ * handler and still executes, which is precisely the case the 403 exists to stop.
+ *
+ * An absent `Origin` is NOT a failure: non-browser clients (the ones that carry a
+ * bearer token) do not send one, and the spec conditions the 403 on the header
+ * being present and invalid.
+ *
+ * @param isOriginAllowed The host's policy. Kept as a callback so this package
+ *   never owns a second, subtly different allow-list to the one the host's CORS
+ *   layer already enforces.
+ * @returns A 403 Response to return immediately, or null to continue.
+ */
+export function originGuard(
+  request: Request,
+  isOriginAllowed: (origin: string) => boolean,
+): Response | null {
+  const origin = request.headers.get('origin')
+  if (!origin || isOriginAllowed(origin)) return null
+
+  return new Response(
+    JSON.stringify({
+      jsonrpc: '2.0',
+      // The spec allows an id-less JSON-RPC error body here; the request may not
+      // even have parsed as JSON-RPC, so there is no id to echo.
+      error: { code: -32000, message: 'Forbidden -- Origin not allowed' },
+      id: null,
+    }),
+    { status: 403, headers: { 'Content-Type': 'application/json' } },
+  )
+}
 
 // ── Default logger ───────────────────────────────────────────────────────────
 
@@ -123,14 +200,14 @@ export function registerToolsOnServer(server: McpServer, ctx: RegistrationContex
     if (filter && !filter(toolName, meta)) continue
 
     const inputSchema = getMergedInputSchema(meta)
-    const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
+    const toolSchema = inputSchema ? typeboxToSchema(inputSchema) : undefined
     const description = generateToolDescription(toolName, meta)
     const annotations = meta.annotations
 
-    if (zodSchema) {
+    if (toolSchema) {
       server.registerTool(
         toolName,
-        { description, inputSchema: zodSchema, annotations },
+        { description, inputSchema: toolSchema, annotations },
         async (args: unknown) => executeTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, options.contextDecorators),
       )
     } else {
@@ -209,6 +286,13 @@ export function createMcpRequestHandler(handlerOpts: McpRequestHandlerOptions) {
   const serverVersion = options.version ?? '1.0.0'
 
   return async function handleMcpRequest(request: Request): Promise<Response> {
+    // Origin gate first: a rebound request must be refused, not merely denied a
+    // readable response (see originGuard).
+    if (options.isOriginAllowed) {
+      const refused = originGuard(request, options.isOriginAllowed)
+      if (refused) return refused
+    }
+
     // Authenticate
     let auth: AuthResult = { roles: [] }
     if (options.authenticate) {

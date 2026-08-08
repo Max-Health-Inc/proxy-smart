@@ -5,7 +5,7 @@
  * MCP Streamable HTTP Endpoint
  *
  * Exposes the backend's tool-registry as a proper MCP server using the
- * Streamable HTTP transport from @modelcontextprotocol/sdk.
+ * Streamable HTTP transport from @modelcontextprotocol/server.
  *
  * Auth: MCP clients discover OAuth via RFC 9728, login via Keycloak, pass Bearer token.
  * The handler validates the token on every request. Unauthenticated requests
@@ -16,15 +16,19 @@
  */
 
 import { Elysia } from 'elysia'
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
 import * as z from 'zod'
+import {
+  McpServer,
+  ResourceTemplate,
+  WebStandardStreamableHTTPServerTransport,
+  isInitializeRequest,
+} from '@modelcontextprotocol/server'
+import { isOriginAllowed } from '@/lib/cors-origins'
 
 import {
   SessionManager,
-  typeboxToZod,
+  typeboxToSchema,
+  originGuard,
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
@@ -92,17 +96,17 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       if (!meta.public && !userRoles.includes('admin')) continue
 
       const inputSchema = getMergedInputSchema(meta)
-      const zodSchema = inputSchema ? typeboxToZod(inputSchema) : undefined
+      const toolSchema = inputSchema ? typeboxToSchema(inputSchema) : undefined
       const description = generateDescription(toolName, meta)
       // Behavioural hints derived from the HTTP verb (destructiveHint for
       // delete_*, idempotentHint for update_*/PUT, etc.) so MCP clients can
       // flag destructive admin operations. See elysia-mcp `annotationsForMethod`.
       const annotations = meta.annotations
 
-      if (zodSchema) {
+      if (toolSchema) {
         server.registerTool(
           toolName,
-          { description, inputSchema: zodSchema, annotations },
+          { description, inputSchema: toolSchema, annotations },
           async (args: unknown) =>
             pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators),
         )
@@ -124,10 +128,10 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       {
         description:
           'Search the platform documentation knowledge base using semantic similarity. Use this when asked about platform features, configuration, SMART on FHIR concepts, admin UI, OAuth flows, or anything the docs might cover.',
-        inputSchema: {
-          query: z.string().describe('The search query to find relevant documentation'),
-          limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
-        },
+        inputSchema: z.object({
+                  query: z.string().describe('The search query to find relevant documentation'),
+                  limit: z.number().optional().describe('Maximum number of results to return (default: 5)'),
+                }),
       },
       async ({ query, limit }) => {
         try {
@@ -290,6 +294,11 @@ async function handleMcpRequest(request: Request): Promise<Response> {
       headers: { 'Content-Type': 'application/json' },
     })
   }
+
+  // Origin gate before authentication: a rebound request must be REFUSED, not
+  // merely denied a readable response (MCP Streamable HTTP security warning).
+  const refused = originGuard(request, isOriginAllowed)
+  if (refused) return refused
 
   // Authenticate
   const auth = await authenticateRequest(request)

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * @max-health-inc/elysia-mcp - Tests
  *
@@ -14,7 +17,7 @@ import {
   pathToResourceName,
   pathToResourceUri,
 } from '../src/introspect'
-import { typeboxToZod, getMergedInputSchema } from '../src/typebox-to-zod'
+import { typeboxToSchema, getMergedInputSchema } from '../src/typebox-schema'
 import { executeTool, executeResource } from '../src/executor'
 import type { ToolMetadata, ResourceMetadata } from '../src/types'
 
@@ -153,40 +156,48 @@ describe('extractRouteResources', () => {
   })
 })
 
-// ── TypeBox-to-Zod tests ─────────────────────────────────────────────────────
+// ── TypeBox-to-Standard-Schema tests ─────────────────────────────────────────
 
-describe('typeboxToZod', () => {
-  it('converts a simple TypeBox object to Zod shape', () => {
-    const schema = Type.Object({
+/** Run a Standard Schema's validator, which is how the MCP SDK invokes it. */
+async function validate(schema: unknown, value: unknown) {
+  const std = (schema as { '~standard': { validate: (v: unknown) => unknown } })['~standard']
+  return await std.validate(value)
+}
+
+describe('typeboxToSchema', () => {
+  it('produces a Standard Schema that accepts a valid value', async () => {
+    const schema = typeboxToSchema(Type.Object({
       name: Type.String({ description: 'User name' }),
       age: Type.Number(),
-    })
+    }))
 
-    const zod = typeboxToZod(schema)
-    expect(zod).toBeDefined()
-    expect(zod!.name).toBeDefined()
-    expect(zod!.age).toBeDefined()
+    expect(schema).toBeDefined()
+    const result = await validate(schema, { name: 'Ada', age: 36 })
+    expect(result).toEqual({ value: { name: 'Ada', age: 36 } })
   })
 
-  it('marks non-required fields as optional', () => {
-    const schema = Type.Object({
+  it('enforces the required array rather than re-deriving it', async () => {
+    const schema = typeboxToSchema(Type.Object({
       name: Type.String(),
       bio: Type.Optional(Type.String()),
-    })
-    // TypeBox with Optional doesn't add to required array
-    const zod = typeboxToZod(schema)
-    expect(zod).toBeDefined()
+    }))
+
+    // `bio` is absent and that is fine; `name` is not optional.
+    expect(await validate(schema, { name: 'Ada' })).toEqual({ value: { name: 'Ada' } })
+    expect(await validate(schema, { bio: 'no name' })).toHaveProperty('issues')
+  })
+
+  it('rejects a value of the wrong type', async () => {
+    const schema = typeboxToSchema(Type.Object({ age: Type.Number() }))
+    expect(await validate(schema, { age: 'thirty-six' })).toHaveProperty('issues')
   })
 
   it('returns undefined for non-object schemas', () => {
-    const schema = Type.String()
-    const zod = typeboxToZod(schema)
-    expect(zod).toBeUndefined()
+    expect(typeboxToSchema(Type.String())).toBeUndefined()
   })
 
   it('returns undefined for invalid input', () => {
-    const zod = typeboxToZod('not a schema')
-    expect(zod).toBeUndefined()
+    expect(typeboxToSchema('not a schema')).toBeUndefined()
   })
 })
 

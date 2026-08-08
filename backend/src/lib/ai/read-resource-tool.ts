@@ -11,8 +11,7 @@
  * MCP clients (LLMs) see one tool with a description listing all available
  * resource paths, rather than 80+ individual get_* tools.
  */
-
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import type { McpServer } from '@modelcontextprotocol/server'
 import * as z from 'zod'
 import { executeResource as pkgExecuteResource, DISPATCH_APP_KEY } from '@max-health-inc/elysia-mcp'
 import {
@@ -117,10 +116,10 @@ export function registerReadResourceTool(
     'read_resource',
     {
       description: buildReadResourceDescription(resources),
-      inputSchema: {
-        path: z.string().describe('The API path to read (e.g. /admin/users, /admin/smart-apps/:appId)'),
-        query: z.record(z.string(), z.string()).optional().describe('Optional query parameters as key-value pairs'),
-      },
+      inputSchema: z.object({
+              path: z.string().describe('The API path to read (e.g. /admin/users, /admin/smart-apps/:appId)'),
+              query: z.record(z.string(), z.string()).optional().describe('Optional query parameters as key-value pairs'),
+            }),
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ path, query }) => {
