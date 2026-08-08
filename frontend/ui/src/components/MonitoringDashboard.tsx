@@ -284,8 +284,8 @@ export function MonitoringDashboard({ config, embedded, isRealTimeActive: parent
                           <YAxis allowDecimals={false} className="text-muted-foreground" />
                           <Tooltip labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }} contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px' }} />
                           <Legend />
-                          <Bar dataKey="success" name={t('Success')} fill="#10b981" stackId="a" />
-                          <Bar dataKey="failure" name={t('Failure')} fill="#ef4444" stackId="a" />
+                          <Bar dataKey="success" name={t('Success')} fill="var(--success)" stackId="a" />
+                          <Bar dataKey="failure" name={t('Failure')} fill="var(--destructive)" stackId="a" />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (

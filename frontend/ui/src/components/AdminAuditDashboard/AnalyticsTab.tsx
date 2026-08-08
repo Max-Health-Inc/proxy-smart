@@ -66,8 +66,8 @@ export function AnalyticsTab({ analytics, actionPieData, resourcePieData }: Anal
                   }}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="success" name={t('Success')} stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="failure" name={t('Failure')} stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="success" name={t('Success')} stroke="var(--success)" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="failure" name={t('Failure')} stroke="var(--destructive)" strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="total" name={t('Total')} stroke="var(--primary)" strokeWidth={2} strokeDasharray="5 5" dot={false} />
               </LineChart>
             </ResponsiveContainer>

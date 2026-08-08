@@ -441,7 +441,7 @@ export function OAuthAnalyticsTab({
                     }}
                   />
                   <Bar dataKey="success" fill="var(--primary)" />
-                  <Bar dataKey="error" fill="#ef4444" />
+                  <Bar dataKey="error" fill="var(--destructive)" />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
