@@ -20,6 +20,7 @@ import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, HealthcareUser } from '@/lib/types/api';
 import { createPersonResource, searchPersonResources, getPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 
 interface AddFhirPersonModalProps {
   isOpen: boolean;
@@ -57,7 +58,7 @@ export function AddFhirPersonModal({
   );
 
   // Debug logging
-  console.debug('AddFhirPersonModal - Data Check:', {
+  logger.debug('AddFhirPersonModal data check', {
     totalServersProvided: availableServers.length,
     availableServersProvided: availableServers.map(s => ({ name: s.name, status: s.status })),
     userFhirPersons: user.fhirPersons,
