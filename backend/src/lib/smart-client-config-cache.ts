@@ -12,8 +12,17 @@
  */
 
 import KcAdminClient from '@keycloak/keycloak-admin-client'
+import { isCimdClientId, resolveCimdRedirectUris, type SmartProxyLogger } from '@proxy-smart/auth'
 import { config } from '@/config'
 import { logger } from '@/lib/logger'
+
+/** The lib takes a flat logger; adapt our structured one once, here. */
+const smartLogger: SmartProxyLogger = {
+  debug: (msg, meta) => logger.auth.debug(msg, meta),
+  info: (msg, meta) => logger.auth.info(msg, meta),
+  warn: (msg, meta) => logger.auth.warn(msg, meta),
+  error: (msg, meta) => logger.auth.error(msg, meta),
+}
 
 export interface SmartClientConfig {
   /** If true → resolve fhirUser to Patient. If false → Practitioner. If undefined → no resolution (backward compat). */
@@ -57,15 +66,32 @@ export async function getSmartClientConfig(clientId: string): Promise<SmartClien
 /**
  * Get the redirect URIs registered for a client (RFC 6749 §3.1.2.3).
  *
- * Reuses the cached client config (single Keycloak admin lookup, shared with
- * patientFacing resolution). Returns an empty array for unknown clients or
- * when Keycloak is unavailable — the caller treats an empty allowlist as
- * "reject every redirect_uri" (fail-closed).
+ * TWO SOURCES, because a client can register two ways and only one of them puts
+ * anything in Keycloak:
+ *
+ *   CIMD  — `client_id` is an https URL and the client publishes its own
+ *           `redirect_uris` there. Keycloak holds no record of the client, so the
+ *           document is the only source of truth. This is the RECOMMENDED
+ *           registration method as of MCP 2026-07-28.
+ *   DCR   — `client_id` is a Keycloak client id; ask Keycloak. Deprecated by the
+ *           same spec revision, still the path SMART apps use.
+ *
+ * Routing both through one function is what lets the authorize interceptor stay
+ * uniform: it asks "what may this client redirect to" and does not care how the
+ * client registered. An earlier attempt special-cased CIMD at the interception
+ * site instead, which silently delegated an authorization-server MUST to Keycloak.
+ *
+ * Returns an empty array for unknown clients, an unverifiable metadata document,
+ * or an unavailable Keycloak — the caller treats an empty allowlist as "reject
+ * every redirect_uri" (fail-closed).
  *
  * Wired into `@proxy-smart/auth`'s `getRegisteredRedirectUris` dependency.
  */
 export async function getRegisteredRedirectUris(clientId: string): Promise<string[]> {
   if (!clientId) return []
+  if (isCimdClientId(clientId)) {
+    return resolveCimdRedirectUris(clientId, { logger: smartLogger })
+  }
   const { redirectUris } = await getSmartClientConfig(clientId)
   return redirectUris
 }

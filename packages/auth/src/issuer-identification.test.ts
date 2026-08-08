@@ -104,24 +104,49 @@ describe('callback interception for proxy-issued resources', () => {
     expect(store.get(sessionKey!)?.clientState).toBe('client-state-123')
   })
 
-  test('does NOT intercept a CIMD client, whose redirect URIs the IdP does not hold', async () => {
-    // Regression: a CIMD client_id is a URL, so getRegisteredRedirectUris finds
-    // nothing in the IdP and the fail-closed check rejected the request with 400
-    // before the user saw a login page. This took the beta connector down.
+  test('intercepts a CIMD client whose metadata document lists the redirect_uri', async () => {
+    // A CIMD client_id is a URL and the IdP holds no record of it, so the
+    // allowlist comes from the metadata document. Once the injected resolver
+    // knows how to read it, interception needs no special case — and the
+    // fail-closed check stays fail-closed.
     const store = new MemoryStore()
+    const CIMD_ID = 'https://claude.ai/api/mcp/client-metadata.json'
+    const deps: AuthorizeInterceptorDeps = {
+      ...authorizeDeps(store),
+      // Stands in for the resolver that fetches and validates the document.
+      getRegisteredRedirectUris: async (id) => (id === CIMD_ID ? [REGISTERED_REDIRECT] : []),
+    }
+
     const { result, sessionKey } = await handleAuthorize(
-      mcpAuthorizeParams({ client_id: 'https://claude.ai/api/mcp/client-metadata.json' }),
-      authorizeDeps(store),
+      mcpAuthorizeParams({ client_id: CIMD_ID }),
+      deps,
     )
 
-    expect(sessionKey).toBeUndefined()
-    expect(result.type).toBe('redirect')
-    if (result.type !== 'redirect') return
+    expect(sessionKey).toBeDefined()
+    if (result.type !== 'redirect') throw new Error('expected redirect')
     const url = new URL(result.url)
-    // Passed through untouched, for the IdP to resolve via the metadata document.
-    expect(url.searchParams.get('client_id')).toBe('https://claude.ai/api/mcp/client-metadata.json')
-    expect(url.searchParams.get('redirect_uri')).toBe(REGISTERED_REDIRECT)
-    expect(url.searchParams.get('state')).toBe('client-state-123')
+    expect(url.searchParams.get('redirect_uri')).toBe(`${BASE_URL}${CALLBACK_PATH}`)
+    expect(url.searchParams.get('client_id')).toBe(CIMD_ID)
+  })
+
+  test('rejects a CIMD client whose document does not list the redirect_uri', async () => {
+    const store = new MemoryStore()
+    const deps: AuthorizeInterceptorDeps = {
+      ...authorizeDeps(store),
+      // Document fetched but the requested URI is not in it — or the document
+      // could not be verified at all, which the resolver reports the same way.
+      getRegisteredRedirectUris: async () => [],
+    }
+
+    const { result } = await handleAuthorize(
+      mcpAuthorizeParams({ client_id: 'https://claude.ai/api/mcp/client-metadata.json' }),
+      deps,
+    )
+
+    expect(result.type).toBe('error')
+    if (result.type !== 'error') return
+    expect(result.status).toBe(400)
+    expect(result.error_description).toContain('redirect_uri')
   })
 
   test('does NOT intercept a non-SMART request for an unlisted resource', async () => {
