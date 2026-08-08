@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui';
 import { CopyButton } from '@/components/ui/copy-button';
 import {
@@ -13,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { FHIR_RESOURCES, FHIR_PERMISSIONS, SCOPE_CONTEXTS, SCOPE_TEMPLATES } from './constants';
 import type { BuilderState, ScopeTemplate, ScopeValidation } from './types';
 import type { ScopeSet } from '@/lib/types/api';
+import { logger } from '@/lib/logger';
 
 interface ScopeBuilderProps {
   editingScope: ScopeSet | null;
@@ -61,8 +65,8 @@ export function ScopeBuilder({
 
   const testScope = async (scope: string) => {
     const validation = validateScope(scope);
-    console.log('Scope validation result:', validation);
-    setTimeout(() => console.log('API test completed'), 3000);
+    logger.debug('Scope validation result', validation);
+    setTimeout(() => logger.debug('API test completed'), 3000);
   };
 
   return (

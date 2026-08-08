@@ -16,6 +16,9 @@ export * from './docs'
 // FHIR schemas (SMART configuration, FHIR responses)
 export * from './fhir'
 
+// Self-service profile schemas
+export * from './profile'
+
 // OAuth monitoring schemas (events, analytics, health)
 export * from './monitoring'
 

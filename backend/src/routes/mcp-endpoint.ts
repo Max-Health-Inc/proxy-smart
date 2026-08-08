@@ -17,18 +17,12 @@
 
 import { Elysia } from 'elysia'
 import * as z from 'zod'
-import {
-  McpServer,
-  ResourceTemplate,
-  WebStandardStreamableHTTPServerTransport,
-  isInitializeRequest,
-} from '@modelcontextprotocol/server'
+import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server'
+import { createMcpHttpHandler } from '@maxhealth.tech/mcp-http'
 import { isOriginAllowed } from '@/lib/cors-origins'
 
 import {
-  SessionManager,
   typeboxToSchema,
-  originGuard,
   executeTool as pkgExecuteTool,
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
@@ -39,7 +33,6 @@ import type { ToolMetadata, ResourceMetadata } from '@max-health-inc/elysia-mcp'
 import { config } from '../config'
 import { validateToken } from '../lib/auth'
 import { getMcpResourceAudience } from '../lib/token-audience'
-import { logger } from '../lib/logger'
 import {
   getToolRegistry,
   isToolRegistryInitialized,
@@ -55,13 +48,11 @@ import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
 
-// ── Session management (delegated to package) ────────────────────────────────
-
-const sessionManager = new SessionManager(100, 30 * 60_000, {
-  info: (msg, data) => logger.server.info(msg, data),
-  warn: (msg, data) => logger.warn('mcp', msg, data),
-  error: (msg, data) => logger.error('mcp', msg, data),
-})
+// No session store: this endpoint is stateless (see handleMcpRequest). The
+// SessionManager that used to live here held transports in PROCESS MEMORY, so
+// every deploy silently invalidated every live connection and the next request
+// got `404 Session not found` — on an environment that redeploys many times a
+// day, that is most of them.
 
 // Domain-specific context decorators injected into tool/resource execution.
 // The dispatch app (resolved lazily — it is registered after this module loads)
@@ -232,15 +223,36 @@ interface AuthResult {
   token?: string
 }
 
-async function authenticateRequest(request: Request): Promise<AuthResult | Response> {
-  const authHeader = request.headers.get('authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return unauthorized()
-  }
+/** A token that fails validation. Mapped to a 401 in `onError`. */
+class McpUnauthorizedError extends Error {}
 
-  const token = authHeader.substring(7).trim()
-  if (!token) return unauthorized()
+/** mcp-http wants the origin to echo, or null to refuse. No Origin stays allowed. */
+function allowedOrigin(req: Request): string | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null
+  return isOriginAllowed(origin) ? origin : null
+}
 
+/**
+ * Rewrite the 401 challenge on the way out.
+ *
+ * Two things upstream does not do. It derives the pointer from `req.url`, so a
+ * spoofed Host behind a proxy that does not normalise it would aim the client at
+ * an attacker's metadata; config.baseUrl is trusted. And it omits `scope`, which
+ * is what lets a client following the challenge actually authorize.
+ */
+function withChallenge(res: Response): Response {
+  if (res.status !== 401) return res
+  const baseUrl = (config.baseUrl || 'http://localhost:8445').replace(/\/+$/, '')
+  const headers = new Headers(res.headers)
+  headers.set(
+    'WWW-Authenticate',
+    `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="${MCP_SCOPE_CHALLENGE}"`,
+  )
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers })
+}
+
+async function authenticateToken(token: string): Promise<AuthResult> {
   try {
     // MCP tokens are bound to the MCP endpoint resource (RFC 8707) or one of the
     // proxy's own clients (matched on aud/azp): the admin WEBAPP client
@@ -258,116 +270,69 @@ async function authenticateRequest(request: Request): Promise<AuthResult | Respo
     ).flatMap((r) => r?.roles ?? [])
     return { roles: [...new Set([...realmRoles, ...clientRoles])], sub: payload.sub, token }
   } catch {
-    return unauthorized()
+    throw new McpUnauthorizedError('Unauthorized')
   }
-}
-
-function unauthorized(): Response {
-  const baseUrl = config.baseUrl || 'http://localhost:8445'
-  return new Response(
-    JSON.stringify({
-      jsonrpc: '2.0',
-      error: { code: -32001, message: 'Unauthorized -- Bearer token required' },
-      id: null,
-    }),
-    {
-      status: 401,
-      headers: {
-        'Content-Type': 'application/json',
-        // The challenged scopes are the ones every provisioned client is granted by default,
-        // so a client that follows this challenge can actually authorize (see lib/oauth-scopes).
-        'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource", scope="${MCP_SCOPE_CHALLENGE}"`,
-      },
-    },
-  )
 }
 
 // ── Core request handler ─────────────────────────────────────────────────────
 
-async function handleMcpRequest(request: Request): Promise<Response> {
-  // Master switch — file-backed config is the single source of truth
-  const endpointCfg = loadMcpEndpointConfig()
-  const effectiveEnabled = endpointCfg.enabled
-  if (!effectiveEnabled) {
-    return new Response(JSON.stringify({ error: 'MCP endpoint is disabled' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
+/** Built once; the tool registry is read per request inside createServer. */
+let handler: ReturnType<typeof createMcpHttpHandler> | null = null
 
-  // Origin gate before authentication: a rebound request must be REFUSED, not
-  // merely denied a readable response (MCP Streamable HTTP security warning).
-  const refused = originGuard(request, isOriginAllowed)
-  if (refused) return refused
-
-  // Authenticate
-  const auth = await authenticateRequest(request)
-  if (auth instanceof Response) return auth
-
-  const sessionId = request.headers.get('mcp-session-id')
-
-  // ── Existing session ───────────────────────────────────────────────────
-  if (sessionId && sessionManager.has(sessionId)) {
-    const session = sessionManager.get(sessionId)!
-    if (session.boundSub && auth.sub && session.boundSub !== auth.sub) {
-      return new Response(
-        JSON.stringify({ jsonrpc: '2.0', error: { code: -32001, message: 'Session belongs to a different user' }, id: null }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } },
-      )
-    }
-    if (auth.token) session.tokenRef.current = auth.token
-    session.lastActivity = Date.now()
-    return (session.transport as WebStandardStreamableHTTPServerTransport).handleRequest(request)
-  }
-
-  // ── Unknown session ID -> 404 ──────────────────────────────────────────
-  if (sessionId) {
-    return new Response(
-      JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Session not found' }, id: null }),
-      { status: 404, headers: { 'Content-Type': 'application/json' } },
-    )
-  }
-
-  // ── New session (initialization) ───────────────────────────────────────
-  if (request.method === 'POST') {
-    const body = await request.json()
-
-    if (isInitializeRequest(body)) {
+function mcpHandler() {
+  if (handler) return handler
+  // Fail closed: mcp-http reads an absent authorizationServer as a public
+  // endpoint and drops the Bearer gate.
+  handler = createMcpHttpHandler({
+    mcpPath: config.mcp?.path ?? '/mcp',
+    authorizationServer: config.keycloak.expectedIssuer ?? config.baseUrl,
+    cors: { origin: allowedOrigin },
+    createServer: async (token) => {
+      const auth = await authenticateToken(token ?? '')
       const tokenRef = { current: auth.token }
-
-      const transport = new WebStandardStreamableHTTPServerTransport({
-        sessionIdGenerator: () => crypto.randomUUID(),
-        onsessioninitialized: (sid) => {
-          sessionManager.set(sid, { transport, server, tokenRef, lastActivity: Date.now(), boundSub: auth.sub })
-          logger.server.info('MCP session initialized', { sessionId: sid, sub: auth.sub })
-        },
-        onsessionclosed: (sid) => {
-          sessionManager.delete(sid)
-          logger.server.info('MCP session closed', { sessionId: sid })
-        },
-      })
-
-      transport.onclose = () => {
-        if (transport.sessionId) sessionManager.delete(transport.sessionId)
-      }
-
       const server = new McpServer(
         { name: config.displayName, version: config.version },
         { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
       )
-
+      // Filtered by the roles on THIS request's token.
       registerTools(server, auth.roles, tokenRef)
       registerResources(server, auth.roles, tokenRef)
+      return server
+    },
+    // A createServer throw is a 500 upstream; a bad token deserves a 401.
+    onError: (err) =>
+      err instanceof McpUnauthorizedError
+        ? new Response(null, { status: 401 })
+        : undefined,
+  })
+  return handler
+}
 
-      await server.connect(transport)
-      return transport.handleRequest(request, { parsedBody: body })
-    }
+async function handleMcpRequest(request: Request): Promise<Response> {
+  // Master switch — file-backed config is the single source of truth.
+  if (!loadMcpEndpointConfig().enabled) {
+    return Response.json({ error: 'MCP endpoint is disabled' }, { status: 404 })
   }
 
-  return new Response(
-    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Bad Request: No valid session or initialization request' }, id: null }),
-    { status: 400, headers: { 'Content-Type': 'application/json' } },
-  )
+  // Origin still first: a rebound request must be REFUSED, not handed a
+  // challenge it can act on.
+  const origin = request.headers.get('origin')
+  if (origin && !isOriginAllowed(origin)) {
+    return Response.json(
+      { jsonrpc: '2.0', error: { code: -32000, message: 'Origin not allowed' }, id: null },
+      { status: 403 },
+    )
+  }
+
+  // Then the challenge, before the method gate. An MCP client discovers
+  // authorization by making an UNAUTHENTICATED request and reading the 401's
+  // WWW-Authenticate; upstream answers GET with 405 and no challenge, which
+  // leaves a registering client with nothing to follow.
+  if (!request.headers.get('authorization')) {
+    return withChallenge(new Response(null, { status: 401 }))
+  }
+
+  return withChallenge(await mcpHandler()(request))
 }
 
 // ── Elysia route ─────────────────────────────────────────────────────────────

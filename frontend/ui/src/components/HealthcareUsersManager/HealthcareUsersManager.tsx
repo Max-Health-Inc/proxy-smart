@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@proxy-smart/shared-ui';
 import { useAuth } from '@/stores/authStore';
@@ -70,6 +73,25 @@ async function fetchClientRoles(clientId: string): Promise<string[]> {
     if (!res.ok) return [];
     const roles: { name?: string }[] = await res.json();
     return roles.map(r => r.name).filter((n): n is string => !!n);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch realm roles, optionally including technical/plumbing ones. The generated
+ * client does not expose `?includeTechnical`, so this mirrors fetchClientRoles.
+ */
+async function fetchRealmRoles({ includeTechnical }: { includeTechnical: boolean }): Promise<RoleResponse[]> {
+  const token = await getStoredToken();
+  if (!token) return [];
+  try {
+    const query = includeTechnical ? '?includeTechnical=true' : '';
+    const res = await fetch(`${config.api.baseUrl}/admin/roles/${query}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return [];
+    return await res.json() as RoleResponse[];
   } catch {
     return [];
   }
@@ -154,20 +176,15 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
       })
       .finally(() => setLoading(false));
 
-    // Load roles and identity providers
+    // Technical roles are fetched here and filtered at the picker, so the edit
+    // form can still show and repair a missing one.
     Promise.all([
-      clientApis.roles.getAdminRoles().catch(() => []),
+      fetchRealmRoles({ includeTechnical: true }),
       fetchClientRoles('admin-ui'),
       clientApis.identityProviders.getAdminIdps().catch(() => []),
     ])
       .then(([realmRoles, adminUiRoles, idps]) => {
-        // getAdminRoles() already hides technical roles; defensively drop plumbing too.
-        const nonTechnicalRoles = realmRoles.filter(r =>
-          !r.isTechnical &&
-          !(r.name ?? '').startsWith('default-roles-') &&
-          !['offline_access', 'uma_authorization'].includes(r.name ?? '')
-        );
-        const realmRoleNames = nonTechnicalRoles
+        const realmRoleNames = realmRoles
           .map(r => r.name)
           .filter((n): n is string => !!n);
         setAvailableRealmRoles(realmRoleNames);
@@ -175,7 +192,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
 
         // Index full metadata by role name (realm roles carry description + scopes).
         const meta: Record<string, RoleResponse> = {};
-        for (const role of nonTechnicalRoles) {
+        for (const role of realmRoles) {
           if (role.name) meta[role.name] = role;
         }
         setRolesMeta(meta);

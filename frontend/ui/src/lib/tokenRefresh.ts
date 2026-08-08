@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Token refresh service - breaks circular dependency between apiClient and authStore
  * This module is imported by apiClient to handle token refresh without directly importing authStore
@@ -34,19 +37,16 @@ export async function attemptTokenRefresh(): Promise<boolean> {
     const tokens = await getItem<{refresh_token?: string}>('openid_tokens');
     
     if (!tokens?.refresh_token) {
-      console.debug('No refresh token available');
       logger.info('tokenRefresh: no refresh token present');
       return false;
     }
 
-    console.debug('Attempting token refresh...');
     logger.info('tokenRefresh: invoking refreshTokensImpl');
     await refreshTokensImpl();
     
     // Verify refresh was successful by checking if we have new tokens
     const newTokens = await getItem<{access_token?: string}>('openid_tokens');
     if (newTokens?.access_token) {
-      console.debug('Token refresh completed successfully');
       logger.info('tokenRefresh: refresh success, access token present');
       return true;
     } else {

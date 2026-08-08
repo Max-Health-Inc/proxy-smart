@@ -24,6 +24,7 @@ import type { IdPAdapter } from './idp/interface'
 import { isSmartLaunch, isStandaloneLaunch, parseScopes } from './smart-scopes'
 import { verifyLaunchCode, type LaunchCodeServiceOptions } from './launch-code'
 import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
+import { isCimdClientId } from './cimd'
 
 export interface AuthorizeInterceptorDeps {
   config: SmartProxyConfig
@@ -135,7 +136,40 @@ export async function handleAuthorize(
   // for — the latter so the callback can carry the proxy's own `iss`. See
   // SmartProxyConfig.interceptedResourceUrls.
   const targetsInterceptedResource = !!aud && (config.interceptedResourceUrls ?? []).includes(aud)
-  const shouldIntercept = (smartLaunch || targetsInterceptedResource) && !!params.redirect_uri
+
+  let shouldIntercept = (smartLaunch || targetsInterceptedResource) && !!params.redirect_uri
+
+  // ── Only intercept what we can validate ───────────────────────────────
+  // Interception rewrites redirect_uri to the proxy callback, which takes the
+  // RFC 6749 §10.6 check away from the IdP and gives it to us. We may only do
+  // that when we can actually perform it.
+  //
+  // For a CIMD client (`client_id` is an https URL) the allowlist lives in a
+  // document on the CLIENT'S OWN HOST, and fetching it can fail for reasons that
+  // say nothing about the request: a bot-protection interstitial in front of that
+  // host, egress restrictions, an outage. Treating an unreadable document as "no
+  // registered URIs" would reject a legitimate authorize request that, before any
+  // of this existed, passed through to the IdP and worked — the IdP resolves CIMD
+  // itself and can validate what we could not read.
+  //
+  // So: resolve first, and only take over when the document actually answered.
+  // Otherwise stand aside. The cost is that such clients keep the IdP's `iss`
+  // instead of ours, which is a conformance gap; rejecting them outright would be
+  // an outage, and an outage is worse.
+  if (shouldIntercept && isCimdClientId(params.client_id) && deps.getRegisteredRedirectUris) {
+    let resolved: string[]
+    try {
+      resolved = await deps.getRegisteredRedirectUris(params.client_id!)
+    } catch {
+      resolved = []
+    }
+    if (resolved.length === 0) {
+      logger?.warn('CIMD metadata document unavailable — passing through to the IdP unintercepted', {
+        clientId: params.client_id,
+      })
+      shouldIntercept = false
+    }
+  }
 
   // ── Validate redirect_uri against the client's registered URIs ────────
   // RFC 6749 §3.1.2.3 / §10.6: reject any redirect_uri that is not an EXACT

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { formatChartTimestamp } from '@/lib/utils'
 import { Badge, Button, Input, CHART_COLORS, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, StatCard } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from './ui/page-loading-state';
 import { PageErrorState } from './ui/page-error-state';
@@ -407,7 +408,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                           />
                           <YAxis allowDecimals={false} className="text-muted-foreground" />
                           <Tooltip
-                            labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }}
+                            labelFormatter={(label) => formatChartTimestamp(label)}
                             contentStyle={{
                               backgroundColor: 'var(--card)',
                               border: '1px solid var(--border)',
@@ -636,7 +637,7 @@ export function ConsentMonitoringDashboard({ embedded, isRealTimeActive: parentR
                           />
                           <YAxis allowDecimals={false} className="text-muted-foreground" />
                           <Tooltip
-                            labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }}
+                            labelFormatter={(label) => formatChartTimestamp(label)}
                             contentStyle={{
                               backgroundColor: 'var(--card)',
                               border: '1px solid var(--border)',
