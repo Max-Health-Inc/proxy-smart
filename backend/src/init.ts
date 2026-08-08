@@ -13,6 +13,7 @@ import {
   ensureIntrospectionClientConfig,
   ensureResourceServerClients,
   ensureResourceIndicatorsScope,
+  ensureAdminUiDeviceGrant,
 } from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 
@@ -959,6 +960,8 @@ async function ensureSystemClients(): Promise<void> {
   await ensureResourceServerClients(admin)
   // After the resource clients — the scope's mappers name them as audiences.
   await ensureResourceIndicatorsScope(admin)
+  // Lets  work without a browser or a client secret.
+  await ensureAdminUiDeviceGrant(admin)
 }
 
 export async function initializeServer(): Promise<void> {
