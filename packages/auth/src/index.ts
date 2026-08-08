@@ -61,6 +61,15 @@ export { signLaunchCode, verifyLaunchCode, type LaunchCodeServiceOptions } from 
 // ─── Redirect URI Validation ──────────────────────────────────────────────────
 export { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
 
+export {
+  isCimdClientId,
+  resolveCimdRedirectUris,
+  validateCimdDocument,
+  clearCimdCache,
+  type CimdDocument,
+  type CimdOptions,
+} from './cimd'
+
 // ─── Stores ─────────────────────────────────────────────────────────────────
 export type { ILaunchContextStore, LaunchContextStoreOptions } from './stores/interface'
 export { MemoryStore } from './stores/memory'
