@@ -29,6 +29,9 @@ export const RESOURCE_AUDIENCE_CLIENT_IDS = ['fhir-resource-server', 'mcp-resour
  */
 const RESOURCE_URL_ATTR = 'resource_url'
 
+/** Keycloak client attribute gating RFC 8628 device authorization. */
+const DEVICE_GRANT_ATTR = 'oauth2.device.authorization.grant.enabled'
+
 /**
  * Non-login "resource server" client that exists only to hold a `resource_url`.
  *
@@ -348,6 +351,56 @@ export async function ensureShlExchangeClient(admin: KcAdminClient): Promise<voi
     logger.keycloak.debug('Reconciled SHL exchange client secret', { clientId })
   } catch (error) {
     logger.keycloak.warn('Failed to reconcile SHL exchange client', {
+      clientId,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  }
+}
+
+/**
+ * Ensure the admin webapp client may start the RFC 8628 device authorization grant.
+ *
+ * This is how `proxy-smart login` works: the CLI has no browser and no client
+ * secret, so it starts a device flow against the admin-ui client and polls. With
+ * the grant disabled Keycloak refuses at the first step:
+ *
+ *   HTTP 400 {"error":"unauthorized_client",
+ *             "error_description":"Client is not allowed to initiate OAuth 2.0
+ *                                  Device Authorization Grant."}
+ *
+ * ALL THREE realm exports already declare the attribute — and it still was not
+ * set on production. Same reason as every other drift in this file:
+ * `--import-realm` is IGNORE_EXISTING, so a realm that already exists never picks
+ * up anything added to the export afterwards. Beta only had it because
+ * .github/scripts/deploy-beta-remote.sh reconciles it at deploy time, and
+ * production does not run that script. Reconciling here makes it true in every
+ * environment by construction rather than in whichever one happened to run a
+ * shell script.
+ */
+export async function ensureAdminUiDeviceGrant(admin: KcAdminClient): Promise<void> {
+  const clientId = config.keycloak.adminUiClientId
+  if (!clientId) return
+
+  try {
+    const existing = await admin.clients.find({ clientId, max: 1 })
+    if (existing.length === 0) {
+      logger.keycloak.debug('Admin UI client not found — skipping device-grant reconcile', { clientId })
+      return
+    }
+
+    const client = existing[0]
+    if (client.attributes?.[DEVICE_GRANT_ATTR] === 'true') return
+
+    await admin.clients.update(
+      { id: client.id! },
+      { clientId, attributes: { ...(client.attributes ?? {}), [DEVICE_GRANT_ATTR]: 'true' } },
+    )
+    logger.keycloak.info('Enabled device-authorization grant on the admin UI client', {
+      clientId,
+      previous: client.attributes?.[DEVICE_GRANT_ATTR] ?? '(unset)',
+    })
+  } catch (error) {
+    logger.keycloak.warn('Failed to reconcile admin-ui device-authorization grant', {
       clientId,
       error: error instanceof Error ? error.message : String(error),
     })

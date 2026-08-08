@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import React, { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -40,6 +43,7 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 
 interface NavigationProps {
   activeTab: string;
@@ -59,11 +63,11 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
   };
 
   const handleLanguageChange = async (languageCode: string) => {
-    console.debug('Navigation: Language change requested to:', languageCode);
-    console.debug('Navigation: Current language:', currentLanguage);
+    logger.debug('Navigation: language change requested', { languageCode });
+    logger.debug('Navigation: current language', { currentLanguage });
     try {
       await setLanguage(languageCode);
-      console.debug('Navigation: Language change completed');
+      logger.debug('Navigation: language change completed');
     } catch (error) {
       console.error('Navigation: Language change failed:', error);
     }
@@ -410,6 +414,16 @@ export function Navigation({ activeTab, onTabChange, profile }: NavigationProps)
                       <span className="font-semibold text-foreground">{t('Profile Settings')}</span>
                     </DropdownMenuItem>
                     
+                    <DropdownMenuItem
+                      onClick={() => onTabChange('profile')}
+                      className="flex items-center space-x-3 p-3 hover:bg-muted/80 cursor-pointer rounded-xl mx-2 my-1 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <span className="font-semibold text-foreground">{t('My Profile')}</span>
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem 
                       onSelect={(e) => {
                         e.preventDefault();

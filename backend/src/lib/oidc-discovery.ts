@@ -23,9 +23,26 @@ const KEYCLOAK_DIRECT_MARKER = '/protocol/openid-connect/'
 /**
  * Endpoint keys the proxy actually fronts with a dedicated `/auth/*` route.
  * Each is rewritten to the proxy origin so clients transit the proxy.
+ *
+ * `issuer` is here too, and it is the load-bearing one. Every caller serves this
+ * document FROM the proxy origin, and RFC 8414 §3.3 requires a metadata document's
+ * `issuer` to match the URL it was retrieved from. Passing Keycloak's realm issuer
+ * straight through — which is what happened while only the endpoints were
+ * rewritten — published a document that asserts Keycloak's identity while
+ * advertising the proxy's endpoints. A client that enforces §3.3 should reject it
+ * outright, and one that does not gets an issuer it will later compare the RFC 9207
+ * `iss` against, which the proxy (not Keycloak) now sends.
+ *
+ * This does NOT change who mints tokens. Keycloak still does, and its tokens still
+ * carry its own `iss`; access tokens are opaque to OAuth clients, and RFC 9207
+ * constrains the authorization RESPONSE, not the token. Consumers that genuinely
+ * need Keycloak's OIDC identity — SMART apps validating an id_token — read it from
+ * `.well-known/smart-configuration` or the realm's own discovery document, both of
+ * which still advertise the realm issuer.
  */
 function proxyEndpointOverrides(baseUrl: string): Record<string, string> {
   return {
+    issuer: baseUrl,
     authorization_endpoint: `${baseUrl}/auth/authorize`,
     token_endpoint: `${baseUrl}/auth/token`,
     device_authorization_endpoint: `${baseUrl}/auth/device`,

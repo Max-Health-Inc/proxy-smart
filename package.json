@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.3-RELEASE.202608081032.10f1a4cef",
+  "version": "0.3.4-beta.202608082103.a47eb328a",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -10,18 +10,18 @@
     "@max-health-inc/config": "^3.2.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/fhir": "^0.0.44",
-    "@vitejs/plugin-react-swc": "^4.3.1",
+    "@vitejs/plugin-react-swc": "^4.3.3",
     "babelfhir-ts": "1.5.21",
-    "concurrently": "^10.0.3",
+    "concurrently": "^10.0.4",
     "cross-env": "^10.1.0",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.1",
     "glob": "^13.0.6",
-    "rollup": "^4.62.2",
+    "rollup": "^4.62.4",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.64.0",
-    "vite": "^8.1.5",
+    "typescript-eslint": "^8.66.0",
+    "vite": "^8.2.1",
     "vitepress": "^1.6.4",
-    "vue": "^3.5.40"
+    "vue": "^3.5.41"
   },
   "description": "Proxy Smart - Healthcare interoperability proxy with Keycloak integration",
   "engines": {
@@ -182,12 +182,6 @@
   "homepage": "https://beta.proxy-smart.com",
   "dependencies": {
     "hl7.fhir.uv.smart-app-launch-generated": "./lib/hl7.fhir.uv.smart-app-launch-generated.tgz",
-    "undici": "^8.7.0"
-  },
-  "overrides": {
-    "zod": "4.3.6"
-  },
-  "resolutions": {
-    "zod": "4.3.6"
+    "undici": "^8.10.0"
   }
 }

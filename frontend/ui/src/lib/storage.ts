@@ -1,5 +1,9 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import localforage from "localforage";
 import { applyDecrypt, applyEncrypt } from "./utils";
+import { logger } from './logger';
 
 localforage.config({
     name: "proxy-smart",
@@ -138,7 +142,7 @@ export const clearAllAuthData = async (): Promise<void> => {
 
 // Utility to immediately clear authorization code data after use
 export const clearAuthorizationCodeData = (): void => {
-    console.log('Clearing authorization code data...');
+    logger.debug('Clearing authorization code data');
     
     // Clear any potential authorization code storage
     removeSessionItem('authorization_code');
