@@ -104,6 +104,26 @@ describe('callback interception for proxy-issued resources', () => {
     expect(store.get(sessionKey!)?.clientState).toBe('client-state-123')
   })
 
+  test('does NOT intercept a CIMD client, whose redirect URIs the IdP does not hold', async () => {
+    // Regression: a CIMD client_id is a URL, so getRegisteredRedirectUris finds
+    // nothing in the IdP and the fail-closed check rejected the request with 400
+    // before the user saw a login page. This took the beta connector down.
+    const store = new MemoryStore()
+    const { result, sessionKey } = await handleAuthorize(
+      mcpAuthorizeParams({ client_id: 'https://claude.ai/api/mcp/client-metadata.json' }),
+      authorizeDeps(store),
+    )
+
+    expect(sessionKey).toBeUndefined()
+    expect(result.type).toBe('redirect')
+    if (result.type !== 'redirect') return
+    const url = new URL(result.url)
+    // Passed through untouched, for the IdP to resolve via the metadata document.
+    expect(url.searchParams.get('client_id')).toBe('https://claude.ai/api/mcp/client-metadata.json')
+    expect(url.searchParams.get('redirect_uri')).toBe(REGISTERED_REDIRECT)
+    expect(url.searchParams.get('state')).toBe('client-state-123')
+  })
+
   test('does NOT intercept a non-SMART request for an unlisted resource', async () => {
     const store = new MemoryStore()
     const { result, sessionKey } = await handleAuthorize(
