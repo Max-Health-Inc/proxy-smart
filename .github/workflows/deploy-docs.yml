@@ -39,9 +39,15 @@ jobs:
 
       - name: Install VitePress
         run: |
-          # Strip workspaces from package.json to avoid resolution errors
-          # (main may not have all workspace dirs yet)
-          node -e "const p=JSON.parse(require('fs').readFileSync('package.json','utf8')); delete p.workspaces; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2))"
+          # docs/.vitepress/config.ts imports vitepress and nothing else, so the
+          # whole manifest is dropped rather than installed.
+          #
+          # workspaces went first, because main may not have every workspace dir.
+          # dependencies and devDependencies follow because resolving them pulls
+          # @max-health-inc/config from GitHub Packages, and this job has no
+          # registry token — bun then hangs on the unauthenticated request rather
+          # than failing, which stalled the deploy for minutes before timing out.
+          node -e "const p=JSON.parse(require('fs').readFileSync('package.json','utf8')); delete p.workspaces; delete p.dependencies; delete p.devDependencies; require('fs').writeFileSync('package.json', JSON.stringify(p,null,2))"
           bun add -d vitepress
 
       - name: Build docs
