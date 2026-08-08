@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.33-alpha.202608080713.96ba5453a] - 2026-08-08
+
+- 🔧 Chores & Improvements: Minor CI/CD and versioning updates
+  - Update docs: CHANGELOG entries for recent PRs
+  - Bump versions to 0.2.32-beta and 0.2.33-alpha
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/942
+
+
 ## [0.2.32-RELEASE.202608071630.8c09b932d] - 2026-08-07
 
 - ✨ Features: Introduced centralized WAF rule management
