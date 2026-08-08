@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.4-alpha.202608081329.9f7c97362",
+  "version": "0.3.4-beta.202608081329.9f7c97362",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
