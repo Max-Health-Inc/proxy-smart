@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/elysia-mcp",
-  "version": "0.2.33-alpha.202608080725.016825365",
+  "version": "0.2.33-beta.202608080725.016825365",
   "private": false,
   "type": "module",
   "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge, Streamable HTTP transport, session management.",
