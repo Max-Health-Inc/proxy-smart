@@ -41,7 +41,7 @@
 
 import { Elysia } from 'elysia'
 import { extractRouteTools, extractRouteResources } from './introspect'
-import { createMcpRequestHandler, SessionManager } from './transport'
+import { createMcpRequestHandler } from './transport'
 import type { ElysiaMcpOptions, Logger } from './types'
 
 // Default logger
@@ -82,19 +82,12 @@ export function elysiaMcp(options: ElysiaMcpOptions = {}) {
 
       logger.info(`Extracted ${tools.size} tools and ${resources.size} resources`)
 
-      // Create session manager
-      const sessionManager = new SessionManager(
-        options.maxSessions,
-        options.sessionTtlMs,
-        logger,
-      )
 
       // Create the request handler
       mcpHandler = createMcpRequestHandler({
         tools,
         resources,
         options,
-        sessionManager,
         logger,
       })
     })
@@ -163,17 +156,11 @@ export function createElysiaMcp(options: ElysiaMcpOptions = {}) {
 
     logger.info(`Extracted ${tools.size} tools and ${resources.size} resources`)
 
-    const sessionManager = new SessionManager(
-      options.maxSessions,
-      options.sessionTtlMs,
-      logger,
-    )
 
     mcpHandler = createMcpRequestHandler({
       tools,
       resources,
       options,
-      sessionManager,
       logger,
     })
   }
@@ -189,7 +176,6 @@ export type {
   ToolAnnotations,
   ResourceMetadata,
   AuthResult,
-  McpSession,
   Logger,
 } from './types'
 
@@ -209,11 +195,11 @@ export { typeboxToSchema, getMergedInputSchema } from './typebox-schema'
 export { executeTool, executeResource, DISPATCH_APP_KEY } from './executor'
 
 export {
-  SessionManager,
   createMcpRequestHandler,
   registerToolsOnServer,
   registerResourcesOnServer,
   originGuard,
+  closeWhenFinished,
   MCP_REQUEST_HEADERS,
   MCP_EXPOSED_RESPONSE_HEADERS,
 } from './transport'
