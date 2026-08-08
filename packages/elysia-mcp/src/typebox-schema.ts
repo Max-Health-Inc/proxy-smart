@@ -42,6 +42,35 @@ export function typeboxToSchema(schema: unknown): StandardSchemaWithJSON | undef
 }
 
 /**
+ * Convert a TypeBox schema to the Standard Schema `registerTool` takes as its
+ * `outputSchema`.
+ *
+ * Unlike an input schema, this does NOT require an object root. A list route
+ * declares `200: t.Array(Role)`, and an array root is legal to advertise: the
+ * SDK's `projectCallToolResult` reconciles it with the wire shape, wrapping the
+ * value as `{result:…}` for a 2025-era client and passing it through on 2026.
+ * Rejecting non-object roots here would drop exactly the list endpoints whose
+ * responses are largest.
+ *
+ * Returns undefined for anything unreadable, so the tool registers without an
+ * output schema rather than with a broken one.
+ */
+export function typeboxToOutputSchema(schema: unknown): StandardSchemaWithJSON | undefined {
+  if (schema === null || schema === undefined) return undefined
+  try {
+    const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
+    // A schema with no `type` and no combinator carries nothing a client could
+    // validate against; advertising it would only invite a false rejection.
+    if (!jsonSchema.type && !jsonSchema.anyOf && !jsonSchema.oneOf && !jsonSchema.allOf && !jsonSchema.$ref) {
+      return undefined
+    }
+    return fromJsonSchema(jsonSchema)
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * Merge body and path-params TypeBox schemas into a single input schema.
  * Both are TypeBox t.Object() -- we combine their properties so MCP/OpenAI
  * clients see a flat object with all required fields.
