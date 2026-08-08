@@ -1,4 +1,5 @@
 import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, StatCard } from '@proxy-smart/shared-ui';
+import { formatChartTimestamp } from '@/lib/utils'
 import {
   Activity,
   BarChart3,
@@ -324,7 +325,7 @@ export function OAuthAnalyticsTab({
                   />
                   <YAxis allowDecimals={false} className="text-muted-foreground" />
                   <Tooltip
-                    labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
+                    labelFormatter={(label) => formatChartTimestamp(label)}
                     formatter={(value) => [value ?? 0, t('flows')]}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
@@ -433,7 +434,7 @@ export function OAuthAnalyticsTab({
                   />
                   <YAxis className="text-muted-foreground" />
                   <Tooltip
-                    labelFormatter={(hour) => format(new Date(hour), 'PPpp')}
+                    labelFormatter={(label) => formatChartTimestamp(label)}
                     contentStyle={{
                       backgroundColor: 'var(--card)',
                       border: '1px solid var(--border)',

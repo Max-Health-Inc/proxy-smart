@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
+import { formatChartTimestamp } from '@/lib/utils'
 import { Badge, Button, CHART_COLORS, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, StatCard } from '@proxy-smart/shared-ui';
 import { SearchInput } from '@/components/ui/search-input';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -282,7 +283,7 @@ export function MonitoringDashboard({ config, embedded, isRealTimeActive: parent
                           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                           <XAxis dataKey="hour" tickFormatter={(h) => { try { return format(new Date(h), 'HH:mm'); } catch { return h; } }} minTickGap={20} className="text-muted-foreground" />
                           <YAxis allowDecimals={false} className="text-muted-foreground" />
-                          <Tooltip labelFormatter={(h) => { try { return format(new Date(h), 'PPpp'); } catch { return h; } }} contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px' }} />
+                          <Tooltip labelFormatter={(label) => formatChartTimestamp(label)} contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px' }} />
                           <Legend />
                           <Bar dataKey="success" name={t('Success')} fill="var(--success)" stackId="a" />
                           <Bar dataKey="failure" name={t('Failure')} fill="var(--destructive)" stackId="a" />

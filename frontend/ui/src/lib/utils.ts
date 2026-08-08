@@ -1,3 +1,4 @@
+import { format as dateFormat } from "date-fns";
 import CryptoJS from "crypto-js";
 
 // Re-export cn from shared-ui to avoid duplication
@@ -43,3 +44,15 @@ export const applyDecrypt = (cipherText: string): string => {
     return '';
   }
 };
+
+/**
+ * Format a recharts label as a timestamp.
+ *
+ * recharts hands label values as `ReactNode`, so they need narrowing before
+ * `new Date`. Falls back to the raw value when it is not a parseable date.
+ */
+export function formatChartTimestamp(value: unknown, pattern = "PPpp"): string {
+  const raw = typeof value === "number" || value instanceof Date ? value : String(value ?? "");
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? String(value ?? "") : dateFormat(date, pattern);
+}
