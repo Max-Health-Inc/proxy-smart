@@ -118,6 +118,7 @@ import { ImagingStudyCard } from "@/components/ImagingStudyCard"
 
 The viewer can also be used standalone:
 
+<!-- doccheck: skip — JSX usage sketch, not a mountable component -->
 ```tsx
 import { DicomViewerDialog, type ViewerTarget } from "@/components/DicomViewer"
 

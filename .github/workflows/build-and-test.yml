@@ -147,6 +147,21 @@ jobs:
         bun run lint:packages
         bun run test:packages
 
+    # === Docs ===
+    # Badges and in-repo links rot without ever failing a build: a version badge
+    # advertising an old release, a workflow badge pointing at a renamed file, a
+    # nav link outliving its heading. Static only, so no network flake.
+    - name: Check Badges and Doc Links
+      run: bun run check:badges
+
+    # Fenced ts/tsx examples are compiled against the real packages, so a rename
+    # breaks the docs the same way it breaks the code. --min is a ratchet: it
+    # only stops coverage falling, and is raised as packages get documented.
+    - name: Typecheck Doc Examples
+      run: |
+        bun run check:docs
+        bun run check:docs:coverage
+
     - name: Upload Build Artifacts
       if: ${{ !startsWith(github.ref, 'refs/heads/dev/') }}
       uses: actions/upload-artifact@v7

@@ -28,7 +28,6 @@ cd scripts
 pip install -r requirements.txt
 ```
 
-> 📖 **See [UV_MIGRATION_GUIDE.md](UV_MIGRATION_GUIDE.md) for complete migration details**
 
 ## What You Get
 

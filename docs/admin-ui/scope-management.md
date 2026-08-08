@@ -80,7 +80,7 @@ These scopes are typically needed for SMART STU2 compliance:
 The **SMART Config** page in the admin UI contains three sub-tabs:
 
 - **Scopes** -- scope CRUD (documented above)
-- **Launch Context** -- per-user SMART launch context management; see [Launch Contexts](./launch-contexts.md)
+- **Launch Context** -- per-user SMART launch context management; see [Launch Contexts](./launch-context.md)
 - **Protocol Mappers** -- diagnostic view showing mapper health + one-click fix via `POST /admin/scope-mappers/fix`
 
 ## Related
