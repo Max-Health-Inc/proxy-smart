@@ -52,11 +52,14 @@ The generated spec can also be used by `bun run generate:ui` to regenerate the f
 
 ## Security
 
-- All MCP tool calls require a valid OAuth 2.0 access token
-- Tokens are validated against Keycloak (JWT signature + claims)
-- Scope-based access control restricts which tools a client can invoke
-- Rate limiting is applied per-client
+Every call carries an OAuth 2.0 access token, validated against Keycloak for signature, expiry, and audience. Audience is fail-closed: the token must be bound to the MCP endpoint resource (RFC 8707) or to one of the proxy's own admin clients, so a SMART app token aimed at the FHIR base is rejected.
+
+Which tools a caller sees is decided at registration time, per request, from that token. A route not marked `meta.public` is registered only for callers holding the `admin` realm role, so a non-admin does not merely fail the call — the tool is absent from `tools/list`. On top of that, the admin-configured allowlist or blocklist filters the set further.
+
+## Toggling a tool
+
+`PUT /admin/mcp-endpoint/tools/:toolName` with `{ "exposed": false }` hides a single tool. It writes to whichever list is active: `enabledTools` when the endpoint is in allowlist mode, `disabledTools` otherwise. Three tools ignore this and stay exposed, so the endpoint that would let you undo the change is always reachable: `get_admin_mcp-endpoint`, `update_admin_mcp-endpoint`, `update_admin_mcp-endpoint_tools_toolName`.
 
 ## Client Configuration
 
-See [MCP HTTP Server](./MCP_HTTP_SERVER.md) for full client setup (VS Code, Claude Desktop, etc.).
+See [MCP HTTP Server](./MCP_HTTP_SERVER.md) for transport details, OAuth discovery, and client setup (VS Code, Claude Desktop, etc.).

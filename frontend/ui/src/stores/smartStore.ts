@@ -1,7 +1,10 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { createAuthenticatedClientApis } from '@/lib/apiClient';
+import { clientApis } from '@/lib/apiClient';
 import { logger } from '@/lib/logger';
 import type { 
   FhirServerList,
@@ -65,8 +68,7 @@ export const useSmartStore = create<SmartState>()(
 
         try {
           logger.debug('Fetching FHIR servers from API');
-          const { servers } = await createAuthenticatedClientApis();
-          const response: FhirServerList = await servers.getFhirServers();
+          const response: FhirServerList = await clientApis.servers.getFhirServers();
           
           logger.debug('FHIR servers fetched', {
             totalServers: response.totalServers,
@@ -101,8 +103,7 @@ export const useSmartStore = create<SmartState>()(
 
         try {
           logger.debug('Fetching healthcare users from API');
-          const { healthcareUsers } = await createAuthenticatedClientApis();
-          const users = await healthcareUsers.getAdminHealthcareUsers();
+          const users = await clientApis.healthcareUsers.getAdminHealthcareUsers();
           
           logger.debug('Healthcare users fetched', {
             totalUsers: users.length,

@@ -91,8 +91,6 @@ export default defineConfig({
         items: [
           { text: 'MCP HTTP Server', link: '/MCP_HTTP_SERVER' },
           { text: 'Backend API Tools', link: '/BACKEND_API_TOOLS' },
-          { text: 'MCP HTTP Client', link: '/BACKEND_MCP_HTTP_CLIENT' },
-          { text: 'MCP Streamable Client', link: '/BACKEND_MCP_STREAMABLE_CLIENT' },
         ],
       },
       {

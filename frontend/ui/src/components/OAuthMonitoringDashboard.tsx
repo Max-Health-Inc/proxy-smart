@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, PageLayout, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from './ui/page-loading-state';
@@ -164,10 +167,11 @@ export function OAuthMonitoringDashboard() {
 
   const fetchSystemStatus = useCallback(async () => {
     try {
-      const token = (await getItem<{access_token: string}>('openid_tokens'))?.access_token;
-      const serverApi = createServerApi(token ?? undefined);
-      const adminApi = createAdminApi(token ?? undefined);
-      const fhirMonApi = createFhirMonitoringApi(token ?? undefined);
+      // Tokenless factories: the clients resolve (and renew) the bearer per request,
+      // which this poll needs — a captured token goes stale between ticks.
+      const serverApi = createServerApi();
+      const adminApi = createAdminApi();
+      const fhirMonApi = createFhirMonitoringApi();
       const [status, acHealth, acEvents, fhirSummaries] = await Promise.allSettled([
         serverApi.getStatus(),
         adminApi.getAdminAccessControlHealth(),

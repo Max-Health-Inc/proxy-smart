@@ -40,6 +40,10 @@ Advertising this is what makes `structuredContent` worth its bytes. Without an o
 
 Against this repo's own admin surface: 169 tools extracted, 164 carry a declared success schema, all 164 convert, and 19 of them are array-rooted.
 
+Both converters drop the `format` hints Elysia attaches to its coercion unions. `t.Integer()` compiles to `anyOf: [{ type: 'string', format: 'integer' }, { type: 'integer' }]` so a query string can carry a number, and Ajv — which the SDK compiles advertised schemas with — logs `unknown format "integer" ignored` for each one. Only `numeric`, `integer`, `boolean` and `ArrayString` are stripped, and only on the string branch; `date` and `date-time` are genuine formats and pass through. Ajv ignores an unknown format anyway, so this removes noise without changing what a schema accepts.
+
+One conversion gap worth knowing: `t.Date()` emits `{ type: 'Date' }`, which is not valid JSON Schema, so a route declaring it converts to nothing and registers without an output schema. No admin route currently does.
+
 ## Naming
 
 `pathToToolName(path, method)` prefixes the flattened path with a verb derived from the method: `GET` becomes `get`, `POST` becomes `create`, `PUT` and `PATCH` become `update`, `DELETE` becomes `delete`. Slashes become underscores and `:` is stripped from parameters. Hyphens in a path segment survive.
