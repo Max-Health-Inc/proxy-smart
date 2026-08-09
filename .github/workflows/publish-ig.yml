@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: Publish FHIR IG package
 
 # Publishes the babelfhir-ts-generated typed package for proxy-smart's OWN
@@ -18,6 +21,10 @@ on:
     branches: [main]
     paths:
       - 'fhir/**'
+      # package.json holds the babelfhir-ts pin, which is part of the build key
+      # below. Without it here, bumping the generator changed the key but fired
+      # no run, so the new output waited for an unrelated fhir/ commit to ship.
+      - 'package.json'
       - '.github/workflows/publish-ig.yml'
   workflow_dispatch:
 
