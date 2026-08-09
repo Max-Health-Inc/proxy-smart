@@ -26,6 +26,8 @@ export {
   extractResponseSchema,
   annotationsForMethod,
   pathToToolName,
+  uniqueToolName,
+  MAX_TOOL_NAME_LENGTH,
   pathToResourceName,
   pathToResourceUri,
 } from './introspect'
