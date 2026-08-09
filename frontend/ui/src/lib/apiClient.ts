@@ -1,6 +1,21 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
+/**
+ * Generated-client factories plus the shared auth-recovery behaviour every admin
+ * call goes through.
+ *
+ * Two rules hold everything together:
+ *   1. Bearer tokens are resolved PER REQUEST from `getValidAccessToken`, never
+ *      captured when a client is built — a client constructed before the session
+ *      is restored, or before a refresh, must not send a stale/absent token.
+ *   2. A 401/403 refreshes once and REPLAYS the call. Only a failed refresh is a
+ *      real auth failure and reaches the logout handler.
+ */
+
 import { config } from '@/config';
-import { getItem } from './storage';
-import { attemptTokenRefresh } from './tokenRefresh';
+import { attemptTokenRefresh, getValidAccessToken } from './tokenRefresh';
+import { logger } from '@/lib/logger';
 import {
   AdminApi,
   AppStoreApi,
@@ -24,87 +39,76 @@ import {
 
 // Auth error handler to automatically logout on authentication failures
 let onAuthError: (() => void) | null = null;
+let logoutTriggered = false;
 
 export const setAuthErrorHandler = (handler: () => void) => {
   onAuthError = handler;
+  // A newly registered handler means a live session again — re-arm logout.
+  logoutTriggered = false;
 };
 
-// Global flags to prevent multiple simultaneous operations
-let isRefreshing = false;
-let hasLoggedOut = false;
+/** HTTP statuses that mean "the token was not accepted", as opposed to a domain error. */
+const AUTH_STATUSES = new Set([401, 403]);
 
-// Wrapper function to handle authentication errors with refresh attempt
-export const handleApiError = async (error: unknown) => {
-  // If already logged out, don't process any more auth errors
-  if (hasLoggedOut) {
-    throw error;
-  }
-
-  let shouldTryRefresh = false;
-
-  // Check for ResponseError first
-  if (error instanceof ResponseError) {
-    if (error.response.status === 401 || error.response.status === 403) {
-      shouldTryRefresh = true;
-    }
-  }
-
-  // Check for other error formats that might contain status
-  if (!shouldTryRefresh && error && typeof error === 'object') {
+/** Pull a status off the several error shapes the generated client can surface. */
+const authStatusOf = (error: unknown): number | null => {
+  if (error instanceof ResponseError) return error.response.status;
+  if (error && typeof error === 'object') {
     const err = error as Record<string, unknown>;
-    const status = (err.status as number) ||
+    const status =
+      (err.status as number) ||
       ((err.response as Record<string, unknown>)?.status as number) ||
       ((err.responseData as Record<string, unknown>)?.status as number);
-    if (status === 401 || status === 403) {
-      shouldTryRefresh = true;
-    }
+    if (typeof status === 'number') return status;
   }
-
-  // Attempt refresh if we detected an auth error and not already refreshing
-  if (shouldTryRefresh && !isRefreshing) {
-    isRefreshing = true;
-    
-    try {
-      const refreshed = await attemptTokenRefresh();
-      
-      if (refreshed) {
-        const newToken = await getStoredToken();
-        if (newToken) {
-          isRefreshing = false;
-          throw new Error('TOKEN_REFRESHED'); // Signal caller to retry
-        }
-      }
-    } catch (refreshError) {
-      if (refreshError instanceof Error && refreshError.message === 'TOKEN_REFRESHED') {
-        throw refreshError;
-      }
-    } finally {
-      isRefreshing = false;
-    }
-    
-    // Refresh failed - trigger logout once
-    hasLoggedOut = true;
-    if (onAuthError) {
-      onAuthError();
-      // Return instead of throwing to prevent further error propagation
-      return;
-    }
-  } else if (shouldTryRefresh && isRefreshing) {
-    // Another refresh is in progress, just wait and don't throw
-    return;
-  }
-
-  throw error;
+  return null;
 };
 
-// Create API client configuration
-const createConfig = (token?: string) => {
-  const basePath = config.api.baseUrl;
-  return new Configuration({
-    basePath,
-    accessToken: token,
+const isAuthError = (error: unknown): boolean => {
+  const status = authStatusOf(error);
+  return status !== null && AUTH_STATUSES.has(status);
+};
+
+/** Hand off to the app's logout, at most once per session. */
+const triggerLogout = () => {
+  if (logoutTriggered || !onAuthError) return;
+  logoutTriggered = true;
+  onAuthError();
+};
+
+/**
+ * Recover from an auth failure. Resolves true when a refresh succeeded and the
+ * caller should replay its request; false once logout has been handed off.
+ */
+const recoverFromAuthError = async (): Promise<boolean> => {
+  if (logoutTriggered) return false;
+  if (await attemptTokenRefresh()) return true;
+  logger.info('apiClient: refresh failed on auth error, logging out');
+  triggerLogout();
+  return false;
+};
+
+/**
+ * Handle an auth error for callers outside the wrapped clients (raw fetch paths).
+ * Non-auth errors are rethrown untouched.
+ */
+export const handleApiError = async (error: unknown): Promise<void> => {
+  if (!isAuthError(error)) throw error;
+  await recoverFromAuthError();
+};
+
+/**
+ * Client configuration. `accessToken` is a resolver the generated client awaits on
+ * every request; an explicit token is only honoured for callers that already hold
+ * one for a specific purpose.
+ */
+const createConfig = (token?: string) =>
+  new Configuration({
+    basePath: config.api.baseUrl,
+    accessToken: token
+      ? async () => token
+      : async () => (await getValidAccessToken()) ?? '',
   });
-};
 
 // Create individual client APIs
 export const createAdminApi = (token?: string) => new AdminApi(createConfig(token));
@@ -124,81 +128,60 @@ export const createOrganizationsApi = (token?: string) => new OrganizationsApi(c
 export const createAuthFlowsApi = (token?: string) => new AuthFlowsApi(createConfig(token));
 export const createScopeSetsApi = (token?: string) => new ScopeSetsApi(createConfig(token));
 
-// Create a wrapper that automatically handles auth errors for any API method
-const wrapApiClient = <T extends object>(client: T): T => {
-  // Create a Proxy that intercepts method calls
-  return new Proxy(client, {
+/**
+ * Wrap every method of a generated client so an auth failure refreshes and replays
+ * the call once. The replay picks up the new token because the config resolves it
+ * per request.
+ */
+const wrapApiClient = <T extends object>(client: T): T =>
+  new Proxy(client, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver);
+      if (typeof value !== 'function') return value;
 
-      // If it's a function, wrap it with error handling
-      if (typeof value === 'function') {
-        return async (...args: unknown[]) => {
-          try {
-            const result = await value.apply(target, args);
-            return result;
-          } catch (error) {
-            try {
-              await handleApiError(error);
-              // If handleApiError doesn't throw, rethrow original error
-              throw error;
-            } catch (handlerError) {
-              // Check if this is our special token refresh indicator
-              if (handlerError instanceof Error && handlerError.message === 'TOKEN_REFRESHED') {
-                // Token was refreshed, we could retry the request here
-                // For now, just throw the original error and let the caller handle retry
-                throw error;
-              }
-              // Otherwise, throw the handler error (logout was triggered)
-              throw handlerError;
-            }
-          }
-        };
-      }
-
-      // For non-functions, return as-is
-      return value;
+      return async (...args: unknown[]) => {
+        try {
+          return await value.apply(target, args);
+        } catch (error) {
+          if (!isAuthError(error)) throw error;
+          if (!(await recoverFromAuthError())) throw error;
+          return await value.apply(target, args);
+        }
+      };
     }
   });
-};
 
-// Create all client APIs at once with automatic auth error handling
-export const createClientApis = (token?: string) => ({
-  admin: wrapApiClient(createAdminApi(token)),
-  appStore: wrapApiClient(createAppStoreApi(token)),
-  auth: wrapApiClient(createAuthApi(token)),
-  clientPolicies: wrapApiClient(createClientPoliciesApi(token)),
-  fhirMonitoring: wrapApiClient(createFhirMonitoringApi(token)),
-  healthcareUsers: wrapApiClient(createHealthcareUsersApi(token)),
-  identityProviders: wrapApiClient(createIdentityProvidersApi(token)),
-  oauthMonitoring: wrapApiClient(createOauthMonitoringApi(token)),
-  roles: wrapApiClient(createRolesApi(token)),
-  smartApps: wrapApiClient(createSmartAppsApi(token)),
-  servers: wrapApiClient(createServersApi(token)),
-  server: wrapApiClient(createServerApi(token)),
-  userFederation: wrapApiClient(createUserFederationApi(token)),
-  organizations: wrapApiClient(createOrganizationsApi(token)),
-  authFlows: wrapApiClient(createAuthFlowsApi(token)),
-  scopeSets: wrapApiClient(createScopeSetsApi(token)),
+/** All clients, sharing the live token resolver and auth recovery. */
+export const createClientApis = () => ({
+  admin: wrapApiClient(createAdminApi()),
+  appStore: wrapApiClient(createAppStoreApi()),
+  auth: wrapApiClient(createAuthApi()),
+  clientPolicies: wrapApiClient(createClientPoliciesApi()),
+  fhirMonitoring: wrapApiClient(createFhirMonitoringApi()),
+  healthcareUsers: wrapApiClient(createHealthcareUsersApi()),
+  identityProviders: wrapApiClient(createIdentityProvidersApi()),
+  oauthMonitoring: wrapApiClient(createOauthMonitoringApi()),
+  roles: wrapApiClient(createRolesApi()),
+  smartApps: wrapApiClient(createSmartAppsApi()),
+  servers: wrapApiClient(createServersApi()),
+  server: wrapApiClient(createServerApi()),
+  userFederation: wrapApiClient(createUserFederationApi()),
+  organizations: wrapApiClient(createOrganizationsApi()),
+  authFlows: wrapApiClient(createAuthFlowsApi()),
+  scopeSets: wrapApiClient(createScopeSetsApi()),
 });
 
-// Helper to get token from encrypted storage (always returns stored token)
-export const getStoredToken = async (): Promise<string | null> => {
-  try {
-    const tokens = await getItem<{access_token: string}>('openid_tokens');
-    return tokens?.access_token || null;
-    // Note: We return the token even if expired - let the server decide validity
-    // The API error handler will catch 401s and trigger refresh if needed
-  } catch (error) {
-    console.error('Error retrieving stored token:', error);
-    return null;
-  }
-};
+export type ClientApis = ReturnType<typeof createClientApis>;
 
-// Create authenticated client APIs using stored token
-export const createAuthenticatedClientApis = async () => {
-  const token = await getStoredToken();
-  return createClientApis(token || undefined);
-  // Note: Even if token is expired, we pass it along
-  // The API wrapper will catch 401s and handle refresh automatically
-};
+/**
+ * The single client set for the app. Stable identity by design: clients no longer
+ * hold a token, so there is nothing to rebuild when the session changes, and
+ * effects keyed on `clientApis.*` stop re-firing on every token rotation.
+ */
+export const clientApis: ClientApis = createClientApis();
+
+/**
+ * The bearer token for hand-rolled fetch calls, renewed when it is expired or
+ * about to be. Shares the single-flight refresh with the generated clients.
+ */
+export const getStoredToken = async (): Promise<string | null> => getValidAccessToken();

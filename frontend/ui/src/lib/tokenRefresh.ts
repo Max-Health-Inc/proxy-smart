@@ -2,80 +2,128 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * Token refresh service - breaks circular dependency between apiClient and authStore
- * This module is imported by apiClient to handle token refresh without directly importing authStore
+ * Access-token authority for the admin UI.
+ *
+ * Every outbound call resolves its bearer token through here instead of capturing
+ * a token string when a client is constructed. Capturing is what produced the
+ * admin 401s: clients built during store rehydration held no token at all, and
+ * clients built before a refresh kept sending the rotated-out one.
+ *
+ * Also breaks the circular dependency between apiClient and authStore — authStore
+ * injects the refresh implementation via `registerRefreshHandler`.
  */
 
 import { getItem, removeItem } from './storage';
 import { logger } from '@/lib/logger';
+import { config } from '@/config';
 
-// Type for the refresh function that will be injected
+export const TOKEN_STORAGE_KEY = 'openid_tokens';
+
+export interface StoredTokens {
+  access_token: string;
+  id_token?: string;
+  refresh_token?: string;
+  /** Absolute expiry in Unix seconds, as issued by the token endpoint. */
+  expires_at?: number;
+}
+
 type RefreshTokensFn = () => Promise<void>;
 
 let refreshTokensImpl: RefreshTokensFn | null = null;
 
-/**
- * Register the token refresh implementation from authStore
- * This should be called during authStore initialization
- */
+/** Register the refresh implementation owned by authStore. */
 export function registerRefreshHandler(refreshFn: RefreshTokensFn) {
   refreshTokensImpl = refreshFn;
 }
 
-/**
- * Attempt to refresh tokens using the registered handler
- * Returns true if refresh was successful and new tokens are available
- */
-export async function attemptTokenRefresh(): Promise<boolean> {
+/** Read the persisted token set, treating any storage failure as "no session". */
+export async function readStoredTokens(): Promise<StoredTokens | null> {
+  try {
+    return await getItem<StoredTokens>(TOKEN_STORAGE_KEY);
+  } catch (error) {
+    logger.warn('tokenRefresh: unable to read stored tokens', error);
+    return null;
+  }
+}
+
+/** True when the stored access token is missing, expired, or inside the renewal skew. */
+export function needsRenewal(tokens: StoredTokens | null): boolean {
+  if (!tokens?.access_token) return true;
+  // No expiry recorded: nothing to pre-empt, let the server rule on it.
+  if (!tokens.expires_at) return false;
+  return Date.now() >= tokens.expires_at * 1000 - config.auth.refreshSkewMs;
+}
+
+/** A dead refresh grant — replaying it only produces more failures. */
+function isInvalidGrant(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('invalid_grant') ||
+    message.includes('token is not active') ||
+    (message.includes('refresh token') && message.includes('expired'))
+  );
+}
+
+async function runRefresh(): Promise<boolean> {
   if (!refreshTokensImpl) {
-    console.warn('Token refresh handler not registered');
     logger.warn('tokenRefresh: handler not registered');
     return false;
   }
 
   try {
-    const tokens = await getItem<{refresh_token?: string}>('openid_tokens');
-    
+    const tokens = await readStoredTokens();
     if (!tokens?.refresh_token) {
       logger.info('tokenRefresh: no refresh token present');
       return false;
     }
 
-    logger.info('tokenRefresh: invoking refreshTokensImpl');
     await refreshTokensImpl();
-    
-    // Verify refresh was successful by checking if we have new tokens
-    const newTokens = await getItem<{access_token?: string}>('openid_tokens');
-    if (newTokens?.access_token) {
-      logger.info('tokenRefresh: refresh success, access token present');
+
+    const renewed = await readStoredTokens();
+    if (renewed?.access_token) {
+      logger.debug('tokenRefresh: renewed access token');
       return true;
-    } else {
-      console.warn('Token refresh completed but no access token available');
-      logger.warn('tokenRefresh: refresh completed but no access token');
-      return false;
     }
+    logger.warn('tokenRefresh: refresh completed but no access token was stored');
+    return false;
   } catch (error) {
-    console.error('Token refresh failed:', error);
     logger.error('tokenRefresh: refresh failed', error);
-    
-    // Check if this is an invalid_grant error (refresh token expired/invalid)
-    if (error instanceof Error) {
-      const errorMessage = error.message.toLowerCase();
-      if (errorMessage.includes('invalid_grant') || 
-          errorMessage.includes('token is not active') ||
-          errorMessage.includes('refresh token') && errorMessage.includes('expired')) {
-        console.warn('Refresh token is invalid/expired, clearing all tokens');
-        logger.warn('tokenRefresh: invalid_grant detected, clearing tokens');
-        // Clear invalid tokens to prevent repeated refresh attempts
-        try {
-          await removeItem('openid_tokens');
-        } catch (clearError) {
-          console.error('Failed to clear invalid tokens:', clearError);
-          logger.error('tokenRefresh: failed to clear invalid tokens', clearError);
-        }
+    if (isInvalidGrant(error)) {
+      try {
+        await removeItem(TOKEN_STORAGE_KEY);
+      } catch (clearError) {
+        logger.error('tokenRefresh: failed to clear invalid tokens', clearError);
       }
     }
-    
     return false;
   }
+}
+
+let inFlightRefresh: Promise<boolean> | null = null;
+
+/**
+ * Refresh the token set, single-flight: concurrent callers (a page mounting six
+ * panels at once) share one round trip instead of racing to rotate the refresh
+ * token against each other.
+ */
+export function attemptTokenRefresh(): Promise<boolean> {
+  inFlightRefresh ??= runRefresh().finally(() => {
+    inFlightRefresh = null;
+  });
+  return inFlightRefresh;
+}
+
+/**
+ * The access token to send right now — renewed first when it is expired or about
+ * to be. Returns null when there is no usable session, so callers send no
+ * Authorization header rather than one the server is certain to reject.
+ */
+export async function getValidAccessToken(): Promise<string | null> {
+  const tokens = await readStoredTokens();
+  if (!needsRenewal(tokens)) return tokens?.access_token ?? null;
+  if (!tokens?.refresh_token) return tokens?.access_token ?? null;
+
+  await attemptTokenRefresh();
+  return (await readStoredTokens())?.access_token ?? null;
 }

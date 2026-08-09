@@ -25,6 +25,51 @@ import { Type } from '@sinclair/typebox'
 import type { ToolMetadata } from './types'
 
 /**
+ * `format` values Elysia emits as coercion hints rather than as JSON Schema
+ * formats. `t.Integer()` compiles to
+ * `anyOf: [{ type: 'string', format: 'integer' }, { type: 'integer' }]` so a
+ * query string can carry a number; the format marks the branch to coerce.
+ *
+ * Ajv, which the SDK compiles advertised schemas with, does not know them and
+ * logs `unknown format "integer" ignored` for every occurrence — once per
+ * schema per registration, so a few hundred lines at boot on a surface this
+ * size. It ignores the keyword anyway, which is what makes dropping it lossless
+ * rather than a change of validation semantics.
+ *
+ * Only these four. `t.Date()` also yields string branches, but its `date` and
+ * `date-time` are real JSON Schema formats that a client should keep.
+ */
+const ELYSIA_COERCION_FORMATS = new Set(['numeric', 'integer', 'boolean', 'ArrayString'])
+
+/**
+ * Drop Elysia's coercion-hint formats, in place, from an already-cloned schema.
+ * Guarded on the string branch so a genuine format on another type is untouched.
+ */
+function stripCoercionFormats(node: unknown): void {
+  if (node === null || typeof node !== 'object') return
+  if (Array.isArray(node)) {
+    for (const item of node) stripCoercionFormats(item)
+    return
+  }
+  const record = node as Record<string, unknown>
+  if (
+    record.type === 'string' &&
+    typeof record.format === 'string' &&
+    ELYSIA_COERCION_FORMATS.has(record.format)
+  ) {
+    delete record.format
+  }
+  for (const value of Object.values(record)) stripCoercionFormats(value)
+}
+
+/** JSON roundtrip to strip TypeBox's Symbol metadata, then de-noise the result. */
+function toPlainJsonSchema(schema: unknown): Record<string, unknown> {
+  const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
+  stripCoercionFormats(jsonSchema)
+  return jsonSchema
+}
+
+/**
  * Convert a TypeBox schema to the Standard Schema `registerTool` expects.
  *
  * Returns undefined when the schema is not an object type or cannot be read, so
@@ -32,8 +77,7 @@ import type { ToolMetadata } from './types'
  */
 export function typeboxToSchema(schema: unknown): StandardSchemaWithJSON | undefined {
   try {
-    // JSON roundtrip strips TypeBox's Symbol metadata, yielding pure JSON Schema
-    const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
+    const jsonSchema = toPlainJsonSchema(schema)
     if (jsonSchema.type !== 'object' || !jsonSchema.properties) return undefined
     return fromJsonSchema(jsonSchema)
   } catch {
@@ -58,7 +102,7 @@ export function typeboxToSchema(schema: unknown): StandardSchemaWithJSON | undef
 export function typeboxToOutputSchema(schema: unknown): StandardSchemaWithJSON | undefined {
   if (schema === null || schema === undefined) return undefined
   try {
-    const jsonSchema = JSON.parse(JSON.stringify(schema)) as Record<string, unknown>
+    const jsonSchema = toPlainJsonSchema(schema)
     // A schema with no `type` and no combinator carries nothing a client could
     // validate against; advertising it would only invite a false rejection.
     if (!jsonSchema.type && !jsonSchema.anyOf && !jsonSchema.oneOf && !jsonSchema.allOf && !jsonSchema.$ref) {
