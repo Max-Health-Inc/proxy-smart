@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import packageJson from '../package.json';
 
 /**
@@ -25,6 +28,15 @@ export const config = {
         isProduction: import.meta.env.PROD,
     },
 
+    // Session / token handling
+    auth: {
+        /**
+         * Renew the access token this long before it expires. Covers clock skew and
+         * request latency so a token never expires in flight.
+         */
+        refreshSkewMs: Number(import.meta.env.VITE_TOKEN_REFRESH_SKEW_MS ?? 30_000),
+    },
+
     // Security
     encryption: {
         secret: import.meta.env.VITE_ENCRYPTION_SECRET,
@@ -35,3 +47,4 @@ export const config = {
 export type Config = typeof config;
 export type ApiConfig = typeof config.api;
 export type AppConfig = typeof config.app;
+export type AuthConfig = typeof config.auth;

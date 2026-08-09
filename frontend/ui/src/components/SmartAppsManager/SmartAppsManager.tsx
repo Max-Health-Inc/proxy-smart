@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Badge, Button, Card, CardContent, CardHeader, CardTitle, PageLayout, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
@@ -29,7 +32,6 @@ import { ScopeTagInput } from '../ScopeManager/ScopeTagInput';
 import { useAuth } from '@/stores/authStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useAppStore } from '@/stores/appStore';
-import { createAuthenticatedClientApis } from '@/lib/apiClient';
 import type { SmartApp, ScopeSet, SmartAppFormData, SmartAppClientTypeEnum } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
 
@@ -182,8 +184,7 @@ export function SmartAppsManager() {
       ));
 
       // Call backend API
-      const apis = await createAuthenticatedClientApis();
-      await apis.smartApps.putAdminSmartAppsByClientId({
+      await clientApis.smartApps.putAdminSmartAppsByClientId({
         clientId: clientId,
         updateSmartAppRequest: {
           name: app.name,
@@ -227,8 +228,7 @@ export function SmartAppsManager() {
     if (!editingApp?.clientId) return;
 
     try {
-      const apis = await createAuthenticatedClientApis();
-      await apis.smartApps.deleteAdminSmartAppsByClientId({
+      await clientApis.smartApps.deleteAdminSmartAppsByClientId({
         clientId: editingApp.clientId
       });
 

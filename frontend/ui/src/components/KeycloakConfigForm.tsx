@@ -1,4 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
+import { useState, useEffect } from 'react';
 import { Button, Input, Label } from '@proxy-smart/shared-ui';
 import {
   Check,
@@ -8,7 +11,7 @@ import {
   Info
 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
-import { createClientApis } from '@/lib/apiClient';
+import { clientApis } from '@/lib/apiClient';
 import { useTranslation } from 'react-i18next';
 
 interface KeycloakConfigFormProps {
@@ -27,8 +30,6 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  const clientApis = useMemo(() => createClientApis(), []); // No auth needed for these endpoints
-
   // Pre-populate form with current Keycloak configuration
   useEffect(() => {
     clientApis.admin.getAdminKeycloakConfigStatus().then((status) => {
@@ -40,7 +41,7 @@ export function KeycloakConfigForm({ onSuccess, onCancel }: KeycloakConfigFormPr
       setBaseUrl((prev) => prev || 'http://localhost:8080');
       setRealm((prev) => prev || 'proxy-smart');
     });
-  }, [clientApis]);
+  }, []);
 
   const handleTest = async () => {
     if (!baseUrl.trim() || !realm.trim()) {
