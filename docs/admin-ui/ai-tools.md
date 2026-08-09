@@ -1,124 +1,60 @@
 # AI Tools
 
-The AI Tools page manages MCP (Model Context Protocol) servers, the built-in MCP endpoint, and skill packages. These tools are exposed to external MCP clients for programmatic integration.
+The AI Tools page controls the built-in MCP endpoint: whether it is served at all, and which of the backend's tools and resources it exposes to MCP clients.
 
 ## Accessing
 
-Navigate to **AI Tools** in the admin sidebar. The page has three tabs:
+Navigate to **AI Tools** in the admin sidebar. The page is a single view backed by `GET /admin/mcp-endpoint/`.
 
-## MCP Servers Tab
+## Endpoint status
 
-Manages connections to external MCP servers that provide additional tools to MCP clients.
+The top card shows whether the endpoint is enabled and the URL clients connect to, derived from `BASE_URL` and `MCP_ENDPOINT_PATH`.
 
-### Server List
-
-Displays all configured MCP servers with:
-- Server name and URL
-- Type badge -- `internal` (from templates) or `external` (dynamically added)
-- Connection status -- `connected`, `disconnected`, `error`, `unknown`
-- Tool count
-- Last health check timestamp
-
-### Adding a Server
-
-**From Template Gallery** -- Browse pre-configured MCP server templates organized by category (Healthcare, Development, Data, etc.). Click a template to install with pre-filled configuration.
-
-**Custom Server** -- Click **Add Server** to configure a custom MCP server:
-
-| Field | Description |
+| Control | Effect |
 |---|---|
-| **Name** | Unique identifier for the server |
-| **URL** | MCP server endpoint URL (Streamable HTTP) |
-| **Description** | Optional description of the server's capabilities |
+| **Enabled** | Master switch. When off, `/mcp` answers 404 to every request. |
+| **Expose resources as tools** | Registers the unified `read_resource` tool alongside the MCP resources. |
 
-### Server Operations
+The path is displayed, not editable — it comes from `MCP_ENDPOINT_PATH` and defaults to `/mcp`. Whether the endpoint is enabled is deliberately not an environment variable, so it can be turned off without a redeploy.
 
-- **Health Check** -- Test connectivity and retrieve server capabilities
-- **View Tools** -- List all tools exposed by the server with their input schemas
-- **Refresh All** -- Re-check health of all configured servers
-- **Delete** -- Remove a dynamically added server
+Configuration persists to PostgreSQL when `DATABASE_URL` is set, and otherwise to `DATA_DIR/mcp-endpoint.json`. Reads come from a short-TTL cache, so a change made on one instance is picked up by the others within seconds.
 
-### Registry Search
+## Exposed tools
 
-Search the public MCP server registry to discover and install community servers. Results show server name, description, and install action.
+Tools are listed grouped by category, derived from the tool name — `create_admin_smart-apps` sits under SMART Apps, and so on. Each row has a toggle that writes through to `PUT /admin/mcp-endpoint/tools/:toolName`.
 
-### Server Persistence
+Which list the toggle writes to depends on the mode. With an allowlist set (`enabledTools` non-null), only listed tools are exposed and the toggle adds or removes from it. Otherwise the endpoint is in blocklist mode and the toggle maintains `disabledTools`.
 
-Server configuration is stored in `mcp.json` alongside the backend. Template servers come from `mcp-server-templates.json`.
+Three tools ignore the toggle and stay exposed, so the endpoint that would let you undo a change is always reachable:
 
-## MCP Endpoint Tab
+- `get_admin_mcp-endpoint`
+- `update_admin_mcp-endpoint`
+- `update_admin_mcp-endpoint_tools_toolName`
 
-Configures the built-in MCP endpoint that exposes Proxy Smart's own backend tools as an MCP server.
+The list also includes two tools that are not derived from routes: `search_documentation` (semantic search over the platform docs) and `read_resource` (the collapsed read path, present when **Expose resources as tools** is on).
 
-| Setting | Description |
-|---|---|
-| **Enabled** | Whether the MCP endpoint is active (enabled by default) |
-| **Path** | URL path for the endpoint (default: `/mcp`) |
+Read-only tools are flagged as such. Note that the visible list is the full admin catalog; what a given MCP client actually sees is filtered again at request time by the roles on its token.
 
-When enabled, external MCP clients (Claude Desktop, Cursor, etc.) can connect to `{BASE_URL}/mcp` and access all admin API tools via the MCP protocol. Authentication uses OAuth Bearer tokens with RFC 9728 discovery.
+## Exposed resources
 
-See [MCP HTTP Server](../MCP_HTTP_SERVER) for protocol details.
+`GET` routes are also published as MCP resources — a fixed URI for a static path, an RFC 6570 template for a parameterized one. The same allowlist and blocklist govern them.
 
-## Skills Tab
-
-Manages skill packages -- structured prompts and tool configurations that extend platform capabilities.
-
-### Installed Skills
-
-Lists currently installed skills with:
-- Skill name and description
-- Source URL (e.g., GitHub repository)
-- Type -- `claude-skill` or `custom`
-- Install date
-- Enabled/disabled toggle
-
-### Adding Skills
-
-**From Registry** -- Browse and search the skills.sh registry for community skills. Click install to add a skill.
-
-**Custom Skill** -- Create a custom skill with a name and description.
-
-### Deleting Skills
-
-Remove installed skills that are no longer needed. Built-in default skills can be re-installed from the registry.
-
-## API Endpoints
-
-### MCP Servers
+## API endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/admin/mcp-servers/templates` | List available server templates |
-| `GET` | `/admin/mcp-servers/` | List all configured servers |
-| `GET` | `/admin/mcp-servers/:name/health` | Check server health |
-| `GET` | `/admin/mcp-servers/:name/tools` | List server tools |
-| `POST` | `/admin/mcp-servers/refresh` | Refresh all server statuses |
-| `POST` | `/admin/mcp-servers/` | Add a new server |
-| `PATCH` | `/admin/mcp-servers/:name` | Update server configuration |
-| `DELETE` | `/admin/mcp-servers/:name` | Remove a server |
-| `GET` | `/admin/mcp-servers/registry/search` | Search public registry |
+| `GET` | `/admin/mcp-endpoint/` | Current configuration, plus the tool and resource lists with their exposure state |
+| `PATCH` | `/admin/mcp-endpoint/` | Update `enabled`, `enabledTools`, `disabledTools`, or `exposeResourcesAsTools` |
+| `PUT` | `/admin/mcp-endpoint/tools/:toolName` | Toggle one tool with `{ "exposed": boolean }` |
 
-### MCP Endpoint
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/mcp-endpoint/` | Get endpoint configuration |
-| `PATCH` | `/admin/mcp-endpoint/` | Update endpoint settings |
-
-### Skills
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/admin/ai-tools/skills/` | List installed skills |
-| `POST` | `/admin/ai-tools/skills/` | Install a custom skill |
-| `DELETE` | `/admin/ai-tools/skills/:name` | Remove a skill |
-| `GET` | `/admin/ai-tools/skills/registry/browse` | Browse skill registry |
-| `GET` | `/admin/ai-tools/skills/registry/search` | Search skill registry |
-| `POST` | `/admin/ai-tools/skills/registry/install` | Install from registry |
-
-## Environment Variables
+## Environment variables
 
 | Variable | Description | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | API key for embeddings and semantic search | -- |
-| `MCP_ENDPOINT_PATH` | URL path for MCP endpoint | `/mcp` |
+| `MCP_ENDPOINT_PATH` | URL path the MCP endpoint is mounted at | `/mcp` |
+| `OPENAI_API_KEY` | Embeddings for `search_documentation` | -- |
+| `DATABASE_URL` | When set, configuration is stored in PostgreSQL rather than on disk | -- |
+
+## See also
+
+[MCP HTTP Server](../MCP_HTTP_SERVER) covers the transport, OAuth discovery, audience rules, and the per-server FHIR endpoint at `/fhir/{server_id}/mcp`.
