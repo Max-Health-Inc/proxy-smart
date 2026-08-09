@@ -47,8 +47,12 @@ export const setAuthErrorHandler = (handler: () => void) => {
   logoutTriggered = false;
 };
 
-/** HTTP statuses that mean "the token was not accepted", as opposed to a domain error. */
-const AUTH_STATUSES = new Set([401, 403]);
+/**
+ * Only 401 is recoverable by refreshing. A 403 means the token was accepted and the
+ * GRANT is insufficient, so a newly minted token is exactly as insufficient — treating
+ * it as refreshable turns a missing role into an endless refresh/retry loop.
+ */
+const REFRESHABLE_STATUS = 401;
 
 /** Pull a status off the several error shapes the generated client can surface. */
 const authStatusOf = (error: unknown): number | null => {
@@ -64,10 +68,7 @@ const authStatusOf = (error: unknown): number | null => {
   return null;
 };
 
-const isAuthError = (error: unknown): boolean => {
-  const status = authStatusOf(error);
-  return status !== null && AUTH_STATUSES.has(status);
-};
+const isAuthError = (error: unknown): boolean => authStatusOf(error) === REFRESHABLE_STATUS;
 
 /** Hand off to the app's logout, at most once per session. */
 const triggerLogout = () => {
