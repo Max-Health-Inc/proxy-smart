@@ -103,6 +103,26 @@ describe('clientApis auth behaviour', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
+  it('treats a 403 as terminal: no refresh, no replay, no logout', async () => {
+    // A 403 means the token was ACCEPTED and the grant is short. Refreshing mints an
+    // equally short token, so retrying it is an endless loop — which is exactly what
+    // /admin/profile/ did while a missing realm-management role was reported as 401.
+    putTokens({ access_token: 'good', refresh_token: 'r', expires_at: secondsFromNow(600) })
+    const refresh = vi.fn(async () => {})
+    registerRefreshHandler(refresh)
+    const onAuthError = vi.fn()
+    setAuthErrorHandler(onAuthError)
+
+    fetchMock.mockResolvedValue(
+      jsonResponse(403, { error: 'Forbidden', details: 'holds no realm-management client role' }),
+    )
+
+    await expect(clientApis.admin.getAdminProfile()).rejects.toBeDefined()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(refresh).not.toHaveBeenCalled()
+    expect(onAuthError).not.toHaveBeenCalled()
+  })
+
   it('does not retry or log out on a non-auth failure', async () => {
     putTokens({ access_token: 'good', refresh_token: 'r', expires_at: secondsFromNow(600) })
     const onAuthError = vi.fn()

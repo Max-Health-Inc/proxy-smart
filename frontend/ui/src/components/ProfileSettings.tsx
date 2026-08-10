@@ -41,7 +41,7 @@ export function ProfileSettings() {
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-  const [message, setMessage] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{ kind: 'ok' | 'error'; key: string } | null>(null);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -61,10 +61,12 @@ export function ProfileSettings() {
       })
       .catch((err: unknown) => {
         logger.error('Failed to load profile', err);
-        setMessage({ kind: 'error', text: t('Could not load your profile.') });
+        setMessage({ kind: 'error', key: 'Could not load your profile.' });
       })
       .finally(() => setLoading(false));
-  }, [isAuthenticated, clientApis.admin, t]);
+    // `t` is deliberately absent: it is not stable across renders, and this effect
+    // sets state on failure — depending on it re-fires the request on every error.
+  }, [isAuthenticated, clientApis.admin]);
 
   const handleProfileChange = (field: keyof UserProfileData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -82,10 +84,10 @@ export function ProfileSettings() {
         },
       })) as unknown as Profile;
       setProfile(updated);
-      setMessage({ kind: 'ok', text: t('Profile updated.') });
+      setMessage({ kind: 'ok', key: 'Profile updated.' });
     } catch (err) {
       logger.error('Failed to update profile', err);
-      setMessage({ kind: 'error', text: t('Could not update your profile.') });
+      setMessage({ kind: 'error', key: 'Could not update your profile.' });
     } finally {
       setSavingProfile(false);
     }
@@ -110,11 +112,11 @@ export function ProfileSettings() {
       });
       setNewPassword('');
       setConfirmPassword('');
-      setMessage({ kind: 'ok', text: t('Password changed.') });
+      setMessage({ kind: 'ok', key: 'Password changed.' });
     } catch (err) {
       logger.error('Failed to change password', err);
       // The realm password policy is enforced by Keycloak, so the reason comes back from it.
-      setMessage({ kind: 'error', text: t('Could not change your password. It may not meet the password policy.') });
+      setMessage({ kind: 'error', key: 'Could not change your password. It may not meet the password policy.' });
     } finally {
       setSavingPassword(false);
     }
@@ -138,7 +140,7 @@ export function ProfileSettings() {
 
       {message && (
         <Alert variant={message.kind === 'error' ? 'destructive' : 'default'}>
-          <AlertDescription>{message.text}</AlertDescription>
+          <AlertDescription>{t(message.key)}</AlertDescription>
         </Alert>
       )}
 

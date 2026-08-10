@@ -106,7 +106,7 @@ export function extractRouteTools(app: unknown, options?: IntrospectOptions): Ma
     const responseSchema = extractResponseSchema(hooks?.response ?? legacySchema?.response)
 
     const isGet = method === 'GET'
-    const toolName = nameGen(path, method)
+    const toolName = uniqueToolName(nameGen(path, method), path, method, new Set(tools.keys()))
 
     tools.set(toolName, {
       path,
@@ -198,6 +198,43 @@ export function extractRouteResources(app: unknown, options?: IntrospectOptions)
 // ── Naming helpers ───────────────────────────────────────────────────────────
 
 /**
+ * Longest tool name a client will accept.
+ *
+ * Tool names are constrained to `^[a-zA-Z0-9_-]{1,64}$`. A name over the cap is not
+ * truncated by the client — the whole tool is REJECTED, and silently as far as the
+ * server is concerned. Deep admin paths cross 64 easily: three of this surface's
+ * routes produced 66- and 67-character names and were dropped from every session,
+ * with nothing in the server's own tool listing to show for it.
+ */
+export const MAX_TOOL_NAME_LENGTH = 64
+
+const METHOD_PREFIXES: Record<string, string> = {
+  GET: 'get',
+  POST: 'create',
+  PUT: 'update',
+  PATCH: 'update',
+  DELETE: 'delete',
+}
+
+/** A short, stable digest — enough to separate names that would otherwise coincide. */
+function digest(input: string): string {
+  // FNV-1a. No crypto import for a disambiguator, and it must stay identical across
+  // runtimes: a tool name that changes between deploys breaks saved client prompts.
+  let hash = 0x811c9dc5
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i)
+    hash = Math.imul(hash, 0x01000193) >>> 0
+  }
+  return hash.toString(36).padStart(7, '0').slice(0, 7)
+}
+
+/** Cut a name to the cap, keeping a digest of the original so it stays unique. */
+function truncateWithDigest(name: string): string {
+  const suffix = `_${digest(name)}`
+  return name.slice(0, MAX_TOOL_NAME_LENGTH - suffix.length) + suffix
+}
+
+/**
  * Convert route path and method to a tool name.
  *
  * Examples:
@@ -205,21 +242,48 @@ export function extractRouteResources(app: unknown, options?: IntrospectOptions)
  * - PUT /admin/users/:id -> update_admin_users_id
  * - DELETE /admin/roles/:roleName -> delete_admin_roles_roleName
  * - GET /admin/branding -> get_admin_branding
+ *
+ * Over {@link MAX_TOOL_NAME_LENGTH}, path PARAMETERS are dropped first:
+ * - DELETE /admin/healthcare-users/:userId/client-roles/:clientId/:roleName
+ *     -> delete_admin_healthcare-users_client-roles
+ * They are the least informative part of a name — every one of them is already an
+ * argument in the tool's input schema, described there — so shedding them costs a
+ * reader nothing while keeping the segments that say what the tool acts on. Only if
+ * that still does not fit is the name cut and digested.
+ *
+ * Names at or under the cap are returned exactly as before, so shortening can never
+ * rename a tool that was already being served.
  */
 export function pathToToolName(path: string, method: string): string {
-  let name = path.replace(/^\//, '')
-  name = name.replace(/\//g, '_').replace(/:/g, '')
+  const prefix = METHOD_PREFIXES[method.toUpperCase()] ?? method.toLowerCase()
 
-  const methodPrefixes: Record<string, string> = {
-    GET: 'get',
-    POST: 'create',
-    PUT: 'update',
-    PATCH: 'update',
-    DELETE: 'delete',
-  }
+  // Verbatim original construction, empty segments included. Several routes are
+  // declared with a trailing slash, so their names legitimately end in `_`
+  // (`get_admin_profile_`); normalising that away here would rename 30 tools that
+  // clients call today, to fix 3 they cannot see.
+  const full = `${prefix}_${path.replace(/^\//, '').replace(/\//g, '_').replace(/:/g, '')}`
+  if (full.length <= MAX_TOOL_NAME_LENGTH) return full
 
-  const prefix = methodPrefixes[method.toUpperCase()] ?? method.toLowerCase()
-  return `${prefix}_${name}`
+  const kept = path.split('/').filter((s) => s.length > 0 && !s.startsWith(':'))
+  const shortened = `${prefix}_${kept.join('_')}`
+  if (kept.length > 0 && shortened.length <= MAX_TOOL_NAME_LENGTH) return shortened
+
+  return truncateWithDigest(full)
+}
+
+/**
+ * A name not already taken, disambiguated by digesting the route it came from.
+ *
+ * Dropping parameters can make two routes agree on a name, and the registry is a Map
+ * keyed by name: without this the second route would overwrite the first and one tool
+ * would vanish with no error anywhere.
+ */
+export function uniqueToolName(candidate: string, path: string, method: string, taken: ReadonlySet<string>): string {
+  if (!taken.has(candidate)) return candidate
+
+  const suffix = `_${digest(`${method} ${path}`)}`
+  const base = candidate.slice(0, MAX_TOOL_NAME_LENGTH - suffix.length)
+  return `${base}${suffix}`
 }
 
 /**
