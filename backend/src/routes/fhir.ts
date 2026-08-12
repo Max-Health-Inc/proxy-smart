@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 import { Elysia, t } from 'elysia'
+import type { Context } from 'elysia'
 import fetch from 'cross-fetch'
 import { validateToken } from '../lib/auth'
 import { AuthenticationError, ConfigurationError, extractBearerToken } from '../lib/admin-utils'
@@ -69,8 +70,14 @@ async function getCachedMetadata(
   try { return await promise } finally { metadataInflight.delete(key) }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function proxyFHIR({ params, request, set }: any) {
+/** The path params this proxy is mounted on, plus what the handler uses. */
+interface FhirProxyContext {
+  params: { server_name: string; fhir_version: string }
+  request: Request
+  set: Context['set']
+}
+
+async function proxyFHIR({ params, request, set }: FhirProxyContext) {
   // 1) early version sanity check
   if (!config.fhir.supportedVersions.includes(params.fhir_version)) {
     set.status = 400
@@ -115,7 +122,7 @@ async function proxyFHIR({ params, request, set }: any) {
         params.server_name, params.fhir_version, serverUrl, serverInfo.identifier, mtlsConfig,
       )
       set.status = entry.status
-      set.headers = { ...set.headers, 'content-type': entry.contentType }
+      set.headers['content-type'] = entry.contentType
       if (entry.contentType.includes('json')) {
         try { return JSON.parse(entry.body) } catch { /* fall through to string */ }
       }
@@ -302,10 +309,7 @@ async function proxyFHIR({ params, request, set }: any) {
             strippedParams: normResult.strippedParams,
             strippedIncludes: normResult.strippedIncludes,
           })
-          set.headers = {
-            ...set.headers,
-            'x-proxy-stripped-params': allStripped.join(','),
-          }
+          set.headers['x-proxy-stripped-params'] = allStripped.join(',')
         }
       }
     }

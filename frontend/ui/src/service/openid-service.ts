@@ -14,6 +14,70 @@ interface OpenIDConfig {
   scope: string;
 }
 
+/**
+ * The shape the generated client throws on an HTTP failure: an Error, plus the
+ * original Response for a non-2xx. Declared narrowly rather than as `any`, so
+ * reading any field off it stays a deliberate act.
+ */
+interface ApiCallError {
+  name?: unknown;
+  message?: unknown;
+  status?: unknown;
+  statusText?: unknown;
+  url?: unknown;
+  response?: { text?: () => Promise<string> };
+}
+
+/**
+ * Turn a failed OAuth call into an error that names the reason.
+ *
+ * The client's own message is generic — the OAuth error and description are in the
+ * response body, so read that when it is present. The token-exchange and refresh
+ * paths did this identically with a copy each; `prefix` is the only thing that
+ * differed between them.
+ */
+async function enrichOAuthError(error: unknown, prefix: string, label: string): Promise<Error | null> {
+  if (!error || typeof error !== 'object') return null;
+  const err = error as ApiCallError;
+
+  let enriched: Error | null = null;
+  const response = err.response;
+  if (response && typeof response.text === 'function') {
+    try {
+      const body = await response.text();
+      console.error(`${label} error response body:`, body);
+      try {
+        const details: unknown = JSON.parse(body);
+        if (details && typeof details === 'object' && 'error' in details) {
+          const parsed = details as { error?: unknown; error_description?: unknown };
+          const description =
+            typeof parsed.error_description === 'string' ? ` - ${parsed.error_description}` : '';
+          enriched = new Error(`${prefix}: ${String(parsed.error)}${description}`);
+        }
+      } catch (parseError) {
+        console.error(`Could not parse error response as JSON (${label}):`, parseError);
+      }
+    } catch (textError) {
+      console.error(`Could not read error response text (${label}):`, textError);
+    }
+  }
+
+  try {
+    console.error('Error object details:', {
+      name: err.name,
+      message: err.message,
+      status: err.status,
+      statusText: err.statusText,
+      url: err.url,
+      keys: Object.keys(error),
+    });
+  } catch {
+    // ignore structured log errors
+  }
+
+  return enriched;
+}
+
 class OpenIDService {
   private readonly config: OpenIDConfig;
   private readonly authApi: AuthenticationApi;
@@ -126,51 +190,7 @@ class OpenIDService {
     } catch (error) {
       console.error('Token exchange API call failed:', error);
 
-      let enrichedError: Error | null = null;
-
-      // Try to extract more detailed error information
-      if (error && typeof error === 'object') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorObj = error as any;
-
-        // Check if it's a ResponseError with response details
-        if (errorObj.response) {
-          try {
-            const responseText = await errorObj.response.text();
-            console.error('Token exchange error response body:', responseText);
-
-            // Try to parse as JSON
-            try {
-              const errorDetails = JSON.parse(responseText);
-              console.error('Parsed error details:', errorDetails);
-
-              // Create a more descriptive error message
-              if (errorDetails.error) {
-                const message = `OAuth error: ${errorDetails.error}${errorDetails.error_description ? ` - ${errorDetails.error_description}` : ''}`;
-                enrichedError = new Error(message);
-              }
-            } catch (parseError) {
-              console.error('Could not parse error response as JSON (token exchange):', parseError);
-            }
-          } catch (textError) {
-            console.error('Could not read error response text (token exchange):', textError);
-          }
-        }
-
-        // Log the error structure for debugging
-        try {
-          console.error('Error object details:', {
-            name: errorObj.name,
-            message: errorObj.message,
-            status: errorObj.status,
-            statusText: errorObj.statusText,
-            url: errorObj.url,
-            keys: Object.keys(errorObj)
-          });
-        } catch {
-          // ignore structured log errors
-        }
-      }
+      const enrichedError = await enrichOAuthError(error, 'OAuth error', 'Token exchange');
 
       throw (enrichedError ?? error);
     }
@@ -219,34 +239,7 @@ class OpenIDService {
     } catch (error) {
       console.error('Token refresh API call failed:', error);
 
-      let enrichedError: Error | null = null;
-
-      // Try to extract more detailed error information for refresh token errors
-      if (error && typeof error === 'object') {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const errorObj = error as any;
-
-        if (errorObj.response) {
-          try {
-            const responseText = await errorObj.response.text();
-            console.error('Token refresh error response body:', responseText);
-
-            try {
-              const errorDetails = JSON.parse(responseText);
-              console.error('Parsed refresh error details:', errorDetails);
-
-              if (errorDetails.error) {
-                const message = `Token refresh failed: ${errorDetails.error}${errorDetails.error_description ? ` - ${errorDetails.error_description}` : ''}`;
-                enrichedError = new Error(message);
-              }
-            } catch (parseError) {
-              console.error('Could not parse refresh error response as JSON (token refresh):', parseError);
-            }
-          } catch (textError) {
-            console.error('Could not read refresh error response text (token refresh):', textError);
-          }
-        }
-      }
+      const enrichedError = await enrichOAuthError(error, 'Token refresh failed', 'Token refresh');
 
       throw (enrichedError ?? error);
     }
