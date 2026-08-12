@@ -25,6 +25,33 @@ import { logger } from '@/lib/logger'
 /**
  * Healthcare User Management - specialized for healthcare professionals
  */
+type ValidatedAdmin = Awaited<ReturnType<typeof getValidatedAdmin>>
+
+/**
+ * Additively assign realm roles, reporting what actually applied.
+ *
+ * Shared by create and the dedicated endpoint so the two cannot drift. Create
+ * swallowed every failure into a warn and still answered 200, so a caller who
+ * passed realmRoles got an account with no roles and no signal.
+ */
+async function assignRealmRoles(
+  admin: ValidatedAdmin,
+  userId: string,
+  requested: string[],
+): Promise<{ assigned: string[]; missing: string[] }> {
+  if (requested.length === 0) return { assigned: [], missing: [] }
+  const all = await admin.roles.find()
+  const found = all.filter(role => requested.includes(role.name || ''))
+  const assigned = found.map(role => role.name!).filter(Boolean)
+  if (found.length > 0) {
+    await admin.users.addRealmRoleMappings({
+      id: userId,
+      roles: found.map(role => ({ id: role.id!, name: role.name! })),
+    })
+  }
+  return { assigned, missing: requested.filter(name => !assigned.includes(name)) }
+}
+
 export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
   .use(keycloakPlugin)
   
@@ -192,22 +219,26 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
       const admin = await getValidatedAdmin(getAdmin, token)
       const result = await admin.users.create(userData)
       
-      // Assign roles if specified
-      if (result.id && (body.realmRoles || body.clientRoles)) {
+      // The id is needed to assign roles. The client does not always return one,
+      // and the old code silently skipped the whole block when it did not — which
+      // is how a create could accept realmRoles and apply none of them.
+      const createdId = result.id
+        ?? (await admin.users.find({ username: userData.username, exact: true }))[0]?.id
+      if (!createdId) {
+        throw new Error('User was created but its id could not be resolved, so roles were not assigned')
+      }
+
+      // Deliberately NOT wrapped in a catch that downgrades to a warning: an
+      // account created without its roles is not a success worth reporting as one.
+      const roleOutcome = await assignRealmRoles(admin, createdId, body.realmRoles ?? [])
+      if (roleOutcome.missing.length > 0) {
+        logger.admin.warn('Some requested realm roles do not exist', {
+          username: userData.username, missing: roleOutcome.missing,
+        })
+      }
+
+      if (createdId && body.clientRoles) {
         try {
-          // Assign realm roles
-          if (body.realmRoles && body.realmRoles.length > 0) {
-            const allRealmRoles = await admin.roles.find()
-            const rolesToAssign = allRealmRoles.filter(role => 
-              body.realmRoles!.includes(role.name || '')
-            ).map(role => ({ id: role.id!, name: role.name! }))
-            if (rolesToAssign.length > 0) {
-              await admin.users.addRealmRoleMappings({
-                id: result.id,
-                roles: rolesToAssign
-              })
-            }
-          }
           
           // Assign client roles
           if (body.clientRoles) {
@@ -222,7 +253,7 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
                   ).map(role => ({ id: role.id!, name: role.name! }))
                   if (rolesToAssign.length > 0) {
                     await admin.users.addClientRoleMappings({
-                      id: result.id,
+                      id: createdId,
                       clientUniqueId: client.id!,
                       roles: rolesToAssign
                     })
@@ -238,9 +269,12 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         }
       }
       
-      // Return the created user object (fetch by id)
-      const created = result.id ? await admin.users.findOne({ id: result.id }) : undefined
-      return created ? mapHealthcareUser(created) : { error: 'Failed to retrieve created user' }
+      // Echo the roles that actually stuck. The response schema always declared
+      // realmRoles; the mapper never filled it, so the create answered 200 with no
+      // way to tell whether the roles had been applied.
+      const created = await admin.users.findOne({ id: createdId })
+      if (!created) return { error: 'Failed to retrieve created user' }
+      return { ...mapHealthcareUser(created), realmRoles: roleOutcome.assigned }
     } catch (error) {
       logger.admin.error('Error creating healthcare user', { error })
       return handleAdminError(error, set)
@@ -586,19 +620,13 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         return { success: true, message: 'No roles to add' }
       }
 
-      const allRealmRoles = await admin.roles.find()
-      const rolesToAssign = allRealmRoles
-        .filter(role => requested.includes(role.name || ''))
-        .map(role => ({ id: role.id!, name: role.name! }))
-
-      if (rolesToAssign.length === 0) {
+      // addRealmRoleMappings is additive in Keycloak: it does not remove others.
+      const { assigned } = await assignRealmRoles(admin, params.userId, requested)
+      if (assigned.length === 0) {
         set.status = 404
         return { error: 'None of the requested realm roles exist' }
       }
-
-      // addRealmRoleMappings is additive in Keycloak: it does not remove others.
-      await admin.users.addRealmRoleMappings({ id: params.userId, roles: rolesToAssign })
-      return { success: true, message: `Added ${rolesToAssign.length} realm role(s)` }
+      return { success: true, message: `Added ${assigned.length} realm role(s)` }
     } catch (error) {
       return handleAdminError(error, set)
     }

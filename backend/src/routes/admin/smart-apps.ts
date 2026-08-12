@@ -621,8 +621,12 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(body.appType && { 'client_type': body.appType }),
           // Keycloak 25+ requires explicit post-logout redirect URI config
           'post.logout.redirect.uris': existing.attributes?.['post.logout.redirect.uris'] || '+',
-          smart_version: body.smartVersion ? [body.smartVersion] : existing.attributes?.smart_version,
-          fhir_version: body.fhirVersion ? [body.fhirVersion] : existing.attributes?.fhir_version,
+          // Plain strings, as the create path writes them. Keycloak's
+          // ClientRepresentation.attributes is Map<String,String>, so an array here
+          // fails to deserialize and the whole PUT comes back as
+          // "Cannot parse the JSON: unknown_error" with no field named.
+          ...(body.smartVersion !== undefined && { smart_version: body.smartVersion }),
+          ...(body.fhirVersion !== undefined && { fhir_version: body.fhirVersion }),
           // Server access control
           ...(body.serverAccessType !== undefined && { 'server_access_type': body.serverAccessType }),
           ...(body.allowedServerIds !== undefined && {
