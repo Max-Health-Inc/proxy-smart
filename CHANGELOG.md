@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.11-beta.202608121633.0ee3da2eb] - 2026-08-12
+
+- 🔧 Chores & Improvements: Enforced explicit region handling in deploy/infra; added DEPLOY_REGIONS, CDK context region validation, and mismatch guard between ambient and provided regions.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1002
+
+
 ## [0.3.9-beta.202608120811.c481d7d66] - 2026-08-12
 
 - ✨ Features: none
