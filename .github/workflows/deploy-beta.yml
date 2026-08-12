@@ -290,6 +290,20 @@ jobs:
             sleep 10
           done
 
+          # The FHIR path needs HAPI and its database, which /health does not touch — and this step
+          # publishes it as fhir_server_url, so check the thing being advertised. 401/403 still prove
+          # the proxy reached FHIR; a 5xx (e.g. a missing database) is this deploy's problem.
+          FHIR_STATUS=$(curl -s -o /tmp/fhir-body -w "%{http_code}" --max-time 30             "${VPS_URL}/proxy-smart-backend/hapi-fhir-server/R4/metadata" || echo "000")
+          case "$FHIR_STATUS" in
+            2*|401|403) echo "✅ FHIR reachable (HTTP $FHIR_STATUS)" ;;
+            *)
+              echo "❌ FHIR endpoint returned HTTP $FHIR_STATUS"
+              head -c 500 /tmp/fhir-body || true
+              echo "deployment_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+              ;;
+          esac
+
           echo "fhir_server_url=${VPS_URL}/proxy-smart-backend/hapi-fhir-server/R4" >> $GITHUB_OUTPUT
           echo "keycloak_url=${VPS_URL}/auth" >> $GITHUB_OUTPUT
           echo "app_url=${VPS_URL}" >> $GITHUB_OUTPUT
