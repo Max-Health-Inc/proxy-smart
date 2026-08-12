@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Button, Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@proxy-smart/shared-ui';
 import { Plus, Landmark } from 'lucide-react';
 import type { IdentityProviderFormData } from '@/lib/types/api';
@@ -179,6 +182,31 @@ export function IdPAddForm({ isOpen, onClose, onSubmit, newIdp, setNewIdp, organ
           {/* OIDC/OAuth2 specific fields */}
           {(['oidc', 'oauth2'].includes((newIdp.providerId ?? '').toLowerCase())) && (
             <div className="space-y-6">
+              {/* Client ID and Authorization URL: Keycloak rejects an OIDC provider
+                  without them, and neither had an input here. */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="clientId" className="text-sm font-semibold text-foreground">{t('Client ID')}</Label>
+                  <Input
+                    id="clientId"
+                    placeholder={t('OAuth2/OIDC client id')}
+                    value={newIdp.config.clientId ?? ''}
+                    onChange={(e) => updateConfig('clientId', e.target.value)}
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="authorizationUrl" className="text-sm font-semibold text-foreground">{t('Authorization URL')}</Label>
+                  <Input
+                    id="authorizationUrl"
+                    type="url"
+                    placeholder="https://login.provider.com/authorize"
+                    value={newIdp.config.authorizationUrl ?? ''}
+                    onChange={(e) => updateConfig('authorizationUrl', e.target.value)}
+                    className="rounded-xl border-border/50 focus:border-ring focus:ring-ring shadow-sm"
+                  />
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <Label htmlFor="clientSecret" className="text-sm font-semibold text-foreground">{t('Client Secret')}</Label>

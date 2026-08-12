@@ -11,33 +11,66 @@ import { t, type Static } from 'elysia'
 /**
  * Identity Provider configuration schema for OIDC/SAML providers
  */
+/**
+ * The Keycloak identity-provider `config` map.
+ *
+ * TWO DEFECTS THIS FIXES, both of which made an OIDC provider impossible to create
+ * through any caller — the admin UI, the generated client, and the MCP tool alike.
+ *
+ * 1. `clientId` and `authorizationUrl` were absent. Two of the four keys Keycloak
+ *    requires for `oidc` could not be named at all, so every create reached Keycloak
+ *    without them and came back 500 `unknown_error`.
+ * 2. The object was closed, and Elysia STRIPS undeclared body properties rather than
+ *    rejecting them. So a caller that sent `clientId` anyway had it removed silently,
+ *    before the handler ran — no error, no warning, nothing in a log.
+ *
+ * Hence `additionalProperties`: the named keys below document what a provider commonly
+ * needs, and anything else Keycloak supports still travels. The old `additionalConfig`
+ * sub-object was not that escape hatch — Keycloak has no `additionalConfig` key, so
+ * anything nested under it was passed to Keycloak and ignored, which reads as an escape
+ * hatch while being a dead end.
+ *
+ * Values are strings because Keycloak stores this map as strings; the few booleans it
+ * accepts are declared explicitly below.
+ */
 export const IdentityProviderConfig = t.Object({
-  // Common fields
-  displayName: t.Optional(t.String({ description: 'Display name for UI' })),
-  enabled: t.Optional(t.Boolean({ description: 'Whether the provider is enabled', default: true })),
-  
-  // OIDC/OAuth2 specific fields
-  clientSecret: t.Optional(t.String({ description: 'OAuth2 client secret' })),
-  tokenUrl: t.Optional(t.String({ description: 'Token endpoint URL' })),
+  // ── OIDC / OAuth2 ──
+  clientId: t.Optional(t.String({ description: 'OAuth2 client id issued by the provider. REQUIRED for oidc, oauth2, keycloak-oidc and the social providers.' })),
+  clientSecret: t.Optional(t.String({ description: 'OAuth2 client secret. REQUIRED for oidc, oauth2, keycloak-oidc and the social providers.' })),
+  authorizationUrl: t.Optional(t.String({ description: "The provider's authorization endpoint URL. REQUIRED for oidc, oauth2 and keycloak-oidc." })),
+  tokenUrl: t.Optional(t.String({ description: "The provider's token endpoint URL. REQUIRED for oidc, oauth2 and keycloak-oidc." })),
   userInfoUrl: t.Optional(t.String({ description: 'UserInfo endpoint URL' })),
-  issuer: t.Optional(t.String({ description: 'OIDC issuer URL' })),
-  defaultScopes: t.Optional(t.String({ description: 'Default OAuth2 scopes' })),
+  issuer: t.Optional(t.String({ description: 'OIDC issuer URL, validated against the id token iss claim' })),
+  defaultScopes: t.Optional(t.String({ description: 'Space-separated OAuth2 scopes to request (e.g. "openid profile email")' })),
   logoutUrl: t.Optional(t.String({ description: 'Logout endpoint URL' })),
-  
-  // SAML specific fields
+  clientAuthMethod: t.Optional(t.String({ description: 'Client authentication method (client_secret_post, client_secret_basic, client_secret_jwt, private_key_jwt)' })),
+  validateSignature: t.Optional(t.Boolean({ description: 'Validate signatures on tokens/assertions from this provider' })),
+  useJwksUrl: t.Optional(t.Boolean({ description: 'Fetch the signing keys from jwksUrl rather than using a static certificate' })),
+  jwksUrl: t.Optional(t.String({ description: "The provider's JWKS URL, used when useJwksUrl is true" })),
+  pkceEnabled: t.Optional(t.Boolean({ description: 'Send a PKCE challenge on the authorization request' })),
+  pkceMethod: t.Optional(t.String({ description: 'PKCE code challenge method (S256 or plain)' })),
+  syncMode: t.Optional(t.String({ description: 'How brokered user data is synced on later logins: IMPORT, LEGACY or FORCE' })),
+
+  // ── SAML ──
   entityId: t.Optional(t.String({ description: 'SAML entity ID' })),
-  singleSignOnServiceUrl: t.Optional(t.String({ description: 'SAML SSO URL' })),
+  singleSignOnServiceUrl: t.Optional(t.String({ description: 'SAML SSO URL. REQUIRED for saml.' })),
   singleLogoutServiceUrl: t.Optional(t.String({ description: 'SAML SLO URL' })),
   metadataDescriptorUrl: t.Optional(t.String({ description: 'SAML metadata URL' })),
   signatureAlgorithm: t.Optional(t.String({ description: 'SAML signature algorithm' })),
   nameIdPolicyFormat: t.Optional(t.String({ description: 'SAML NameID format' })),
   signingCertificate: t.Optional(t.String({ description: 'SAML signing certificate' })),
-  validateSignature: t.Optional(t.Boolean({ description: 'Validate SAML signatures' })),
   wantAuthnRequestsSigned: t.Optional(t.Boolean({ description: 'Require signed AuthN requests' })),
-  
-  // Allow additional configuration
-  additionalConfig: t.Optional(t.Record(t.String(), t.Any()))
-}, { title: 'IdentityProviderConfig' })
+
+  // ── Kept for the admin UI, which writes it alongside the real keys ──
+  displayName: t.Optional(t.String({ description: 'Display name for UI' })),
+}, {
+  title: 'IdentityProviderConfig',
+  // Any other key this provider type supports, passed through to Keycloak verbatim.
+  // Booleans and numbers are accepted as well as strings: Keycloak stores the map as
+  // strings and coerces, and restricting to strings would recreate the dead end this
+  // replaces for keys whose natural JSON form is not a string.
+  additionalProperties: t.Union([t.String(), t.Boolean(), t.Number()]),
+})
 
 export const IdentityProvider = t.Object({
   alias: t.Optional(t.String({ description: 'Provider alias (unique identifier)' })),
