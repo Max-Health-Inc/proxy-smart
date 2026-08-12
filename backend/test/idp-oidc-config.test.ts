@@ -23,6 +23,7 @@
 import { describe, it, expect } from 'bun:test'
 import { Elysia, t } from 'elysia'
 import type { TSchema } from '@sinclair/typebox'
+import type { Context } from 'elysia'
 import { IdentityProviderConfig, CreateIdentityProviderRequest, UpdateIdentityProviderRequest } from '../src/schemas/admin/identity-providers'
 import { missingConfigKeys, requiredConfigFor } from '../src/lib/idp-required-config'
 import { handleAdminError } from '../src/lib/admin-error-handler'
@@ -158,8 +159,8 @@ describe('missingConfigKeys', () => {
 })
 
 describe('Keycloak error detail surfacing', () => {
-  function makeSet() {
-    return { status: undefined as number | string | undefined, headers: {} as Record<string, string> }
+  function makeSet(): Context['set'] {
+    return { headers: {}, status: undefined }
   }
 
   it('reports the description rather than the bare code', () => {
@@ -169,8 +170,7 @@ describe('Keycloak error detail surfacing', () => {
         response: { status: 500 },
         responseData: { error: 'unknown_error', error_description: 'Could not resolve authorization endpoint' },
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- narrow Context['set'] stand-in
-      set as any,
+      set,
     ) as { error: string; details?: string }
 
     expect(set.status).toBe(500)
@@ -183,8 +183,7 @@ describe('Keycloak error detail surfacing', () => {
     const set = makeSet()
     const body = handleAdminError(
       { response: { status: 500 }, responseData: { error: 'unknown_error' } },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
-      set as any,
+      set,
     ) as { error: string; details?: string }
 
     expect(body.details).toBe('unknown_error')
