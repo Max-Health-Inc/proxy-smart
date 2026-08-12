@@ -190,3 +190,55 @@ describe('Keycloak error detail surfacing', () => {
     expect(body.details).toBe('unknown_error')
   })
 })
+
+describe('read and write must not drift apart', () => {
+  /**
+   * THE DRIFT THIS PINS. One resource's `config` was typed four ways in one file:
+   * the read schemas (IdentityProvider, IdentityProviderResponse) used an open
+   * Record<string, any>, while the write schemas (Create/Update) used a closed
+   * object missing clientId and authorizationUrl.
+   *
+   * So the API was not round-trippable: a GET showed you a working provider's full
+   * config, and POSTing that same object back silently dropped the keys that made
+   * it work. Beta's broker looked perfect on read and was unreproducible on write.
+   *
+   * The mapper schemas in the same file use Record<string, string> on both sides
+   * and never had the problem, which is what marks this as drift rather than design.
+   */
+
+  it('accepts on write everything the read side can return', () => {
+    // Read is an open Record, so write must not be a closed object — that
+    // asymmetry IS the bug, independent of which keys happen to be named today.
+    const additional = (IdentityProviderConfig as { additionalProperties?: unknown }).additionalProperties
+    expect(additional).toBeDefined()
+  })
+
+  it('round-trips a real Keycloak OIDC provider config unchanged', async () => {
+    // Shaped after the working broker on beta, which was created by the CLI piping a
+    // full Keycloak representation and so never passed through this schema.
+    const asReadFromKeycloak = {
+      clientId: 'maxhealth-broker',
+      clientSecret: 'not-a-real-secret',
+      authorizationUrl: 'https://login.maxhealth.tech/authorize',
+      tokenUrl: 'https://login.maxhealth.tech/token',
+      userInfoUrl: 'https://login.maxhealth.tech/userinfo',
+      jwksUrl: 'https://login.maxhealth.tech/jwks',
+      useJwksUrl: true,
+      issuer: 'https://login.maxhealth.tech',
+      defaultScopes: 'openid profile email',
+      clientAuthMethod: 'client_secret_post',
+      pkceEnabled: true,
+      pkceMethod: 'S256',
+      syncMode: 'FORCE',
+      validateSignature: true,
+    }
+
+    const { status, body } = await probe(t.Object({ config: IdentityProviderConfig }), {
+      config: asReadFromKeycloak,
+    })
+
+    expect(status).toBe(200)
+    // Not a subset check: nothing may be dropped on the way through.
+    expect(body.config).toEqual(asReadFromKeycloak)
+  })
+})
