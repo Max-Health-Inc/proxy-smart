@@ -65,8 +65,15 @@ export function handleAdminError(error: unknown, set: Context['set']) {
 /**
  * Sanitize error details before sending in HTTP response.
  * Removes stack traces and internal file paths to prevent information disclosure.
+ *
+ * Prefers Keycloak's own response body over `error.message`. The admin client throws
+ * with the message set to just the error CODE, so a failed provider create surfaced as
+ * the bare word `unknown_error` while the body carried the actual reason. Reporting the
+ * code alone is indistinguishable from reporting nothing.
  */
 function sanitizeErrorForResponse(error: unknown): string {
+  const fromKeycloak = keycloakErrorDetail(error)
+  if (fromKeycloak) return fromKeycloak
   if (error instanceof Error) {
     return error.message
   }
@@ -74,6 +81,33 @@ function sanitizeErrorForResponse(error: unknown): string {
     return error
   }
   return 'An unexpected error occurred'
+}
+
+/**
+ * The most specific description Keycloak returned, across the field names its various
+ * endpoints use (`error_description`, `errorMessage`, `error`) and the two places the
+ * admin client stashes the parsed body.
+ */
+function keycloakErrorDetail(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null
+  const err = error as Record<string, unknown>
+  const response = err.response as Record<string, unknown> | undefined
+  const bodies = [err.responseData, response?.data, response?.body].filter(
+    (b): b is Record<string, unknown> => !!b && typeof b === 'object',
+  )
+
+  const parts: string[] = []
+  for (const body of bodies) {
+    for (const field of ['error_description', 'errorMessage', 'error']) {
+      const value = body[field]
+      if (typeof value === 'string' && value.trim() && !parts.includes(value)) parts.push(value)
+    }
+  }
+  if (parts.length === 0) return null
+
+  // A message plus the code reads better than either alone, and the code is what
+  // Keycloak's own docs are searchable by.
+  return parts.join(': ')
 }
 
 

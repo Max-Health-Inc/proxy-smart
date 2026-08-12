@@ -21,6 +21,7 @@ import {
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ensureIdpAttributeMappers } from '@/lib/idp-mappers'
+import { missingConfigKeys } from '@/lib/idp-required-config'
 import { logger } from '@/lib/logger'
 import type IdentityProviderRepresentation from '@keycloak/keycloak-admin-client/lib/defs/identityProviderRepresentation.js'
 
@@ -135,6 +136,17 @@ export const identityProvidersRoutes = new Elysia({ prefix: '/idps' })
       if (!payload.alias || !payload.providerId) {
         set.status = 400
         return { error: 'Alias and providerId are required' }
+      }
+
+      // Keycloak answers 500 `unknown_error` for an incomplete provider, naming nothing.
+      // Refuse first, and say which keys are missing.
+      const missing = missingConfigKeys(payload.providerId, payload.config as Record<string, unknown>)
+      if (missing.length > 0) {
+        set.status = 400
+        return {
+          error: `Missing required config for providerId "${payload.providerId}": ${missing.join(', ')}. ` +
+            `Supply them under "config".`,
+        }
       }
 
       await admin.identityProviders.create({
