@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.9-beta.202608120811.c481d7d66] - 2026-08-12
+
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+- 📚 Documentation: none
+- 🔧 Chores & Improvements: sync package versions; fix non-deprecated OpenAI embedding accessor; pin read/write config parity to prevent schema drift
+- ⚠️ Breaking Changes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/994
+
+
 ## [0.3.4-beta.202608081721.cb4b3a46e] - 2026-08-08
 
 - ✨ Features: 
