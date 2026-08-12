@@ -2,7 +2,7 @@
   "name": "proxy-smart-infra",
   "displayName": "Proxy Smart Infrastructure",
   "description": "AWS CDK infrastructure for Proxy Smart production deployment",
-  "version": "0.3.8-beta.202608120751.92961df39",
+  "version": "0.3.9-alpha.202608120811.c481d7d66",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,7 +22,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.263.0",
+    "aws-cdk-lib": "^2.264.0",
     "constructs": "^10.8.1"
   },
   "devDependencies": {
@@ -30,10 +30,10 @@
     "@types/node": "^26.2.0",
     "aws-cdk": "^2.1135.1",
     "eslint": "^10.8.1",
-    "globals": "^17.9.0",
-    "tsx": "^4.23.11",
+    "globals": "^17.10.0",
+    "tsx": "^4.23.12",
     "typescript": "6.0.3",
-    "typescript-eslint": "^8.66.0"
+    "typescript-eslint": "^8.67.0"
   },
   "engines": {
     "node": ">=18.0.0",
