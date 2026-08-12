@@ -143,6 +143,25 @@ describe('missingConfigKeys', () => {
     expect(missingConfigKeys('oidc', { ...OIDC_CONFIG, clientId: '   ' })).toEqual(['clientId'])
   })
 
+  it('does not ask private_key_jwt or none for a secret they do not have', () => {
+    // Demanding one rejected the two strongest configurations: private_key_jwt signs with a key
+    // pair, and none relies on PKCE. A live broker running clientAuthMethod: none could not be
+    // re-registered through the API that manages it.
+    for (const clientAuthMethod of ['private_key_jwt', 'none']) {
+      const { clientSecret: _unused, ...noSecret } = OIDC_CONFIG
+      expect(missingConfigKeys('oidc', { ...noSecret, clientAuthMethod })).toEqual([])
+    }
+  })
+
+  it('still asks the secret-based methods for a secret', () => {
+    const { clientSecret: _unused, ...noSecret } = OIDC_CONFIG
+    for (const clientAuthMethod of ['client_secret_post', 'client_secret_basic', 'client_secret_jwt']) {
+      expect(missingConfigKeys('oidc', { ...noSecret, clientAuthMethod })).toEqual(['clientSecret'])
+    }
+    // Unset means Keycloak's default, which is client_secret_post.
+    expect(missingConfigKeys('oidc', noSecret)).toEqual(['clientSecret'])
+  })
+
   it('asks a social provider only for credentials, since it ships its own endpoints', () => {
     expect(requiredConfigFor('google')).toEqual(['clientId', 'clientSecret'])
     expect(missingConfigKeys('google', { clientId: 'a', clientSecret: 'b' })).toEqual([])
