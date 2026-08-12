@@ -29,8 +29,7 @@ import { getRuntimeAccessControlConfig } from './runtime-config'
 
 export interface AccessControlContext {
   /** Raw token payload from JWT validation */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  tokenPayload: Record<string, any>
+  tokenPayload: Record<string, unknown>
   /** The FHIR resource path (e.g. "Patient/123", "Observation") */
   resourcePath: string
   /** HTTP method */
@@ -53,8 +52,7 @@ export interface AccessControlResult {
   /** HTTP status code if denied */
   status?: number
   /** Error response body if denied */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body?: Record<string, any>
+  body?: Record<string, unknown>
   /** Modified query string (role-based filtering may inject search params) */
   modifiedQueryString?: string
 }
@@ -196,12 +194,23 @@ export function enforceScopeAccess(ctx: AccessControlContext): AccessControlResu
  * Perform an upstream FHIR fetch with proper auth/mTLS, checking response status.
  * Returns the parsed JSON bundle or null on failure.
  */
+/**
+ * Entry count of an upstream FHIR Bundle, 0 when absent or not a list.
+ *
+ * The read used to be `bundle.entry?.length` through a `Record<string, any>`, which
+ * silently yielded undefined for a non-array `entry` and was then treated as empty —
+ * i.e. as "not found". Same outcome, but stated rather than assumed.
+ */
+function bundleEntryCount(bundle: Record<string, unknown>): number {
+  const entry = bundle.entry
+  return Array.isArray(entry) ? entry.length : 0
+}
+
 async function upstreamFhirQuery(
   ctx: AccessControlContext,
   url: string,
   description: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<Record<string, any> | null> {
+): Promise<Record<string, unknown> | null> {
   try {
     const headers: Record<string, string> = { Accept: 'application/fhir+json' }
     if (ctx.authHeader) {
@@ -373,7 +382,7 @@ async function enforcePatientFiltering(
             body: { error: 'upstream_error', message: 'Failed to validate resource ownership on upstream FHIR server' },
           }
         }
-      } else if (!checkBundle.entry?.length) {
+      } else if (bundleEntryCount(checkBundle) === 0) {
         logger.fhir.warn('Patient access denied to unowned resource', {
           fhirUser, resourceType, resourceId, server: ctx.serverName,
         })

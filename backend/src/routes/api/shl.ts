@@ -16,6 +16,7 @@
  */
 
 import { Elysia, t } from 'elysia'
+import type { Context } from 'elysia'
 import { SHL, encryptSHLFile } from 'kill-the-clipboard'
 import type { SHLFileContentType } from 'kill-the-clipboard'
 import { config } from '@/config'
@@ -106,8 +107,10 @@ function sessionSelectiveScope(session: { shareScope?: ShareScope }): SelectiveS
  * `{ error }`; on success returns the session. Shared by the FHIR + DICOMweb
  * proxy handlers so the checks (esp. revocation) live in exactly one place.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function authorizeShlBearer(headers: any, set: any): Promise<{ shlId: string; session: ShlSession } | { error: string }> {
+async function authorizeShlBearer(
+  headers: Record<string, string | undefined>,
+  set: Context['set'],
+): Promise<{ shlId: string; session: ShlSession } | { error: string }> {
   const bearerToken = extractBearerToken(headers)
   if (!bearerToken) {
     set.status = 401
@@ -132,15 +135,28 @@ async function authorizeShlBearer(headers: any, set: any): Promise<{ shlId: stri
   return { shlId, session }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function shlFhirProxyHandler({ request, params, headers, set }: any) {
+/**
+ * What the SHL proxy handlers read off Elysia's context.
+ *
+ * Both routes are wildcards, so the tail arrives as `params['*']`. Typing this
+ * removed an inner `params as Record<string, string>` in each handler that only
+ * existed because the parameter itself was `any`.
+ */
+interface ShlProxyContext {
+  request: Request
+  params: Record<string, string>
+  headers: Record<string, string | undefined>
+  set: Context['set']
+}
+
+async function shlFhirProxyHandler({ request, params, headers, set }: ShlProxyContext) {
   try {
     const auth = await authorizeShlBearer(headers, set)
     if ('error' in auth) return auth
     const { shlId, session } = auth
 
     // Extract the FHIR path after /fhir/ (empty string for base /fhir route)
-    const fhirPath = (params as Record<string, string>)?.['*'] || ''
+    const fhirPath = params['*'] || ''
 
     const url = new URL(request.url)
     // Query string sent upstream. Study-scoped requests may rewrite this to force the scope filter.
@@ -288,8 +304,7 @@ function buildDicomAuthHeader(server: { authType?: string; authHeader?: string; 
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
+async function shlDicomwebProxyHandler({ request, params, headers, set }: ShlProxyContext) {
   try {
     const auth = await authorizeShlBearer(headers, set)
     if ('error' in auth) return auth
@@ -307,7 +322,7 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: any) {
       return { error: 'DICOMweb proxy is not configured' }
     }
 
-    const dicomPath = (params as Record<string, string>)?.['*'] || ''
+    const dicomPath = params['*'] || ''
     const url = new URL(request.url)
 
     // Study-scope enforcement: default-deny anything outside the shared study.
