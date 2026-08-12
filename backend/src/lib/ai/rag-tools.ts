@@ -54,6 +54,7 @@ interface KnowledgeChunk {
 
 const EMBEDDING_MODEL = process.env.OPENAI_EMBEDDING_MODEL || 'text-embedding-3-small'
 const MAX_BATCH_SIZE = Number.parseInt(process.env.RAG_EMBEDDING_BATCH_SIZE || '64', 10)
+const embeddingModel = openai.embedding(EMBEDDING_MODEL)
 const TARGET_CHARS = Number.parseInt(process.env.RAG_CHUNK_SIZE || '1200', 10)
 const MIN_CHARS = Number.parseInt(process.env.RAG_MIN_CHUNK_SIZE || '200', 10)
 
@@ -312,7 +313,7 @@ async function generateEmbeddings(chunks: string[]): Promise<CacheChunk[]> {
     
     // Use AI SDK's embedMany for batch processing
     const { embeddings } = await embedMany({
-      model: openai.textEmbedding(EMBEDDING_MODEL),
+      model: embeddingModel,
       values: batch
     })
 
@@ -347,7 +348,7 @@ export async function searchDocumentation(query: string, limit = 5, category?: s
   
   // Use AI SDK's embed for single query
   const { embedding: queryEmbedding } = await embed({
-    model: openai.textEmbedding(EMBEDDING_MODEL),
+    model: embeddingModel,
     value: sanitizedQuery.replace(/\s+/g, ' ').trim()
   })
 

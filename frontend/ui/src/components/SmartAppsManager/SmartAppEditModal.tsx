@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState } from 'react';
 import {
   Button,
@@ -93,6 +96,22 @@ function buildFormState(app: SmartApp): UpdateSmartAppRequest {
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
+/**
+ * Copy one field across, keeping key and value types correlated.
+ *
+ * A plain `payload[key] = form[key]` cannot typecheck when `key` is a union: TS
+ * widens the value to the union of all field types. Binding a single `K` per call
+ * is what relates them, and is the same shape as this component's `set` helper —
+ * so the write no longer needs `payload as any`.
+ */
+function copyChangedField<K extends keyof UpdateSmartAppRequest>(
+  target: UpdateSmartAppRequest,
+  source: UpdateSmartAppRequest,
+  key: K,
+): void {
+  target[key] = source[key];
+}
+
 export function SmartAppEditModal({
   open,
   onOpenChange,
@@ -119,8 +138,7 @@ export function SmartAppEditModal({
         const orig = original[key];
         if (cur === undefined) continue;
         if (JSON.stringify(cur) !== JSON.stringify(orig)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (payload as any)[key] = cur;
+          copyChangedField(payload, form, key);
         }
       }
       await onSave(app.clientId!, payload);

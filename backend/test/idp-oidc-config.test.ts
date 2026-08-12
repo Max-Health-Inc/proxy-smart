@@ -23,6 +23,7 @@
 import { describe, it, expect } from 'bun:test'
 import { Elysia, t } from 'elysia'
 import type { TSchema } from '@sinclair/typebox'
+import type { Context } from 'elysia'
 import { IdentityProviderConfig, CreateIdentityProviderRequest, UpdateIdentityProviderRequest } from '../src/schemas/admin/identity-providers'
 import { missingConfigKeys, requiredConfigFor } from '../src/lib/idp-required-config'
 import { handleAdminError } from '../src/lib/admin-error-handler'
@@ -142,6 +143,25 @@ describe('missingConfigKeys', () => {
     expect(missingConfigKeys('oidc', { ...OIDC_CONFIG, clientId: '   ' })).toEqual(['clientId'])
   })
 
+  it('does not ask private_key_jwt or none for a secret they do not have', () => {
+    // Demanding one rejected the two strongest configurations: private_key_jwt signs with a key
+    // pair, and none relies on PKCE. A live broker running clientAuthMethod: none could not be
+    // re-registered through the API that manages it.
+    for (const clientAuthMethod of ['private_key_jwt', 'none']) {
+      const { clientSecret: _unused, ...noSecret } = OIDC_CONFIG
+      expect(missingConfigKeys('oidc', { ...noSecret, clientAuthMethod })).toEqual([])
+    }
+  })
+
+  it('still asks the secret-based methods for a secret', () => {
+    const { clientSecret: _unused, ...noSecret } = OIDC_CONFIG
+    for (const clientAuthMethod of ['client_secret_post', 'client_secret_basic', 'client_secret_jwt']) {
+      expect(missingConfigKeys('oidc', { ...noSecret, clientAuthMethod })).toEqual(['clientSecret'])
+    }
+    // Unset means Keycloak's default, which is client_secret_post.
+    expect(missingConfigKeys('oidc', noSecret)).toEqual(['clientSecret'])
+  })
+
   it('asks a social provider only for credentials, since it ships its own endpoints', () => {
     expect(requiredConfigFor('google')).toEqual(['clientId', 'clientSecret'])
     expect(missingConfigKeys('google', { clientId: 'a', clientSecret: 'b' })).toEqual([])
@@ -158,8 +178,8 @@ describe('missingConfigKeys', () => {
 })
 
 describe('Keycloak error detail surfacing', () => {
-  function makeSet() {
-    return { status: undefined as number | string | undefined, headers: {} as Record<string, string> }
+  function makeSet(): Context['set'] {
+    return { headers: {}, status: undefined }
   }
 
   it('reports the description rather than the bare code', () => {
@@ -169,8 +189,7 @@ describe('Keycloak error detail surfacing', () => {
         response: { status: 500 },
         responseData: { error: 'unknown_error', error_description: 'Could not resolve authorization endpoint' },
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- narrow Context['set'] stand-in
-      set as any,
+      set,
     ) as { error: string; details?: string }
 
     expect(set.status).toBe(500)
@@ -183,10 +202,61 @@ describe('Keycloak error detail surfacing', () => {
     const set = makeSet()
     const body = handleAdminError(
       { response: { status: 500 }, responseData: { error: 'unknown_error' } },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
-      set as any,
+      set,
     ) as { error: string; details?: string }
 
     expect(body.details).toBe('unknown_error')
+  })
+})
+
+describe('read and write must not drift apart', () => {
+  /**
+   * THE DRIFT THIS PINS. One resource's `config` was typed four ways in one file:
+   * the read schemas (IdentityProvider, IdentityProviderResponse) used an open
+   * Record<string, any>, while the write schemas (Create/Update) used a closed
+   * object missing clientId and authorizationUrl.
+   *
+   * So the API was not round-trippable: a GET showed you a working provider's full
+   * config, and POSTing that same object back silently dropped the keys that made
+   * it work. Beta's broker looked perfect on read and was unreproducible on write.
+   *
+   * The mapper schemas in the same file use Record<string, string> on both sides
+   * and never had the problem, which is what marks this as drift rather than design.
+   */
+
+  it('accepts on write everything the read side can return', () => {
+    // Read is an open Record, so write must not be a closed object — that
+    // asymmetry IS the bug, independent of which keys happen to be named today.
+    const additional = (IdentityProviderConfig as { additionalProperties?: unknown }).additionalProperties
+    expect(additional).toBeDefined()
+  })
+
+  it('round-trips a real Keycloak OIDC provider config unchanged', async () => {
+    // Shaped after the working broker on beta, which was created by the CLI piping a
+    // full Keycloak representation and so never passed through this schema.
+    const asReadFromKeycloak = {
+      clientId: 'maxhealth-broker',
+      clientSecret: 'not-a-real-secret',
+      authorizationUrl: 'https://login.maxhealth.tech/authorize',
+      tokenUrl: 'https://login.maxhealth.tech/token',
+      userInfoUrl: 'https://login.maxhealth.tech/userinfo',
+      jwksUrl: 'https://login.maxhealth.tech/jwks',
+      useJwksUrl: true,
+      issuer: 'https://login.maxhealth.tech',
+      defaultScopes: 'openid profile email',
+      clientAuthMethod: 'client_secret_post',
+      pkceEnabled: true,
+      pkceMethod: 'S256',
+      syncMode: 'FORCE',
+      validateSignature: true,
+    }
+
+    const { status, body } = await probe(t.Object({ config: IdentityProviderConfig }), {
+      config: asReadFromKeycloak,
+    })
+
+    expect(status).toBe(200)
+    // Not a subset check: nothing may be dropped on the way through.
+    expect(body.config).toEqual(asReadFromKeycloak)
   })
 })

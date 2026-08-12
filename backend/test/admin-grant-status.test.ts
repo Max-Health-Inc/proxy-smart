@@ -18,13 +18,14 @@
  */
 
 import { describe, it, expect } from 'bun:test'
+import type { Context } from 'elysia'
 import { AuthenticationError, AuthorizationError } from '../src/lib/admin-utils'
 import { handleAdminError } from '../src/lib/admin-error-handler'
 import { hasAdminRole, KEYCLOAK_REALM_MANAGEMENT_CLIENT, PRODUCT_ADMIN_ROLE } from '../src/lib/admin-roles'
 
-/** Minimal stand-in for Elysia's mutable `set`. */
-function makeSet() {
-  return { status: undefined as number | string | undefined, headers: {} as Record<string, string> }
+/** Elysia's mutable `set`, typed as the handler receives it — no assertion needed. */
+function makeSet(): Context['set'] {
+  return { headers: {}, status: undefined }
 }
 
 type ErrorBody = { error: string; details?: string }
@@ -34,8 +35,7 @@ describe('handleAdminError status semantics', () => {
     const set = makeSet()
     const body = handleAdminError(
       new AuthorizationError('holds no realm-management client role'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- narrow Elysia Context['set'] stand-in
-      set as any,
+      set,
     ) as ErrorBody
 
     expect(set.status).toBe(403)
@@ -46,8 +46,7 @@ describe('handleAdminError status semantics', () => {
 
   it('does not fall through to 500 for an AuthorizationError', () => {
     const set = makeSet()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
-    handleAdminError(new AuthorizationError('nope'), set as any)
+    handleAdminError(new AuthorizationError('nope'), set)
     expect(set.status).not.toBe(500)
   })
 
@@ -55,8 +54,7 @@ describe('handleAdminError status semantics', () => {
     const set = makeSet()
     const body = handleAdminError(
       new AuthenticationError('Token has expired'),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
-      set as any,
+      set,
     ) as ErrorBody
 
     expect(set.status).toBe(401)
@@ -69,8 +67,7 @@ describe('handleAdminError status semantics', () => {
     const set = makeSet()
     const body = handleAdminError(
       { response: { status: 403 } },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
-      set as any,
+      set,
     ) as ErrorBody
 
     expect(set.status).toBe(403)
@@ -79,8 +76,7 @@ describe('handleAdminError status semantics', () => {
 
   it('still reports an unrecognised failure as 500', () => {
     const set = makeSet()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
-    handleAdminError(new Error('disk on fire'), set as any)
+    handleAdminError(new Error('disk on fire'), set)
     expect(set.status).toBe(500)
   })
 })
