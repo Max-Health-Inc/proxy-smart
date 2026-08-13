@@ -60,6 +60,10 @@ export function chooseToolText(serialized: string, format: ToolTextFormat = 'jso
 
   try {
     const toon = toonEncode(value)
+    // TOON renders `{}` as the empty string, and an empty content[].text block
+    // is rejected by clients ("Invalid content from server") — so shortest only
+    // applies while there is something left to read.
+    if (toon.trim() === '') return serialized
     return toon.length < serialized.length ? toon : serialized
   } catch {
     // An unencodable value (cycles, exotic types) is not an error worth

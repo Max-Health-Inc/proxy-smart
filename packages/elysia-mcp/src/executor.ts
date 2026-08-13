@@ -311,7 +311,11 @@ function successResult(
   structuredContent?: StructuredContent
 } {
   const structured = toStructuredContent(text)
-  const rendered = chooseToolText(text, textFormat)
+  // A 204 or an otherwise bodyless success leaves nothing to render, and clients
+  // reject an empty content[].text block outright rather than reading it as "no
+  // data". Say so instead of emitting nothing.
+  const chosen = chooseToolText(text, textFormat)
+  const rendered = chosen.trim() === '' ? '(no content)' : chosen
   return structured !== undefined
     ? { content: [{ type: 'text', text: rendered }], structuredContent: structured }
     : { content: [{ type: 'text', text: rendered }] }
