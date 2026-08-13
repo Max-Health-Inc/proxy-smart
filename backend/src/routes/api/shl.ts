@@ -34,6 +34,7 @@ import { shlSessionStore, type ShareScope, type ShlSession } from '@/lib/shl-ses
 import {
   isDicomPathAllowed,
   scopeFhirRequest,
+  isCompleteShare,
   isSelectiveScopeActive,
   preScreenSelectiveRequest,
   applySelectiveFilter,
@@ -449,7 +450,7 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         scope: 'patient/*.read',
         patient: patientId,
         aud: `${config.baseUrl}/api/shl/fhir`,
-        complete: !shareScope,
+        complete: isCompleteShare({ selectiveScope: shareScope, studyInstanceUID: body.studyInstanceUID }),
       })
 
       // Generate SHL using kill-the-clipboard
