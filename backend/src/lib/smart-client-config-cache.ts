@@ -11,9 +11,8 @@
  * Avoids hitting Keycloak admin API on every token exchange.
  */
 
-import KcAdminClient from '@keycloak/keycloak-admin-client'
 import { isCimdClientId, resolveCimdRedirectUris, type SmartProxyLogger } from '@proxy-smart/auth'
-import { config } from '@/config'
+import { getAdminClient } from '@/lib/kc-admin-factory'
 import { logger } from '@/lib/logger'
 
 /** The lib takes a flat logger; adapt our structured one once, here. */
@@ -36,31 +35,101 @@ export interface SmartClientConfig {
   redirectUris: string[]
 }
 
+/**
+ * The three distinguishable outcomes of asking Keycloak about a client.
+ *
+ * `unavailable` exists because collapsing it into `absent` is what turns a
+ * Keycloak hiccup into "this client has no registered redirect URIs", and the
+ * redirect_uri check is fail-closed on an empty allowlist — so an infrastructure
+ * failure came out as a client-configuration error and rejected every launch.
+ */
+export type ClientLookup =
+  | { status: 'found'; config: SmartClientConfig }
+  | { status: 'absent' }
+  | { status: 'unavailable'; reason: string }
+
+/** How the cache reaches the client directory. Injectable so tests need no module mocking. */
+export type ClientLookupSource = (clientId: string) => Promise<ClientLookup>
+
 interface CacheEntry {
   config: SmartClientConfig
   expiresAt: number
 }
 
 const DEFAULT_TTL_MS = 5 * 60 * 1000 // 5 minutes
+/** Absence is usually "not created yet", so re-ask soon (admin create/recreate races). */
+const ABSENT_TTL_MS = 30 * 1000
 
-const cache = new Map<string, CacheEntry>()
+const EMPTY_CONFIG: SmartClientConfig = { redirectUris: [] }
+
+/**
+ * Build a caching client-config reader over a lookup source.
+ *
+ * Exported so tests can drive the caching and failure semantics through a fake
+ * source. `mock.module` is process-global in bun, so a sibling test that mocks
+ * this whole module would otherwise make these paths untestable.
+ */
+export function createClientConfigCache(source: ClientLookupSource) {
+  const cache = new Map<string, CacheEntry>()
+
+  /** A failed lookup is NEVER cached — that would stretch one hiccup across the whole TTL. */
+  async function lookup(clientId: string): Promise<ClientLookup> {
+    const now = Date.now()
+    const cached = cache.get(clientId)
+
+    if (cached && now < cached.expiresAt) {
+      return { status: 'found', config: cached.config }
+    }
+
+    const result = await source(clientId)
+
+    if (result.status === 'found') {
+      cache.set(clientId, { config: result.config, expiresAt: now + DEFAULT_TTL_MS })
+    } else if (result.status === 'absent') {
+      cache.set(clientId, { config: EMPTY_CONFIG, expiresAt: now + ABSENT_TTL_MS })
+    }
+
+    return result
+  }
+
+  /** Lenient reader: see getSmartClientConfig. */
+  async function getSmartClientConfig(clientId: string): Promise<SmartClientConfig> {
+    const result = await lookup(clientId)
+    return result.status === 'found' ? result.config : EMPTY_CONFIG
+  }
+
+  /** Strict reader: see getRegisteredRedirectUris. */
+  async function getRegisteredRedirectUris(clientId: string): Promise<string[]> {
+    if (!clientId) return []
+    if (isCimdClientId(clientId)) {
+      return resolveCimdRedirectUris(clientId, { logger: smartLogger })
+    }
+    const result = await lookup(clientId)
+    if (result.status === 'unavailable') {
+      throw new Error(`Cannot read registered redirect URIs for "${clientId}": ${result.reason}`)
+    }
+    return result.status === 'found' ? result.config.redirectUris : []
+  }
+
+  return {
+    getSmartClientConfig,
+    getRegisteredRedirectUris,
+    invalidate: (clientId: string) => cache.delete(clientId),
+    clear: () => cache.clear(),
+  }
+}
+
+const defaultCache = createClientConfigCache(fetchClientConfig)
 
 /**
  * Get the SMART client config for a given clientId.
- * Returns cached value if available; otherwise fetches from Keycloak.
+ *
+ * Lenient by design: token-time enrichment only reads `patientFacing`, and an
+ * unreachable Keycloak must not stop a token being issued. Callers that need a
+ * trustworthy allowlist use `getRegisteredRedirectUris`, which fails loudly.
  */
 export async function getSmartClientConfig(clientId: string): Promise<SmartClientConfig> {
-  const now = Date.now()
-  const cached = cache.get(clientId)
-
-  if (cached && now < cached.expiresAt) {
-    return cached.config
-  }
-
-  // Fetch from Keycloak
-  const fetched = await fetchClientConfig(clientId)
-  cache.set(clientId, { config: fetched, expiresAt: now + DEFAULT_TTL_MS })
-  return fetched
+  return defaultCache.getSmartClientConfig(clientId)
 }
 
 /**
@@ -81,54 +150,47 @@ export async function getSmartClientConfig(clientId: string): Promise<SmartClien
  * client registered. An earlier attempt special-cased CIMD at the interception
  * site instead, which silently delegated an authorization-server MUST to Keycloak.
  *
- * Returns an empty array for unknown clients, an unverifiable metadata document,
- * or an unavailable Keycloak — the caller treats an empty allowlist as "reject
- * every redirect_uri" (fail-closed).
+ * Returns an empty array for an unknown client or an unverifiable metadata
+ * document — the caller treats an empty allowlist as "reject every redirect_uri"
+ * (fail-closed).
+ *
+ * THROWS when Keycloak could not be asked at all. That is not the same as "this
+ * client has no registered URIs", and the callers act on the difference: both
+ * the authorize interceptor and the callback handler already answer a thrown
+ * lookup with `Unable to validate redirect_uri` and an error-level log, instead
+ * of blaming the client's configuration for an outage on our side.
  *
  * Wired into `@proxy-smart/auth`'s `getRegisteredRedirectUris` dependency.
  */
 export async function getRegisteredRedirectUris(clientId: string): Promise<string[]> {
-  if (!clientId) return []
-  if (isCimdClientId(clientId)) {
-    return resolveCimdRedirectUris(clientId, { logger: smartLogger })
-  }
-  const { redirectUris } = await getSmartClientConfig(clientId)
-  return redirectUris
+  return defaultCache.getRegisteredRedirectUris(clientId)
 }
 
 /**
  * Invalidate cache for a specific client (call after admin updates).
  */
 export function invalidateClientConfig(clientId: string): void {
-  cache.delete(clientId)
+  defaultCache.invalidate(clientId)
 }
 
 /**
  * Clear the entire client config cache.
  */
 export function clearClientConfigCache(): void {
-  cache.clear()
+  defaultCache.clear()
 }
 
-async function fetchClientConfig(clientId: string): Promise<SmartClientConfig> {
-  if (!config.keycloak.isConfigured || !config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
-    return { redirectUris: [] }
-  }
-
+async function fetchClientConfig(clientId: string): Promise<ClientLookup> {
   try {
-    const admin = new KcAdminClient({
-      baseUrl: config.keycloak.baseUrl!,
-      realmName: config.keycloak.realm!,
-    })
-    await admin.auth({
-      grantType: 'client_credentials',
-      clientId: config.keycloak.adminClientId,
-      clientSecret: config.keycloak.adminClientSecret,
-    })
+    const admin = await getAdminClient()
+    if (!admin) {
+      return { status: 'unavailable', reason: 'Keycloak admin credentials are not configured' }
+    }
 
     const clients = await admin.clients.find({ clientId, max: 1 })
     if (!clients || clients.length === 0) {
-      return { redirectUris: [] }
+      logger.auth.warn('Keycloak has no such client', { clientId })
+      return { status: 'absent' }
     }
 
     const attrs = clients[0].attributes || {}
@@ -139,12 +201,10 @@ async function fetchClientConfig(clientId: string): Promise<SmartClientConfig> {
 
     const redirectUris = Array.isArray(clients[0].redirectUris) ? clients[0].redirectUris : []
 
-    return { patientFacing, redirectUris }
+    return { status: 'found', config: { patientFacing, redirectUris } }
   } catch (error) {
-    logger.auth.warn('Failed to fetch client config from Keycloak', {
-      clientId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    })
-    return { redirectUris: [] }
+    const reason = error instanceof Error ? error.message : 'Unknown error'
+    logger.auth.error('Cannot reach Keycloak to read client config', { clientId, error: reason })
+    return { status: 'unavailable', reason }
   }
 }
