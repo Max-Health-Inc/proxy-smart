@@ -17,6 +17,7 @@ import { createApp } from './app-factory'
 import { startShareConsentReconciler } from './lib/consent/shl-consent'
 import { startDcrClientReaper } from './lib/dcr-client-reaper'
 import { getServiceAccountAdmin } from './lib/service-account-admin'
+import { ensureApplicationDatabase } from './lib/pg-pool'
 import { existsSync, readFileSync } from 'fs'
 
 // Security guard: refuse to start with dev auth bypass in production
@@ -37,6 +38,9 @@ export { app }
 // Initialize and start server
 initializeServer()
   .then(async () => {
+    // Before anything reads the admin-config store, which lives in that database.
+    await ensureApplicationDatabase();
+
     // Initialize OAuth metrics logger
     await oauthMetricsLogger.initialize();
 

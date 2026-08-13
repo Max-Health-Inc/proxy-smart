@@ -124,3 +124,61 @@ export function getSharedPool(): Pool {
   })
   return pool
 }
+
+/**
+ * Create the application database if it is not there yet.
+ *
+ * WHY THIS EXISTS. RDS creates exactly the one database its `databaseName` names (`keycloak`), and
+ * Postgres only runs `init.sql` on a FRESH data volume — so the backend's own database has to be
+ * created by something, and on every environment so far that something was a human. Production ran
+ * for months answering every FHIR request with 500 `database "proxy_smart" does not exist`, because
+ * resolving a FHIR server reads the admin-config store, and the store is in here.
+ *
+ * Doing it at startup rather than in the deploy pipeline means a brand-new environment — the second
+ * region, a fresh beta volume, a laptop — comes up complete without anyone remembering a step.
+ *
+ * Idempotent and safe to race: several tasks boot together, so `42P04` (duplicate_database) means
+ * another task won and is a success, not an error. Never throws — an unreachable maintenance
+ * database leaves the resilient file backend to cover it, exactly as before.
+ */
+export async function ensureApplicationDatabase(): Promise<void> {
+  const target = process.env.PGDATABASE
+  const host = process.env.PGHOST
+  const user = process.env.PGUSER
+  const password = process.env.PGPASSWORD
+  // DATABASE_URL callers manage their own database; only the PG* form names one we can create.
+  if (!target || !host || !user || !password || process.env.DATABASE_URL) return
+
+  // `postgres` always exists and is never the target, so connecting here cannot be the thing that
+  // fails when the target is missing.
+  const maintenance = process.env.PGMAINTENANCEDB || 'postgres'
+  if (target === maintenance) return
+
+  const ssl = resolveSslConfig()
+  const port = process.env.PGPORT || '5432'
+  const enc = encodeURIComponent
+  const client = new Pool({
+    connectionString: `postgresql://${enc(user)}:${enc(password)}@${host}:${port}/${enc(maintenance)}`,
+    max: 1,
+    ...(ssl ? { ssl } : {}),
+  })
+
+  try {
+    const existing = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [target])
+    if (existing.rowCount === 0) {
+      // Not parameterisable — CREATE DATABASE takes an identifier, not a value. `target` comes from
+      // our own deployment config, and the quoting keeps a surprising name from becoming syntax.
+      await client.query(`CREATE DATABASE "${target.replace(/"/g, '""')}"`)
+      logger.security.info('Created the application database', { database: target })
+    }
+  } catch (error) {
+    const code = (error as { code?: string }).code
+    if (code === '42P04') return // another task created it first
+    logger.security.warn('Could not ensure the application database exists', {
+      database: target,
+      error: error instanceof Error ? error.message : String(error),
+    })
+  } finally {
+    await client.end().catch(() => {})
+  }
+}
