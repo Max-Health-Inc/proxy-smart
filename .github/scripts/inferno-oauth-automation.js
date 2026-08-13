@@ -767,9 +767,39 @@ async function runEhrLaunchTests(sessionId, browser) {
 }
 
 /**
+ * Find the authorization URL a waiting test is blocked on.
+ *
+ * Prefers a recorded outgoing request (an exact URL) over one parsed out of the
+ * wait message's prose, which is how the EHR launch URL lost its query string.
+ * Returns null if nothing looks like an authorize URL yet.
+ */
+function findAuthorizeUrl(results) {
+  for (const result of results || []) {
+    if (result.result !== 'wait') continue;
+
+    for (const req of result.requests || []) {
+      if (req.direction === 'outgoing' && req.url && req.url.includes('authorize')) {
+        return req.url;
+      }
+    }
+
+    for (const field of ['wait_message', 'result_message', 'messages']) {
+      if (!result[field]) continue;
+      const content = typeof result[field] === 'string' ? result[field] : JSON.stringify(result[field]);
+      const match = content.match(/https?:\/\/[^\s<>"')]+?authorize[^\s<>"')]*/);
+      if (match) return match[0].replace(/[.,;:!?]+$/, '');
+    }
+  }
+  return null;
+}
+
+/**
  * Wait for EHR Launch test completion.
- * Similar to waitForSimpleTestCompletion but looks for Inferno's launch URL
- * (containing /launch) instead of an authorize URL.
+ *
+ * Two phases, and the loop used to serve only the first: the EHR hands the app its
+ * launch context, and THEN the app performs the authorization redirect the user has
+ * to complete. Once `launchAttempted` was set nothing acted again, so the run sat in
+ * `waiting` until the 3-minute timeout with `smart_app_redirect_stu2` never resolved.
  */
 async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
   const maxWait = 180000; // 3 minutes
@@ -778,6 +808,8 @@ async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
   let page = null;
   let launchAttempted = false;
   let launchAttemptCount = 0;
+  let authorizeAttempted = false;
+  let authorizeAttemptCount = 0;
   const MAX_LAUNCH_ATTEMPTS = 3;
 
   console.log(`Waiting for EHR Launch test run ${runId} to complete (timeout: 3 minutes)...`);
@@ -894,6 +926,31 @@ async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
               console.log(`    ${field} (first 300 chars): ${wr[field].substring(0, 300)}`);
             }
           }
+        }
+      }
+    } else if (runStatus.status === 'waiting' && browser && launchAttempted && !authorizeAttempted
+               && authorizeAttemptCount < MAX_LAUNCH_ATTEMPTS) {
+      // Phase 2: the app has its launch context and now redirects the user to
+      // authorize. Same handling as the standalone group.
+      const authUrl = findAuthorizeUrl(runStatus.results);
+
+      if (!authUrl) {
+        // No URL yet is normal for a poll or two. Say what the payload holds so a
+        // persistent stall names its own cause instead of timing out silently.
+        const waitIds = (runStatus.results || [])
+          .filter(r => r.result === 'wait')
+          .map(r => r.test_id || 'unknown');
+        console.log(`  Post-launch: waiting for an authorization URL (blocked on: ${waitIds.join(', ') || 'nothing'})`);
+      } else {
+        authorizeAttemptCount++;
+        console.log(`  Post-launch authorization (attempt ${authorizeAttemptCount}/${MAX_LAUNCH_ATTEMPTS}): ${authUrl.substring(0, 140)}`);
+        try {
+          if (!page) page = await browser.newPage();
+          await handleOAuthFlow(page, authUrl);
+          authorizeAttempted = true;
+          console.log('  EHR Launch authorization completed, continuing to poll...');
+        } catch (authError) {
+          console.error(`  EHR Launch authorization failed: ${authError.message}`);
         }
       }
     } else if (runStatus.status === 'waiting') {
