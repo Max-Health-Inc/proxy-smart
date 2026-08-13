@@ -27,6 +27,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1002
 
 
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+- 📚 Documentation: Update CHANGELOG.md for recent PRs
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1005
+
+
 ## [0.3.9-beta.202608120811.c481d7d66] - 2026-08-12
 
 - ✨ Features: none
