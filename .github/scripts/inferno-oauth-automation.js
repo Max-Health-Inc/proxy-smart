@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Inferno SMART App Launch STU2.2 Compliance Test Runner
  * 
@@ -24,6 +27,14 @@ const KC_PASSWORD = process.env.KC_PASSWORD || 'testpass';
 // Inferno client configuration
 const CLIENT_ID = process.env.CLIENT_ID || 'inferno-test-client';
 const BACKEND_SERVICES_CLIENT_ID = process.env.BACKEND_SERVICES_CLIENT_ID || 'inferno-backend-services';
+
+// The proxy's own origin, for /auth/token and /auth/launch. Derived from the FHIR
+// URL rather than configured separately so the two can never point at different
+// deployments.
+const PROXY_BASE_URL = process.env.PROXY_BASE_URL || new URL(FHIR_SERVER_URL).origin;
+
+// Patient the simulated EHR puts in the launch context (seeded by the workflow).
+const EHR_LAUNCH_PATIENT = process.env.EHR_LAUNCH_PATIENT || 'test-patient';
 
 // Inferno test group IDs for SMART STU2.2 suite
 const GROUP_IDS = {
@@ -535,8 +546,7 @@ async function runStandaloneLaunchTests(sessionId, browser) {
     return await waitForSimpleTestCompletion(sessionId, run.id, browser);
     
   } catch (error) {
-    console.error('Standalone Launch tests error:', error.message);
-    throw error;
+    return groupFailure('Standalone Launch', error);
   }
 }
 
@@ -571,10 +581,7 @@ async function runTokenIntrospectionTests(sessionId, browser) {
     return await waitForSimpleTestCompletion(sessionId, run.id, browser);
     
   } catch (error) {
-    console.error('Token Introspection tests error:', error.message);
-    // Don't throw — Token Introspection failure shouldn't block the pipeline
-    console.log('WARNING: Token Introspection tests failed but continuing...');
-    return null;
+    return groupFailure('Token Introspection', error);
   }
 }
 
@@ -633,15 +640,101 @@ function buildBackendServicesSmartAuthInfo() {
 }
 
 /**
- * Run the EHR Launch test group.
- * EHR Launch differs from Standalone: Inferno presents a launch URL that we must
- * navigate to (simulating the EHR initiating the launch). Inferno then adds `iss`
- * and `launch` params and redirects to our /authorize → Keycloak → login → callback.
+ * Mint a signed launch code, the way a real EHR does before handing off to an app.
  *
- * NOTE: Patient context for EHR launch comes from a signed launch code issued via
- * POST /auth/launch. Inferno uses its own opaque launch value which our proxy cannot
- * verify, so EHR Launch tests may not return patient context unless a real launch code
- * is pre-registered. See backend launch-context-store for the session-based flow.
+ * POST /auth/launch needs a Bearer token, so this first takes one via the password
+ * grant — the same grant the workflow already uses to smoke-test /auth/token.
+ *
+ * Returns null (never throws) if either call fails: an EHR launch without patient
+ * context still exercises the handshake, and the reason is logged rather than
+ * taking the whole group down.
+ */
+async function mintEhrLaunchCode() {
+  try {
+    // /auth/launch validates the token against the default audience set, whose FHIR
+    // prefix matcher only accepts a token carrying the FHIR base in `aud`. Ask for it
+    // via the RFC 8707 `resource` indicator; if this realm/client is not wired for
+    // resource indicators the request comes back invalid_target, so fall back to a
+    // plain token rather than losing the handshake over it.
+    const requestToken = (withResource) => fetch(`${PROXY_BASE_URL}/auth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password',
+        client_id: CLIENT_ID,
+        username: KC_USERNAME,
+        password: KC_PASSWORD,
+        scope: 'openid',
+        ...(withResource ? { resource: FHIR_SERVER_URL } : {}),
+      }).toString(),
+    });
+
+    let tokenResp = await requestToken(true);
+    if (!tokenResp.ok) {
+      console.log(`  Token request with resource indicator failed (HTTP ${tokenResp.status}), retrying without`);
+      tokenResp = await requestToken(false);
+    }
+
+    if (!tokenResp.ok) {
+      console.log(`  Could not get a token for /auth/launch: HTTP ${tokenResp.status} ${(await tokenResp.text()).substring(0, 200)}`);
+      return null;
+    }
+
+    const { access_token: accessToken } = await tokenResp.json();
+    if (!accessToken) {
+      console.log('  Token response carried no access_token');
+      return null;
+    }
+
+    const launchResp = await fetch(`${PROXY_BASE_URL}/auth/launch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ patient: EHR_LAUNCH_PATIENT, clientId: CLIENT_ID }),
+    });
+
+    if (!launchResp.ok) {
+      console.log(`  POST /auth/launch failed: HTTP ${launchResp.status} ${(await launchResp.text()).substring(0, 200)}`);
+      return null;
+    }
+
+    const { launch } = await launchResp.json();
+    if (!launch) {
+      console.log('  /auth/launch returned no launch code');
+      return null;
+    }
+
+    console.log(`  Minted launch code for Patient/${EHR_LAUNCH_PATIENT} (${launch.length} chars)`);
+    return launch;
+  } catch (error) {
+    console.log(`  Could not mint a launch code: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Build the URL the EHR sends the browser to, handing the app its launch context.
+ *
+ * Inferno IS the app here, and its wait message states the contract: it resumes
+ * when it receives a launch request at this path carrying an `iss` naming the FHIR
+ * server. `launch` is the EHR's opaque handle, which the app echoes back to
+ * /authorize — so supplying our own signed code is what gets patient context into
+ * the token (see signLaunchCode in @proxy-smart/auth).
+ */
+function buildInfernoLaunchUrl(launchCode) {
+  const url = new URL(`${INFERNO_URL}/custom/${TEST_SUITE}/launch`);
+  url.searchParams.set('iss', FHIR_SERVER_URL);
+  if (launchCode) url.searchParams.set('launch', launchCode);
+  return url.toString();
+}
+
+/**
+ * Run the EHR Launch test group.
+ * EHR Launch differs from Standalone: the EHR initiates. We mint a launch code and
+ * send the browser to Inferno's launch URL with `iss` and `launch`; Inferno then
+ * redirects to our /authorize → Keycloak → login → callback.
  */
 async function runEhrLaunchTests(sessionId, browser) {
   console.log('\n=== Running EHR Launch Tests ===\n');
@@ -669,16 +762,44 @@ async function runEhrLaunchTests(sessionId, browser) {
     return await waitForEhrLaunchCompletion(sessionId, run.id, browser);
 
   } catch (error) {
-    console.error('EHR Launch tests error:', error.message);
-    console.log('WARNING: EHR Launch tests failed but continuing...');
-    return null;
+    return groupFailure('EHR Launch', error);
   }
 }
 
 /**
+ * Find the authorization URL a waiting test is blocked on.
+ *
+ * Prefers a recorded outgoing request (an exact URL) over one parsed out of the
+ * wait message's prose, which is how the EHR launch URL lost its query string.
+ * Returns null if nothing looks like an authorize URL yet.
+ */
+function findAuthorizeUrl(results) {
+  for (const result of results || []) {
+    if (result.result !== 'wait') continue;
+
+    for (const req of result.requests || []) {
+      if (req.direction === 'outgoing' && req.url && req.url.includes('authorize')) {
+        return req.url;
+      }
+    }
+
+    for (const field of ['wait_message', 'result_message', 'messages']) {
+      if (!result[field]) continue;
+      const content = typeof result[field] === 'string' ? result[field] : JSON.stringify(result[field]);
+      const match = content.match(/https?:\/\/[^\s<>"')]+?authorize[^\s<>"')]*/);
+      if (match) return match[0].replace(/[.,;:!?]+$/, '');
+    }
+  }
+  return null;
+}
+
+/**
  * Wait for EHR Launch test completion.
- * Similar to waitForSimpleTestCompletion but looks for Inferno's launch URL
- * (containing /launch) instead of an authorize URL.
+ *
+ * Two phases, and the loop used to serve only the first: the EHR hands the app its
+ * launch context, and THEN the app performs the authorization redirect the user has
+ * to complete. Once `launchAttempted` was set nothing acted again, so the run sat in
+ * `waiting` until the 3-minute timeout with `smart_app_redirect_stu2` never resolved.
  */
 async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
   const maxWait = 180000; // 3 minutes
@@ -687,6 +808,8 @@ async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
   let page = null;
   let launchAttempted = false;
   let launchAttemptCount = 0;
+  let authorizeAttempted = false;
+  let authorizeAttemptCount = 0;
   const MAX_LAUNCH_ATTEMPTS = 3;
 
   console.log(`Waiting for EHR Launch test run ${runId} to complete (timeout: 3 minutes)...`);
@@ -730,11 +853,15 @@ async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
                 ? result[field]
                 : JSON.stringify(result[field]);
 
-              // Look for Inferno's launch URL (e.g. http://localhost:4567/custom/smart_stu2_2/launch)
-              const launchUrlMatch = content.match(/https?:\/\/[^\s<>"')]+\/launch(?:\b|[?\s<>"')])/);
-              if (launchUrlMatch) {
-                let launchUrl = launchUrlMatch[0].replace(/[)\s<>"']+$/, '');
-                console.log(`  Found Inferno launch URL in ${field}: ${launchUrl}`);
+              // Inferno's wait message names the launch path in prose. Scraping the
+              // bare URL out of it dropped the query string entirely, so Inferno got
+              // no `iss`, could not correlate the waiting run, and answered 500
+              // "Unable to find test run with identifier ''". Build the URL from the
+              // contract instead: `iss` is the FHIR server we are already testing.
+              if (/\/launch\b/.test(content)) {
+                const launchCode = await mintEhrLaunchCode();
+                const launchUrl = buildInfernoLaunchUrl(launchCode);
+                console.log(`  EHR launch handoff${launchCode ? ' with patient context' : ' WITHOUT patient context'}: ${launchUrl.substring(0, 160)}`);
                 try {
                   if (!page) page = await browser.newPage();
                   // Navigate to Inferno's launch URL — it will redirect to /authorize → Keycloak
@@ -801,6 +928,31 @@ async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
           }
         }
       }
+    } else if (runStatus.status === 'waiting' && browser && launchAttempted && !authorizeAttempted
+               && authorizeAttemptCount < MAX_LAUNCH_ATTEMPTS) {
+      // Phase 2: the app has its launch context and now redirects the user to
+      // authorize. Same handling as the standalone group.
+      const authUrl = findAuthorizeUrl(runStatus.results);
+
+      if (!authUrl) {
+        // No URL yet is normal for a poll or two. Say what the payload holds so a
+        // persistent stall names its own cause instead of timing out silently.
+        const waitIds = (runStatus.results || [])
+          .filter(r => r.result === 'wait')
+          .map(r => r.test_id || 'unknown');
+        console.log(`  Post-launch: waiting for an authorization URL (blocked on: ${waitIds.join(', ') || 'nothing'})`);
+      } else {
+        authorizeAttemptCount++;
+        console.log(`  Post-launch authorization (attempt ${authorizeAttemptCount}/${MAX_LAUNCH_ATTEMPTS}): ${authUrl.substring(0, 140)}`);
+        try {
+          if (!page) page = await browser.newPage();
+          await handleOAuthFlow(page, authUrl);
+          authorizeAttempted = true;
+          console.log('  EHR Launch authorization completed, continuing to poll...');
+        } catch (authError) {
+          console.error(`  EHR Launch authorization failed: ${authError.message}`);
+        }
+      }
     } else if (runStatus.status === 'waiting') {
       if (launchAttemptCount >= MAX_LAUNCH_ATTEMPTS) {
         console.error(`  EHR Launch OAuth failed after ${MAX_LAUNCH_ATTEMPTS} attempts — aborting wait`);
@@ -856,10 +1008,7 @@ async function runBackendServicesTests(sessionId) {
     return await waitForSimpleTestCompletion(sessionId, run.id);
 
   } catch (error) {
-    console.error('Backend Services tests error:', error.message);
-    // Don't throw — Backend Services failure shouldn't block the pipeline yet
-    console.log('WARNING: Backend Services tests failed but continuing...');
-    return null;
+    return groupFailure('Backend Services', error);
   }
 }
 
@@ -1009,6 +1158,17 @@ async function getSessionResults(sessionId) {
   return response.json();
 }
 
+/**
+ * Record a group that blew up, so the run can report every group's outcome and
+ * still fail. Three of the four groups used to log "WARNING: ... but continuing"
+ * and return null that nothing inspected, so a run reported success with most of
+ * the suite never executed; the fourth threw, which aborted the groups after it.
+ */
+function groupFailure(group, error) {
+  console.error(`${group} tests error:`, error.message);
+  return { group, ok: false, error: error.message };
+}
+
 async function printResults(results) {
   console.log('\n========================================');
   console.log('          TEST RESULTS SUMMARY          ');
@@ -1018,7 +1178,17 @@ async function printResults(results) {
   let failed = 0;
   let skipped = 0;
   let errors = 0;
-  
+  // 'omit' is Inferno declining a test that does not apply here (the TLS tests
+  // in local non-TLS mode). Not a failure, but it must be counted: it used to
+  // fall through to the default branch, inflating `total` while landing in no
+  // bucket at all.
+  let omitted = 0;
+  // A test that never reached a verdict: still 'wait'ing for a user action the
+  // automation never completed, or cancelled. These are the ones that made the
+  // job green while a launch flow was broken.
+  let incomplete = 0;
+  const incompleteTests = [];
+
   // Collect detailed failure info for later
   const failedTests = [];
   
@@ -1068,14 +1238,43 @@ async function printResults(results) {
           });
         }
         break;
+      case 'omit':
+        omitted++;
+        console.log(`− OMIT: ${title}`);
+        if (result.result_message) {
+          console.log(`    Reason: ${result.result_message.substring(0, 120)}`);
+        }
+        break;
+      case 'wait':
+      case 'cancel':
+        incomplete++;
+        incompleteTests.push({ title, status, test_id: result.test_id });
+        console.log(`⧗ INCOMPLETE (${status}): ${title}`);
+        break;
       default:
-        console.log(`? ${status.toUpperCase()}: ${title}`);
+        // An unrecognised status is counted as incomplete rather than ignored:
+        // a new Inferno state must not be able to pass the gate by being unknown.
+        incomplete++;
+        incompleteTests.push({ title, status, test_id: result.test_id });
+        console.log(`⧗ INCOMPLETE (unrecognised status "${status}"): ${title}`);
     }
   }
   
   console.log('\n========================================');
-  console.log(`Total: ${results.length} | Passed: ${passed} | Failed: ${failed} | Skipped: ${skipped} | Errors: ${errors}`);
+  console.log(`Total: ${results.length} | Passed: ${passed} | Failed: ${failed} | Incomplete: ${incomplete} | Skipped: ${skipped} | Omitted: ${omitted} | Errors: ${errors}`);
+  const accountedFor = passed + failed + skipped + errors + omitted + incomplete;
+  if (accountedFor !== results.length) {
+    console.log(`WARNING: ${results.length - accountedFor} result(s) landed in no bucket — the tally is wrong.`);
+  }
   console.log('========================================\n');
+
+  if (incompleteTests.length > 0) {
+    console.log('The following tests never reached a verdict:');
+    for (const t of incompleteTests) {
+      console.log(`  ⧗ [${t.status}] ${t.title}`);
+    }
+    console.log('');
+  }
   
   // Print detailed failure analysis
   if (failedTests.length > 0) {
@@ -1167,7 +1366,11 @@ async function printResults(results) {
     }
   }
   
-  return { passed, failed, skipped, errors, total: results.length };
+  return {
+    passed, failed, skipped, errors, omitted, incomplete,
+    total: results.length,
+    unaccounted: results.length - accountedFor,
+  };
 }
 
 async function main() {
@@ -1257,27 +1460,51 @@ async function main() {
     // Get all results across all groups
     const results = await getSessionResults(session.id);
     const summary = await printResults(results);
-    
+
+    const groupFailures = [standaloneResult, introspectionResult, backendServicesResult, ehrLaunchResult]
+      .filter(r => r && r.ok === false);
+
+    if (groupFailures.length > 0) {
+      console.error('\nTest groups that did not run to completion:');
+      for (const f of groupFailures) {
+        console.error(`  ✗ ${f.group}: ${f.error}`);
+      }
+    }
+
     // Output for GitHub Actions
     if (process.env.GITHUB_OUTPUT) {
       const fs = require('fs');
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `passed=${summary.passed}\n`);
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `failed=${summary.failed}\n`);
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `total=${summary.total}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incomplete=${summary.incomplete}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `omitted=${summary.omitted}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `group_failures=${groupFailures.length}\n`);
     }
-    
-    // Exit with error if any tests failed OR no tests ran
-    if (summary.failed > 0 || summary.total === 0) {
-      console.error(`\n❌ Tests failed: ${summary.total === 0 ? 'No tests completed' : `${summary.failed} failed, ${summary.errors} errors out of ${summary.total}`}`);
+
+    // A run is only a pass if every test reached a verdict and every group ran.
+    // Counting only `failed` let a green result hide tests still stuck in `wait`
+    // because their launch flow never completed.
+    const reasons = [];
+    if (summary.total === 0) reasons.push('no tests ran');
+    if (summary.failed > 0) reasons.push(`${summary.failed} failed`);
+    if (summary.incomplete > 0) reasons.push(`${summary.incomplete} never reached a verdict`);
+    if (summary.unaccounted !== 0) reasons.push(`${summary.unaccounted} unaccounted for`);
+    if (groupFailures.length > 0) {
+      reasons.push(`${groupFailures.length} group(s) failed to run: ${groupFailures.map(f => f.group).join(', ')}`);
+    }
+
+    if (reasons.length > 0) {
+      console.error(`\n❌ Compliance run failed — ${reasons.join('; ')} (out of ${summary.total} tests, ${summary.errors} errors)`);
       process.exit(1);
     }
-    
+
     if (summary.errors > 0) {
       console.warn(`\n⚠️  ${summary.errors} test(s) had internal errors (not compliance failures) — ${summary.passed} passed out of ${summary.total}`);
     }
-    
-    console.log(`\n✅ All ${summary.passed} tests passed!`);
-    
+
+    console.log(`\n✅ All ${summary.passed} tests passed${summary.omitted > 0 ? ` (${summary.omitted} omitted as not applicable)` : ''}!`);
+
   } catch (error) {
     console.error('Test execution failed:', error.message);
     process.exit(1);

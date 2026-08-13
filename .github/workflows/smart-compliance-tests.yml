@@ -1317,17 +1317,23 @@ jobs:
           INFERNO_EXIT_CODE=${PIPESTATUS[0]}
           cd $GITHUB_WORKSPACE
           
-          # Parse results from the log
-          if grep -q "PASS:" inferno-output.log; then
-            PASSED=$(grep -c "✓ PASS:" inferno-output.log || true)
-            FAILED=$(grep -c "✗ FAIL:" inferno-output.log || true)
-          else
-            PASSED=0
-            FAILED=0
-          fi
-          PASSED=${PASSED:-0}
-          FAILED=${FAILED:-0}
-          
+          # Read the runner's own tally instead of re-counting log markers, which
+          # also matched the per-poll progress lines and could not see the tests
+          # that never reached a verdict.
+          SUMMARY_LINE=$(grep -E "^Total: [0-9]+ \| Passed:" inferno-output.log | tail -1 || true)
+          # `|| true` on every extraction: under `bash -e` a failed grep would
+          # abort this step, losing the summary in exactly the case (runner died
+          # before printing its tally) where it is most needed.
+          field() {
+            echo "$SUMMARY_LINE" | tr '|' '\n' | grep -iE "^ *$1:" | sed 's/.*: *//' | tr -d ' ' | head -1 || true
+          }
+          TOTAL=$(field Total || true); TOTAL=${TOTAL:-0}
+          PASSED=$(field Passed || true); PASSED=${PASSED:-0}
+          FAILED=$(field Failed || true); FAILED=${FAILED:-0}
+          INCOMPLETE=$(field Incomplete || true); INCOMPLETE=${INCOMPLETE:-0}
+          OMITTED=$(field Omitted || true); OMITTED=${OMITTED:-0}
+          ERRORS=$(field Errors || true); ERRORS=${ERRORS:-0}
+
           # Write summary
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "## SMART 2.2.0 Compliance Test Results" >> $GITHUB_STEP_SUMMARY
@@ -1341,16 +1347,31 @@ jobs:
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Total: $TOTAL" >> $GITHUB_STEP_SUMMARY
           echo "- Passed: $PASSED" >> $GITHUB_STEP_SUMMARY
           echo "- Failed: $FAILED" >> $GITHUB_STEP_SUMMARY
+          echo "- Never reached a verdict: $INCOMPLETE" >> $GITHUB_STEP_SUMMARY
+          echo "- Omitted (not applicable here): $OMITTED" >> $GITHUB_STEP_SUMMARY
+          echo "- Internal errors: $ERRORS" >> $GITHUB_STEP_SUMMARY
           echo "- Test Stage: ${{ env.TEST_STAGE }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Per-group marks were hardcoded to ✓, so the summary claimed all four
+          # groups passed even when three of them never ran. Derive them.
           echo "### Groups Tested" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ Standalone Launch (Discovery + OAuth + OIDC + Token Refresh)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ Token Introspection" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ Backend Services (client_credentials + asymmetric JWT)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✓ EHR Launch (EHR-initiated launch with patient context)" >> $GITHUB_STEP_SUMMARY
-          
+          group_mark() {
+            if grep -qF "✗ $1:" inferno-output.log; then echo "✗"; else echo "✓"; fi
+          }
+          echo "- $(group_mark 'Standalone Launch') Standalone Launch (Discovery + OAuth + OIDC + Token Refresh)" >> $GITHUB_STEP_SUMMARY
+          echo "- $(group_mark 'Token Introspection') Token Introspection" >> $GITHUB_STEP_SUMMARY
+          echo "- $(group_mark 'Backend Services') Backend Services (client_credentials + asymmetric JWT)" >> $GITHUB_STEP_SUMMARY
+          echo "- $(group_mark 'EHR Launch') EHR Launch (EHR-initiated launch with patient context)" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$INCOMPLETE" -gt 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> $INCOMPLETE test(s) never reached a verdict — see \"never reached a verdict\" in the log." >> $GITHUB_STEP_SUMMARY
+          fi
+
           # Include FHIR server info
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### FHIR Server Configuration" >> $GITHUB_STEP_SUMMARY

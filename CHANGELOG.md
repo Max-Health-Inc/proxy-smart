@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.14-beta.202608131924.cfdc0c7f7] - 2026-08-13
+
+- 🔧 Chores & Improvements: CI/CD and version synchronization
+  - Update version to 0.3.14-beta.202608131924.cfdc0c7f7 (beta)
+  - chore: sync package versions
+- 🐛 Bug Fixes: EHR launch flow fix
+  - fix(ci): perform the EHR half of the EHR launch instead of scraping a URL
+    - Corrects misnamed launch path handling and ensures proper iss correlation
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1019
+
+
 ## [0.3.11-RELEASE.202608121633.0ee3da2eb] - 2026-08-13
 
 - ✨ Features
