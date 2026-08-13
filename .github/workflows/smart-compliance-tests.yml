@@ -1321,15 +1321,18 @@ jobs:
           # also matched the per-poll progress lines and could not see the tests
           # that never reached a verdict.
           SUMMARY_LINE=$(grep -E "^Total: [0-9]+ \| Passed:" inferno-output.log | tail -1 || true)
+          # `|| true` on every extraction: under `bash -e` a failed grep would
+          # abort this step, losing the summary in exactly the case (runner died
+          # before printing its tally) where it is most needed.
           field() {
-            echo "$SUMMARY_LINE" | tr '|' '\n' | grep -iE "^ *$1:" | sed 's/.*: *//' | tr -d ' ' | head -1
+            echo "$SUMMARY_LINE" | tr '|' '\n' | grep -iE "^ *$1:" | sed 's/.*: *//' | tr -d ' ' | head -1 || true
           }
-          TOTAL=$(field Total); TOTAL=${TOTAL:-0}
-          PASSED=$(field Passed); PASSED=${PASSED:-0}
-          FAILED=$(field Failed); FAILED=${FAILED:-0}
-          INCOMPLETE=$(field Incomplete); INCOMPLETE=${INCOMPLETE:-0}
-          OMITTED=$(field Omitted); OMITTED=${OMITTED:-0}
-          ERRORS=$(field Errors); ERRORS=${ERRORS:-0}
+          TOTAL=$(field Total || true); TOTAL=${TOTAL:-0}
+          PASSED=$(field Passed || true); PASSED=${PASSED:-0}
+          FAILED=$(field Failed || true); FAILED=${FAILED:-0}
+          INCOMPLETE=$(field Incomplete || true); INCOMPLETE=${INCOMPLETE:-0}
+          OMITTED=$(field Omitted || true); OMITTED=${OMITTED:-0}
+          ERRORS=$(field Errors || true); ERRORS=${ERRORS:-0}
 
           # Write summary
           echo "" >> $GITHUB_STEP_SUMMARY
