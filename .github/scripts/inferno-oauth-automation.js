@@ -28,6 +28,14 @@ const KC_PASSWORD = process.env.KC_PASSWORD || 'testpass';
 const CLIENT_ID = process.env.CLIENT_ID || 'inferno-test-client';
 const BACKEND_SERVICES_CLIENT_ID = process.env.BACKEND_SERVICES_CLIENT_ID || 'inferno-backend-services';
 
+// The proxy's own origin, for /auth/token and /auth/launch. Derived from the FHIR
+// URL rather than configured separately so the two can never point at different
+// deployments.
+const PROXY_BASE_URL = process.env.PROXY_BASE_URL || new URL(FHIR_SERVER_URL).origin;
+
+// Patient the simulated EHR puts in the launch context (seeded by the workflow).
+const EHR_LAUNCH_PATIENT = process.env.EHR_LAUNCH_PATIENT || 'test-patient';
+
 // Inferno test group IDs for SMART STU2.2 suite
 const GROUP_IDS = {
   STANDALONE_LAUNCH: `${TEST_SUITE}-smart_full_standalone_launch`,
@@ -632,15 +640,101 @@ function buildBackendServicesSmartAuthInfo() {
 }
 
 /**
- * Run the EHR Launch test group.
- * EHR Launch differs from Standalone: Inferno presents a launch URL that we must
- * navigate to (simulating the EHR initiating the launch). Inferno then adds `iss`
- * and `launch` params and redirects to our /authorize → Keycloak → login → callback.
+ * Mint a signed launch code, the way a real EHR does before handing off to an app.
  *
- * NOTE: Patient context for EHR launch comes from a signed launch code issued via
- * POST /auth/launch. Inferno uses its own opaque launch value which our proxy cannot
- * verify, so EHR Launch tests may not return patient context unless a real launch code
- * is pre-registered. See backend launch-context-store for the session-based flow.
+ * POST /auth/launch needs a Bearer token, so this first takes one via the password
+ * grant — the same grant the workflow already uses to smoke-test /auth/token.
+ *
+ * Returns null (never throws) if either call fails: an EHR launch without patient
+ * context still exercises the handshake, and the reason is logged rather than
+ * taking the whole group down.
+ */
+async function mintEhrLaunchCode() {
+  try {
+    // /auth/launch validates the token against the default audience set, whose FHIR
+    // prefix matcher only accepts a token carrying the FHIR base in `aud`. Ask for it
+    // via the RFC 8707 `resource` indicator; if this realm/client is not wired for
+    // resource indicators the request comes back invalid_target, so fall back to a
+    // plain token rather than losing the handshake over it.
+    const requestToken = (withResource) => fetch(`${PROXY_BASE_URL}/auth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password',
+        client_id: CLIENT_ID,
+        username: KC_USERNAME,
+        password: KC_PASSWORD,
+        scope: 'openid',
+        ...(withResource ? { resource: FHIR_SERVER_URL } : {}),
+      }).toString(),
+    });
+
+    let tokenResp = await requestToken(true);
+    if (!tokenResp.ok) {
+      console.log(`  Token request with resource indicator failed (HTTP ${tokenResp.status}), retrying without`);
+      tokenResp = await requestToken(false);
+    }
+
+    if (!tokenResp.ok) {
+      console.log(`  Could not get a token for /auth/launch: HTTP ${tokenResp.status} ${(await tokenResp.text()).substring(0, 200)}`);
+      return null;
+    }
+
+    const { access_token: accessToken } = await tokenResp.json();
+    if (!accessToken) {
+      console.log('  Token response carried no access_token');
+      return null;
+    }
+
+    const launchResp = await fetch(`${PROXY_BASE_URL}/auth/launch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ patient: EHR_LAUNCH_PATIENT, clientId: CLIENT_ID }),
+    });
+
+    if (!launchResp.ok) {
+      console.log(`  POST /auth/launch failed: HTTP ${launchResp.status} ${(await launchResp.text()).substring(0, 200)}`);
+      return null;
+    }
+
+    const { launch } = await launchResp.json();
+    if (!launch) {
+      console.log('  /auth/launch returned no launch code');
+      return null;
+    }
+
+    console.log(`  Minted launch code for Patient/${EHR_LAUNCH_PATIENT} (${launch.length} chars)`);
+    return launch;
+  } catch (error) {
+    console.log(`  Could not mint a launch code: ${error.message}`);
+    return null;
+  }
+}
+
+/**
+ * Build the URL the EHR sends the browser to, handing the app its launch context.
+ *
+ * Inferno IS the app here, and its wait message states the contract: it resumes
+ * when it receives a launch request at this path carrying an `iss` naming the FHIR
+ * server. `launch` is the EHR's opaque handle, which the app echoes back to
+ * /authorize — so supplying our own signed code is what gets patient context into
+ * the token (see signLaunchCode in @proxy-smart/auth).
+ */
+function buildInfernoLaunchUrl(launchCode) {
+  const url = new URL(`${INFERNO_URL}/custom/${TEST_SUITE}/launch`);
+  url.searchParams.set('iss', FHIR_SERVER_URL);
+  if (launchCode) url.searchParams.set('launch', launchCode);
+  return url.toString();
+}
+
+/**
+ * Run the EHR Launch test group.
+ * EHR Launch differs from Standalone: the EHR initiates. We mint a launch code and
+ * send the browser to Inferno's launch URL with `iss` and `launch`; Inferno then
+ * redirects to our /authorize → Keycloak → login → callback.
  */
 async function runEhrLaunchTests(sessionId, browser) {
   console.log('\n=== Running EHR Launch Tests ===\n');
@@ -727,11 +821,15 @@ async function waitForEhrLaunchCompletion(sessionId, runId, browser) {
                 ? result[field]
                 : JSON.stringify(result[field]);
 
-              // Look for Inferno's launch URL (e.g. http://localhost:4567/custom/smart_stu2_2/launch)
-              const launchUrlMatch = content.match(/https?:\/\/[^\s<>"')]+\/launch(?:\b|[?\s<>"')])/);
-              if (launchUrlMatch) {
-                let launchUrl = launchUrlMatch[0].replace(/[)\s<>"']+$/, '');
-                console.log(`  Found Inferno launch URL in ${field}: ${launchUrl}`);
+              // Inferno's wait message names the launch path in prose. Scraping the
+              // bare URL out of it dropped the query string entirely, so Inferno got
+              // no `iss`, could not correlate the waiting run, and answered 500
+              // "Unable to find test run with identifier ''". Build the URL from the
+              // contract instead: `iss` is the FHIR server we are already testing.
+              if (/\/launch\b/.test(content)) {
+                const launchCode = await mintEhrLaunchCode();
+                const launchUrl = buildInfernoLaunchUrl(launchCode);
+                console.log(`  EHR launch handoff${launchCode ? ' with patient context' : ' WITHOUT patient context'}: ${launchUrl.substring(0, 160)}`);
                 try {
                   if (!page) page = await browser.newPage();
                   // Navigate to Inferno's launch URL — it will redirect to /authorize → Keycloak
