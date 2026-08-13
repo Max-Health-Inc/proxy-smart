@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: SMART Compliance Tests (Inferno)
 
 on:
@@ -473,20 +476,30 @@ jobs:
         if: steps.config.outputs.target != 'deployed'
         run: |
           cd backend
-          bun run start &
+          # Log to a file: a backgrounded process's stdout stops being captured
+          # when this step ends, which left every later failure undiagnosable.
+          bun run start > /tmp/backend.log 2>&1 &
           APP_PID=$!
           echo "app_pid=$APP_PID" >> $GITHUB_ENV
           
           # Wait for app to be ready
           echo "Waiting for application..."
+          READY=false
           for i in {1..30}; do
             if curl -sf http://localhost:8445/health; then
               echo "Application is ready!"
+              READY=true
               break
             fi
             echo "Attempt $i/30..."
             sleep 2
           done
+
+          if [ "$READY" != "true" ]; then
+            echo "ERROR: application never became healthy — backend log follows"
+            cat /tmp/backend.log || true
+            exit 1
+          fi
         env:
           NODE_ENV: production
           KEYCLOAK_BASE_URL: http://localhost:8080
@@ -1371,12 +1384,12 @@ jobs:
             echo "(Deployed mode — container logs not available from CI runner.)"
             echo "Check VPS logs: docker logs proxy-smart-backend-beta --tail 200 2>&1 | grep -iE 'token|auth|error|warn'"
           else
-            # Local CI: dump from Docker containers
+            # Local CI: the backend runs as a bare process, not a container.
             echo "--- Backend logs (auth-related) ---"
-            docker logs backend 2>&1 | grep -iE 'token endpoint|keycloak token|forwarding to keycloak|error response|warn|400|401|422|500' | tail -100 || echo "(no backend container)"
+            grep -iE 'redirect_uri|registered redirect|token endpoint|keycloak|error|warn|400|401|422|500' /tmp/backend.log | tail -100 || echo "(nothing matched)"
             echo ""
-            echo "--- Backend logs (last 50 lines) ---"
-            docker logs backend 2>&1 | tail -50 || echo "(no backend container)"
+            echo "--- Backend logs (last 80 lines) ---"
+            tail -80 /tmp/backend.log || echo "(no /tmp/backend.log)"
             echo ""
             echo "--- Keycloak logs (auth-related, last 50 lines) ---"
             docker logs keycloak 2>&1 | grep -iE 'token|grant|client|error|warn' | tail -50 || echo "(no keycloak container)"
@@ -1422,6 +1435,7 @@ jobs:
           
           # Also save service logs (only exists for local targets)
           docker logs keycloak > test-results/keycloak.log 2>&1 || true
+          cp /tmp/backend.log test-results/backend.log 2>/dev/null || true
 
       - name: Upload Artifacts
         if: always()
