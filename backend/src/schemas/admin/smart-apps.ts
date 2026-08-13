@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 import { t, type Static } from 'elysia'
-import { AttributesMap, AppTypeLiteral, ClientTypeLiteral } from './common'
+import { AttributesMap, AppTypeLiteral, ClientTypeLiteral, OptionalEnum, APP_TYPES, CLIENT_TYPES } from './common'
 
 /**
  * SMART App/Client Management schemas
@@ -20,15 +20,16 @@ export const SmartApp = t.Object({
   webOrigins: t.Optional(t.Array(t.String(), { description: 'Allowed web origins (CORS)' })),
   attributes: t.Optional(AttributesMap),
   clientAuthenticatorType: t.Optional(t.String({ description: 'Keycloak internal auth type (use tokenEndpointAuthMethod instead)' })),
-  tokenEndpointAuthMethod: t.Optional(t.UnionEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' })),
+  tokenEndpointAuthMethod: OptionalEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' }),
+  tokenEndpointAuthSigningAlg: OptionalEnum(['RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'], { description: 'Algorithm the client signs its assertions with, for private_key_jwt. Detected from an inline JWKS; state it when using jwksUri, which is not fetched. Defaults to RS384.' }),
   serviceAccountsEnabled: t.Optional(t.Boolean({ description: 'Enable service accounts' })),
   standardFlowEnabled: t.Optional(t.Boolean({ description: 'Enable authorization code flow' })),
   implicitFlowEnabled: t.Optional(t.Boolean({ description: 'Enable implicit flow' })),
   directAccessGrantsEnabled: t.Optional(t.Boolean({ description: 'Enable direct access grants' })),
   defaultClientScopes: t.Optional(t.Array(t.String(), { description: 'Default scopes' })),
   optionalClientScopes: t.Optional(t.Array(t.String(), { description: 'Optional scopes' })),
-  appType: t.Optional(AppTypeLiteral),
-  clientType: t.Optional(ClientTypeLiteral),
+  appType: OptionalEnum(APP_TYPES),
+  clientType: OptionalEnum(CLIENT_TYPES),
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   access: t.Optional(t.Record(t.String(), t.Boolean(), { description: 'Keycloak admin console permissions (configure, manage, view) - informational only' })),
   
@@ -40,7 +41,7 @@ export const SmartApp = t.Object({
   contacts: t.Optional(t.Array(t.String(), { description: 'Contact emails or names' })),
   
   // Server access control
-  serverAccessType: t.Optional(t.UnionEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' })),
+  serverAccessType: OptionalEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' }),
   allowedServerIds: t.Optional(t.Array(t.String(), { description: 'List of allowed FHIR server IDs' })),
   
   // Scope set reference
@@ -89,9 +90,10 @@ export const CreateSmartAppRequest = t.Object({
   optionalClientScopes: t.Optional(t.Array(t.String(), { description: 'Optional SMART scopes' })),
   smartVersion: t.Optional(t.String({ description: 'SMART App Launch version' })),
   fhirVersion: t.Optional(t.String({ description: 'FHIR version' })),
-  appType: t.Optional(AppTypeLiteral),
-  clientType: t.Optional(ClientTypeLiteral),
-  tokenEndpointAuthMethod: t.Optional(t.UnionEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' })),
+  appType: OptionalEnum(APP_TYPES),
+  clientType: OptionalEnum(CLIENT_TYPES),
+  tokenEndpointAuthMethod: OptionalEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' }),
+  tokenEndpointAuthSigningAlg: OptionalEnum(['RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'], { description: 'Algorithm the client signs its assertions with, for private_key_jwt. Detected from an inline JWKS; state it when using jwksUri, which is not fetched. Defaults to RS384.' }),
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   publicKey: t.Optional(t.String({ description: 'Public key for JWT authentication (PEM format)' })),
   jwksUri: t.Optional(t.String({ description: 'JWKS URI for JWT authentication' })),
@@ -106,7 +108,7 @@ export const CreateSmartAppRequest = t.Object({
   contacts: t.Optional(t.Array(t.String(), { description: 'Contact emails or names' })),
   
   // Server access control
-  serverAccessType: t.Optional(t.UnionEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' })),
+  serverAccessType: OptionalEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' }),
   allowedServerIds: t.Optional(t.Array(t.String(), { description: 'List of allowed FHIR server IDs (when serverAccessType is selected-servers)' })),
   
   // Scope set reference
@@ -155,9 +157,10 @@ export const UpdateSmartAppRequest = t.Object({
   optionalClientScopes: t.Optional(t.Array(t.String(), { description: 'Optional SMART scopes' })),
   smartVersion: t.Optional(t.String({ description: 'SMART App Launch version' })),
   fhirVersion: t.Optional(t.String({ description: 'FHIR version' })),
-  appType: t.Optional(AppTypeLiteral),
-  clientType: t.Optional(ClientTypeLiteral),
-  tokenEndpointAuthMethod: t.Optional(t.UnionEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' })),
+  appType: OptionalEnum(APP_TYPES),
+  clientType: OptionalEnum(CLIENT_TYPES),
+  tokenEndpointAuthMethod: OptionalEnum(['none', 'client_secret_basic', 'client_secret_post', 'private_key_jwt'], { description: 'Standard OAuth 2.0 token endpoint authentication method (RFC 7591)' }),
+  tokenEndpointAuthSigningAlg: OptionalEnum(['RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES512'], { description: 'Algorithm the client signs its assertions with, for private_key_jwt. Detected from an inline JWKS; state it when using jwksUri, which is not fetched. Defaults to RS384.' }),
   secret: t.Optional(t.String({ description: 'Client secret for symmetric authentication (only for confidential clients)' })),
   publicKey: t.Optional(t.String({ description: 'Public key for JWT authentication (PEM format)' })),
   jwksUri: t.Optional(t.String({ description: 'JWKS URI for JWT authentication' })),
@@ -172,7 +175,7 @@ export const UpdateSmartAppRequest = t.Object({
   contacts: t.Optional(t.Array(t.String(), { description: 'Contact emails or names' })),
   
   // Server access control
-  serverAccessType: t.Optional(t.UnionEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' })),
+  serverAccessType: OptionalEnum(['all-servers', 'selected-servers', 'user-person-servers'], { description: 'FHIR server access control type' }),
   allowedServerIds: t.Optional(t.Array(t.String(), { description: 'List of allowed FHIR server IDs' })),
   
   // Scope set reference

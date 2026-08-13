@@ -37,8 +37,7 @@ truth), so they are never hardcoded in the script. Header format:
 
 The `workflows/` folder contains Python scripts used by GitHub Actions:
 
-- `summarize_diff.py` - AI-powered commit diff summaries (GPT-5 nano)
-- `generate_changelog_ai.py` - AI-powered changelog generation from commits
+- `generate_changelog_ai.py` - AI-powered changelog generation from commit messages (GPT-5 nano)
 - `categorize_commits.py` - Fallback commit categorization (no AI required)
 
 ## AI Pipeline (Experimental)

@@ -46,21 +46,16 @@ export const CertificateDetails = t.Object({
 /**
  * App type literal values for SMART applications
  */
-export const AppTypeLiteral = t.UnionEnum([
-  'standalone-app',
-  'ehr-launch',
-  'backend-service',
-  'agent'
-])
+export const APP_TYPES = ['standalone-app', 'ehr-launch', 'backend-service', 'agent'] as const
+
+export const AppTypeLiteral = t.UnionEnum([...APP_TYPES])
 
 /**
  * Client type literal values for OAuth2 clients
  */
-export const ClientTypeLiteral = t.UnionEnum([
-  'public',
-  'confidential',
-  'backend-service'
-])
+export const CLIENT_TYPES = ['public', 'confidential', 'backend-service'] as const
+
+export const ClientTypeLiteral = t.UnionEnum([...CLIENT_TYPES])
 
 /**
  * Server scope literal values for launch contexts
@@ -79,3 +74,25 @@ export type CertificateDetailsType = Static<typeof CertificateDetails>
 export type AppType = Static<typeof AppTypeLiteral>
 export type ClientType = Static<typeof ClientTypeLiteral>
 export type ServerScopeType = Static<typeof ServerScopeLiteral>
+
+/**
+ * An optional enum field that does NOT carry a default.
+ *
+ * `t.UnionEnum([...])` sets `default` to its FIRST member, and Elysia populates defaults on every
+ * request — so an optional field the caller omitted arrives with a value nobody chose, and the
+ * handler cannot tell it apart from a deliberate one. On PUT /admin/smart-apps that turned a
+ * one-field patch into a rewrite: appType became standalone-app, clientType public,
+ * tokenEndpointAuthMethod none and serverAccessType all-servers, silently downgrading a
+ * confidential backend service to a public app.
+ *
+ * Use this for every OPTIONAL enum in a REQUEST schema. Defaults belong on response schemas and on
+ * fields a caller must supply, not on ones whose absence is meaningful.
+ */
+export function OptionalEnum<const T extends readonly [string, ...string[]]>(
+  values: T,
+  options?: Record<string, unknown>,
+) {
+  const schema = t.UnionEnum(values, options)
+  delete (schema as { default?: unknown }).default
+  return t.Optional(schema)
+}
