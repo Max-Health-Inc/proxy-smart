@@ -207,6 +207,30 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         }
       }
 
+      /*
+       * The algorithm the client signs assertions with. An inline JWKS carries its own `alg`, but a
+       * jwksUri is never fetched, so the caller has to say — and defaulting silently to RS384 gave
+       * an ES384 client a Keycloak config that rejects every assertion it sends.
+       */
+      const signingAlg = body.tokenEndpointAuthSigningAlg || 'RS384'
+
+      /*
+       * A scope cannot be both default and optional on one client — Keycloak refuses the second
+       * assignment with `unknown_error` and "consult the server log", naming neither the scope nor
+       * the reason, and the client is left half-created. Say which scopes overlap instead.
+       */
+      const overlappingScopes = (body.defaultClientScopes || []).filter((scope) =>
+        [...(body.optionalClientScopes || []), ...(body.systemScopes || [])].includes(scope),
+      )
+      if (overlappingScopes.length > 0) {
+        set.status = 400
+        return {
+          error:
+            `These scopes are listed as both default and optional: ${overlappingScopes.join(', ')}. ` +
+            'A scope may be one or the other, not both.',
+        }
+      }
+
       // Validate Backend Services requirements
       if (isBackendService) {
         if (!body.publicKey && !body.jwksUri && !body.jwksString) {
@@ -350,7 +374,15 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           ...(isBackendService ? BACKEND_SERVICE_DEFAULT_SCOPES : STANDARD_OIDC_DEFAULT_SCOPES),
         ]
 
-        const optionalScopesToAssign = body.optionalClientScopes || []
+        /*
+         * `systemScopes` is the backend-service spelling of optional scopes, and was accepted by the
+         * schema while being read nowhere — a client registered with system/Patient.c came back with
+         * no scope attached and no error. Merged rather than replacing, so a caller may pass both,
+         * and de-duplicated because assigning the same scope twice is a Keycloak error.
+         */
+        const optionalScopesToAssign = [
+          ...new Set([...(body.optionalClientScopes || []), ...(body.systemScopes || [])]),
+        ]
 
         // Get all available client scopes to find matching ones by name
         let allClientScopes = await admin.clientScopes.find()
@@ -477,15 +509,25 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             await registerJwksForClient(admin, createdClient.id, {
               publicKeyPem: body.publicKey,
               jwksString: body.jwksString,
+              signingAlg: body.tokenEndpointAuthSigningAlg,
             })
           }
-          // jwksUri is already stored in attributes during creation — just ensure
-          // the signing alg attribute is set for consistency
+          /*
+           * jwksUri is already stored during creation; only the signing alg needs stating, because
+           * nothing fetches the URI to discover it.
+           *
+           * This used to also force `clientAuthenticatorType: 'client-secret'`, which made
+           * private_key_jwt unusable with a jwksUri: the authenticator computed from
+           * tokenEndpointAuthMethod (federated-jwt) was overwritten immediately after being set, so
+           * a client registered for assertion auth came back expecting a shared secret. The
+           * jwksString path never did this, and the federated-jwt clients in production prove it is
+           * not required. The authenticator is left as the caller asked for.
+           */
           if (body.jwksUri && !body.publicKey && !body.jwksString) {
             await admin.clients.update({ id: createdClient.id }, {
-              clientAuthenticatorType: 'client-secret',
               attributes: {
-                'token.endpoint.auth.signing.alg': 'RS384',
+                ...fullClient.attributes,
+                'token.endpoint.auth.signing.alg': signingAlg,
               }
             })
           }
