@@ -42,6 +42,16 @@ export async function refreshCorsOrigins(): Promise<void> {
   try {
     if (!config.keycloak.adminClientId || !config.keycloak.adminClientSecret) {
       cachedOrigins = config.cors.origins
+      // Silent before. In a deployed environment this means every registered
+      // webOrigin is ignored, which is indistinguishable from a working policy
+      // until an app is blocked.
+      if (process.env.NODE_ENV === 'production') {
+        logger.auth.error('No Keycloak admin credentials — SMART app webOrigins cannot be read', {
+          adminClientId: config.keycloak.adminClientId ?? '(unset)',
+          hasSecret: !!config.keycloak.adminClientSecret,
+          consequence: `CORS is limited to CORS_ORIGINS (${cachedOrigins.length} origin(s))`,
+        })
+      }
       return
     }
 
@@ -80,10 +90,22 @@ export async function refreshCorsOrigins(): Promise<void> {
       total: cachedOrigins.length,
     })
   } catch (error) {
-    logger.auth.warn('Failed to refresh CORS origins from Keycloak, using static config', {
-      error: error instanceof Error ? error.message : String(error),
+    // An admin-client failure often carries only "Unable to determine error
+    // message", so name what was attempted. Without this the warning says a
+    // refresh failed but not which realm, which client, or why — and the
+    // hardcoded fallback then hid the consequence entirely.
+    const detail = error instanceof Error ? error.message : String(error)
+    const status = (error as { response?: { status?: number } })?.response?.status
+    logger.auth.error('Failed to refresh CORS origins from Keycloak — falling back to CORS_ORIGINS', {
+      detail,
+      ...(status ? { status } : {}),
+      keycloakBaseUrl: config.keycloak.baseUrl,
+      realm: config.keycloak.realm,
+      adminClientId: config.keycloak.adminClientId,
+      // Registered webOrigins are ignored while this fails, so an app added
+      // through the admin UI will appear configured and still be blocked.
+      consequence: 'SMART app webOrigins are NOT in effect',
     })
-    // Fallback to static origins on error
     if (cachedOrigins.length === 0) {
       cachedOrigins = config.cors.origins
     }

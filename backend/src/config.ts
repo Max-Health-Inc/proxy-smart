@@ -392,25 +392,22 @@ export const config = {
         config.baseUrl // Fallback to base URL
       ];
 
-      // Production standalone app domains (fallback if Keycloak refresh fails)
-      const productionAppOrigins = process.env.NODE_ENV === 'production' ? [
-        'https://patient.maxhealth.tech',
-        'https://consent.maxhealth.tech',
-        'https://dtr.maxhealth.tech',
-        'https://dicom.maxhealth.tech',
-        'https://maxhealth.tech',
-      ] : [];
-      
+      // Deployed origins come from CORS_ORIGINS, or from the webOrigins of the
+      // SMART apps registered in Keycloak (see lib/cors-origins). A hardcoded
+      // per-app list used to live here as a "fallback if Keycloak refresh
+      // fails"; it silently became the real mechanism, so registering an app's
+      // origin did nothing and every new app or environment needed a code
+      // change. That is how dicom.beta.maxhealth.tech ended up blocked while
+      // dicom.maxhealth.tech worked.
       const envOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()) || [];
-      
-      // In production with explicit CORS_ORIGINS, use those + production app origins
-      if (process.env.NODE_ENV === 'production' && envOrigins.length > 0) {
-        return [...new Set([...envOrigins, ...productionAppOrigins])].filter(Boolean);
+
+      // Localhost defaults are for development only: shipping them in a
+      // deployed environment widens the policy for no one's benefit.
+      if (process.env.NODE_ENV === 'production') {
+        return [...new Set(envOrigins)].filter(Boolean);
       }
-      
-      // Otherwise include all default + env + production origins
-      const allOrigins = [...new Set([...defaultOrigins, ...envOrigins, ...productionAppOrigins])];
-      return allOrigins.filter(Boolean);
+
+      return [...new Set([...defaultOrigins, ...envOrigins])].filter(Boolean);
     }
   }
 } as const
