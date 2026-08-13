@@ -13,10 +13,44 @@ import {
 
 const app = new cdk.App();
 
-// Environment configuration
+/**
+ * The regions this product deploys to. Tenants are PINNED to the stack holding their data, so a
+ * region is a deliberate choice per deployment, not somewhere a deploy can drift to.
+ */
+const DEPLOY_REGIONS = ['us-east-1', 'eu-central-1'] as const;
+
+/**
+ * The target region — from `-c region=...`, NOT from the environment.
+ *
+ * `CDK_DEFAULT_REGION` looks like the obvious source and is a trap: the CDK CLI fills it in from
+ * the ambient AWS config, so `cdk deploy` with no region in mind silently targets whatever
+ * `~/.aws/config` happens to say. That is how this repo ended up with resolved availability zones
+ * for a region nobody chose. Requiring context makes the region appear in the command that deployed
+ * it, and the env var is then only cross-checked — a mismatch means you are authenticated against
+ * one region and deploying to another, which is worth stopping for.
+ */
+const region = app.node.tryGetContext('region') as string | undefined;
+if (!region) {
+  throw new Error(
+    `Missing -c region=<${DEPLOY_REGIONS.join('|')}>. ` +
+      'Pass the region explicitly: cdk deploy -c region=us-east-1',
+  );
+}
+if (!DEPLOY_REGIONS.includes(region as (typeof DEPLOY_REGIONS)[number])) {
+  throw new Error(`region "${region}" is not one of: ${DEPLOY_REGIONS.join(', ')}`);
+}
+
+const ambientRegion = process.env.CDK_DEFAULT_REGION;
+if (ambientRegion && ambientRegion !== region) {
+  throw new Error(
+    `-c region=${region} but the AWS environment resolves to ${ambientRegion}. ` +
+      'Deploying across that mismatch is almost never intended; align them or unset the ambient one.',
+  );
+}
+
 const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
-  region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+  region,
 };
 
 // Application configuration
