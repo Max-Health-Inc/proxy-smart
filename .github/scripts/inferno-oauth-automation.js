@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * Inferno SMART App Launch STU2.2 Compliance Test Runner
  * 
@@ -535,8 +538,7 @@ async function runStandaloneLaunchTests(sessionId, browser) {
     return await waitForSimpleTestCompletion(sessionId, run.id, browser);
     
   } catch (error) {
-    console.error('Standalone Launch tests error:', error.message);
-    throw error;
+    return groupFailure('Standalone Launch', error);
   }
 }
 
@@ -571,10 +573,7 @@ async function runTokenIntrospectionTests(sessionId, browser) {
     return await waitForSimpleTestCompletion(sessionId, run.id, browser);
     
   } catch (error) {
-    console.error('Token Introspection tests error:', error.message);
-    // Don't throw — Token Introspection failure shouldn't block the pipeline
-    console.log('WARNING: Token Introspection tests failed but continuing...');
-    return null;
+    return groupFailure('Token Introspection', error);
   }
 }
 
@@ -669,9 +668,7 @@ async function runEhrLaunchTests(sessionId, browser) {
     return await waitForEhrLaunchCompletion(sessionId, run.id, browser);
 
   } catch (error) {
-    console.error('EHR Launch tests error:', error.message);
-    console.log('WARNING: EHR Launch tests failed but continuing...');
-    return null;
+    return groupFailure('EHR Launch', error);
   }
 }
 
@@ -856,10 +853,7 @@ async function runBackendServicesTests(sessionId) {
     return await waitForSimpleTestCompletion(sessionId, run.id);
 
   } catch (error) {
-    console.error('Backend Services tests error:', error.message);
-    // Don't throw — Backend Services failure shouldn't block the pipeline yet
-    console.log('WARNING: Backend Services tests failed but continuing...');
-    return null;
+    return groupFailure('Backend Services', error);
   }
 }
 
@@ -1009,6 +1003,17 @@ async function getSessionResults(sessionId) {
   return response.json();
 }
 
+/**
+ * Record a group that blew up, so the run can report every group's outcome and
+ * still fail. Three of the four groups used to log "WARNING: ... but continuing"
+ * and return null that nothing inspected, so a run reported success with most of
+ * the suite never executed; the fourth threw, which aborted the groups after it.
+ */
+function groupFailure(group, error) {
+  console.error(`${group} tests error:`, error.message);
+  return { group, ok: false, error: error.message };
+}
+
 async function printResults(results) {
   console.log('\n========================================');
   console.log('          TEST RESULTS SUMMARY          ');
@@ -1018,7 +1023,17 @@ async function printResults(results) {
   let failed = 0;
   let skipped = 0;
   let errors = 0;
-  
+  // 'omit' is Inferno declining a test that does not apply here (the TLS tests
+  // in local non-TLS mode). Not a failure, but it must be counted: it used to
+  // fall through to the default branch, inflating `total` while landing in no
+  // bucket at all.
+  let omitted = 0;
+  // A test that never reached a verdict: still 'wait'ing for a user action the
+  // automation never completed, or cancelled. These are the ones that made the
+  // job green while a launch flow was broken.
+  let incomplete = 0;
+  const incompleteTests = [];
+
   // Collect detailed failure info for later
   const failedTests = [];
   
@@ -1068,14 +1083,43 @@ async function printResults(results) {
           });
         }
         break;
+      case 'omit':
+        omitted++;
+        console.log(`− OMIT: ${title}`);
+        if (result.result_message) {
+          console.log(`    Reason: ${result.result_message.substring(0, 120)}`);
+        }
+        break;
+      case 'wait':
+      case 'cancel':
+        incomplete++;
+        incompleteTests.push({ title, status, test_id: result.test_id });
+        console.log(`⧗ INCOMPLETE (${status}): ${title}`);
+        break;
       default:
-        console.log(`? ${status.toUpperCase()}: ${title}`);
+        // An unrecognised status is counted as incomplete rather than ignored:
+        // a new Inferno state must not be able to pass the gate by being unknown.
+        incomplete++;
+        incompleteTests.push({ title, status, test_id: result.test_id });
+        console.log(`⧗ INCOMPLETE (unrecognised status "${status}"): ${title}`);
     }
   }
   
   console.log('\n========================================');
-  console.log(`Total: ${results.length} | Passed: ${passed} | Failed: ${failed} | Skipped: ${skipped} | Errors: ${errors}`);
+  console.log(`Total: ${results.length} | Passed: ${passed} | Failed: ${failed} | Incomplete: ${incomplete} | Skipped: ${skipped} | Omitted: ${omitted} | Errors: ${errors}`);
+  const accountedFor = passed + failed + skipped + errors + omitted + incomplete;
+  if (accountedFor !== results.length) {
+    console.log(`WARNING: ${results.length - accountedFor} result(s) landed in no bucket — the tally is wrong.`);
+  }
   console.log('========================================\n');
+
+  if (incompleteTests.length > 0) {
+    console.log('The following tests never reached a verdict:');
+    for (const t of incompleteTests) {
+      console.log(`  ⧗ [${t.status}] ${t.title}`);
+    }
+    console.log('');
+  }
   
   // Print detailed failure analysis
   if (failedTests.length > 0) {
@@ -1167,7 +1211,11 @@ async function printResults(results) {
     }
   }
   
-  return { passed, failed, skipped, errors, total: results.length };
+  return {
+    passed, failed, skipped, errors, omitted, incomplete,
+    total: results.length,
+    unaccounted: results.length - accountedFor,
+  };
 }
 
 async function main() {
@@ -1257,27 +1305,51 @@ async function main() {
     // Get all results across all groups
     const results = await getSessionResults(session.id);
     const summary = await printResults(results);
-    
+
+    const groupFailures = [standaloneResult, introspectionResult, backendServicesResult, ehrLaunchResult]
+      .filter(r => r && r.ok === false);
+
+    if (groupFailures.length > 0) {
+      console.error('\nTest groups that did not run to completion:');
+      for (const f of groupFailures) {
+        console.error(`  ✗ ${f.group}: ${f.error}`);
+      }
+    }
+
     // Output for GitHub Actions
     if (process.env.GITHUB_OUTPUT) {
       const fs = require('fs');
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `passed=${summary.passed}\n`);
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `failed=${summary.failed}\n`);
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `total=${summary.total}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `incomplete=${summary.incomplete}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `omitted=${summary.omitted}\n`);
+      fs.appendFileSync(process.env.GITHUB_OUTPUT, `group_failures=${groupFailures.length}\n`);
     }
-    
-    // Exit with error if any tests failed OR no tests ran
-    if (summary.failed > 0 || summary.total === 0) {
-      console.error(`\n❌ Tests failed: ${summary.total === 0 ? 'No tests completed' : `${summary.failed} failed, ${summary.errors} errors out of ${summary.total}`}`);
+
+    // A run is only a pass if every test reached a verdict and every group ran.
+    // Counting only `failed` let a green result hide tests still stuck in `wait`
+    // because their launch flow never completed.
+    const reasons = [];
+    if (summary.total === 0) reasons.push('no tests ran');
+    if (summary.failed > 0) reasons.push(`${summary.failed} failed`);
+    if (summary.incomplete > 0) reasons.push(`${summary.incomplete} never reached a verdict`);
+    if (summary.unaccounted !== 0) reasons.push(`${summary.unaccounted} unaccounted for`);
+    if (groupFailures.length > 0) {
+      reasons.push(`${groupFailures.length} group(s) failed to run: ${groupFailures.map(f => f.group).join(', ')}`);
+    }
+
+    if (reasons.length > 0) {
+      console.error(`\n❌ Compliance run failed — ${reasons.join('; ')} (out of ${summary.total} tests, ${summary.errors} errors)`);
       process.exit(1);
     }
-    
+
     if (summary.errors > 0) {
       console.warn(`\n⚠️  ${summary.errors} test(s) had internal errors (not compliance failures) — ${summary.passed} passed out of ${summary.total}`);
     }
-    
-    console.log(`\n✅ All ${summary.passed} tests passed!`);
-    
+
+    console.log(`\n✅ All ${summary.passed} tests passed${summary.omitted > 0 ? ` (${summary.omitted} omitted as not applicable)` : ''}!`);
+
   } catch (error) {
     console.error('Test execution failed:', error.message);
     process.exit(1);
