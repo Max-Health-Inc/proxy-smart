@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 import { t, type Static } from 'elysia'
-import { AttributesMap, AppTypeLiteral, ClientTypeLiteral, OptionalEnum, APP_TYPES, CLIENT_TYPES } from './common'
+import { AttributesMap, OptionalEnum, APP_TYPES, CLIENT_TYPES } from './common'
 
 /**
  * SMART App/Client Management schemas

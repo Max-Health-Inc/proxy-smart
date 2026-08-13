@@ -79,4 +79,22 @@ describe('chooseToolText', () => {
     const out = chooseToolText(flatList, 'auto')
     expect(decode(out)).toEqual(JSON.parse(flatList))
   })
+
+  /**
+   * TOON encodes `{}` as the empty string. Shortest-wins would pick it, and an
+   * empty content[].text block makes the client reject the whole tool result
+   * ("Invalid content from server") rather than read it as "no data".
+   */
+  it('never renders an empty text block, however short that would be', () => {
+    for (const payload of ['{}', '{"a":{}}', '{"outer":{"inner":{}}}']) {
+      expect(chooseToolText(payload, 'auto').trim()).not.toBe('')
+    }
+  })
+
+  it('still keeps a legitimately short encoding', () => {
+    expect(chooseToolText(JSON.stringify({ viewerAppClientId: null }), 'auto'))
+      .toBe('viewerAppClientId: null')
+    expect(chooseToolText(JSON.stringify({ enabled: false, count: 0 }), 'auto'))
+      .toBe('enabled: false\ncount: 0')
+  })
 })
