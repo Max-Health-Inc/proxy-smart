@@ -199,6 +199,7 @@ jobs:
         run: |
           bunx cdk deploy ProxySmartKeycloak \
             --exclusively \
+            -c region="$AWS_REGION" \
             -c keycloakImageUri="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}" \
             --require-approval never \
             --progress events
@@ -216,6 +217,7 @@ jobs:
         run: |
           bunx cdk deploy ProxySmartBackend \
             --exclusively \
+            -c region="$AWS_REGION" \
             --require-approval never \
             --progress events
 
