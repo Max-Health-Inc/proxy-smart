@@ -29,14 +29,14 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.40",
         "@elysiajs/cors": "^1.4.2",
         "@elysiajs/eden": "^1.4.9",
         "@elysiajs/openapi": "^1.4.15",
         "@elysiajs/static": "^1.4.10",
-        "@keycloak/keycloak-admin-client": "26.7.1",
+        "@keycloak/keycloak-admin-client": "26.6.4",
         "@max-health-inc/consent-fhir": "^0.1.4",
         "@max-health-inc/elysia-mcp": "workspace:*",
         "@maxhealth.tech/mcp-http": "^0.5.0",
@@ -78,7 +78,7 @@
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -89,7 +89,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "aws-cdk-lib": "^2.264.0",
         "constructs": "^10.8.1",
@@ -107,7 +107,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.3",
         "@cornerstonejs/core": "^5.7.3",
@@ -148,7 +148,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
         "@radix-ui/react-avatar": "^1.2.6",
@@ -208,7 +208,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "devDependencies": {
         "@types/node": "^26.2.0",
         "typescript": "6.0.3",
@@ -216,7 +216,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -228,7 +228,7 @@
     },
     "packages/cli": {
       "name": "@proxy-smart/cli",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "bin": {
         "proxy-smart": "./src/index.ts",
       },
@@ -240,7 +240,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "@toon-format/toon": "^4.1.1",
       },
@@ -258,7 +258,7 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.3.7-beta.202608091534.25d7f9a8e",
+      "version": "0.3.13-beta.202608131431.4f03d93ff",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
@@ -642,7 +642,7 @@
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
-    "@keycloak/keycloak-admin-client": ["@keycloak/keycloak-admin-client@26.7.1", "", { "dependencies": { "@microsoft/kiota-abstractions": "1.0.0-preview.103", "@microsoft/kiota-http-fetchlibrary": "1.0.0-preview.103", "@microsoft/kiota-serialization-form": "1.0.0-preview.103", "@microsoft/kiota-serialization-json": "1.0.0-preview.103", "@microsoft/kiota-serialization-multipart": "1.0.0-preview.103", "@microsoft/kiota-serialization-text": "1.0.0-preview.103", "camelize-ts": "^3.0.0", "url-template": "^3.1.1" } }, "sha512-jKJ+xR6SxoIDY3LjThmLGkeJJGA4LaihqieJOd/qnVIUfNMsUjmwWNOomPAEH+TUfRz6CG9yiuxxvauuM1KmIQ=="],
+    "@keycloak/keycloak-admin-client": ["@keycloak/keycloak-admin-client@26.6.4", "", { "dependencies": { "@microsoft/kiota-abstractions": "^1.0.0-preview.86", "@microsoft/kiota-http-fetchlibrary": "^1.0.0-preview.80", "@microsoft/kiota-serialization-form": "^1.0.0-preview.74", "@microsoft/kiota-serialization-json": "^1.0.0-preview.86", "@microsoft/kiota-serialization-multipart": "^1.0.0-preview.67", "@microsoft/kiota-serialization-text": "^1.0.0-preview.79", "camelize-ts": "^3.0.0", "url-template": "^3.1.1" } }, "sha512-Jd8Ah3p4yK3SX8e35buzHACMKnN1h7upDZotM1kibnqKvW3Nj+Vjm2/pgFP/v1Qk0IZIVO5oMoB47w+wlgcuoA=="],
 
     "@kitware/vtk.js": ["@kitware/vtk.js@36.4.1", "", { "dependencies": { "@types/webxr": "0.5.5", "commander": "9.2.0", "d3-scale": "4.0.2", "fast-deep-equal": "3.1.3", "fflate": "0.7.3", "gl-matrix": "3.4.3", "seedrandom": "3.0.5", "shelljs": "0.8.5", "spark-md5": "3.0.2", "utif": "3.1.0", "webworker-promise": "0.5.0", "xmlbuilder2": "4.0.3" }, "peerDependencies": { "autoprefixer": "^10.4.7", "wslink": ">=1.1.0 || ^2.0.0" }, "bin": { "xml2json": "Utilities/XMLConverter/xml2json-cli.js", "vtkDataConverter": "Utilities/DataGenerator/convert-cli.js" } }, "sha512-vHgiOZTHS7wgEw6Cbuv6vS+zlTx8HgepPqq0UMTWx6T+OcmP2qJCGRpHI1eTPqKcN2SaEHIK7DSsVatTHZ9OPw=="],
 
