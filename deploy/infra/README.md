@@ -170,6 +170,13 @@ For production:
 
 ## Troubleshooting
 
+### `Missing -c region=<us-east-1|eu-central-1>`
+Every `cdk` command names its region: `cdk deploy ProxySmartBackend -c region=us-east-1`.
+It is not read from `~/.aws/config` or `CDK_DEFAULT_REGION` — the CLI fills those in
+silently, which is how a stack gets deployed to a region nobody chose. Tenants are pinned
+to the region holding their data, so the region belongs in the command that deployed it.
+The `deploy:*` package scripts take it the same way: `bun run deploy:database -- -c region=us-east-1`.
+
 ### CDK Bootstrap Fails
 ```bash
 # Ensure AWS credentials are configured

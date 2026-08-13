@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.11-RELEASE.202608121633.0ee3da2eb] - 2026-08-13
+
+- ✨ Features
+  - Add explicit region handling and validation in deploy/infra: require region via CDK context, validate against allowed list, and guard against region mismatches.
+
+- 🐛 Bug Fixes
+  - Improve FHIR endpoint verification: perform curl-based reachability check against /proxy-smart-backend/hapi-fhir-server/R4/metadata; treat 2xx/401/403 as reachable and fail deploy on other statuses.
+
+- 🔧 Chores & Improvements
+  - None additional beyond the above (merged/metadata commits skipped).
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1004
+
+
+## [0.3.11-beta.202608121633.0ee3da2eb] - 2026-08-12
+
+- 🔧 Chores & Improvements: Enforced explicit region handling in deploy/infra; added DEPLOY_REGIONS, CDK context region validation, and mismatch guard between ambient and provided regions.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1002
+
+
 ## [0.3.9-beta.202608120811.c481d7d66] - 2026-08-12
 
 - ✨ Features: none
