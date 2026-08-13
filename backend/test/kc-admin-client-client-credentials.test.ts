@@ -17,6 +17,12 @@
  *
  * This test drives the library itself against a token endpoint that answers the
  * way Keycloak does, so a version bump that reintroduces the bug fails here.
+ *
+ * Upstream: keycloak/keycloak#50845, fixed by #51232 (merged 2026-08-11, labeled
+ * release/26.8.0). 26.7.1 is the last published 26.7 and does NOT carry it, so
+ * `@keycloak/keycloak-admin-client` stays pinned to 26.6.4. When 26.8.0 ships,
+ * move the Keycloak SERVER with it — the client tracks the server release for
+ * release, and the server is 26.6.4 (Dockerfile.keycloak, docker-compose*.yml).
  */
 import { describe, it, expect } from 'bun:test'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
