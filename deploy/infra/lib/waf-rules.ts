@@ -55,6 +55,21 @@ const COMMON_RULE_SET_EXCLUSIONS = [
    * XHTML by definition, so it looks like injected markup to a generic matcher).
    */
   'CrossSiteScripting_BODY',
+  /**
+   * Blocks any request with no User-Agent header.
+   *
+   * SMART Backend Services clients are SERVERS, and a server-side HTTP client sends no
+   * User-Agent unless told to — Cloudflare Workers' `fetch` is one, and so is anything
+   * built on undici defaults. Measured on production: the same URL returns 200 with
+   * `-A curl/8.0` and 403 with `-A ""`, for both
+   * /proxy-smart-backend/<server>/R4/.well-known/smart-configuration and .../metadata.
+   *
+   * So SMART discovery failed for every headless client, which is the entire audience
+   * of a system-scoped FHIR API. Ours reported it as "Failed to discover SMART endpoints"
+   * and a member's record went unwritten. A bot heuristic that blocks conformant machine
+   * clients is wrong for this API specifically.
+   */
+  'NoUserAgent_HEADER',
 ] as const;
 
 /** Options for {@link managedRuleGroups}. */

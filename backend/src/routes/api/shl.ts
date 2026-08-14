@@ -92,6 +92,37 @@ function isJsonContentType(contentType: string | null): boolean {
   return !!contentType && /json/i.test(contentType)
 }
 
+/**
+ * The smart-api-access document the recipient decrypts (SHL spec §3.2).
+ *
+ * Derived from the session on every manifest fetch rather than frozen at mint,
+ * because what it asserts — how long the token is good for, whether the share is
+ * complete — are properties of the share as it stands now. Freezing them meant a
+ * link kept telling recipients it carried the full record after the rule deciding
+ * that was corrected, since the claim sat inside ciphertext minted days earlier.
+ */
+export function buildSmartApiAccess(session: {
+  sessionToken: string
+  patientId: string
+  expiresAt: number
+  shareScope?: ShareScope
+  studyInstanceUID?: string
+}): string {
+  return JSON.stringify({
+    access_token: session.sessionToken,
+    token_type: 'Bearer',
+    expires_in: Math.max(0, Math.floor((session.expiresAt - Date.now()) / 1000)),
+    scope: 'patient/*.read',
+    patient: session.patientId,
+    // aud points to our FHIR proxy — the viewer never talks to the real FHIR server.
+    aud: `${config.baseUrl}/api/shl/fhir`,
+    complete: isCompleteShare({
+      selectiveScope: session.shareScope,
+      studyInstanceUID: session.studyInstanceUID,
+    }),
+  })
+}
+
 /** Build the pure SelectiveScope from a session's persisted shareScope (all-empty when absent). */
 function sessionSelectiveScope(session: { shareScope?: ShareScope }): SelectiveScope {
   return {
@@ -438,19 +469,15 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
           ? { excludedTypes, excludedIds, excludedObservationCategories }
           : undefined
 
-      // Build the SMART API Access token response (per SHL spec)
-      // aud points to our FHIR proxy — the viewer never talks to the real FHIR server.
-      // `complete` is a non-standard hint for our own viewer: false when the patient
-      // de-selected records, so the recipient can be told the summary is partial
-      // (qualitative only — no counts leak). Only the key holder can read it (JWE).
-      const smartApiAccess = JSON.stringify({
-        access_token: sessionToken,
-        token_type: 'Bearer',
-        expires_in: ttlSeconds,
-        scope: 'patient/*.read',
-        patient: patientId,
-        aud: `${config.baseUrl}/api/shl/fhir`,
-        complete: isCompleteShare({ selectiveScope: shareScope, studyInstanceUID: body.studyInstanceUID }),
+      // The same document the manifest re-derives on every fetch — built once here
+      // so a freshly minted link and a later fetch cannot disagree. `complete` is a
+      // non-standard hint for our own viewer, readable only by the key holder (JWE).
+      const smartApiAccess = buildSmartApiAccess({
+        sessionToken,
+        patientId,
+        expiresAt,
+        shareScope,
+        studyInstanceUID: body.studyInstanceUID,
       })
 
       // Generate SHL using kill-the-clipboard
@@ -614,12 +641,29 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
       recipient: body.recipient,
     })
 
+    // Re-derive the access document from the session so it describes the share as
+    // it is now. Falls back to the stored blob only if encryption fails, since a
+    // stale claim still beats handing the recipient an unopenable link.
+    let embedded = entry.jwe
+    try {
+      embedded = await encryptSHLFile({
+        content: buildSmartApiAccess(entry),
+        key: entry.shl.key,
+        contentType: SMART_API_ACCESS,
+      })
+    } catch (error) {
+      logger.auth.error('Could not rebuild the SHL access document — serving the one stored at mint', {
+        shlId: params.id,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+
     // Return spec-compliant SHL manifest
     // The JWE compact string goes directly in `embedded` (not wrapped in custom JSON)
     return {
       files: [{
         contentType: SMART_API_ACCESS as string,
-        embedded: entry.jwe,
+        embedded,
       }],
     }
   }, {
