@@ -16,6 +16,7 @@ import {
   ensureAdminUiDeviceGrant,
 } from './lib/kc-system-provisioning'
 import KcAdminClient from '@keycloak/keycloak-admin-client'
+import { proxySigningJwksUrl, isReachableFromKeycloak } from '@/lib/proxy-signing-url'
 
 // Global state to track Keycloak connectivity
 let keycloakAccessible = false
@@ -699,15 +700,24 @@ async function ensureProxySigningIdp(): Promise<void> {
     const token = await admin.getAccessToken()
     const idpUrl = `${config.keycloak.baseUrl}/admin/realms/${config.keycloak.realm}/identity-provider/instances/${IDP_ALIAS}`
 
-    // Compute the internal JWKS URL (how KC reaches the backend within Docker)
-    // If KEYCLOAK_BASE_URL has an internal hostname (e.g., http://keycloak:8080/auth),
-    // we know we're in Docker and the backend is at http://backend:PORT.
-    // Otherwise (localhost), the backend is also on localhost.
     const kcHost = new URL(config.keycloak.baseUrl!).hostname
-    const internalBackendHost = (kcHost !== 'localhost' && kcHost !== '127.0.0.1')
-      ? 'backend'
-      : 'localhost'
-    const jwksUrl = `http://${internalBackendHost}:${config.port}/.well-known/jwks.json`
+    const jwksUrl = proxySigningJwksUrl(kcHost, config.proxySigningJwksUrl, config.port)
+
+    /*
+     * Refuse to write a URL Keycloak cannot resolve. `backend` is a docker-compose service name, and
+     * on ECS (or any host-per-service deployment) there is nothing behind it — Keycloak then cannot
+     * fetch our JWKS, cannot verify a proxy-signed assertion, and EVERY private_key_jwt client fails
+     * with `invalid_client`. That was production for months. Leaving a correct config in place beats
+     * replacing it with a broken one, so this reconciles nothing and says why.
+     */
+    if (!isReachableFromKeycloak(jwksUrl, kcHost)) {
+      logger.keycloak.warn(
+        'Refusing to reconcile proxy-smart-signing: the derived JWKS URL is unreachable from Keycloak. ' +
+          'Set PROXY_SIGNING_JWKS_URL to a URL Keycloak can fetch (the public base URL works when it has egress).',
+        { jwksUrl, keycloakHost: kcHost },
+      )
+      return
+    }
 
     // Check if the IdP already exists
     const getRes = await fetch(idpUrl, {

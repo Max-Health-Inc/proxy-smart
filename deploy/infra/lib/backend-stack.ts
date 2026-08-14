@@ -213,6 +213,12 @@ export class BackendStack extends cdk.Stack {
       NODE_ENV: 'production',
       BASE_URL: `https://${props.domainName}`,
       PORT: '8445',
+      // Where Keycloak fetches this backend's JWKS to verify proxy-signed assertions. It must be set
+      // HERE because the fallback assumes docker-compose and resolves to `http://backend:8445`, a
+      // service name that does not exist on ECS — every private_key_jwt client then fails with
+      // `invalid_client`, which is what production did. Keycloak has egress to the load balancer, so
+      // the public URL is the one address both sides agree on.
+      PROXY_SIGNING_JWKS_URL: `https://${props.domainName}/.well-known/jwks.json`,
       // CORS: standalone app domains hosted on Cloudflare Pages
       CORS_ORIGINS: [
         `https://${props.domainName}`,
