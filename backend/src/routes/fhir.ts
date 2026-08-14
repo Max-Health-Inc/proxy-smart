@@ -10,6 +10,7 @@ import { config } from '../config'
 import { fhirServerStore, getServerByName, getServerInfoByName } from '../lib/fhir-server-store'
 import { CommonErrorResponses, ErrorResponse, CacheRefreshResponse, SmartConfigurationResponse, FhirProxyResponse, type SmartConfigurationResponseType } from '../schemas'
 import { smartConfigService } from '../lib/smart-config'
+import { withSmartSecurity } from '../lib/capability-security'
 import { logger } from '../lib/logger'
 import { fetchWithMtls, getMtlsConfig } from './fhir-servers'
 import { checkConsentWithIal, getConsentConfig } from '../lib/consent'
@@ -59,8 +60,11 @@ async function getCachedMetadata(
       serverUrl,
       `${config.baseUrl}/${config.name}/${serverName}/${fhirVersion}`,
     )
+    // Upstream does not know it is behind a SMART layer, so it advertises no OAuth endpoints. We
+    // are the layer, so we add them from the same service that builds .well-known/smart-configuration.
+    const annotated = await annotateSecurity(replaced)
     const contentType = resp.headers.get('content-type') || 'application/fhir+json'
-    const entry: MetadataCacheEntry = { body: replaced, contentType, status: resp.status, expiresAt: now + METADATA_TTL_MS }
+    const entry: MetadataCacheEntry = { body: annotated, contentType, status: resp.status, expiresAt: now + METADATA_TTL_MS }
     // Only cache successes; let transient upstream errors retry on the next hit.
     if (resp.status === 200) metadataCache.set(key, entry)
     return entry
@@ -68,6 +72,21 @@ async function getCachedMetadata(
 
   metadataInflight.set(key, promise)
   try { return await promise } finally { metadataInflight.delete(key) }
+}
+
+/**
+ * Add this proxy's OAuth endpoints to a CapabilityStatement. Discovery being unavailable must not
+ * make /metadata unavailable, so a failure here serves the upstream document unchanged.
+ */
+async function annotateSecurity(body: string): Promise<string> {
+  try {
+    return withSmartSecurity(body, await smartConfigService.getSmartConfiguration())
+  } catch (error) {
+    logger.fhir.warn('could not advertise SMART endpoints in the CapabilityStatement', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+    return body
+  }
 }
 
 /** The path params this proxy is mounted on, plus what the handler uses. */
