@@ -40,6 +40,15 @@ try {
 export const config = {
   baseUrl: process.env.BASE_URL || 'http://localhost:8445',
   port: process.env.PORT || 8445,
+
+  /**
+   * Where KEYCLOAK fetches this backend's JWKS to verify proxy-signed assertions.
+   *
+   * Set it whenever Keycloak cannot reach us at the docker-compose service name `backend` — on ECS
+   * there is no such host, and the derived URL silently breaks every private_key_jwt client with
+   * `invalid_client`. The public base URL works there, since Keycloak has egress to the load balancer.
+   */
+  proxySigningJwksUrl: process.env.PROXY_SIGNING_JWKS_URL || null,
   
   // Application name and version from package.json
   name: packageJson.name,

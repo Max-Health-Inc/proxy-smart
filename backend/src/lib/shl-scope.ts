@@ -196,6 +196,24 @@ interface FhirBundleLike {
   [key: string]: unknown
 }
 
+/**
+ * True only when NOTHING narrows the share.
+ *
+ * The recipient is told "complete summary — the patient shared their full health
+ * record" on the strength of this, so every dimension that narrows a share has to
+ * be counted here. It lives beside the scope rules rather than inline at the mint
+ * site because that is how it drifted: it knew about selective de-selection and
+ * not about study scoping, so a single-study link claimed to carry everything
+ * while the proxy answered almost every query with 403 — which the viewer drew as
+ * "no allergies, no medications, no conditions".
+ */
+export function isCompleteShare(narrowing: {
+  selectiveScope?: unknown
+  studyInstanceUID?: string
+}): boolean {
+  return !narrowing.selectiveScope && !narrowing.studyInstanceUID
+}
+
 /** True when the scope actually narrows anything (else all helpers are no-ops). */
 export function isSelectiveScopeActive(scope: SelectiveScope): boolean {
   return (

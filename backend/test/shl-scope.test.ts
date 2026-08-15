@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * SHL Scope Enforcement — unit tests for the pure access-control decisions.
  *
@@ -10,6 +13,7 @@ import { describe, expect, it } from 'bun:test'
 import {
   isDicomPathAllowed,
   scopeFhirRequest,
+  isCompleteShare,
   isSelectiveScopeActive,
   preScreenSelectiveRequest,
   applySelectiveFilter,
@@ -284,5 +288,29 @@ describe('applySelectiveFilter', () => {
 describe('emptySearchBundle', () => {
   it('is a valid empty searchset', () => {
     expect(emptySearchBundle()).toEqual({ resourceType: 'Bundle', type: 'searchset', total: 0, entry: [] })
+  })
+})
+
+describe('isCompleteShare — what the recipient is told the link carries', () => {
+  it('is complete when nothing narrows the share', () => {
+    expect(isCompleteShare({})).toBe(true)
+    expect(isCompleteShare({ selectiveScope: undefined, studyInstanceUID: undefined })).toBe(true)
+  })
+
+  it('is NOT complete when the patient de-selected records', () => {
+    expect(isCompleteShare({ selectiveScope: { excludedTypes: ['Condition'] } })).toBe(false)
+  })
+
+  /**
+   * The regression: a study-scoped link reported `complete: true`, so the viewer
+   * showed "the patient shared their full health record" over a record whose every
+   * other query the proxy answers with 403.
+   */
+  it('is NOT complete when the share is scoped to a single imaging study', () => {
+    expect(isCompleteShare({ studyInstanceUID: STUDY })).toBe(false)
+  })
+
+  it('is NOT complete when both narrowings apply', () => {
+    expect(isCompleteShare({ selectiveScope: { excludedTypes: ['Condition'] }, studyInstanceUID: STUDY })).toBe(false)
   })
 })
