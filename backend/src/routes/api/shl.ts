@@ -121,9 +121,7 @@ export function buildSmartApiAccess(session: {
     aud: `${config.baseUrl}/api/shl/fhir`,
     // Spec field. Undefined drops out of the JSON, which is the "no hints" case.
     query: shareQueryHints({ studyInstanceUID: session.studyInstanceUID }),
-    // Ours, and named so: nothing in the SHL spec describes a withheld record.
-    maxhealth_records_withheld: isSelectiveScopeActive(selectiveScope),
-    // Deprecated — see isCompleteShare. Emitted until both viewers read the above.
+    // Ours. Only `true` carries meaning — see isCompleteShare.
     complete: isCompleteShare({
       selectiveScope,
       studyInstanceUID: session.studyInstanceUID,

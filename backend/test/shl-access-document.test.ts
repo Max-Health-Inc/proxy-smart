@@ -40,26 +40,6 @@ describe('buildSmartApiAccess — query hints', () => {
   })
 })
 
-describe('buildSmartApiAccess — withheld records', () => {
-  it('reports nothing withheld from a whole-patient share', () => {
-    expect(parse(buildSmartApiAccess(base)).maxhealth_records_withheld).toBe(false)
-  })
-
-  it('reports records withheld when the patient de-selected some', () => {
-    const doc = parse(buildSmartApiAccess({
-      ...base,
-      shareScope: { excludedTypes: ['Condition'], excludedIds: [], excludedObservationCategories: [] },
-    }))
-    expect(doc.maxhealth_records_withheld).toBe(true)
-  })
-
-  /** Study scoping is not withholding — it is what the link is for. */
-  it('reports nothing withheld from a study-scoped share', () => {
-    const doc = parse(buildSmartApiAccess({ ...base, studyInstanceUID: '1.2.840.113619.2.55.3' }))
-    expect(doc.maxhealth_records_withheld).toBe(false)
-  })
-})
-
 describe('buildSmartApiAccess', () => {
   it('reports a whole-patient share as complete', () => {
     expect(parse(buildSmartApiAccess(base)).complete).toBe(true)
