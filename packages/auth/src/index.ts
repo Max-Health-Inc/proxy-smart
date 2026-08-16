@@ -85,6 +85,7 @@ export {
 export {
   handleCallback,
   handlePatientSelect,
+  isPractitioner,
   type CallbackParams,
   type CallbackHandlerDeps,
   type CallbackResult,
