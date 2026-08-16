@@ -197,21 +197,30 @@ interface FhirBundleLike {
 }
 
 /**
- * True only when NOTHING narrows the share.
+ * The SHL spec's `query` hints. Carries the identifier filter `scopeFhirRequest`
+ * forces, so what the recipient is told to run is what will be allowed.
  *
- * The recipient is told "complete summary — the patient shared their full health
- * record" on the strength of this, so every dimension that narrows a share has to
- * be counted here. It lives beside the scope rules rather than inline at the mint
- * site because that is how it drifted: it knew about selective de-selection and
- * not about study scoping, so a single-study link claimed to carry everything
- * while the proxy answered almost every query with 403 — which the viewer drew as
- * "no allergies, no medications, no conditions".
+ * Whole-patient shares get none: naming the reachable types names the withheld
+ * ones by omission.
+ */
+export function shareQueryHints(narrowing: { studyInstanceUID?: string }): string[] | undefined {
+  if (!narrowing.studyInstanceUID) return undefined
+  return [`ImagingStudy?identifier=urn:oid:${narrowing.studyInstanceUID}`]
+}
+
+/**
+ * True only when NOTHING narrows the share. Sound as an affirmation only: `false`
+ * covers both a study-scoped link and a de-selected record, which mean opposite
+ * things to a reader. Act on `true`; use the `query` hints for anything else.
  */
 export function isCompleteShare(narrowing: {
-  selectiveScope?: unknown
+  selectiveScope?: SelectiveScope
   studyInstanceUID?: string
 }): boolean {
-  return !narrowing.selectiveScope && !narrowing.studyInstanceUID
+  const narrowed = narrowing.selectiveScope
+    ? isSelectiveScopeActive(narrowing.selectiveScope)
+    : false
+  return !narrowed && !narrowing.studyInstanceUID
 }
 
 /** True when the scope actually narrows anything (else all helpers are no-ops). */
