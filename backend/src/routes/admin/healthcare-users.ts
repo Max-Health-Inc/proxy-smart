@@ -548,8 +548,8 @@ export const healthcareUsersRoutes = new Elysia({ prefix: '/healthcare-users' })
         federatedIdentityId: params.provider,
         federatedIdentity: {
           identityProvider: params.provider,
-          userId: linkBody.userId,
-          userName: linkBody.userName
+          userId: linkBody.providerUserId,
+          userName: linkBody.providerUserName
         }
       })
       return { success: true, message: `Linked identity provider '${params.provider}'` }
