@@ -51,6 +51,9 @@ import { getSharedPool, hasDatabaseUrl } from './pg-pool'
  */
 const CACHE_TTL_MS = 5_000
 
+/** Compare-and-set attempts before giving up. Contention here is admins clicking, not a hot path. */
+const MUTATE_MAX_ATTEMPTS = 5
+
 /** A JSON-serialisable admin config value. */
 export type AdminConfigValue = Record<string, unknown>
 
@@ -62,11 +65,28 @@ export type AdminConfigValue = Record<string, unknown>
  * with a custom backend (e.g. a failing primary) to exercise the resilient
  * fallback path without a real database.
  */
+/** A stored value together with the revision it was read at, for compare-and-set. */
+export interface VersionedAdminConfigValue {
+  value: AdminConfigValue | null
+  /** 0 when the key does not exist yet, so creating is just a compare-and-set from 0. */
+  version: number
+}
+
 export interface AdminConfigBackend {
   /** Load the raw value for a key, or null if it has never been written. */
   load(key: string): Promise<AdminConfigValue | null>
   /** Persist the value for a key. */
   store(key: string, value: AdminConfigValue): Promise<void>
+  /**
+   * Read a value together with its revision. Optional: a backend without
+   * compare-and-set omits this pair and {@link AdminConfigStore.mutate} serialises in-process.
+   */
+  loadVersioned?(key: string): Promise<VersionedAdminConfigValue>
+  /**
+   * Persist only while the stored revision is still `expectedVersion`.
+   * False means another writer got there first and the caller must re-read and retry.
+   */
+  storeIfVersion?(key: string, value: AdminConfigValue, expectedVersion: number): Promise<boolean>
 }
 
 // ── File backend (local dev / no DATABASE_URL) ────────────────────────────────
@@ -118,6 +138,11 @@ class PostgresAdminConfigBackend implements AdminConfigBackend {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `)
+    // Added after the table existed, so it is a separate idempotent statement rather than a
+    // migration. `version` is what makes a mutation safe when more than one task is writing.
+    await getSharedPool().query(
+      'ALTER TABLE admin_config ADD COLUMN IF NOT EXISTS version BIGINT NOT NULL DEFAULT 1',
+    )
     this.initialized = true
     logger.info('security', 'PostgreSQL admin_config table initialized')
   }
@@ -137,14 +162,59 @@ class PostgresAdminConfigBackend implements AdminConfigBackend {
     await this.initialize()
     await getSharedPool().query(
       `
-      INSERT INTO admin_config (config_key, value, updated_at)
-      VALUES ($1, $2, NOW())
+      INSERT INTO admin_config (config_key, value, updated_at, version)
+      VALUES ($1, $2, NOW(), 1)
       ON CONFLICT (config_key) DO UPDATE SET
         value = EXCLUDED.value,
-        updated_at = NOW()
+        updated_at = NOW(),
+        version = admin_config.version + 1
       `,
       [key, JSON.stringify(value)],
     )
+  }
+
+  async loadVersioned(key: string): Promise<VersionedAdminConfigValue> {
+    await this.initialize()
+    const result = await getSharedPool().query(
+      'SELECT value, version FROM admin_config WHERE config_key = $1',
+      [key],
+    )
+    if (result.rows.length === 0) return { value: null, version: 0 }
+    // BIGINT arrives as a string from pg; a config revision never approaches Number.MAX_SAFE_INTEGER.
+    return {
+      value: result.rows[0].value as AdminConfigValue,
+      version: Number(result.rows[0].version),
+    }
+  }
+
+  /**
+   * The whole point of this class for concurrent writers: the UPDATE only lands while the row is
+   * still at the revision the caller read. Version 0 means "did not exist", so the insert is
+   * conditional on nobody else having created it first.
+   */
+  async storeIfVersion(key: string, value: AdminConfigValue, expectedVersion: number): Promise<boolean> {
+    await this.initialize()
+    if (expectedVersion === 0) {
+      const inserted = await getSharedPool().query(
+        `
+        INSERT INTO admin_config (config_key, value, updated_at, version)
+        VALUES ($1, $2, NOW(), 1)
+        ON CONFLICT (config_key) DO NOTHING
+        `,
+        [key, JSON.stringify(value)],
+      )
+      return (inserted.rowCount ?? 0) > 0
+    }
+
+    const updated = await getSharedPool().query(
+      `
+      UPDATE admin_config
+         SET value = $2, updated_at = NOW(), version = version + 1
+       WHERE config_key = $1 AND version = $3
+      `,
+      [key, JSON.stringify(value), expectedVersion],
+    )
+    return (updated.rowCount ?? 0) > 0
   }
 }
 
@@ -230,6 +300,8 @@ interface CacheEntry {
 export class AdminConfigStore {
   private readonly backend: AdminConfigBackend
   private readonly cache = new Map<string, CacheEntry>()
+  /** One promise chain per key, so same-task mutations queue instead of interleaving. */
+  private readonly mutations = new Map<string, Promise<void>>()
   /** True when persistence is durable across tasks/restarts (Postgres). */
   readonly durable: boolean
 
@@ -324,6 +396,60 @@ export class AdminConfigStore {
     const serialisable = value as AdminConfigValue
     this.cache.set(key, { value: serialisable, loadedAt: Date.now(), refreshing: false })
     await this.backend.store(key, serialisable)
+  }
+
+  /**
+   * Change a config value SAFELY when more than one task can write it.
+   *
+   * `set` is last-writer-wins over a whole document, and every caller that appends to a list was
+   * doing read-then-set across a 5-second cache: publishing one app silently unpublished another,
+   * because the writing task had never seen it. This reads the CURRENT value, applies `update`, and
+   * writes only while the revision is unchanged — retrying when it is not.
+   *
+   * Falls back to a serialised read-modify-write when the backend cannot compare-and-set (the file
+   * backend, which is single-task by definition). In-process calls are serialised per key either
+   * way, so two requests on the SAME task cannot interleave.
+   */
+  async mutate<T extends object>(
+    key: string,
+    defaults: T,
+    merge: (defaults: T, raw: AdminConfigValue | null) => T,
+    update: (current: T) => T,
+  ): Promise<T> {
+    const run = async (): Promise<T> => {
+      const { loadVersioned, storeIfVersion } = this.backend
+      if (!loadVersioned || !storeIfVersion) {
+        const raw = await this.backend.load(key)
+        const next = update(merge(defaults, raw))
+        await this.set(key, next)
+        return next
+      }
+
+      for (let attempt = 0; attempt < MUTATE_MAX_ATTEMPTS; attempt++) {
+        const { value, version } = await loadVersioned.call(this.backend, key)
+        const next = update(merge(defaults, value))
+        const written = await storeIfVersion.call(this.backend, key, next as AdminConfigValue, version)
+        if (written) {
+          this.cache.set(key, { value: next as AdminConfigValue, loadedAt: Date.now(), refreshing: false })
+          return next
+        }
+        // Someone else wrote between our read and our write; re-read and reapply on their result.
+        logger.debug('security', 'admin config mutation retrying after a concurrent write', { key, attempt })
+      }
+
+      throw new Error(`Could not update admin config '${key}': too many concurrent writers`)
+    }
+
+    // Chain per key so concurrent callers in THIS task queue rather than race each other.
+    const queued = (this.mutations.get(key) ?? Promise.resolve()).then(run, run)
+    this.mutations.set(
+      key,
+      queued.then(
+        () => undefined,
+        () => undefined,
+      ),
+    )
+    return queued
   }
 
   /**
