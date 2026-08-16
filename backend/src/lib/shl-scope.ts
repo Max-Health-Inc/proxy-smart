@@ -197,21 +197,41 @@ interface FhirBundleLike {
 }
 
 /**
+ * The `query` hints for this share — the SHL spec's optional field on
+ * `application/smart-api-access`, "hints to the client, indicating queries it
+ * might want to make".
+ *
+ * A study-scoped link has no other way to say what it is about, so a recipient
+ * fires its usual sweep and the default-deny proxy rejects nearly all of it. The
+ * hint carries the same identifier filter `scopeFhirRequest` forces, so what the
+ * recipient is told to run is exactly what will be allowed.
+ *
+ * Whole-patient shares get no hints on purpose. Listing the reachable types would
+ * name the withheld ones by omission, which is more than the patient agreed to
+ * disclose.
+ */
+export function shareQueryHints(narrowing: { studyInstanceUID?: string }): string[] | undefined {
+  if (!narrowing.studyInstanceUID) return undefined
+  return [`ImagingStudy?identifier=urn:oid:${narrowing.studyInstanceUID}`]
+}
+
+/**
  * True only when NOTHING narrows the share.
  *
- * The recipient is told "complete summary — the patient shared their full health
- * record" on the strength of this, so every dimension that narrows a share has to
- * be counted here. It lives beside the scope rules rather than inline at the mint
- * site because that is how it drifted: it knew about selective de-selection and
- * not about study scoping, so a single-study link claimed to carry everything
- * while the proxy answered almost every query with 403 — which the viewer drew as
- * "no allergies, no medications, no conditions".
+ * @deprecated Conflates the two narrowings it counts: a study-scoped link and a
+ * de-selected record both report `false`, which reads as a warning for one and as
+ * the definition of the link for the other. Recipients should use the `query`
+ * hints for what the share covers and `maxhealth_records_withheld` for what was
+ * held back. Kept until both viewers ship those.
  */
 export function isCompleteShare(narrowing: {
-  selectiveScope?: unknown
+  selectiveScope?: SelectiveScope
   studyInstanceUID?: string
 }): boolean {
-  return !narrowing.selectiveScope && !narrowing.studyInstanceUID
+  const narrowed = narrowing.selectiveScope
+    ? isSelectiveScopeActive(narrowing.selectiveScope)
+    : false
+  return !narrowed && !narrowing.studyInstanceUID
 }
 
 /** True when the scope actually narrows anything (else all helpers are no-ops). */

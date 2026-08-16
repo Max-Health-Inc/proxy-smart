@@ -15,6 +15,7 @@ import {
   scopeFhirRequest,
   isCompleteShare,
   isSelectiveScopeActive,
+  shareQueryHints,
   preScreenSelectiveRequest,
   applySelectiveFilter,
   isResourceExcluded,
@@ -291,14 +292,52 @@ describe('emptySearchBundle', () => {
   })
 })
 
-describe('isCompleteShare — what the recipient is told the link carries', () => {
+const scopeOf = (partial: Partial<SelectiveScope>): SelectiveScope => ({
+  excludedTypes: [],
+  excludedIds: [],
+  excludedObservationCategories: [],
+  ...partial,
+})
+
+/**
+ * The spec's answer to what `complete` was invented for: a scoped link saying what
+ * it IS rather than what it is not. The hint has to match the identifier filter
+ * isFhirPathAllowed forces, or the recipient is told to run a query the proxy denies.
+ */
+describe('shareQueryHints — telling the recipient what the share covers', () => {
+  it('points a study-scoped share at exactly that study', () => {
+    expect(shareQueryHints({ studyInstanceUID: STUDY })).toEqual([
+      `ImagingStudy?identifier=urn:oid:${STUDY}`,
+    ])
+  })
+
+  it('agrees with the identifier the FHIR proxy forces', () => {
+    const [hint] = shareQueryHints({ studyInstanceUID: STUDY }) ?? []
+    const [path, search] = hint.split('?')
+    const decision = scopeFhirRequest(path, `?${search}`, {
+      patientId: PATIENT,
+      studyInstanceUID: STUDY,
+    })
+    expect(decision.allowed).toBe(true)
+    // Already filtered, so the proxy has nothing to rewrite.
+    expect(decision.rewrittenSearch).toBeUndefined()
+  })
+
+  /** Naming the reachable types would name the withheld ones by omission. */
+  it('offers no hints for a whole-patient share', () => {
+    expect(shareQueryHints({})).toBeUndefined()
+    expect(shareQueryHints({ studyInstanceUID: undefined })).toBeUndefined()
+  })
+})
+
+describe('isCompleteShare — deprecated, kept until both viewers move off it', () => {
   it('is complete when nothing narrows the share', () => {
     expect(isCompleteShare({})).toBe(true)
     expect(isCompleteShare({ selectiveScope: undefined, studyInstanceUID: undefined })).toBe(true)
   })
 
   it('is NOT complete when the patient de-selected records', () => {
-    expect(isCompleteShare({ selectiveScope: { excludedTypes: ['Condition'] } })).toBe(false)
+    expect(isCompleteShare({ selectiveScope: scopeOf({ excludedTypes: ['Condition'] }) })).toBe(false)
   })
 
   /**
@@ -311,6 +350,17 @@ describe('isCompleteShare — what the recipient is told the link carries', () =
   })
 
   it('is NOT complete when both narrowings apply', () => {
-    expect(isCompleteShare({ selectiveScope: { excludedTypes: ['Condition'] }, studyInstanceUID: STUDY })).toBe(false)
+    expect(
+      isCompleteShare({ selectiveScope: scopeOf({ excludedTypes: ['Condition'] }), studyInstanceUID: STUDY }),
+    ).toBe(false)
+  })
+
+  /**
+   * Truthiness on the object read a present-but-empty scope as narrowing. The mint
+   * site normalises that to undefined, so it never fired — but the invariant lived
+   * at the call site rather than here, where the question is asked.
+   */
+  it('is complete when a scope is present but excludes nothing', () => {
+    expect(isCompleteShare({ selectiveScope: scopeOf({}) })).toBe(true)
   })
 })

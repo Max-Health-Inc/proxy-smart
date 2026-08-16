@@ -23,6 +23,43 @@ const base = {
 
 const parse = (json: string) => JSON.parse(json) as Record<string, unknown>
 
+/**
+ * `query` is the SHL spec's own field — "hints to the client, indicating queries it
+ * might want to make". A scoped link has no other standard way to say what it holds,
+ * which is the gap `complete` was invented to paper over.
+ */
+describe('buildSmartApiAccess — query hints', () => {
+  it('points a study-scoped share at that study', () => {
+    const doc = parse(buildSmartApiAccess({ ...base, studyInstanceUID: '1.2.840.113619.2.55.3' }))
+    expect(doc.query).toEqual(['ImagingStudy?identifier=urn:oid:1.2.840.113619.2.55.3'])
+  })
+
+  /** Optional in the spec, and an omitted key is how "no hints" is expressed. */
+  it('omits the key entirely for a whole-patient share', () => {
+    expect('query' in parse(buildSmartApiAccess(base))).toBe(false)
+  })
+})
+
+describe('buildSmartApiAccess — withheld records', () => {
+  it('reports nothing withheld from a whole-patient share', () => {
+    expect(parse(buildSmartApiAccess(base)).maxhealth_records_withheld).toBe(false)
+  })
+
+  it('reports records withheld when the patient de-selected some', () => {
+    const doc = parse(buildSmartApiAccess({
+      ...base,
+      shareScope: { excludedTypes: ['Condition'], excludedIds: [], excludedObservationCategories: [] },
+    }))
+    expect(doc.maxhealth_records_withheld).toBe(true)
+  })
+
+  /** Study scoping is not withholding — it is what the link is for. */
+  it('reports nothing withheld from a study-scoped share', () => {
+    const doc = parse(buildSmartApiAccess({ ...base, studyInstanceUID: '1.2.840.113619.2.55.3' }))
+    expect(doc.maxhealth_records_withheld).toBe(false)
+  })
+})
+
 describe('buildSmartApiAccess', () => {
   it('reports a whole-patient share as complete', () => {
     expect(parse(buildSmartApiAccess(base)).complete).toBe(true)

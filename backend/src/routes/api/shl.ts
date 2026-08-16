@@ -36,6 +36,7 @@ import {
   scopeFhirRequest,
   isCompleteShare,
   isSelectiveScopeActive,
+  shareQueryHints,
   preScreenSelectiveRequest,
   applySelectiveFilter,
   emptySearchBundle,
@@ -96,10 +97,11 @@ function isJsonContentType(contentType: string | null): boolean {
  * The smart-api-access document the recipient decrypts (SHL spec §3.2).
  *
  * Derived from the session on every manifest fetch rather than frozen at mint,
- * because what it asserts — how long the token is good for, whether the share is
- * complete — are properties of the share as it stands now. Freezing them meant a
- * link kept telling recipients it carried the full record after the rule deciding
- * that was corrected, since the claim sat inside ciphertext minted days earlier.
+ * because what it asserts — how long the token is good for, what the share covers
+ * — are properties of the share as it stands now. Freezing them meant a link kept
+ * telling recipients it carried the full record after the rule deciding that was
+ * corrected, since the claim sat inside ciphertext minted days earlier. It is also
+ * why links already in circulation pick up `query` without being re-minted.
  */
 export function buildSmartApiAccess(session: {
   sessionToken: string
@@ -108,6 +110,7 @@ export function buildSmartApiAccess(session: {
   shareScope?: ShareScope
   studyInstanceUID?: string
 }): string {
+  const selectiveScope = sessionSelectiveScope(session)
   return JSON.stringify({
     access_token: session.sessionToken,
     token_type: 'Bearer',
@@ -116,8 +119,13 @@ export function buildSmartApiAccess(session: {
     patient: session.patientId,
     // aud points to our FHIR proxy — the viewer never talks to the real FHIR server.
     aud: `${config.baseUrl}/api/shl/fhir`,
+    // Spec field. Undefined drops out of the JSON, which is the "no hints" case.
+    query: shareQueryHints({ studyInstanceUID: session.studyInstanceUID }),
+    // Ours, and named so: nothing in the SHL spec describes a withheld record.
+    maxhealth_records_withheld: isSelectiveScopeActive(selectiveScope),
+    // Deprecated — see isCompleteShare. Emitted until both viewers read the above.
     complete: isCompleteShare({
-      selectiveScope: session.shareScope,
+      selectiveScope,
       studyInstanceUID: session.studyInstanceUID,
     }),
   })
