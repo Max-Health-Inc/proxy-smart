@@ -197,18 +197,11 @@ interface FhirBundleLike {
 }
 
 /**
- * The `query` hints for this share — the SHL spec's optional field on
- * `application/smart-api-access`, "hints to the client, indicating queries it
- * might want to make".
+ * The SHL spec's `query` hints. Carries the identifier filter `scopeFhirRequest`
+ * forces, so what the recipient is told to run is what will be allowed.
  *
- * A study-scoped link has no other way to say what it is about, so a recipient
- * fires its usual sweep and the default-deny proxy rejects nearly all of it. The
- * hint carries the same identifier filter `scopeFhirRequest` forces, so what the
- * recipient is told to run is exactly what will be allowed.
- *
- * Whole-patient shares get no hints on purpose. Listing the reachable types would
- * name the withheld ones by omission, which is more than the patient agreed to
- * disclose.
+ * Whole-patient shares get none: naming the reachable types names the withheld
+ * ones by omission.
  */
 export function shareQueryHints(narrowing: { studyInstanceUID?: string }): string[] | undefined {
   if (!narrowing.studyInstanceUID) return undefined
@@ -216,13 +209,9 @@ export function shareQueryHints(narrowing: { studyInstanceUID?: string }): strin
 }
 
 /**
- * True only when NOTHING narrows the share.
- *
- * @deprecated Conflates the two narrowings it counts: a study-scoped link and a
- * de-selected record both report `false`, which reads as a warning for one and as
- * the definition of the link for the other. Recipients should use the `query`
- * hints for what the share covers and `maxhealth_records_withheld` for what was
- * held back. Kept until both viewers ship those.
+ * True only when NOTHING narrows the share. Sound as an affirmation only: `false`
+ * covers both a study-scoped link and a de-selected record, which mean opposite
+ * things to a reader. Act on `true`; use the `query` hints for anything else.
  */
 export function isCompleteShare(narrowing: {
   selectiveScope?: SelectiveScope
