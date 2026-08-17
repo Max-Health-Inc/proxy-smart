@@ -131,8 +131,8 @@ export const appStoreAdminRoutes = new Elysia({ prefix: '/app-store' })
     },
   })
   // POST /admin/app-store/:appId/hide — hide an app from the public store
-  .post('/:appId/hide', ({ params }) => {
-    const config = hideApp(params.appId)
+  .post('/:appId/hide', async ({ params }) => {
+    const config = await hideApp(params.appId)
     logger.server.info(`App store: hid app "${params.appId}"`)
     return { success: true, hiddenAppIds: config.hiddenAppIds, updatedAt: config.updatedAt }
   }, {
@@ -145,8 +145,8 @@ export const appStoreAdminRoutes = new Elysia({ prefix: '/app-store' })
     },
   })
   // POST /admin/app-store/:appId/show — show an app in the public store
-  .post('/:appId/show', ({ params }) => {
-    const config = showApp(params.appId)
+  .post('/:appId/show', async ({ params }) => {
+    const config = await showApp(params.appId)
     logger.server.info(`App store: showed app "${params.appId}"`)
     return { success: true, hiddenAppIds: config.hiddenAppIds, updatedAt: config.updatedAt }
   }, {
@@ -159,8 +159,8 @@ export const appStoreAdminRoutes = new Elysia({ prefix: '/app-store' })
     },
   })
   // POST /admin/app-store/publish — publish a registered app to the store
-  .post('/publish', ({ body }) => {
-    const config = publishApp(body)
+  .post('/publish', async ({ body }) => {
+    const config = await publishApp(body)
     logger.server.info(`App store: published registered app "${body.clientId}" (${body.name})`)
     return { success: true, publishedApps: config.publishedApps, updatedAt: config.updatedAt }
   }, {
@@ -175,8 +175,8 @@ export const appStoreAdminRoutes = new Elysia({ prefix: '/app-store' })
     },
   })
   // POST /admin/app-store/:appId/unpublish — remove a registered app from the store
-  .post('/:appId/unpublish', ({ params }) => {
-    const config = unpublishApp(params.appId)
+  .post('/:appId/unpublish', async ({ params }) => {
+    const config = await unpublishApp(params.appId)
     logger.server.info(`App store: unpublished registered app "${params.appId}"`)
     return { success: true, publishedApps: config.publishedApps, updatedAt: config.updatedAt }
   }, {

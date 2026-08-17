@@ -494,7 +494,7 @@ export function HealthcareUsersManager({ embedded, addUserOpen, onAddUserOpenCha
                 await clientApis.healthcareUsers.postAdminHealthcareUsersByUserIdFederatedIdentitiesByProvider({
                   userId: formData.id,
                   provider: op.provider,
-                  linkFederatedIdentityRequest: { userId: op.idpUserId, userName: op.userName },
+                  linkFederatedIdentityRequest: { providerUserId: op.idpUserId, providerUserName: op.userName },
                 });
               }
             }

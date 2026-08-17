@@ -445,7 +445,8 @@ describe('SMART Launch Flow Integration', () => {
     })
 
     it('redirects to patient picker when needsPatientPicker=true and no patient set', async () => {
-      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+      // A practitioner: the picker is theirs alone, so the fixture must say who the user is.
+      const [sessionKey] = createTestSession({ needsPatientPicker: true, fhirUser: 'Practitioner/dr-smith' })
 
       const res = await authRoutes.handle(authRequest(
         `/auth/smart-callback?code=picker-code&state=${sessionKey}`
@@ -515,8 +516,8 @@ describe('SMART Launch Flow Integration', () => {
       mockAutoResolvePatient = async () => null
     })
 
-    it('falls through to picker when fhirUser is not Patient/*', async () => {
-      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+    it('falls through to picker when the user is a practitioner', async () => {
+      const [sessionKey] = createTestSession({ needsPatientPicker: true, fhirUser: 'Practitioner/dr-smith' })
 
       // Practitioner user — auto-resolve returns null (not a Patient)
       mockAutoResolvePatient = async () => null
@@ -531,6 +532,23 @@ describe('SMART Launch Flow Integration', () => {
       expect(location.pathname).toBe('/patient-picker/')
       expect(location.searchParams.get('session')).toBe(sessionKey)
     })
+
+    it('refuses the picker when the identity is not a practitioner', async () => {
+      /*
+       * THE HOLE. An identity we cannot place used to reach a searchable directory of every patient.
+       * "No resolved patient" is not evidence of being a clinician, so this now fails closed.
+       */
+      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+      mockAutoResolvePatient = async () => null
+
+      const res = await authRoutes.handle(authRequest(
+        `/auth/smart-callback?code=unknown-code&state=${sessionKey}&session_state=kc-session-unknown`
+      ))
+
+      expect(res.status).toBe(403)
+      const session = launchContextStore.get(sessionKey)
+      expect(session?.pickerAllowed).toBeUndefined()
+    })
   })
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -538,8 +556,9 @@ describe('SMART Launch Flow Integration', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('Patient Picker — GET & POST /auth/patient-select', () => {
-    it('GET redirects to patient picker app when session is valid', async () => {
-      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+    it('GET redirects to patient picker app when the session was cleared for it', async () => {
+      // `pickerAllowed` is what the callback gate sets after establishing a practitioner.
+      const [sessionKey] = createTestSession({ needsPatientPicker: true, pickerAllowed: true })
 
       const res = await authRoutes.handle(authRequest(
         `/auth/patient-select?session=${sessionKey}&code=the-code`
@@ -572,6 +591,19 @@ describe('SMART Launch Flow Integration', () => {
       const location = new URL(res.headers.get('location')!)
       expect(location.pathname).toBe('/patient-picker/')
       expect(location.searchParams.get('error')).toBe('invalid_request')
+    })
+
+    it('GET refuses the picker app when the session was never cleared for it', async () => {
+      // Defence in depth: the gate lives in the callback, and this endpoint does not take its word.
+      const [sessionKey] = createTestSession({ needsPatientPicker: true })
+
+      const res = await authRoutes.handle(authRequest(
+        `/auth/patient-select?session=${sessionKey}&code=the-code`
+      ))
+
+      expect(res.status).toBe(302)
+      const location = new URL(res.headers.get('location')!)
+      expect(location.searchParams.get('error')).toBe('access_denied')
     })
 
     it('GET redirects to patient-picker with error when session is expired/invalid', async () => {
@@ -1060,6 +1092,12 @@ describe('SMART Launch Flow Integration', () => {
       expect(authorizeRes.status).toBe(302)
       const kcRedirect = new URL(authorizeRes.headers.get('location')!)
       const sessionKey = kcRedirect.searchParams.get('state')!
+
+      /*
+       * The real resolver writes fhirUser onto the session while looking for a patient
+       * (kc-session-resolver), and the picker gate reads it. Simulate a practitioner signing in.
+       */
+      launchContextStore.update(sessionKey, { fhirUser: 'Practitioner/dr-smith' })
 
       // Step 2: Simulate KC callback to /smart-callback with auth code
       const callbackRes = await authRoutes.handle(authRequest(

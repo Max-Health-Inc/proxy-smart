@@ -17,9 +17,15 @@ export const FederatedIdentity = t.Object({
   userName: t.String({ description: 'Username at the identity provider' })
 }, { title: 'FederatedIdentity' })
 
+/**
+ * `providerUserId` is deliberately NOT `userId`: the local Keycloak user is already a PATH parameter
+ * of the same name, and a generated client that flattens path and body — the MCP tool surface does —
+ * collapses the two and silently drops one. That made this endpoint uncallable, so a user whose
+ * broker link was missing could not be repaired without deleting the account.
+ */
 export const LinkFederatedIdentityRequest = t.Object({
-  userId: t.String({ description: 'User ID at the identity provider' }),
-  userName: t.String({ description: 'Username at the identity provider' })
+  providerUserId: t.String({ description: "Subject (`sub`) this user has AT the identity provider" }),
+  providerUserName: t.String({ description: 'Username at the identity provider' })
 }, { title: 'LinkFederatedIdentityRequest' })
 
 /**

@@ -87,26 +87,55 @@ export function getAppStoreConfig(): AppStoreConfig {
   return syncedStore().getConfig()
 }
 
-export function setHiddenAppIds(ids: string[]): AppStoreConfig {
-  return syncedStore().setHiddenAppIds(ids)
-}
-
 export function getPublishedApps(): PublishedApp[] {
   return syncedStore().getPublishedApps()
 }
 
-export function publishApp(app: PublishedApp): AppStoreConfig {
-  return syncedStore().publishApp(app)
+/**
+ * Every mutation goes through the shared store's compare-and-set.
+ *
+ * The package store mutates a whole document in memory and persists it last-writer-wins, which loses
+ * updates the moment two tasks write: publishing one app unpublished another that the writing task
+ * had never read. These build the next document from the CURRENT one and retry on conflict, so a
+ * concurrent publish is merged rather than dropped.
+ */
+async function mutateConfig(update: (current: AppStoreConfig) => AppStoreConfig): Promise<AppStoreConfig> {
+  const next = await adminConfigStore.mutate<AppStoreConfig>(CONFIG_KEY, DEFAULTS, mergeConfig, update)
+  // Keep the package store's in-process view in step for the sync readers above.
+  store.reload()
+  return next
 }
 
-export function unpublishApp(clientId: string): AppStoreConfig {
-  return syncedStore().unpublishApp(clientId)
+export function setHiddenAppIds(ids: string[]): Promise<AppStoreConfig> {
+  return mutateConfig((current) => ({ ...current, hiddenAppIds: [...ids] }))
 }
 
-export function hideApp(appId: string): AppStoreConfig {
-  return syncedStore().hideApp(appId)
+export function publishApp(app: PublishedApp): Promise<AppStoreConfig> {
+  return mutateConfig((current) => ({
+    ...current,
+    // Replace an existing entry in place rather than appending a duplicate.
+    publishedApps: [...current.publishedApps.filter((a) => a.clientId !== app.clientId), app],
+  }))
 }
 
-export function showApp(appId: string): AppStoreConfig {
-  return syncedStore().showApp(appId)
+export function unpublishApp(clientId: string): Promise<AppStoreConfig> {
+  return mutateConfig((current) => ({
+    ...current,
+    publishedApps: current.publishedApps.filter((a) => a.clientId !== clientId),
+  }))
+}
+
+export function hideApp(appId: string): Promise<AppStoreConfig> {
+  return mutateConfig((current) =>
+    current.hiddenAppIds.includes(appId)
+      ? current
+      : { ...current, hiddenAppIds: [...current.hiddenAppIds, appId] },
+  )
+}
+
+export function showApp(appId: string): Promise<AppStoreConfig> {
+  return mutateConfig((current) => ({
+    ...current,
+    hiddenAppIds: current.hiddenAppIds.filter((id) => id !== appId),
+  }))
 }

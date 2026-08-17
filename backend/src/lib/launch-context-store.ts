@@ -53,6 +53,12 @@ export interface LaunchSession {
   fhirContext?: string
   /** Whether patient picker is required (standalone launch without pre-set context) */
   needsPatientPicker?: boolean
+  /**
+   * Set ONLY by the callback gate, once the user has been established as a practitioner.
+   * `/auth/patient-search` refuses without it, so the directory cannot be reached by holding a
+   * session key alone.
+   */
+  pickerAllowed?: boolean
   /** FHIR server base URL from the aud/resource parameter (e.g., "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4") */
   aud?: string
   /** Keycloak user sub (populated after KC callback) */
