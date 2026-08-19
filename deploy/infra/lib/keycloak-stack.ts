@@ -40,6 +40,16 @@ export interface KeycloakStackProps extends cdk.StackProps {
   domainName: string;
   hostedZone: route53.IHostedZone;
   /**
+   * Public origin of the backend, e.g. https://api.proxy-smart.com.
+   *
+   * Read by the login theme (not by Keycloak): theme.properties carries
+   * `?base=${env.PROXY_PUBLIC_URL}` on its brand-accent script, and Keycloak substitutes
+   * this when rendering the tag. Keycloak and the backend are always on different hosts
+   * here (auth.* vs api.*), so without it the per-organization accent would resolve
+   * against auth.* and silently never apply.
+   */
+  proxyPublicUrl: string;
+  /**
    * Keycloak container image tag — only used when `imageUri` is not set.
    * @default '26.6.4'
    */
@@ -300,6 +310,9 @@ export class KeycloakStack extends cdk.Stack {
             // which fails config.keycloak.expectedIssuer, so anything validating an
             // internally-minted token rejects it. A full URL pins scheme and port
             // regardless of how the request arrived.
+            // Substituted into the login theme's brand-accent script src (see
+            // proxyPublicUrl above); Keycloak itself does not read it.
+            PROXY_PUBLIC_URL: props.proxyPublicUrl,
             KC_HOSTNAME: `https://${props.domainName}`,
             KC_HOSTNAME_STRICT: 'false',
             // Must equal the custom image's build-time --http-relative-path
