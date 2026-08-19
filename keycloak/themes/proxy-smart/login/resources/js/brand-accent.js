@@ -14,11 +14,15 @@
  * `client_id` is a query parameter on the authorization URL and is carried through
  * /login-actions/* too, so secondary pages (a failed password, an OTP prompt) stay themed.
  *
- * Origin: same-origin by default, which is the deployment where Caddy fronts Keycloak and
- * the proxy on one host. When they are on separate origins, pass the proxy's base URL in
- * theme.properties — `scripts=js/brand-accent.js?base=https://api.example.com` — and it is
- * read back off this script's own src below. Failure is silent on purpose: the theme
- * default is a working colour, and no colour is worth a broken login page.
+ * Origin: the proxy is usually on a different host from Keycloak (auth.* vs api.*), so the
+ * base URL arrives on this script's own src. theme.properties carries
+ * `?base=${env.PROXY_PUBLIC_URL}`, which Keycloak substitutes when it renders the tag.
+ *
+ * With that variable unset Keycloak emits the placeholder verbatim rather than an empty
+ * string, so `base` is only used when it parses as an absolute http(s) URL; anything else
+ * falls back to same-origin, which is correct when one host fronts both. Failure is silent
+ * on purpose: the theme default is a working colour, and no colour is worth a broken login
+ * page.
  */
 (function () {
   try {
@@ -27,7 +31,10 @@
 
     var base = ""
     var self = document.currentScript
-    if (self && self.src) base = new URL(self.src).searchParams.get("base") || ""
+    if (self && self.src) {
+      var declared = new URL(self.src).searchParams.get("base") || ""
+      if (/^https?:\/\//.test(declared)) base = declared.replace(/\/$/, "")
+    }
 
     var link = document.createElement("link")
     link.rel = "stylesheet"

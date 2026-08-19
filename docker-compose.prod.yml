@@ -5,6 +5,9 @@ services:
       dockerfile: Dockerfile.keycloak
     container_name: proxy-smart-keycloak-prod
     environment:
+      # Backend origin, substituted into the login theme's brand-accent script src
+      # (keycloak/themes/proxy-smart/login/theme.properties). Keycloak does not read it.
+      PROXY_PUBLIC_URL: http://localhost:8445
       KC_HOSTNAME: localhost
       KC_HOSTNAME_PORT: 8080
       KC_PROXY: edge
