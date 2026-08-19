@@ -132,7 +132,12 @@ describe('callback-handler: patient picker gate', () => {
     expect(result.type === 'redirect' && result.url).toContain('patient-picker')
   })
 
-  test('No fhirUser on session: shows picker when autoResolvePatient fails', async () => {
+  test('No fhirUser on session: REFUSES the picker rather than showing it', async () => {
+    /*
+     * This asserted the opposite until the picker was gated, and the old expectation was the hole:
+     * the picker is a searchable directory of every Patient on the server, so an identity we cannot
+     * place must not reach it. "No resolved patient" is not evidence of being a clinician.
+     */
     const store = new MemoryStore()
     const session = makeSession({
       needsPatientPicker: true,
@@ -149,9 +154,26 @@ describe('callback-handler: patient picker gate', () => {
     const params: CallbackParams = { state: 'session-key', code: 'auth-code-123' }
     const { result } = await handleCallback(params, deps)
 
-    // No fhirUser → still needs picker
+    expect(result.type).toBe('error')
+    expect(result.type === 'error' && result.status).toBe(403)
+    expect(store.get('session-key')?.pickerAllowed).toBeUndefined()
+  })
+
+  test('Practitioner: the picker is cleared on the session, not merely redirected to', async () => {
+    // `pickerAllowed` is what /auth/patient-search checks, so the gate must record its decision.
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'Practitioner/dr-smith' }))
+
+    const deps: CallbackHandlerDeps = {
+      config: BASE_CONFIG,
+      store,
+      autoResolvePatient: async () => null,
+    }
+
+    const { result } = await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
     expect(result.type).toBe('redirect')
-    expect(result.type === 'redirect' && result.url).toContain('patient-picker')
+    expect(store.get('session-key')?.pickerAllowed).toBe(true)
   })
 })
 
