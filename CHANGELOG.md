@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.16-beta.202608161817.167c04f59] - 2026-08-19
+
+- ✨ Features
+  - 🧭 (No new user-facing features found)
+
+- 🐛 Bug Fixes
+  - fix(picker): restrict patient directory access to practitioners only
+  - fix(admin): ensure federated-identity link endpoint is callable
+
+- 🔧 Chores & Improvements
+  - chore: sync package versions
+  - chore: update internal version metadata and related housekeeping
+
+- ⚠️ Breaking Changes
+  - (None detected)
+
+Note: Only changes since last release included; merge/update commits skipped.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1030
+
+
 ## [0.3.14-beta.202608131924.cfdc0c7f7] - 2026-08-13
 
 - 🔧 Chores & Improvements: CI/CD and version synchronization
