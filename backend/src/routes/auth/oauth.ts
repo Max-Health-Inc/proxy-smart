@@ -261,6 +261,14 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       return redirect(errorUrl.href)
     }
 
+    // Same gate as the search endpoint: the picker UI is only for users cleared to use it.
+    if (!session.pickerAllowed && session.needsPatientPicker) {
+      const errorUrl = new URL(`${config.baseUrl}/patient-picker/`)
+      errorUrl.searchParams.set('error', 'access_denied')
+      errorUrl.searchParams.set('error_description', 'Selecting a patient requires a practitioner account.')
+      return redirect(errorUrl.href)
+    }
+
     // Guard: if a patient was already selected (e.g. user hit browser back), skip the picker
     if (!session.needsPatientPicker && session.patient) {
       const clientUrl = new URL(session.clientRedirectUri)
@@ -319,6 +327,19 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     if (!session) {
       set.status = 401
       return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    /*
+     * A session key alone is not permission to read the patient directory. `pickerAllowed` is set
+     * only by the callback gate, and only once the user was established as a practitioner — so this
+     * endpoint cannot be reached by a patient who happens to hold a launch session.
+     */
+    if (!session.pickerAllowed) {
+      logger.auth.warn('Patient search refused: session was never cleared for the picker', {
+        clientId: session.clientId,
+      })
+      set.status = 403
+      return { error: 'access_denied', error_description: 'Selecting a patient requires a practitioner account.' }
     }
 
     // Parse server_name and fhir_version from the session aud URL

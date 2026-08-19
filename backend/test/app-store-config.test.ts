@@ -24,39 +24,39 @@ import { DATA_DIR } from '../src/lib/paths'
 
 const FILE = join(DATA_DIR, 'app-store.json')
 
-afterEach(() => {
+afterEach(async () => {
   // Reset to a clean state for the next test.
-  for (const id of [...getHiddenAppIds()]) showApp(id)
-  for (const app of [...getPublishedApps()]) unpublishApp(app.clientId)
+  for (const id of [...getHiddenAppIds()]) await showApp(id)
+  for (const app of [...getPublishedApps()]) await unpublishApp(app.clientId)
   adminConfigStore.invalidate('app-store')
   if (existsSync(FILE)) unlinkSync(FILE)
 })
 
 describe('App Store Config — file fallback', () => {
-  it('hides and shows apps, persisting the hidden list', () => {
-    hideApp('app-a')
-    hideApp('app-b')
+  it('hides and shows apps, persisting the hidden list', async () => {
+    await hideApp('app-a')
+    await hideApp('app-b')
     expect(getHiddenAppIds().sort()).toEqual(['app-a', 'app-b'])
 
-    showApp('app-a')
+    await showApp('app-a')
     expect(getHiddenAppIds()).toEqual(['app-b'])
   })
 
-  it('hideApp is idempotent', () => {
-    hideApp('dup')
-    hideApp('dup')
+  it('hideApp is idempotent', async () => {
+    await hideApp('dup')
+    await hideApp('dup')
     expect(getHiddenAppIds()).toEqual(['dup'])
   })
 
-  it('publishes and unpublishes registered apps (upsert by clientId)', () => {
-    publishApp({
+  it('publishes and unpublishes registered apps (upsert by clientId)', async () => {
+    await publishApp({
       clientId: 'c1',
       name: 'One',
       description: 'first',
       launchUrl: 'https://example/one',
       category: 'clinical',
     })
-    publishApp({
+    await publishApp({
       clientId: 'c1',
       name: 'One Updated',
       description: 'first again',
@@ -67,12 +67,12 @@ describe('App Store Config — file fallback', () => {
     expect(published).toHaveLength(1)
     expect(published[0].name).toBe('One Updated')
 
-    unpublishApp('c1')
+    await unpublishApp('c1')
     expect(getPublishedApps()).toHaveLength(0)
   })
 
   it('persists the config to DATA_DIR/app-store.json', async () => {
-    hideApp('persist-me')
+    await hideApp('persist-me')
     // Allow the background durable write kicked off by save() to flush.
     await adminConfigStore.set('app-store', getAppStoreConfig())
     expect(existsSync(FILE)).toBe(true)
@@ -81,7 +81,7 @@ describe('App Store Config — file fallback', () => {
   })
 
   it('survives a simulated restart by reloading from disk', async () => {
-    hideApp('survivor')
+    await hideApp('survivor')
     await adminConfigStore.set('app-store', getAppStoreConfig())
 
     // Simulate a fresh task: drop the cache so the next read loads from file.

@@ -68,6 +68,18 @@ function withIssuer(url: URL, config: SmartProxyConfig): URL {
 }
 
 /**
+ * Whether this identity may pick a patient.
+ *
+ * `fhirUser` is the only identity the callback carries, so the check is on its resource TYPE. Unknown
+ * or absent is NOT a practitioner — see the gate that calls this for why that direction matters.
+ */
+export function isPractitioner(fhirUser: string | undefined): boolean {
+  if (!fhirUser) return false
+  const type = fhirUser.split('/').filter(Boolean).slice(-2)[0]
+  return type === 'Practitioner' || type === 'PractitionerRole'
+}
+
+/**
  * Process an IdP callback (smart-callback).
  *
  * Validates the session by state param, handles IdP errors by forwarding
@@ -192,7 +204,30 @@ export async function handleCallback(
 
   // If still needs picker after auto-resolve attempt, redirect to picker UI
   if (session.needsPatientPicker && !session.patient && !patientAutoResolved) {
-    store.update(sessionKey, { needsPatientPicker: true })
+    /*
+     * ONLY PRACTITIONERS CHOOSE A PATIENT. The picker is a searchable directory of everyone on the
+     * server, so reaching it must require positive evidence of being a clinician — not merely the
+     * absence of a resolved patient. A user whose identity we could not establish fell through to
+     * it, which is the same directory a patient would have seen.
+     *
+     * Fails closed: no practitioner fhirUser, no picker.
+     */
+    if (!isPractitioner(session.fhirUser)) {
+      logger?.warn('SMART callback: refusing patient picker for a non-practitioner', {
+        sessionKey: sessionKey.slice(0, 8) + '...',
+        clientId: session.clientId,
+        fhirUser: session.fhirUser ?? '(none)',
+      })
+      return {
+        result: {
+          type: 'error',
+          status: 403,
+          error: 'access_denied',
+          error_description: 'Selecting a patient requires a practitioner account.',
+        },
+      }
+    }
+    store.update(sessionKey, { needsPatientPicker: true, pickerAllowed: true })
     const pickerUrl = new URL(`${config.baseUrl}${patientPickerPath}`)
     pickerUrl.searchParams.set('session', sessionKey)
     pickerUrl.searchParams.set('code', code)

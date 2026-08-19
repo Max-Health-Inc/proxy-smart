@@ -42,6 +42,11 @@ export interface LaunchSession {
   fhirContext?: string
   /** Whether patient picker is required (standalone launch without pre-set context) */
   needsPatientPicker?: boolean
+  /**
+   * Set ONLY by the callback gate, once the user was established as a practitioner. The patient
+   * search endpoint refuses without it, so a launch session alone does not open the directory.
+   */
+  pickerAllowed?: boolean
   /** FHIR server base URL from the aud/resource parameter (e.g., "https://proxy.example.com/proxy-smart-backend/hapi-fhir-server/R4") */
   aud?: string
   /** IdP user subject (populated after IdP callback) */
