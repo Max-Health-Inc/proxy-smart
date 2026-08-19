@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@proxy-smart/shared-ui';
-import { Save, RotateCcw, Loader2, Image, Globe, MapPin } from 'lucide-react';
+import { Save, RotateCcw, Loader2, Image, Globe, MapPin, Palette } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
@@ -193,6 +193,28 @@ export function OrgBrandingTab({ orgId, orgName }: OrgBrandingTabProps) {
         )}
       </fieldset>
 
+      {/* Brand colour (theming) */}
+      <fieldset className="space-y-4 rounded-xl border border-border/50 p-4">
+        <legend className="flex items-center gap-2 text-sm font-medium px-2">
+          <Palette className="w-4 h-4" /> {t('Brand Colour')}
+        </legend>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ColourOverrideField
+            label={t('Primary Colour')} value={config.primaryColor ?? ''}
+            placeholder={t('Inherit from main')}
+            onChange={(v) => setConfig((p) => v ? { ...p, primaryColor: v } : (() => { const { primaryColor: _, ...rest } = p; return rest; })())}
+          />
+          <ColourOverrideField
+            label={t('Accent Colour')} value={config.accentColor ?? ''}
+            placeholder={t('Inherit from primary')}
+            onChange={(v) => setConfig((p) => v ? { ...p, accentColor: v } : (() => { const { accentColor: _, ...rest } = p; return rest; })())}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t('Themes the login page and patient picker for launches by this organization. Any CSS colour (e.g. #00d294). Not published in branding.json.')}
+        </p>
+      </fieldset>
+
       {/* Portal */}
       <fieldset className="space-y-4 rounded-xl border border-border/50 p-4">
         <legend className="flex items-center gap-2 text-sm font-medium px-2">
@@ -270,6 +292,37 @@ export function OrgBrandingTab({ orgId, orgName }: OrgBrandingTabProps) {
           <Save className="h-4 w-4 mr-2" />
           {t('Save Overrides')}
         </LoadingButton>
+      </div>
+    </div>
+  );
+}
+
+// ── Helper: Colour override — swatch plus the literal value ─────────
+// Kept next to OverrideField rather than folded into it: clearing the text must delete the
+// key so the org inherits, and a native colour input has no empty state to clear with.
+
+function ColourOverrideField({
+  label, value, placeholder, onChange,
+}: {
+  label: string; value: string; placeholder: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs font-medium">{label}</Label>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          aria-label={label}
+          value={value || '#00d294'}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-9 w-12 shrink-0 cursor-pointer rounded border border-border bg-transparent p-1"
+        />
+        <Input
+          value={value} placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          className="rounded-lg border-border/50 text-sm"
+        />
       </div>
     </div>
   );
