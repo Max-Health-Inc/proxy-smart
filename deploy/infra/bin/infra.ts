@@ -135,6 +135,7 @@ const keycloakStack = new KeycloakStack(app, 'ProxySmartKeycloak', {
   database: databaseStack.database,
   dbSecret: databaseStack.secret,
   domainName: config.keycloakDomain,
+  proxyPublicUrl: `https://${config.backendDomain}`,
   hostedZone,
   imageUri: config.keycloakImageUri,
 });
