@@ -16,6 +16,10 @@ import type { BrandConfigType } from '@/schemas'
 import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
 import type { BrandCategoryType } from '@/schemas/admin/branding'
 import { logger } from './logger'
+import { config } from '@/config'
+import { getAdminClient } from './kc-admin-factory'
+import { getAttr } from './smart-client-enrichment'
+import { safeCssColor } from './brand-color'
 
 const BRAND_PREFIX = 'brand_settings.'
 
@@ -176,4 +180,46 @@ export async function loadAllOrgBrands(admin: KcAdminClient): Promise<void> {
   } catch (error) {
     logger.admin.warn('Failed to load org brand overrides', { error })
   }
+}
+
+/**
+ * Brand colours for a launching client: the global brand, with the client's organization
+ * override applied when one resolves.
+ *
+ * Best-effort by design. Theming must never decide whether a login or a launch succeeds,
+ * so every failure here falls back to the global brand and logs at debug.
+ *
+ * Colours are validated on the way out as well as on the way in: these end up in a
+ * stylesheet, and an attribute written before validation existed (or edited straight onto
+ * the Keycloak organization) would otherwise reach the page unchecked.
+ */
+export async function resolveClientBrandColors(
+  clientId: string | undefined,
+): Promise<{ primaryColor: string | null; accentColor: string | null }> {
+  const colours = {
+    primaryColor: safeCssColor(config.brand.primaryColor),
+    accentColor: safeCssColor(config.brand.accentColor),
+  }
+  if (!clientId) return colours
+
+  try {
+    const admin = await getAdminClient()
+    if (!admin) return colours
+    const clients = await admin.clients.find({ clientId })
+    const orgIds = getAttr(clients[0]?.attributes, 'organization_ids')?.split(',').filter(Boolean)
+    if (!orgIds || orgIds.length === 0) return colours
+
+    const orgBrand = await getOrgBranding(admin, orgIds[0])
+    const primary = safeCssColor(orgBrand.primaryColor)
+    const accent = safeCssColor(orgBrand.accentColor)
+    if (primary) colours.primaryColor = primary
+    if (accent) colours.accentColor = accent
+  } catch (err) {
+    logger.auth.debug('brand colours: per-org resolution failed, using global brand', {
+      clientId,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
+
+  return colours
 }

@@ -61,11 +61,11 @@
   --ps-border-focus: rgba(250, 250, 250, 0.4);
   --ps-input-bg: rgba(250, 250, 250, 0.03);
   /* Brand accent. Default is the Max Health emerald (the brandc --maxhealth
-     value). --brand-accent is the per-organization override hook: when the
-     login page is rendered for an org that set a brand colour, that colour is
-     injected as --brand-accent (see per-org login theming) and everything that
-     uses --ps-accent retints automatically. --ps-accent-subtle derives from it
-     so it tracks any override. */
+     value). --brand-accent is set by resources/js/brand-accent.js, which links
+     the proxy's /auth/login-brand.css for the launching client's organization
+     before first paint; absent that colour this default stands. Everything on
+     --ps-accent retints, and --ps-accent-subtle derives from it so it tracks
+     any override. */
   --ps-accent: var(--brand-accent, #00d294);
   --ps-accent-subtle: color-mix(in srgb, var(--ps-accent) 15%, transparent);
   --ps-error: #ef4444;

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: Max Health Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
@@ -16,9 +16,8 @@ import { hasClientAssertion, translateClientAssertion, ClientAssertionError } fr
 import { kcUnavailablePage, authErrorPage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
-import { getAdminClient } from '@/lib/kc-admin-factory'
-import { getOrgBranding } from '@/lib/org-branding'
-import { getAttr } from '@/lib/smart-client-enrichment'
+import { resolveClientBrandColors } from '@/lib/org-branding'
+import { safeCssColor } from '@/lib/brand-color'
 import {
   handleAuthorize,
   handleCallback,
@@ -407,36 +406,47 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
     }
 
-    // Global brand colour is the default.
-    const brand: { primaryColor: string | null; accentColor: string | null } = {
-      primaryColor: config.brand.primaryColor,
-      accentColor: config.brand.accentColor,
-    }
-
-    // Per-org override: session client → its organization → org brand colour.
-    // Best-effort and non-fatal; falls back to the global brand on any failure.
-    try {
-      const clientId = (session as { clientId?: string }).clientId
-      const admin = clientId ? await getAdminClient() : null
-      if (admin && clientId) {
-        const clients = await admin.clients.find({ clientId })
-        const orgIds = getAttr(clients[0]?.attributes, 'organization_ids')?.split(',').filter(Boolean)
-        if (orgIds && orgIds.length > 0) {
-          const orgBrand = await getOrgBranding(admin, orgIds[0])
-          if (orgBrand.primaryColor) brand.primaryColor = orgBrand.primaryColor
-          if (orgBrand.accentColor) brand.accentColor = orgBrand.accentColor
-        }
-      }
-    } catch (err) {
-      logger.auth.debug('brand-context: per-org resolution failed, using global brand', {
-        error: err instanceof Error ? err.message : String(err),
-      })
-    }
+    const brand = await resolveClientBrandColors((session as { clientId?: string }).clientId)
 
     set.headers['Cache-Control'] = 'no-store'
     return brand
   }, {
     detail: { summary: 'Brand Context (Picker)', description: 'Session-validated brand colour for theming the patient picker to the launching organization.', tags: ['authentication'] }
+  })
+
+  // ── Login page brand accent (Keycloak login theme) ────────────────────
+  // The login theme is static CSS served by Keycloak, so it cannot resolve an
+  // organization itself. Its `brand-accent.js` adds a render-blocking <link> to this
+  // endpoint with the client_id already on the login URL, and everything built on
+  // --ps-accent retints before first paint.
+  //
+  // Public by necessity: this is rendered before anyone has authenticated. It discloses
+  // only a colour, and only to someone who already knows a client_id.
+  .get('/login-brand.css', async ({ query, set }) => {
+    set.headers['content-type'] = 'text/css; charset=utf-8'
+    // Brief: a colour change should reach the login page without a redeploy, but the
+    // stylesheet is render-blocking on every login attempt.
+    set.headers['Cache-Control'] = 'public, max-age=60'
+
+    const { primaryColor, accentColor } = await resolveClientBrandColors(query.client_id)
+    // The login page tints from one accent. primaryColor is the organization's actual
+    // brand colour; accentColor only overrides it when set explicitly.
+    //
+    // Re-validated here even though the resolver already did: this is the sink that writes
+    // into a stylesheet, and it should not depend on a caller upstream having been careful.
+    const accent = safeCssColor(accentColor) ?? safeCssColor(primaryColor)
+    if (!accent) return ''
+    return `:root{--brand-accent:${accent}}
+`
+  }, {
+    query: t.Object({
+      client_id: t.Optional(t.String({ description: 'Launching client, as present on the Keycloak login URL.' })),
+    }),
+    detail: {
+      summary: 'Login Brand Accent (CSS)',
+      description: 'Per-organization accent colour for the Keycloak login theme, as a CSS custom property. Empty when no colour is configured, so the theme default applies.',
+      tags: ['authentication'],
+    },
   })
 
   // ── Login redirect ────────────────────────────────────────────────────
