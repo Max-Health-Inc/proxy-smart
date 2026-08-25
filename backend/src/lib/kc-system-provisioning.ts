@@ -16,6 +16,7 @@ import { config } from '../config'
 import { logger } from './logger'
 import { RESOURCE_INDICATORS_SCOPE } from './smart-client-enrichment'
 import { ensureMappersOnScope } from './smart-scope-mappers'
+import { getFhirResourceUrls } from './fhir-server-store'
 
 /** Keycloak client attribute: let this client introspect tokens it isn't in the aud of. */
 const ALLOW_INTROSPECTION_WITHOUT_AUDIENCE = 'allow.token.introspection.without.audience.check'
@@ -157,6 +158,66 @@ export async function ensureResourceServerClients(admin: KcAdminClient): Promise
         error: error instanceof Error ? error.message : String(error),
       })
     }
+  }
+
+  await ensureFhirResourceServerClient(admin)
+}
+
+/**
+ * `fhir-resource-server` — the resource client for the proxy FHIR base. Its
+ * `resource_url` carries the runtime server id + FHIR version (see
+ * fhirResourceUrlFor), so unlike the MCP client it is NOT safe to derive-and-
+ * overwrite on every boot: an earlier version did exactly that with a wrong
+ * value and broke every FHIR token exchange with `invalid_target`.
+ *
+ * So this is strictly CREATE-IF-MISSING. Environments whose realm export /
+ * deploy script already set the value keep it untouched; an environment that
+ * never got it (production imports with IGNORE_EXISTING, and only the beta
+ * deploy runs the reconcile script) has the gap filled with the URL the proxy
+ * itself advertises for its first FHIR server. If no server resolves yet, it is
+ * skipped — a later boot with the registry warm creates it.
+ *
+ * The `resource-indicators` scope already maps `fhir-resource-server` as an
+ * audience; without this client that mapper points at nothing and the FHIR
+ * `aud` cannot bind.
+ */
+async function ensureFhirResourceServerClient(admin: KcAdminClient): Promise<void> {
+  const clientId = 'fhir-resource-server'
+  try {
+    const existing = await admin.clients.find({ clientId, max: 1 })
+    if (existing.length > 0) {
+      logger.keycloak.debug('fhir-resource-server present — leaving its resource_url as owned by the realm export')
+      return
+    }
+
+    const resourceUrl = (await getFhirResourceUrls())[0]
+    if (!resourceUrl) {
+      logger.keycloak.warn('fhir-resource-server missing and no FHIR server resolved yet — skipping (will retry next boot)')
+      return
+    }
+
+    await admin.clients.create({
+      clientId,
+      name: 'FHIR Resource Server (RFC 8707 resource indicator)',
+      description: 'Non-login resource client. Holds resource_url = the proxy FHIR base.',
+      enabled: true,
+      protocol: 'openid-connect',
+      clientAuthenticatorType: 'client-secret',
+      publicClient: false,
+      bearerOnly: false,
+      standardFlowEnabled: false,
+      implicitFlowEnabled: false,
+      directAccessGrantsEnabled: false,
+      serviceAccountsEnabled: false,
+      authorizationServicesEnabled: false,
+      fullScopeAllowed: false,
+      attributes: { [RESOURCE_URL_ATTR]: resourceUrl },
+    })
+    logger.keycloak.info('Created resource-server client', { clientId, resourceUrl })
+  } catch (error) {
+    logger.keycloak.warn('Failed to reconcile fhir-resource-server', {
+      error: error instanceof Error ? error.message : String(error),
+    })
   }
 }
 

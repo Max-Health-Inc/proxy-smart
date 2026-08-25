@@ -23,6 +23,7 @@ import { describe, it, expect } from 'bun:test'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import { RESOURCE_SERVER_CLIENT_IDS, resourceServerUrlFor } from '@/lib/kc-system-provisioning'
+import { fhirResourceUrlFor } from '@/lib/fhir-server-store'
 
 const REPO = join(import.meta.dir, '..', '..')
 
@@ -58,8 +59,17 @@ describe('resource-server client reconciliation', () => {
   })
 
   it('leaves the FHIR resource client to the export, which still declares it', () => {
-    // Guards the other direction: excluding it from reconciliation must not be
-    // read as "it does not matter" — the export is now its only owner.
+    // Guards the other direction: excluding it from derive-and-overwrite must not
+    // be read as "it does not matter" — the export owns its value where present.
     expect(exported.get('fhir-resource-server')).toBeDefined()
+  })
+
+  it('fhirResourceUrlFor rebuilds exactly the FHIR resource the export declares', () => {
+    // The create-only reconcile fills the gap (e.g. production, which imports with
+    // IGNORE_EXISTING) using this exact format. Pinning it to the export value is
+    // the same cross-check that would have caught the invalid_target regression.
+    const exportedFhir = exported.get('fhir-resource-server')!
+    const [identifier, fhirVersion] = exportedFhir.split('/').slice(-2)
+    expect(fhirResourceUrlFor({ identifier, metadata: { fhirVersion } })).toBe(exportedFhir)
   })
 })
