@@ -15,6 +15,7 @@ import { tokenContextStore } from '@/lib/token-context-store'
 import { hasClientAssertion, translateClientAssertion, ClientAssertionError } from './backend-services'
 import { kcUnavailablePage, authErrorPage } from './smart-templates'
 import { autoResolvePatient } from '@/lib/kc-session-resolver'
+import { getAdminClient } from '@/lib/kc-admin-factory'
 import { smartProxyConfig, smartStore, keycloakAdapter, smartLogger } from './smart-proxy-setup'
 import { resolveClientBrandColors } from '@/lib/org-branding'
 import { safeCssColor } from '@/lib/brand-color'
@@ -30,6 +31,7 @@ import {
   toAbsoluteFhirUser,
   canReturnPatient,
   parseScopes,
+  resolvePostLogoutUri,
   type LaunchCodePayload,
   type AuthorizeParams,
   type TokenPayload,
@@ -236,7 +238,9 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           error: result.error,
           errorDescription: result.error_description,
           signedInAs: session?.fhirUser,
-          logoutUrl: `${config.baseUrl}/auth/logout`,
+          logoutUrl: query.state
+            ? `${config.baseUrl}/auth/logout?state=${encodeURIComponent(query.state)}`
+            : `${config.baseUrl}/auth/logout`,
         })
       case 'response':
         set.status = result.status
@@ -482,7 +486,30 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   // browser to a Keycloak URL. This avoids exposing the Keycloak logout and
   // logout-confirm pages through the reverse proxy (Caddy).
   .get('/logout', async ({ query, redirect }) => {
-    const postLogoutUri = query.post_logout_redirect_uri || `${config.baseUrl}/`
+    const session = query.state ? smartStore.get(query.state) : undefined
+
+    // A failed launch has no id_token_hint, so the session would otherwise survive.
+    if (session?.userSub) {
+      try {
+        const admin = await getAdminClient()
+        await admin?.users.logout({ id: session.userSub })
+        logger.auth.info('Ended Keycloak session for a failed launch', { clientId: session.clientId })
+      } catch (error) {
+        logger.auth.error('Admin logout failed', { error })
+      }
+    }
+
+    const logoutClientId = query.client_id || session?.clientId
+    const registeredForLogout = !session?.clientRedirectUri && query.post_logout_redirect_uri && logoutClientId
+      ? await getRegisteredRedirectUris(logoutClientId).catch(() => [])
+      : []
+
+    const postLogoutUri = resolvePostLogoutUri({
+      baseUrl: config.baseUrl,
+      sessionRedirectUri: session?.clientRedirectUri,
+      requested: query.post_logout_redirect_uri,
+      registered: registeredForLogout,
+    })
 
     if (query.id_token_hint && typeof query.id_token_hint === 'string' &&
         query.id_token_hint.split('.').length === 3 && query.id_token_hint.length > 50) {
