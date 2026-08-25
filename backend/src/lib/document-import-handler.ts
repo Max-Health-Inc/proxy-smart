@@ -4,8 +4,13 @@
 /**
  * Document Import Handler
  *
- * Shared logic for processing PDF documents via AI + OCR + FHIR validation.
- * Used by both admin and patient-facing routes.
+ * The half of the pipeline that has to run here: a PDF becomes markdown, which
+ * needs Java and a filesystem. The markdown then goes to the clinical narrative
+ * importer in `@max-health-inc/connect-engine` (see `@/lib/ai-import`), which
+ * owns the extraction prompt, the IPS validation loop, and the model.
+ *
+ * Shared by the admin and patient-facing routes, which differ only in how they
+ * authenticate the caller.
  */
 
 import { writeFile, unlink, mkdir } from 'fs/promises'
@@ -13,12 +18,20 @@ import { join } from 'path'
 import { tmpdir } from 'os'
 import { randomUUID } from 'crypto'
 import { logger } from '@/lib/logger'
-import { importDocument } from '@/lib/document-import'
+import { extractTextFromPdf } from '@/lib/pdf-extract-opendataloader'
+import {
+  createNarrativeImporter,
+  type FailedResourceShape,
+  type ImportedResourceShape,
+  type ImporterUnavailable,
+} from '@/lib/ai-import'
 
 export interface DocumentImportInput {
   file: File
   patientId: string
   engine?: 'opendataloader'
+  /** BCP-47 tag of the document, when the caller knows it (e.g. `fr`). */
+  language?: string
 }
 
 export interface DocumentImportResult {
@@ -26,65 +39,107 @@ export interface DocumentImportResult {
   fileName: string
   pagesProcessed: number
   engine: 'opendataloader'
-  resources: Array<{
-    resourceType: string
-    resource: unknown
-    retriesNeeded: number
-    warnings: string[]
-  }>
-  failed: Array<{
-    resourceType: string
-    errors: string[]
-    warnings: string[]
-    retriesAttempted: number
-  }>
+  resources: ImportedResourceShape[]
+  failed: FailedResourceShape[]
   documentReference: unknown
   processingTimeMs: number
 }
 
+/** Either the import ran, or the AI side is not available to run it. */
+export type DocumentImportOutcome =
+  | { ok: true; result: DocumentImportResult }
+  | ({ ok: false } & ImporterUnavailable)
+
 /**
- * Process a PDF document import: write to temp, run AI extraction, map result.
- * Callers are responsible for auth validation and AI config check.
+ * Process a PDF import: write to temp, extract text, hand the text to the
+ * importer, map the result onto the route's response shape.
+ *
+ * Callers validate auth first; a `{ ok: false }` outcome is a 503, since neither
+ * cause is fixable by retrying or by sending a different body.
  */
-export async function processDocumentImport(input: DocumentImportInput): Promise<DocumentImportResult> {
-  const { file, patientId, engine } = input
+export async function processDocumentImport(
+  input: DocumentImportInput,
+): Promise<DocumentImportOutcome> {
+  const { file, patientId, engine = 'opendataloader', language } = input
+
+  const importer = await createNarrativeImporter()
+  if (!importer.ok) {
+    return { ok: false, reason: importer.reason, detail: importer.detail }
+  }
 
   const tempDir = join(tmpdir(), 'proxy-smart-doc-import')
   await mkdir(tempDir, { recursive: true })
   const tempPath = join(tempDir, `${randomUUID()}.pdf`)
 
   try {
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
+    const buffer = Buffer.from(await file.arrayBuffer())
     await writeFile(tempPath, buffer)
 
-    const pdfBase64 = buffer.toString('base64')
-    const result = await importDocument(tempPath, file.name, pdfBase64, { patientId, engine })
+    const { markdown, pages } = await extractTextFromPdf(tempPath)
+
+    const imported = await importer.importer.importDocument(markdown, {
+      patientId,
+      fileName: file.name,
+      pdfBase64: buffer.toString('base64'),
+      pagesProcessed: pages,
+      language,
+    })
 
     return {
-      success: true,
-      fileName: result.fileName,
-      pagesProcessed: result.pagesProcessed,
-      engine: result.engine,
-      resources: result.resources.map(r => ({
-        resourceType: r.resourceType,
-        resource: r.resource,
-        retriesNeeded: r.retriesNeeded,
-        warnings: r.warnings,
-      })),
-      failed: result.failed.map(f => ({
-        resourceType: f.resourceType,
-        errors: f.errors,
-        warnings: f.warnings,
-        retriesAttempted: f.retriesAttempted,
-      })),
-      documentReference: result.documentReference,
-      processingTimeMs: result.processingTimeMs,
+      ok: true,
+      result: {
+        success: true,
+        fileName: file.name,
+        pagesProcessed: pages,
+        engine,
+        resources: imported.resources,
+        failed: imported.failed,
+        documentReference: imported.documentReference,
+        processingTimeMs: imported.processingTimeMs,
+      },
     }
   } catch (error) {
     logger.server.error('Document import failed', { error })
     throw error
   } finally {
     await unlink(tempPath).catch(() => {})
+  }
+}
+
+export interface ScribeResult {
+  success: true
+  resources: ImportedResourceShape[]
+  failed: FailedResourceShape[]
+  processingTimeMs: number
+}
+
+export type ScribeOutcome =
+  | { ok: true; result: ScribeResult }
+  | ({ ok: false } & ImporterUnavailable)
+
+/** Turn free text a patient wrote into reviewable FHIR. No document involved. */
+export async function processScribe(input: {
+  text: string
+  patientId: string
+  language?: string
+}): Promise<ScribeOutcome> {
+  const importer = await createNarrativeImporter()
+  if (!importer.ok) {
+    return { ok: false, reason: importer.reason, detail: importer.detail }
+  }
+
+  const imported = await importer.importer.importText(input.text, {
+    patientId: input.patientId,
+    language: input.language,
+  })
+
+  return {
+    ok: true,
+    result: {
+      success: true,
+      resources: imported.resources,
+      failed: imported.failed,
+      processingTimeMs: imported.processingTimeMs,
+    },
   }
 }

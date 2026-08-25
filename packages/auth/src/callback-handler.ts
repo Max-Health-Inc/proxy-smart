@@ -218,7 +218,11 @@ export async function handleCallback(
         clientId: session.clientId,
         fhirUser: session.fhirUser ?? '(none)',
       })
+      // The session rides along so the error page can name the account that was
+      // refused and offer to sign out of it — without it the user is told the wrong
+      // account is signed in and given no way to change that.
       return {
+        session,
         result: {
           type: 'error',
           status: 403,
