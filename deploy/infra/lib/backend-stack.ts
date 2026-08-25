@@ -304,10 +304,10 @@ export class BackendStack extends cdk.Stack {
       {
         cluster: this.cluster,
         serviceName: 'proxy-smart-backend',
-        // Right-sized from 512/2048: 30d avg CPU 0.8%, peak mem ~11% (~220 MB).
-        // Node process — 512 MB is ample. Autoscaling covers bursts.
+        // 512 MB was OOM-killed in prod (exit 137): ~410 MB baseline RSS leaves no
+        // headroom. The ~220 MB behind the previous sizing was JS heap, not RSS.
         cpu: 256,
-        memoryLimitMiB: 512,
+        memoryLimitMiB: 1024,
         desiredCount: 1,
 
         // Place tasks in private subnets so the RDS security group's
