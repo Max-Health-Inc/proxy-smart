@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.20-beta.202608251354.1cfc4b69b] - 2026-08-25
+
+- 🐛 Bug Fixes: Addressed memory alarm handling to prevent OOM kills under backpressure; clarified behavior of launch-context store per-task to avoid carrying state across restarts
+- 🔧 Chores & Improvements: Update version pre-release tag to 0.3.20-beta.202608251354.1cfc4b69b
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1046
+
+
 ## [0.3.16-beta.202608161817.167c04f59] - 2026-08-19
 
 - ✨ Features
