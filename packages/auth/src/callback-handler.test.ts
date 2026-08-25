@@ -177,6 +177,87 @@ describe('callback-handler: patient picker gate', () => {
   })
 })
 
+describe('callback-handler: Person fhirUser reaches the token endpoint', () => {
+  /*
+   * REGRESSION. SMART allows `fhirUser` to name a Person, and Max Health's IdP emits exactly
+   * that (one Person per human, linking out to their Patient and/or Practitioner). The picker
+   * gate could only place `Patient/*`, so every such user was refused with "Selecting a patient
+   * requires a practitioner account" — a patient told to be a clinician. The token endpoint
+   * resolves Person → Patient per client, so the launch has to be allowed to reach it.
+   */
+  test('Person: forwards to the client instead of refusing with 403', async () => {
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'Person/1007' }))
+
+    const deps: CallbackHandlerDeps = {
+      config: BASE_CONFIG,
+      store,
+      autoResolvePatient: async () => null,
+    }
+
+    const { result } = await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
+    expect(result.type).toBe('redirect')
+    expect(result.type === 'redirect' && result.url).toContain('app.example.com/callback')
+    expect(result.type === 'redirect' && result.url).not.toContain('patient-picker')
+  })
+
+  test('Person: never gets picker access, since it resolves to its OWN patient downstream', async () => {
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'Person/1007' }))
+
+    const deps: CallbackHandlerDeps = { config: BASE_CONFIG, store, autoResolvePatient: async () => null }
+    await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
+    // The directory stays practitioner-only; deferring must not hand out `pickerAllowed`.
+    expect(store.get('session-key')?.pickerAllowed).toBeUndefined()
+    expect(store.get('session-key')?.needsPatientPicker).toBe(false)
+  })
+
+  test('Person as an absolute reference is recognised too', async () => {
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({
+      needsPatientPicker: true,
+      fhirUser: 'https://fhir.example.com/Person/1007',
+    }))
+
+    const deps: CallbackHandlerDeps = { config: BASE_CONFIG, store, autoResolvePatient: async () => null }
+    const { result } = await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
+    expect(result.type).toBe('redirect')
+    expect(result.type === 'redirect' && result.url).not.toContain('patient-picker')
+  })
+
+  test('RelatedPerson is NOT a Person: still refused, because the token endpoint cannot place it', async () => {
+    /*
+     * Deferral covers exactly what `resolveFhirUserForClient` can resolve. Letting a
+     * RelatedPerson through would issue a token carrying `launch/patient` and no patient,
+     * which SMART forbids — the EHR SHALL establish a patient in context.
+     */
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'RelatedPerson/carer-9' }))
+
+    const deps: CallbackHandlerDeps = { config: BASE_CONFIG, store, autoResolvePatient: async () => null }
+    const { result } = await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
+    expect(result.type).toBe('error')
+    expect(result.type === 'error' && result.status).toBe(403)
+  })
+
+  test('a resolved patient still wins over deferral', async () => {
+    // Deferral is the fallback for an unplaceable identity, not a bypass of real context.
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'Person/1007' }))
+
+    const deps: CallbackHandlerDeps = { config: BASE_CONFIG, store, autoResolvePatient: async () => '1008' }
+    const { result } = await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
+    expect(result.type).toBe('redirect')
+    expect(store.get('session-key')?.patient).toBe('1008')
+    expect(store.get('session-key')?.needsPatientPicker).toBe(false)
+  })
+})
+
 describe('handlePatientSelect: duplicate submission guard', () => {
   test('returns redirect idempotently when patient already selected', () => {
     const store = new MemoryStore()
