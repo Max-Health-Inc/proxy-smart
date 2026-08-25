@@ -17,6 +17,12 @@ import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import type { Construct } from 'constructs';
 import { managedRuleGroups } from './waf-rules.js';
 
+// 512 MiB was OOM-killed (exit 137) — the container idles near 410 MiB RSS.
+// Exported so test/backend-sizing.test.ts can hold the floor.
+export const BACKEND_TASK_CPU = 256;
+export const BACKEND_TASK_MEMORY_MIB = 1024;
+export const BACKEND_MEMORY_ALARM_PERCENT = 80;
+
 export interface BackendStackProps extends cdk.StackProps {
   vpc: ec2.IVpc;
   /**
@@ -304,10 +310,8 @@ export class BackendStack extends cdk.Stack {
       {
         cluster: this.cluster,
         serviceName: 'proxy-smart-backend',
-        // 512 MB was OOM-killed in prod (exit 137): ~410 MB baseline RSS leaves no
-        // headroom. The ~220 MB behind the previous sizing was JS heap, not RSS.
-        cpu: 256,
-        memoryLimitMiB: 1024,
+        cpu: BACKEND_TASK_CPU,
+        memoryLimitMiB: BACKEND_TASK_MEMORY_MIB,
         desiredCount: 1,
 
         // Place tasks in private subnets so the RDS security group's
@@ -396,6 +400,15 @@ export class BackendStack extends cdk.Stack {
       threshold: 10,
       evaluationPeriods: 2,
       alarmDescription: 'High rate of 5xx errors from backend ALB',
+    });
+
+    // Scaling targets CPU, so memory climbs to an OOM kill with every other alarm green.
+    new cloudwatch.Alarm(this, 'MemoryUtilizationAlarm', {
+      metric: this.service.service.metricMemoryUtilization(),
+      threshold: BACKEND_MEMORY_ALARM_PERCENT,
+      evaluationPeriods: 3,
+      alarmDescription:
+        'Backend task memory above 80% — an OOM restart discards all in-flight SMART launch sessions',
     });
 
     // Tags
