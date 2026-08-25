@@ -29,7 +29,7 @@
     },
     "backend": {
       "name": "proxy-smart-backend",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "@ai-sdk/openai": "^4.0.40",
         "@elysiajs/cors": "^1.4.2",
@@ -75,10 +75,13 @@
         "typescript": "6.0.3",
         "typescript-eslint": "^8.67.0",
       },
+      "optionalDependencies": {
+        "@max-health-inc/connect-engine": "^0.2.0",
+      },
     },
     "config/eslint": {
       "name": "@proxy-smart/eslint-config",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "@eslint/js": "^10.0.1",
         "eslint-plugin-react-hooks": "^7.1.1",
@@ -89,7 +92,7 @@
     },
     "deploy/infra": {
       "name": "proxy-smart-infra",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "aws-cdk-lib": "^2.264.0",
         "constructs": "^10.8.1",
@@ -107,7 +110,7 @@
     },
     "frontend/smart-dicom-template": {
       "name": "smart-dicom-template",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "@babelfhir-ts/dicomweb": "^0.1.3",
         "@cornerstonejs/core": "^5.7.3",
@@ -148,7 +151,7 @@
     },
     "frontend/ui": {
       "name": "proxy-smart-ui",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
         "@radix-ui/react-avatar": "^1.2.6",
@@ -208,7 +211,7 @@
     },
     "packages/app-store": {
       "name": "@proxy-smart/app-store",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "devDependencies": {
         "@types/node": "^26.2.0",
         "typescript": "6.0.3",
@@ -216,7 +219,7 @@
     },
     "packages/auth": {
       "name": "@proxy-smart/auth",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "devDependencies": {
         "@types/jsonwebtoken": "^9.0.10",
         "jsonwebtoken": "^9.0.3",
@@ -228,7 +231,7 @@
     },
     "packages/cli": {
       "name": "@proxy-smart/cli",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "bin": {
         "proxy-smart": "./src/index.ts",
       },
@@ -240,7 +243,7 @@
     },
     "packages/elysia-mcp": {
       "name": "@max-health-inc/elysia-mcp",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "@toon-format/toon": "^4.1.1",
       },
@@ -258,7 +261,7 @@
     },
     "packages/patient-picker": {
       "name": "proxy-smart-patient-picker",
-      "version": "0.3.13-beta.202608131431.4f03d93ff",
+      "version": "0.3.18-beta.202608191905.2907829cb",
       "dependencies": {
         "@fontsource-variable/geist": "^5.3.0",
         "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
