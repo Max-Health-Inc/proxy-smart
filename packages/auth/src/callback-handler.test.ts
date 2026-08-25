@@ -178,13 +178,7 @@ describe('callback-handler: patient picker gate', () => {
 })
 
 describe('callback-handler: Person fhirUser reaches the token endpoint', () => {
-  /*
-   * REGRESSION. SMART allows `fhirUser` to name a Person, and Max Health's IdP emits exactly
-   * that (one Person per human, linking out to their Patient and/or Practitioner). The picker
-   * gate could only place `Patient/*`, so every such user was refused with "Selecting a patient
-   * requires a practitioner account" — a patient told to be a clinician. The token endpoint
-   * resolves Person → Patient per client, so the launch has to be allowed to reach it.
-   */
+  // Regression: every patient whose fhirUser is a Person was told to be a clinician.
   test('Person: forwards to the client instead of refusing with 403', async () => {
     const store = new MemoryStore()
     store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'Person/1007' }))
@@ -229,11 +223,7 @@ describe('callback-handler: Person fhirUser reaches the token endpoint', () => {
   })
 
   test('RelatedPerson is NOT a Person: still refused, because the token endpoint cannot place it', async () => {
-    /*
-     * Deferral covers exactly what `resolveFhirUserForClient` can resolve. Letting a
-     * RelatedPerson through would issue a token carrying `launch/patient` and no patient,
-     * which SMART forbids — the EHR SHALL establish a patient in context.
-     */
+    // Letting it through would issue launch/patient with no patient, which SMART forbids.
     const store = new MemoryStore()
     store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: 'RelatedPerson/carer-9' }))
 

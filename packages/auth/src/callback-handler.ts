@@ -202,15 +202,8 @@ export async function handleCallback(
     }
   }
 
-  /*
-   * A PERSON IS DEFERRED, NOT REFUSED. SMART permits `fhirUser` to name a Person — the spec's
-   * case for "the authorized representative for >1 patients" — which is an identity rather than
-   * a patient, so `extractPatientFromFhirUser` cannot place it and the practitioner gate below
-   * would refuse it. The token endpoint already resolves it per client
-   * (`resolveFhirUserForClient` + the app's `patientFacing` flag) and derives `patient` from the
-   * result, so let the launch reach it. Refusing here failed EVERY patient whose identity is a
-   * Person, in every patient-facing app, with a message about practitioner accounts.
-   */
+  // A Person is a valid SMART fhirUser and not a patient, so the gate below would refuse it.
+  // /token resolves it per client (resolveFhirUserForClient + patientFacing) — defer to that.
   const deferPersonResolution =
     session.needsPatientPicker &&
     !session.patient &&
