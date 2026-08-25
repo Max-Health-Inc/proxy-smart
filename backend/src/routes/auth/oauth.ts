@@ -222,7 +222,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // ── SMART callback (delegates to @proxy-smart/auth) ───────────────────
   .get('/smart-callback', async ({ query, redirect, set }) => {
-    const { result } = await handleCallback(
+    const { result, session } = await handleCallback(
       { state: query.state, code: query.code, error: query.error, error_description: query.error_description, session_state: query.session_state },
       { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient, getRegisteredRedirectUris },
     )
@@ -231,7 +231,13 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       case 'redirect':
         return redirect(result.url)
       case 'error':
-        return authErrorPage({ status: result.status, error: result.error, errorDescription: result.error_description })
+        return authErrorPage({
+          status: result.status,
+          error: result.error,
+          errorDescription: result.error_description,
+          signedInAs: session?.fhirUser,
+          logoutUrl: `${config.baseUrl}/auth/logout`,
+        })
       case 'response':
         set.status = result.status
         return result.body
