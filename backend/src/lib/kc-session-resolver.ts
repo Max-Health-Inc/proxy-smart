@@ -158,6 +158,9 @@ export async function autoResolvePatient(
 
     if (!userId) return null
 
+    // /auth/logout needs this: a failed launch has no id_token_hint to log out with.
+    session.userSub = userId
+
     // Look up the user's fhirUser attribute
     const user = await admin.users.findOne({ id: userId })
     const fhirUser = user?.attributes?.fhirUser?.[0]

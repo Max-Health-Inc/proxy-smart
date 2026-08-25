@@ -44,6 +44,36 @@ export type GetRegisteredRedirectUris = (clientId: string) => Promise<string[]>
  * @returns true if `candidate` exactly equals one of `registered`, or matches a
  *   trailing-wildcard pattern in `registered`.
  */
+/**
+ * Where to send the browser after logout.
+ *
+ * A launch session's `clientRedirectUri` was already validated at authorize, so its origin is
+ * trusted. Anything the caller supplies is not: unregistered values fall back to `baseUrl` rather
+ * than being honoured, which is what stops /logout being an open redirect.
+ */
+export function resolvePostLogoutUri(opts: {
+  baseUrl: string
+  sessionRedirectUri?: string
+  requested?: string
+  registered?: readonly string[]
+}): string {
+  const fallback = `${opts.baseUrl.replace(/\/+$/, '')}/`
+
+  if (opts.sessionRedirectUri) {
+    try {
+      return new URL(opts.sessionRedirectUri).origin
+    } catch {
+      return fallback
+    }
+  }
+
+  if (opts.requested && isRedirectUriRegistered(opts.requested, opts.registered ?? [])) {
+    return opts.requested
+  }
+
+  return fallback
+}
+
 export function isRedirectUriRegistered(candidate: string, registered: readonly string[]): boolean {
   for (const pattern of registered) {
     // Exact string match (RFC 6749 §3.1.2.3).

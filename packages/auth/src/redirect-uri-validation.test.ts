@@ -20,7 +20,7 @@
 import { describe, test, expect } from 'bun:test'
 import { handleAuthorize, type AuthorizeInterceptorDeps } from './authorize-interceptor'
 import { handleCallback, type CallbackParams, type CallbackHandlerDeps } from './callback-handler'
-import { isRedirectUriRegistered } from './redirect-uri'
+import { isRedirectUriRegistered, resolvePostLogoutUri } from './redirect-uri'
 import { MemoryStore } from './stores/memory'
 import type { AuthorizeParams, LaunchSession, SmartProxyConfig } from './types'
 import type { IdPAdapter } from './idp/interface'
@@ -257,5 +257,47 @@ describe('isRedirectUriRegistered — Keycloak-compatible matching (exact + trai
 
   test('empty allowlist rejects everything', () => {
     expect(isRedirectUriRegistered('https://app.example.com/cb', [])).toBe(false)
+  })
+})
+
+describe('resolvePostLogoutUri', () => {
+  const BASE = 'https://proxy.example.com'
+
+  test('an unregistered requested URI is refused, not honoured', () => {
+    // Otherwise /logout is an open redirect: ?post_logout_redirect_uri=https://evil.example
+    expect(
+      resolvePostLogoutUri({ baseUrl: BASE, requested: 'https://evil.example/', registered: ['https://app.example.com/*'] }),
+    ).toBe('https://proxy.example.com/')
+  })
+
+  test('a registered requested URI is honoured', () => {
+    expect(
+      resolvePostLogoutUri({ baseUrl: BASE, requested: 'https://app.example.com/cb', registered: ['https://app.example.com/*'] }),
+    ).toBe('https://app.example.com/cb')
+  })
+
+  test('a session URI wins, and only its origin is used', () => {
+    expect(
+      resolvePostLogoutUri({ baseUrl: BASE, sessionRedirectUri: 'https://app.example.com/callback?x=1' }),
+    ).toBe('https://app.example.com')
+  })
+
+  test('the session URI is not overridden by a hostile request param', () => {
+    expect(
+      resolvePostLogoutUri({
+        baseUrl: BASE,
+        sessionRedirectUri: 'https://app.example.com/callback',
+        requested: 'https://evil.example/',
+      }),
+    ).toBe('https://app.example.com')
+  })
+
+  test('nothing usable lands on the proxy, never undefined', () => {
+    expect(resolvePostLogoutUri({ baseUrl: BASE })).toBe('https://proxy.example.com/')
+    expect(resolvePostLogoutUri({ baseUrl: 'https://proxy.example.com/' })).toBe('https://proxy.example.com/')
+  })
+
+  test('a malformed session URI falls back rather than throwing', () => {
+    expect(resolvePostLogoutUri({ baseUrl: BASE, sessionRedirectUri: 'not-a-url' })).toBe('https://proxy.example.com/')
   })
 })
