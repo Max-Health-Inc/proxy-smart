@@ -14,7 +14,6 @@
 
 import { Elysia, t } from 'elysia'
 import { logger } from '@/lib/logger'
-import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ErrorResponse } from '@/schemas'
@@ -39,12 +38,7 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         return { error: 'Unauthorized', details: 'Invalid or expired token' }
       }
 
-      if (!config.ai.openaiApiKey) {
-        set.status = 503
-        return { error: 'AI not configured', details: 'Document import requires AI to be configured' }
-      }
-
-      const { file, patientId, engine } = body
+      const { file, patientId, engine, language } = body
 
       // Verify the token grants access to this patient
       const tokenPatientId = tokenPayload.patient || tokenPayload.sub
@@ -61,7 +55,12 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
       }
 
       try {
-        return await processDocumentImport({ file, patientId, engine })
+        const outcome = await processDocumentImport({ file, patientId, engine, language })
+        if (!outcome.ok) {
+          set.status = 503
+          return { error: 'AI not configured', details: outcome.detail }
+        }
+        return outcome.result
       } catch (error) {
         set.status = 500
         return { error: 'Document import failed', details: error instanceof Error ? error.message : String(error) }
@@ -72,6 +71,7 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         file: t.File({ description: 'PDF document to import' }),
         patientId: t.String({ description: 'FHIR Patient ID to associate resources with' }),
         engine: t.Optional(t.Literal('opendataloader', { default: 'opendataloader', description: 'PDF extraction engine' })),
+        language: t.Optional(t.String({ description: 'BCP-47 tag of the document, e.g. "fr". Kept on the DocumentReference and told to the extractor so it does not translate the wording.' })),
       }),
       response: {
         200: t.Object({

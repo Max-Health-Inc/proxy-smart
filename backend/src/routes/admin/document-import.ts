@@ -13,7 +13,6 @@
  */
 
 import { Elysia, t } from 'elysia'
-import { config } from '@/config'
 import { ErrorResponse } from '@/schemas'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { validateAdminToken } from '@/lib/auth'
@@ -30,12 +29,7 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
       }
       await validateAdminToken(token)
 
-      if (!config.ai.openaiApiKey) {
-        set.status = 503
-        return { error: 'AI not configured', details: 'OPENAI_API_KEY is required for document import' }
-      }
-
-      const { file, patientId, engine } = body
+      const { file, patientId, engine, language } = body
 
       if (file.type !== 'application/pdf') {
         set.status = 400
@@ -43,7 +37,12 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
       }
 
       try {
-        return await processDocumentImport({ file, patientId, engine })
+        const outcome = await processDocumentImport({ file, patientId, engine, language })
+        if (!outcome.ok) {
+          set.status = 503
+          return { error: 'AI not configured', details: outcome.detail }
+        }
+        return outcome.result
       } catch (error) {
         set.status = 500
         return { error: 'Document import failed', details: error instanceof Error ? error.message : String(error) }
@@ -54,6 +53,7 @@ export const documentImportRoutes = new Elysia({ prefix: '/document-import' })
         file: t.File({ description: 'PDF document to import' }),
         patientId: t.String({ description: 'FHIR Patient ID to associate resources with' }),
         engine: t.Optional(t.Literal('opendataloader', { default: 'opendataloader', description: 'PDF extraction engine' })),
+        language: t.Optional(t.String({ description: 'BCP-47 tag of the document, e.g. "fr". Kept on the DocumentReference and told to the extractor so it does not translate the wording.' })),
       }),
       response: {
         200: t.Object({
