@@ -13,11 +13,10 @@
 
 import { Elysia, t } from 'elysia'
 import { logger } from '@/lib/logger'
-import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { ErrorResponse } from '@/schemas'
-import { generateFromText } from '@/lib/document-import'
+import { processScribe } from '@/lib/document-import-handler'
 
 export const patientScribeRoutes = new Elysia({ prefix: '/patient-scribe' })
   .post(
@@ -36,12 +35,7 @@ export const patientScribeRoutes = new Elysia({ prefix: '/patient-scribe' })
         return { error: 'Unauthorized', details: 'Invalid or expired token' }
       }
 
-      if (!config.ai.openaiApiKey) {
-        set.status = 503
-        return { error: 'AI not configured', details: 'Patient scribe requires AI to be configured' }
-      }
-
-      const { text, patientId } = body
+      const { text, patientId, language } = body
 
       if (!text.trim()) {
         set.status = 400
@@ -49,24 +43,12 @@ export const patientScribeRoutes = new Elysia({ prefix: '/patient-scribe' })
       }
 
       try {
-        const result = await generateFromText(text, { patientId })
-
-        return {
-          success: true,
-          resources: result.resources.map(r => ({
-            resourceType: r.resourceType,
-            resource: r.resource,
-            retriesNeeded: r.retriesNeeded,
-            warnings: r.warnings,
-          })),
-          failed: result.failed.map(f => ({
-            resourceType: f.resourceType,
-            errors: f.errors,
-            warnings: f.warnings,
-            retriesAttempted: f.retriesAttempted,
-          })),
-          processingTimeMs: result.processingTimeMs,
+        const outcome = await processScribe({ text, patientId, language })
+        if (!outcome.ok) {
+          set.status = 503
+          return { error: 'AI not configured', details: outcome.detail }
         }
+        return outcome.result
       } catch (error) {
         logger.server.error('Patient scribe failed', { error })
         set.status = 500
@@ -77,6 +59,7 @@ export const patientScribeRoutes = new Elysia({ prefix: '/patient-scribe' })
       body: t.Object({
         text: t.String({ description: 'Free text describing symptoms, medications, etc.', maxLength: 50000 }),
         patientId: t.String({ description: 'FHIR Patient ID to associate resources with' }),
+        language: t.Optional(t.String({ description: 'BCP-47 tag of the text, e.g. "fr", told to the extractor so it keeps the wording.' })),
       }),
       response: {
         200: t.Object({
