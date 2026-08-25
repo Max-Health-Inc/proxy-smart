@@ -7,8 +7,16 @@
  */
 
 /** Friendly HTML page shown for auth flow errors (expired session, invalid state, etc.) */
-export function authErrorPage(opts: { status: number; error: string; errorDescription: string }): Response {
-  const { status, error, errorDescription } = opts
+export function authErrorPage(opts: {
+  status: number
+  error: string
+  errorDescription: string
+  /** Who the browser is signed in as, when the flow got far enough to know. */
+  signedInAs?: string
+  /** Where "use a different account" goes. Omit to hide the action. */
+  logoutUrl?: string
+}): Response {
+  const { status, error, errorDescription, signedInAs, logoutUrl } = opts
   const title = error === 'invalid_request' ? 'Session Expired' : 'Authorization Error'
   const html = `<!DOCTYPE html>
 <html lang="en" class="dark">
@@ -39,10 +47,11 @@ a:hover{opacity:.85}
 <h2>${Bun.escapeHTML(title)}</h2>
 <p>${Bun.escapeHTML(errorDescription)}</p>
 <div class="actions">
-<a href="javascript:history.back()">Go Back</a>
+${logoutUrl ? `<a href="${Bun.escapeHTML(logoutUrl)}">Sign out and use a different account</a>` : ''}
+<a class="${logoutUrl ? 'secondary' : ''}" href="javascript:history.back()">Go Back</a>
 <a class="secondary" href="/">Home</a>
 </div>
-<div class="code">${Bun.escapeHTML(error)}</div>
+<div class="code">${Bun.escapeHTML(error)}${signedInAs ? `<br/>signed in as ${Bun.escapeHTML(signedInAs)}` : ''}</div>
 </div>
 </body>
 </html>`
