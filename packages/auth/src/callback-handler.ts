@@ -10,7 +10,7 @@
 
 import type { LaunchSession, SmartProxyConfig, SmartProxyLogger, SmartProxyResult } from './types'
 import type { ILaunchContextStore } from './stores/interface'
-import { extractPatientFromFhirUser } from './fhir-user'
+import { extractPatientFromFhirUser, getFhirUserResourceType } from './fhir-user'
 import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
 
 export interface CallbackParams {
@@ -202,8 +202,32 @@ export async function handleCallback(
     }
   }
 
+  /*
+   * A PERSON IS DEFERRED, NOT REFUSED. SMART permits `fhirUser` to name a Person — the spec's
+   * case for "the authorized representative for >1 patients" — which is an identity rather than
+   * a patient, so `extractPatientFromFhirUser` cannot place it and the practitioner gate below
+   * would refuse it. The token endpoint already resolves it per client
+   * (`resolveFhirUserForClient` + the app's `patientFacing` flag) and derives `patient` from the
+   * result, so let the launch reach it. Refusing here failed EVERY patient whose identity is a
+   * Person, in every patient-facing app, with a message about practitioner accounts.
+   */
+  const deferPersonResolution =
+    session.needsPatientPicker &&
+    !session.patient &&
+    !patientAutoResolved &&
+    getFhirUserResourceType(session.fhirUser ?? '') === 'Person'
+
+  if (deferPersonResolution) {
+    store.update(sessionKey, { needsPatientPicker: false })
+    logger?.info('SMART callback: Person fhirUser, deferring patient context to the token endpoint', {
+      sessionKey: sessionKey.slice(0, 8) + '...',
+      clientId: session.clientId,
+      fhirUser: session.fhirUser,
+    })
+  }
+
   // If still needs picker after auto-resolve attempt, redirect to picker UI
-  if (session.needsPatientPicker && !session.patient && !patientAutoResolved) {
+  if (session.needsPatientPicker && !session.patient && !patientAutoResolved && !deferPersonResolution) {
     /*
      * ONLY PRACTITIONERS CHOOSE A PATIENT. The picker is a searchable directory of everyone on the
      * server, so reaching it must require positive evidence of being a clinician — not merely the
