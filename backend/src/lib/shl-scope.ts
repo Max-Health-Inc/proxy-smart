@@ -105,6 +105,50 @@ function isStowTarget(dicomPath: string): boolean {
   return segments.length === 1 || segments.length === 2
 }
 
+/**
+ * Whether a share may perform this FHIR request.
+ *
+ * Reads are untouched — study scope and selective filtering decide those. This
+ * governs writes, and grants exactly one: a conditional update of an
+ * ImagingStudy, which is the FHIR half of the DICOM upload grant. STOW-RS puts
+ * pixels in the PACS and nothing else, so without this a recipient could upload
+ * a study that then appears in no imaging list.
+ *
+ * Deliberately narrow. `writeScope.dicom` says "you may add imaging", not "you
+ * may write FHIR", so a POST, a different resource type, or an unconditional PUT
+ * to an id are all refused: the first two are outside the grant and the third
+ * would let a recipient overwrite a study by guessing its id.
+ */
+export function fhirWriteRefusal(request: {
+  method: string
+  fhirPath: string
+  search: string
+  dicomWriteGranted: boolean
+  attested: boolean
+}): DicomWriteRefusal | null {
+  const method = request.method.toUpperCase()
+  if (method === 'GET' || method === 'HEAD') return null
+
+  if (method !== 'PUT') {
+    return { status: 405, error: `${method} is not supported on shared links` }
+  }
+  if (!request.dicomWriteGranted) {
+    return { status: 405, error: 'Only read operations are allowed on this shared link' }
+  }
+  if (pathSegments(request.fhirPath)[0] !== 'ImagingStudy' || pathSegments(request.fhirPath).length !== 1) {
+    return { status: 403, error: 'This link may only file an ImagingStudy for the imaging it uploads' }
+  }
+  // A conditional update is a PUT to a SEARCH url. Without a query this is an
+  // update by id, which is not what the grant covers.
+  if (!new URLSearchParams(request.search).has('identifier')) {
+    return { status: 403, error: 'ImagingStudy must be filed by identifier (conditional update)' }
+  }
+  if (!request.attested) {
+    return { status: 403, error: 'Sign before uploading: POST /api/shl/attest with your name and signature' }
+  }
+  return null
+}
+
 /** Why a DICOM write was refused, or null when it may proceed. */
 export interface DicomWriteRefusal {
   status: 403 | 405
