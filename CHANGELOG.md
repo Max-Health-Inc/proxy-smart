@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.21-beta.202608251511.5fc93e7ad] - 2026-08-26
+
+- 🐛 Bug Fixes: Fix Keycloak provisioning to create fhir-resource-server when missing in production environments, ensuring correct FHIR aud mapping and token exchange.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1049
+
+
 ## [0.3.20-RELEASE.202608251354.1cfc4b69b] - 2026-08-25
 
 - 🐛 Bug Fixes
