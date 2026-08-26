@@ -235,12 +235,11 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         return redirect(result.url)
       case 'error': {
         /*
-         * An account with no identity at all is an unfinished sign-up, so it gets the page
-         * AIHR's portal already settled on for the same refusal: say the record is not set
-         * up, point at where to set it up, and keep the clinician case in the hint — two
-         * different people land here and "requires a practitioner account" only speaks to one
-         * of them, while being flatly wrong for the other. Where onboarding lives is
-         * deployment config, never baked into the proxy.
+         * An account with no identity at all is an unfinished sign-up, so the page says that
+         * and points at where to finish it, keeping the clinician case in the hint: two
+         * different people land here, and "requires a practitioner account" speaks to one of
+         * them while being flatly wrong for the other. Where onboarding lives is deployment
+         * config — a deployment that sets nothing still gets the explanation.
          */
         const notLinked = result.reason === 'account-not-linked'
         return authErrorPage({
