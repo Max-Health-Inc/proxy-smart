@@ -12,6 +12,7 @@
  * a failure logs a warning and leaves the realm untouched.
  */
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
+import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
 import { config } from '../config'
 import { logger } from './logger'
 import { RESOURCE_INDICATORS_SCOPE } from './smart-client-enrichment'
@@ -29,6 +30,9 @@ export const RESOURCE_AUDIENCE_CLIENT_IDS = ['fhir-resource-server', 'mcp-resour
  * token request carries a matching `resource` parameter.
  */
 const RESOURCE_URL_ATTR = 'resource_url'
+
+/** SMART app type. The only marker an export-seeded app carries. */
+const CLIENT_TYPE_ATTR = 'client_type'
 
 /** Keycloak client attribute gating RFC 8628 device authorization. */
 const DEVICE_GRANT_ATTR = 'oauth2.device.authorization.grant.enabled'
@@ -295,19 +299,34 @@ export async function ensureResourceIndicatorsScope(admin: KcAdminClient): Promi
 }
 
 /**
+ * Clients needing the resource-indicators scope to bind a requested `resource`
+ * into `aud`.
+ *
+ * Two markers, not one: `smart_app` is written only when a client is CREATED
+ * (admin API + DCR), so keying on it alone permanently skipped export-seeded
+ * apps, which carry `client_type` — every token exchange they tried returned
+ * `invalid_target`. Resource clients are excluded: they are the audience, never
+ * the requester.
+ */
+export function needsResourceIndicators(client: ClientRepresentation): boolean {
+  if (!client.id) return false
+  if (RESOURCE_AUDIENCE_CLIENT_IDS.includes(client.clientId as typeof RESOURCE_AUDIENCE_CLIENT_IDS[number])) return false
+  return client.attributes?.smart_app !== undefined || client.attributes?.[CLIENT_TYPE_ATTR] !== undefined
+}
+
+/**
  * Attach the scope to clients that already existed when it was created.
  *
  * New clients get it at registration (assignResourceIndicatorsScope), but a realm
  * that gained the scope late leaves everything created before it without one.
- * Derived from the `smart_app` attribute rather than a hardcoded client list, so
- * it cannot drift as apps are added.
+ * Membership comes from {@link needsResourceIndicators}.
  */
 async function attachResourceIndicatorsToExistingClients(
   admin: KcAdminClient,
   scopeId: string,
 ): Promise<void> {
   const clients = await admin.clients.find()
-  const managed = clients.filter((c) => c.id && c.attributes?.smart_app !== undefined)
+  const managed = clients.filter(needsResourceIndicators)
 
   let attached = 0
   for (const client of managed) {
