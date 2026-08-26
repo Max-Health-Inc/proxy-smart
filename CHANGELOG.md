@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.21-beta.202608251511.5fc93e7ad] - 2026-08-26
+
+- 🐛 Bug Fixes: Fix Keycloak provisioning to create fhir-resource-server when missing in production environments, ensuring correct FHIR aud mapping and token exchange.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1049
+
+
+## [0.3.20-RELEASE.202608251354.1cfc4b69b] - 2026-08-25
+
+- 🐛 Bug Fixes
+  - fix(keycloak): create fhir-resource-server when missing in production to resolve invalid_target during token exchange
+
+- 🔧 Chores & Improvements
+  - chore: sync package versions
+  - 🔄 Update version to 0.3.20-RELEASE.202608251354.1cfc4b69b
+  - 🔄 Update version to 0.3.20-beta.202608251354.1cfc4b69b
+  - 🔄 Update version to 0.3.20-alpha.202608251354.1cfc4b69b
+
+- ⚠️ Breaking Changes
+  - None
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #1046
+
+- 🔧 Chores & Improvements (stability/infra)
+  - fix(infra): alarm on backend memory and ensure stability under production loads
+  - fix(infra): give backend more headroom to prevent OOM kills
+
+Notes:
+- Updated to stable release 0.3.20 and included related beta/alpha version bumps.
+- Focused on user-facing fix for production token exchange and infrastructure stability.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1050
+
+
 ## [0.3.20-beta.202608251354.1cfc4b69b] - 2026-08-25
 
 - 🐛 Bug Fixes: Addressed memory alarm handling to prevent OOM kills under backpressure; clarified behavior of launch-context store per-task to avoid carrying state across restarts
