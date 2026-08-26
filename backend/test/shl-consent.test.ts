@@ -30,6 +30,27 @@ function makeSession(overrides: Partial<ShlSession> = {}): ShlSession {
 }
 
 describe('buildShareConsent', () => {
+  it('records a read-only share as access alone', () => {
+    const consent = buildShareConsent('shl-read', makeSession())
+    const codes = consent.provision?.action?.flatMap((a) => a.coding?.map((c) => c.code) ?? []) ?? []
+    expect(codes).toEqual(['access'])
+  })
+
+  it('records a write-enabled share as access AND correct', () => {
+    // Without the second code an upload-capable link mirrors as a read-only grant,
+    // and the consent portal is where the patient reviews what they gave away.
+    const consent = buildShareConsent('shl-write', makeSession({ writeScope: { dicom: true } }))
+    const codes = consent.provision?.action?.flatMap((a) => a.coding?.map((c) => c.code) ?? []) ?? []
+    expect(codes).toEqual(['access', 'correct'])
+  })
+
+  it('names the intended recipient while still saying it is a bearer link', () => {
+    const consent = buildShareConsent('shl-named', makeSession({ recipientName: 'Dr. Müller' }))
+    const display = consent.provision?.actor?.[0]?.reference?.display ?? ''
+    expect(display).toContain('Dr. Müller')
+    expect(display).toContain('holder of the share link')
+  })
+
   it('produces a profile-valid, active, permit Consent tied to the SHL id', async () => {
     const consent = buildShareConsent('shl-abc', makeSession())
 
