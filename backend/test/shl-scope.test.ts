@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from 'bun:test'
 import {
+  dicomWriteRefusal,
   isDicomPathAllowed,
   scopeFhirRequest,
   isCompleteShare,
@@ -362,5 +363,59 @@ describe('isCompleteShare — deprecated, kept until both viewers move off it', 
    */
   it('is complete when a scope is present but excludes nothing', () => {
     expect(isCompleteShare({ selectiveScope: scopeOf({}) })).toBe(true)
+  })
+})
+
+// ── DICOM write access ──────────────────────────────────────────────────────
+//
+// SECURITY-CRITICAL. Default-deny: a share with no write grant must behave
+// exactly as every share did before write access existed, and a granted share
+// must still refuse until the recipient has signed — otherwise a write could
+// land with nothing to attribute it to.
+
+describe('dicomWriteRefusal', () => {
+  const readOnly = { dicomWriteGranted: false, attested: false }
+  const granted = { dicomWriteGranted: true, attested: true }
+
+  it('never interferes with reads, granted or not', () => {
+    for (const method of ['GET', 'HEAD', 'get', 'head']) {
+      expect(dicomWriteRefusal({ method, dicomPath: 'studies', ...readOnly })).toBeNull()
+      expect(dicomWriteRefusal({ method, dicomPath: 'studies/1.2.3/series', ...granted })).toBeNull()
+    }
+  })
+
+  it('refuses a POST on a share with no write grant', () => {
+    const refusal = dicomWriteRefusal({ method: 'POST', dicomPath: 'studies', ...readOnly })
+    expect(refusal?.status).toBe(405)
+    expect(refusal?.error).toMatch(/read operations/i)
+  })
+
+  it('refuses a POST that is granted but unsigned', () => {
+    const refusal = dicomWriteRefusal({
+      method: 'POST',
+      dicomPath: 'studies',
+      dicomWriteGranted: true,
+      attested: false,
+    })
+    expect(refusal?.status).toBe(403)
+    expect(refusal?.error).toMatch(/sign before uploading/i)
+  })
+
+  it('allows a signed, granted STOW at either target', () => {
+    expect(dicomWriteRefusal({ method: 'POST', dicomPath: 'studies', ...granted })).toBeNull()
+    expect(dicomWriteRefusal({ method: 'POST', dicomPath: 'studies/1.2.840.113619.2', ...granted })).toBeNull()
+  })
+
+  it('refuses a POST below the study level even when signed and granted', () => {
+    for (const path of ['studies/1.2.3/series', 'studies/1.2.3/series/4.5.6/instances', 'series', '']) {
+      const refusal = dicomWriteRefusal({ method: 'POST', dicomPath: path, ...granted })
+      expect(refusal?.status).toBe(403)
+    }
+  })
+
+  it('refuses every other method regardless of grant', () => {
+    for (const method of ['PUT', 'DELETE', 'PATCH']) {
+      expect(dicomWriteRefusal({ method, dicomPath: 'studies', ...granted })?.status).toBe(405)
+    }
   })
 })

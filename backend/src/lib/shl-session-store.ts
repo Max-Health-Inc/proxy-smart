@@ -34,6 +34,29 @@ export interface ShareScope {
   excludedObservationCategories: string[]
 }
 
+/** What a share lets its recipient write. Each kind is granted separately. */
+export interface ShlWriteScope {
+  /** May STOW DICOM instances for the shared patient. */
+  dicom?: boolean
+}
+
+/**
+ * The recipient's signature over what they are about to write.
+ *
+ * Held on the session only until a write happens, at which point it belongs in
+ * the patient's record as a `Provenance.signature`. Sessions are purged at
+ * expiry, so this is scratch space and never the evidence of record.
+ */
+export interface ShlAttestation {
+  /** The name the signature is claimed under — the patient's label, or self-entered. */
+  name: string
+  /** Whether `name` came from the patient at mint or from the recipient at signing. */
+  nameSource: 'patient' | 'recipient'
+  /** The drawn mark, as a data URL. */
+  signature: string
+  signedAt: number
+}
+
 export interface ShlSession {
   /** SHL payload from kill-the-clipboard (for manifest serving) */
   shl: { url: string; key: string; exp?: number; flag?: string; label?: string }
@@ -53,6 +76,24 @@ export interface ShlSession {
   verifiedOnly: boolean
   /** Optional selective-sharing scope (record/category de-selection). */
   shareScope?: ShareScope
+  /**
+   * What the recipient may WRITE. Absent means read-only, which is every share
+   * minted before this existed and every share whose patient did not opt in.
+   *
+   * An object rather than a flag because write access is scoped per kind: letting
+   * a radiology department add imaging is not the same grant as letting them
+   * write observations, and the patient chooses which.
+   */
+  writeScope?: ShlWriteScope
+  /**
+   * Who the patient says this link is for, as a display name. A LABEL, not an
+   * identity: an SHL is a bearer link, so whoever holds it can claim to be this
+   * person. Optional — when the patient does not name anyone, the recipient
+   * supplies their own name when they attest.
+   */
+  recipientName?: string
+  /** The recipient's signature, captured before any write is accepted. */
+  attestation?: ShlAttestation
   /** Number of manifest accesses */
   accessCount: number
   /** Optional passcode (hashed) */
@@ -71,6 +112,9 @@ interface ShlRow {
   expires_at: number
   verified_only: number // 0 or 1
   share_scope: string | null // JSON-serialized ShareScope, or null for "share everything"
+  write_scope: string | null // JSON-serialized ShlWriteScope, or null for read-only
+  recipient_name: string | null
+  attestation: string | null // JSON-serialized ShlAttestation, or null until signed
   access_count: number
   passcode_hash: string | null
   consent_mirrored: number // 0 or 1
@@ -102,6 +146,9 @@ function createDatabase(): Database {
       expires_at INTEGER NOT NULL,
       verified_only INTEGER NOT NULL DEFAULT 0,
       share_scope TEXT,
+      write_scope TEXT,
+      recipient_name TEXT,
+      attestation TEXT,
       access_count INTEGER NOT NULL DEFAULT 0,
       passcode_hash TEXT,
       consent_mirrored INTEGER NOT NULL DEFAULT 0,
@@ -130,6 +177,16 @@ function createDatabase(): Database {
     db.run('ALTER TABLE shl_sessions ADD COLUMN consent_mirrored INTEGER NOT NULL DEFAULT 0')
   } catch {
     /* column already exists */
+  }
+
+  // Idempotent migrations: write access. A pre-existing row has no write_scope,
+  // which reads as read-only — the behaviour every share had before this existed.
+  for (const column of ['write_scope TEXT', 'recipient_name TEXT', 'attestation TEXT']) {
+    try {
+      db.run(`ALTER TABLE shl_sessions ADD COLUMN ${column}`)
+    } catch {
+      /* column already exists */
+    }
   }
 
   // Index for token lookups (FHIR proxy uses this path)
@@ -177,9 +234,9 @@ class ShlSessionStore {
   set(id: string, session: ShlSession): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO shl_sessions
-        (id, session_token, shl_payload, jwe, patient_id, study_instance_uid, fhir_server_url, expires_at, verified_only, share_scope, access_count, passcode_hash, created_at)
+        (id, session_token, shl_payload, jwe, patient_id, study_instance_uid, fhir_server_url, expires_at, verified_only, share_scope, write_scope, recipient_name, attestation, access_count, passcode_hash, created_at)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     stmt.run(
       id,
@@ -192,6 +249,9 @@ class ShlSessionStore {
       session.expiresAt,
       session.verifiedOnly ? 1 : 0,
       session.shareScope ? JSON.stringify(session.shareScope) : null,
+      session.writeScope ? JSON.stringify(session.writeScope) : null,
+      session.recipientName ?? null,
+      session.attestation ? JSON.stringify(session.attestation) : null,
       session.accessCount,
       session.passcodeHash ?? null,
       Date.now(),
@@ -249,6 +309,21 @@ class ShlSessionStore {
   }
 
   /** Mark that this session's SHL→Consent mirror was successfully written. */
+  /**
+   * Record the recipient's signature on a session.
+   *
+   * Write-once: a second attempt is ignored rather than overwriting. The
+   * signature is what a later Provenance is built from, so letting a subsequent
+   * caller replace it would let whoever holds the link re-attribute writes that
+   * were already made under the first signature.
+   */
+  recordAttestation(id: string, attestation: ShlAttestation): boolean {
+    const result = this.db
+      .prepare('UPDATE shl_sessions SET attestation = ? WHERE id = ? AND attestation IS NULL')
+      .run(JSON.stringify(attestation), id)
+    return result.changes > 0
+  }
+
   markConsentMirrored(id: string): void {
     this.db.prepare('UPDATE shl_sessions SET consent_mirrored = 1 WHERE id = ?').run(id)
   }
@@ -296,6 +371,9 @@ class ShlSessionStore {
       expiresAt: row.expires_at,
       verifiedOnly: row.verified_only === 1,
       shareScope: row.share_scope ? (JSON.parse(row.share_scope) as ShareScope) : undefined,
+      writeScope: row.write_scope ? (JSON.parse(row.write_scope) as ShlWriteScope) : undefined,
+      recipientName: row.recipient_name ?? undefined,
+      attestation: row.attestation ? (JSON.parse(row.attestation) as ShlAttestation) : undefined,
       accessCount: row.access_count,
       passcodeHash: row.passcode_hash ?? undefined,
     }
