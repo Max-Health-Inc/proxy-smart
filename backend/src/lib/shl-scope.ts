@@ -92,6 +92,61 @@ export function isDicomPathAllowed(
  * @param search   the incoming query string (with or without leading `?`)
  * @param opts     patientId (session patient) and studyInstanceUID (study scope)
  */
+/**
+ * The STOW-RS write targets: the studies collection, or one named study.
+ *
+ * Anything deeper is a read path in DICOMweb and has no POST semantics, so it is
+ * refused rather than forwarded — a POST to `studies/{uid}/series/{uid}` is a
+ * client bug and a PACS may interpret it in ways we have not reasoned about.
+ */
+function isStowTarget(dicomPath: string): boolean {
+  const segments = pathSegments(dicomPath)
+  if (segments[0] !== 'studies') return false
+  return segments.length === 1 || segments.length === 2
+}
+
+/** Why a DICOM write was refused, or null when it may proceed. */
+export interface DicomWriteRefusal {
+  status: 403 | 405
+  error: string
+}
+
+/**
+ * Whether a share may perform this DICOM request.
+ *
+ * Reads are unaffected: they fall through to {@link isDicomPathAllowed}, which
+ * is what enforces study scope. This governs writes only, and refuses by default
+ * — a share with no `writeScope` behaves exactly as every share did before write
+ * access existed.
+ *
+ * Attestation is checked here rather than at upload time on purpose: the point of
+ * the signature is to attribute what gets written, so a write that happens before
+ * one exists could never be attributed afterwards.
+ */
+export function dicomWriteRefusal(request: {
+  method: string
+  dicomPath: string
+  dicomWriteGranted: boolean
+  attested: boolean
+}): DicomWriteRefusal | null {
+  const method = request.method.toUpperCase()
+  if (method === 'GET' || method === 'HEAD') return null
+
+  if (method !== 'POST') {
+    return { status: 405, error: `${method} is not supported on shared links` }
+  }
+  if (!request.dicomWriteGranted) {
+    return { status: 405, error: 'Only read operations are allowed on this shared link' }
+  }
+  if (!isStowTarget(request.dicomPath)) {
+    return { status: 403, error: 'Uploads are only accepted at studies or studies/{studyInstanceUID}' }
+  }
+  if (!request.attested) {
+    return { status: 403, error: 'Sign before uploading: POST /api/shl/attest with your name and signature' }
+  }
+  return null
+}
+
 export function scopeFhirRequest(
   fhirPath: string,
   search: string,

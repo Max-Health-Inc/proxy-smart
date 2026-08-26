@@ -30,9 +30,10 @@ import { getDefaultDicomServer } from '@/lib/runtime-config'
 import { shortenUrl } from '@/lib/url-shortener'
 import { getPublishedApps } from '@/lib/app-store-config'
 import { resolveClientLaunchUrl } from '@/lib/client-launch-url'
-import { shlSessionStore, type ShareScope, type ShlSession } from '@/lib/shl-session-store'
+import { shlSessionStore, type ShareScope, type ShlAttestation, type ShlSession, type ShlWriteScope } from '@/lib/shl-session-store'
 import {
   isDicomPathAllowed,
+  dicomWriteRefusal,
   scopeFhirRequest,
   isCompleteShare,
   isSelectiveScopeActive,
@@ -69,6 +70,10 @@ const CreateShlBody = t.Object({
     excludedObservationCategories: t.Optional(t.Array(t.String(), { description: 'Observation category codes fully hidden (e.g. vital-signs, laboratory)' })),
   }, { description: 'Selective sharing: the patient de-selected some records/categories. Omit (or leave empty) to share everything.' })),
   studyInstanceUID: t.Optional(t.String({ description: 'DICOM Study Instance UID — scope the SHL to a single imaging study' })),
+  writeScope: t.Optional(t.Object({
+    dicom: t.Optional(t.Boolean({ description: 'Let the recipient STOW DICOM instances for this patient' })),
+  }, { description: 'What the recipient may WRITE. Omit for a read-only share, which is the default and what every share was before this existed. Granted per kind: letting a radiology department add imaging is not the same as letting them write observations.' })),
+  recipientName: t.Optional(t.String({ description: 'Who the patient says the link is for, e.g. "Dr. Müller". A LABEL, not an identity — an SHL is a bearer link, so whoever holds it can claim to be this person. Omit and the recipient enters their own name when they sign.', maxLength: 200 })),
   shortenUrl: t.Optional(t.Boolean({ description: 'Opt-in: shorten the viewer URL via go.maxhealth.tech (stored securely, auto-expires)', default: false })),
   maxUses: t.Optional(t.Number({ description: 'Maximum number of times the shortened URL can be accessed before expiring (only when shortenUrl is true)', minimum: 1 })),
 })
@@ -109,6 +114,9 @@ export function buildSmartApiAccess(session: {
   expiresAt: number
   shareScope?: ShareScope
   studyInstanceUID?: string
+  writeScope?: ShlWriteScope
+  recipientName?: string
+  attestation?: ShlAttestation
 }): string {
   const selectiveScope = sessionSelectiveScope(session)
   return JSON.stringify({
@@ -126,6 +134,18 @@ export function buildSmartApiAccess(session: {
       selectiveScope,
       studyInstanceUID: session.studyInstanceUID,
     }),
+    // Ours. What the recipient may write, and what they must do first.
+    //
+    // `scope` above stays `patient/*.read` and that is not an oversight: it is a
+    // SMART scope string describing FHIR access, and DICOM upload is not a FHIR
+    // operation. Overloading it would tell every reader something untrue about
+    // the FHIR API. Undefined drops out of the JSON, so a read-only share is
+    // byte-identical to what it was before write access existed.
+    upload: session.writeScope?.dicom ? { dicom: true } : undefined,
+    // So the signing step can show the name the patient chose, or ask for one.
+    recipientName: session.recipientName,
+    // Whether a signature is already on file for this session.
+    attested: session.attestation ? true : undefined,
   })
 }
 
@@ -348,9 +368,16 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: ShlPro
     if ('error' in auth) return auth
     const { shlId, session } = auth
 
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      set.status = 405
-      return { error: 'Only read operations are allowed on shared links' }
+    const dicomPathForGuard = params['*'] || ''
+    const refusal = dicomWriteRefusal({
+      method: request.method,
+      dicomPath: dicomPathForGuard,
+      dicomWriteGranted: session.writeScope?.dicom === true,
+      attested: session.attestation !== undefined,
+    })
+    if (refusal) {
+      set.status = refusal.status
+      return { error: refusal.error }
     }
 
     // Resolve the configured DICOM server
@@ -378,13 +405,21 @@ async function shlDicomwebProxyHandler({ request, params, headers, set }: ShlPro
     if (accept) upstreamHeaders.set('accept', accept)
     const upstreamAuth = buildDicomAuthHeader(dicomServer)
     if (upstreamAuth) upstreamHeaders.set('authorization', upstreamAuth)
+    // STOW-RS carries the instances in a multipart body, and the boundary lives in
+    // the Content-Type. Forwarding the method without either produced an empty POST.
+    const isWrite = request.method.toUpperCase() === 'POST'
+    if (isWrite) {
+      const contentType = request.headers.get('content-type')
+      if (contentType) upstreamHeaders.set('content-type', contentType)
+    }
 
     let resp: Response
     try {
       resp = await fetch(targetUrl, {
         method: request.method,
         headers: upstreamHeaders,
-      })
+        ...(isWrite ? { body: request.body, duplex: 'half' } : {}),
+      } as RequestInit)
     } catch (fetchError) {
       const msg = fetchError instanceof Error ? fetchError.message : 'Unknown network error'
       logger.auth.error('SHL DICOMweb upstream unreachable', { shlId, targetUrl, error: msg })
@@ -519,6 +554,11 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
         expiresAt,
         verifiedOnly: body.verifiedOnly ?? false,
         shareScope,
+        // Only a scope that actually grants something is stored: `{}` and `{ dicom: false }`
+        // both mean read-only, and persisting them would make a read-only share look
+        // like a write-enabled one to anything inspecting the session.
+        writeScope: body.writeScope?.dicom ? { dicom: true } : undefined,
+        recipientName: body.recipientName?.trim() || undefined,
         accessCount: 0,
         passcodeHash,
       }
@@ -591,6 +631,96 @@ export const shlRoutes = new Elysia({ prefix: '/shl', tags: ['shl'] })
     detail: {
       summary: 'Create SMART Health Link',
       description: 'Create a spec-compliant SHL for QR-based patient data sharing. Uses JWE (A256GCM) encryption via kill-the-clipboard.',
+      tags: ['shl'],
+      security: [{ BearerAuth: [] }],
+    },
+  })
+
+  /**
+   * Attestation endpoint (recipient POST).
+   *
+   * The recipient signs before they may write anything. Two shapes, per whether
+   * the patient named them when they minted the link:
+   *
+   *   - named     — the name is already on the session; signing says "that is me"
+   *   - not named — the recipient supplies their own name, and signs it
+   *
+   * Either way the signature is what a later Provenance is attributed to, which
+   * is why a write is refused until one exists: an upload that happened first
+   * could never be attributed afterwards.
+   *
+   * This is NOT identity verification and must not be presented as such. An SHL
+   * is a bearer link, so whoever holds it can sign as anyone; what the signature
+   * establishes is that a deliberate, attributable act took place. Nothing
+   * written under it is verified — see the data-verification vocabulary.
+   */
+  .post('/attest', async ({ body, headers, set }) => {
+    const auth = await authorizeShlBearer(headers, set)
+    if ('error' in auth) return auth
+    const { shlId, session } = auth
+
+    if (!session.writeScope?.dicom) {
+      set.status = 403
+      return { error: 'This share is read-only — there is nothing to attest to' }
+    }
+
+    const signature = body.signature.trim()
+    if (!signature.startsWith('data:image/')) {
+      set.status = 400
+      return { error: 'signature must be a data URL of the drawn mark, e.g. data:image/png;base64,…' }
+    }
+
+    // A patient-supplied name wins: the recipient is confirming it is them, not
+    // choosing what to be called. Only an unnamed share reads a name from the body.
+    const patientName = session.recipientName?.trim()
+    const ownName = body.name?.trim()
+    if (!patientName && !ownName) {
+      set.status = 400
+      return { error: 'This share names no recipient — send your own name with the signature' }
+    }
+    const attestation = {
+      name: patientName || (ownName as string),
+      nameSource: patientName ? ('patient' as const) : ('recipient' as const),
+      signature,
+      signedAt: Date.now(),
+    }
+
+    if (!shlSessionStore.recordAttestation(shlId, attestation)) {
+      set.status = 409
+      return { error: 'This share has already been signed' }
+    }
+
+    logger.auth.info('SHL attestation recorded', {
+      shlId,
+      nameSource: attestation.nameSource,
+      patientId: session.patientId,
+    })
+
+    return {
+      name: attestation.name,
+      nameSource: attestation.nameSource,
+      signedAt: new Date(attestation.signedAt).toISOString(),
+    }
+  }, {
+    body: t.Object({
+      name: t.Optional(t.String({ description: 'The name the signer goes by. Required only when the patient named no recipient; ignored otherwise.', maxLength: 200 })),
+      signature: t.String({ description: 'The drawn signature as a data URL, e.g. data:image/png;base64,…', maxLength: 2_000_000 }),
+    }),
+    response: {
+      200: t.Object({
+        name: t.String(),
+        nameSource: t.Union([t.Literal('patient'), t.Literal('recipient')]),
+        signedAt: t.String(),
+      }),
+      400: ErrorResponse,
+      401: ErrorResponse,
+      403: ErrorResponse,
+      409: ErrorResponse,
+      410: ErrorResponse,
+    },
+    detail: {
+      summary: 'Sign before writing through a share link',
+      description: 'Records the name and drawn signature of the recipient on the share session. Required once before any write is accepted. Establishes attribution, NOT identity — a shared link is a bearer credential.',
       tags: ['shl'],
       security: [{ BearerAuth: [] }],
     },
