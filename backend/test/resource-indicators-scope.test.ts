@@ -12,7 +12,7 @@ import {
   assignResourceIndicatorsScope,
   RESOURCE_INDICATORS_SCOPE,
 } from '../src/lib/smart-client-enrichment'
-import { RESOURCE_AUDIENCE_CLIENT_IDS } from '../src/lib/kc-system-provisioning'
+import { RESOURCE_AUDIENCE_CLIENT_IDS, needsResourceIndicators } from '../src/lib/kc-system-provisioning'
 
 /** Minimal KcAdminClient stub recording addDefaultClientScope calls. */
 function makeAdmin(realmScopes: { id?: string; name?: string }[]) {
@@ -74,6 +74,38 @@ describe('assignResourceIndicatorsScope', () => {
     await expect(
       assignResourceIndicatorsScope(admin, 'client-uuid', 'my-client'),
     ).resolves.toBeUndefined()
+  })
+})
+
+/**
+ * Pins the regression: keying only on `smart_app` skipped export-seeded apps on
+ * every reconcile run, so their token exchanges returned `invalid_target`.
+ */
+describe('needsResourceIndicators', () => {
+  const client = (clientId: string, attributes?: Record<string, string>) =>
+    ({ id: `${clientId}-uuid`, clientId, attributes })
+
+  it('covers an export-seeded SMART app, which carries client_type and no smart_app', () => {
+    expect(needsResourceIndicators(client('seeded-app', { client_type: 'standalone-app' }))).toBe(true)
+  })
+
+  it('covers a client provisioned through the admin API or DCR', () => {
+    expect(needsResourceIndicators(client('registered-app', { smart_app: 'true' }))).toBe(true)
+  })
+
+  it('excludes the resource clients, which are the audience and never the requester', () => {
+    for (const clientId of RESOURCE_AUDIENCE_CLIENT_IDS) {
+      expect(needsResourceIndicators(client(clientId, { resource_url: 'https://example.test/fhir' }))).toBe(false)
+    }
+  })
+
+  it('leaves a client with neither marker alone', () => {
+    expect(needsResourceIndicators(client('some-service', { 'access.token.lifespan': '300' }))).toBe(false)
+    expect(needsResourceIndicators(client('bare'))).toBe(false)
+  })
+
+  it('skips a client Keycloak returned without an internal id', () => {
+    expect(needsResourceIndicators({ clientId: 'no-id', attributes: { smart_app: 'true' } })).toBe(false)
   })
 })
 
