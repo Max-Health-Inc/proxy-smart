@@ -12,6 +12,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
   dicomWriteRefusal,
+  fhirWriteRefusal,
   isDicomPathAllowed,
   scopeFhirRequest,
   isCompleteShare,
@@ -416,6 +417,60 @@ describe('dicomWriteRefusal', () => {
   it('refuses every other method regardless of grant', () => {
     for (const method of ['PUT', 'DELETE', 'PATCH']) {
       expect(dicomWriteRefusal({ method, dicomPath: 'studies', ...granted })?.status).toBe(405)
+    }
+  })
+})
+
+// ── FHIR write access ───────────────────────────────────────────────────────
+//
+// SECURITY-CRITICAL. The DICOM grant permits exactly one FHIR write — filing the
+// ImagingStudy for what was uploaded — because STOW-RS stores pixels and nothing
+// else. Everything wider stays refused.
+
+describe('fhirWriteRefusal', () => {
+  const granted = { dicomWriteGranted: true, attested: true }
+  const filing = { method: 'PUT', fhirPath: 'ImagingStudy', search: '?identifier=urn:dicom:uid|urn:oid:1.2.3' }
+
+  it('leaves reads alone', () => {
+    expect(fhirWriteRefusal({ method: 'GET', fhirPath: 'Observation', search: '', ...granted })).toBeNull()
+    expect(fhirWriteRefusal({ method: 'HEAD', fhirPath: 'Patient/p1', search: '', dicomWriteGranted: false, attested: false })).toBeNull()
+  })
+
+  it('allows the conditional ImagingStudy update the upload needs', () => {
+    expect(fhirWriteRefusal({ ...filing, ...granted })).toBeNull()
+  })
+
+  it('refuses it on a read-only share', () => {
+    const r = fhirWriteRefusal({ ...filing, dicomWriteGranted: false, attested: false })
+    expect(r?.status).toBe(405)
+  })
+
+  it('refuses it until the recipient has signed', () => {
+    const r = fhirWriteRefusal({ ...filing, dicomWriteGranted: true, attested: false })
+    expect(r?.status).toBe(403)
+    expect(r?.error).toMatch(/sign before uploading/i)
+  })
+
+  it('refuses any other resource type', () => {
+    for (const type of ['Observation', 'Patient', 'DocumentReference']) {
+      const r = fhirWriteRefusal({ ...filing, fhirPath: type, ...granted })
+      expect(r?.status).toBe(403)
+    }
+  })
+
+  it('refuses an update by id — the grant is not "overwrite a study you can name"', () => {
+    const r = fhirWriteRefusal({ method: 'PUT', fhirPath: 'ImagingStudy/abc', search: '', ...granted })
+    expect(r?.status).toBe(403)
+  })
+
+  it('refuses a PUT with no identifier search', () => {
+    const r = fhirWriteRefusal({ method: 'PUT', fhirPath: 'ImagingStudy', search: '', ...granted })
+    expect(r?.status).toBe(403)
+  })
+
+  it('refuses POST, PATCH and DELETE outright', () => {
+    for (const method of ['POST', 'PATCH', 'DELETE']) {
+      expect(fhirWriteRefusal({ ...filing, method, ...granted })?.status).toBe(405)
     }
   })
 })

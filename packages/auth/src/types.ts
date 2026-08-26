@@ -89,10 +89,22 @@ export interface LaunchCodeContext {
 // ─── Proxy Results ──────────────────────────────────────────────────────────
 
 /** Result of a proxy handler — framework-agnostic response representation */
+/**
+ * Why an authorization was refused, when the OAuth `error` code alone is too coarse to
+ * present. `access_denied` covers both "you are not a clinician" and "your account was
+ * never linked to a patient record" — the second is an unfinished sign-up, and a host
+ * that cannot tell them apart has to show the first message to both.
+ */
+export type SmartErrorReason =
+  /** The signed-in account carries no `fhirUser` at all — sign-up never completed. */
+  | 'account-not-linked'
+  /** An identity exists but cannot be placed on a patient, and is not a practitioner. */
+  | 'not-a-practitioner'
+
 export type SmartProxyResult =
   | { type: 'redirect'; url: string }
   | { type: 'response'; status: number; body: unknown; headers?: Record<string, string> }
-  | { type: 'error'; status: number; error: string; error_description: string }
+  | { type: 'error'; status: number; error: string; error_description: string; reason?: SmartErrorReason }
 
 // ─── Authorize Request ──────────────────────────────────────────────────────
 

@@ -73,6 +73,14 @@ function withIssuer(url: URL, config: SmartProxyConfig): URL {
  * `fhirUser` is the only identity the callback carries, so the check is on its resource TYPE. Unknown
  * or absent is NOT a practitioner — see the gate that calls this for why that direction matters.
  */
+/**
+ * Refusal copy, exported so the picker routes and this gate cannot drift into two
+ * different explanations of the same refusal.
+ */
+export const PRACTITIONER_REQUIRED_MESSAGE = 'Selecting a patient requires a practitioner account.'
+export const ACCOUNT_NOT_LINKED_MESSAGE =
+  'This account is not yet linked to a patient record, so there is nothing to open. Finish setting up your account and sign in again.'
+
 export function isPractitioner(fhirUser: string | undefined): boolean {
   if (!fhirUser) return false
   const type = fhirUser.split('/').filter(Boolean).slice(-2)[0]
@@ -237,10 +245,20 @@ export async function handleCallback(
      * Fails closed: no practitioner fhirUser, no picker.
      */
     if (!isPractitioner(session.fhirUser)) {
+      /*
+       * TWO DIFFERENT SITUATIONS, TWO DIFFERENT ANSWERS. No `fhirUser` at all is not a
+       * permission problem — it is a sign-up that never linked the account to a patient
+       * record, and telling that person they need a practitioner account is both wrong and
+       * unactionable. An identity that exists but cannot be placed on a patient (a
+       * RelatedPerson carer, say) genuinely does need the clinical route. `reason` lets the
+       * host present each honestly instead of matching on the description text.
+       */
+      const linked = !!session.fhirUser
       logger?.warn('SMART callback: refusing patient picker for a non-practitioner', {
         sessionKey: sessionKey.slice(0, 8) + '...',
         clientId: session.clientId,
         fhirUser: session.fhirUser ?? '(none)',
+        reason: linked ? 'not-a-practitioner' : 'account-not-linked',
       })
       // The session rides along so the error page can name the account that was
       // refused and offer to sign out of it — without it the user is told the wrong
@@ -251,7 +269,8 @@ export async function handleCallback(
           type: 'error',
           status: 403,
           error: 'access_denied',
-          error_description: 'Selecting a patient requires a practitioner account.',
+          error_description: linked ? PRACTITIONER_REQUIRED_MESSAGE : ACCOUNT_NOT_LINKED_MESSAGE,
+          reason: linked ? 'not-a-practitioner' : 'account-not-linked',
         },
       }
     }

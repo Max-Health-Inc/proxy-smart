@@ -34,6 +34,7 @@ import { shlSessionStore, type ShareScope, type ShlAttestation, type ShlSession,
 import {
   isDicomPathAllowed,
   dicomWriteRefusal,
+  fhirWriteRefusal,
   scopeFhirRequest,
   isCompleteShare,
   isSelectiveScopeActive,
@@ -247,9 +248,16 @@ async function shlFhirProxyHandler({ request, params, headers, set }: ShlProxyCo
       }
     }
 
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      set.status = 405
-      return { error: 'Only read operations are allowed on shared links' }
+    const fhirRefusal = fhirWriteRefusal({
+      method: request.method,
+      fhirPath,
+      search: url.search,
+      dicomWriteGranted: session.writeScope?.dicom === true,
+      attested: session.attestation !== undefined,
+    })
+    if (fhirRefusal) {
+      set.status = fhirRefusal.status
+      return { error: fhirRefusal.error }
     }
 
     // Selective sharing (record/category de-selection) — whole-patient shares only.
