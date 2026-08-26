@@ -327,6 +327,28 @@ async function attachResourceIndicatorsToExistingClients(
 }
 
 /**
+ * Reconcile the full RFC 8707 resource-indicator wiring on demand — the resource
+ * clients (including the create-only fhir-resource-server), the
+ * resource-indicators scope, and its audience mappers. This is the same work
+ * `ensureSystemClients` runs at boot, exposed so an operator can repair a drifted
+ * or partially-imported realm without a redeploy (e.g. via the admin API / MCP).
+ * Returns the resulting resource clients for confirmation. Idempotent; each step
+ * is individually non-fatal.
+ */
+export async function reconcileResourceIndicators(
+  admin: KcAdminClient,
+): Promise<{ clientId: string; resourceUrl?: string }[]> {
+  await ensureResourceServerClients(admin)
+  await ensureResourceIndicatorsScope(admin)
+  const summary: { clientId: string; resourceUrl?: string }[] = []
+  for (const clientId of RESOURCE_AUDIENCE_CLIENT_IDS) {
+    const found = await admin.clients.find({ clientId, max: 1 })
+    summary.push({ clientId, resourceUrl: found[0]?.attributes?.[RESOURCE_URL_ATTR] })
+  }
+  return summary
+}
+
+/**
  * Ensure the proxy's introspection client (admin-service) may introspect tokens
  * whose `aud` does not list it.
  *
