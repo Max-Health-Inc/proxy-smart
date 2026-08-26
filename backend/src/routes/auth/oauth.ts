@@ -22,6 +22,7 @@ import { safeCssColor } from '@/lib/brand-color'
 import {
   handleAuthorize,
   handleCallback,
+  PRACTITIONER_REQUIRED_MESSAGE,
   handlePatientSelect,
   enrichTokenResponse,
   enrichIntrospection,
@@ -232,7 +233,16 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     switch (result.type) {
       case 'redirect':
         return redirect(result.url)
-      case 'error':
+      case 'error': {
+        /*
+         * An account with no identity at all is an unfinished sign-up, so it gets the page
+         * AIHR's portal already settled on for the same refusal: say the record is not set
+         * up, point at where to set it up, and keep the clinician case in the hint — two
+         * different people land here and "requires a practitioner account" only speaks to one
+         * of them, while being flatly wrong for the other. Where onboarding lives is
+         * deployment config, never baked into the proxy.
+         */
+        const notLinked = result.reason === 'account-not-linked'
         return authErrorPage({
           status: result.status,
           error: result.error,
@@ -241,7 +251,17 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
           logoutUrl: query.state
             ? `${config.baseUrl}/auth/logout?state=${encodeURIComponent(query.state)}`
             : `${config.baseUrl}/auth/logout`,
+          ...(notLinked
+            ? {
+                variant: 'setup' as const,
+                hint: 'Signing in as a clinician through your organization? Your administrator links your account to your Practitioner record instead.',
+                ...(config.patientOnboardingUrl
+                  ? { retryUrl: config.patientOnboardingUrl, retryLabel: 'Set up my record' }
+                  : {}),
+              }
+            : {}),
         })
+      }
       case 'response':
         set.status = result.status
         return result.body
@@ -274,7 +294,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
     if (!session.pickerAllowed && session.needsPatientPicker) {
       const errorUrl = new URL(`${config.baseUrl}/patient-picker/`)
       errorUrl.searchParams.set('error', 'access_denied')
-      errorUrl.searchParams.set('error_description', 'Selecting a patient requires a practitioner account.')
+      errorUrl.searchParams.set('error_description', PRACTITIONER_REQUIRED_MESSAGE)
       return redirect(errorUrl.href)
     }
 
@@ -348,7 +368,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
         clientId: session.clientId,
       })
       set.status = 403
-      return { error: 'access_denied', error_description: 'Selecting a patient requires a practitioner account.' }
+      return { error: 'access_denied', error_description: PRACTITIONER_REQUIRED_MESSAGE }
     }
 
     // Parse server_name and fhir_version from the session aud URL

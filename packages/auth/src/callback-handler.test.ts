@@ -228,6 +228,25 @@ describe('callback-handler: Person fhirUser reaches the token endpoint', () => {
     expect(result.type === 'redirect' && result.url).not.toContain('patient-picker')
   })
 
+  test('no fhirUser at all: refused as an unfinished sign-up, not as a missing practitioner role', async () => {
+    /*
+     * The account was never linked to a patient record, which the user can fix themselves.
+     * `reason` is what the host renders off — asserting it, rather than the sentence, is what
+     * keeps the copy free to improve.
+     */
+    const store = new MemoryStore()
+    store.set('session-key', makeSession({ needsPatientPicker: true, fhirUser: undefined }))
+
+    const deps: CallbackHandlerDeps = { config: BASE_CONFIG, store, autoResolvePatient: async () => null }
+    const { result } = await handleCallback({ state: 'session-key', code: 'auth-code-123' }, deps)
+
+    expect(result.type).toBe('error')
+    expect(result.type === 'error' && result.reason).toBe('account-not-linked')
+    // Still a refusal, and still no directory access.
+    expect(result.type === 'error' && result.status).toBe(403)
+    expect(store.get('session-key')?.pickerAllowed).toBeUndefined()
+  })
+
   test('RelatedPerson is NOT a Person: still refused, because the token endpoint cannot place it', async () => {
     /*
      * Deferral covers exactly what `resolveFhirUserForClient` can resolve. Letting a
@@ -242,6 +261,8 @@ describe('callback-handler: Person fhirUser reaches the token endpoint', () => {
 
     expect(result.type).toBe('error')
     expect(result.type === 'error' && result.status).toBe(403)
+    // An identity that exists but cannot be placed is the clinical route, not a sign-up gap.
+    expect(result.type === 'error' && result.reason).toBe('not-a-practitioner')
   })
 
   test('a resolved patient still wins over deferral', async () => {

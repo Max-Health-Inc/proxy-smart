@@ -15,16 +15,33 @@ export function authErrorPage(opts: {
   signedInAs?: string
   /** Where "use a different account" goes. Omit to hide the action. */
   logoutUrl?: string
+  /**
+   * `setup` for a refusal the user can resolve themselves — an account that was never
+   * linked to a patient record. It drops the status number and the Go Back link: a
+   * three-digit code answers a question this person did not ask, and going back only
+   * replays the same launch.
+   */
+  variant?: 'error' | 'setup'
+  /** Overrides the derived headline. */
+  title?: string
+  /** Muted line under the message — for the reader the main copy is not addressed to. */
+  hint?: string
+  /** Primary way forward, e.g. where to finish signing up. Omit to hide it. */
+  retryUrl?: string
+  retryLabel?: string
 }): Response {
-  const { status, error, errorDescription, signedInAs, logoutUrl } = opts
-  const title = error === 'invalid_request' ? 'Session Expired' : 'Authorization Error'
+  const { status, error, errorDescription, signedInAs, logoutUrl, variant = 'error', hint, retryUrl, retryLabel } = opts
+  const isSetup = variant === 'setup'
+  const title = opts.title ?? (isSetup
+    ? 'Your patient record is not set up yet'
+    : error === 'invalid_request' ? 'Session Expired' : 'Authorization Error')
   const html = `<!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <link rel="icon" type="image/svg+xml" href="/proxy-smart.svg"/>
-<title>${status} — ${title}</title>
+<title>${isSetup ? title : `${status} — ${title}`}</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{color-scheme:dark}
@@ -39,16 +56,18 @@ a:hover{opacity:.85}
 .secondary{background:transparent;color:#737373;border:1px solid rgba(255,255,255,.1)}
 .secondary:hover{color:#a3a3a3;border-color:rgba(255,255,255,.2)}
 .code{margin-top:2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,.05);font-size:.75rem;color:#525252;font-family:ui-monospace,monospace}
+.hint{display:inline-block;margin-top:.75rem;color:#525252;font-size:.8125rem}
 </style>
 </head>
 <body>
 <div class="c">
-<h1>${status}</h1>
+${isSetup ? '' : `<h1>${status}</h1>`}
 <h2>${Bun.escapeHTML(title)}</h2>
-<p>${Bun.escapeHTML(errorDescription)}</p>
+<p>${Bun.escapeHTML(errorDescription)}${hint ? `<br/><span class="hint">${Bun.escapeHTML(hint)}</span>` : ''}</p>
 <div class="actions">
-${logoutUrl ? `<a href="${Bun.escapeHTML(logoutUrl)}">Sign out and use a different account</a>` : ''}
-<a class="${logoutUrl ? 'secondary' : ''}" href="javascript:history.back()">Go Back</a>
+${retryUrl ? `<a href="${Bun.escapeHTML(retryUrl)}">${Bun.escapeHTML(retryLabel ?? 'Try again')}</a>` : ''}
+${logoutUrl ? `<a class="${retryUrl ? 'secondary' : ''}" href="${Bun.escapeHTML(logoutUrl)}">Sign out and use a different account</a>` : ''}
+${isSetup ? '' : `<a class="${logoutUrl || retryUrl ? 'secondary' : ''}" href="javascript:history.back()">Go Back</a>`}
 <a class="secondary" href="/">Home</a>
 </div>
 <div class="code">${Bun.escapeHTML(error)}${signedInAs ? `<br/>signed in as ${Bun.escapeHTML(signedInAs)}` : ''}</div>
