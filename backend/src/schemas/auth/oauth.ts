@@ -119,7 +119,8 @@ export type LoginQueryType = Static<typeof LoginQuery>
 export const LogoutQuery = t.Object({
   post_logout_redirect_uri: t.Optional(t.String({ description: 'Post-logout redirect URI (defaults to base URL)' })),
   id_token_hint: t.Optional(t.String({ description: 'ID token hint for logout' })),
-  client_id: t.Optional(t.String({ description: 'OAuth client ID' }))
+  client_id: t.Optional(t.String({ description: 'OAuth client ID' })),
+  state: t.Optional(t.String({ description: 'Launch session key, used to end the session and return to the app' }))
 }, { title: 'LogoutQuery' })
 export type LogoutQueryType = Static<typeof LogoutQuery>
 
