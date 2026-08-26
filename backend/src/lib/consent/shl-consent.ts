@@ -83,7 +83,12 @@ export function buildShareConsent(shlId: string, session: ShlSession): MaxHealth
   const nowIso = new Date().toISOString()
   const patientRef = `Patient/${session.patientId}`
   const label = session.shl.label?.trim()
-  const recipientDisplay = label ? `Any holder of the share link (${label})` : 'Any holder of the share link'
+  // A named recipient is who the patient INTENDED, and it is what the consent
+  // portal should show them — but it is still a bearer link, so the display says
+  // both: the intent and the fact that anyone holding the link can act on it.
+  const intended = session.recipientName?.trim()
+  const holder = label ? `Any holder of the share link (${label})` : 'Any holder of the share link'
+  const recipientDisplay = intended ? `${intended} — ${holder.toLowerCase()}` : holder
   const classes = sharedClasses(session)
 
   return {
@@ -127,13 +132,21 @@ export function buildShareConsent(shlId: string, session: ShlSession): MaxHealth
               },
             ],
           },
-          // Bearer link: no named recipient. R4 requires actor.reference, so we
-          // carry a display describing the grantee class (any holder of the link).
+          // R4 requires actor.reference. A share has no Practitioner to point at —
+          // even a named recipient is a label the patient typed — so the identity
+          // travels as a display rather than a reference that would imply lookup.
           reference: { display: recipientDisplay },
         },
       ],
+      // `access` always; `correct` as well when the share permits writing. Without
+      // the second code an upload-capable link mirrors as a read-only grant, and
+      // the consent portal — where the patient reviews and revokes — understates
+      // what they gave away.
       action: [
         { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/consentaction', code: 'access' }] },
+        ...(session.writeScope?.dicom
+          ? [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/consentaction', code: 'correct', display: 'Correct/Update information' }] }]
+          : []),
       ],
       ...(classes ? { class: classes } : {}),
     },
