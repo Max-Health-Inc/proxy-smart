@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.28-alpha.202608271636.ea49e0947] - 2026-08-27
+
+- 🔧 Chores & Improvements: Synchronize package versions and update alpha pre-release to 0.3.28-alpha.202608271636.ea49e0947
+- 🐛 Bug Fixes: Fix FHIR generation to use babelfhir-ts 1.6.10 for consent-fhir to avoid extra client-r4 dependency and related issues
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1074
+
+
 ## [0.3.25-beta.202608261825.cd165e80f] - 2026-08-26
 
 - 🔧 Chores & Improvements: Sync package versions
