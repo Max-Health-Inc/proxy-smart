@@ -864,7 +864,12 @@ describe('Consent Enforcement E2E', () => {
       expect(result.decision).toBe('deny')
     })
 
-    it.serial('should PERMIT when consent has no actor restrictions (applies to all)', async () => {
+    /**
+     * An actor-less provision names no recipient, so it grants nothing. This used
+     * to permit every client, which inverted the model: the unscoped consent let
+     * everyone in while a consent naming a practitioner let nobody in.
+     */
+    it.serial('should DENY when consent names no actor, because it grants to nobody', async () => {
       setConsentConfig()
 
       const consentNoActor: FhirConsent = {
@@ -881,7 +886,44 @@ describe('Consent Enforcement E2E', () => {
       mockFhirConsentResponse([consentNoActor])
 
       const result = await testCheckConsent(
-        createToken({ azp: 'any-client' }),
+        createToken({ azp: 'any-client', fhirUser: 'Practitioner/dr-smith' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('deny')
+    })
+
+    /**
+     * The shape the consent portal actually writes: actor is the GRANTEE
+     * practitioner, not the OAuth client. Matching only clientId meant every
+     * consent a patient granted was ignored.
+     */
+    it.serial('should PERMIT the practitioner a consent names, whatever app they use', async () => {
+      setConsentConfig()
+
+      const consentForPractitioner: FhirConsent = {
+        resourceType: 'Consent',
+        id: 'consent-dr-smith',
+        status: 'active',
+        scope: { coding: [{ code: 'patient-privacy' }] },
+        category: [],
+        provision: {
+          type: 'permit' as const,
+          actor: [{
+            role: { coding: [{ code: 'PRCP' }] },
+            reference: { reference: 'Practitioner/dr-smith' },
+          }],
+        },
+      } as FhirConsent
+
+      mockFhirConsentResponse([consentForPractitioner])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'aihr-portal', fhirUser: 'Practitioner/dr-smith' }),
         'hapi',
         'https://fhir.example.com',
         'Patient/patient-123',
@@ -890,6 +932,72 @@ describe('Consent Enforcement E2E', () => {
       )
 
       expect(result.decision).toBe('permit')
+      expect(result.consentId).toBe('Consent/consent-dr-smith')
+    })
+
+    it.serial('should DENY a different practitioner than the consent names', async () => {
+      setConsentConfig()
+
+      const consentForPractitioner: FhirConsent = {
+        resourceType: 'Consent',
+        id: 'consent-dr-smith',
+        status: 'active',
+        scope: { coding: [{ code: 'patient-privacy' }] },
+        category: [],
+        provision: {
+          type: 'permit' as const,
+          actor: [{
+            role: { coding: [{ code: 'PRCP' }] },
+            reference: { reference: 'Practitioner/dr-smith' },
+          }],
+        },
+      } as FhirConsent
+
+      mockFhirConsentResponse([consentForPractitioner])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'aihr-portal', fhirUser: 'Practitioner/dr-jones' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('deny')
+    })
+
+    /** An SHL mirror names its recipient by display only, so it grants no FHIR access. */
+    it.serial('should DENY an actor carrying only a display name', async () => {
+      setConsentConfig()
+
+      const shlMirror: FhirConsent = {
+        resourceType: 'Consent',
+        id: 'consent-shl',
+        status: 'active',
+        scope: { coding: [{ code: 'patient-privacy' }] },
+        category: [],
+        provision: {
+          type: 'permit' as const,
+          actor: [{
+            role: { coding: [{ code: 'IRCP' }] },
+            reference: { display: 'Dr Anywhere' },
+          }],
+        },
+      } as FhirConsent
+
+      mockFhirConsentResponse([shlMirror])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'aihr-portal', fhirUser: 'Practitioner/dr-smith' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('deny')
     })
   })
 
