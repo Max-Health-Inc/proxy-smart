@@ -33,28 +33,29 @@ import { checkIal, getIalConfig } from './person-resolver'
 import { logger } from '../logger'
 import { getRuntimeConsentConfig } from '../runtime-config'
 import { consentMetricsLogger } from '../consent-metrics-logger'
+import { resolveTokenPatientId } from '../patient-context'
 
 /**
- * Extract patient ID from various sources
+ * Whose consent governs this request. The token decides, not the URL.
+ *
+ * Reading the id from the path meant a token for patient A asking for
+ * `Patient/B` was evaluated against B's consent, which a broad Consent on B
+ * permitted. The URL stays as a last resort only: dropping it would turn those
+ * requests into "No patient context" and skip the check entirely.
  */
 function extractPatientId(
   tokenPayload: SmartTokenPayload,
   resourcePath: string
 ): string | null {
-  // 1. From token's SMART launch context
-  if (tokenPayload.patient) {
-    return tokenPayload.patient
+  const fromToken = resolveTokenPatientId(tokenPayload as unknown as Record<string, unknown>)
+  if (fromToken) {
+    return fromToken
   }
 
-  // 2. From resource path if accessing Patient resource directly
   const patientMatch = resourcePath.match(/^Patient\/([^/]+)/)
   if (patientMatch) {
     return patientMatch[1]
   }
-
-  // 3. Could potentially extract from query params for searches
-  // e.g., Observation?patient=Patient/123
-  // For now, return null if not determinable
 
   return null
 }

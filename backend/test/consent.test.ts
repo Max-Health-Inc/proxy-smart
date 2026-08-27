@@ -195,9 +195,46 @@ describe('buildConsentContext', () => {
       azp: 'test-client',
       scope: 'system/*.read'
     }
-    
+
     const context = buildConsentContext(token, 'test-server', 'Observation', 'GET')
-    
+
+    expect(context.patientId).toBeNull()
+  })
+
+  /** The URL must never outrank the token. */
+  it('prefers the patient the token is about over the one named in the path', () => {
+    const token: SmartTokenPayload = {
+      azp: 'patient-portal',
+      scope: 'patient/*.read',
+      fhirUser: 'Patient/1005',
+    }
+
+    const context = buildConsentContext(token, 'test-server', 'Patient/2000', 'GET')
+
+    expect(context.patientId).toBe('1005')
+  })
+
+  it('resolves the patient from a Patient fhirUser when there is no claim', () => {
+    const token: SmartTokenPayload = {
+      azp: 'patient-portal',
+      scope: 'patient/*.read',
+      fhirUser: 'https://fhir.example.com/Patient/1005',
+    }
+
+    const context = buildConsentContext(token, 'test-server', 'Observation', 'GET')
+
+    expect(context.patientId).toBe('1005')
+  })
+
+  it('does not treat a Practitioner fhirUser as a patient', () => {
+    const token: SmartTokenPayload = {
+      azp: 'aihr-portal',
+      scope: 'user/*.read',
+      fhirUser: 'Practitioner/dr-smith',
+    }
+
+    const context = buildConsentContext(token, 'test-server', 'Observation', 'GET')
+
     expect(context.patientId).toBeNull()
   })
 
