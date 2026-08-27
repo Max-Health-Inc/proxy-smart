@@ -11,9 +11,9 @@
  *
  * 2. **Role-Based Data Isolation** — two compartment rules, both governed by
  *    ROLE_BASED_FILTERING_MODE:
- *      a) a `patient/`-scoped grant is confined to the token's `patient` launch
- *         context, whoever the user is (SMART: "If the app has any patient-level
- *         scopes, they will be scoped to Patient 123")
+ *      a) a `patient/`-scoped grant is confined to one patient, whoever the user
+ *         is (SMART: "If the app has any patient-level scopes, they will be
+ *         scoped to Patient 123"), resolved by {@link resolveCompartmentPatient}
  *      b) a user who IS a patient (`fhirUser: Patient/…`) sees only their own data
  *
  * SCOPE_ENFORCEMENT_MODE defaults to `enforce`; ROLE_BASED_FILTERING_MODE defaults
@@ -24,6 +24,7 @@
 import { hasPatientCompartmentScope, parseScopes } from '@proxy-smart/auth'
 import { logger } from './logger'
 import { getRuntimeAccessControlConfig } from './runtime-config'
+import { tokenContextStore } from './token-context-store'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -238,6 +239,48 @@ async function upstreamFhirQuery(
   }
 }
 
+/**
+ * The patient a `patient/` grant is confined to, and where that came from.
+ *
+ * Three sources because the launch context is NOT a JWT claim here:
+ * `launch/patient` stopped using a Keycloak mapper and is captured per-token in
+ * TokenContextStore at exchange (see smart-scope-mappers). Only introspection
+ * read that store, so the FHIR path saw no patient at all and `enforce` refused
+ * every patient-scoped request — which is why it could only ever ship as
+ * audit-only. The store is single-node in-memory, so `fhirUser` (a real mapped
+ * claim) backs it up and keeps patient-facing apps working without shared state.
+ */
+function resolveCompartmentPatient(
+  tokenPayload: Record<string, unknown>,
+): { patient: string; source: 'claim' | 'launch-context' | 'fhirUser' } | null {
+  const claim = tokenPayload.patient
+  if (typeof claim === 'string' && claim) {
+    return { patient: claim, source: 'claim' }
+  }
+
+  const jti = tokenPayload.jti
+  if (typeof jti === 'string' && jti) {
+    const azp = tokenPayload.azp
+    const stored = tokenContextStore.get(jti, typeof azp === 'string' ? azp : undefined)
+    if (stored?.patient) {
+      return { patient: stored.patient, source: 'launch-context' }
+    }
+  }
+
+  // Only a Patient fhirUser identifies a compartment. A Practitioner holding
+  // patient/ scopes is confined to a patient this cannot name, so it stays null
+  // and the caller refuses rather than widening the grant to the whole server.
+  const fhirUser = tokenPayload.fhirUser
+  if (typeof fhirUser === 'string' && fhirUser) {
+    const normalized = normalizeFhirUser(fhirUser)
+    if (normalized.startsWith('Patient/')) {
+      return { patient: normalized, source: 'fhirUser' }
+    }
+  }
+
+  return null
+}
+
 export async function enforceRoleBasedFiltering(
   ctx: AccessControlContext,
   queryString: string,
@@ -259,9 +302,9 @@ export async function enforceRoleBasedFiltering(
   // user happens to BE the patient.
   const grantedScopes = parseScopes(ctx.tokenPayload.scope as string | undefined)
   if (hasPatientCompartmentScope(grantedScopes)) {
-    const contextPatient = ctx.tokenPayload.patient as string | undefined
+    const resolved = resolveCompartmentPatient(ctx.tokenPayload)
 
-    if (!contextPatient) {
+    if (!resolved) {
       // The grant is confined to one patient but nothing says which, so the
       // confinement is undefined. Enforcing means refusing; audit-only records
       // what enforcement would have refused.
@@ -291,11 +334,12 @@ export async function enforceRoleBasedFiltering(
     // Reuses the same compartment logic as patient users below; only the source
     // of the patient id differs.
     const compartment = normalizeFhirUser(
-      contextPatient.includes('/') ? contextPatient : `Patient/${contextPatient}`,
+      resolved.patient.includes('/') ? resolved.patient : `Patient/${resolved.patient}`,
     )
     if (!isEnforce) {
       logger.fhir.info('Patient-compartment filtering skipped (audit-only)', {
         compartment,
+        source: resolved.source,
         resourceType,
         method: ctx.method,
         server: ctx.serverName,
