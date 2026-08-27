@@ -1,26 +1,40 @@
 /**
- * FHIR Service for Person Resource Operations
- * Handles creating and searching FHIR Person resources across different servers
- * with version-specific type support (R3, R4, R5)
+ * FHIR Person operations against a proxied FHIR server.
+ *
+ * Runs on `@babelfhir-ts/client-r4`, the generator's own client, rather than the
+ * hand-rolled fetch this module used to carry: each of the five operations
+ * repeated its own token lookup, URL assembly, header block, `!response.ok`
+ * throw and JSON parse, and the search parsed `bundle.entry` by hand — so it read
+ * only the first page and silently dropped every result after it. `searchAll`
+ * follows the `next` links, and the writer reports the server's
+ * `OperationOutcome` instead of just the status line.
+ *
+ * FHIR version handling is now only what it actually is: a path segment on the
+ * proxy URL. `buildPersonResource` used to assemble one object and assert it to
+ * `PersonR3`, `PersonR5` or `PersonR4` in a switch — three assertions proving the
+ * fields used here (name, telecom, identifier, link) are identical across the
+ * three releases. The R4 types describe them for all three.
  */
 
-import type { PersonR3, PersonR4, PersonR5, AssuranceLevel } from '../lib/fhir-types';
-import type { ContactPoint, CustomPersonLink, PersonResource, ServerInfo } from '../lib/fhir-types';
+import { FhirResourceReader, FhirResourceWriter, bearerFetch } from '@babelfhir-ts/client-r4';
+import { formatHumanName } from '@proxy-smart/shared-ui';
+import type { Person, ContactPoint, Identifier } from 'fhir/r4';
+import {
+  isAssuranceLevel,
+  isLinkedResourceType,
+  type CustomPersonLink,
+  type PersonResource,
+  type ServerInfo,
+} from '@/lib/person-linking';
 import { getStoredToken } from '@/lib/apiClient';
 import { config } from '@/config';
-
-// Union type for all FHIR Person versions
-type AnyPerson = PersonR3 | PersonR4 | PersonR5;
 
 export interface PersonData {
   firstName: string;
   lastName: string;
   email: string;
   telecom?: ContactPoint[];
-  identifier?: Array<{
-    system: string;
-    value: string;
-  }>;
+  identifier?: Identifier[];
 }
 
 export interface SearchPersonParams {
@@ -30,349 +44,178 @@ export interface SearchPersonParams {
   _id?: string;
 }
 
+/** A Person as the linking screens list it. */
+export interface PersonSummary {
+  id: string;
+  display: string;
+}
+
 /**
- * Determine the FHIR version path segment from version string
+ * The proxy path segment for a server's FHIR release.
+ *
+ * The proxy routes by release, so a server advertising `4.0.1`, `R4` or nothing
+ * recognisable all land on the same `/R4` path.
  */
 function getFhirVersionPath(fhirVersion: string): 'R3' | 'R4' | 'R5' {
   const version = fhirVersion.toUpperCase();
-  
-  // Handle various version formats
+
   if (version.includes('3.0') || version === 'STU3' || version === 'R3') {
     return 'R3';
   }
   if (version.includes('5.0') || version === 'R5') {
     return 'R5';
   }
-  // Default to R4 for 4.0.x or unrecognized versions
   return 'R4';
 }
 
+/** The proxied base URL for one server's FHIR endpoint. */
+function proxyBaseUrl(serverId: string, fhirVersion: string): string {
+  return `${config.api.baseUrl}/proxy/${serverId}/${getFhirVersionPath(fhirVersion)}`;
+}
+
 /**
- * Build a FHIR Person resource with the correct version-specific type
- * @param personData - The person data to build the resource from
- * @param fhirVersion - The FHIR version to build for (determines the return type)
+ * A reader and writer for one server, authorized with the token held right now.
+ *
+ * Built per operation rather than once at module scope, because the admin token
+ * refreshes and `bearerFetch` captures the string it is given. Every operation
+ * below therefore starts from a freshly read token.
  */
-function buildPersonResource(personData: PersonData, fhirVersion: string): AnyPerson {
-  const versionPath = getFhirVersionPath(fhirVersion);
-  
-  // Base structure that's compatible with all FHIR versions
-  const basePersonData = {
-    resourceType: 'Person' as const,
+async function personClients(
+  serverId: string,
+  fhirVersion: string,
+): Promise<{ reader: FhirResourceReader<Person>; writer: FhirResourceWriter<Person> }> {
+  const baseUrl = proxyBaseUrl(serverId, fhirVersion);
+  const authFetch = bearerFetch((await getStoredToken()) ?? undefined);
+  return {
+    reader: new FhirResourceReader<Person>(baseUrl, 'Person', authFetch),
+    writer: new FhirResourceWriter<Person>(baseUrl, 'Person', authFetch),
+  };
+}
+
+/** The logical id, whether the caller passed `Person/123` or `123`. */
+function logicalId(personId: string): string {
+  return personId.startsWith('Person/') ? personId.slice('Person/'.length) : personId;
+}
+
+function summarize(person: Person & { id: string }): PersonSummary {
+  return { id: `Person/${person.id}`, display: formatHumanName(person.name) };
+}
+
+/** Build the Person resource to send for a new entry. */
+function buildPersonResource(personData: PersonData): Person {
+  return {
+    resourceType: 'Person',
     active: true,
     name: [
       {
-        use: 'official' as const,
+        use: 'official',
         family: personData.lastName,
         given: [personData.firstName],
-        text: `${personData.firstName} ${personData.lastName}`
-      }
+        text: `${personData.firstName} ${personData.lastName}`,
+      },
     ],
-    telecom: personData.telecom || [
-      {
-        system: 'email' as const,
-        value: personData.email,
-        use: 'work' as const
-      }
+    telecom: personData.telecom ?? [
+      { system: 'email', value: personData.email, use: 'work' },
     ],
-    ...(personData.identifier && personData.identifier.length > 0 && { identifier: personData.identifier })
+    ...(personData.identifier?.length ? { identifier: personData.identifier } : {}),
   };
-
-  // Return the version-specific typed resource
-  switch (versionPath) {
-    case 'R3':
-      return basePersonData as PersonR3;
-    case 'R5':
-      return basePersonData as PersonR5;
-    case 'R4':
-    default:
-      return basePersonData as PersonR4;
-  }
 }
 
-/**
- * Create a FHIR Person resource on a specific server
- * @param serverId - The ID of the FHIR server
- * @param fhirVersion - The FHIR version of the server (e.g., "4.0.1", "R4", "5.0.0")
- * @param personData - The person data to create
- */
+/** Create a Person on a server. */
 export async function createPersonResource(
   serverId: string,
   fhirVersion: string,
-  personData: PersonData
-): Promise<{ id: string; display: string }> {
-  
-  // Build the FHIR Person resource with version-specific structure
-  const person = buildPersonResource(personData, fhirVersion);
-  const versionPath = getFhirVersionPath(fhirVersion);
-
-  // Get the access token
-  const token = await getStoredToken();
-  if (!token) {
-    throw new Error('No access token available. Please log in.');
-  }
-
-  // Make the request to the FHIR proxy with the correct version path
-  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person`;
-
-  const response = await fetch(fhirProxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/fhir+json',
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/fhir+json'
-    },
-    body: JSON.stringify(person)
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to create Person resource: ${response.status} ${response.statusText}. ${errorText}`);
-  }
-
-  const createdPerson: AnyPerson = await response.json();
-  
-  if (!createdPerson.id) {
-    throw new Error('Created Person resource has no ID');
-  }
-
-  const display = createdPerson.name?.[0]?.text || 
-                  `${createdPerson.name?.[0]?.given?.[0] || ''} ${createdPerson.name?.[0]?.family || ''}`.trim();
-
-  return {
-    id: `Person/${createdPerson.id}`,
-    display: display || createdPerson.id
-  };
+  personData: PersonData,
+): Promise<PersonSummary> {
+  const { writer } = await personClients(serverId, fhirVersion);
+  const created = await writer.create(buildPersonResource(personData));
+  return summarize(created);
 }
 
-/**
- * Search for Person resources on a specific server
- * @param serverId - The ID of the FHIR server
- * @param fhirVersion - The FHIR version of the server (e.g., "4.0.1", "R4", "5.0.0")
- * @param searchParams - Search parameters
- */
+/** Search for Persons on a server, across every page of results. */
 export async function searchPersonResources(
   serverId: string,
   fhirVersion: string,
-  searchParams: SearchPersonParams
-): Promise<Array<{ id: string; display: string }>> {
-  
-  const versionPath = getFhirVersionPath(fhirVersion);
-  
-  // Get the access token
-  const token = await getStoredToken();
-  if (!token) {
-    throw new Error('No access token available. Please log in.');
-  }
+  searchParams: SearchPersonParams,
+): Promise<PersonSummary[]> {
+  const params: Record<string, string> = {};
+  if (searchParams._id) params._id = searchParams._id;
+  if (searchParams.name) params.name = searchParams.name;
+  if (searchParams.identifier) params.identifier = searchParams.identifier;
+  if (searchParams.email) params.telecom = `email|${searchParams.email}`;
 
-  // Build search URL with parameters
-  const params = new URLSearchParams();
-  if (searchParams._id) {
-    params.append('_id', searchParams._id);
-  }
-  if (searchParams.name) {
-    params.append('name', searchParams.name);
-  }
-  if (searchParams.identifier) {
-    params.append('identifier', searchParams.identifier);
-  }
-  if (searchParams.email) {
-    params.append('telecom', `email|${searchParams.email}`);
-  }
-
-  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person?${params.toString()}`;
-
-  const response = await fetch(fhirProxyUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/fhir+json'
-    }
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to search Person resources: ${response.status} ${response.statusText}. ${errorText}`);
-  }
-
-  const bundle = await response.json();
-  
-  if (!bundle.entry || bundle.entry.length === 0) {
-    return [];
-  }
-
-  return bundle.entry.map((entry: { resource: AnyPerson }) => {
-    const person: AnyPerson = entry.resource;
-    const display = person.name?.[0]?.text || 
-                    `${person.name?.[0]?.given?.[0] || ''} ${person.name?.[0]?.family || ''}`.trim();
-    
-    return {
-      id: `Person/${person.id}`,
-      display: display || person.id || 'Unknown'
-    };
-  });
+  const { reader } = await personClients(serverId, fhirVersion);
+  const persons = await reader.searchAll(params);
+  return persons.map(summarize);
 }
 
-/**
- * Get a specific Person resource by ID
- * @param serverId - The ID of the FHIR server
- * @param fhirVersion - The FHIR version of the server (e.g., "4.0.1", "R4", "5.0.0")
- * @param personId - The Person resource ID (with or without "Person/" prefix)
- */
+/** Read one Person by id. */
 export async function getPersonResource(
   serverId: string,
   fhirVersion: string,
-  personId: string
-): Promise<{ id: string; display: string }> {
-  
-  const versionPath = getFhirVersionPath(fhirVersion);
-  
-  // Get the access token
-  const token = await getStoredToken();
-  if (!token) {
-    throw new Error('No access token available. Please log in.');
-  }
-
-  // Remove "Person/" prefix if present
-  const cleanId = personId.startsWith('Person/') ? personId.substring(7) : personId;
-
-  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
-
-  const response = await fetch(fhirProxyUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/fhir+json'
-    }
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error(`Person resource not found: ${personId}`);
-    }
-    const errorText = await response.text();
-    throw new Error(`Failed to get Person resource: ${response.status} ${response.statusText}. ${errorText}`);
-  }
-
-  const person: AnyPerson = await response.json();
-  const display = person.name?.[0]?.text || 
-                  `${person.name?.[0]?.given?.[0] || ''} ${person.name?.[0]?.family || ''}`.trim();
-
-  return {
-    id: `Person/${person.id}`,
-    display: display || person.id || 'Unknown'
-  };
+  personId: string,
+): Promise<PersonSummary> {
+  const { reader } = await personClients(serverId, fhirVersion);
+  const person = await reader.read(logicalId(personId));
+  return summarize(person);
 }
 
 /**
- * Get a Person resource with full detail including links
+ * Read one Person with its links, mapped for the linking screens.
+ *
+ * A link whose target is not a Patient, Practitioner or RelatedPerson is dropped
+ * rather than relabelled: the old mapping asserted the reference's first segment
+ * to that union and defaulted a missing one to `Patient`, which showed a link to
+ * something else as a link to a patient.
  */
 export async function getPersonResourceFull(
   serverId: string,
   fhirVersion: string,
   personId: string,
-  serverInfo: ServerInfo
+  serverInfo: ServerInfo,
 ): Promise<PersonResource> {
-  const versionPath = getFhirVersionPath(fhirVersion);
-  const token = await getStoredToken();
-  if (!token) throw new Error('No access token available. Please log in.');
+  const id = logicalId(personId);
+  const { reader } = await personClients(serverId, fhirVersion);
+  const person = await reader.read(id);
 
-  const cleanId = personId.startsWith('Person/') ? personId.substring(7) : personId;
-  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
-
-  const response = await fetch(fhirProxyUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/fhir+json'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to get Person resource: ${response.status} ${response.statusText}`);
-  }
-
-  const person: AnyPerson = await response.json();
-  const display = person.name?.[0]?.text ||
-    `${person.name?.[0]?.given?.[0] || ''} ${person.name?.[0]?.family || ''}`.trim();
-
-  // Map FHIR Person.link to our CustomPersonLink format
-  const links: CustomPersonLink[] = (person.link || []).map((link: { target?: { reference?: string; display?: string }; assurance?: string }, idx: number) => {
-    const ref = link.target?.reference || '';
-    const parts = ref.split('/');
-    const resourceType = (parts[0] || 'Patient') as 'Patient' | 'Practitioner' | 'RelatedPerson';
-    return {
-      id: `link-${idx}`,
-      target: {
-        resourceType,
-        reference: ref,
-        display: link.target?.display
+  const links: CustomPersonLink[] = (person.link ?? []).flatMap((link, idx) => {
+    const reference = link.target?.reference;
+    const resourceType = reference?.split('/')[0];
+    if (!reference || !isLinkedResourceType(resourceType)) return [];
+    return [
+      {
+        id: `link-${idx}`,
+        target: { resourceType, reference, display: link.target?.display },
+        assurance: isAssuranceLevel(link.assurance) ? link.assurance : 'level1',
+        created: new Date().toISOString(),
       },
-      assurance: (link.assurance as AssuranceLevel) || 'level1',
-      created: new Date().toISOString()
-    };
+    ];
   });
 
   return {
-    id: person.id || cleanId,
-    display: display || cleanId,
+    id: person.id,
+    display: formatHumanName(person.name),
     serverInfo,
-    links
+    links,
   };
 }
 
-/**
- * Update Person.link entries on a FHIR server (read-modify-write)
- */
+/** Replace a Person's links (read-modify-write). */
 export async function updatePersonLinks(
   serverId: string,
   fhirVersion: string,
   personId: string,
-  links: CustomPersonLink[]
+  links: CustomPersonLink[],
 ): Promise<void> {
-  const versionPath = getFhirVersionPath(fhirVersion);
-  const token = await getStoredToken();
-  if (!token) throw new Error('No access token available. Please log in.');
+  const id = logicalId(personId);
+  const { reader, writer } = await personClients(serverId, fhirVersion);
 
-  const cleanId = personId.startsWith('Person/') ? personId.substring(7) : personId;
-  const fhirProxyUrl = `${config.api.baseUrl}/proxy/${serverId}/${versionPath}/Person/${cleanId}`;
-
-  // Read the current Person resource
-  const getResponse = await fetch(fhirProxyUrl, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/fhir+json'
-    }
+  const person = await reader.read(id);
+  await writer.update({
+    ...person,
+    link: links.map((link) => ({
+      target: { reference: link.target.reference, display: link.target.display },
+      assurance: link.assurance,
+    })),
   });
-
-  if (!getResponse.ok) {
-    throw new Error(`Failed to read Person resource: ${getResponse.status}`);
-  }
-
-  const person = await getResponse.json();
-
-  // Map CustomPersonLinks back to FHIR Person.link format
-  person.link = links.map(link => ({
-    target: {
-      reference: link.target.reference,
-      display: link.target.display
-    },
-    assurance: link.assurance
-  }));
-
-  // Write back with PUT
-  const putResponse = await fetch(fhirProxyUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/fhir+json',
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/fhir+json'
-    },
-    body: JSON.stringify(person)
-  });
-
-  if (!putResponse.ok) {
-    const errorText = await putResponse.text();
-    throw new Error(`Failed to update Person links: ${putResponse.status} ${putResponse.statusText}. ${errorText}`);
-  }
 }

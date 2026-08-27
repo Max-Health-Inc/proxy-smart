@@ -10,6 +10,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { enforceScopeAccess, enforceRoleBasedFiltering, type AccessControlContext } from '../src/lib/smart-access-control'
+import { tokenContextStore } from '../src/lib/token-context-store'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1004,6 +1005,94 @@ describe('Patient-Compartment Grants', () => {
 
       expect(result.allowed).toBe(true)
       expect(result.modifiedQueryString).toBe('')
+    })
+
+    /** The claim is absent on the FHIR path, so these pin the other two sources. */
+    describe('compartment resolution when the patient claim is absent', () => {
+      it('resolves from the stored launch context, matched by jti', async () => {
+        tokenContextStore.set('jti-launch-1', { patient: 'p-123', clientId: 'some-app' })
+        const ctx = makeCtx({
+          tokenPayload: {
+            scope: 'openid fhirUser launch/patient patient/Observation.rs',
+            fhirUser: 'Practitioner/dr-smith',
+            jti: 'jti-launch-1',
+            azp: 'some-app',
+          },
+          resourcePath: 'Observation',
+          method: 'GET',
+        })
+
+        const result = await enforceRoleBasedFiltering(ctx, '')
+
+        expect(result.allowed).toBe(true)
+        expect(result.modifiedQueryString).toContain('patient=Patient/p-123')
+      })
+
+      it('ignores a stored context bound to a different client', async () => {
+        tokenContextStore.set('jti-launch-2', { patient: 'p-123', clientId: 'app-a' })
+        const ctx = makeCtx({
+          tokenPayload: {
+            scope: 'patient/Observation.rs',
+            fhirUser: 'Practitioner/dr-smith',
+            jti: 'jti-launch-2',
+            azp: 'app-b',
+          },
+          resourcePath: 'Observation',
+          method: 'GET',
+        })
+
+        const result = await enforceRoleBasedFiltering(ctx, '')
+
+        expect(result.allowed).toBe(false)
+        expect(result.status).toBe(403)
+      })
+
+      it('falls back to a Patient fhirUser, which is the patient-portal case', async () => {
+        const ctx = makeCtx({
+          tokenPayload: {
+            scope: 'openid fhirUser launch/patient patient/*.read',
+            fhirUser: 'Patient/1005',
+          },
+          resourcePath: 'Patient/1005',
+          method: 'GET',
+        })
+
+        const result = await enforceRoleBasedFiltering(ctx, '')
+
+        expect(result.allowed).toBe(true)
+      })
+
+      it('still confines that fallback to the fhirUser patient', async () => {
+        const ctx = makeCtx({
+          tokenPayload: {
+            scope: 'patient/*.read',
+            fhirUser: 'Patient/1005',
+          },
+          resourcePath: 'Patient/2000',
+          method: 'GET',
+        })
+
+        const result = await enforceRoleBasedFiltering(ctx, '')
+
+        expect(result.allowed).toBe(false)
+        expect(result.status).toBe(403)
+      })
+
+      it('prefers the claim over fhirUser when both are present', async () => {
+        const ctx = makeCtx({
+          tokenPayload: {
+            scope: 'patient/Observation.rs',
+            fhirUser: 'Patient/1005',
+            patient: 'p-123',
+          },
+          resourcePath: 'Observation',
+          method: 'GET',
+        })
+
+        const result = await enforceRoleBasedFiltering(ctx, '')
+
+        expect(result.modifiedQueryString).toContain('patient=Patient/p-123')
+      })
     })
   })
 

@@ -11,9 +11,9 @@
  *
  * 2. **Role-Based Data Isolation** — two compartment rules, both governed by
  *    ROLE_BASED_FILTERING_MODE:
- *      a) a `patient/`-scoped grant is confined to the token's `patient` launch
- *         context, whoever the user is (SMART: "If the app has any patient-level
- *         scopes, they will be scoped to Patient 123")
+ *      a) a `patient/`-scoped grant is confined to one patient, whoever the user
+ *         is (SMART: "If the app has any patient-level scopes, they will be
+ *         scoped to Patient 123"), resolved by `resolveTokenPatient`
  *      b) a user who IS a patient (`fhirUser: Patient/…`) sees only their own data
  *
  * SCOPE_ENFORCEMENT_MODE defaults to `enforce`; ROLE_BASED_FILTERING_MODE defaults
@@ -24,6 +24,7 @@
 import { hasPatientCompartmentScope, parseScopes } from '@proxy-smart/auth'
 import { logger } from './logger'
 import { getRuntimeAccessControlConfig } from './runtime-config'
+import { normalizeFhirUser, resolveTokenPatient } from './patient-context'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -55,25 +56,6 @@ export interface AccessControlResult {
   body?: Record<string, unknown>
   /** Modified query string (role-based filtering may inject search params) */
   modifiedQueryString?: string
-}
-
-// ── fhirUser normalization ───────────────────────────────────────────────────
-
-/**
- * Normalize a fhirUser claim to a relative reference (e.g. "Patient/123").
- * Handles both relative references and full URLs per SMART spec.
- */
-function normalizeFhirUser(fhirUser: string): string {
-  // Already relative
-  if (fhirUser.startsWith('Patient/') || fhirUser.startsWith('Practitioner/') || fhirUser.startsWith('Person/') || fhirUser.startsWith('RelatedPerson/') || fhirUser.startsWith('Device/')) {
-    return fhirUser
-  }
-  // Full URL — extract the resource type and ID from the path
-  const match = fhirUser.match(/(Patient|Practitioner|Person|RelatedPerson|Device)\/([a-zA-Z0-9\-.]+)/)
-  if (match) {
-    return `${match[1]}/${match[2]}`
-  }
-  return fhirUser
 }
 
 // ── SMART Scope Enforcement ──────────────────────────────────────────────────
@@ -259,9 +241,9 @@ export async function enforceRoleBasedFiltering(
   // user happens to BE the patient.
   const grantedScopes = parseScopes(ctx.tokenPayload.scope as string | undefined)
   if (hasPatientCompartmentScope(grantedScopes)) {
-    const contextPatient = ctx.tokenPayload.patient as string | undefined
+    const resolved = resolveTokenPatient(ctx.tokenPayload)
 
-    if (!contextPatient) {
+    if (!resolved) {
       // The grant is confined to one patient but nothing says which, so the
       // confinement is undefined. Enforcing means refusing; audit-only records
       // what enforcement would have refused.
@@ -291,11 +273,12 @@ export async function enforceRoleBasedFiltering(
     // Reuses the same compartment logic as patient users below; only the source
     // of the patient id differs.
     const compartment = normalizeFhirUser(
-      contextPatient.includes('/') ? contextPatient : `Patient/${contextPatient}`,
+      resolved.patient.includes('/') ? resolved.patient : `Patient/${resolved.patient}`,
     )
     if (!isEnforce) {
       logger.fhir.info('Patient-compartment filtering skipped (audit-only)', {
         compartment,
+        source: resolved.source,
         resourceType,
         method: ctx.method,
         server: ctx.serverName,
