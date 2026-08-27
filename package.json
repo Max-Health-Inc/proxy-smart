@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.3.28-beta.202608271632.3d9788341",
+  "version": "0.3.28-alpha.202608271636.ea49e0947",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -11,7 +11,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/fhir": "^0.0.44",
     "@vitejs/plugin-react-swc": "^4.3.3",
-    "babelfhir-ts": "1.6.5",
+    "babelfhir-ts": "1.6.10",
     "concurrently": "^10.0.4",
     "cross-env": "^10.1.0",
     "eslint": "^10.8.1",
