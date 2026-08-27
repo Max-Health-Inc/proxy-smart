@@ -3,13 +3,23 @@
 
 /**
  * Consent Service
- * 
+ *
  * Core consent enforcement logic:
  * - Query FHIR Consent resources from upstream server
  * - Evaluate consent provisions against request context
  * - Make allow/deny decisions
  * - Audit logging
  * - Integrates with IAL (Identity Assurance Level) for Person→Patient verification
+ *
+ * TWO UNRELATED THINGS ARE CALLED CONSENT. This file only ever means the FHIR
+ * `Consent` resource: the patient's standing decision about who may reach their
+ * data. The OAuth consent screen (Keycloak's `consentRequired` on a client, where
+ * a user approves the scopes an app asked for) is a different act at a different
+ * layer and grants no access to anyone's record. Say "OAuth consent" for that one.
+ *
+ * The rule this enforces: a patient's data may be reached by SOMEONE ELSE only if
+ * the patient consented to that someone. Reaching one's own record is not a
+ * disclosure and needs no Consent — see {@link isSelfAccess}.
  */
 
 import type { JwtPayload } from 'jsonwebtoken'
@@ -149,22 +159,41 @@ function isPeriodActive(period: FhirPeriod | undefined): boolean {
 }
 
 /**
- * Check if consent applies to the requesting client
+ * Does this Consent name the party making the request?
+ *
+ * `provision.actor` is the GRANTEE — "the recipient this consent names". The
+ * consent portal writes a `Practitioner/<id>` there (role PRCP) when a patient
+ * approves an access request, so the party to match is the requesting USER, not
+ * the app they happen to be using. Matching only `clientId` meant every consent
+ * a patient ever granted was ignored: `Practitioner/dr-123` never contains
+ * `aihr-portal`, so no actor matched and the decision fell through to deny.
+ *
+ * clientId still matches, for grants written against an app rather than a person
+ * (a `Device/<client>` actor, or an identifier carrying the client id).
+ *
+ * An actor-less provision names no recipient, so it grants nothing. It used to
+ * mean "applies to every client", which inverted the model: the unscoped consent
+ * permitted everyone while the scoped one permitted no one.
  */
-function consentAppliesToClient(consent: FhirConsent, clientId: string): boolean {
+function consentAppliesToRequester(
+  consent: FhirConsent,
+  requester: { clientId: string; fhirUser: string | null },
+): boolean {
   const provision = getConsentProvision(consent)
   if (!provision?.actor?.length) {
-    // No actor restrictions = applies to all
-    return true
+    return false
   }
 
-  // Check if any actor matches the client
+  const user = requester.fhirUser ? normalizeFhirUser(requester.fhirUser) : null
+
   for (const actor of provision.actor) {
     const ref = actor.reference?.reference || ''
     const identifier = actor.reference?.identifier?.value || ''
-    
-    // Match by reference or identifier
-    if (ref.includes(clientId) || identifier === clientId) {
+
+    if (user && ref && normalizeFhirUser(ref) === user) {
+      return true
+    }
+    if (ref.includes(requester.clientId) || identifier === requester.clientId) {
       return true
     }
   }
@@ -206,8 +235,8 @@ function evaluateConsent(consent: FhirConsent, context: ConsentCheckContext): Co
     return null
   }
 
-  // Must apply to this client
-  if (!consentAppliesToClient(consent, context.clientId)) {
+  // Must name the party asking
+  if (!consentAppliesToRequester(consent, { clientId: context.clientId, fhirUser: context.fhirUser })) {
     return null
   }
 
@@ -379,11 +408,11 @@ function shouldSkipConsentCheck(context: ConsentCheckContext, consentConfig: Con
 /**
  * Is the requester the patient whose data this is?
  *
- * Consent authorizes DISCLOSURE to someone else. A patient reading their own
- * record discloses nothing, and a right of access is not a grant the subject
+ * A FHIR Consent authorizes DISCLOSURE to someone else. A patient reading their
+ * own record discloses nothing, and a right of access is not a grant the subject
  * makes to themselves — gating it on a Consent would let a missing or lapsed one
- * lock a patient out of their own chart. The app-authorization question is real
- * but belongs to OAuth, which Keycloak already records per client.
+ * lock a patient out of their own chart. Whether the patient authorized the APP
+ * is a real question, but it is OAuth consent and Keycloak already records it.
  *
  * Derived per REQUEST, not per client, because a client can serve both
  * populations: the same viewer used by a practitioner is a disclosure and stays
