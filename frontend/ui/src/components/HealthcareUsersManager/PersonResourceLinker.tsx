@@ -25,7 +25,7 @@ import {
   type AssuranceLevel, 
   type CustomPersonLink,
   validateFhirReference 
-} from '@/lib/fhir-types';
+} from '@/lib/person-linking';
 import { useTranslation } from 'react-i18next';
 
 interface PersonResourceLinkerProps {

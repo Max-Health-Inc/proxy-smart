@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Admin UI",
   "description": "A web-based administration interface for managing healthcare applications and resources via Proxy Smart.",
   "private": true,
-  "version": "0.3.26-beta.202608262206.60ec429c5",
+  "version": "0.3.26-beta.202608262217.bd6d2dbfd",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "brandc": "^0.6.1",
+    "@babelfhir-ts/client-r4": "^0.3.2",
     "@proxy-smart/shared-ui": "npm:@max-health-inc/shared-ui@^0.9.1",
     "@radix-ui/react-avatar": "^1.2.6",
     "@radix-ui/react-dialog": "^1.1.23",
