@@ -504,6 +504,100 @@ describe('Consent Enforcement E2E', () => {
   })
 
   // ---------------------------------------------------------------------------
+  // Self-access — per request, so one client can serve both populations
+  // ---------------------------------------------------------------------------
+
+  describe('self-access', () => {
+    it.serial('permits a patient reading their own record, with no Consent present', async () => {
+      setConsentConfig({ exemptClients: [] })
+      mockFhirConsentResponse([])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'any-client', fhirUser: 'Patient/patient-123' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('permit')
+      expect(result.reason).toContain('own record')
+    })
+
+    it.serial('still enforces consent for a practitioner on the SAME client', async () => {
+      setConsentConfig({ exemptClients: [] })
+      mockFhirConsentResponse([])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'any-client', fhirUser: 'Practitioner/dr-smith' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('deny')
+    })
+
+    /**
+     * Consent judges the patient the TOKEN is about, so this reads as self-access
+     * even though the URL names someone else. Blocking the cross-patient read is
+     * the compartment gate's job, not consent's — see smart-access-control.test.
+     */
+    it.serial('judges the token\'s patient, not the one in the URL', async () => {
+      setConsentConfig({ exemptClients: [] })
+      mockFhirConsentResponse([])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'any-client', fhirUser: 'Patient/patient-999', patient: undefined }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.context.patientId).toBe('patient-999')
+      expect(result.decision).toBe('permit')
+    })
+
+    it.serial('denies when the token names a patient with no consent for the client', async () => {
+      setConsentConfig({ exemptClients: [] })
+      mockFhirConsentResponse([])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'any-client', fhirUser: 'Practitioner/dr-smith', patient: 'patient-123' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Observation',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('deny')
+    })
+
+    it.serial('resolves self-access from an absolute fhirUser URL', async () => {
+      setConsentConfig({ exemptClients: [] })
+      mockFhirConsentResponse([])
+
+      const result = await testCheckConsent(
+        createToken({ azp: 'any-client', fhirUser: 'https://fhir.example.com/R4/Patient/patient-123' }),
+        'hapi',
+        'https://fhir.example.com',
+        'Patient/patient-123',
+        'GET',
+        'Bearer tok',
+      )
+
+      expect(result.decision).toBe('permit')
+      expect(result.reason).toContain('own record')
+    })
+  })
+
+  // ---------------------------------------------------------------------------
   // Exempt resource types
   // ---------------------------------------------------------------------------
 

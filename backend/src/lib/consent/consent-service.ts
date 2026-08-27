@@ -33,7 +33,7 @@ import { checkIal, getIalConfig } from './person-resolver'
 import { logger } from '../logger'
 import { getRuntimeConsentConfig } from '../runtime-config'
 import { consentMetricsLogger } from '../consent-metrics-logger'
-import { resolveTokenPatientId } from '../patient-context'
+import { normalizeFhirUser, resolveTokenPatientId } from '../patient-context'
 
 /**
  * Whose consent governs this request. The token decides, not the URL.
@@ -369,7 +369,31 @@ function shouldSkipConsentCheck(context: ConsentCheckContext, consentConfig: Con
     return 'No patient context - cannot check consent'
   }
 
+  if (isSelfAccess(context)) {
+    return 'Patient is accessing their own record'
+  }
+
   return null // Don't skip
+}
+
+/**
+ * Is the requester the patient whose data this is?
+ *
+ * Consent authorizes DISCLOSURE to someone else. A patient reading their own
+ * record discloses nothing, and a right of access is not a grant the subject
+ * makes to themselves — gating it on a Consent would let a missing or lapsed one
+ * lock a patient out of their own chart. The app-authorization question is real
+ * but belongs to OAuth, which Keycloak already records per client.
+ *
+ * Derived per REQUEST, not per client, because a client can serve both
+ * populations: the same viewer used by a practitioner is a disclosure and stays
+ * enforced. That is what an `exemptClients` entry cannot express.
+ */
+function isSelfAccess(context: ConsentCheckContext): boolean {
+  if (!context.fhirUser || !context.patientId) return false
+  const user = normalizeFhirUser(context.fhirUser)
+  if (!user.startsWith('Patient/')) return false
+  return user.slice('Patient/'.length) === context.patientId
 }
 
 /**
