@@ -17,7 +17,7 @@ import { HealthcareUsersTable } from './HealthcareUsersTable';
 import { PersonResourceLinker } from './PersonResourceLinker';
 import { IALSettings } from '../IALSettings';
 import { getPersonResourceFull, updatePersonLinks } from '@/service/fhirService';
-import type { PersonResource, CustomPersonLink } from '@/lib/fhir-types';
+import type { PersonResource, CustomPersonLink } from '@/lib/person-linking';
 import { useTranslation } from 'react-i18next';
 import { config } from '@/config';
 import { getStoredToken } from '@/lib/apiClient';
