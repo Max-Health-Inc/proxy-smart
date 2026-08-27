@@ -13,7 +13,7 @@
  *    ROLE_BASED_FILTERING_MODE:
  *      a) a `patient/`-scoped grant is confined to one patient, whoever the user
  *         is (SMART: "If the app has any patient-level scopes, they will be
- *         scoped to Patient 123"), resolved by {@link resolveCompartmentPatient}
+ *         scoped to Patient 123"), resolved by `resolveTokenPatient`
  *      b) a user who IS a patient (`fhirUser: Patient/…`) sees only their own data
  *
  * SCOPE_ENFORCEMENT_MODE defaults to `enforce`; ROLE_BASED_FILTERING_MODE defaults
@@ -24,7 +24,7 @@
 import { hasPatientCompartmentScope, parseScopes } from '@proxy-smart/auth'
 import { logger } from './logger'
 import { getRuntimeAccessControlConfig } from './runtime-config'
-import { tokenContextStore } from './token-context-store'
+import { normalizeFhirUser, resolveTokenPatient } from './patient-context'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,25 +56,6 @@ export interface AccessControlResult {
   body?: Record<string, unknown>
   /** Modified query string (role-based filtering may inject search params) */
   modifiedQueryString?: string
-}
-
-// ── fhirUser normalization ───────────────────────────────────────────────────
-
-/**
- * Normalize a fhirUser claim to a relative reference (e.g. "Patient/123").
- * Handles both relative references and full URLs per SMART spec.
- */
-function normalizeFhirUser(fhirUser: string): string {
-  // Already relative
-  if (fhirUser.startsWith('Patient/') || fhirUser.startsWith('Practitioner/') || fhirUser.startsWith('Person/') || fhirUser.startsWith('RelatedPerson/') || fhirUser.startsWith('Device/')) {
-    return fhirUser
-  }
-  // Full URL — extract the resource type and ID from the path
-  const match = fhirUser.match(/(Patient|Practitioner|Person|RelatedPerson|Device)\/([a-zA-Z0-9\-.]+)/)
-  if (match) {
-    return `${match[1]}/${match[2]}`
-  }
-  return fhirUser
 }
 
 // ── SMART Scope Enforcement ──────────────────────────────────────────────────
@@ -239,48 +220,6 @@ async function upstreamFhirQuery(
   }
 }
 
-/**
- * The patient a `patient/` grant is confined to, and where that came from.
- *
- * Three sources because the launch context is NOT a JWT claim here:
- * `launch/patient` stopped using a Keycloak mapper and is captured per-token in
- * TokenContextStore at exchange (see smart-scope-mappers). Only introspection
- * read that store, so the FHIR path saw no patient at all and `enforce` refused
- * every patient-scoped request — which is why it could only ever ship as
- * audit-only. The store is single-node in-memory, so `fhirUser` (a real mapped
- * claim) backs it up and keeps patient-facing apps working without shared state.
- */
-function resolveCompartmentPatient(
-  tokenPayload: Record<string, unknown>,
-): { patient: string; source: 'claim' | 'launch-context' | 'fhirUser' } | null {
-  const claim = tokenPayload.patient
-  if (typeof claim === 'string' && claim) {
-    return { patient: claim, source: 'claim' }
-  }
-
-  const jti = tokenPayload.jti
-  if (typeof jti === 'string' && jti) {
-    const azp = tokenPayload.azp
-    const stored = tokenContextStore.get(jti, typeof azp === 'string' ? azp : undefined)
-    if (stored?.patient) {
-      return { patient: stored.patient, source: 'launch-context' }
-    }
-  }
-
-  // Only a Patient fhirUser identifies a compartment. A Practitioner holding
-  // patient/ scopes is confined to a patient this cannot name, so it stays null
-  // and the caller refuses rather than widening the grant to the whole server.
-  const fhirUser = tokenPayload.fhirUser
-  if (typeof fhirUser === 'string' && fhirUser) {
-    const normalized = normalizeFhirUser(fhirUser)
-    if (normalized.startsWith('Patient/')) {
-      return { patient: normalized, source: 'fhirUser' }
-    }
-  }
-
-  return null
-}
-
 export async function enforceRoleBasedFiltering(
   ctx: AccessControlContext,
   queryString: string,
@@ -302,7 +241,7 @@ export async function enforceRoleBasedFiltering(
   // user happens to BE the patient.
   const grantedScopes = parseScopes(ctx.tokenPayload.scope as string | undefined)
   if (hasPatientCompartmentScope(grantedScopes)) {
-    const resolved = resolveCompartmentPatient(ctx.tokenPayload)
+    const resolved = resolveTokenPatient(ctx.tokenPayload)
 
     if (!resolved) {
       // The grant is confined to one patient but nothing says which, so the

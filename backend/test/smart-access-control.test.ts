@@ -1007,11 +1007,7 @@ describe('Patient-Compartment Grants', () => {
       expect(result.modifiedQueryString).toBe('')
     })
 
-    /**
-     * The launch context is not a JWT claim here — it lives in TokenContextStore
-     * and only introspection read it, so the FHIR path saw no patient and enforce
-     * refused every patient-scoped request. These pin the other two sources.
-     */
+    /** The claim is absent on the FHIR path, so these pin the other two sources. */
     describe('compartment resolution when the patient claim is absent', () => {
       it('resolves from the stored launch context, matched by jti', async () => {
         tokenContextStore.set('jti-launch-1', { patient: 'p-123', clientId: 'some-app' })
