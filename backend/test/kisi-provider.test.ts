@@ -178,5 +178,35 @@ describe('KisiAccessProvider', () => {
       expect(result.failed).toHaveLength(1)
       expect(result.failed[0].email).toBe('fail@example.com')
     })
+
+    it('deduplicates by email case-insensitively', async () => {
+      const result = await provider.syncUsersFromKeycloak!([
+        { id: '1', email: 'USER@EXAMPLE.COM' },
+      ])
+      expect(result.skipped).toContain('user@example.com')
+      expect(result.created).toHaveLength(0)
+    })
+
+    it('accepts role mapping rules', async () => {
+      const result = await provider.syncUsersFromKeycloak!(
+        [{ id: '2', email: 'new@example.com', roles: ['doctor', 'admin'] }],
+        [{ keycloakRole: 'doctor', groupId: '1' }],
+      )
+      expect(result.created).toContain('new@example.com')
+    })
+
+    it('builds the member name from first and last name, falling back to username', async () => {
+      await provider.syncUsersFromKeycloak!([
+        { id: '2', email: 'new@example.com', firstName: 'Ada', lastName: 'Lovelace' },
+      ])
+      expect(mockClient.createMember).toHaveBeenCalledWith({ email: 'new@example.com', name: 'Ada Lovelace' })
+
+      mockClient.createMember = mock((data: { email: string; name?: string }) =>
+        Promise.resolve({ id: 100, email: data.email, name: data.name }))
+      await provider.syncUsersFromKeycloak!([
+        { id: '3', email: 'other@example.com', username: 'ada' },
+      ])
+      expect(mockClient.createMember).toHaveBeenCalledWith({ email: 'other@example.com', name: 'ada' })
+    })
   })
 })
