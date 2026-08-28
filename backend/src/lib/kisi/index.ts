@@ -3,8 +3,10 @@
 
 /**
  * Kisi Access Control - Module Index
- * 
- * Re-exports the Kisi API client, service layer, and plugin.
+ *
+ * The Kisi HTTP client. Everything above it — entity mapping, Keycloak sync,
+ * the overview — belongs to KisiAccessProvider in lib/access-control, which is
+ * what the admin routes talk to.
  */
 
 export { KisiClient, KisiApiError } from './client'
@@ -23,5 +25,3 @@ export type {
   KisiPagination,
   KisiUnlockResponse,
 } from './client'
-export { KisiService } from './service'
-export { kisiPlugin } from './plugin'
