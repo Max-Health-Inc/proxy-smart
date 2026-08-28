@@ -144,7 +144,7 @@ graph TB
 | `packages/patient-picker/` | Patient selection UI for standalone SMART launch |
 | `packages/auth/` | Shared auth utilities |
 | `packages/app-store/` | App store catalog UI |
-| `deploy/infra/` | AWS CDK infrastructure |
+| `deploy/<env>/` | Per-environment Keycloak realm and app store config |
 | `config/eslint/` | Shared ESLint configuration |
 
 ### Tech Stack

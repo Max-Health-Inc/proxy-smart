@@ -161,7 +161,7 @@ This document provides a detailed breakdown of the HL7 SMART App Launch specific
       would change, changing nothing. Review those logs before flipping.
     - `disabled` — no compartment filtering.
     - The posture is declared per environment (`docker-compose.beta.yml`,
-      `deploy/infra/lib/backend-stack.ts`) rather than inherited from code
+      `backend-stack.ts` in the `proxy-smart-infra` repo) rather than inherited from code
       defaults, so changing it is a reviewable edit.
 
 #### Token Exchange *(Enhanced in SMART 2.0+)*
