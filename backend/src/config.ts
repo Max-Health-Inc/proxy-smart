@@ -11,6 +11,11 @@ import { loadMcpEndpointConfig } from './lib/mcp-endpoint-config'
 // WARNING: This is NOT safe for multi-node deployments — set SMART_LAUNCH_SECRET env var.
 const _defaultLaunchSecret = randomBytes(32).toString('hex')
 
+// The admin-service secret seeded by keycloak/realm-export.json, the dev/CI fixture
+// realm. It is published in this repo, so it must never authenticate production
+// (enforced by the startup guard in index.ts).
+export const DEV_FIXTURE_ADMIN_CLIENT_SECRET = 'admin-service-secret'
+
 // Get package.json path - try multiple strategies for robustness
 let packageJson: { name: string; displayName?: string; version: string }
 try {
