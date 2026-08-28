@@ -134,7 +134,7 @@ const DEV_SEED_USERNAMES = ['admin', 'doctor', 'testuser']
  * Exports that seed a REAL environment. keycloak/realm-export.json is excluded:
  * it is the dev/CI seed and is allowed to carry dev passwords.
  */
-const DEPLOY_EXPORTS = EXPORTS.filter((e) => e.name.startsWith('deploy/'))
+const DEPLOY_EXPORTS = EXPORTS.filter((e) => !e.name.endsWith('keycloak/realm-export.json'))
 
 /**
  * A deployed environment must not be seeded with dev accounts or passwords.
