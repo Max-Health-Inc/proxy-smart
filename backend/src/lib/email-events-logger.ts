@@ -8,7 +8,7 @@
  * EXECUTE_ACTIONS, etc.) using the shared BaseEventsLogger infrastructure.
  */
 
-import { BaseEventsLogger, type KeycloakEvent } from './base-events-logger'
+import { BaseEventsLogger, mapBaseKeycloakEvent, type KeycloakEvent } from './base-events-logger'
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ export interface EmailAnalytics {
 
 // ─── Event types ─────────────────────────────────────────────────
 
-const EMAIL_EVENT_TYPES = [
+export const EMAIL_EVENT_TYPES = [
   'SEND_RESET_PASSWORD', 'SEND_RESET_PASSWORD_ERROR',
   'SEND_VERIFY_EMAIL', 'SEND_VERIFY_EMAIL_ERROR',
   'SEND_IDENTITY_PROVIDER_LINK', 'SEND_IDENTITY_PROVIDER_LINK_ERROR',
@@ -43,6 +43,11 @@ const EMAIL_EVENT_TYPES = [
   'EXECUTE_ACTION_TOKEN', 'EXECUTE_ACTION_TOKEN_ERROR',
   'CUSTOM_REQUIRED_ACTION', 'CUSTOM_REQUIRED_ACTION_ERROR',
 ]
+
+/** Email events use the shared mapping unchanged. */
+export function mapEmailEvent(kc: KeycloakEvent): EmailEvent {
+  return mapBaseKeycloakEvent(kc, 'email')
+}
 
 // ─── Implementation ──────────────────────────────────────────────
 
@@ -54,20 +59,7 @@ class EmailEventsLogger extends BaseEventsLogger<EmailEvent, EmailAnalytics> {
       eventTypes: EMAIL_EVENT_TYPES,
       logChannel: 'email',
       idPrefix: 'email',
-      mapEvent: (kc: KeycloakEvent): EmailEvent => {
-        const isError = kc.type?.endsWith('_ERROR') ?? false
-        return {
-          id: kc.id ?? `email-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          timestamp: kc.time ? new Date(kc.time).toISOString() : new Date().toISOString(),
-          type: kc.type ?? 'UNKNOWN',
-          userId: kc.userId,
-          clientId: kc.clientId,
-          ipAddress: kc.ipAddress,
-          error: kc.error,
-          success: !isError && !kc.error,
-          details: kc.details,
-        }
-      },
+      mapEvent: mapEmailEvent,
     })
   }
 
