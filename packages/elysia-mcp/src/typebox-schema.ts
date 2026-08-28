@@ -137,13 +137,13 @@ export function getMergedInputSchema(meta: ToolMetadata): TSchema | undefined {
 
   const merged = Type.Object(mergedProps, { additionalProperties: false })
 
-  // Override the required array to include both sets
+  // TypeBox rederives `required` from property optionality, which would drop
+  // whichever source's required list did not survive the spread. Replace it with
+  // the union of both, or omit it entirely when neither side required anything.
   const allRequired = [...new Set([...paramsRequired, ...bodyRequired])]
-  if (allRequired.length > 0) {
-    ;(merged as unknown as { required: string[] }).required = allRequired
-  } else {
-    delete (merged as unknown as { required?: string[] }).required
-  }
+  const { required: _rederived, ...withoutRequired } = merged
 
-  return merged
+  return allRequired.length > 0
+    ? { ...withoutRequired, required: allRequired }
+    : withoutRequired
 }
