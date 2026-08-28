@@ -1,17 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from '@proxy-smart/shared-ui';
+import { useState } from 'react';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Shield,
   ShieldCheck,
-  CheckCircle,
-  AlertCircle,
   RefreshCw,
   Save,
   X,
   Plus,
 } from 'lucide-react';
-import { adminApiCall } from '@/lib/admin-api';
+import { useAdminSettings } from '@/hooks/useAdminSettings';
+import { SettingsStatusMessage } from '@/components/settings/SettingsStatusMessage';
 import { useTranslation } from 'react-i18next';
 import type { ConsentConfig } from '@/lib/types/api';
 
@@ -31,72 +30,34 @@ const DEFAULT_CONSENT: ConsentConfig = {
 
 export function ConsentSettings() {
   const { t } = useTranslation();
-  const [consent, setConsent] = useState<ConsentConfig>(DEFAULT_CONSENT);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const {
+    settings: consent,
+    setSettings: setConsent,
+    loading,
+    saving,
+    message,
+    reload,
+    save: saveSettings,
+    addToList,
+    removeFromList,
+  } = useAdminSettings<ConsentConfig>({
+    endpoint: '/admin/consent/config',
+    defaults: DEFAULT_CONSENT,
+    loadErrorText: t('Failed to load consent settings'),
+    saveErrorText: t('Failed to save consent settings'),
+    saveSuccessText: t('Consent settings saved successfully'),
+  });
 
   const [newExemptClient, setNewExemptClient] = useState('');
   const [newRequiredType, setNewRequiredType] = useState('');
   const [newExemptType, setNewExemptType] = useState('');
 
-  const loadSettings = useCallback(async () => {
-    try {
-      const res = await adminApiCall<{ config: ConsentConfig }>('/admin/consent/config');
-      setConsent(res.config);
-      setMessage(null);
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to load consent settings',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    adminApiCall<{ config: ConsentConfig }>('/admin/consent/config')
-      .then(res => {
-        setConsent(res.config);
-        setMessage(null);
-      })
-      .catch(error => {
-        setMessage({
-          type: 'error',
-          text: error instanceof Error ? error.message : 'Failed to load consent settings',
-        });
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-      setMessage(null);
-      await adminApiCall('/admin/consent/config', 'PUT', consent);
-      setMessage({ type: 'success', text: 'Consent settings saved successfully' });
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : 'Failed to save consent settings',
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const addToList = (field: keyof ConsentConfig, value: string, inputSetter: React.Dispatch<React.SetStateAction<string>>) => {
-    const trimmed = value.trim();
-    const currentList = consent[field] as string[];
-    if (!trimmed || currentList.includes(trimmed)) return;
-    setConsent(prev => ({ ...prev, [field]: [...currentList, trimmed] }));
-    inputSetter('');
-  };
-
-  const removeFromList = (field: keyof ConsentConfig, value: string) => {
-    const currentList = consent[field] as string[];
-    setConsent(prev => ({ ...prev, [field]: currentList.filter(v => v !== value) }));
+  const add = (
+    field: keyof ConsentConfig,
+    value: string,
+    inputSetter: React.Dispatch<React.SetStateAction<string>>,
+  ) => {
+    if (addToList(field, value)) inputSetter('');
   };
 
   if (loading) {
@@ -121,7 +82,7 @@ export function ConsentSettings() {
             </Badge>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="sm" onClick={() => { setLoading(true); setMessage(null); loadSettings(); }} disabled={saving}>
+            <Button variant="outline" size="sm" onClick={reload} disabled={saving}>
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Reload')}
             </Button>
@@ -133,27 +94,7 @@ export function ConsentSettings() {
         </div>
       </div>
 
-      {/* Status message */}
-      {message && (
-        <Alert
-          className={
-            message.type === 'success'
-              ? 'border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-400/10'
-              : 'border-destructive/20 bg-destructive/10'
-          }
-        >
-          {message.type === 'success' ? (
-            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-destructive" />
-          )}
-          <AlertDescription
-            className={message.type === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-destructive'}
-          >
-            {message.text}
-          </AlertDescription>
-        </Alert>
-      )}
+      <SettingsStatusMessage message={message} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Consent Core */}
@@ -235,7 +176,7 @@ export function ConsentSettings() {
               items={consent.exemptClients}
               inputValue={newExemptClient}
               onInputChange={setNewExemptClient}
-              onAdd={() => addToList('exemptClients', newExemptClient, setNewExemptClient)}
+              onAdd={() => add('exemptClients', newExemptClient, setNewExemptClient)}
               onRemove={v => removeFromList('exemptClients', v)}
             />
 
@@ -245,7 +186,7 @@ export function ConsentSettings() {
               items={consent.requiredForResourceTypes}
               inputValue={newRequiredType}
               onInputChange={setNewRequiredType}
-              onAdd={() => addToList('requiredForResourceTypes', newRequiredType, setNewRequiredType)}
+              onAdd={() => add('requiredForResourceTypes', newRequiredType, setNewRequiredType)}
               onRemove={v => removeFromList('requiredForResourceTypes', v)}
             />
 
@@ -255,7 +196,7 @@ export function ConsentSettings() {
               items={consent.exemptResourceTypes}
               inputValue={newExemptType}
               onInputChange={setNewExemptType}
-              onAdd={() => addToList('exemptResourceTypes', newExemptType, setNewExemptType)}
+              onAdd={() => add('exemptResourceTypes', newExemptType, setNewExemptType)}
               onRemove={v => removeFromList('exemptResourceTypes', v)}
             />
           </CardContent>
