@@ -39,3 +39,6 @@ export * from './email-monitoring'
 
 // Auth monitoring schemas (Keycloak login/logout/register event tracking)
 export * from './auth-monitoring'
+
+// Document import schemas (shared by the admin and SMART planes)
+export * from './document-import'
