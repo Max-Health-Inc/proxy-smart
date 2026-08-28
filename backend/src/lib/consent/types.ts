@@ -119,11 +119,9 @@ export function isR4OrR5Consent(consent: FhirConsent): consent is ConsentR4 | Co
  * Returns R4/R5 provision or undefined for R3
  */
 export function getConsentProvision(consent: FhirConsent): FhirConsentProvision | undefined {
-  // R4 and R5 have 'provision' property directly
-  if ('provision' in consent) {
-    return consent.provision as FhirConsentProvision
-  }
-  return undefined
+  if (!('provision' in consent) || !consent.provision) return undefined
+  // R5 allows a list here; R4 a single element. Callers read one provision.
+  return Array.isArray(consent.provision) ? consent.provision[0] : consent.provision
 }
 
 /**
@@ -131,9 +129,9 @@ export function getConsentProvision(consent: FhirConsent): FhirConsentProvision 
  * Works across R4 and R5 provision types
  */
 export function getProvisionClasses(provision: FhirConsentProvision): Array<{ code?: string }> {
-  // Both R4 and R5 have 'class' property as Coding[]
-  // Use type assertion since TypeScript union doesn't see the common property
-  return (provision as ConsentProvisionR4).class || []
+  // R4 and R5 both carry `class`, but the union does not surface it.
+  if (!('class' in provision) || !Array.isArray(provision.class)) return []
+  return provision.class
 }
 
 /**
@@ -141,13 +139,9 @@ export function getProvisionClasses(provision: FhirConsentProvision): Array<{ co
  * Works across R4 and R5 provision types
  */
 export function getProvisionType(provision: FhirConsentProvision): 'permit' | 'deny' {
-  // R4 has 'type' as code: 'permit' | 'deny'
-  // R5 uses slightly different structure but both have type
-  const provisionType = (provision as ConsentProvisionR4).type
-  if (provisionType === 'deny') {
-    return 'deny'
-  }
-  return 'permit' // Default to permit
+  // Anything that is not an explicit deny is treated as permit.
+  const provisionType = 'type' in provision ? provision.type : undefined
+  return provisionType === 'deny' ? 'deny' : 'permit'
 }
 
 /**
