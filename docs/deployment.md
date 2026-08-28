@@ -42,7 +42,17 @@ Set required environment variables or use a `.env` file:
 KC_DB_PASSWORD=<secure-password>
 POSTGRES_PASSWORD=<secure-password>
 KEYCLOAK_ADMIN_CLIENT_SECRET=<service-account-secret>
+DEPLOY_ENV=<your-env>   # selects deploy/<your-env>/realm-export.json
 ```
+
+`DEPLOY_ENV` has no default on purpose. `Dockerfile.keycloak` falls back to
+`keycloak/realm-export.json`, the dev/CI fixture realm, and that file seeds the
+`admin`, `doctor` and `testuser` accounts and the `admin-service` client secret
+with values published in this repository. Point `DEPLOY_ENV` at your own
+`deploy/<env>/realm-export.json` before deploying anything reachable.
+
+The backend enforces the same rule at startup: with `NODE_ENV=production` it
+refuses to start when `KEYCLOAK_ADMIN_CLIENT_SECRET` is still the fixture value.
 
 ### Deploy
 
@@ -63,7 +73,7 @@ The production compose builds the backend from `Dockerfile` and Keycloak from `D
 - Backend image includes the Admin UI and Patient Picker as static files
 - External SMART apps are deployed independently into the `apps_static` Docker volume
 - Keycloak uses PostgreSQL for persistence
-- Realm configuration is imported from `keycloak/realm-export.json`
+- Realm configuration is imported from `deploy/$DEPLOY_ENV/realm-export.json`
 
 ### With Caddy (HTTPS)
 
@@ -80,7 +90,7 @@ Caddy provides automatic TLS certificate provisioning via Let's Encrypt.
 - **Image**: `quay.io/keycloak/keycloak:26.6.3`
 - **Purpose**: OAuth 2.0 / OIDC identity provider
 - **Health check**: HTTP on port 9000 (`/health/ready`)
-- **Realm import**: Auto-imports `keycloak/realm-export.json` on first start
+- **Realm import**: Auto-imports `deploy/$DEPLOY_ENV/realm-export.json` on first start, falling back to `keycloak/realm-export.json` (dev/CI fixture only)
 - **Features**: `cimd`, `token-exchange`, `client-auth-federated`, `resource-indicators` (RFC 8707) enabled at build time
 
 #### Seeded administrator (beta / prod)
