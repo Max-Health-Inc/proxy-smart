@@ -22,7 +22,7 @@ import type {
 import type { ILaunchContextStore } from './stores/interface'
 import type { IdPAdapter } from './idp/interface'
 import { isSmartLaunch, isStandaloneLaunch, parseScopes } from './smart-scopes'
-import { verifyLaunchCode, type LaunchCodeServiceOptions } from './launch-code'
+import { verifyLaunchCode, toLaunchCodeOptions } from './launch-code'
 import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
 import { isCimdClientId } from './cimd'
 
@@ -95,13 +95,7 @@ export async function handleAuthorize(
   // ── EHR Launch code resolution ────────────────────────────────────────
   let resolvedLaunchContext: LaunchCodePayload | null = null
   if (params.launch) {
-    const launchCodeOpts: LaunchCodeServiceOptions = {
-      secret: config.launchCodeSecret,
-      ttlSeconds: config.launchCodeTtlSeconds,
-      issuer: config.baseUrl,
-      logger,
-    }
-    const result = verifyLaunchCode(params.launch, launchCodeOpts)
+    const result = verifyLaunchCode(params.launch, toLaunchCodeOptions(config, logger))
     if (result) {
       resolvedLaunchContext = result.payload
       // Validate client_id audience restriction
