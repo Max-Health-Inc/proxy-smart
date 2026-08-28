@@ -14,7 +14,7 @@ Node admin-client works (see "Do NOT upgrade to 26.7.0" below).
 | --- | --- | --- |
 | Keycloak server (prod/beta, custom image) | **26.6.4** | [`Dockerfile.keycloak`](../Dockerfile.keycloak) (`FROM quay.io/keycloak/keycloak:26.6.4`) |
 | Keycloak server (local dev) | **26.6.4** | `docker-compose.yml`, `docker-compose.development.yml` |
-| Keycloak server (CDK stock fallback) | **26.6.4** | `deploy/infra/lib/keycloak-stack.ts` (`keycloakVersion` default; only used when no `imageUri`) |
+| Keycloak server (CDK stock fallback) | **26.6.4** | `keycloak-stack.ts` in the `proxy-smart-infra` repo (`keycloakVersion` default; only used when no `imageUri`) |
 | `@keycloak/keycloak-admin-client` (backend lib) | **26.6.4** (exact pin, no caret) | `backend/package.json` |
 
 > The prod/beta image tag is `ghcr.io/max-health-inc/proxy-smart/keycloak:<env>-latest`, built

@@ -10,8 +10,6 @@ Utility scripts for the Proxy Smart project.
 
 ## Development
 
-- `extract-schemas.py` - Extract TypeScript schemas
-- `count-targets.py` - Count implementation targets
 - `spdx.mjs` - Add/verify per-file SPDX license headers
 
 ## Licensing (SPDX / REUSE)
@@ -39,7 +37,3 @@ The `workflows/` folder contains Python scripts used by GitHub Actions:
 
 - `generate_changelog_ai.py` - AI-powered changelog generation from commit messages (GPT-5 nano)
 - `categorize_commits.py` - Fallback commit categorization (no AI required)
-
-## AI Pipeline (Experimental)
-
-The `ai-pipeline/` folder contains experimental AI-assisted code analysis and fix proposal tooling. See [ai-pipeline/README.md](ai-pipeline/README.md) for details.

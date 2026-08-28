@@ -163,10 +163,26 @@ jobs:
       # synthesized template is byte-identical each run, CDK reports no changes,
       # and the service never picks the new image up — the same failure in a
       # different disguise.
-      # This repo is a bun workspace with no package-lock.json, so `npm ci` cannot
-      # work here — deploy/infra is a workspace member and aws-cdk is one of its
-      # devDependencies. Install from the root the same way every other workflow
-      # does, then run the workspace-local cdk.
+      # The CDK stacks live in Max-Health-Inc/proxy-smart-infra: they describe one
+      # operator's AWS account, not the product, so they are not part of the
+      # public source tree. Everything below runs against that checkout.
+      - name: Authenticate as GitHub App for infra checkout
+        id: infra-app-auth
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: proxy-smart-infra
+
+      - name: Checkout infrastructure
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository_owner }}/proxy-smart-infra
+          ref: main
+          path: infra
+          token: ${{ steps.infra-app-auth.outputs.token }}
+
       - name: Set up Bun
         uses: ./.github/actions/setup-bun-version
         with:
@@ -174,12 +190,13 @@ jobs:
 
       - name: Install infra dependencies
         timeout-minutes: 10
-        # --filter scopes the install to deploy/infra (aws-cdk and friends);
+        working-directory: infra
         # --frozen-lockfile so a deploy can never quietly resolve something new.
-        uses: ./.github/actions/bun-install
-        with:
-          token: ${{ secrets.GH_PACKAGES_TOKEN }}
-          args: --filter proxy-smart-infra --frozen-lockfile
+        # GH_PACKAGES_TOKEN resolves @max-health-inc/config for the shared lint
+        # config; see bunfig.toml in that repo.
+        env:
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+        run: bun install --frozen-lockfile
 
       # --exclusively is NOT optional. Without it CDK reports
       #   "Including dependency stacks: ProxySmartDatabase, ProxySmartVpc"
@@ -195,7 +212,7 @@ jobs:
       #   ssm:GetParameter  on arn:aws:ssm:*:*:parameter/cdk-bootstrap/hnb659fds/*
       #   sts:AssumeRole    on arn:aws:iam::*:role/cdk-hnb659fds-*
       - name: Deploy Keycloak stack (points the task definition at the new image)
-        working-directory: deploy/infra
+        working-directory: infra
         run: |
           bunx cdk deploy ProxySmartKeycloak \
             --exclusively \
@@ -213,7 +230,7 @@ jobs:
       # ProxySmartVpc, turning an env-var change into a CloudFormation update of
       # the production RDS instance.
       - name: Deploy Backend stack (Keycloak URL split — internal vs public)
-        working-directory: deploy/infra
+        working-directory: infra
         run: |
           bunx cdk deploy ProxySmartBackend \
             --exclusively \

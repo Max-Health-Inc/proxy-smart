@@ -3,7 +3,7 @@
 
 // Import paths first to trigger ensureDataDir() side-effect before any store constructors
 import './lib/paths'
-import { config } from './config'
+import { config, DEV_FIXTURE_ADMIN_CLIENT_SECRET } from './config'
 import { logger } from './lib/logger'
 import { initializeServer, displayServerEndpoints } from './init'
 import { oauthMetricsLogger } from './lib/oauth-metrics-logger'
@@ -27,6 +27,18 @@ if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEV_AUTH_BYPASS =
 }
 if (process.env.NODE_ENV === 'production' && (process.env.AI_AUTH_OPTIONAL || '').toLowerCase() === 'true') {
   console.error('FATAL: AI_AUTH_OPTIONAL=true is set in production. This is a security risk. Refusing to start.')
+  process.exit(1)
+}
+// The dev fixture realm ships this secret in a public repo, and docker-compose.prod.yml
+// used to import that realm, so a production stack could authenticate on it. The
+// opt-out exists for the compliance suite, which runs NODE_ENV=production against
+// that same fixture realm on purpose.
+if (
+  process.env.NODE_ENV === 'production' &&
+  process.env.KEYCLOAK_ADMIN_CLIENT_SECRET === DEV_FIXTURE_ADMIN_CLIENT_SECRET &&
+  process.env.ALLOW_DEV_FIXTURE_SECRET !== 'true'
+) {
+  console.error('FATAL: KEYCLOAK_ADMIN_CLIENT_SECRET is the dev fixture secret published in keycloak/realm-export.json. Rotate the admin-service secret in Keycloak. Refusing to start.')
   process.exit(1)
 }
 

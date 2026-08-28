@@ -506,6 +506,9 @@ jobs:
           KEYCLOAK_REALM: proxy-smart
           KEYCLOAK_ADMIN_CLIENT_ID: admin-service
           KEYCLOAK_ADMIN_CLIENT_SECRET: admin-service-secret
+          # Compliance runs production code paths against the dev fixture realm, which
+          # is the one case the index.ts dev-fixture-secret guard must not kill.
+          ALLOW_DEV_FIXTURE_SECRET: 'true'
           SHL_EXCHANGE_CLIENT_ID: shl-exchange
           SHL_EXCHANGE_CLIENT_SECRET: shl-exchange-dev-secret
           # Point to HAPI FHIR server running in GitHub Actions service container

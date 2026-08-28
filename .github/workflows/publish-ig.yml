@@ -131,6 +131,19 @@ jobs:
           rm -rf dist-ig && mkdir dist-ig
           tar xzf "lib/maxhealth.consent-${IG_VERSION}-generated.tgz" -C dist-ig --strip-components=1
 
+      # Nothing here compiled what it published, so output that does not build
+      # shipped with this workflow still green — which is how consent-fhir sat on
+      # @babelfhir-ts/client-r4 ^0.2.0 for a week. Runs before the stamp so a
+      # package that fails never reaches `npm publish`.
+      - name: Typecheck the generated package
+        if: steps.decide.outputs.publish == 'true'
+        # Pinned by SHA rather than @main: the action lives on BabelFHIR-TS develop
+        # until the next promotion, and a SHA resolves regardless of branch — and
+        # cannot move underneath a publish. Bump it when the action changes.
+        uses: Max-Health-Inc/BabelFHIR-TS/.github/actions/typecheck-generated@8fc2760b476fd531f4c95f932be923855b3ebb6d
+        with:
+          path: dist-ig
+
       - name: Stamp name / version / build key
         if: steps.decide.outputs.publish == 'true'
         run: |
