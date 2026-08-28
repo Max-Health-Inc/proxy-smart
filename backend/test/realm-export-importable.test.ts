@@ -32,19 +32,15 @@
  */
 import { describe, it, expect } from 'bun:test'
 import { readFileSync } from 'fs'
-import { join } from 'path'
-
-const REPO = join(import.meta.dir, '..', '..')
+import { realmExportPaths, realmExportLabel } from './helpers/realm-exports'
 
 /**
- * Dockerfile.keycloak copies keycloak/realm-export.json and then layers
- * deploy/<env>/realm-export.json over it, so all three seed a real realm.
+ * Every realm export present in this checkout, plus any REALM_EXPORT_PATHS
+ * points at. The environment realms live in proxy-smart-infra and are layered
+ * onto the Keycloak base image there, so they reach these assertions from that
+ * repository's CI rather than from a hardcoded path here.
  */
-const EXPORT_PATHS = [
-  'keycloak/realm-export.json',
-  'deploy/beta/realm-export.json',
-  'deploy/prod/realm-export.json',
-]
+const EXPORT_PATHS = realmExportPaths()
 
 /** Fields Keycloak's UserRepresentation accepts (from its own rejection message). */
 const USER_REPRESENTATION_FIELDS = new Set([
@@ -104,9 +100,9 @@ function boundedFields(realm: RealmExport): { where: string; field: string; valu
   return out
 }
 
-const EXPORTS = EXPORT_PATHS.map((name) => ({
-  name,
-  raw: readFileSync(join(REPO, name), 'utf8'),
+const EXPORTS = EXPORT_PATHS.map((path) => ({
+  name: realmExportLabel(path),
+  raw: readFileSync(path, 'utf8'),
 })).map((entry) => ({ ...entry, realm: JSON.parse(entry.raw) as RealmExport }))
 
 /** Walk every object key in the document, reporting dotted paths. */
@@ -138,7 +134,7 @@ const DEV_SEED_USERNAMES = ['admin', 'doctor', 'testuser']
  * Exports that seed a REAL environment. keycloak/realm-export.json is excluded:
  * it is the dev/CI seed and is allowed to carry dev passwords.
  */
-const DEPLOY_EXPORTS = EXPORTS.filter((e) => e.name.startsWith('deploy/'))
+const DEPLOY_EXPORTS = EXPORTS.filter((e) => !e.name.endsWith('keycloak/realm-export.json'))
 
 /**
  * A deployed environment must not be seeded with dev accounts or passwords.
