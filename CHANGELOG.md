@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.29-beta.202608282259.633003ecd] - 2026-08-28
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements:
+  - Refactors and maintenance: consolidate monitoring modules into a factory; share contract between admin and SMART document-import routes; remove backend launch-code copy in auth package
+  - Dependency and version housekeeping: update dependencies to latest (TypeScript kept at 6.0.3); sync package versions
+  - Test improvements: test the logger directly instead of a copied implementation
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1088
+
+
 ## [0.3.29-beta.202608282230.0be408206] - 2026-08-28
 
 - ✨ Features
