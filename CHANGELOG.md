@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.29-beta.202608282325.afbdef61d] - 2026-08-28
+
+- ✨ Features
+  - No user-facing features detected in this set.
+
+- 🐛 Bug Fixes
+  - Narrow type checks in consent/types.ts to avoid unnecessary assertions while maintaining correct behavior for R4/R5 union handling.
+
+- 🔧 Chores & Improvements
+  - Refactor UI: share a single DICOM form between add and edit dialogs to reduce duplication.
+  - Refactor UI: share monitoring socket logic between OAuth and consent to consolidate common behavior.
+  - Re-structure internal code to reduce duplication and improve maintainability.
+
+- 📚 Documentation
+  - No documentation changes detected.
+
+- ⚠️ Breaking Changes
+  - None detected.
+
+- 🔄 CI/CD / Versioning
+  - Bump versions across packages and update beta version identifiers.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1091
+
+
 ## [0.3.29-beta.202608282259.633003ecd] - 2026-08-28
 
 - ✨ Features: None
