@@ -23,11 +23,10 @@
  */
 import { describe, it, expect } from 'bun:test'
 import { readFileSync } from 'fs'
-import { join } from 'path'
+import { realmExportPaths, realmExportLabel } from './helpers/realm-exports'
 import { ensureAdminUiDeviceGrant } from '@/lib/kc-system-provisioning'
 
 const DEVICE_GRANT_ATTR = 'oauth2.device.authorization.grant.enabled'
-const REPO = join(import.meta.dir, '..', '..')
 
 interface RealmExport {
   clients?: { clientId?: string; attributes?: Record<string, string> }[]
@@ -54,13 +53,9 @@ function fakeAdmin(existing: Record<string, string> | null) {
 describe('every realm export declares the attribute', () => {
   // Not the thing that makes it true, but if an export ever drops it the runtime
   // reconcile becomes the only source — worth knowing.
-  for (const path of [
-    'keycloak/realm-export.json',
-    'deploy/beta/realm-export.json',
-    'deploy/prod/realm-export.json',
-  ]) {
-    it(`${path} sets it on admin-ui`, () => {
-      const realm = JSON.parse(readFileSync(join(REPO, path), 'utf8')) as RealmExport
+  for (const path of realmExportPaths()) {
+    it(`${realmExportLabel(path)} sets it on admin-ui`, () => {
+      const realm = JSON.parse(readFileSync(path, 'utf8')) as RealmExport
       const adminUi = (realm.clients ?? []).find((c) => c.clientId === 'admin-ui')
       expect(adminUi?.attributes?.[DEVICE_GRANT_ATTR]).toBe('true')
     })

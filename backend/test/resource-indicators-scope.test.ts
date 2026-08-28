@@ -7,7 +7,7 @@
  */
 import { describe, it, expect } from 'bun:test'
 import { readFileSync } from 'fs'
-import { join } from 'path'
+import { realmExportPaths, realmExportLabel } from './helpers/realm-exports'
 import {
   assignResourceIndicatorsScope,
   RESOURCE_INDICATORS_SCOPE,
@@ -110,13 +110,13 @@ describe('needsResourceIndicators', () => {
 })
 
 /** The reconciler creates the scope; the export declares it. They must agree. */
-describe.each(['keycloak/realm-export.json', 'deploy/prod/realm-export.json'])('%s', (path) => {
+describe.each(realmExportPaths().map(realmExportLabel))('%s', (label) => {
   interface Scope {
     name?: string
     protocolMappers?: { protocolMapper?: string; config?: Record<string, string> }[]
   }
-  const repo = join(import.meta.dir, '..', '..')
-  const scope = (JSON.parse(readFileSync(join(repo, path), 'utf8')).clientScopes as Scope[] | undefined)
+  const path = realmExportPaths().find((p) => realmExportLabel(p) === label)!
+  const scope = (JSON.parse(readFileSync(path, 'utf8')).clientScopes as Scope[] | undefined)
     ?.find((s) => s.name === RESOURCE_INDICATORS_SCOPE)
 
   it('declares the resource-indicators scope', () => {

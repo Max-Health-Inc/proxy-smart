@@ -16,7 +16,7 @@
  */
 import { describe, it, expect } from 'bun:test'
 import { readFileSync } from 'fs'
-import { join } from 'path'
+import { realmExportPaths, realmExportLabel } from './helpers/realm-exports'
 
 interface RealmUser {
   username?: string
@@ -28,31 +28,39 @@ interface RealmExport {
   roles?: { realm?: { name?: string }[] }
 }
 
-const REPO = join(import.meta.dir, '..', '..')
 
 /**
  * EVERY realm export, not just the dev one.
  *
- * Dockerfile.keycloak copies `keycloak/realm-export.json` and then `deploy/<env>/realm-export.json`
- * over it, so the deploy file is what actually seeds beta and prod. Checking only the dev export
- * is how three files drifted apart unnoticed: `proxy-smart-admin` and the `admin` composite existed
- * in one of them, and prod still had no offline-session ceiling.
+ * The Keycloak base image ships no realm; each environment layers its own on top, and the
+ * deployed ones live in proxy-smart-infra. Checking only the dev export is how three files
+ * drifted apart unnoticed: `proxy-smart-admin` and the `admin` composite existed in one of
+ * them, and prod still had no offline-session ceiling. REALM_EXPORT_PATHS is what keeps the
+ * deployed realms inside this net from the repository that now holds them.
  */
-const EXPORTS: { name: string; realm: RealmExport }[] = [
-  'keycloak/realm-export.json',
-  'deploy/beta/realm-export.json',
-  'deploy/prod/realm-export.json',
-].map((name) => ({ name, realm: JSON.parse(readFileSync(join(REPO, name), 'utf8')) as RealmExport }))
+const EXPORTS: { name: string; realm: RealmExport }[] = realmExportPaths().map((path) => ({
+  name: realmExportLabel(path),
+  realm: JSON.parse(readFileSync(path, 'utf8')) as RealmExport,
+}))
 
-/** The dev export, for assertions that are genuinely about dev seeding. */
-const realm = EXPORTS[0].realm
+/**
+ * The dev export, for assertions that are genuinely about dev seeding.
+ *
+ * Resolved by name rather than by position: when proxy-smart-infra runs these
+ * assertions against its own realms via REALM_EXPORT_PATHS, this file is not in
+ * the set, and index 0 would silently become beta. The blocks that depend on it
+ * skip instead.
+ */
+const devExport = EXPORTS.find(({ name }) => name.endsWith('keycloak/realm-export.json'))
+const HAS_DEV_EXPORT = devExport !== undefined
+const realm = devExport?.realm ?? ({} as RealmExport)
 
 const DEFAULT_ROLE = 'default-roles-proxy-smart'
 const composite = realm.defaultRole?.composites?.realm ?? []
 /** Users the import actually creates with roles; service accounts carry none. */
 const seeded = (realm.users ?? []).filter((u) => u.realmRoles !== undefined)
 
-describe('realm default role composite', () => {
+describe.skipIf(!HAS_DEV_EXPORT)('realm default role composite', () => {
   it('is the realm default and grants offline_access', () => {
     // offline_access here is what lets ANY user obtain a refresh-token grant that Keycloak gates
     // on the role. Stock Keycloak ships it in this composite; dropping it breaks every client
@@ -70,7 +78,7 @@ describe('realm default role composite', () => {
   })
 })
 
-describe('offline session lifetime', () => {
+describe.skipIf(!HAS_DEV_EXPORT)('offline session lifetime', () => {
   const settings = realm as unknown as Record<string, unknown>
 
   it('enforces a maximum lifespan, not only an idle timeout', () => {
@@ -92,7 +100,7 @@ describe('offline session lifetime', () => {
   })
 })
 
-describe('the generic admin role', () => {
+describe.skipIf(!HAS_DEV_EXPORT)('the generic admin role', () => {
   const admin = (realm.roles?.realm ?? []).find((r) => r.name === 'admin') as
     | { name?: string; composite?: boolean; composites?: { realm?: string[] } }
     | undefined
@@ -116,7 +124,7 @@ describe('the generic admin role', () => {
   })
 })
 
-describe('seeded users', () => {
+describe.skipIf(!HAS_DEV_EXPORT)('seeded users', () => {
   it('exist, so the assertions below are not vacuous', () => {
     expect(seeded.length).toBeGreaterThan(0)
   })
@@ -148,8 +156,8 @@ describe('seeded users', () => {
 })
 
 describe('every realm export agrees', () => {
-  // Dockerfile.keycloak layers deploy/<env>/realm-export.json OVER keycloak/realm-export.json, so
-  // the deploy file is what actually seeds beta and prod. Asserting only the dev export let three
+  // Each environment layers its own realm onto the realm-less base image, so the deployed
+  // file is what actually seeds beta and prod. Asserting only the dev export let three
   // files drift: two lacked `proxy-smart-admin` and the `admin` composite, and prod shipped with
   // offline sessions uncapped.
   for (const { name, realm: r } of EXPORTS) {
@@ -183,14 +191,16 @@ describe('the initial administrator on a fresh deploy', () => {
   // "beta and prod should not have another initial admin than max.nussbaumer@maxhealth.tech".
   // The dev export is excluded on purpose: CI and local development need the seeded `admin`,
   // `doctor` and `testuser` accounts, and that realm is never public.
-  const DEPLOYED = EXPORTS.filter(({ name }) => name.startsWith('deploy/'))
+  //
+  // The deployed realms live in proxy-smart-infra, so in a plain checkout of this
+  // repository there are none and this block is inert. That repo's CI runs these
+  // same assertions with REALM_EXPORT_PATHS pointing at its realm/ directory,
+  // which is where the coverage assertion below does its work.
+  const DEPLOYED = EXPORTS.filter(({ name }) => !name.endsWith('keycloak/realm-export.json'))
   const SOLE_ADMIN = 'max.nussbaumer@maxhealth.tech'
 
-  it('covers both deployed environments', () => {
-    expect(DEPLOYED.map((e) => e.name)).toEqual([
-      'deploy/beta/realm-export.json',
-      'deploy/prod/realm-export.json',
-    ])
+  it.skipIf(DEPLOYED.length === 0)('covers both deployed environments', () => {
+    expect(DEPLOYED).toHaveLength(2)
   })
 
   for (const { name, realm: r } of DEPLOYED) {

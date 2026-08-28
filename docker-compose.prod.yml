@@ -3,11 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.keycloak
-      args:
-        # Picks deploy/<env>/realm-export.json. Required, because Dockerfile.keycloak
-        # otherwise falls back to the dev fixture realm, whose user passwords and
-        # admin-service secret are published in this repo.
-        DEPLOY_ENV: ${DEPLOY_ENV:?Set DEPLOY_ENV to the deploy/<env> directory holding your realm-export.json}
     container_name: proxy-smart-keycloak-prod
     environment:
       # Backend origin, substituted into the login theme's brand-accent script src
@@ -29,6 +24,14 @@ services:
       KC_METRICS_ENABLED: true
     ports:
       - "8080:8080"
+    volumes:
+      # Dockerfile.keycloak ships no realm on purpose, so supply your own here.
+      # Required: without it Keycloak starts with no realm at all, which is a
+      # loud failure rather than a silent boot on someone else's configuration.
+      # Start from keycloak/realm-export.json, then remove the seeded admin,
+      # doctor and testuser accounts and set your own admin-service secret —
+      # every value in that file is published in this repository.
+      - ${KEYCLOAK_REALM_FILE:?Set KEYCLOAK_REALM_FILE to your realm-export.json}:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
       postgres:
         condition: service_healthy
