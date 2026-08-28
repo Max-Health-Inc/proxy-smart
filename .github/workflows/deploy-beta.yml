@@ -133,19 +133,46 @@ jobs:
           cache-from: type=gha,scope=beta-backend-v2
           cache-to: type=gha,mode=max,scope=beta-backend-v2
 
-      - name: Build & push keycloak image
+      # The beta realm lives in Max-Health-Inc/proxy-smart-infra alongside the
+      # production one: both name this operator's users, clients and identity
+      # providers rather than anything about the product. The app-token above is
+      # org-scoped, so it already reaches that repository.
+      - name: Checkout infrastructure
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/proxy-smart-infra
+          ref: main
+          path: infra
+          token: ${{ steps.app-token.outputs.token }}
+
+      # Base carries the theme, feature flags and `kc.sh build` output, and no
+      # realm. Loaded locally rather than pushed: only the realm-bearing image
+      # is worth publishing.
+      - name: Build keycloak base image (no realm)
         uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.keycloak
+          load: true
+          push: false
+          tags: proxy-smart-keycloak-base:beta-${{ inputs.app_version }}
+          cache-from: type=gha,scope=beta-keycloak
+          cache-to: type=gha,mode=max,scope=beta-keycloak
+
+      # Adds only the realm file. Import happens at container start, never at
+      # `kc.sh build`, so the optimized build in the base is untouched — a
+      # rebuild here would drop --features and crash realm import.
+      - name: Build & push keycloak image (beta realm)
+        uses: docker/build-push-action@v7
+        with:
+          context: infra/realm/beta
+          file: ./infra/Dockerfile.realm
           push: true
           tags: |
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-latest
           build-args: |
-            DEPLOY_ENV=beta
-          cache-from: type=gha,scope=beta-keycloak
-          cache-to: type=gha,mode=max,scope=beta-keycloak
+            BASE_IMAGE=proxy-smart-keycloak-base:beta-${{ inputs.app_version }}
 
   # ── Deploy to VPS via SSH ──
   deploy:

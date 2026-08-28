@@ -31,6 +31,25 @@ Click **Add Identity Provider** to configure a new external authentication sourc
 
 The remaining fields live in the provider's `config` object and depend on its protocol. OIDC providers take the authorization, token, and logout URLs, a client ID and secret, the issuer and JWKS URL, and the scopes and PKCE method to request. SAML providers take the SSO service URL and entity ID, the signing and encryption certificates, and the NameID format and binding type.
 
+Keys the form does not list are passed through to Keycloak unchanged, so a
+provider can carry anything its type supports.
+
+### Signing out and picking a different account
+
+Two OIDC keys decide what happens after a user signs out, and leaving both unset
+produces a confusing result: the user signs out, clicks the provider again, and
+is returned to the same account with no prompt.
+
+| Key | Effect |
+|---|---|
+| `prompt` | Sent on every authorization request. `select_account` makes the provider offer its account chooser instead of silently reusing its session; `login` forces a full re-authentication |
+| `logoutUrl` | The provider's `end_session_endpoint`, so signing out of Keycloak can end the session at the provider too |
+
+Ending the upstream session depends on how the provider's logout endpoint
+identifies the session. One that reads a browser cookie cannot be ended by a
+server-side call, so `logoutUrl` alone may not be enough; `prompt` is what
+reliably lets a user choose a different account.
+
 ## Claim Mappers
 
 A user who authenticates through an external IdP arrives in Keycloak with only

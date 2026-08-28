@@ -42,17 +42,37 @@ Set required environment variables or use a `.env` file:
 KC_DB_PASSWORD=<secure-password>
 POSTGRES_PASSWORD=<secure-password>
 KEYCLOAK_ADMIN_CLIENT_SECRET=<service-account-secret>
-DEPLOY_ENV=<your-env>   # selects deploy/<your-env>/realm-export.json
+KEYCLOAK_REALM_FILE=<path to your realm-export.json>
 ```
 
-`DEPLOY_ENV` has no default on purpose. `Dockerfile.keycloak` falls back to
-`keycloak/realm-export.json`, the dev/CI fixture realm, and that file seeds the
-`admin`, `doctor` and `testuser` accounts and the `admin-service` client secret
-with values published in this repository. Point `DEPLOY_ENV` at your own
-`deploy/<env>/realm-export.json` before deploying anything reachable.
+### Bring your own realm
 
-The backend enforces the same rule at startup: with `NODE_ENV=production` it
-refuses to start when `KEYCLOAK_ADMIN_CLIENT_SECRET` is still the fixture value.
+`Dockerfile.keycloak` builds a Keycloak image with the login theme, the feature
+flags and the optimized build, and **no realm at all**. That is deliberate: a
+realm names your users, clients and identity providers, so there is no sensible
+default to ship. Keycloak with no realm fails loudly; Keycloak with someone
+else's realm does not.
+
+`KEYCLOAK_REALM_FILE` has no default for the same reason. Point it at your own
+export and compose mounts it into the import directory.
+
+To make one, start from `keycloak/realm-export.json` and then:
+
+- remove the seeded `admin`, `doctor` and `testuser` accounts, whose passwords
+  are published in this repository
+- replace the `admin-service` client secret, likewise published
+- keep the `default-roles-proxy-smart` composite declared in both
+  `realm.defaultRole` and `roles.realm[]` (see
+  [keycloak-features.md](keycloak-features)), or every user silently gets no roles
+
+`backend/test/realm-export-importable.test.ts` encodes the constraints that stop
+Keycloak booting — column-width limits and rejected fields. Point it at your file
+with `REALM_EXPORT_PATHS=/path/to/realm-export.json bun test` to check it before
+you deploy.
+
+The backend enforces the secret rule at startup too: with `NODE_ENV=production`
+it refuses to start when `KEYCLOAK_ADMIN_CLIENT_SECRET` is still the fixture
+value.
 
 ### Deploy
 
@@ -73,7 +93,7 @@ The production compose builds the backend from `Dockerfile` and Keycloak from `D
 - Backend image includes the Admin UI and Patient Picker as static files
 - External SMART apps are deployed independently into the `apps_static` Docker volume
 - Keycloak uses PostgreSQL for persistence
-- Realm configuration is imported from `deploy/$DEPLOY_ENV/realm-export.json`
+- Realm configuration is mounted from `$KEYCLOAK_REALM_FILE` (the image ships none)
 
 ### With Caddy (HTTPS)
 
@@ -90,13 +110,13 @@ Caddy provides automatic TLS certificate provisioning via Let's Encrypt.
 - **Image**: `quay.io/keycloak/keycloak:26.6.3`
 - **Purpose**: OAuth 2.0 / OIDC identity provider
 - **Health check**: HTTP on port 9000 (`/health/ready`)
-- **Realm import**: Auto-imports `deploy/$DEPLOY_ENV/realm-export.json` on first start, falling back to `keycloak/realm-export.json` (dev/CI fixture only)
+- **Realm import**: Auto-imports whatever is in `/opt/keycloak/data/import/` on first start. The image ships no realm; supply one (see [Bring your own realm](#bring-your-own-realm))
 - **Features**: `cimd`, `token-exchange`, `client-auth-federated`, `resource-indicators` (RFC 8707) enabled at build time
 
 #### Seeded administrator (beta / prod)
 
-`Dockerfile.keycloak` layers `deploy/<env>/realm-export.json` over the base
-export, so that file is what seeds the beta and prod realms. It declares
+The beta and prod realms live in the private `proxy-smart-infra` repository and
+are layered onto the base image at deploy time. They declare
 `max.nussbaumer@maxhealth.tech` as the initial administrator, and deliberately
 the only one:
 
@@ -138,7 +158,10 @@ starting at all. JSON has no comments; document intent here instead.
 
 ## AWS CDK Deployment
 
-For cloud deployment, see the [Infrastructure README](https://github.com/Max-Health-Inc/proxy-smart/tree/main/infra) which provides AWS CDK stacks for:
+The CDK stacks for Max Health's own AWS deployment live in the private
+`proxy-smart-infra` repository, because they describe one operator's account
+rather than the product. Self-hosting does not need them; the compose files
+above are the supported path. They provide:
 - ECS Fargate services
 - RDS PostgreSQL
 - CloudFront distribution
