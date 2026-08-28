@@ -99,7 +99,7 @@ Either way the compartment is applied as:
 
 A user with only `user/`-scoped access and a non-Patient `fhirUser` -- a practitioner -- is **not** compartment-filtered here. Their access is governed by consent instead.
 
-> Earlier revisions of this document described practitioners being narrowed to patients assigned via `generalPractitioner`. No such lookup exists in the proxy; `generalPractitioner` appears nowhere in the backend. Practitioner access is bounded by consent, not by assignment.
+> **Not yet implemented:** narrowing a practitioner to the patients assigned to them via `generalPractitioner`. There are no `generalPractitioner` links in the system yet and the proxy performs no such lookup, so nothing here bounds a practitioner to an assigned panel. Until it exists, **consent is the only thing limiting which patients a practitioner can reach** -- which makes actor matching (above) load-bearing rather than advisory.
 
 ### 5. Capability-Aware Normalization
 
