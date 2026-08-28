@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.29-beta.202608282230.0be408206] - 2026-08-28
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix: stop beta deploy stripping prompt from maxhealth broker; align prompt and logoutUrl to avoid losing added fields during beta deploys
+  - fix: keep deployed-realm assertions running after path change to ensure seeds and CI accounts are created as expected
+
+- 📚 Documentation
+  - docs: note practitioner panel narrowing is not yet implemented
+
+- 🔧 Chores & Improvements
+  - chore: build Keycloak from a realm-less base and layer realm per environment for cleaner images
+  - CI/CD: versioning updates for beta/alpha pre-releases
+
+- ⚠️ Breaking Changes
+  - None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1085
+
+
 ## [0.3.28-alpha.202608271636.ea49e0947] - 2026-08-27
 
 - 🔧 Chores & Improvements: Synchronize package versions and update alpha pre-release to 0.3.28-alpha.202608271636.ea49e0947
