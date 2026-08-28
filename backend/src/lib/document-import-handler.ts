@@ -143,3 +143,41 @@ export async function processScribe(input: {
     },
   }
 }
+
+/** Minimal view of Elysia's `set`, so this stays free of framework types. */
+interface ResponseStatus {
+  status?: number | string
+}
+
+/** Error envelope both document-import planes return. */
+interface DocumentImportError {
+  error: string
+  details?: string
+}
+
+/**
+ * Run an import for an already-authenticated caller and map the outcome onto the
+ * route response. Both document-import planes share this so their status codes
+ * and error envelopes cannot drift; only the auth guard differs between them.
+ */
+export async function respondToDocumentImport(
+  input: DocumentImportInput,
+  set: ResponseStatus,
+): Promise<DocumentImportResult | DocumentImportError> {
+  if (input.file.type !== 'application/pdf') {
+    set.status = 400
+    return { error: 'Invalid file type', details: 'Only PDF files are supported' }
+  }
+
+  try {
+    const outcome = await processDocumentImport(input)
+    if (!outcome.ok) {
+      set.status = 503
+      return { error: 'AI not configured', details: outcome.detail }
+    }
+    return outcome.result
+  } catch (error) {
+    set.status = 500
+    return { error: 'Document import failed', details: error instanceof Error ? error.message : String(error) }
+  }
+}

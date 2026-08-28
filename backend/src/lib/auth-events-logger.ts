@@ -8,7 +8,7 @@
  * CODE_TO_TOKEN, etc.) using the shared BaseEventsLogger infrastructure.
  */
 
-import { BaseEventsLogger, type KeycloakEvent } from './base-events-logger'
+import { BaseEventsLogger, mapBaseKeycloakEvent, type KeycloakEvent } from './base-events-logger'
 
 // ─── Types ───────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ export interface AuthAnalytics {
 
 // ─── Event types ─────────────────────────────────────────────────
 
-const AUTH_EVENT_TYPES = [
+export const AUTH_EVENT_TYPES = [
   'LOGIN', 'LOGIN_ERROR',
   'LOGOUT', 'LOGOUT_ERROR',
   'REGISTER', 'REGISTER_ERROR',
@@ -50,6 +50,11 @@ const AUTH_EVENT_TYPES = [
   'REVOKE_GRANT', 'REVOKE_GRANT_ERROR',
 ]
 
+/** Auth events add the Keycloak session id to the shared mapping. */
+export function mapAuthEvent(kc: KeycloakEvent): AuthEvent {
+  return { ...mapBaseKeycloakEvent(kc, 'auth'), sessionId: kc.sessionId }
+}
+
 // ─── Implementation ──────────────────────────────────────────────
 
 class AuthEventsLogger extends BaseEventsLogger<AuthEvent, AuthAnalytics> {
@@ -60,21 +65,7 @@ class AuthEventsLogger extends BaseEventsLogger<AuthEvent, AuthAnalytics> {
       eventTypes: AUTH_EVENT_TYPES,
       logChannel: 'auth',
       idPrefix: 'auth',
-      mapEvent: (kc: KeycloakEvent): AuthEvent => {
-        const isError = kc.type?.endsWith('_ERROR') ?? false
-        return {
-          id: kc.id ?? `auth-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          timestamp: kc.time ? new Date(kc.time).toISOString() : new Date().toISOString(),
-          type: kc.type ?? 'UNKNOWN',
-          userId: kc.userId,
-          clientId: kc.clientId,
-          sessionId: kc.sessionId,
-          ipAddress: kc.ipAddress,
-          error: kc.error,
-          success: !isError && !kc.error,
-          details: kc.details,
-        }
-      },
+      mapEvent: mapAuthEvent,
     })
   }
 

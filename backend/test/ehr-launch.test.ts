@@ -57,7 +57,19 @@ mock.module('@/lib/logger', () => ({
 
 // ─── Import after mocks ─────────────────────────────────────────────────────
 
-import { signLaunchCode, verifyLaunchCode, type LaunchCodePayload } from '../src/lib/launch-code'
+import {
+  signLaunchCode as signLaunchCodeWith,
+  verifyLaunchCode as verifyLaunchCodeWith,
+  toLaunchCodeOptions,
+  type LaunchCodePayload,
+} from '@proxy-smart/auth'
+import { smartProxyConfig, smartLogger } from '../src/routes/auth/smart-proxy-setup'
+
+// smartProxyConfig reads config through getters, so options resolve per call and
+// pick up the env vars each test sets.
+const launchOpts = () => toLaunchCodeOptions(smartProxyConfig, smartLogger)
+const signLaunchCode = (payload: LaunchCodePayload) => signLaunchCodeWith(payload, launchOpts())
+const verifyLaunchCode = (code: string) => verifyLaunchCodeWith(code, launchOpts())
 
 // ─── Launch Code Service Tests ──────────────────────────────────────────────
 

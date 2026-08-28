@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 import { t } from 'elysia'
-import { adminAuditLogger } from '../lib/admin-audit-logger'
-import { AdminAuditEventsResponse, AdminAuditAnalyticsResponse } from '../schemas/admin-audit'
-import { createMonitoringRoutes } from './monitoring-factory'
+import { adminAuditLogger } from '@/lib/admin-audit-logger'
+import { AdminAuditEventsResponse, AdminAuditAnalyticsResponse } from '@/schemas/admin-audit'
+import { createEventLoggerMonitoringRoutes } from './factory'
 
 /**
  * Admin audit monitoring routes — real-time SSE streams + REST queries.
  */
-export const adminAuditMonitoringRoutes = createMonitoringRoutes({
+export const adminAuditMonitoringRoutes = createEventLoggerMonitoringRoutes({
   prefix: '/monitoring/admin-audit',
   tag: 'admin-audit-monitoring',
   logger: adminAuditLogger,

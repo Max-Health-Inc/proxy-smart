@@ -12,7 +12,7 @@
  */
 
 import jwt from 'jsonwebtoken'
-import type { LaunchCodePayload, LaunchCodeContext, SmartProxyLogger, noopLogger as _noop } from './types'
+import type { LaunchCodePayload, LaunchCodeContext, SmartProxyConfig, SmartProxyLogger, noopLogger as _noop } from './types'
 
 export interface LaunchCodeServiceOptions {
   /** HMAC secret for signing/verifying launch codes */
@@ -23,6 +23,24 @@ export interface LaunchCodeServiceOptions {
   issuer: string
   /** Optional logger */
   logger?: SmartProxyLogger
+}
+
+/** Config fields a launch code needs. Kept structural so callers can pass a getter-backed object. */
+export type LaunchCodeConfig = Pick<SmartProxyConfig, 'baseUrl' | 'launchCodeSecret' | 'launchCodeTtlSeconds'>
+
+/**
+ * Derive launch code options from a {@link SmartProxyConfig}.
+ *
+ * Signing and verification must agree on secret, TTL and issuer, so both sides
+ * read them through here rather than assembling the object at each call site.
+ */
+export function toLaunchCodeOptions(config: LaunchCodeConfig, logger?: SmartProxyLogger): LaunchCodeServiceOptions {
+  return {
+    secret: config.launchCodeSecret,
+    ...(config.launchCodeTtlSeconds !== undefined && { ttlSeconds: config.launchCodeTtlSeconds }),
+    issuer: config.baseUrl,
+    ...(logger && { logger }),
+  }
 }
 
 /**
