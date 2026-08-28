@@ -159,19 +159,23 @@ jobs:
       # Two stages, because the realm is not part of the product.
       #
       # The base carries the theme, the feature flags and the `kc.sh build`
-      # output, and ships no realm at all. It is loaded into the local daemon
-      # rather than pushed: only the finished, realm-bearing image belongs in
-      # ECR, and publishing a realm-less Keycloak would just invite someone to
-      # deploy it.
-      - name: Build Keycloak base image (no realm)
+      # output, and ships no realm at all.
+      #
+      # It is pushed under its own tag rather than kept local. `load: true` puts
+      # an image in the runner's Docker daemon, but the overlay below builds on
+      # a docker-container buildx driver, which resolves FROM against a registry
+      # and never reads that daemon — so it looked for the base on Docker Hub
+      # and failed with "pull access denied". Same ECR repository, distinct tag,
+      # so no second repository or IAM change is needed. Nothing deploys this
+      # tag: the task definition is pointed at the realm-bearing one below.
+      - name: Build and push Keycloak base image (no realm)
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.keycloak
-          load: true
-          push: false
+          push: true
           platforms: linux/amd64
-          tags: proxy-smart-keycloak-base:${{ inputs.app_version }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:base-${{ inputs.app_version }}
           build-args: |
             KC_RELATIVE_PATH=/
           cache-from: type=gha,scope=prod-keycloak
@@ -192,7 +196,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:latest
             ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}
           build-args: |
-            BASE_IMAGE=proxy-smart-keycloak-base:${{ inputs.app_version }}
+            BASE_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:base-${{ inputs.app_version }}
 
       # Point the Keycloak task definition at the image we just pushed.
       #

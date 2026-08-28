@@ -146,16 +146,21 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       # Base carries the theme, feature flags and `kc.sh build` output, and no
-      # realm. Loaded locally rather than pushed: only the realm-bearing image
-      # is worth publishing.
-      - name: Build keycloak base image (no realm)
+      # realm.
+      #
+      # Pushed under its own tag rather than kept local. `load: true` puts an
+      # image in the runner's Docker daemon, but the overlay below builds on a
+      # docker-container buildx driver, which resolves FROM against a registry
+      # and never reads that daemon — so it looked for the base on Docker Hub
+      # and failed with "pull access denied". Same repository, distinct tag, so
+      # this needs no extra registry setup.
+      - name: Build & push keycloak base image (no realm)
         uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.keycloak
-          load: true
-          push: false
-          tags: proxy-smart-keycloak-base:beta-${{ inputs.app_version }}
+          push: true
+          tags: ${{ env.IMAGE_PREFIX }}/keycloak:base-beta-${{ inputs.app_version }}
           cache-from: type=gha,scope=beta-keycloak
           cache-to: type=gha,mode=max,scope=beta-keycloak
 
@@ -172,7 +177,7 @@ jobs:
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-${{ inputs.app_version }}
             ${{ env.IMAGE_PREFIX }}/keycloak:beta-latest
           build-args: |
-            BASE_IMAGE=proxy-smart-keycloak-base:beta-${{ inputs.app_version }}
+            BASE_IMAGE=${{ env.IMAGE_PREFIX }}/keycloak:base-beta-${{ inputs.app_version }}
 
   # ── Deploy to VPS via SSH ──
   deploy:
