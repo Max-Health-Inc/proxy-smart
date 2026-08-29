@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.2-beta.202608292104.162ca334d] - 2026-08-29
+
+- 🔧 Chores & Improvements: Update version to 0.4.2-beta.202608292104.162ca334d (beta) [skip ci]
+- 🔧 Chores & Improvements: Sync package versions
+- ⚠️ Breaking Changes: Reverts and adjustments related to deployment flow due to production policy changes (AWS credentials and IAM role/OIDC trust policy considerations)
+
+**Full Changelog**: https://github.com/proxy-smart/proxy-smart/pull/1129
+
+
 ## [0.4.1-beta.202608291951.07496cf55] - 2026-08-29
 
 - 🔧 Chores & Improvements: CI/CD adjustments and toolchain handling
