@@ -13,9 +13,6 @@ const __dirname = path.dirname(__filename);
 // Directories to skip entirely during recursive search
 const SKIP_DIRS = ['node_modules', 'dist', 'build', '.git', '.cache', 'cache'];
 
-// Private packages that are never published — excluded from version management
-const EXCLUDED_PACKAGES = ['consent-app', 'dtr-app', 'shared-ui'];
-
 // Recursively find all package.json files using built-in modules
 function findPackageFiles(dir = process.cwd(), found = [], depth = 0) {
   try {
@@ -27,7 +24,6 @@ function findPackageFiles(dir = process.cwd(), found = [], depth = 0) {
       
       if (stat.isDirectory()) {
         if (SKIP_DIRS.includes(item)) continue;
-        if (depth === 0 && EXCLUDED_PACKAGES.includes(item)) continue;
         findPackageFiles(fullPath, found, depth + 1);
       } else if (item === 'package.json') {
         // Convert to relative path from process.cwd()
@@ -45,31 +41,16 @@ function findPackageFiles(dir = process.cwd(), found = [], depth = 0) {
 
 // Dynamically find all package.json files
 function getPackagePaths() {
-  try {
-    const allPackages = findPackageFiles();
-    
-    // Ensure root package.json is first
-    const rootIndex = allPackages.indexOf('package.json');
-    if (rootIndex > 0) {
-      allPackages.splice(rootIndex, 1);
-      allPackages.unshift('package.json');
-    }
-    
-    return allPackages;
-  } catch (error) {
-    // Fallback to manual list if finding fails
-    console.warn('⚠ Warning: Could not auto-detect package.json files, using fallback list');
-    return [
-      'package.json',
-      'backend/package.json', 
-      'frontend/ui/package.json',
-      'scripts/package.json',
-      'testing/package.json',
-      'testing/alpha/package.json',
-      'testing/beta/package.json',
-      'testing/production/package.json'
-    ];
+  const allPackages = findPackageFiles();
+
+  // Ensure root package.json is first
+  const rootIndex = allPackages.indexOf('package.json');
+  if (rootIndex > 0) {
+    allPackages.splice(rootIndex, 1);
+    allPackages.unshift('package.json');
   }
+
+  return allPackages;
 }
 
 /** Git reports POSIX paths; path.relative gives backslashes on Windows. */
