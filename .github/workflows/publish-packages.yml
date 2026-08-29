@@ -47,11 +47,13 @@ jobs:
         with:
           token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
+      # Scope derived, not literal: it has to agree with the packages being
+      # published, and those are named for whichever org owns this repository.
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           registry-url: https://npm.pkg.github.com
-          scope: '@max-health-inc'
+          scope: '@${{ github.repository_owner }}'
 
       # The API client does not exist in a checkout — it is generated from the
       # backend's OpenAPI spec and gitignored, so it has to be produced before it
