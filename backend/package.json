@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.3.30-beta.202608291010.f3c0b0f8b",
+  "version": "0.3.30-alpha.202608291115.70c5bb971",
   "type": "module",
   "scripts": {
     "test": "bun test --isolate",
@@ -26,7 +26,7 @@
     "@max-health-inc/consent-fhir": "^0.1.28",
     "@max-health-inc/elysia-mcp": "workspace:*",
     "@maxhealth.tech/mcp-http": "^0.5.0",
-    "@maxhealth.tech/prefab": "^0.3.12",
+    "@maxhealth.tech/prefab": "^0.3.13",
     "@modelcontextprotocol/server": "^2.0.0",
     "@opendataloader/pdf": "^2.5.5",
     "@proxy-smart/app-store": "workspace:*",

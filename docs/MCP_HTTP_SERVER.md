@@ -142,10 +142,11 @@ Tools on `/mcp` are derived from the Elysia route table by [`@max-health-inc/ely
 
 Execution goes back through the real Elysia pipeline via a registered dispatch app, so route guards, response-schema coercion, and lifecycle hooks such as admin audit logging all run. A synthetic-context fallback exists for the case where no dispatch app is registered, and the `getAdmin` / `getAccessControl` decorators serve that path.
 
-Two tools are hand-written rather than derived:
+Three tools are hand-written rather than derived:
 
 - **`search_documentation`** — semantic search over the platform documentation knowledge base.
 - **`read_resource`** — a single tool that collapses every read-only `GET` route. It takes a `path` and optional `query` map, and its description enumerates the paths the caller is allowed to read. Registered only when `exposeResourcesAsTools` is on. Collapsing hundreds of `get_*` tools into one keeps the tool list inside what a client will actually load.
+- **`show_form`** — draws a write tool's arguments as a form the user fills in, instead of the model guessing them. Registered only when `MCP_PREFAB_UI` is on, since without a host that renders UI there is nothing for it to return.
 
 `GET` routes are additionally registered as MCP **resources** — fixed URIs for static paths, RFC 6570 templates for parameterized ones.
 
@@ -162,6 +163,8 @@ Three things follow from turning it on:
 - **The endpoint registers a `ui://` viewer resource.** It is the HTML page the host loads before any tool runs; prefab owns its content, CSP and cache hints, and each tool points at it through `_meta.ui.resourceUri` on its own definition.
 - **Tools stop advertising an `outputSchema`.** A result has one `structuredContent` and it cannot mean two things: the spec requires structured results to conform to a declared output schema, and a view does not. This is why the flag defaults to off — the machine-facing contract is unchanged until a deployment asks for UI.
 - **Nothing changes for the model.** The payload stays in the text block under the encoding described above, and `structuredContent` never enters model context, so the UI costs no tokens. A payload with no sensible view (a scalar, an empty body) keeps its JSON, and a view that fails to build is dropped rather than failing the call.
+
+It also registers **`show_form`**, which is the input side of the same idea. Given a write tool's name it returns a form built from that tool's own input schema, and submitting the form calls the tool — so what the form asks for and what the call validates come from one declaration and cannot drift. `values` pre-fills fields, which is also how a form is bound to one record (`{ userId: "abc123" }` for `update_admin_users_userId`); path params stay fields, because they are arguments of the call. The model is told what was drawn and that nothing has changed yet, so it does not report the edit as done before the user submits.
 
 ### Controlling exposure
 

@@ -9,9 +9,9 @@
  * into a view without a line of per-route UI code — a list renders as a table
  * and a record as a detail card.
  *
- * A form derived from a tool's own input schema is the other half and needs
- * prefab's `fieldsFromJsonSchema` (0.3.13); `typeboxToJsonSchema` in
- * `./typebox-schema` is the conversion it takes.
+ * `toolForm` is the other half: the form a tool's own input schema describes,
+ * whose submit action calls that same tool. The form and the validation it will
+ * face come from one declaration, so they cannot drift.
  *
  * prefab is an OPTIONAL peer: importing this module is the opt-in. Nothing in
  * `@max-health-inc/elysia-mcp` itself reaches for it, so a server that serves
@@ -31,11 +31,16 @@
 import {
   PrefabApp,
   autoDetail,
+  autoForm,
   autoTable,
+  fieldsFromJsonSchema,
   PREFAB_RESOURCE_URI,
+  type AutoFormField,
   type Component,
 } from '@maxhealth.tech/prefab'
+import type { ToolMetadata } from './types'
 import type { StructuredContent, ToolView, ToolViewContext } from './executor'
+import { getMergedInputSchema, typeboxToJsonSchema } from './typebox-schema'
 
 // ── Tool _meta ───────────────────────────────────────────────────────────────
 
@@ -68,6 +73,18 @@ export function titleFromToolName(toolName: string): string {
   const words = stripped.length > 0 ? stripped : parts
   const text = words.join(' ').replace(/-/g, ' ')
   return text.length === 0 ? toolName : text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** `create_admin_smart-apps` → `Create admin smart apps`. Keeps the verb, which a form needs. */
+export function labelFromToolName(toolName: string): string {
+  const text = toolName.split('_').join(' ').replace(/-/g, ' ').trim()
+  return text.length === 0 ? toolName : text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** The verb a tool name starts with, when it starts with one. */
+function verbOf(toolName: string): string | undefined {
+  const first = toolName.split('_')[0]
+  return first !== undefined && TOOL_VERBS.has(first) ? first : undefined
 }
 
 // ── Payload shapes ───────────────────────────────────────────────────────────
@@ -144,6 +161,60 @@ export function defaultView(
   }
 
   return undefined
+}
+
+// ── toolForm() ───────────────────────────────────────────────────────────────
+
+export interface ToolFormOptions {
+  /** Form heading. @default the humanized tool name */
+  title?: string
+  /** Submit button text. @default the tool's own verb (`Create`, `Update`, …) */
+  submitLabel?: string
+  /** Argument names to leave out entirely. */
+  exclude?: string[]
+  /**
+   * Pre-filled values, keyed by argument name. This is how a form for a route
+   * that acts on one record (`/admin/users/:userId`) is bound to it: the path
+   * param is a required argument of the call, so it stays a field, and the
+   * caller supplies which record it is about.
+   */
+  values?: Record<string, string | number | boolean | string[]>
+}
+
+/**
+ * Build the form a tool's own input schema describes.
+ *
+ * The submit action calls that same tool, so what the form asks for and what
+ * the call validates come from one declaration. Path params are included, not
+ * dropped: they are required arguments of the call, and a form that omitted
+ * them would submit something the tool rejects.
+ *
+ * Returns undefined when the schema describes nothing a flat form can ask for —
+ * a tool taking no arguments, or only nested ones.
+ */
+export function toolForm(
+  toolName: string,
+  meta: ToolMetadata,
+  options?: ToolFormOptions,
+): Component | undefined {
+  const jsonSchema = typeboxToJsonSchema(getMergedInputSchema(meta))
+  if (jsonSchema === undefined) return undefined
+
+  const fields = fieldsFromJsonSchema(jsonSchema, {
+    ...(options?.exclude !== undefined && { exclude: options.exclude }),
+  })
+  if (fields.length === 0) return undefined
+
+  const values = options?.values
+  const prefilled: AutoFormField[] = values === undefined
+    ? fields
+    : fields.map(f => (values[f.name] === undefined ? f : { ...f, default: values[f.name] }))
+
+  const verb = verbOf(toolName)
+  return autoForm(prefilled, toolName, {
+    title: options?.title ?? labelFromToolName(toolName),
+    submitLabel: options?.submitLabel ?? (verb === undefined ? 'Submit' : verb.charAt(0).toUpperCase() + verb.slice(1)),
+  })
 }
 
 // ── prefabView() ─────────────────────────────────────────────────────────────

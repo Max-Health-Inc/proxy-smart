@@ -48,6 +48,7 @@ import { loadMcpEndpointConfig, isToolExposed, isResourceExposed } from '../lib/
 import { MCP_SCOPE_CHALLENGE } from '../lib/oauth-scopes'
 import { searchDocumentation } from '../lib/ai/rag-tools'
 import { registerReadResourceTool } from '../lib/ai/read-resource-tool'
+import { registerToolFormTool } from '../lib/ai/tool-form-tool'
 import { createAdminClient } from '../lib/keycloak-plugin'
 import { getAccessControlInstance } from '../lib/access-control/plugin'
 
@@ -182,6 +183,12 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
   const cfg = loadMcpEndpointConfig()
   if (cfg.exposeResourcesAsTools && isToolExposed('read_resource')) {
     registerReadResourceTool(server, userRoles, tokenRef)
+  }
+
+  // show_form draws a write tool's arguments as a form the user fills in.
+  // Pointless without a host that renders it, hence the same flag as the views.
+  if (config.mcp.ui && isToolExposed('show_form')) {
+    registerToolFormTool(server, userRoles)
   }
 }
 

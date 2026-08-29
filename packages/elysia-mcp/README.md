@@ -169,6 +169,8 @@ server.registerTool(name, { description, inputSchema, _meta: uiToolMeta() }, (ar
 
 `prefabView()` renders a list of records as a searchable table and a single record as a detail card, titled from the tool name (`list_admin_smart-apps` → *Admin smart apps*). A list-shaped envelope holding exactly one array (`{ items: [...], total: 42 }`) is unwrapped; one holding two is left as a record, because picking which array is *the* table would be a guess. Anything else — a scalar, an empty body — renders nothing and keeps its JSON. `render` overrides the view for chosen tools and falls through to the default when it declines, `maxRows` caps what is shipped into the iframe, and `onSkipped` reports the payloads that got no view.
 
+`toolForm(toolName, meta, options?)` is the input side: the form a tool's own input schema describes, whose submit action calls that same tool. Path params are kept rather than dropped — they are required arguments of the call, and a form omitting them would submit something the tool rejects — and `values` pre-fills fields, which is how a form is bound to one record. The submit button takes the tool's own verb (`create_*` → *Create*). It returns `undefined` for a tool with no arguments a flat form can ask for.
+
 `uiToolMeta(uri?)` is the `_meta` pointing a host at the renderer resource. It belongs on the tool **definition**: the host resolves the `ui://` resource when it lists tools, before any call is made.
 
 ## Text encoding

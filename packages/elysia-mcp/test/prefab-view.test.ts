@@ -10,7 +10,8 @@
 
 import { describe, it, expect } from 'bun:test'
 import { PrefabApp, Column, Heading } from '@maxhealth.tech/prefab'
-import { defaultView, prefabView, titleFromToolName, uiToolMeta } from '../src/prefab-view'
+import { defaultView, labelFromToolName, prefabView, titleFromToolName, toolForm, uiToolMeta } from '../src/prefab-view'
+import { Type } from '@sinclair/typebox'
 import { executeTool, executeResourceResult } from '../src/executor'
 import type { ResourceMetadata, ToolMetadata } from '../src/types'
 
@@ -151,6 +152,77 @@ describe('prefabView through executeResourceResult', () => {
     }
     const result = await executeResourceResult(resource, {}, undefined, undefined, { view: prefabView() })
     expect(JSON.stringify(result.structuredContent)).toContain('Admin smart apps')
+  })
+})
+
+describe('toolForm', () => {
+  const createRole: ToolMetadata = {
+    path: '/admin/roles',
+    method: 'POST',
+    handler: () => ({}),
+    schema: Type.Object({
+      name: Type.String({ title: 'Role name' }),
+      description: Type.Optional(Type.String()),
+      scope: Type.Optional(Type.Union([Type.Literal('realm'), Type.Literal('client')])),
+    }),
+  }
+
+  const updateUser: ToolMetadata = {
+    path: '/admin/users/:userId',
+    method: 'PUT',
+    handler: () => ({}),
+    schema: Type.Object({ email: Type.String({ format: 'email' }) }),
+    paramsSchema: Type.Object({ userId: Type.String() }),
+  }
+
+  it('asks for what the tool accepts, and submits to that tool', () => {
+    const json = JSON.stringify(toolForm('create_admin_roles', createRole)!.toJSON())
+    expect(json).toContain('create_admin_roles')
+    expect(json).toContain('Role name')
+    expect(json).toContain('description')
+  })
+
+  it('marks required arguments as required', () => {
+    const form = JSON.parse(JSON.stringify(toolForm('create_admin_roles', createRole)!.toJSON())) as unknown
+    const flat = JSON.stringify(form)
+    // `name` is the only non-optional property in the schema.
+    expect(flat).toContain('"required":true')
+  })
+
+  it('keeps path params as fields — they are arguments of the call', () => {
+    const json = JSON.stringify(toolForm('update_admin_users_userId', updateUser)!.toJSON())
+    expect(json).toContain('userId')
+  })
+
+  it('binds a form to one record by pre-filling', () => {
+    const json = JSON.stringify(
+      toolForm('update_admin_users_userId', updateUser, { values: { userId: 'abc123' } })!.toJSON(),
+    )
+    expect(json).toContain('abc123')
+  })
+
+  it('labels the submit button with the verb the tool name starts with', () => {
+    expect(JSON.stringify(toolForm('create_admin_roles', createRole)!.toJSON())).toContain('Create')
+    expect(JSON.stringify(toolForm('update_admin_users_userId', updateUser)!.toJSON())).toContain('Update')
+  })
+
+  it('declines a tool with no arguments a form can ask for', () => {
+    const restart: ToolMetadata = { path: '/admin/restart', method: 'POST', handler: () => ({}) }
+    expect(toolForm('create_admin_restart', restart)).toBeUndefined()
+  })
+
+  it('excludes what the caller already knows', () => {
+    const json = JSON.stringify(
+      toolForm('create_admin_roles', createRole, { exclude: ['description'] })!.toJSON(),
+    )
+    expect(json).not.toContain('description')
+  })
+})
+
+describe('labelFromToolName', () => {
+  it('keeps the verb, unlike a view title', () => {
+    expect(labelFromToolName('create_admin_smart-apps')).toBe('Create admin smart apps')
+    expect(titleFromToolName('create_admin_smart-apps')).toBe('Admin smart apps')
   })
 })
 
