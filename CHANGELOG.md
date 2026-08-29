@@ -24,6 +24,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1119
 
 
+
+- 🐛 Bug Fixes: 
+  - fix(theme): prevent 403 on error page by ensuring the "Back to application" link targets the correct app context
+
+- 🔧 Chores & Improvements:
+  - ci: build the admin UI before the image that copies it (adjusted build order for deploy paths)
+  - ci: follow admin UI to proxy-smart org; token handling clarified across repos
+  - chore(ci): remove AI self-heal subsystem remnants and associated workflows
+
+- 📚 Documentation:
+  - docs: update CHANGELOG.md for PR #1119
+  - docs: update CHANGELOG.md for PR #1118
+
+- 🔧 Chore/CI tweaks:
+  - 🔄 Update version to 0.4.1-beta.202608291631.6f2c9207d (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1121
+
+
 ## [0.3.30-alpha.202608291138.c2ac99f12] - 2026-08-29
 
 - 🔧 Chores & Improvements: Version bumps for pre-release alpha 0.3.30-alpha.202608291138.c2ac99f12
