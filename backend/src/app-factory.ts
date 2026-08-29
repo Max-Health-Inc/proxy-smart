@@ -69,6 +69,40 @@ function serveAppStoreUi(): Response {
     return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
 }
 
+/**
+ * Serve the bundled admin UI, or explain its absence.
+ *
+ * The UI is a separate build copied into public/webapp, so a deployment can ship
+ * without it — the whole admin surface is reachable over the API and, since every
+ * admin route is derived into an MCP tool, over /mcp as well. Returning the file
+ * unconditionally turned that supported shape into an unexplained failure on a
+ * path that simply is not there.
+ */
+async function serveAdminUi(): Promise<Response | ReturnType<typeof Bun.file>> {
+    const index = Bun.file('public/webapp/index.html')
+    if (await index.exists()) return index
+
+    return new Response(ADMIN_UI_ABSENT_HTML, {
+        status: 404,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+    })
+}
+
+const ADMIN_UI_ABSENT_HTML = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Admin UI not installed</title>
+<style>body{font:16px/1.6 system-ui,sans-serif;max-width:34rem;margin:12vh auto;padding:0 1.5rem}
+code{background:#f4f4f5;padding:.15em .4em;border-radius:.25rem}</style>
+</head><body>
+<h1>Admin UI not installed</h1>
+<p>This deployment does not bundle the admin web interface. The same administration
+surface is available two other ways:</p>
+<ul>
+<li>the REST API under <code>/admin</code> — browse it at <a href="/swagger">/swagger</a></li>
+<li>the MCP endpoint at <code>/mcp</code>, where every admin route is exposed as a tool</li>
+</ul>
+</body></html>`
+
 /** Scan public/apps/ for sub-apps with smart-manifest.json, merge published registered apps, and return discovery list */
 function discoverApps({ includeHidden = false } = {}) {
     const appsDir = join(import.meta.dir, '..', 'public', 'apps')
@@ -223,8 +257,8 @@ export function createApp() {
             alwaysStatic: true,
             indexHTML: false
         }))
-        .get('/webapp', () => Bun.file('public/webapp/index.html'))
-        .get('/webapp/', () => Bun.file('public/webapp/index.html'))
+        .get('/webapp', () => serveAdminUi())
+        .get('/webapp/', () => serveAdminUi())
         .get('/', () => Bun.file('public/index.html'))
         // Browsers request /favicon.ico by default — redirect to our SVG icon
         .get('/favicon.ico', () => Response.redirect('/proxy-smart.svg', 301))
