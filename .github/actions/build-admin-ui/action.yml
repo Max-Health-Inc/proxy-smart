@@ -4,6 +4,11 @@
 name: 'Build Admin UI'
 description: 'Check out proxy-smart/proxy-smart-admin-ui and build it against this commit''s API client, into webapp-dist/'
 
+# The caller sets up bun and installs the workspace first: this deliberately
+# nests no local action, because `uses: ./` inside a composite resolves against
+# the caller's workspace and nothing else here relies on that. Callers already
+# own toolchain setup, so there is nothing to share.
+
 inputs:
   app_id:
     description: 'GitHub App client id. The admin UI is private and in another org, so GITHUB_TOKEN cannot reach it.'
@@ -29,20 +34,6 @@ inputs:
 runs:
   using: composite
   steps:
-    # checkout: false — the caller has already checked this repository out, and a
-    # second checkout runs `git clean -ffdx`, which would delete the admin UI
-    # working tree. Hence also the ordering: toolchain first, UI second.
-    - name: Setup Bun
-      uses: ./.github/actions/setup-bun-version
-      with:
-        checkout: 'false'
-
-    - name: Install Dependencies (Workspace)
-      timeout-minutes: 20
-      uses: ./.github/actions/bun-install
-      with:
-        token: ${{ inputs.packages_token }}
-
     # create-github-app-token mints for ONE org, and the UI is no longer in this
     # repository's. This collapses into the caller's token once the monorepo
     # moves to proxy-smart too.

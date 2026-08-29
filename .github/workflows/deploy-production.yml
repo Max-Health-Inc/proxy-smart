@@ -102,6 +102,19 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # checkout: false — the repository is already checked out above, and a second
+      # checkout runs `git clean -ffdx` over the workspace.
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun-version
+        with:
+          checkout: 'false'
+
+      - name: Install Dependencies (Workspace)
+        timeout-minutes: 20
+        uses: ./.github/actions/bun-install
+        with:
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+
       # Production ships the same admin UI as beta. It is built here rather than
       # in the image so it compiles against the client this commit produced, and
       # it must precede the image build, which copies webapp-dist/ into the tree.
