@@ -140,7 +140,36 @@ These are advisory hints a client may use to shape its UX, such as confirming be
 
 `executeResource` follows the same shape for resource reads.
 
-Both accept an optional `ExecuteOptions` as their last argument, currently carrying only `textFormat`.
+Both accept an optional `ExecuteOptions` as their last argument, carrying `textFormat` and `view`.
+
+`executeResourceResult` is `executeResource` with the view alongside the text. A resource read answers with a string, which is all `resources/read` can carry, but a tool standing in for many resources (`read_resource`) returns a full tool result and can carry a view too.
+
+## Views
+
+A generated tool answers with JSON, so a host that can draw a UI has nothing to draw. `ExecuteOptions.view` is a function handed the payload plus the tool name and route it came from; what it returns replaces the payload as `structuredContent`, which is where an [MCP Apps](https://modelcontextprotocol.io/seps/1865-mcp-apps-interactive-user-interfaces-for-mcp) host looks — the host forwards the whole `CallToolResult` into its sandboxed iframe and the renderer reads the view from there.
+
+The text block is untouched and still carries the payload under whichever encoding `textFormat` chose. The model reads the data and pays nothing for the UI, because `structuredContent` never enters model context.
+
+A view is presentation and cannot fail a call: one that throws or returns `undefined` leaves the result byte-identical to what it would have been without a view. Error results never reach it. That is what makes enabling one globally safe — a tool either gains a UI or is left alone.
+
+One thing does have to change per tool: a tool whose `structuredContent` carries a view must **not** advertise an `outputSchema` derived from its route response, because the spec requires structured results to conform to the schema the tool declares.
+
+### The prefab view
+
+`@max-health-inc/elysia-mcp/prefab` is a ready-made implementation built on [`@maxhealth.tech/prefab`](https://www.npmjs.com/package/@maxhealth.tech/prefab), an **optional** peer — importing that subpath is the opt-in, and a server that serves JSON never installs it.
+
+```ts
+import { prefabView, uiToolMeta } from '@max-health-inc/elysia-mcp/prefab'
+import { registerViewerResource } from '@maxhealth.tech/prefab'
+
+registerViewerResource(server, { themeBridge: 'vscode' })
+server.registerTool(name, { description, inputSchema, _meta: uiToolMeta() }, (args) =>
+  executeTool(name, meta, args, token, decorators, { view: prefabView() }))
+```
+
+`prefabView()` renders a list of records as a searchable table and a single record as a detail card, titled from the tool name (`list_admin_smart-apps` → *Admin smart apps*). A list-shaped envelope holding exactly one array (`{ items: [...], total: 42 }`) is unwrapped; one holding two is left as a record, because picking which array is *the* table would be a guess. Anything else — a scalar, an empty body — renders nothing and keeps its JSON. `render` overrides the view for chosen tools and falls through to the default when it declines, `maxRows` caps what is shipped into the iframe, and `onSkipped` reports the payloads that got no view.
+
+`uiToolMeta(uri?)` is the `_meta` pointing a host at the renderer resource. It belongs on the tool **definition**: the host resolves the `ui://` resource when it lists tools, before any call is made.
 
 ## Text encoding
 
@@ -170,6 +199,8 @@ Streamable HTTP has a header contract a host's CORS layer has to honour, and get
 `MCP_EXPOSED_RESPONSE_HEADERS` lists what belongs in `Access-Control-Expose-Headers`, which the allow-list does not grant. It is deliberately short: only `Mcp-Protocol-Version`. `Mcp-Session-Id` was here while the server was stateful and had to be echoed by the client; statelessly there is no session id to emit, so exposing it advertised a header that is never sent.
 
 ## Types
+
+`ToolView` renders a payload into the wire object a host displays, and `ToolViewContext` is what it is told about the call: the `toolName` and the route `meta`. `applyView` runs one under the guard described above, for handlers that assemble their own result.
 
 `ToolMetadata` carries a route's `path`, `method`, `handler`, its `schema`, `paramsSchema` and `responseSchema`, and the `public`, `readOnly` and `annotations` flags. `ResourceMetadata` is the `GET`-only equivalent, adding `pathParams`. `ToolAnnotations` is the MCP annotations object described above.
 

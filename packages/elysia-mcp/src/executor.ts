@@ -23,6 +23,7 @@
 import { Value } from '@sinclair/typebox/value'
 import type { ToolMetadata, ResourceMetadata } from './types'
 import { getMergedInputSchema } from './typebox-schema'
+import { pathToToolName } from './introspect'
 import { chooseToolText, type ToolTextFormat } from './text-format'
 
 /** Context-decorator key carrying the Elysia app used for pipeline dispatch. */
@@ -152,6 +153,14 @@ export async function executeTool(
 
 // ── Resource Execution ───────────────────────────────────────────────────────
 
+/** A resource read: the text a client receives, plus a view when one rendered. */
+export interface ResourceResult {
+  /** The payload, under whichever encoding `textFormat` chose. */
+  text: string
+  /** The rendered view, when a `view` was supplied and produced one. */
+  structuredContent?: StructuredContent
+}
+
 /**
  * Execute a GET route handler and return the serialized result.
  *
@@ -165,6 +174,43 @@ export async function executeResource(
   contextDecorators?: Record<string, unknown>,
   options?: ExecuteOptions,
 ): Promise<string> {
+  const { text } = await executeResourceResult(meta, pathParams, authToken, contextDecorators, options)
+  return text
+}
+
+/**
+ * The same read, with the view alongside the text.
+ *
+ * A resource read answers with a string, which is all `resources/read` can
+ * carry — but a TOOL that stands in for many resources returns a full tool
+ * result and can carry a view too. It has to be rendered from the payload
+ * BEFORE the text encoding is chosen: under `textFormat: 'auto'` the text may
+ * be TOON, and a view built by parsing that would silently never render on
+ * exactly the large uniform lists TOON is chosen for.
+ */
+export async function executeResourceResult(
+  meta: ResourceMetadata,
+  pathParams: Record<string, string>,
+  authToken?: string,
+  contextDecorators?: Record<string, unknown>,
+  options?: ExecuteOptions,
+): Promise<ResourceResult> {
+  const serialized = await readResource(meta, pathParams, authToken, contextDecorators)
+  const view = applyView(serialized, options?.view, {
+    toolName: pathToToolName(meta.path, 'GET'),
+    meta,
+  })
+  const text = chooseToolText(serialized, options?.textFormat)
+  return view !== undefined ? { text, structuredContent: view } : { text }
+}
+
+/** Run the route and serialize whatever it answered, as JSON, without encoding choices. */
+async function readResource(
+  meta: ResourceMetadata,
+  pathParams: Record<string, string>,
+  authToken?: string,
+  contextDecorators?: Record<string, unknown>,
+): Promise<string> {
   try {
     const app = getDispatchApp(contextDecorators)
 
@@ -173,7 +219,7 @@ export async function executeResource(
       // pathParams are pre-resolved by the caller; feed them as args so the
       // shared URL builder interpolates them into the concrete path.
       const { text } = await dispatchThroughPipeline(app, meta.path, 'GET', pathParams, authToken)
-      return chooseToolText(text, options?.textFormat)
+      return text
     }
 
     // ── Synthetic context (legacy fallback) ──────────────────────────────
@@ -196,8 +242,7 @@ export async function executeResource(
     if (result === undefined || result === null) {
       return JSON.stringify({ success: true })
     }
-    const serialized = typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
-    return chooseToolText(serialized, options?.textFormat)
+    return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
   } catch (err) {
     return JSON.stringify({ error: `Resource read failed: ${err instanceof Error ? err.message : String(err)}` })
   }
@@ -355,7 +400,7 @@ function successResult(
   const rendered = chosen.trim() === '' ? '(no content)' : chosen
   const content = [{ type: 'text' as const, text: rendered }]
 
-  const view = structured === undefined ? undefined : renderView(structured, options?.view, context)
+  const view = applyView(text, options?.view, context)
   if (view !== undefined) return { content, structuredContent: view }
 
   return structured !== undefined
@@ -364,16 +409,22 @@ function successResult(
 }
 
 /**
- * Run the view, or give up on it. A view is presentation: a builder that throws
- * on an unexpected payload must not turn a successful call into a failed one,
- * so the payload is served as it would have been without a view at all.
+ * Render a serialized payload through a view, or give up on it.
+ *
+ * A view is presentation: a builder that throws on an unexpected payload must
+ * not turn a successful call into a failed one, so the caller falls back to the
+ * payload it would have sent anyway. Exported because a handler that assembles
+ * its own tool result — one tool standing in for many routes, say — needs the
+ * same step, and reimplementing the guard is how the guard gets forgotten.
  */
-function renderView(
-  payload: StructuredContent,
+export function applyView(
+  serialized: string,
   view: ToolView | undefined,
   context: ToolViewContext,
 ): StructuredContent | undefined {
   if (view === undefined) return undefined
+  const payload = toStructuredContent(serialized)
+  if (payload === undefined) return undefined
   try {
     return view(payload, context)
   } catch {

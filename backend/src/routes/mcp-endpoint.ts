@@ -29,7 +29,9 @@ import {
   getMergedInputSchema,
   DISPATCH_APP_KEY,
 } from '@max-health-inc/elysia-mcp'
-import type { ToolMetadata, ResourceMetadata } from '@max-health-inc/elysia-mcp'
+import type { ExecuteOptions, ToolMetadata, ResourceMetadata } from '@max-health-inc/elysia-mcp'
+import { prefabView, uiToolMeta } from '@max-health-inc/elysia-mcp/prefab'
+import { registerViewerResource } from '@maxhealth.tech/prefab'
 
 import { config } from '../config'
 import { validateToken } from '../lib/auth'
@@ -62,6 +64,23 @@ import { getAccessControlInstance } from '../lib/access-control/plugin'
 // stays JSON either way.
 const TOOL_TEXT_OPTIONS = { textFormat: 'auto' } as const
 
+// ── Prefab UI (MCP Apps) ─────────────────────────────────────────────────────
+//
+// A tool result has one structuredContent and it cannot mean two things. With
+// the UI on it carries the rendered view, which is where an MCP Apps host looks
+// for it; the payload stays in the text block, which is what the model reads,
+// so the UI costs no tokens. The route's response schema is then NOT advertised
+// as outputSchema: the spec requires structured results to conform to a
+// declared output schema, and a view does not. Off by default (MCP_PREFAB_UI),
+// so the machine-facing contract is unchanged until a deployment asks for UI.
+
+/** Execution options for this request's tool calls. */
+function toolExecuteOptions(): ExecuteOptions {
+  return config.mcp.ui
+    ? { ...TOOL_TEXT_OPTIONS, view: prefabView() }
+    : { ...TOOL_TEXT_OPTIONS }
+}
+
 // Domain-specific context decorators injected into tool/resource execution.
 // The dispatch app (resolved lazily — it is registered after this module loads)
 // routes execution through the real Elysia pipeline so guards, response-schema
@@ -86,6 +105,8 @@ function buildContextDecorators(): Record<string, unknown> {
  */
 function registerTools(server: McpServer, userRoles: string[], tokenRef: { current?: string }): void {
   const contextDecorators = buildContextDecorators()
+  const execOptions = toolExecuteOptions()
+  const uiMeta = config.mcp.ui ? { _meta: uiToolMeta() } : {}
   if (isToolRegistryInitialized()) {
     const registry = getToolRegistry()
 
@@ -100,7 +121,7 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       // structuredContent from an untyped copy of the text block into something
       // a client can validate. Safe because Elysia coerces the response to this
       // same schema in the pipeline, so the body already conforms.
-      const outputSchema = typeboxToOutputSchema(meta.responseSchema)
+      const outputSchema = config.mcp.ui ? undefined : typeboxToOutputSchema(meta.responseSchema)
       const description = generateDescription(toolName, meta)
       // Behavioural hints derived from the HTTP verb (destructiveHint for
       // delete_*, idempotentHint for update_*/PUT, etc.) so MCP clients can
@@ -110,16 +131,16 @@ function registerTools(server: McpServer, userRoles: string[], tokenRef: { curre
       if (toolSchema) {
         server.registerTool(
           toolName,
-          { description, inputSchema: toolSchema, ...(outputSchema ? { outputSchema } : {}), annotations },
+          { description, inputSchema: toolSchema, ...(outputSchema ? { outputSchema } : {}), annotations, ...uiMeta },
           async (args: unknown) =>
-            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators, TOOL_TEXT_OPTIONS),
+            pkgExecuteTool(toolName, meta, args as Record<string, unknown>, tokenRef.current, contextDecorators, execOptions),
         )
       } else {
         server.registerTool(
           toolName,
-          { description, ...(outputSchema ? { outputSchema } : {}), annotations },
+          { description, ...(outputSchema ? { outputSchema } : {}), annotations, ...uiMeta },
           async () =>
-            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators, TOOL_TEXT_OPTIONS),
+            pkgExecuteTool(toolName, meta, {}, tokenRef.current, contextDecorators, execOptions),
         )
       }
     }
@@ -307,6 +328,11 @@ function mcpHandler() {
         { name: config.displayName, version: config.version },
         { capabilities: { tools: { listChanged: false }, resources: { listChanged: false } } },
       )
+      // The viewer is the `ui://` resource a host loads into its sandboxed
+      // iframe before any tool runs; prefab owns its HTML, CSP and cache hints.
+      // Registered before connect so the MCP Apps extension capability can be
+      // declared with it.
+      if (config.mcp.ui) registerViewerResource(server, { themeBridge: 'vscode' })
       // Filtered by the roles on THIS request's token.
       registerTools(server, auth.roles, tokenRef)
       registerResources(server, auth.roles, tokenRef)

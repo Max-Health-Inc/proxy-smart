@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/elysia-mcp",
-  "version": "0.3.30-beta.202608290959.88e7b72b1",
+  "version": "0.3.30-beta.202608290949.9f5fb13b7",
   "private": false,
   "type": "module",
   "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge and tool execution; the HTTP edge lives in @maxhealth.tech/mcp-http.",
@@ -17,6 +17,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./prefab": "./src/prefab-view.ts",
     "./introspect": "./src/introspect.ts",
     "./typebox-schema": "./src/typebox-schema.ts",
     "./text-format": "./src/text-format.ts"
@@ -32,11 +33,18 @@
     "@toon-format/toon": "^4.1.1"
   },
   "peerDependencies": {
+    "@maxhealth.tech/prefab": ">=0.3.12",
     "@modelcontextprotocol/server": ">=2.0.0",
     "@sinclair/typebox": ">=0.34.0",
     "elysia": ">=1.2.0"
   },
+  "peerDependenciesMeta": {
+    "@maxhealth.tech/prefab": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@maxhealth.tech/prefab": "^0.3.12",
     "@modelcontextprotocol/server": "^2.0.0",
     "@sinclair/typebox": "^0.34.52",
     "elysia": "^1.4.30",
