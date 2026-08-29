@@ -22,15 +22,13 @@ COPY lib/ ./lib/
 
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
-COPY frontend/ui/package.json ./frontend/ui/
 COPY packages/patient-picker/package.json ./packages/patient-picker/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/app-store/package.json ./packages/app-store/
 COPY packages/elysia-mcp/package.json ./packages/elysia-mcp/
-COPY packages/api-client/package.json ./packages/api-client/
 
 # Strip workspaces not included in Docker build to avoid install failures
-RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/elysia-mcp","packages/api-client","packages/patient-picker","frontend/ui"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
+RUN bun -e 'const p=JSON.parse(require("fs").readFileSync("./package.json","utf8")); p.workspaces=["backend","packages/auth","packages/app-store","packages/elysia-mcp","packages/patient-picker"]; require("fs").writeFileSync("./package.json", JSON.stringify(p,null,2))'
 
 # Install dependencies for Docker-relevant workspaces only. The registry token comes
 # in as a BuildKit secret so it never lands in an image layer; the retry loop and the
@@ -64,29 +62,6 @@ COPY packages/elysia-mcp/ ./packages/elysia-mcp/
 COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN bun run export-openapi
-
-# API client generation stage
-FROM build-deps AS api-client-gen
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-RUN uv tool install openapi-ts-fetch==0.2.2
-ENV PATH="/root/.local/bin:$PATH"
-COPY --from=openapi-gen /app/backend/dist/openapi.json ./backend/dist/openapi.json
-# The client is a workspace package now, not a directory inside the UI. Emit
-# the generated half and compile it: consumers resolve it through dist/.
-COPY packages/api-client/ ./packages/api-client/
-RUN openapi-ts-fetch backend/dist/openapi.json packages/api-client/src/generated && \
-    cd packages/api-client && bunx tsc
-
-# Admin UI build stage — always built with /webapp/ base path
-FROM build-deps AS ui-build
-ARG VITE_ENCRYPTION_SECRET
-RUN test -n "$VITE_ENCRYPTION_SECRET" || (echo "ERROR: VITE_ENCRYPTION_SECRET build arg is required" && exit 1)
-ENV VITE_ENCRYPTION_SECRET=${VITE_ENCRYPTION_SECRET}
-ENV VITE_BASE=/webapp/
-COPY frontend/ui/ ./frontend/ui/
-COPY --from=api-client-gen /app/packages/api-client ./packages/api-client
-WORKDIR /app/frontend/ui
-RUN bun run build
 
 # Patient Picker build stage
 FROM build-deps AS patient-picker-build
@@ -133,8 +108,10 @@ COPY --from=backend-build /app/backend/package.json ./backend/package.json
 # Copy backend's public directory (landing page, static assets)
 COPY --from=backend-build /app/backend/public ./backend/public
 
-# Copy Admin UI into backend public (served at /webapp/)
-COPY --from=ui-build /app/frontend/ui/dist ./backend/public/webapp
+# Admin UI, built by CI from Max-Health-Inc/proxy-smart-admin-ui and placed here
+# as webapp-dist/. Empty in a local build, which the /webapp route reports rather
+# than failing on — the API and /mcp carry the same surface.
+COPY webapp-dist/ ./backend/public/webapp
 
 # Copy built SMART apps into backend public
 COPY --from=patient-picker-build /app/packages/patient-picker/dist ./backend/public/patient-picker

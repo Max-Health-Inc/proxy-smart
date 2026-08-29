@@ -93,7 +93,7 @@ jobs:
         if: env.TARGET == 'all' || env.TARGET == 'frontend'
         continue-on-error: true
         run: |
-          cd frontend/ui
+          cd admin-ui
           bun run test --run 2>&1 | tee /tmp/frontend-test-output.log
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
 
@@ -224,7 +224,7 @@ jobs:
 
             PROMPT="You are in a CI environment fixing failing frontend tests.
           Working directory: $(pwd)
-          Test command: cd frontend/ui && bun run test --run
+          Test command: cd admin-ui && bun run test --run
 
           The following test failures occurred:
           \`\`\`
@@ -236,7 +236,7 @@ jobs:
           Rules:
           - Read the failing test files and the source files they test
           - Fix the SOURCE code to make tests pass, do NOT modify test files unless the test itself is wrong
-          - Run 'cd frontend/ui && bun run test --run' to verify your fix
+          - Run 'cd admin-ui && bun run test --run' to verify your fix
           - If tests pass, stop. If not, try another approach.
           - Do not add new dependencies
           - Keep changes minimal and focused"
@@ -264,7 +264,7 @@ jobs:
             echo "::endgroup::"
 
             echo "::group::Frontend test retry $ATTEMPT"
-            cd frontend/ui
+            cd admin-ui
             if bun run test --run 2>&1 | tee /tmp/frontend-test-output.log; then
               FIXED="true"
               cd ../..

@@ -1,0 +1,2 @@
+# CI replaces this directory with the built admin UI.
+# Empty here so the image always builds; /webapp then reports the UI as absent.

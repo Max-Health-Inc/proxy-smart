@@ -39,7 +39,7 @@ bun run dev
 Your algorithm lives in `src/algorithm.ts`. Implement the `runAlgorithm` function:
 
 ```typescript
-import type { ImagingStudy } from "hl7.fhir.uv.ips-generated"
+import type { ImagingStudyUvIps as ImagingStudy } from "@max-health-inc/fhir-ips"
 
 export interface AlgorithmInput {
   studyUID: string
