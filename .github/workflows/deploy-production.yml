@@ -172,6 +172,14 @@ jobs:
           path: infra
           token: ${{ steps.infra-app-auth.outputs.token }}
 
+      # Fail here rather than serve a broken theme. Keycloak substitutes ${env.X} in
+      # theme.properties at theme load, and an UNSET variable is emitted verbatim — it does not
+      # fail or warn. That is how the error page's "Back to application" came to be a 403: the
+      # fallback had no configured destination and nothing said so. The requirement is read out
+      # of the theme itself, so adding a placeholder makes it a deploy gate automatically.
+      - name: Assert the Keycloak environment provides what the theme needs
+        run: node scripts/check-theme-env.mjs infra
+
       # Two stages, because the realm is not part of the product.
       #
       # The base carries the theme, the feature flags and the `kc.sh build`

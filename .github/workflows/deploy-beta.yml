@@ -163,6 +163,11 @@ jobs:
           path: infra
           token: ${{ steps.app-token.outputs.token }}
 
+      # See deploy-production. Beta's Keycloak environment is in docker-compose.beta.yml, which
+      # is scp'd to the VPS further down, so the check runs against that rather than infra.
+      - name: Assert the Keycloak environment provides what the theme needs
+        run: node scripts/check-theme-env.mjs docker-compose.beta.yml
+
       # Base carries the theme, feature flags and `kc.sh build` output, and no
       # realm.
       #
