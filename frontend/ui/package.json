@@ -36,7 +36,7 @@
     "geist": "^1.7.2",
     "i18next": "^26.4.0",
     "localforage": "^1.10.0",
-    "lucide-react": "^1.35.0",
+    "lucide-react": "^1.37.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.86.0",
