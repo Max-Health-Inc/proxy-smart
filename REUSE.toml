@@ -14,13 +14,11 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "Max Health Inc."
 SPDX-License-Identifier = "AGPL-3.0-or-later OR LicenseRef-Commercial"
 
-# Vendored FHIR Implementation Guide tarballs are third-party artifacts and
-# carry their own upstream licensing; do not assert our copyright over them.
-[[annotations]]
-path = ["lib/*.tgz", "frontend/smart-dicom-template/lib/*.tgz"]
-precedence = "override"
-SPDX-FileCopyrightText = "NONE"
-SPDX-License-Identifier = "LicenseRef-VendoredThirdParty"
+# NOTE: the vendored-tarball annotation (LicenseRef-VendoredThirdParty) was
+# removed when the IGs moved to published packages and lib/*.tgz became a
+# gitignored build artifact. `reuse lint` fails on a license text nothing
+# references, so the LICENSES/ entry had to go with it. If a third-party
+# artifact is ever committed again, restore both together.
 
 # Generated API clients are build output derived from our OpenAPI spec; they
 # inherit the project license but hold no separate copyright of their own.

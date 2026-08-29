@@ -128,6 +128,8 @@ These are advisory hints a client may use to shape its UX, such as confirming be
 
 `typeboxToSchema(schema)` converts a TypeBox schema into the Standard Schema the MCP SDK's `registerTool` accepts. TypeBox schemas are already valid JSON Schema carrying extra Symbol metadata, so the conversion is a JSON roundtrip (which strips the symbols) followed by a handoff to `fromJsonSchema`. There is nothing to translate field by field. It returns `undefined` for anything that is not an object type, so a caller registers the tool with no input schema rather than a broken one.
 
+`typeboxToJsonSchema(schema)` stops one step earlier and returns the plain JSON Schema, for consumers that want the schema itself rather than the Standard Schema wrapper — deriving a form from a route's input is what it exists for.
+
 `getMergedInputSchema(meta)` flattens a route's body and path-params schemas into one object, because an MCP client sees a single flat argument object with no notion of where a value rides in the HTTP request. Path params win on key collision and are always required; the merged `required` array is the union of both.
 
 ## Execution
@@ -142,7 +144,7 @@ These are advisory hints a client may use to shape its UX, such as confirming be
 
 Both accept an optional `ExecuteOptions` as their last argument, carrying `textFormat` and `view`.
 
-`executeResourceResult` is `executeResource` with the view alongside the text. A resource read answers with a string, which is all `resources/read` can carry, but a tool standing in for many resources (`read_resource`) returns a full tool result and can carry a view too.
+`executeResourceResult` is `executeResource` with the view alongside the text, returning a `ResourceResult` — the `text` a client receives plus the `structuredContent` a view produced. A resource read answers with a string, which is all `resources/read` can carry, but a tool standing in for many resources (`read_resource`) returns a full tool result and can carry a view too.
 
 ## Views
 
@@ -167,9 +169,13 @@ server.registerTool(name, { description, inputSchema, _meta: uiToolMeta() }, (ar
   executeTool(name, meta, args, token, decorators, { view: prefabView() }))
 ```
 
-`prefabView()` renders a list of records as a searchable table and a single record as a detail card, titled from the tool name (`list_admin_smart-apps` → *Admin smart apps*). A list-shaped envelope holding exactly one array (`{ items: [...], total: 42 }`) is unwrapped; one holding two is left as a record, because picking which array is *the* table would be a guess. Anything else — a scalar, an empty body — renders nothing and keeps its JSON. `render` overrides the view for chosen tools and falls through to the default when it declines, `maxRows` caps what is shipped into the iframe, and `onSkipped` reports the payloads that got no view.
+`prefabView()` renders a list of records as a searchable table and a single record as a detail card. A list-shaped envelope holding exactly one array (`{ items: [...], total: 42 }`) is unwrapped; one holding two is left as a record, because picking which array is *the* table would be a guess. Anything else — a scalar, an empty body — renders nothing and keeps its JSON. That behaviour is `defaultView(payload, context, options?)`, exported so a custom view can fall back to it explicitly.
 
-`toolForm(toolName, meta, options?)` is the input side: the form a tool's own input schema describes, whose submit action calls that same tool. Path params are kept rather than dropped — they are required arguments of the call, and a form omitting them would submit something the tool rejects — and `values` pre-fills fields, which is how a form is bound to one record. The submit button takes the tool's own verb (`create_*` → *Create*). It returns `undefined` for a tool with no arguments a flat form can ask for.
+`PrefabViewOptions` shapes it: `render` overrides the view for chosen tools and falls through to the default when it declines, `maxRows` caps what is shipped into the iframe, and `onSkipped` reports the payloads that got no view.
+
+Titles come from the tool name, which is the only human-readable label a generated tool has. `titleFromToolName` drops the verb so a view reads as a noun (`list_admin_smart-apps` → *Admin smart apps*); `labelFromToolName` keeps it, which is what a form wants (`create_admin_roles` → *Create admin roles*).
+
+`toolForm(toolName, meta, options?)`, taking `ToolFormOptions`, is the input side: the form a tool's own input schema describes, whose submit action calls that same tool. Path params are kept rather than dropped — they are required arguments of the call, and a form omitting them would submit something the tool rejects — and `values` pre-fills fields, which is how a form is bound to one record. The submit button takes the tool's own verb (`create_*` → *Create*). It returns `undefined` for a tool with no arguments a flat form can ask for.
 
 `uiToolMeta(uri?)` is the `_meta` pointing a host at the renderer resource. It belongs on the tool **definition**: the host resolves the `ui://` resource when it lists tools, before any call is made.
 
