@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/proxy-smart-client",
-  "version": "0.3.30-beta.202608291135.c83e9dd58",
+  "version": "0.3.30-beta.202608291138.c2ac99f12",
   "private": false,
   "type": "module",
   "description": "Typed fetch client for the Proxy Smart admin and FHIR API, generated from its OpenAPI spec.",
