@@ -95,7 +95,7 @@
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "check": "bun run typecheck && bun run lint && bun run check:badges && bun run check:docs && bun run check:docs:coverage",
+    "check": "bun run typecheck && bun run lint && bun run check:theme-env && bun run check:badges && bun run check:docs && bun run check:docs:coverage",
     "check:badges": "doccheck badges",
     "check:badges:online": "doccheck badges --online",
     "check:docs": "doccheck examples",
@@ -127,7 +127,8 @@
     "version:check": "node scripts/version.js check",
     "version:base": "node scripts/version.js base",
     "precommit": "bun run version:sync",
-    "generate:clients:api": "cd packages/api-client && bun run build"
+    "generate:clients:api": "cd packages/api-client && bun run build",
+    "check:theme-env": "node scripts/check-theme-env.mjs docker-compose.beta.yml"
   },
   "type": "module",
   "workspaces": [
