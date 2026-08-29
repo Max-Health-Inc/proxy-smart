@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1-beta.202608291951.07496cf55] - 2026-08-29
+
+- 🔧 Chores & Improvements: CI/CD adjustments and toolchain handling
+  - ci: let each deploy job own its toolchain instead of nesting it in the action
+  - ci: keep the nested checkout from deleting the admin UI it just cloned
+  - ci: gate deploys on the theme's env variable being set and related safeguards
+  - ci: cap the version-ops job to prevent hangs during alpha releases
+  - ci: build the admin UI before the image that copies it, on both deploy paths
+  - ci: follow the admin UI to the proxy-smart org
+  - chore(ci): finish removing the AI self-heal subsystem (partial cleanup)
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+- 📚 Documentation: none
+- ⚠️ Breaking Changes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1125
+
+
 ## [0.4.1-beta.202608291631.6f2c9207d] - 2026-08-29
 
 - 🔧 Chores & Improvements: CI/CD maintenance and org changes (proxy-smart moves, token access considerations)
