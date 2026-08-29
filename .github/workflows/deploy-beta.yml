@@ -148,6 +148,40 @@ jobs:
           path: infra
           token: ${{ steps.app-token.outputs.token }}
 
+      # The admin UI lives in Max-Health-Inc/proxy-smart-admin-ui. It is built
+      # here rather than inside the image so it compiles against the client this
+      # very commit produced — a UI built against a different revision of the API
+      # is the one failure this arrangement has to make impossible. The app-token
+      # above is org-scoped, so it already reaches that repository.
+      - name: Checkout admin UI
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/proxy-smart-admin-ui
+          ref: main
+          path: admin-ui
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Build admin UI
+        env:
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+          VITE_BASE: /webapp/
+        run: |
+          echo "Building admin UI against this commit's API client..."
+          # Generate and build the client from this checkout, then link it in by
+          # path. Linking rather than installing a published version means the UI
+          # cannot be built against an API revision this commit did not produce,
+          # and it needs no publish step to have happened first.
+          bun run generate:clients:api
+          cd admin-ui
+          bun add "@max-health-inc/proxy-smart-client@file:../packages/api-client"
+          bun run build
+          cd ..
+          rm -rf webapp-dist && mkdir -p webapp-dist
+          cp -r admin-ui/dist/. webapp-dist/
+          echo "Admin UI built: $(find webapp-dist -type f | wc -l) files"
+
       # Base carries the theme, feature flags and `kc.sh build` output, and no
       # realm.
       #
