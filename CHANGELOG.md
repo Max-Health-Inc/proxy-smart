@@ -16,6 +16,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1118
 
 
+
+- 🔧 Chores & Improvements: CI/CD updates to build order and admin UI deployment
+- 🐛 Bug Fixes: Follow-up adjustments for admin UI, proxy org token access, and token handling in deploys
+- 📚 Documentation: CHANGELOG update for PR #1118
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1119
+
+
 ## [0.3.30-alpha.202608291138.c2ac99f12] - 2026-08-29
 
 - 🔧 Chores & Improvements: Version bumps for pre-release alpha 0.3.30-alpha.202608291138.c2ac99f12
