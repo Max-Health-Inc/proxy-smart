@@ -222,7 +222,9 @@ export interface IdpMapperStatus {
   missingRequired: string[]
   /** Names of optional definitions with no matching mapper */
   missingOptional: string[]
-  /** True when every required attribute import is present */
+  /** Definitions whose mapper EXISTS but does not do what the definition asks */
+  misconfigured: { name: string; mapper: string; differences: string[] }[]
+  /** True when every required attribute import is present AND correctly configured */
   healthy: boolean
   /** True when the provider supports no attribute-import mapper type */
   unsupported: boolean
@@ -230,9 +232,46 @@ export interface IdpMapperStatus {
   userFacing: boolean
 }
 
-/** A definition is satisfied by any mapper writing the same user attribute. */
-const isSatisfied = (definition: IdpAttributeMapperDefinition, mappers: IdpMapperEntry[]): boolean =>
-  mappers.some((mapper) => mapper.userAttribute === definition.userAttribute)
+/**
+ * The mapper serving a definition, matched on the TARGET user attribute.
+ *
+ * Deliberately not matched on name: an admin who renames a mapper has not removed it, and
+ * provisioning a second mapper writing the same attribute would be worse than the rename.
+ */
+const findMapperFor = (
+  definition: IdpAttributeMapperDefinition,
+  mappers: IdpMapperEntry[],
+): IdpMapperEntry | undefined =>
+  mappers.find((mapper) => mapper.userAttribute === definition.userAttribute)
+
+/**
+ * How an existing mapper differs from what its definition asks for. Empty means it is correct.
+ *
+ * EXISTENCE USED TO BE THE WHOLE CHECK, and that is how `fhirUser-import` ran in production
+ * with syncMode IMPORT while the definition demanded FORCE. IMPORT writes the attribute only
+ * when the brokered user is first created, so a member who signed in BEFORE their health
+ * record existed never received `fhirUser` — not on that login and not on any later one,
+ * which reads to them as "your health record isn't set up yet", permanently. The status
+ * endpoint called the provider healthy throughout, because a mapper writing the right
+ * attribute was present, and `ensureIdpAttributeMappers` skipped it for the same reason, so
+ * running the fix endpoint could never repair it either.
+ *
+ * Only `syncMode` is compared, and only where the mapper type carries one. The CLAIM is
+ * deliberately not: a federated IdP may legitimately publish the reference under its own name
+ * — `smart_fhir_user`, say — and an admin who wired that up has configured it correctly, so
+ * "correcting" it would break a working provider. What the proxy actually requires is the
+ * target attribute (which identifies the mapper) and that the value refreshes on every login.
+ * A field the type does not support is skipped, because a check that cannot go green is one
+ * people learn to ignore.
+ */
+function mapperDrift(
+  definition: IdpAttributeMapperDefinition,
+  mapper: IdpMapperEntry,
+  supportsSyncMode: boolean,
+): string[] {
+  if (!supportsSyncMode || mapper.syncMode === definition.syncMode) return []
+  return [`syncMode is ${mapper.syncMode ?? '(unset)'}, expected ${definition.syncMode}`]
+}
 
 /**
  * Whether humans are brokered through this provider.
@@ -274,13 +313,22 @@ export async function getIdpMapperStatus(
   const userFacing = isUserFacingProvider(provider)
   const missingRequired: string[] = []
   const missingOptional: string[] = []
+  const misconfigured: IdpMapperStatus['misconfigured'] = []
 
   // Only providers humans log in through need user attribute imports.
   if (userFacing) {
     for (const definition of SMART_IDP_ATTRIBUTE_MAPPERS) {
-      if (isSatisfied(definition, mappers)) continue
-      if (definition.required) missingRequired.push(definition.name)
-      else missingOptional.push(definition.name)
+      const mapper = findMapperFor(definition, mappers)
+      if (!mapper) {
+        if (definition.required) missingRequired.push(definition.name)
+        else missingOptional.push(definition.name)
+        continue
+      }
+
+      const differences = mapperDrift(definition, mapper, attributeType?.supportsSyncMode ?? false)
+      if (differences.length > 0) {
+        misconfigured.push({ name: definition.name, mapper: mapper.name, differences })
+      }
     }
   }
 
@@ -295,9 +343,14 @@ export async function getIdpMapperStatus(
     mappers,
     missingRequired,
     missingOptional,
+    misconfigured,
     // Neither a machine trust anchor nor a provider that cannot carry attribute
     // mappers at all is "unhealthy" — there is no action an admin could take.
-    healthy: unsupported || !userFacing || missingRequired.length === 0,
+    //
+    // A misconfigured mapper counts as unhealthy even when it is optional: it EXISTS, so an
+    // admin looking at the list sees the attribute covered, and the whole failure mode here
+    // is a wrong mapper reading as a present one.
+    healthy: unsupported || !userFacing || (missingRequired.length === 0 && misconfigured.length === 0),
     unsupported,
     userFacing,
   }
@@ -317,7 +370,9 @@ export interface EnsureIdpMappersResult {
   attributeMapperType: string | null
   /** Names of mappers created by this call */
   created: string[]
-  /** Names of definitions that already had a matching mapper */
+  /** Names of mappers that existed but were corrected in place by this call */
+  repaired: string[]
+  /** Names of definitions already served by a correctly configured mapper */
   skipped: string[]
   /** True when the provider supports no attribute-import mapper type */
   unsupported: boolean
@@ -327,10 +382,15 @@ export interface EnsureIdpMappersResult {
 }
 
 /**
- * Ensure the SMART attribute-import mappers exist on an identity provider.
+ * Ensure the SMART attribute-import mappers exist AND are configured correctly.
  *
- * Idempotent: a definition already served by an existing mapper (matched on the
- * target user attribute, so admin-renamed mappers still count) is skipped.
+ * Idempotent: a definition already served by a correct mapper (matched on the target user
+ * attribute, so admin-renamed mappers still count) is skipped. One that exists but has
+ * drifted is corrected IN PLACE rather than skipped — this used to only ever create missing
+ * mappers, which is why the fix endpoint could not repair `fhirUser-import` running on
+ * syncMode IMPORT. Repairing in place also avoids the alternative failure, two mappers
+ * writing the same user attribute.
+ *
  * Machine trust anchors are left alone — see isUserFacingProvider.
  *
  * @param includeOptional also provision definitions marked optional
@@ -344,6 +404,7 @@ export async function ensureIdpAttributeMappers(
     alias,
     attributeMapperType: null,
     created: [],
+    repaired: [],
     skipped: [],
     unsupported: false,
     userFacing: true,
@@ -375,12 +436,39 @@ export async function ensureIdpAttributeMappers(
     : SMART_IDP_ATTRIBUTE_MAPPERS.filter((definition) => definition.required)
 
   for (const definition of definitions) {
-    if (isSatisfied(definition, existingEntries)) {
+    const current = findMapperFor(definition, existingEntries)
+    const differences = current ? mapperDrift(definition, current, attributeType.supportsSyncMode) : []
+
+    if (current && differences.length === 0) {
       result.skipped.push(definition.name)
       continue
     }
 
     try {
+      if (current?.id) {
+        // Merge rather than rebuild. buildAttributeMapper would rewrite the claim to the
+        // definition's, discarding an admin's deliberate mapping from a provider that
+        // publishes the reference under another name. Only the drifted keys move.
+        await admin.identityProviders.updateMapper(
+          { alias, id: current.id },
+          {
+            id: current.id,
+            name: current.name || definition.name,
+            identityProviderAlias: alias,
+            identityProviderMapper: current.identityProviderMapper || attributeType.id,
+            config: { ...current.config, syncMode: definition.syncMode },
+          },
+        )
+        result.repaired.push(definition.name)
+        logger.admin.info('Repaired IdP attribute mapper', {
+          alias,
+          mapper: current.name,
+          userAttribute: definition.userAttribute,
+          differences,
+        })
+        continue
+      }
+
       await admin.identityProviders.createMapper({
         alias,
         identityProviderMapper: buildAttributeMapper(alias, definition, attributeType),
