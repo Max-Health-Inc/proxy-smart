@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.30-beta.202608291010.f3c0b0f8b] - 2026-08-29
+
+- ✨ Features: render tool results as prefab UIs for MCP Apps hosts (mcp)
+- 🔧 Chores & Improvements: sync package versions
+- 🔧 Chores & Improvements: update version to 0.3.30-beta.202608291010.f3c0b0f8b (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1104
+
+
 ## [0.3.30-beta.202608290842.c91c9caea] - 2026-08-29
 
 - 🔧 Chores & Improvements: Sync package versions and consume published IG packages (remove vendored tarballs)
