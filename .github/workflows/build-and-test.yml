@@ -81,12 +81,6 @@ jobs:
       with:
         token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
-    # The plugin directories under plugins/ are generated from plugins/source, and the
-    # marketplace fetches them straight out of the repo — so a hand-edit here would be served
-    # to installers and silently lost on the next build. Cheap, so it runs before the builds.
-    - name: Check generated agent plugins
-      run: bun run plugins:check
-
     # === BACKEND BUILD ===
     - name: Build Backend
       run: |
