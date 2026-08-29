@@ -34,7 +34,12 @@ export {
 
 export type { IntrospectOptions } from './introspect'
 
-export { typeboxToSchema, typeboxToOutputSchema, getMergedInputSchema } from './typebox-schema'
+export {
+  typeboxToSchema,
+  typeboxToOutputSchema,
+  typeboxToJsonSchema,
+  getMergedInputSchema,
+} from './typebox-schema'
 
 export {
   executeTool,
@@ -42,6 +47,8 @@ export {
   DISPATCH_APP_KEY,
   type ExecuteOptions,
   type StructuredContent,
+  type ToolView,
+  type ToolViewContext,
 } from './executor'
 
 export { chooseToolText, type ToolTextFormat } from './text-format'
