@@ -115,6 +115,19 @@ jobs:
       - name: Compute image prefix (GHCR requires lowercase)
         run: echo "IMAGE_PREFIX=ghcr.io/${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
+      # checkout: false — the repository is already checked out above, and a second
+      # checkout runs `git clean -ffdx` over the workspace.
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun-version
+        with:
+          checkout: 'false'
+
+      - name: Install Dependencies (Workspace)
+        timeout-minutes: 20
+        uses: ./.github/actions/bun-install
+        with:
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+
       # The admin UI lives in proxy-smart/proxy-smart-admin-ui and is built here
       # rather than inside the image, so it compiles against the client this very
       # commit produced — a UI built against a different revision of the API is the
