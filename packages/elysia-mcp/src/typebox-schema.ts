@@ -70,6 +70,23 @@ function toPlainJsonSchema(schema: unknown): Record<string, unknown> {
 }
 
 /**
+ * Convert a TypeBox schema to plain JSON Schema.
+ *
+ * The same conversion `typeboxToSchema` performs before handing the result to
+ * the SDK, exposed for consumers that need the JSON Schema itself rather than a
+ * Standard Schema wrapper — deriving a form from a route's input schema, for
+ * one. Returns undefined for anything unreadable.
+ */
+export function typeboxToJsonSchema(schema: unknown): Record<string, unknown> | undefined {
+  if (schema === null || schema === undefined) return undefined
+  try {
+    return toPlainJsonSchema(schema)
+  } catch {
+    return undefined
+  }
+}
+
+/**
  * Convert a TypeBox schema to the Standard Schema `registerTool` expects.
  *
  * Returns undefined when the schema is not an object type or cannot be read, so

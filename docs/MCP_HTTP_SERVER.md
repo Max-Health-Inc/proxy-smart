@@ -1,6 +1,6 @@
 # MCP HTTP Server
 
-Proxy Smart serves the Model Context Protocol over Streamable HTTP. The transport is the official [`@modelcontextprotocol/server`](https://www.npmjs.com/package/@modelcontextprotocol/server) SDK, wrapped by [`@maxhealth.tech/mcp-http`](https://github.com/Max-Health-Inc/mcp-http) for the OAuth gate, CORS, and observability. Protocol semantics — the 2026-07-28 revision, `server/discover`, MRTR, `resultType` — come from the SDK, so this repository does not reimplement them.
+Proxy Smart serves the Model Context Protocol over Streamable HTTP. The transport is the official [`@modelcontextprotocol/server`](https://www.npmjs.com/package/@modelcontextprotocol/server) SDK, wrapped by [`@maxhealth.tech/mcp-http`](https://github.com/Max-Health-Inc/mcp-http) for the OAuth gate, CORS, and observability. Protocol semantics come from the SDK, so this repository does not reimplement them. What that means concretely is set by the SDK version in `backend/package.json`: `@modelcontextprotocol/server` 2.x resolves `@modelcontextprotocol/core`, whose `LATEST_PROTOCOL_VERSION` is **2025-11-25**. That is this deployment's ceiling.
 
 There are two endpoints, and they are different servers:
 
@@ -11,9 +11,31 @@ There are two endpoints, and they are different servers:
 
 Both speak JSON-RPC 2.0 over `POST`. Neither accepts the ad-hoc `{"type":"listTools"}` envelope that earlier revisions of this document described; use an MCP client, or `tools/list` and `tools/call` directly.
 
+## Protocol version
+
+The server negotiates down to what the client asks for, and caps at the SDK's latest. Measured
+against this repository's own endpoint:
+
+| Client asks for | Server negotiates |
+|---|---|
+| `2025-03-26` | `2025-03-26` |
+| `2025-06-18` | `2025-06-18` |
+| `2025-11-25` | `2025-11-25` |
+| `2026-07-28` | `2025-11-25` |
+| anything unrecognised | `2025-11-25` |
+
+A client asking for a revision newer than the SDK supports is **not** rejected — it is quietly
+answered at `2025-11-25`. So pinning `MCP-Protocol-Version: 2026-07-28` appears to work while
+delivering none of that revision's additions. Ask for `2025-11-25`, or send no version header and
+let the SDK default apply.
+
+Raising the ceiling is an SDK bump, not a change here. `@max-health-inc/elysia-mcp` carries no
+protocol version at all — it derives tools and executes them, and the revision is entirely the
+SDK's business.
+
 ## Statelessness
 
-Both endpoints are stateless. `mcp-http` leaves the SDK's `legacy` mode at `'stateless'`, so a 2025-era client is served one fresh server instance per request rather than being turned away, and the 2026-07-28 revision has no sessions at all.
+Both endpoints are stateless. `mcp-http` leaves the SDK's `legacy` mode at `'stateless'`, so a client on an older revision is served one fresh server instance per request rather than being turned away.
 
 This is deliberate. The session store that used to live in `mcp-endpoint.ts` held transports in process memory, so every redeploy silently invalidated every live connection and the next request got `404 Session not found`. On an environment that redeploys many times a day, that was most of them. There is no `Mcp-Session-Id` to send and none to honour.
 
@@ -120,16 +142,29 @@ Tools on `/mcp` are derived from the Elysia route table by [`@max-health-inc/ely
 
 Execution goes back through the real Elysia pipeline via a registered dispatch app, so route guards, response-schema coercion, and lifecycle hooks such as admin audit logging all run. A synthetic-context fallback exists for the case where no dispatch app is registered, and the `getAdmin` / `getAccessControl` decorators serve that path.
 
-Two tools are hand-written rather than derived:
+Three tools are hand-written rather than derived:
 
 - **`search_documentation`** — semantic search over the platform documentation knowledge base.
 - **`read_resource`** — a single tool that collapses every read-only `GET` route. It takes a `path` and optional `query` map, and its description enumerates the paths the caller is allowed to read. Registered only when `exposeResourcesAsTools` is on. Collapsing hundreds of `get_*` tools into one keeps the tool list inside what a client will actually load.
+- **`show_form`** — draws a write tool's arguments as a form the user fills in, instead of the model guessing them. Registered only when `MCP_PREFAB_UI` is on, since without a host that renders UI there is nothing for it to return.
 
 `GET` routes are additionally registered as MCP **resources** — fixed URIs for static paths, RFC 6570 templates for parameterized ones.
 
 ### Response encoding
 
 Tool text is emitted as whichever of JSON and TOON is shorter for that payload (`textFormat: 'auto'`). Admin list endpoints are the high-token responses an agent hits most and are uniform enough for TOON's tabular form to collapse the repeated keys; nested and single-object responses, which TOON handles badly, keep their JSON. `structuredContent` is always JSON.
+
+### Rendered UIs (MCP Apps)
+
+With `MCP_PREFAB_UI=true`, a tool result carries a rendered UI instead of raw JSON in `structuredContent`, and a host that speaks [MCP Apps](https://modelcontextprotocol.io/seps/1865-mcp-apps-interactive-user-interfaces-for-mcp) — VS Code, Claude Desktop, ChatGPT — draws it in a sandboxed iframe. A list becomes a searchable table, a record becomes a detail card. Views are built by [`@maxhealth.tech/prefab`](https://www.npmjs.com/package/@maxhealth.tech/prefab) from the payload alone, so no route writes UI code.
+
+Three things follow from turning it on:
+
+- **The endpoint registers a `ui://` viewer resource.** It is the HTML page the host loads before any tool runs; prefab owns its content, CSP and cache hints, and each tool points at it through `_meta.ui.resourceUri` on its own definition.
+- **Tools stop advertising an `outputSchema`.** A result has one `structuredContent` and it cannot mean two things: the spec requires structured results to conform to a declared output schema, and a view does not. This is why the flag defaults to off — the machine-facing contract is unchanged until a deployment asks for UI.
+- **Nothing changes for the model.** The payload stays in the text block under the encoding described above, and `structuredContent` never enters model context, so the UI costs no tokens. A payload with no sensible view (a scalar, an empty body) keeps its JSON, and a view that fails to build is dropped rather than failing the call.
+
+It also registers **`show_form`**, which is the input side of the same idea. Given a write tool's name it returns a form built from that tool's own input schema, and submitting the form calls the tool — so what the form asks for and what the call validates come from one declaration and cannot drift. `values` pre-fills fields, which is also how a form is bound to one record (`{ userId: "abc123" }` for `update_admin_users_userId`); path params stay fields, because they are arguments of the call. The model is told what was drawn and that nothing has changed yet, so it does not report the edit as done before the user submits.
 
 ### Controlling exposure
 
@@ -170,6 +205,7 @@ Every call inherits auth, consent, scope enforcement, and capability-aware norma
 | Variable | Description | Default |
 |---|---|---|
 | `MCP_ENDPOINT_PATH` | Path the endpoint is mounted at | `/mcp` |
+| `MCP_PREFAB_UI` | Render tool results as prefab UIs for MCP Apps hosts | `false` |
 | `DATA_DIR` | Where `mcp-endpoint.json` lives when `DATABASE_URL` is unset | — |
 | `DATABASE_URL` | When set, endpoint config is stored in PostgreSQL instead | — |
 
@@ -190,14 +226,14 @@ curl https://example.com/.well-known/oauth-protected-resource
 curl -X POST https://example.com/mcp \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -H "MCP-Protocol-Version: 2026-07-28" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 
 # Call one
 curl -X POST https://example.com/mcp \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -H "MCP-Protocol-Version: 2026-07-28" \
+  -H "MCP-Protocol-Version: 2025-11-25" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
        "params":{"name":"read_resource","arguments":{"path":"/admin/healthcare-users"}}}'
 ```

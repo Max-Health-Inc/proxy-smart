@@ -141,16 +141,17 @@ describe('ConsentCache', () => {
   })
 
   describe('cleanup', () => {
-    it('should remove expired entries', async () => {
+    it('should remove expired entries', () => {
       const key1 = { patientId: 'p1', clientId: 'c1', serverName: 's1' }
       const key2 = { patientId: 'p2', clientId: 'c2', serverName: 's1' }
       
-      cache.set(key1, [], 10) // expires very quickly (10ms)
+      // Already expired when stored, rather than a short TTL raced against a
+      // sleep: the claim under test is that cleanup() removes expired entries
+      // and keeps live ones, not that a 10ms deadline beats a 50ms timer on a
+      // loaded runner. It did not, intermittently, in CI.
+      cache.set(key1, [], -1)
       cache.set(key2, [], 60000) // doesn't expire (60s)
-      
-      // Wait long enough for first entry to definitely expire
-      await new Promise(resolve => setTimeout(resolve, 50))
-      
+
       const cleaned = cache.cleanup()
       
       // First entry should be cleaned, second should remain

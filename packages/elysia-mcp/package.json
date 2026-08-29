@@ -1,9 +1,9 @@
 {
   "name": "@max-health-inc/elysia-mcp",
-  "version": "0.3.29-beta.202608282346.3e201b1b1",
+  "version": "0.4.0-beta.202608291337.5ed1bac44",
   "private": false,
   "type": "module",
-  "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge, Streamable HTTP transport, session management.",
+  "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge and tool execution; the HTTP edge lives in @maxhealth.tech/mcp-http.",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
@@ -12,13 +12,13 @@
     "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
     "directory": "packages/elysia-mcp"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./prefab": "./src/prefab-view.ts",
     "./introspect": "./src/introspect.ts",
-    "./transport": "./src/transport.ts",
     "./typebox-schema": "./src/typebox-schema.ts",
     "./text-format": "./src/text-format.ts"
   },
@@ -33,11 +33,18 @@
     "@toon-format/toon": "^4.1.1"
   },
   "peerDependencies": {
+    "@maxhealth.tech/prefab": ">=0.3.13",
     "@modelcontextprotocol/server": ">=2.0.0",
     "@sinclair/typebox": ">=0.34.0",
     "elysia": ">=1.2.0"
   },
+  "peerDependenciesMeta": {
+    "@maxhealth.tech/prefab": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@maxhealth.tech/prefab": "^0.3.13",
     "@modelcontextprotocol/server": "^2.0.0",
     "@sinclair/typebox": "^0.34.52",
     "elysia": "^1.4.30",

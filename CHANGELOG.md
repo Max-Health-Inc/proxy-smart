@@ -6,6 +6,106 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.30-alpha.202608291138.c2ac99f12] - 2026-08-29
+
+- 🔧 Chores & Improvements: Version bumps for pre-release alpha 0.3.30-alpha.202608291138.c2ac99f12
+- 📚 Documentation: changelog update for PR #1107
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1108
+
+
+## [0.3.30-alpha.202608291135.c83e9dd58] - 2026-08-29
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix(webapp): handle missing admin UI gracefully when public/webapp/index.html is absent, avoiding failure and clarifying REST API-admin surface behavior
+  - fix(test): stabilize consent cache cleanup test by addressing clock vs timer discrepancy
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #1106
+
+- 🔧 Chores & Improvements
+  - chore: sync package versions
+  - chore: sync package versions (duplicate)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1107
+
+
+## [0.3.30-beta.202608291115.70c5bb971] - 2026-08-29
+
+- ✨ Features:
+  - MCP UI: render tool results as prefab UIs for MCP Apps hosts (prefab UI from tool payload)
+  - MCP UI: draw a write tool's arguments as a form the user fills in
+
+- 🐛 Bug Fixes:
+  - Fix CI gates: green doc-coverage and REUSE gates by aligning documentation naming with actual symbols
+
+- 🔧 Chores & Improvements:
+  - Sync package versions
+  - Update version metadata to 0.3.30-beta.202608291115.70c5bb971 (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1106
+
+
+## [0.3.30-beta.202608291010.f3c0b0f8b] - 2026-08-29
+
+- ✨ Features: render tool results as prefab UIs for MCP Apps hosts (mcp)
+- 🔧 Chores & Improvements: sync package versions
+- 🔧 Chores & Improvements: update version to 0.3.30-beta.202608291010.f3c0b0f8b (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1104
+
+
+## [0.3.30-beta.202608290842.c91c9caea] - 2026-08-29
+
+- 🔧 Chores & Improvements: Sync package versions and consume published IG packages (remove vendored tarballs)
+  - chore: sync package versions (quotentiroler)
+  - chore: consume the published IG packages instead of vendored tarballs (quotentiroler)
+
+- ✨ Features (new functionality)
+  - None
+
+- 🐛 Bug Fixes
+  - None
+
+- 📚 Documentation
+  - docs: correct MCP protocol revision and SDK boundary documentation
+
+- ⚠️ Breaking Changes
+  - None
+
+- 🔧 Chores & Improvements (CI/CD)
+  - 🔄 Update version to 0.3.30-beta.202608290842.c91c9caea (beta)
+  - 🔄 Update version to 0.3.30-alpha.202608290842.c91c9caea (alpha)
+  - chore: sync package versions (quotentiroler)
+  - docs: update CHANGELOG.md for PR #1098
+  - docs: update CHANGELOG.md for PR #1097
+
+Notes:
+- Skipped: update commits without meaningful context; merge commits; metadata updates.
+- Only meaningful changes since last release are included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1100
+
+
+## [0.3.30-alpha.202608290832.00558e9bd] - 2026-08-29
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1098
+
+
+## [0.3.30-alpha.202608290829.d740f3a7f] - 2026-08-29
+
+- 🔧 Chores & Improvements: Bump versions for zod and lucide-react across frontends; clean up transport export handling to reflect moved mcp-http components
+- 🐛 Bug Fixes: Remove dangling ./transport export reference to prevent resolution errors after transport/session move
+- 🔧 Chores & Improvements: Sync package versions and update internal metadata to reflect 0.3.30-alpha.202608290829.d740f3a7f
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1097
+
+
 ## [0.3.29-beta.202608282325.afbdef61d] - 2026-08-28
 
 - ✨ Features

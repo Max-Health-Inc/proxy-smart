@@ -1,7 +1,7 @@
 {
   "name": "proxy-smart-backend",
   "displayName": "Proxy Smart Backend",
-  "version": "0.3.29-RELEASE.202608282359.873fe413d",
+  "version": "0.4.0-beta.202608291352.6abf886ca",
   "type": "module",
   "scripts": {
     "test": "bun test --isolate",
@@ -23,9 +23,10 @@
     "@elysiajs/openapi": "^1.4.15",
     "@elysiajs/static": "^1.4.10",
     "@keycloak/keycloak-admin-client": "26.6.4",
-    "@max-health-inc/consent-fhir": "^0.1.27",
+    "@max-health-inc/consent-fhir": "^0.1.28",
     "@max-health-inc/elysia-mcp": "workspace:*",
     "@maxhealth.tech/mcp-http": "^0.5.0",
+    "@maxhealth.tech/prefab": "^0.3.13",
     "@modelcontextprotocol/server": "^2.0.0",
     "@opendataloader/pdf": "^2.5.5",
     "@proxy-smart/app-store": "workspace:*",
@@ -35,7 +36,7 @@
     "cross-fetch": "^4.1.0",
     "date-fns": "^4.4.0",
     "elysia": "^1.4.30",
-    "hl7.fhir.uv.ips-generated": "../lib/hl7.fhir.uv.ips-generated.tgz",
+    "@max-health-inc/fhir-ips": "^2.0.15",
     "jsonwebtoken": "^9.0.3",
     "jwks-rsa": "^4.1.0",
     "kill-the-clipboard": "^1.1.0",
@@ -44,7 +45,7 @@
     "pg": "^8.23.0",
     "resend": "^6.25.0",
     "unifi-access": "^1.5.3",
-    "zod": "^4.5.1"
+    "zod": "^4.5.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

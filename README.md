@@ -237,8 +237,8 @@ Base memory per Keycloak pod: **1,250 MB** (includes caches for 10,000 sessions)
 ### AI & MCP
 - [MCP HTTP Server](docs/MCP_HTTP_SERVER.md)
 - [Backend API Tools](docs/BACKEND_API_TOOLS.md)
-- [Claude Code / Codex plugin](plugins/proxy/README.md)
-- [Plugin for the public beta](plugins/proxy-beta/README.md)
+- [Claude Code / Codex plugin](https://github.com/proxy-smart/plugins/blob/main/proxy/README.md)
+- [Plugin for the public beta](https://github.com/proxy-smart/plugins/blob/main/proxy-beta/README.md)
 
 </td>
 </tr>

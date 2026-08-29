@@ -20,7 +20,7 @@ import type { IalConfig, IdentityAssuranceLevel } from '@/lib/consent/types'
 import type { BrandConfigType, BrandCategoryType } from '@/schemas'
 import type { SmartAccessControlConfigType } from '@/schemas'
 import type { DicomServerConfigType } from '@/schemas'
-import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
+import { isValidUserAccessCategoryValueSetCode } from '@max-health-inc/fhir-smart/valuesets/ValueSet-UserAccessCategoryValueSet'
 import { loadAllOrgBrands } from './org-branding'
 
 // Module-level cache

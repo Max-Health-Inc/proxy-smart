@@ -1,0 +1,3 @@
+# Emitted from backend/dist/openapi.json by `bun run generate`.
+src/generated/
+dist/

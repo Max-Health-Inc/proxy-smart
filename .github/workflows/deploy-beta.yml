@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: Deploy Beta
 
 on:
@@ -144,6 +147,40 @@ jobs:
           ref: main
           path: infra
           token: ${{ steps.app-token.outputs.token }}
+
+      # The admin UI lives in Max-Health-Inc/proxy-smart-admin-ui. It is built
+      # here rather than inside the image so it compiles against the client this
+      # very commit produced — a UI built against a different revision of the API
+      # is the one failure this arrangement has to make impossible. The app-token
+      # above is org-scoped, so it already reaches that repository.
+      - name: Checkout admin UI
+        uses: actions/checkout@v6
+        with:
+          repository: Max-Health-Inc/proxy-smart-admin-ui
+          ref: main
+          path: admin-ui
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Build admin UI
+        env:
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          VITE_ENCRYPTION_SECRET: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+          VITE_BASE: /webapp/
+        run: |
+          echo "Building admin UI against this commit's API client..."
+          # Generate and build the client from this checkout, then link it in by
+          # path. Linking rather than installing a published version means the UI
+          # cannot be built against an API revision this commit did not produce,
+          # and it needs no publish step to have happened first.
+          bun run generate:clients:api
+          cd admin-ui
+          bun add "@max-health-inc/proxy-smart-client@file:../packages/api-client"
+          bun run build
+          cd ..
+          rm -rf webapp-dist && mkdir -p webapp-dist
+          cp -r admin-ui/dist/. webapp-dist/
+          echo "Admin UI built: $(find webapp-dist -type f | wc -l) files"
 
       # Base carries the theme, feature flags and `kc.sh build` output, and no
       # realm.
@@ -301,9 +338,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
-          ${SSH_CMD} "DEPLOY_DIR='${DEPLOY_DIR}' GH_TOKEN='${GH_TOKEN}' GH_ACTOR='${GH_ACTOR}' RESEND_API_KEY='${RESEND_API_KEY:-}' bash '${DEPLOY_DIR}/deploy-beta-remote.sh'"
+          # Secrets go over stdin, not in the ssh command. Anything in that
+          # command becomes an argument of the remote shell, so it is visible in
+          # `ps` to every user on the box and recorded by sshd.
+          #
+          # RESEND_API_KEY is not sent at all: the step above already wrote it
+          # into .env.beta (mode 600) on that host, and the script reads it there.
+          printf 'GH_TOKEN=%s\n' "${GH_TOKEN}" \
+          | ${SSH_CMD} "DEPLOY_DIR='${DEPLOY_DIR}' GH_ACTOR='${GH_ACTOR}' bash '${DEPLOY_DIR}/deploy-beta-remote.sh'"
 
       - name: Verify deployment
         id: outputs

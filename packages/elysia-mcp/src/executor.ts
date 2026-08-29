@@ -23,6 +23,7 @@
 import { Value } from '@sinclair/typebox/value'
 import type { ToolMetadata, ResourceMetadata } from './types'
 import { getMergedInputSchema } from './typebox-schema'
+import { pathToToolName } from './introspect'
 import { chooseToolText, type ToolTextFormat } from './text-format'
 
 /** Context-decorator key carrying the Elysia app used for pipeline dispatch. */
@@ -36,7 +37,43 @@ export interface ExecuteOptions {
    * See {@link chooseToolText}.
    */
   textFormat?: ToolTextFormat
+  /**
+   * Renders the payload as a UI the host displays instead of the raw JSON.
+   * See {@link ToolView}.
+   */
+  view?: ToolView
 }
+
+/** What a {@link ToolView} is told about the call it is rendering. */
+export interface ToolViewContext {
+  /** Registered MCP tool name (e.g. `list_admin_roles`). */
+  toolName: string
+  /** The route the tool was derived from. */
+  meta: ToolMetadata
+}
+
+/**
+ * Turns a tool's payload into the wire object a UI host renders.
+ *
+ * The result replaces the payload as `structuredContent`, which is where MCP
+ * Apps hosts look: the host forwards the whole `CallToolResult` into the
+ * sandboxed iframe, and the renderer reads the view from there. The text block
+ * is left alone and still carries the payload, so the model reads the data and
+ * pays nothing for the UI — `structuredContent` never enters model context.
+ *
+ * A tool whose payload is replaced this way must NOT advertise an
+ * `outputSchema` derived from its route response: the spec requires structured
+ * results to conform to the schema the tool declares, and a view does not.
+ *
+ * Return undefined for anything this view does not want to render; the payload
+ * is then passed through untouched.
+ *
+ * @see `@max-health-inc/elysia-mcp/prefab` for a ready-made implementation.
+ */
+export type ToolView = (
+  payload: StructuredContent,
+  context: ToolViewContext,
+) => StructuredContent | undefined
 
 /** Minimal shape of an Elysia app we depend on for pipeline dispatch. */
 interface DispatchableApp {
@@ -85,7 +122,7 @@ export async function executeTool(
       if (status >= 400) {
         return { content: [{ type: 'text', text }], isError: true }
       }
-      return successResult(text, options?.textFormat)
+      return successResult(text, options, { toolName, meta })
     }
 
     // ── Synthetic context (legacy fallback) ──────────────────────────────
@@ -105,7 +142,7 @@ export async function executeTool(
     if (responseStatus >= 400) {
       return { content: [{ type: 'text', text }], isError: true }
     }
-    return successResult(text, options?.textFormat)
+    return successResult(text, options, { toolName, meta })
   } catch (err) {
     return {
       content: [{ type: 'text', text: `Error executing ${toolName}: ${err instanceof Error ? err.message : String(err)}` }],
@@ -115,6 +152,14 @@ export async function executeTool(
 }
 
 // ── Resource Execution ───────────────────────────────────────────────────────
+
+/** A resource read: the text a client receives, plus a view when one rendered. */
+export interface ResourceResult {
+  /** The payload, under whichever encoding `textFormat` chose. */
+  text: string
+  /** The rendered view, when a `view` was supplied and produced one. */
+  structuredContent?: StructuredContent
+}
 
 /**
  * Execute a GET route handler and return the serialized result.
@@ -129,6 +174,43 @@ export async function executeResource(
   contextDecorators?: Record<string, unknown>,
   options?: ExecuteOptions,
 ): Promise<string> {
+  const { text } = await executeResourceResult(meta, pathParams, authToken, contextDecorators, options)
+  return text
+}
+
+/**
+ * The same read, with the view alongside the text.
+ *
+ * A resource read answers with a string, which is all `resources/read` can
+ * carry — but a TOOL that stands in for many resources returns a full tool
+ * result and can carry a view too. It has to be rendered from the payload
+ * BEFORE the text encoding is chosen: under `textFormat: 'auto'` the text may
+ * be TOON, and a view built by parsing that would silently never render on
+ * exactly the large uniform lists TOON is chosen for.
+ */
+export async function executeResourceResult(
+  meta: ResourceMetadata,
+  pathParams: Record<string, string>,
+  authToken?: string,
+  contextDecorators?: Record<string, unknown>,
+  options?: ExecuteOptions,
+): Promise<ResourceResult> {
+  const serialized = await readResource(meta, pathParams, authToken, contextDecorators)
+  const view = applyView(serialized, options?.view, {
+    toolName: pathToToolName(meta.path, 'GET'),
+    meta,
+  })
+  const text = chooseToolText(serialized, options?.textFormat)
+  return view !== undefined ? { text, structuredContent: view } : { text }
+}
+
+/** Run the route and serialize whatever it answered, as JSON, without encoding choices. */
+async function readResource(
+  meta: ResourceMetadata,
+  pathParams: Record<string, string>,
+  authToken?: string,
+  contextDecorators?: Record<string, unknown>,
+): Promise<string> {
   try {
     const app = getDispatchApp(contextDecorators)
 
@@ -137,7 +219,7 @@ export async function executeResource(
       // pathParams are pre-resolved by the caller; feed them as args so the
       // shared URL builder interpolates them into the concrete path.
       const { text } = await dispatchThroughPipeline(app, meta.path, 'GET', pathParams, authToken)
-      return chooseToolText(text, options?.textFormat)
+      return text
     }
 
     // ── Synthetic context (legacy fallback) ──────────────────────────────
@@ -160,8 +242,7 @@ export async function executeResource(
     if (result === undefined || result === null) {
       return JSON.stringify({ success: true })
     }
-    const serialized = typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
-    return chooseToolText(serialized, options?.textFormat)
+    return typeof result === 'string' ? result : JSON.stringify(result, serializeErrors, 2)
   } catch (err) {
     return JSON.stringify({ error: `Resource read failed: ${err instanceof Error ? err.message : String(err)}` })
   }
@@ -305,7 +386,8 @@ function serializeResult(result: unknown, status: number): string {
  */
 function successResult(
   text: string,
-  textFormat?: ToolTextFormat,
+  options: ExecuteOptions | undefined,
+  context: ToolViewContext,
 ): {
   content: { type: 'text'; text: string }[]
   structuredContent?: StructuredContent
@@ -314,11 +396,40 @@ function successResult(
   // A 204 or an otherwise bodyless success leaves nothing to render, and clients
   // reject an empty content[].text block outright rather than reading it as "no
   // data". Say so instead of emitting nothing.
-  const chosen = chooseToolText(text, textFormat)
+  const chosen = chooseToolText(text, options?.textFormat)
   const rendered = chosen.trim() === '' ? '(no content)' : chosen
+  const content = [{ type: 'text' as const, text: rendered }]
+
+  const view = applyView(text, options?.view, context)
+  if (view !== undefined) return { content, structuredContent: view }
+
   return structured !== undefined
-    ? { content: [{ type: 'text', text: rendered }], structuredContent: structured }
-    : { content: [{ type: 'text', text: rendered }] }
+    ? { content, structuredContent: structured }
+    : { content }
+}
+
+/**
+ * Render a serialized payload through a view, or give up on it.
+ *
+ * A view is presentation: a builder that throws on an unexpected payload must
+ * not turn a successful call into a failed one, so the caller falls back to the
+ * payload it would have sent anyway. Exported because a handler that assembles
+ * its own tool result — one tool standing in for many routes, say — needs the
+ * same step, and reimplementing the guard is how the guard gets forgotten.
+ */
+export function applyView(
+  serialized: string,
+  view: ToolView | undefined,
+  context: ToolViewContext,
+): StructuredContent | undefined {
+  if (view === undefined) return undefined
+  const payload = toStructuredContent(serialized)
+  if (payload === undefined) return undefined
+  try {
+    return view(payload, context)
+  } catch {
+    return undefined
+  }
 }
 
 /**
