@@ -37,8 +37,10 @@
   ],
   "scripts": {
     "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/generated",
-    "build": "bun run generate && tsc",
-    "typecheck": "tsc --noEmit"
+    "build": "bun run generate && bun run build:bundle && bun run build:types",
+    "typecheck": "tsc --noEmit",
+    "build:bundle": "bun build src/index.ts src/generated/models/index.ts src/generated/apis/index.ts src/generated/runtime.ts --outdir dist --target browser --format esm --splitting",
+    "build:types": "tsc --emitDeclarationOnly"
   },
   "keywords": [
     "proxy-smart",
