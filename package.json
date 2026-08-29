@@ -38,7 +38,7 @@
     "react",
     "typescript"
   ],
-  "license": "AGPL-3.0-or-later",
+  "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "private": true,
   "doccheck": {
     "workspace": "frontend/ui",
