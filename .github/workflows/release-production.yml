@@ -98,12 +98,16 @@ jobs:
       app_version: ${{ needs.production-release.outputs.version }}
     secrets: inherit
 
-  # Revert changes if production release fails
+  # Revert main only when production actually changed and is now bad. A failure
+  # before the deploy mutates anything — expired AWS credentials, a failed image
+  # build, a red test — leaves production exactly as it was, so reverting would
+  # roll back a good release for a reason that has nothing to do with the code.
+  # deploy-production sets production_mutated at the point of no return.
   revert-on-failure:
     name: Revert Changes on Failure
     runs-on: ubuntu-latest
     needs: [production-release, deploy-production, test-production-deployment]
-    if: ${{ failure() }}
+    if: ${{ failure() && needs.deploy-production.outputs.production_mutated == 'true' }}
 
     steps:
       - name: Generate token
