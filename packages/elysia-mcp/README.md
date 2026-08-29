@@ -20,7 +20,7 @@ const meta = tools.get('create_admin_users')
 await executeTool('create_admin_users', meta, args, token, decorators)
 ```
 
-Subpath entries expose the pieces individually: `./introspect`, `./transport`, `./typebox-schema`.
+Subpath entries expose the pieces individually: `./introspect`, `./typebox-schema`, `./text-format`.
 
 ## Introspection
 
