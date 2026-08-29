@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/elysia-mcp",
-  "version": "0.4.1-beta.202608292044.406aac756",
+  "version": "0.4.2-alpha.202608292104.162ca334d",
   "private": false,
   "type": "module",
   "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge and tool execution; the HTTP edge lives in @maxhealth.tech/mcp-http.",
