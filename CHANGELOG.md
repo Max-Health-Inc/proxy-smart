@@ -43,6 +43,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 **Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1121
 
 
+
+- 🔧 Chores & Improvements: CI/CD stability improvements
+  - cap the version-ops job to prevent hangs blocking alpha releases
+  - follow admin UI to proxy-smart org and adjust token access
+  - finish removing AI self-heal subsystem and related cleanup
+
+- 📚 Documentation: changelog updates
+  - update CHANGELOG.md for PR #1121
+  - update CHANGELOG.md for PR #1119
+  - update CHANGELOG.md for PR #1118
+
+- 🔄 Versioning: bump to 0.4.1-beta.202608291631.6f2c9207d (internal)
+
+- ⚠️ Breaking Changes: none detected
+
+- ✨ Features: none detected
+
+- 🐛 Bug Fixes: none detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1122
+
+
 ## [0.3.30-alpha.202608291138.c2ac99f12] - 2026-08-29
 
 - 🔧 Chores & Improvements: Version bumps for pre-release alpha 0.3.30-alpha.202608291138.c2ac99f12
