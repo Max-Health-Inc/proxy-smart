@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * @max-health-inc/elysia-mcp - Tests
+ * @proxy-smart/elysia-mcp - Tests
  *
  * Unit tests for route introspection, TypeBox-to-Zod bridge, and tool execution.
  */

@@ -3,7 +3,7 @@
   "version": "0.4.1-beta.202608291951.07496cf55",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
+    "url": "git+https://github.com/proxy-smart/proxy-smart.git"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -147,7 +147,7 @@
   },
   "author": "",
   "bugs": {
-    "url": "https://github.com/Max-Health-Inc/proxy-smart/issues"
+    "url": "https://github.com/proxy-smart/proxy-smart/issues"
   },
   "homepage": "https://beta.proxy-smart.com",
   "dependencies": {

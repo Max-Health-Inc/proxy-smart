@@ -39,7 +39,7 @@
         "@elysiajs/static": "^1.4.10",
         "@keycloak/keycloak-admin-client": "26.6.4",
         "@max-health-inc/consent-fhir": "^0.1.28",
-        "@max-health-inc/elysia-mcp": "workspace:*",
+        "@proxy-smart/elysia-mcp": "workspace:*",
         "@max-health-inc/fhir-ips": "^2.0.15",
         "@maxhealth.tech/mcp-http": "^0.5.0",
         "@maxhealth.tech/prefab": "^0.3.13",
@@ -93,7 +93,7 @@
       },
     },
     "packages/api-client": {
-      "name": "@max-health-inc/proxy-smart-client",
+      "name": "@proxy-smart/api-client",
       "version": "0.3.30-alpha.202608291250.bc7a1297c",
     },
     "packages/app-store": {
@@ -129,7 +129,7 @@
       },
     },
     "packages/elysia-mcp": {
-      "name": "@max-health-inc/elysia-mcp",
+      "name": "@proxy-smart/elysia-mcp",
       "version": "0.3.30-alpha.202608291250.bc7a1297c",
       "dependencies": {
         "@toon-format/toon": "^4.1.1",
@@ -441,7 +441,7 @@
 
     "@max-health-inc/consent-fhir": ["@max-health-inc/consent-fhir@0.1.28", "https://npm.pkg.github.com/download/@max-health-inc/consent-fhir/0.1.28/aab7215f74370b6c935c20916b0fed01cb3f630a", { "dependencies": { "@babelfhir-ts/client-r4": "^0.3.2", "@types/fhir": ">=0.0.44 <0.1.0" }, "peerDependencies": { "fhirpath": ">=5.2.0 <6.0.0" } }, "sha512-2CUNBgrFCLQvMDMSMDStGI+ggwoRcT3z7DWNtMqQFROL/Tc0OpuVLlFUglYLSTIxNrc3VdPdm+PpHo+aVT4QbA=="],
 
-    "@max-health-inc/elysia-mcp": ["@max-health-inc/elysia-mcp@workspace:packages/elysia-mcp"],
+    "@proxy-smart/elysia-mcp": ["@proxy-smart/elysia-mcp@workspace:packages/elysia-mcp"],
 
     "@max-health-inc/fhir-carin-bb": ["@max-health-inc/fhir-carin-bb@2.2.2", "https://npm.pkg.github.com/download/@max-health-inc/fhir-carin-bb/2.2.2/620561eae4da2576a87d530c929e5bd63ad36f70", { "dependencies": { "@babelfhir-ts/client-r4": "^0.2.0", "@types/fhir": ">=0.0.44 <0.1.0" }, "peerDependencies": { "fhirpath": ">=4.9.1 <6.0.0" } }, "sha512-PcI5AjrDaZp/1gUeoLBvaFVWVGasKhtR97+lNSvmN760dFuqTwfvxkBFT+d4CEBNtAjTc1LpnLbHsVQrYc/pEQ=="],
 
@@ -451,7 +451,7 @@
 
     "@max-health-inc/mcp-host-core": ["@max-health-inc/mcp-host-core@0.10.1", "https://npm.pkg.github.com/download/@max-health-inc/mcp-host-core/0.10.1/64a193909a5b9c9193e8d5b69d0e47bffe68f046", { "dependencies": { "@ai-sdk/anthropic": "^4.0.11", "@ai-sdk/google": "^4.0.11", "@ai-sdk/mcp": "^2.0.10", "@ai-sdk/openai": "^4.0.10", "@ai-sdk/provider": "^4.0.3", "@modelcontextprotocol/sdk": "^1.29.0", "ai": "^7.0.19", "zod": "^4.4.3" } }, "sha512-W402qfH7akftRzQAugYYNM2O2ITUps4EwVvfHhdJHhAovknsXO7pY/jG1ZeVBSzHi9I/mUwo9fDIb9GEDN8Axg=="],
 
-    "@max-health-inc/proxy-smart-client": ["@max-health-inc/proxy-smart-client@workspace:packages/api-client"],
+    "@proxy-smart/api-client": ["@proxy-smart/api-client@workspace:packages/api-client"],
 
     "@maxhealth.tech/mcp-http": ["@maxhealth.tech/mcp-http@0.5.0", "", { "peerDependencies": { "@modelcontextprotocol/server": "^2.0.0", "hono": ">=4.12.0" }, "optionalPeers": ["hono"] }, "sha512-Axyn1SIF9y5PlLZ9oZByBxbB1RDHqoj+AKpD+zOhGb6kRftY+BWbqrDI0JJS+2CLb7CGM92oh1c7c9rbXp1VFg=="],
 

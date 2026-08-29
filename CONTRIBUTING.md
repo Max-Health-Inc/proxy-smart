@@ -93,7 +93,7 @@ main                      # ❌ Protected branch
 - Use meaningful variable and function names
 - Add JSDoc comments for public APIs
 - Follow existing code formatting
-- Run `bun run generate` after changing a route: it re-exports the OpenAPI spec and rebuilds `@max-health-inc/proxy-smart-client`, which the admin UI and CLI both consume
+- Run `bun run generate` after changing a route: it re-exports the OpenAPI spec and rebuilds `@proxy-smart/api-client`, which the admin UI and CLI both consume
 
 ### Testing
 

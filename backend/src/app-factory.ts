@@ -4,7 +4,7 @@
 import { Elysia } from 'elysia'
 import { openapi, fromTypes } from '@elysiajs/openapi'
 import { cors } from '@elysiajs/cors'
-import { MCP_REQUEST_HEADERS, MCP_EXPOSED_RESPONSE_HEADERS } from '@max-health-inc/elysia-mcp'
+import { MCP_REQUEST_HEADERS, MCP_EXPOSED_RESPONSE_HEADERS } from '@proxy-smart/elysia-mcp'
 import { isOriginAllowed, refreshIfStale } from './lib/cors-origins'
 import staticPlugin from '@elysiajs/static'
 import { join } from 'path'

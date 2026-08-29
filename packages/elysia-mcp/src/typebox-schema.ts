@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * @max-health-inc/elysia-mcp - TypeBox to Standard Schema Bridge
+ * @proxy-smart/elysia-mcp - TypeBox to Standard Schema Bridge
  *
  * Converts TypeBox schemas (Elysia's type system) into the Standard Schema the
  * MCP SDK's `registerTool` takes, via the JSON Schema both sides already speak.

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * @max-health-inc/elysia-mcp - Tool & Resource Execution
+ * @proxy-smart/elysia-mcp - Tool & Resource Execution
  *
  * Two execution strategies:
  *
@@ -68,7 +68,7 @@ export interface ToolViewContext {
  * Return undefined for anything this view does not want to render; the payload
  * is then passed through untouched.
  *
- * @see `@max-health-inc/elysia-mcp/prefab` for a ready-made implementation.
+ * @see `@proxy-smart/elysia-mcp/prefab` for a ready-made implementation.
  */
 export type ToolView = (
   payload: StructuredContent,

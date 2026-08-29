@@ -1,4 +1,4 @@
-# @max-health-inc/proxy-smart-client
+# @proxy-smart/api-client
 
 Typed fetch client for the Proxy Smart admin and FHIR API, generated from the backend's own OpenAPI spec.
 
@@ -11,7 +11,7 @@ This exists so consumers outside this repository — the admin UI, and anything 
 ## Install
 
 ```bash
-bun add @max-health-inc/proxy-smart-client
+bun add @proxy-smart/api-client
 ```
 
 Published to GitHub Packages, so the `@max-health-inc` scope needs to point at `https://npm.pkg.github.com`. Inside this repository it is a workspace dependency and needs no registry configuration.
@@ -19,7 +19,7 @@ Published to GitHub Packages, so the `@max-health-inc` scope needs to point at `
 ## Usage
 
 ```ts
-import { AuthenticationApi, Configuration } from '@max-health-inc/proxy-smart-client'
+import { AuthenticationApi, Configuration } from '@proxy-smart/api-client'
 
 const api = new AuthenticationApi(new Configuration({
   basePath: 'https://proxy.example.com',

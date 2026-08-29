@@ -1,5 +1,5 @@
 /**
- * @max-health-inc/elysia-mcp ESLint config — extends the shared Node base config.
+ * @proxy-smart/elysia-mcp ESLint config — extends the shared Node base config.
  *
  * Previously absent, which made `eslint .` fail with "all files ignored"
  * (no flat config resolved for the package). This wires the package into the

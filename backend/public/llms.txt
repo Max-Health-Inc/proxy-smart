@@ -53,7 +53,7 @@ Proxy Smart sits between your SMART on FHIR app and any FHIR server, adding full
 
 - Website: https://proxy-smart.com
 - Documentation: https://proxy-smart.com/docs
-- GitHub: https://github.com/Max-Health-Inc/proxy-smart
+- GitHub: https://github.com/proxy-smart/proxy-smart
 - npm (BabelFHIR-TS): https://www.npmjs.com/package/babelfhir-ts
 - Discord: https://discord.gg/FshSApM7
 - Company: https://maxhealth.tech

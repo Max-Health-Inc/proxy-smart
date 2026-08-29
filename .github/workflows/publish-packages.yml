@@ -16,11 +16,10 @@ name: Publish packages
 # nothing extra.
 #
 # SCOPE MUST MATCH THE OWNING ORG. GitHub Packages rejects a package whose npm scope
-# is not the org that owns the repository, so from Max-Health-Inc/proxy-smart only
-# `@max-health-inc/*` can go out. `@proxy-smart/*` packages are skipped with a note
-# rather than failing the run — the check compares against the repository owner at
-# runtime, so they start publishing on their own if either the scope or the owning
-# org changes to agree.
+# is not the org that owns the repository. Every package here is now `@proxy-smart/*`
+# and this repository is owned by proxy-smart, so all of them publish; the guard is
+# kept because it is what makes a mismatch a skip with a note instead of a red build,
+# and it compares against the repository owner at runtime rather than a literal.
 
 on:
   push:

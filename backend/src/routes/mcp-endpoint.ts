@@ -28,9 +28,9 @@ import {
   executeResource as pkgExecuteResource,
   getMergedInputSchema,
   DISPATCH_APP_KEY,
-} from '@max-health-inc/elysia-mcp'
-import type { ExecuteOptions, ToolMetadata, ResourceMetadata } from '@max-health-inc/elysia-mcp'
-import { prefabView, uiToolMeta } from '@max-health-inc/elysia-mcp/prefab'
+} from '@proxy-smart/elysia-mcp'
+import type { ExecuteOptions, ToolMetadata, ResourceMetadata } from '@proxy-smart/elysia-mcp'
+import { prefabView, uiToolMeta } from '@proxy-smart/elysia-mcp/prefab'
 import { registerViewerResource } from '@maxhealth.tech/prefab'
 
 import { config } from '../config'

@@ -72,7 +72,7 @@ runs:
         # API revision this commit did not produce, and needs no prior publish.
         bun run generate:ui
         cd admin-ui
-        bun add "@max-health-inc/proxy-smart-client@file:../packages/api-client"
+        bun add "@proxy-smart/api-client@file:../packages/api-client"
         # Straight into the staging directory the image copies, rather than into
         # admin-ui/dist and then copying. --emptyOutDir because it is outside root.
         bun run build --outDir ../webapp-dist --emptyOutDir
