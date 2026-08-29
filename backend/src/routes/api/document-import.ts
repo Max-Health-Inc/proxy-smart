@@ -10,20 +10,22 @@
  * runs OCR + AI + babelfhir-ts validation, and returns the validated
  * FHIR resources for the patient portal to review and POST through the
  * FHIR proxy (which enforces scope, consent, and audit).
+ *
+ * SMART-authenticated twin of /admin/document-import; the import itself and the
+ * response contract are shared.
  */
 
-import { Elysia, t } from 'elysia'
+import { Elysia } from 'elysia'
 import { logger } from '@/lib/logger'
 import { validateToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
-import { ErrorResponse } from '@/schemas'
-import { processDocumentImport } from '@/lib/document-import-handler'
+import { respondToDocumentImport } from '@/lib/document-import-handler'
+import { DocumentImportBody, DocumentImportResponses } from '@/schemas/document-import'
 
 export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-import' })
   .post(
     '/',
     async ({ body, set, headers }) => {
-      // Validate SMART access token
       const token = extractBearerToken(headers)
       if (!token) {
         set.status = 401
@@ -38,67 +40,19 @@ export const patientDocumentImportRoutes = new Elysia({ prefix: '/document-impor
         return { error: 'Unauthorized', details: 'Invalid or expired token' }
       }
 
-      const { file, patientId, engine, language } = body
-
-      // Verify the token grants access to this patient
       const tokenPatientId = tokenPayload.patient || tokenPayload.sub
-      if (tokenPatientId && tokenPatientId !== patientId) {
+      if (tokenPatientId && tokenPatientId !== body.patientId) {
         logger.server.warn('Document import: patient ID mismatch', {
           tokenPatient: tokenPatientId,
-          requestedPatient: patientId,
+          requestedPatient: body.patientId,
         })
       }
 
-      if (file.type !== 'application/pdf') {
-        set.status = 400
-        return { error: 'Invalid file type', details: 'Only PDF files are supported' }
-      }
-
-      try {
-        const outcome = await processDocumentImport({ file, patientId, engine, language })
-        if (!outcome.ok) {
-          set.status = 503
-          return { error: 'AI not configured', details: outcome.detail }
-        }
-        return outcome.result
-      } catch (error) {
-        set.status = 500
-        return { error: 'Document import failed', details: error instanceof Error ? error.message : String(error) }
-      }
+      return respondToDocumentImport(body, set)
     },
     {
-      body: t.Object({
-        file: t.File({ description: 'PDF document to import' }),
-        patientId: t.String({ description: 'FHIR Patient ID to associate resources with' }),
-        engine: t.Optional(t.Literal('opendataloader', { default: 'opendataloader', description: 'PDF extraction engine' })),
-        language: t.Optional(t.String({ description: 'BCP-47 tag of the document, e.g. "fr". Kept on the DocumentReference and told to the extractor so it does not translate the wording.' })),
-      }),
-      response: {
-        200: t.Object({
-          success: t.Boolean(),
-          fileName: t.String(),
-          pagesProcessed: t.Number(),
-          engine: t.Literal('opendataloader'),
-          resources: t.Array(t.Object({
-            resourceType: t.String(),
-            resource: t.Any({ description: 'Validated FHIR R4 resource' }),
-            retriesNeeded: t.Number(),
-            warnings: t.Array(t.String()),
-          })),
-          failed: t.Array(t.Object({
-            resourceType: t.String(),
-            errors: t.Array(t.String()),
-            warnings: t.Array(t.String()),
-            retriesAttempted: t.Number(),
-          })),
-          documentReference: t.Any({ description: 'DocumentReference wrapping the original PDF' }),
-          processingTimeMs: t.Number(),
-        }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        500: ErrorResponse,
-        503: ErrorResponse,
-      },
+      body: DocumentImportBody,
+      response: DocumentImportResponses,
       detail: {
         summary: 'Import Document (SMART)',
         description: 'Upload a PDF, extract FHIR resources via AI, and return them for review. Requires SMART access token.',

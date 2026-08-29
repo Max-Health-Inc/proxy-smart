@@ -58,6 +58,37 @@ export interface BaseAnalytics {
   timestamp: string
 }
 
+/** Fields every logger maps the same way out of a Keycloak event. */
+export interface MappedKeycloakEvent extends BaseEvent {
+  userId?: string
+  clientId?: string
+  ipAddress?: string
+  error?: string
+  details?: Record<string, string>
+}
+
+/**
+ * Map the fields every domain event shares out of a Keycloak event.
+ *
+ * A Keycloak event is a failure if its type ends in _ERROR or it carries an
+ * error string; both checks matter, since some types report failure only in the
+ * error field. Subclasses spread this and add their own fields.
+ */
+export function mapBaseKeycloakEvent(kc: KeycloakEvent, idPrefix: string): MappedKeycloakEvent {
+  const isError = kc.type?.endsWith('_ERROR') ?? false
+  return {
+    id: kc.id ?? `${idPrefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    timestamp: kc.time ? new Date(kc.time).toISOString() : new Date().toISOString(),
+    type: kc.type ?? 'UNKNOWN',
+    userId: kc.userId,
+    clientId: kc.clientId,
+    ipAddress: kc.ipAddress,
+    error: kc.error,
+    success: !isError && !kc.error,
+    details: kc.details,
+  }
+}
+
 // ─── Configuration ───────────────────────────────────────────────
 
 export interface EventLoggerConfig<TEvent extends BaseEvent> {
@@ -77,7 +108,7 @@ export interface EventLoggerConfig<TEvent extends BaseEvent> {
 
 // ─── Base class ──────────────────────────────────────────────────
 
-const RING_BUFFER_SIZE = 1000
+export const RING_BUFFER_SIZE = 1000
 const DEFAULT_POLL_INTERVAL_MS = 60_000
 
 export abstract class BaseEventsLogger<

@@ -14,16 +14,18 @@ import { fhirRoutes } from './routes/fhir'
 import { statusRoutes } from './routes/status'
 import { sourceRoutes } from './routes/source'
 import { serverDiscoveryRoutes } from './routes/fhir-servers'
-import { oauthMonitoringRoutes } from './routes/oauth-monitoring'
+import {
+  adminAuditMonitoringRoutes,
+  authMonitoringRoutes,
+  consentMonitoringRoutes,
+  emailMonitoringRoutes,
+  fhirMonitoringRoutes,
+  fhirProxyMonitoringRoutes,
+  oauthMonitoringRoutes,
+} from './routes/monitoring'
 import { oauthWebSocket } from './routes/oauth-websocket'
-import { consentMonitoringRoutes } from './routes/consent-monitoring'
 import { consentWebSocket } from './routes/consent-websocket'
-import { fhirMonitoringRoutes } from './routes/fhir-monitoring'
-import { fhirProxyMonitoringRoutes } from './routes/fhir-proxy-monitoring'
 import { fhirCapabilitiesRoutes } from './routes/fhir-capabilities'
-import { adminAuditMonitoringRoutes } from './routes/admin-audit-monitoring'
-import { emailMonitoringRoutes } from './routes/email-monitoring'
-import { authMonitoringRoutes } from './routes/auth-monitoring'
 import { config } from './config'
 import { adminRoutes } from './routes/admin'
 import { authRoutes } from './routes/auth'

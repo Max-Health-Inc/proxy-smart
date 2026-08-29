@@ -6,6 +6,67 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.29-beta.202608282325.afbdef61d] - 2026-08-28
+
+- ✨ Features
+  - No user-facing features detected in this set.
+
+- 🐛 Bug Fixes
+  - Narrow type checks in consent/types.ts to avoid unnecessary assertions while maintaining correct behavior for R4/R5 union handling.
+
+- 🔧 Chores & Improvements
+  - Refactor UI: share a single DICOM form between add and edit dialogs to reduce duplication.
+  - Refactor UI: share monitoring socket logic between OAuth and consent to consolidate common behavior.
+  - Re-structure internal code to reduce duplication and improve maintainability.
+
+- 📚 Documentation
+  - No documentation changes detected.
+
+- ⚠️ Breaking Changes
+  - None detected.
+
+- 🔄 CI/CD / Versioning
+  - Bump versions across packages and update beta version identifiers.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1091
+
+
+## [0.3.29-beta.202608282259.633003ecd] - 2026-08-28
+
+- ✨ Features: None
+- 🐛 Bug Fixes: None
+- 📚 Documentation: None
+- 🔧 Chores & Improvements:
+  - Refactors and maintenance: consolidate monitoring modules into a factory; share contract between admin and SMART document-import routes; remove backend launch-code copy in auth package
+  - Dependency and version housekeeping: update dependencies to latest (TypeScript kept at 6.0.3); sync package versions
+  - Test improvements: test the logger directly instead of a copied implementation
+- ⚠️ Breaking Changes: None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1088
+
+
+## [0.3.29-beta.202608282230.0be408206] - 2026-08-28
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix: stop beta deploy stripping prompt from maxhealth broker; align prompt and logoutUrl to avoid losing added fields during beta deploys
+  - fix: keep deployed-realm assertions running after path change to ensure seeds and CI accounts are created as expected
+
+- 📚 Documentation
+  - docs: note practitioner panel narrowing is not yet implemented
+
+- 🔧 Chores & Improvements
+  - chore: build Keycloak from a realm-less base and layer realm per environment for cleaner images
+  - CI/CD: versioning updates for beta/alpha pre-releases
+
+- ⚠️ Breaking Changes
+  - None
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1085
+
+
 ## [0.3.28-alpha.202608271636.ea49e0947] - 2026-08-27
 
 - 🔧 Chores & Improvements: Synchronize package versions and update alpha pre-release to 0.3.28-alpha.202608271636.ea49e0947

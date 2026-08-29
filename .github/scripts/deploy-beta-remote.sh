@@ -293,6 +293,12 @@ fi
 # maxhealth IdP onto the beta host, then asserts no IdP references a foreign
 # environment — reconcile first so a normal deploy self-heals and only genuinely
 # unexpected drift fails the deploy.
+#
+# The payload below is a SECOND definition of an IdP whose source of truth is
+# scripts/register-maxhealth-idp.ts in the maxhealth.tech repo (see its
+# IDP_REGISTRATION.md). This PUT overwrites the whole representation, so a key
+# added there and not here is silently stripped on the next beta deploy — which
+# is exactly how `prompt` went missing. Change both, or neither.
 echo '🔒 Verifying brokered identity stays within beta...'
 MH_ISSUER='https://auth.beta.maxhealth.tech'
 # Hosts that must never appear in a beta IdP config (production identity + API).
@@ -335,7 +341,9 @@ if [ -n "${KC_IP:-}" ]; then
     "pkceEnabled": "true",
     "pkceMethod": "S256",
     "defaultScopes": "openid profile email",
-    "syncMode": "FORCE"
+    "syncMode": "FORCE",
+    "prompt": "select_account",
+    "logoutUrl": "${MH_ISSUER}/logout"
   }
 }
 JSON

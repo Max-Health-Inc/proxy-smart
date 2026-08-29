@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Patient Picker",
   "description": "Patient selection UI shown during SMART standalone launch when patient context is needed.",
   "private": true,
-  "version": "0.3.28-beta.202608282057.f0775400b",
+  "version": "0.3.29-beta.202608282346.3e201b1b1",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5176",
@@ -21,7 +21,7 @@
     "brandc": "^0.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.31.0",
+    "lucide-react": "^1.35.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "sonner": "^2.0.8",
@@ -31,16 +31,16 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.4.0",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "@types/react-dom": "^19.2.5",
     "@vitejs/plugin-react-swc": "^4.3.3",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.1",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.4",
-    "globals": "^17.10.0",
-    "shadcn": "^4.17.0",
-    "typescript": "~6.0.3",
-    "vite": "^8.2.1"
+    "eslint-plugin-react-refresh": "^0.5.5",
+    "globals": "^17.11.0",
+    "shadcn": "^4.19.0",
+    "typescript": "6.0.3",
+    "vite": "^8.2.2"
   }
 }

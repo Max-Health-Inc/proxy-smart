@@ -1,17 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from '@proxy-smart/shared-ui';
+import { useState } from 'react';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Switch } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import {
   Fingerprint,
   ShieldCheck,
-  CheckCircle,
-  AlertCircle,
   RefreshCw,
   Save,
   X,
   Plus,
 } from 'lucide-react';
-import { adminApiCall } from '@/lib/admin-api';
+import { useAdminSettings } from '@/hooks/useAdminSettings';
+import { SettingsStatusMessage } from '@/components/settings/SettingsStatusMessage';
 import { useTranslation } from 'react-i18next';
 import type { IalConfig, IalConfigMinimumLevelEnum } from '@/lib/types/api';
 
@@ -40,68 +39,30 @@ const IAL_LEVEL_LABELS: Record<IalLevel, string> = {
 
 export function IALSettings() {
   const { t } = useTranslation();
-  const [ial, setIal] = useState<IalConfig>(DEFAULT_IAL);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const {
+    settings: ial,
+    setSettings: setIal,
+    loading,
+    saving,
+    message,
+    reload,
+    save: saveSettings,
+    addToList,
+    removeFromList,
+  } = useAdminSettings<IalConfig>({
+    endpoint: '/admin/consent/ial',
+    defaults: DEFAULT_IAL,
+    loadErrorText: t('Failed to load IAL settings'),
+    saveErrorText: t('Failed to save IAL settings'),
+    saveSuccessText: t('IAL settings saved successfully'),
+  });
   const [newSensitiveType, setNewSensitiveType] = useState('');
 
-  const loadSettings = useCallback(async () => {
-    try {
-      const res = await adminApiCall<{ config: IalConfig }>('/admin/consent/ial');
-      setIal(res.config);
-      setMessage(null);
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : t('Failed to load IAL settings'),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
-
-  useEffect(() => {
-    adminApiCall<{ config: IalConfig }>('/admin/consent/ial')
-      .then(res => {
-        setIal(res.config);
-        setMessage(null);
-      })
-      .catch(error => {
-        setMessage({
-          type: 'error',
-          text: error instanceof Error ? error.message : t('Failed to load IAL settings'),
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [t]);
-
-  const saveSettings = async () => {
-    try {
-      setSaving(true);
-      setMessage(null);
-      await adminApiCall('/admin/consent/ial', 'PUT', ial);
-      setMessage({ type: 'success', text: t('IAL settings saved successfully') });
-    } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error instanceof Error ? error.message : t('Failed to save IAL settings'),
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const addSensitiveType = () => {
-    const trimmed = newSensitiveType.trim();
-    if (!trimmed || ial.sensitiveResourceTypes.includes(trimmed)) return;
-    setIal(prev => ({ ...prev, sensitiveResourceTypes: [...prev.sensitiveResourceTypes, trimmed] }));
-    setNewSensitiveType('');
+    if (addToList('sensitiveResourceTypes', newSensitiveType)) setNewSensitiveType('');
   };
 
-  const removeSensitiveType = (value: string) => {
-    setIal(prev => ({ ...prev, sensitiveResourceTypes: prev.sensitiveResourceTypes.filter(v => v !== value) }));
-  };
+  const removeSensitiveType = (value: string) => removeFromList('sensitiveResourceTypes', value);
 
   if (loading) {
     return <PageLoadingState message={t('Loading IAL settings...')} />;
@@ -129,7 +90,7 @@ export function IALSettings() {
             </Badge>
           </div>
           <div className="flex space-x-3">
-            <Button variant="outline" size="sm" onClick={() => { setLoading(true); setMessage(null); loadSettings(); }} disabled={saving}>
+            <Button variant="outline" size="sm" onClick={reload} disabled={saving}>
               <RefreshCw className="w-4 h-4 mr-2" />
               {t('Reload')}
             </Button>
@@ -141,27 +102,7 @@ export function IALSettings() {
         </div>
       </div>
 
-      {/* Status message */}
-      {message && (
-        <Alert
-          className={
-            message.type === 'success'
-              ? 'border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-400/10'
-              : 'border-destructive/20 bg-destructive/10'
-          }
-        >
-          {message.type === 'success' ? (
-            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-destructive" />
-          )}
-          <AlertDescription
-            className={message.type === 'success' ? 'text-emerald-700 dark:text-emerald-300' : 'text-destructive'}
-          >
-            {message.text}
-          </AlertDescription>
-        </Alert>
-      )}
+      <SettingsStatusMessage message={message} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* IAL Core */}

@@ -34,6 +34,10 @@ All requests (except `GET /metadata`) require a valid Bearer token. The token is
 
 When consent enforcement is enabled (`CONSENT_MODE=enforce`), the proxy checks whether the token holder has consent to access the requested resource.
 
+This means the FHIR `Consent` resource throughout -- the patient's standing decision about who may reach their data. It is unrelated to the OAuth consent screen (Keycloak's `consentRequired` on a client), where a user approves the scopes an app asked for. That grants access to nobody's record.
+
+The rule: **a patient's data may be reached by someone else only if the patient consented to that someone.**
+
 - The consent service evaluates the request against FHIR Consent resources
 - Identity Assurance Level (IAL) checks verify the trust level of the Person→Patient link
 - If consent is denied, the proxy returns `403` with details:
@@ -47,6 +51,24 @@ Consent enforcement has three modes:
 | `audit-only` | Checks consent and logs decisions, but never blocks requests |
 | `enforce` | Blocks requests without valid consent |
 
+#### Whose consent is evaluated
+
+The patient the **token** is about, resolved in this order: a `patient` claim, then the launch context captured at token exchange, then `fhirUser` when it names a `Patient`. The requested URL is a last resort only, used when the token identifies no patient at all.
+
+The URL never outranks the token. Judging the URL's patient would check a token for one patient against another patient's consent.
+
+#### Which consents apply
+
+`provision.actor` is the **grantee** -- the recipient the consent names. An actor matches when it references the requesting `fhirUser` (for example `Practitioner/dr-123`, which is what the consent app writes when a patient approves an access request), or when its reference or identifier carries the OAuth client id (for grants written against an app rather than a person).
+
+A provision with **no actor names no recipient and therefore grants nothing.** An actor carrying only a `display` and no reference -- as an SHL mirror does -- likewise grants no FHIR access.
+
+#### Self-access
+
+A patient reaching their own record is not a disclosure, so no Consent is required and the check is skipped. This is decided **per request**, by comparing the token's `fhirUser` to the patient the request is about -- not per client. A client serving both patients and practitioners is therefore skipped for the patient and still enforced for the practitioner, which `CONSENT_EXEMPT_CLIENTS` cannot express.
+
+Self-access answers only *whether the patient consented*. It does not decide *which* record may be read -- see Role-Based Data Isolation below, which must be enforcing for that.
+
 ### 3. SMART Scope Enforcement
 
 When enabled (`SCOPE_ENFORCEMENT_MODE=enforce`), validates that the token's scopes grant permission for the requested operation.
@@ -58,11 +80,26 @@ When enabled (`SCOPE_ENFORCEMENT_MODE=enforce`), validates that the token's scop
 
 ### 4. Role-Based Data Isolation
 
-When enabled (`ROLE_BASED_FILTERING_MODE=enforce`), restricts data visibility based on the `fhirUser` token claim.
+When enabled (`ROLE_BASED_FILTERING_MODE=enforce`), confines a request to one patient's FHIR compartment. This is the only stage that decides **which** patient may be read; scope enforcement checks resource types, and consent checks who may receive data.
 
-- **Patient users** -- can only access their own data; the proxy injects `patient={id}` search parameters
-- **Practitioner users** -- see only patients assigned to them via `generalPractitioner` references; the proxy looks up assigned patients and injects compartment filters
-- If a practitioner has no assigned patients, the proxy returns an empty Bundle rather than leaking data
+Two rules, in order:
+
+**A `patient/`-scoped grant is confined to one patient**, whoever the user is -- per SMART, "if the app has any patient-level scopes, they will be scoped to Patient 123". The patient is resolved the same way consent resolves it: `patient` claim, then the launch context captured at token exchange, then `fhirUser` when it names a `Patient`. A token holding `patient/` scopes with none of those resolving is refused, rather than widened to the whole server.
+
+**A user who IS a patient** (`fhirUser: Patient/…`) sees only their own data.
+
+Either way the compartment is applied as:
+
+| Request | Result |
+|---|---|
+| `GET Patient?…` | `_id={ownId}` injected |
+| `GET Patient/{other}` | `403` |
+| `GET Observation` (any `PATIENT_SCOPED_RESOURCES` type) | `patient=Patient/{ownId}` injected |
+| `GET Observation/{id}` | ownership verified upstream; `403` if the resource is not the patient's |
+
+A user with only `user/`-scoped access and a non-Patient `fhirUser` -- a practitioner -- is **not** compartment-filtered here. Their access is governed by consent instead.
+
+> **Not yet implemented:** narrowing a practitioner to the patients assigned to them via `generalPractitioner`. There are no `generalPractitioner` links in the system yet and the proxy performs no such lookup, so nothing here bounds a practitioner to an assigned panel. Until it exists, **consent is the only thing limiting which patients a practitioner can reach** -- which makes actor matching (above) load-bearing rather than advisory.
 
 ### 5. Capability-Aware Normalization
 
@@ -106,7 +143,7 @@ All proxied requests are tracked with metrics including server name, HTTP method
 | `CONSENT_MODE` | Consent enforcement mode: `disabled`, `audit-only`, `enforce` | `disabled` |
 | `CONSENT_ENABLED` | Enable consent checks | `false` |
 | `CONSENT_CACHE_TTL` | Consent decision cache TTL (ms) | `60000` |
-| `CONSENT_EXEMPT_CLIENTS` | Comma-separated client IDs exempt from consent | -- |
+| `CONSENT_EXEMPT_CLIENTS` | Comma-separated client IDs exempt from consent. Not needed for patient self-access, which is detected per request | -- |
 | `CONSENT_REQUIRED_RESOURCE_TYPES` | Resource types that always require consent | -- |
 | `CONSENT_EXEMPT_RESOURCE_TYPES` | Resource types exempt from consent | `CapabilityStatement,metadata` |
 | `IAL_ENABLED` | Enable Identity Assurance Level checks | `false` |

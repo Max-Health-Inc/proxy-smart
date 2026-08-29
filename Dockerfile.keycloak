@@ -1,10 +1,24 @@
 FROM quay.io/keycloak/keycloak:26.6.4
 
-# Copy realm export — environment-specific (deploy/<env>/realm-export.json)
-# Falls back to keycloak/realm-export.json (dev/CI) if deploy env file missing.
-ARG DEPLOY_ENV=dev
-COPY keycloak/realm-export.json /opt/keycloak/data/import/realm-export.json
-COPY deploy/${DEPLOY_ENV}/realm-export.jso[n] /opt/keycloak/data/import/
+# BASE IMAGE — carries the product (theme, feature flags, optimized build) and
+# deliberately NO realm.
+#
+# The realm is layered on top per environment, because a realm names an
+# operator's users, clients and identity providers rather than anything about
+# Proxy Smart. Deployments add it with a one-line overlay:
+#
+#   ARG BASE_IMAGE
+#   FROM ${BASE_IMAGE}
+#   COPY realm-export.json /opt/keycloak/data/import/realm-export.json
+#
+# Baking a default here is what made an earlier version dangerous: the fallback
+# was the dev fixture realm, whose passwords and admin-service secret are
+# published in this repository, and a production build that omitted the env
+# overlay silently imported it. Starting with no realm fails visibly instead.
+#
+# Local development does not use this image at all — docker-compose.yml and
+# docker-compose.development.yml run the stock Keycloak image and bind-mount
+# keycloak/realm-export.json.
 
 # Copy custom login theme (IdP button icons, branding overrides)
 COPY keycloak/themes/proxy-smart /opt/keycloak/themes/proxy-smart

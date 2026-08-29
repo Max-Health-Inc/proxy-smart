@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 import { t } from 'elysia'
-import { authEventsLogger } from '../lib/auth-events-logger'
-import { AuthEventsResponse, AuthAnalyticsResponse } from '../schemas/auth-monitoring'
-import { createMonitoringRoutes } from './monitoring-factory'
+import { authEventsLogger } from '@/lib/auth-events-logger'
+import { AuthEventsResponse, AuthAnalyticsResponse } from '@/schemas/auth-monitoring'
+import { createEventLoggerMonitoringRoutes } from './factory'
 
 /**
  * Auth event monitoring routes — real-time SSE streams + REST queries.
  * Polls Keycloak for LOGIN, LOGOUT, REGISTER, CODE_TO_TOKEN, etc.
  */
-export const authMonitoringRoutes = createMonitoringRoutes({
+export const authMonitoringRoutes = createEventLoggerMonitoringRoutes({
   prefix: '/monitoring/auth',
   tag: 'auth-monitoring',
   logger: authEventsLogger,

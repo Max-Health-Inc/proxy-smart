@@ -29,6 +29,7 @@ import {
   getRewrittenRedirectUri,
   getSessionAudience,
   signLaunchCode,
+  toLaunchCodeOptions,
   toAbsoluteFhirUser,
   canReturnPatient,
   parseScopes,
@@ -182,12 +183,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       ...(body.clientId && { clientId: body.clientId }),
     }
 
-    const launch = signLaunchCode(launchPayload, {
-      secret: smartProxyConfig.launchCodeSecret,
-      ttlSeconds: smartProxyConfig.launchCodeTtlSeconds,
-      issuer: smartProxyConfig.baseUrl,
-      logger: smartLogger,
-    })
+    const launch = signLaunchCode(launchPayload, toLaunchCodeOptions(smartProxyConfig, smartLogger))
 
     return { launch, expires_in: config.smart.launchCodeTtlSeconds }
   }, {

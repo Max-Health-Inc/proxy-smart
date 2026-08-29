@@ -6,10 +6,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Edit, Shield, Landmark } from 'lucide-react';
+import { Edit, Shield } from 'lucide-react';
 import type { IdentityProviderFormData } from '@/lib/types/api';
 import type { Organization } from '@/lib/api-client';
 import { useTranslation } from 'react-i18next';
+import { OrganizationLinkField } from './OrganizationLinkField';
 
 interface IdPEditDialogProps {
   isOpen: boolean;
@@ -229,34 +230,11 @@ export function IdPEditDialog({
             </div>
           </div>
 
-          {/* Organization Linking */}
-          {organizations.length > 0 && (
-            <div className="bg-card/70 p-6 rounded-xl border border-border/50">
-              <h4 className="text-lg font-semibold text-foreground mb-2 flex items-center space-x-2">
-                <Landmark className="w-5 h-5" />
-                <span>{t('Organization')}</span>
-              </h4>
-              <p className="text-sm text-muted-foreground mb-4">
-                {t('Link this identity provider to an organization. Users authenticating through this IdP will be associated with the selected organization.')}
-              </p>
-              <Select
-                value={editingIdp.organizationId ?? '__none__'}
-                onValueChange={(value) => setEditingIdp({ ...editingIdp, organizationId: value === '__none__' ? undefined : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t('No organization linked')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__none__">{t('No organization linked')}</SelectItem>
-                  {organizations.map((org) => (
-                    <SelectItem key={org.id!} value={org.id!}>
-                      {org.name} {org.alias ? `(${org.alias})` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <OrganizationLinkField
+            organizations={organizations}
+            value={editingIdp.organizationId}
+            onChange={organizationId => setEditingIdp({ ...editingIdp, organizationId })}
+          />
 
           <div className="flex gap-4 pt-4">
             <Button 

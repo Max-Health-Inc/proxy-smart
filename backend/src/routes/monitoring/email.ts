@@ -1,15 +1,15 @@
 // SPDX-FileCopyrightText: Max Health Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
-import { emailEventsLogger } from '../lib/email-events-logger'
-import { EmailEventsResponse, EmailAnalyticsResponse } from '../schemas/email-monitoring'
-import { createMonitoringRoutes } from './monitoring-factory'
+import { emailEventsLogger } from '@/lib/email-events-logger'
+import { EmailEventsResponse, EmailAnalyticsResponse } from '@/schemas/email-monitoring'
+import { createEventLoggerMonitoringRoutes } from './factory'
 
 /**
  * Email monitoring routes — real-time SSE streams + REST queries.
  * Polls Keycloak for SEND_RESET_PASSWORD, SEND_VERIFY_EMAIL, etc.
  */
-export const emailMonitoringRoutes = createMonitoringRoutes({
+export const emailMonitoringRoutes = createEventLoggerMonitoringRoutes({
   prefix: '/monitoring/email',
   tag: 'email-monitoring',
   logger: emailEventsLogger,

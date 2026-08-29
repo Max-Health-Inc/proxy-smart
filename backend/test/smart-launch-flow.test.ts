@@ -132,7 +132,11 @@ mock.module('@/lib/smart-client-config-cache', () => ({
 
 import { authRoutes } from '../src/routes/auth'
 import { launchContextStore, type LaunchSession } from '../src/lib/launch-context-store'
-import { signLaunchCode } from '../src/lib/launch-code'
+import { signLaunchCode as signLaunchCodeWith, toLaunchCodeOptions, type LaunchCodePayload } from '@proxy-smart/auth'
+import { smartProxyConfig, smartLogger } from '../src/routes/auth/smart-proxy-setup'
+
+const signLaunchCode = (payload: LaunchCodePayload) =>
+  signLaunchCodeWith(payload, toLaunchCodeOptions(smartProxyConfig, smartLogger))
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

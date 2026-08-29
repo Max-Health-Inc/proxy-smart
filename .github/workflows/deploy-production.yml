@@ -134,38 +134,11 @@ jobs:
             exit 1
           fi
 
-      - name: Build and push Keycloak image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./Dockerfile.keycloak
-          push: true
-          platforms: linux/amd64
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:latest
-            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}
-          build-args: |
-            DEPLOY_ENV=prod
-            KC_RELATIVE_PATH=/
-          cache-from: type=gha,scope=prod-keycloak
-          cache-to: type=gha,mode=max,scope=prod-keycloak
-
-      # Point the Keycloak task definition at the image we just pushed.
-      #
-      # THE BUG THIS FIXES. The image was built and pushed on every release and
-      # then thrown away: nothing ever ran `cdk deploy`, so `keycloakImageUri`
-      # was never set, the stack kept resolving to the stock quay.io image, and
-      # the `--force-new-deployment` below merely restarted the SAME task
-      # definition. Production ran stock Keycloak with no realm import and no
-      # proxy-smart theme while CI reported a green deploy.
-      #
-      # Tagged with the version, never `latest`: with a constant URI the
-      # synthesized template is byte-identical each run, CDK reports no changes,
-      # and the service never picks the new image up — the same failure in a
-      # different disguise.
-      # The CDK stacks live in Max-Health-Inc/proxy-smart-infra: they describe one
-      # operator's AWS account, not the product, so they are not part of the
-      # public source tree. Everything below runs against that checkout.
+      # The CDK stacks and the production realm both live in
+      # Max-Health-Inc/proxy-smart-infra: they describe one operator's AWS
+      # account and identity configuration, not the product, so they are not
+      # part of the public source tree. The checkout has to happen BEFORE the
+      # Keycloak image is built, because the realm is layered onto it below.
       - name: Authenticate as GitHub App for infra checkout
         id: infra-app-auth
         uses: actions/create-github-app-token@v3
@@ -183,6 +156,61 @@ jobs:
           path: infra
           token: ${{ steps.infra-app-auth.outputs.token }}
 
+      # Two stages, because the realm is not part of the product.
+      #
+      # The base carries the theme, the feature flags and the `kc.sh build`
+      # output, and ships no realm at all.
+      #
+      # It is pushed under its own tag rather than kept local. `load: true` puts
+      # an image in the runner's Docker daemon, but the overlay below builds on
+      # a docker-container buildx driver, which resolves FROM against a registry
+      # and never reads that daemon — so it looked for the base on Docker Hub
+      # and failed with "pull access denied". Same ECR repository, distinct tag,
+      # so no second repository or IAM change is needed. Nothing deploys this
+      # tag: the task definition is pointed at the realm-bearing one below.
+      - name: Build and push Keycloak base image (no realm)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile.keycloak
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:base-${{ inputs.app_version }}
+          build-args: |
+            KC_RELATIVE_PATH=/
+          cache-from: type=gha,scope=prod-keycloak
+          cache-to: type=gha,mode=max,scope=prod-keycloak
+
+      # Adds only the realm file. Realm exports are read at container start by
+      # `start --import-realm`, never by `kc.sh build`, so this leaves the
+      # optimized build in the base byte-for-byte identical — which matters,
+      # because a rebuild here would drop --features and crash realm import.
+      - name: Build and push Keycloak image (production realm)
+        uses: docker/build-push-action@v7
+        with:
+          context: infra/realm/prod
+          file: ./infra/Dockerfile.realm
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:${{ inputs.app_version }}
+          build-args: |
+            BASE_IMAGE=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_KEYCLOAK_REPOSITORY }}:base-${{ inputs.app_version }}
+
+      # Point the Keycloak task definition at the image we just pushed.
+      #
+      # THE BUG THIS FIXES. The image was built and pushed on every release and
+      # then thrown away: nothing ever ran `cdk deploy`, so `keycloakImageUri`
+      # was never set, the stack kept resolving to the stock quay.io image, and
+      # the `--force-new-deployment` below merely restarted the SAME task
+      # definition. Production ran stock Keycloak with no realm import and no
+      # proxy-smart theme while CI reported a green deploy.
+      #
+      # Tagged with the version, never `latest`: with a constant URI the
+      # synthesized template is byte-identical each run, CDK reports no changes,
+      # and the service never picks the new image up — the same failure in a
+      # different disguise.
       - name: Set up Bun
         uses: ./.github/actions/setup-bun-version
         with:

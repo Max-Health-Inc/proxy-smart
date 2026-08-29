@@ -92,6 +92,8 @@ Matching replicates Keycloak's, because the proxy has to reach the same verdict 
 
 `signLaunchCode(payload, options)` mints the HS256 JWT an EHR hands to an app to carry launch context, and `verifyLaunchCode(code, options)` returns a `LaunchCodeContext` with the payload and its `remainingTtl`, or `null`. `LaunchCodeServiceOptions` takes the HMAC `secret`, the `issuer` (normally the proxy's base URL), and `ttlSeconds`, defaulting to 300. The short default is the point: a launch code is a bearer credential for a patient context and is meant to be redeemed immediately.
 
+Signing and verification have to agree on all three, so derive them from one place rather than assembling the object at each call site: `toLaunchCodeOptions(config, logger)` builds `LaunchCodeServiceOptions` from a `LaunchCodeConfig` — the `baseUrl`, `launchCodeSecret` and `launchCodeTtlSeconds` slice of `SmartProxyConfig`. It is structural, so a getter-backed config object works and the secret is read at call time rather than captured at startup.
+
 ## Stores
 
 `ILaunchContextStore` is the session contract: `set`, `get`, `update`, `delete`, `find`, `size` and `dispose`. `get` returns `null` for both missing and expired entries, so callers never see a stale session.
