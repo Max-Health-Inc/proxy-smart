@@ -3,7 +3,7 @@
   "displayName": "Proxy Smart Patient Picker",
   "description": "Patient selection UI shown during SMART standalone launch when patient context is needed.",
   "private": true,
-  "version": "0.4.0-beta.202608291337.5ed1bac44",
+  "version": "0.4.0-beta.202608291352.6abf886ca",
   "type": "module",
   "scripts": {
     "dev": "vite --port 5176",
