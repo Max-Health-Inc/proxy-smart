@@ -1,6 +1,6 @@
 {
   "name": "@max-health-inc/proxy-smart-client",
-  "version": "0.3.30-beta.202608291138.c2ac99f12",
+  "version": "0.3.30-beta.202608291150.3a7758068",
   "private": false,
   "type": "module",
   "description": "Typed fetch client for the Proxy Smart admin and FHIR API, generated from its OpenAPI spec.",
@@ -37,8 +37,10 @@
   ],
   "scripts": {
     "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/generated",
-    "build": "bun run generate && tsc",
-    "typecheck": "tsc --noEmit"
+    "build": "bun run generate && bun run build:bundle && bun run build:types",
+    "typecheck": "tsc --noEmit",
+    "build:bundle": "bun build src/index.ts src/generated/models/index.ts src/generated/apis/index.ts src/generated/runtime.ts --outdir dist --target browser --format esm --splitting",
+    "build:types": "tsc --emitDeclarationOnly"
   },
   "keywords": [
     "proxy-smart",

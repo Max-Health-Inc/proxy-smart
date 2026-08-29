@@ -2,7 +2,9 @@
 
 Typed fetch client for the Proxy Smart admin and FHIR API, generated from the backend's own OpenAPI spec.
 
-The spec is the contract. `src/generated/` is emitted by `openapi-ts-fetch` from `backend/dist/openapi.json` and is never edited by hand; `src/index.ts` decides which of it is public API. Regenerating is `bun run build` — it re-emits and compiles in one step.
+The spec is the contract. `src/generated/` is emitted by `openapi-ts-fetch` from `backend/dist/openapi.json` and is never edited by hand; `src/index.ts` decides which of it is public API. Regenerating is `bun run build` — it re-emits, bundles each entry point, and emits declarations.
+
+The entries are bundled rather than compiled file-by-file on purpose. The generator writes extensionless relative imports, which a bundler resolves and Node's ESM resolver does not — so a `tsc`-only build works under Vite and fails under anything loading the package through Node, `vitest` included.
 
 This exists so consumers outside this repository — the admin UI, and anything else that talks to the API — can install a client instead of reaching into `backend/dist/` for a spec file and running a generator themselves.
 
