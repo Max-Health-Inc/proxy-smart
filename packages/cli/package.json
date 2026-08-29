@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/cli",
-  "version": "0.3.30-beta.202608290949.9f5fb13b7",
+  "version": "0.3.30-beta.202608290959.88e7b72b1",
   "private": false,
   "type": "module",
   "description": "Admin CLI for the proxy-smart SMART on FHIR authorization proxy. Authenticates via Keycloak OAuth (device flow or client_credentials) and drives the admin REST API.",
@@ -12,7 +12,7 @@
     "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
     "directory": "packages/cli"
   },
-  "license": "AGPL-3.0-or-later",
+  "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "bin": {
