@@ -165,9 +165,9 @@ jobs:
 
       # The beta realm lives in Max-Health-Inc/proxy-smart-infra alongside the
       # production one: both name this operator's users, clients and identity
-      # providers rather than anything about the product. It stays alongside this
-      # repository — deploy-production derives its owner from github.repository_owner,
-      # so the two have to share an org.
+      # providers rather than anything about the product, so it stayed in
+      # Max-Health-Inc when this repository moved to the proxy-smart org. Both
+      # deploy workflows now name that owner explicitly.
       - name: Checkout infrastructure
         uses: actions/checkout@v6
         with:

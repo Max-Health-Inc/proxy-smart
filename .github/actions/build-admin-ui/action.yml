@@ -34,9 +34,10 @@ inputs:
 runs:
   using: composite
   steps:
-    # create-github-app-token mints for ONE org, and the UI is no longer in this
-    # repository's. This collapses into the caller's token once the monorepo
-    # moves to proxy-smart too.
+    # A token of its own even though the UI is now in the same org: GITHUB_TOKEN is
+    # scoped to the running repository, so it cannot read a different private one.
+    # The deploy jobs mint a second token for Max-Health-Inc/proxy-smart-infra, and
+    # create-github-app-token mints for ONE org, so the two cannot be merged.
     - name: Authenticate as GitHub App for the admin UI
       id: ui-app-token
       uses: actions/create-github-app-token@v3

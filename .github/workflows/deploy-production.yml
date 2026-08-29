@@ -170,8 +170,8 @@ jobs:
       # Keycloak image is built, because the realm is layered onto it below.
       #
       # Named explicitly rather than derived from github.repository_owner. This
-      # repository is moving to the proxy-smart org and infra is not: it belongs
-      # to the operator, not the product. Deriving it would have repointed
+      # repository moved to the proxy-smart org and infra did not: it belongs to
+      # the operator, not the product. Deriving it would have repointed
       # production at an org that has no infra repository at all.
       - name: Authenticate as GitHub App for infra checkout
         id: infra-app-auth
