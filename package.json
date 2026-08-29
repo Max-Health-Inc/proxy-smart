@@ -1,6 +1,6 @@
 {
   "name": "proxy-smart",
-  "version": "0.4.0-beta.202608291337.5ed1bac44",
+  "version": "0.4.0-alpha.202608291352.6abf886ca",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Max-Health-Inc/proxy-smart.git"
@@ -65,8 +65,7 @@
     "start:backend": "cd backend && bun run start",
     "normalize": "git add --renormalize .",
     "generate": "cd backend && bun run export-openapi && cd .. && bun run generate:clients",
-    "generate:clients": "bun run generate:clients:api && bun run generate:clients:cli",
-    "generate:clients:cli": "cd packages/cli && bun run generate",
+    "generate:clients": "bun run generate:clients:api",
     "generate:ui": "cd backend && bun run export-openapi && cd .. && bun run generate:clients:api",
     "generate:test": "cd testing && bun run generate",
     "fhir:build": "node fhir/build.mjs",
@@ -76,22 +75,18 @@
     "test:beta": "cd testing/beta && bun run test",
     "test:production": "cd testing/production && bun run test",
     "test:all": "bun run test:alpha && bun run test:beta && bun run test:production",
-    "typecheck": "concurrently \"bun run typecheck:backend\" \"bun run typecheck:cli\" \"bun run typecheck:packages\"",
+    "typecheck": "concurrently \"bun run typecheck:backend\" \"bun run typecheck:packages\"",
     "typecheck:backend": "cd backend && bun run typecheck",
-    "typecheck:cli": "cd packages/cli && bun run typecheck",
     "typecheck:packages": "cd packages/auth && bun run typecheck && cd ../elysia-mcp && bun run typecheck",
-    "test:cli": "cd packages/cli && bun run test",
     "test:packages": "cd packages/auth && bun run test && cd ../elysia-mcp && bun run test",
-    "lint": "concurrently \"bun run lint:backend\" \"bun run lint:cli\" \"bun run lint:packages\"",
+    "lint": "concurrently \"bun run lint:backend\" \"bun run lint:packages\"",
     "lint:backend": "cd backend && bun run lint",
-    "lint:cli": "cd packages/cli && bun run lint",
     "lint:packages": "cd packages/auth && bun run lint && cd ../elysia-mcp && bun run lint",
     "spdx:check": "node scripts/spdx.mjs --check --staged",
     "spdx:add": "node scripts/spdx.mjs --add --staged",
     "reuse:lint": "reuse lint",
-    "lint:fix": "concurrently \"bun run lint:fix:backend\" \"bun run lint:fix:cli\"",
+    "lint:fix": "concurrently \"bun run lint:fix:backend\"",
     "lint:fix:backend": "cd backend && bun run lint:fix",
-    "lint:fix:cli": "cd packages/cli && bun run lint:fix",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -137,8 +132,7 @@
     "packages/api-client",
     "config/eslint",
     "backend",
-    "packages/patient-picker",
-    "packages/cli"
+    "packages/patient-picker"
   ],
   "main": "eslint.config.js",
   "directories": {
