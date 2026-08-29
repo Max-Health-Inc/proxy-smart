@@ -92,12 +92,10 @@ jobs:
       run: |
         echo "🔨 Generating client APIs..."
         pip install --break-system-packages openapi-ts-fetch==0.2.2
-        # `generate` covers every generated client: the shared
-        # @max-health-inc/proxy-smart-client package (which the admin UI
-        # consumes) and the CLI's tag-filtered copy. Both are gitignored, so
-        # anything not generated here does not exist in CI at all — the CLI used
-        # to be silently absent. The package is compiled, not just emitted, so
-        # the UI typecheck resolves it through dist/.
+        # Builds @max-health-inc/proxy-smart-client, which the admin UI below
+        # consumes. Its generated source is gitignored, so what is not generated
+        # here does not exist in CI at all. It is compiled, not just emitted,
+        # because consumers resolve the package through dist/.
         bun run generate
 
     # === FRONTEND ===
@@ -147,15 +145,6 @@ jobs:
         echo "🧪 Testing admin UI..."
         cd admin-ui
         bun run test --run
-
-    # === CLI (published from this repo, so it must build and pass here) ===
-    - name: Test CLI
-      if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
-      run: |
-        echo "🧪 Testing CLI..."
-        cd packages/cli
-        bun run typecheck
-        bun run test
 
     # === Shared packages ===
     # @proxy-smart/auth carries the SMART launch/scope logic the backend imports,
