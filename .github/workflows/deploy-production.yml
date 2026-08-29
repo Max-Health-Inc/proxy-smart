@@ -30,6 +30,9 @@ on:
       deployment_target:
         description: "Target platform where app was deployed"
         value: ${{ jobs.deploy.outputs.deployment_target }}
+      production_mutated:
+        description: "Whether the deploy got far enough to change what is running"
+        value: ${{ jobs.deploy.outputs.production_mutated }}
     secrets:
       VITE_ENCRYPTION_SECRET:
         required: true
@@ -78,6 +81,7 @@ jobs:
       app_url: ${{ steps.outputs.outputs.app_url }}
       deployment_status: ${{ steps.outputs.outputs.deployment_status }}
       deployment_target: ${{ steps.outputs.outputs.deployment_target }}
+      production_mutated: ${{ steps.mutation-gate.outputs.production_mutated }}
 
     steps:
       - name: Checkout code
@@ -281,6 +285,15 @@ jobs:
       # It needs, at minimum:
       #   ssm:GetParameter  on arn:aws:ssm:*:*:parameter/cdk-bootstrap/hnb659fds/*
       #   sts:AssumeRole    on arn:aws:iam::*:role/cdk-hnb659fds-*
+      # Everything above this line is additive: it builds artifacts and pushes
+      # images to ECR, but nothing running in production has changed yet. From the
+      # CDK deploy onward it has. release-production reverts main only when this
+      # flag is set, so a failure before this point (expired credentials, a bad
+      # image build) no longer rolls back a release that never shipped.
+      - name: Mark production as mutated from here on
+        id: mutation-gate
+        run: echo "production_mutated=true" >> "$GITHUB_OUTPUT"
+
       - name: Deploy Keycloak stack (points the task definition at the new image)
         working-directory: infra
         run: |
