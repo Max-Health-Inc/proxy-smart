@@ -168,19 +168,24 @@ jobs:
       # account and identity configuration, not the product, so they are not
       # part of the public source tree. The checkout has to happen BEFORE the
       # Keycloak image is built, because the realm is layered onto it below.
+      #
+      # Named explicitly rather than derived from github.repository_owner. This
+      # repository moved to the proxy-smart org and infra did not: it belongs to
+      # the operator, not the product. Deriving it would have repointed
+      # production at an org that has no infra repository at all.
       - name: Authenticate as GitHub App for infra checkout
         id: infra-app-auth
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
+          owner: Max-Health-Inc
           repositories: proxy-smart-infra
 
       - name: Checkout infrastructure
         uses: actions/checkout@v6
         with:
-          repository: ${{ github.repository_owner }}/proxy-smart-infra
+          repository: Max-Health-Inc/proxy-smart-infra
           ref: main
           path: infra
           token: ${{ steps.infra-app-auth.outputs.token }}

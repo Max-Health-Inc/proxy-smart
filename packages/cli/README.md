@@ -1,6 +1,6 @@
 # @proxy-smart/cli
 
-`proxy-smart` — an admin CLI for the [proxy-smart](https://github.com/Max-Health-Inc/proxy-smart)
+`proxy-smart` — an admin CLI for the [proxy-smart](https://github.com/proxy-smart/proxy-smart)
 SMART on FHIR authorization proxy. It authenticates via Keycloak OAuth and drives
 the proxy's admin REST API through a generated, fully typed API client.
 

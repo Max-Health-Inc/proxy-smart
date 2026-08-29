@@ -94,7 +94,7 @@ jobs:
         echo "🔨 Generating client APIs..."
         pip install --break-system-packages openapi-ts-fetch==0.2.2
         # `generate` covers every generated client: the shared
-        # @max-health-inc/proxy-smart-client package (which the admin UI
+        # @proxy-smart/api-client package (which the admin UI
         # consumes) and the CLI's tag-filtered copy. Both are gitignored, so
         # anything not generated here does not exist in CI at all — the CLI used
         # to be silently absent. The package is compiled, not just emitted, so
@@ -121,7 +121,7 @@ jobs:
       run: |
         echo "🔨 Building admin UI against this commit's client..."
         cd admin-ui
-        bun add "@max-health-inc/proxy-smart-client@file:../packages/api-client"
+        bun add "@proxy-smart/api-client@file:../packages/api-client"
         bun run build
 
     # === BACKEND TESTS ===

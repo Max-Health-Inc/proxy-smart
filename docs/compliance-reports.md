@@ -25,7 +25,7 @@ retention window. `summary.json` carries the counts and a link back to the run:
   "test_stage": "dev",
   "timestamp": "2026-08-08T09:18:21Z",
   "commit": "589e95d904b88787a239f4f03384fb91247b1030",
-  "run_url": "https://github.com/Max-Health-Inc/proxy-smart/actions/runs/...",
+  "run_url": "https://github.com/proxy-smart/proxy-smart/actions/runs/...",
   "passed": 42,
   "failed": 0,
   "status": "success"
@@ -46,5 +46,5 @@ write` and the app token it needed to push past branch protection.
 For the specification-level view of what is covered, see the
 [SMART 2.2.0 Checklist](/SMART_2.2.0_CHECKLIST).
 
-[workflow]: https://github.com/Max-Health-Inc/proxy-smart/actions/workflows/smart-compliance-tests.yml
-[pr954]: https://github.com/Max-Health-Inc/proxy-smart/pull/954
+[workflow]: https://github.com/proxy-smart/proxy-smart/actions/workflows/smart-compliance-tests.yml
+[pr954]: https://github.com/proxy-smart/proxy-smart/pull/954

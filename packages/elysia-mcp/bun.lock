@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@max-health-inc/elysia-mcp",
+      "name": "@proxy-smart/elysia-mcp",
       "devDependencies": {
         "@modelcontextprotocol/sdk": "^1.29.0",
         "@sinclair/typebox": "^0.34.49",

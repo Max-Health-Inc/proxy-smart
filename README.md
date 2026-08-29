@@ -6,7 +6,7 @@
 
 <!-- Version & Spec Badges -->
 <p align="center">
-  <a href="https://github.com/Max-Health-Inc/proxy-smart/releases"><img src="https://img.shields.io/github/v/release/Max-Health-Inc/proxy-smart?include_prereleases&label=release&color=blue" alt="Version"></a>
+  <a href="https://github.com/proxy-smart/proxy-smart/releases"><img src="https://img.shields.io/github/v/release/proxy-smart/proxy-smart?include_prereleases&label=release&color=blue" alt="Version"></a>
   <a href="http://hl7.org/fhir/smart-app-launch/"><img src="https://img.shields.io/badge/SMART%20App%20Launch-2.2.0-green.svg" alt="SMART App Launch 2.2.0"></a>
   <a href="https://hl7.org/fhir/R4/"><img src="https://img.shields.io/badge/FHIR-R4%2FR4B-orange.svg" alt="FHIR R4/R4B"></a>
 </p>
@@ -14,7 +14,7 @@
 <!-- Compliance Badges -->
 <p align="center">
   <a href="http://hl7.org/fhir/smart-app-launch/"><img src="https://img.shields.io/badge/SMART%20STU2.2-Compliant-2563eb?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik05IDEybDIgMiA0LTQiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIvPjwvc3ZnPg==" alt="SMART STU2.2 Compliant"></a>
-  <a href="https://github.com/Max-Health-Inc/proxy-smart/actions/workflows/smart-compliance-tests.yml"><img src="https://github.com/Max-Health-Inc/proxy-smart/actions/workflows/smart-compliance-tests.yml/badge.svg" alt="Inferno Tests"></a>
+  <a href="https://github.com/proxy-smart/proxy-smart/actions/workflows/smart-compliance-tests.yml"><img src="https://github.com/proxy-smart/proxy-smart/actions/workflows/smart-compliance-tests.yml/badge.svg" alt="Inferno Tests"></a>
 </p>
 
 <!-- Tech Stack Badges -->

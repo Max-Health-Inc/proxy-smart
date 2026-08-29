@@ -26,7 +26,7 @@
 
 services:
   keycloak:
-    image: ${KEYCLOAK_IMAGE:-ghcr.io/max-health-inc/proxy-smart/keycloak:beta-latest}
+    image: ${KEYCLOAK_IMAGE:-ghcr.io/proxy-smart/proxy-smart/keycloak:beta-latest}
     container_name: proxy-smart-keycloak-beta
     restart: unless-stopped
     mem_limit: 768m
@@ -110,7 +110,7 @@ services:
       retries: 5
 
   backend:
-    image: ${BACKEND_IMAGE:-ghcr.io/max-health-inc/proxy-smart/backend:beta-latest}
+    image: ${BACKEND_IMAGE:-ghcr.io/proxy-smart/proxy-smart/backend:beta-latest}
     container_name: proxy-smart-backend-beta
     restart: unless-stopped
     mem_limit: 1024m
