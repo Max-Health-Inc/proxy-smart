@@ -12,6 +12,7 @@ import { Badge, Button } from '@proxy-smart/shared-ui';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { FhirServerDetails } from '@/lib/types/api';
 import { useTranslation } from 'react-i18next';
+import { DetailRow } from '@/components/ui/detail-row';
 
 export function ServerDetails({ server }: { server: FhirServerDetails }) {
   const { t } = useTranslation();
@@ -53,24 +54,9 @@ export function ServerDetails({ server }: { server: FhirServerDetails }) {
               {t('Server Information')}
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('Server Name:')}</span>
-                <span className={`text-sm font-bold ${(server.serverName === 'Unknown FHIR Server' || !server.serverName) ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  {server.serverName || 'Unknown'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('FHIR Version:')}</span>
-                <span className={`text-sm font-bold ${server.fhirVersion === 'Unknown' ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  {server.fhirVersion}
-                </span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('Server Version:')}</span>
-                <span className={`text-sm font-bold ${(!server.serverVersion || server.serverVersion === 'Unknown') ? 'text-muted-foreground' : 'text-foreground'}`}>
-                  {server.serverVersion || 'Unknown'}
-                </span>
-              </div>
+              <DetailRow label={t('Server Name:')} valueClassName={`${(server.serverName === 'Unknown FHIR Server' || !server.serverName) ? 'text-muted-foreground' : 'text-foreground'}`}>{server.serverName || 'Unknown'}</DetailRow>
+              <DetailRow label={t('FHIR Version:')} valueClassName={`${server.fhirVersion === 'Unknown' ? 'text-muted-foreground' : 'text-foreground'}`}>{server.fhirVersion}</DetailRow>
+              <DetailRow label={t('Server Version:')} valueClassName={`${(!server.serverVersion || server.serverVersion === 'Unknown') ? 'text-muted-foreground' : 'text-foreground'}`}>{server.serverVersion || 'Unknown'}</DetailRow>
             </div>
           </div>
         </div>

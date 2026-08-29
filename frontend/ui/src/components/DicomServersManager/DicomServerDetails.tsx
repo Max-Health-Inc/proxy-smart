@@ -11,6 +11,7 @@ import {
 import { Badge, Button } from '@proxy-smart/shared-ui'
 import { CopyButton } from '@/components/ui/copy-button'
 import { useTranslation } from 'react-i18next'
+import { DetailRow } from '@/components/ui/detail-row'
 import type { DicomServerWithStatus } from './DicomServersManager'
 
 export function DicomServerDetails({ server }: { server: DicomServerWithStatus }) {
@@ -86,22 +87,10 @@ export function DicomServerDetails({ server }: { server: DicomServerWithStatus }
               {t('Server Information')}
             </h3>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('Server Name:')}</span>
-                <span className="text-sm font-bold text-foreground">{server.name}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('Server ID:')}</span>
-                <span className="text-sm font-bold text-foreground font-mono">{server.id}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('Authentication:')}</span>
-                <span className="text-sm font-bold text-foreground">{authLabel()}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-xl">
-                <span className="text-sm font-semibold text-muted-foreground">{t('Timeout:')}</span>
-                <span className="text-sm font-bold text-foreground">{server.timeoutMs ? `${server.timeoutMs}ms` : t('Default (30s)')}</span>
-              </div>
+              <DetailRow label={t('Server Name:')}>{server.name}</DetailRow>
+              <DetailRow label={t('Server ID:')} valueClassName="font-mono">{server.id}</DetailRow>
+              <DetailRow label={t('Authentication:')}>{authLabel()}</DetailRow>
+              <DetailRow label={t('Timeout:')}>{server.timeoutMs ? `${server.timeoutMs}ms` : t('Default (30s)')}</DetailRow>
             </div>
           </div>
         </div>
