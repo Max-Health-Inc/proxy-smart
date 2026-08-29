@@ -41,7 +41,7 @@
   "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",
   "private": true,
   "doccheck": {
-    "workspace": "frontend/ui",
+    "workspace": "frontend/smart-dicom-template",
     "skipSegments": [
       "lib"
     ],
