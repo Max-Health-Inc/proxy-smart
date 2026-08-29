@@ -48,6 +48,10 @@ jobs:
   version-ops:
     name: Version Operations
     runs-on: ubuntu-latest
+    # releases-alpha is cancel-in-progress: false, so a hung job here blocks
+    # every alpha release behind it for the 6h default. This job only reads and
+    # writes version files; 15 minutes is generous.
+    timeout-minutes: 15
     outputs:
       current_version: ${{ steps.check.outputs.current_version }}
       new_version: ${{ steps.update.outputs.new_version }}
