@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1-beta.202608291631.6f2c9207d] - 2026-08-29
+
+- 🔧 Chores & Improvements: CI/CD maintenance and org changes (proxy-smart moves, token access considerations)
+  - Follow admin UI to proxy-smart org; adjust tokens/access accordingly
+  - Remove AI self-heal subsystem pieces and related workflows
+  - Update version to 0.4.1-beta.202608291631.6f2c9207d (beta) [skip ci]
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1118
+
+
 ## [0.3.30-alpha.202608291138.c2ac99f12] - 2026-08-29
 
 - 🔧 Chores & Improvements: Version bumps for pre-release alpha 0.3.30-alpha.202608291138.c2ac99f12
