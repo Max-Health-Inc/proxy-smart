@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.30-beta.202608290842.c91c9caea] - 2026-08-29
+
+- 🔧 Chores & Improvements: Sync package versions and consume published IG packages (remove vendored tarballs)
+  - chore: sync package versions (quotentiroler)
+  - chore: consume the published IG packages instead of vendored tarballs (quotentiroler)
+
+- ✨ Features (new functionality)
+  - None
+
+- 🐛 Bug Fixes
+  - None
+
+- 📚 Documentation
+  - docs: correct MCP protocol revision and SDK boundary documentation
+
+- ⚠️ Breaking Changes
+  - None
+
+- 🔧 Chores & Improvements (CI/CD)
+  - 🔄 Update version to 0.3.30-beta.202608290842.c91c9caea (beta)
+  - 🔄 Update version to 0.3.30-alpha.202608290842.c91c9caea (alpha)
+  - chore: sync package versions (quotentiroler)
+  - docs: update CHANGELOG.md for PR #1098
+  - docs: update CHANGELOG.md for PR #1097
+
+Notes:
+- Skipped: update commits without meaningful context; merge commits; metadata updates.
+- Only meaningful changes since last release are included.
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1100
+
+
 ## [0.3.30-alpha.202608290832.00558e9bd] - 2026-08-29
 
 - 🔧 Chores & Improvements: Internal updates and maintenance
