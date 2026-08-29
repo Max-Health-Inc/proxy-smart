@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.30-alpha.202608290832.00558e9bd] - 2026-08-29
+
+- 🔧 Chores & Improvements: Internal updates and maintenance
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1098
+
+
 ## [0.3.30-alpha.202608290829.d740f3a7f] - 2026-08-29
 
 - 🔧 Chores & Improvements: Bump versions for zod and lucide-react across frontends; clean up transport export handling to reflect moved mcp-http components
