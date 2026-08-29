@@ -51,10 +51,10 @@ jobs:
     # fails fast instead of running to GitHub's 6h default.
     timeout-minutes: 40
     outputs:
-      backend_success: ${{ steps.backend-build.outcome == 'success' || steps.backend-build-heal.outputs.fixed == 'true' }}
-      frontend_success: ${{ steps.frontend-build.outcome == 'success' || steps.frontend-build-heal.outputs.fixed == 'true' }}
-      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || steps.backend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
-      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || steps.frontend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      backend_success: ${{ steps.backend-build.outcome == 'success' }}
+      frontend_success: ${{ steps.frontend-build.outcome == 'success' }}
+      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
     
     steps:
     # The admin UI is a separate private repository; the default GITHUB_TOKEN
