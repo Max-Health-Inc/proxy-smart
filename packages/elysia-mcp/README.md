@@ -6,7 +6,44 @@ An admin API that already exists as typed Elysia routes is, structurally, alread
 
 The HTTP edge is deliberately not here. Hosts serve MCP with `@maxhealth.tech/mcp-http`, which tracks the protocol through the SDK; this package only bridges Elysia to it.
 
+## What this is not
+
+There are community Elysia MCP plugins on npm — `elysia-mcp` and `elysiajs-mcp` — and they solve the
+opposite half of the problem. They give you Streamable HTTP, sessions and resumability, and you hand
+them a tool catalog you wrote by hand (`setupServer(server)`, registering each tool). They have no
+notion of your route table.
+
+This package has no transport, no sessions and no plugin. It reads the routes you already have and
+produces the catalog. The two are stackable rather than competing: the output of `extractRouteTools`
+is what such a plugin's `setupServer` would otherwise be written out by hand.
+
+## SDK and protocol version
+
+Requires the **v2** SDK — `@modelcontextprotocol/server` `>=2.0.0`, the split packaging that replaced
+the monolithic `@modelcontextprotocol/sdk`. That is a peer dependency, so the host chooses the exact
+version.
+
+This package carries **no protocol version**. Nothing here pins, asserts or negotiates a revision;
+`extractRouteTools` and `executeTool` produce SDK-shaped values and the SDK decides what goes on the
+wire. The revision in force comes from `@modelcontextprotocol/core`, whose `LATEST_PROTOCOL_VERSION`
+is `2025-11-25` at v2.0.0, and negotiation happens at the HTTP edge in `mcp-http`. Supporting a newer
+revision is an SDK bump, not a change here.
+
+What it does implement of the v2 tool contract is `inputSchema` and `outputSchema` as Standard Schema
+(see [Schema conversion](#schema-conversion)) and `structuredContent` on results (see
+[Types](#types)).
+
 ## Install
+
+Inside this repository it is a workspace package:
+
+```jsonc
+// backend/package.json
+"@max-health-inc/elysia-mcp": "workspace:*"
+```
+
+It is published to GitHub Packages rather than public npm, so an external consumer needs the registry
+configured for the `@max-health-inc` scope:
 
 ```bash
 bun add @max-health-inc/elysia-mcp
@@ -55,6 +92,17 @@ One conversion gap worth knowing: `t.Date()` emits `{ type: 'Date' }`, which is 
 | `POST` | `/admin/healthcare-users` | `create_admin_healthcare-users` |
 | `PUT` | `/admin/smart-apps/:clientId` | `update_admin_smart-apps_clientId` |
 | `DELETE` | `/admin/roles/:roleName` | `delete_admin_roles_roleName` |
+
+`MAX_TOOL_NAME_LENGTH` is 64, the cap clients enforce on a tool name. A generated name longer than
+that is cut to fit and given a seven-character FNV-1a digest of the full name as a suffix, so two long
+paths that agree up to the truncation point still get distinct names. The digest is deliberately not a
+crypto hash: it has to produce the same value on every runtime, because a tool name that shifts
+between deploys breaks prompts clients have already saved.
+
+`uniqueToolName(candidate, path, method, taken)` resolves the remaining case — two different routes
+generating the same name. It returns the candidate untouched when it is free, and otherwise appends a
+digest of `METHOD path`, trimming the base so the result still fits the cap. Without it the second
+route would silently overwrite the first in the registry.
 
 `pathToResourceName(path)` is different in two ways, because a resource name reads as a noun rather than an action: parameters become `by_<name>` and hyphens become underscores. `/admin/roles/:roleName` yields `admin_roles_by_roleName`.
 
