@@ -138,8 +138,9 @@ jobs:
 
       # The beta realm lives in Max-Health-Inc/proxy-smart-infra alongside the
       # production one: both name this operator's users, clients and identity
-      # providers rather than anything about the product. The app-token above is
-      # org-scoped, so it already reaches that repository.
+      # providers rather than anything about the product. It stays alongside this
+      # repository — deploy-production derives its owner from github.repository_owner,
+      # so the two have to share an org.
       - name: Checkout infrastructure
         uses: actions/checkout@v6
         with:
@@ -148,18 +149,30 @@ jobs:
           path: infra
           token: ${{ steps.app-token.outputs.token }}
 
-      # The admin UI lives in Max-Health-Inc/proxy-smart-admin-ui. It is built
-      # here rather than inside the image so it compiles against the client this
-      # very commit produced — a UI built against a different revision of the API
-      # is the one failure this arrangement has to make impossible. The app-token
-      # above is org-scoped, so it already reaches that repository.
+      # The admin UI lives in proxy-smart/proxy-smart-admin-ui. It is built here
+      # rather than inside the image so it compiles against the client this very
+      # commit produced — a UI built against a different revision of the API is the
+      # one failure this arrangement has to make impossible.
+      #
+      # A second token, because create-github-app-token mints for ONE org and the UI
+      # is no longer in this repository's. Both collapse back into the token above
+      # once this repository moves to the proxy-smart org too.
+      - name: Authenticate as GitHub App for the admin UI
+        id: ui-app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: proxy-smart
+          repositories: proxy-smart-admin-ui
+
       - name: Checkout admin UI
         uses: actions/checkout@v6
         with:
-          repository: Max-Health-Inc/proxy-smart-admin-ui
+          repository: proxy-smart/proxy-smart-admin-ui
           ref: main
           path: admin-ui
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ steps.ui-app-token.outputs.token }}
 
       - name: Build admin UI
         env:
