@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.30-alpha.202608291135.c83e9dd58] - 2026-08-29
+
+- ✨ Features
+  - None
+
+- 🐛 Bug Fixes
+  - fix(webapp): handle missing admin UI gracefully when public/webapp/index.html is absent, avoiding failure and clarifying REST API-admin surface behavior
+  - fix(test): stabilize consent cache cleanup test by addressing clock vs timer discrepancy
+
+- 📚 Documentation
+  - docs: update CHANGELOG.md for PR #1106
+
+- 🔧 Chores & Improvements
+  - chore: sync package versions
+  - chore: sync package versions (duplicate)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1107
+
+
 ## [0.3.30-beta.202608291115.70c5bb971] - 2026-08-29
 
 - ✨ Features:
