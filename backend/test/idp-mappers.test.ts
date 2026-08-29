@@ -85,6 +85,13 @@ interface CreateMapperPayload {
   }
 }
 
+interface UpdateMapperPayload {
+  id?: string
+  name?: string
+  identityProviderMapper?: string
+  config?: Record<string, string>
+}
+
 function createMockAdmin({
   types = OIDC_TYPES,
   mappers = [],
@@ -94,6 +101,8 @@ function createMockAdmin({
 }: MockOptions = {}) {
   /** Payloads passed to createMapper, in call order */
   const createdPayloads: CreateMapperPayload[] = []
+  /** Representations passed to updateMapper, in call order */
+  const updatedPayloads: UpdateMapperPayload[] = []
 
   const identityProviders = {
     findOne: mock(async () => ({ alias: 'hospital-oidc', providerId: 'oidc', config: providerConfig })),
@@ -107,9 +116,17 @@ function createMockAdmin({
       createdPayloads.push(payload)
       return { id: 'created-id' }
     }),
+    updateMapper: mock(async (target: { alias: string; id: string }, representation: UpdateMapperPayload) => {
+      updatedPayloads.push({ ...representation, id: target.id })
+    }),
   }
 
-  return { admin: { identityProviders } as unknown as AdminArg, identityProviders, createdPayloads }
+  return {
+    admin: { identityProviders } as unknown as AdminArg,
+    identityProviders,
+    createdPayloads,
+    updatedPayloads,
+  }
 }
 
 describe('resolveAttributeMapperType', () => {
@@ -193,13 +210,13 @@ describe('ensureIdpAttributeMappers', () => {
     })
   })
 
-  it('is idempotent: an existing mapper for the attribute is skipped even when renamed', async () => {
+  it('is idempotent: a correct mapper for the attribute is skipped even when renamed', async () => {
     const { admin, identityProviders } = createMockAdmin({
       mappers: [{
         id: 'existing',
         name: 'our-own-fhiruser-mapping',
         identityProviderMapper: 'oidc-user-attribute-idp-mapper',
-        config: { claim: 'smart_fhir_user', 'user.attribute': 'fhirUser' },
+        config: { claim: 'smart_fhir_user', 'user.attribute': 'fhirUser', syncMode: 'FORCE' },
       }],
     })
 
@@ -207,7 +224,68 @@ describe('ensureIdpAttributeMappers', () => {
 
     expect(result.skipped).toContain('fhirUser-import')
     expect(result.created).not.toContain('fhirUser-import')
+    expect(identityProviders.updateMapper).not.toHaveBeenCalled()
     expect(identityProviders.createMapper).toHaveBeenCalledTimes(SMART_IDP_ATTRIBUTE_MAPPERS.length - 1)
+  })
+
+  it('repairs a mapper stuck on IMPORT instead of skipping it', async () => {
+    // The production failure: fhirUser-import existed, so every check called the provider
+    // healthy and every fix skipped it, while IMPORT meant the attribute was written once at
+    // user creation and never refreshed. A member who signed in before their record existed
+    // stayed without a fhirUser for good.
+    const { admin, updatedPayloads } = createMockAdmin({
+      mappers: [{
+        id: 'stuck',
+        name: 'fhirUser-import',
+        identityProviderMapper: 'oidc-user-attribute-idp-mapper',
+        config: { claim: 'fhirUser', 'user.attribute': 'fhirUser', syncMode: 'IMPORT' },
+      }],
+    })
+
+    const result = await ensureIdpAttributeMappers(admin, 'hospital-oidc')
+
+    expect(result.repaired).toContain('fhirUser-import')
+    expect(result.skipped).not.toContain('fhirUser-import')
+    expect(updatedPayloads[0]?.id).toBe('stuck')
+    expect(updatedPayloads[0]?.config?.syncMode).toBe('FORCE')
+  })
+
+  it('keeps the admin-configured claim when repairing', async () => {
+    // A provider may publish the reference under its own name. Rebuilding the mapper from the
+    // definition would rewrite that to `fhirUser` and break a working federation, so only the
+    // drifted key moves.
+    const { admin, updatedPayloads } = createMockAdmin({
+      mappers: [{
+        id: 'renamed',
+        name: 'our-own-fhiruser-mapping',
+        identityProviderMapper: 'oidc-user-attribute-idp-mapper',
+        config: { claim: 'smart_fhir_user', 'user.attribute': 'fhirUser', syncMode: 'IMPORT' },
+      }],
+    })
+
+    await ensureIdpAttributeMappers(admin, 'hospital-oidc')
+
+    expect(updatedPayloads[0]?.config?.claim).toBe('smart_fhir_user')
+    expect(updatedPayloads[0]?.config?.syncMode).toBe('FORCE')
+    expect(updatedPayloads[0]?.name).toBe('our-own-fhiruser-mapping')
+  })
+
+  it('leaves syncMode alone on a provider type that has none', async () => {
+    // SAML's importer declares no syncMode, so demanding one would be a permanent false alarm.
+    const { admin, identityProviders } = createMockAdmin({
+      types: SAML_TYPES,
+      mappers: [{
+        id: 'saml-existing',
+        name: 'fhirUser-import',
+        identityProviderMapper: 'saml-user-attribute-idp-mapper',
+        config: { 'attribute.name': 'fhirUser', 'user.attribute': 'fhirUser' },
+      }],
+    })
+
+    const result = await ensureIdpAttributeMappers(admin, 'hospital-saml')
+
+    expect(result.skipped).toContain('fhirUser-import')
+    expect(identityProviders.updateMapper).not.toHaveBeenCalled()
   })
 
   it('provisions only required mappers when optional ones are excluded', async () => {
@@ -285,6 +363,28 @@ describe('getIdpMapperStatus', () => {
     expect(status.missingOptional).toEqual(['organization-import'])
     expect(status.mappers[0]?.externalName).toBe('fhirUser')
     expect(status.mappers[0]?.userAttribute).toBe('fhirUser')
+    expect(status.misconfigured).toEqual([])
+  })
+
+  it('is UNHEALTHY when the required mapper exists but will not refresh', async () => {
+    // Existence was once the whole check, so this exact provider reported healthy while
+    // brokered users silently never had their fhirUser updated after first login.
+    const { admin } = createMockAdmin({
+      mappers: [{
+        id: 'm1',
+        name: 'fhirUser-import',
+        identityProviderMapper: 'oidc-user-attribute-idp-mapper',
+        config: { claim: 'fhirUser', 'user.attribute': 'fhirUser', syncMode: 'IMPORT' },
+      }],
+    })
+
+    const status = await getIdpMapperStatus(admin, provider)
+
+    expect(status.missingRequired).toEqual([])
+    expect(status.healthy).toBe(false)
+    expect(status.misconfigured).toEqual([
+      { name: 'fhirUser-import', mapper: 'fhirUser-import', differences: ['syncMode is IMPORT, expected FORCE'] },
+    ])
   })
 
   it('does not mark providers unhealthy when no attribute importer exists', async () => {

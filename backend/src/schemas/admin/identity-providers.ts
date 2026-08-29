@@ -177,7 +177,15 @@ export const IdentityProviderMapperStatus = t.Object({
   mappers: t.Array(IdentityProviderMapperResponse, { description: 'Mappers currently attached to the provider' }),
   missingRequired: t.Array(t.String(), { description: 'Names of required mappers that are missing' }),
   missingOptional: t.Array(t.String(), { description: 'Names of optional mappers that are missing' }),
-  healthy: t.Boolean({ description: 'Whether all required attribute imports are present' }),
+  misconfigured: t.Array(
+    t.Object({
+      name: t.String({ description: 'Definition the mapper is meant to satisfy' }),
+      mapper: t.String({ description: 'Name the mapper carries in Keycloak' }),
+      differences: t.Array(t.String(), { description: 'What differs, as "field is X, expected Y"' })
+    }),
+    { description: 'Mappers that EXIST but do not do what their definition asks — e.g. syncMode IMPORT where FORCE is required, which stops later logins refreshing the attribute' }
+  ),
+  healthy: t.Boolean({ description: 'Whether all required attribute imports are present AND correctly configured' }),
   unsupported: t.Boolean({ description: 'Whether the provider supports attribute-import mappers at all' }),
   userFacing: t.Boolean({
     description: 'False for machine trust anchors (client-assertion federation), where user attributes do not apply'
@@ -197,7 +205,8 @@ export const IdentityProviderMapperFixResponse = t.Object({
   alias: t.String({ description: 'Provider the mappers were provisioned on' }),
   attributeMapperType: t.Union([t.String(), t.Null()], { description: 'Mapper type used for provisioning' }),
   created: t.Array(t.String(), { description: 'Names of mappers created by this call' }),
-  skipped: t.Array(t.String(), { description: 'Names of mappers that already existed' }),
+  repaired: t.Array(t.String(), { description: 'Names of mappers that existed but were corrected in place' }),
+  skipped: t.Array(t.String(), { description: 'Names of mappers already present and correctly configured' }),
   unsupported: t.Boolean({ description: 'Whether the provider supports attribute-import mappers at all' }),
   userFacing: t.Boolean({ description: 'False when the provider is a machine trust anchor; nothing is provisioned' }),
   errors: t.Array(t.String(), { description: 'Any errors encountered' }),
