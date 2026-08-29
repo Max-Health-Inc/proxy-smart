@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * @max-health-inc/elysia-mcp - Core Types
+ * @proxy-smart/elysia-mcp - Core Types
  *
  * Type definitions for the Elysia-to-MCP bridge.
  */

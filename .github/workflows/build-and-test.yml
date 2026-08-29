@@ -51,22 +51,23 @@ jobs:
     # fails fast instead of running to GitHub's 6h default.
     timeout-minutes: 40
     outputs:
-      backend_success: ${{ steps.backend-build.outcome == 'success' || steps.backend-build-heal.outputs.fixed == 'true' }}
-      frontend_success: ${{ steps.frontend-build.outcome == 'success' || steps.frontend-build-heal.outputs.fixed == 'true' }}
-      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || steps.backend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
-      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || steps.frontend-test-heal.outputs.fixed == 'true' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      backend_success: ${{ steps.backend-build.outcome == 'success' }}
+      frontend_success: ${{ steps.frontend-build.outcome == 'success' }}
+      backend_tests_success: ${{ steps.backend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
+      frontend_tests_success: ${{ steps.frontend-test.outcome == 'success' || (inputs.run_tests != true && inputs.run_tests != null) }}
     
     steps:
-    # The admin UI is a separate private repository; the default GITHUB_TOKEN
-    # cannot reach it, so the checkout below uses an org-scoped app token — the
-    # same mechanism deploy-beta already uses for proxy-smart-infra.
+    # The admin UI is a separate private repository in the proxy-smart org; the
+    # default GITHUB_TOKEN cannot reach it, so the checkout below uses an app token
+    # minted for that org — the same mechanism deploy-beta uses for its checkouts.
     - name: Generate GitHub App token
       id: app-token
       uses: actions/create-github-app-token@v3
       with:
         client-id: ${{ secrets.APP_ID }}
         private-key: ${{ secrets.APP_PRIVATE_KEY }}
-        owner: Max-Health-Inc
+        owner: proxy-smart
+        repositories: proxy-smart-admin-ui
 
     - name: Checkout repository
       uses: actions/checkout@v6
@@ -92,20 +93,22 @@ jobs:
       run: |
         echo "🔨 Generating client APIs..."
         pip install --break-system-packages openapi-ts-fetch==0.2.2
-        # Builds @max-health-inc/proxy-smart-client, which the admin UI below
-        # consumes. Its generated source is gitignored, so what is not generated
-        # here does not exist in CI at all. It is compiled, not just emitted,
-        # because consumers resolve the package through dist/.
+        # `generate` covers every generated client: the shared
+        # @proxy-smart/api-client package (which the admin UI
+        # consumes) and the CLI's tag-filtered copy. Both are gitignored, so
+        # anything not generated here does not exist in CI at all — the CLI used
+        # to be silently absent. The package is compiled, not just emitted, so
+        # the UI typecheck resolves it through dist/.
         bun run generate
 
     # === FRONTEND ===
-    # The admin UI is Max-Health-Inc/proxy-smart-admin-ui now. It is built and
+    # The admin UI is proxy-smart/proxy-smart-admin-ui now. It is built and
     # tested against the client this commit produces, so a route change that
     # breaks the UI still fails here rather than at deploy time.
     - name: Checkout admin UI
       uses: actions/checkout@v6
       with:
-        repository: Max-Health-Inc/proxy-smart-admin-ui
+        repository: proxy-smart/proxy-smart-admin-ui
         ref: main
         path: admin-ui
         token: ${{ steps.app-token.outputs.token }}
@@ -118,7 +121,7 @@ jobs:
       run: |
         echo "🔨 Building admin UI against this commit's client..."
         cd admin-ui
-        bun add "@max-health-inc/proxy-smart-client@file:../packages/api-client"
+        bun add "@proxy-smart/api-client@file:../packages/api-client"
         bun run build
 
     # === BACKEND TESTS ===
@@ -145,6 +148,15 @@ jobs:
         echo "🧪 Testing admin UI..."
         cd admin-ui
         bun run test --run
+
+    # === CLI (published from this repo, so it must build and pass here) ===
+    - name: Test CLI
+      if: ${{ inputs.run_tests == true || inputs.run_tests == null }}
+      run: |
+        echo "🧪 Testing CLI..."
+        cd packages/cli
+        bun run typecheck
+        bun run test
 
     # === Shared packages ===
     # @proxy-smart/auth carries the SMART launch/scope logic the backend imports,

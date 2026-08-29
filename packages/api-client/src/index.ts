@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * @max-health-inc/proxy-smart-client
+ * @proxy-smart/api-client
  *
  * Public surface of the generated client. `src/generated/` is emitted from
  * backend/dist/openapi.json and never edited; this file decides what of it is

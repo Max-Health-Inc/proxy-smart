@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 /**
- * @max-health-inc/elysia-mcp - Tool text encoding
+ * @proxy-smart/elysia-mcp - Tool text encoding
  *
  * Chooses the encoding for a tool result's `content[].text` block, the part a
  * client feeds to the model. `structuredContent` is unaffected and stays JSON:

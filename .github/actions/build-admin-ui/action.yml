@@ -1,0 +1,80 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
+name: 'Build Admin UI'
+description: 'Check out proxy-smart/proxy-smart-admin-ui and build it against this commit''s API client, into webapp-dist/'
+
+# The caller sets up bun and installs the workspace first: this deliberately
+# nests no local action, because `uses: ./` inside a composite resolves against
+# the caller's workspace and nothing else here relies on that. Callers already
+# own toolchain setup, so there is nothing to share.
+
+inputs:
+  app_id:
+    description: 'GitHub App client id. The admin UI is private and in another org, so GITHUB_TOKEN cannot reach it.'
+    required: true
+  app_private_key:
+    description: 'GitHub App private key'
+    required: true
+  packages_token:
+    description: 'GitHub Packages token for the workspace install'
+    required: true
+  encryption_secret:
+    description: 'VITE_ENCRYPTION_SECRET for the UI bundle'
+    required: true
+  base:
+    description: 'VITE_BASE — the path the UI is served under'
+    required: false
+    default: '/webapp/'
+  ref:
+    description: 'Ref of the admin UI to build'
+    required: false
+    default: 'main'
+
+runs:
+  using: composite
+  steps:
+    # A token of its own even though the UI is now in the same org: GITHUB_TOKEN is
+    # scoped to the running repository, so it cannot read a different private one.
+    # The deploy jobs mint a second token for Max-Health-Inc/proxy-smart-infra, and
+    # create-github-app-token mints for ONE org, so the two cannot be merged.
+    - name: Authenticate as GitHub App for the admin UI
+      id: ui-app-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.app_private_key }}
+        owner: proxy-smart
+        repositories: proxy-smart-admin-ui
+
+    - name: Checkout admin UI
+      uses: actions/checkout@v6
+      with:
+        repository: proxy-smart/proxy-smart-admin-ui
+        ref: ${{ inputs.ref }}
+        path: admin-ui
+        token: ${{ steps.ui-app-token.outputs.token }}
+
+    - name: Install OpenAPI generator
+      shell: bash
+      run: pip install --break-system-packages openapi-ts-fetch==0.2.2
+
+    - name: Build admin UI
+      shell: bash
+      env:
+        GH_PACKAGES_TOKEN: ${{ inputs.packages_token }}
+        VITE_ENCRYPTION_SECRET: ${{ inputs.encryption_secret }}
+        TAILWIND_DISABLE_LIGHTNINGCSS: "1"
+        VITE_BASE: ${{ inputs.base }}
+      run: |
+        # generate:ui exports the OpenAPI spec from this checkout's backend and
+        # builds the client package from it. Linking that by path rather than
+        # installing a published version means the UI cannot be built against an
+        # API revision this commit did not produce, and needs no prior publish.
+        bun run generate:ui
+        cd admin-ui
+        bun add "@proxy-smart/api-client@file:../packages/api-client"
+        # Straight into the staging directory the image copies, rather than into
+        # admin-ui/dist and then copying. --emptyOutDir because it is outside root.
+        bun run build --outDir ../webapp-dist --emptyOutDir
+        echo "Admin UI built: $(find ../webapp-dist -type f | wc -l) files"

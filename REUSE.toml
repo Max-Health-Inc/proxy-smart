@@ -2,7 +2,7 @@ version = 1
 
 SPDX-PackageName = "proxy-smart"
 SPDX-PackageSupplier = "Max Health Inc. <hello@maxhealth.tech>"
-SPDX-PackageDownloadLocation = "https://github.com/Max-Health-Inc/proxy-smart"
+SPDX-PackageDownloadLocation = "https://github.com/proxy-smart/proxy-smart"
 
 # Catch-all: every first-party file is dual-licensed (AGPL-3.0-or-later OR a
 # commercial license). precedence = "aggregate" means a per-file SPDX header,

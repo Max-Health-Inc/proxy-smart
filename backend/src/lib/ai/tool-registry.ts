@@ -4,7 +4,7 @@
 /**
  * Tool Registry - Auto-generates OpenAI function definitions from Elysia routes
  *
- * This module wraps @max-health-inc/elysia-mcp's route introspection and adds
+ * This module wraps @proxy-smart/elysia-mcp's route introspection and adds
  * domain-specific orchestration: global singleton, custom tools, OpenAI format,
  * and the tool executor used by the AI assistant chat.
  */
@@ -17,11 +17,11 @@ import {
   getMergedInputSchema as _getMergedInputSchema,
   executeTool as _executeTool,
   DISPATCH_APP_KEY,
-} from '@max-health-inc/elysia-mcp'
+} from '@proxy-smart/elysia-mcp'
 import type {
   ToolMetadata,
   ResourceMetadata,
-} from '@max-health-inc/elysia-mcp'
+} from '@proxy-smart/elysia-mcp'
 import { getCustomTools } from './custom-tools'
 
 // Re-export types so existing consumers don't need to change their imports

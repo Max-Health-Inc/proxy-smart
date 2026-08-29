@@ -433,7 +433,7 @@ export const config = {
   // these values (env-overridable for downstream self-hosters/forks).
   source: {
     get repositoryUrl() {
-      return process.env.SOURCE_REPOSITORY_URL || 'https://github.com/Max-Health-Inc/proxy-smart'
+      return process.env.SOURCE_REPOSITORY_URL || 'https://github.com/proxy-smart/proxy-smart'
     },
     // SPDX expression — single source of truth, mirrors REUSE.toml / package.json.
     get license() {

@@ -1,6 +1,6 @@
 {
   "name": "@proxy-smart/app-store",
-  "version": "0.4.0-beta.202608291337.5ed1bac44",
+  "version": "0.4.1-alpha.202608292041.eca892479",
   "private": false,
   "type": "module",
   "description": "SMART on FHIR app store — manifest discovery, visibility configuration, and registry CRUD. Framework-agnostic.",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
+    "url": "https://github.com/proxy-smart/proxy-smart.git",
     "directory": "packages/app-store"
   },
   "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",

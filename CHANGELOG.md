@@ -6,6 +6,83 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.1-beta.202608291951.07496cf55] - 2026-08-29
+
+- 🔧 Chores & Improvements: CI/CD adjustments and toolchain handling
+  - ci: let each deploy job own its toolchain instead of nesting it in the action
+  - ci: keep the nested checkout from deleting the admin UI it just cloned
+  - ci: gate deploys on the theme's env variable being set and related safeguards
+  - ci: cap the version-ops job to prevent hangs during alpha releases
+  - ci: build the admin UI before the image that copies it, on both deploy paths
+  - ci: follow the admin UI to the proxy-smart org
+  - chore(ci): finish removing the AI self-heal subsystem (partial cleanup)
+- ✨ Features: none
+- 🐛 Bug Fixes: none
+- 📚 Documentation: none
+- ⚠️ Breaking Changes: none
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1125
+
+
+## [0.4.1-beta.202608291631.6f2c9207d] - 2026-08-29
+
+- 🔧 Chores & Improvements: CI/CD maintenance and org changes (proxy-smart moves, token access considerations)
+  - Follow admin UI to proxy-smart org; adjust tokens/access accordingly
+  - Remove AI self-heal subsystem pieces and related workflows
+  - Update version to 0.4.1-beta.202608291631.6f2c9207d (beta) [skip ci]
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1118
+
+
+
+- 🔧 Chores & Improvements: CI/CD updates to build order and admin UI deployment
+- 🐛 Bug Fixes: Follow-up adjustments for admin UI, proxy org token access, and token handling in deploys
+- 📚 Documentation: CHANGELOG update for PR #1118
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1119
+
+
+
+- 🐛 Bug Fixes: 
+  - fix(theme): prevent 403 on error page by ensuring the "Back to application" link targets the correct app context
+
+- 🔧 Chores & Improvements:
+  - ci: build the admin UI before the image that copies it (adjusted build order for deploy paths)
+  - ci: follow admin UI to proxy-smart org; token handling clarified across repos
+  - chore(ci): remove AI self-heal subsystem remnants and associated workflows
+
+- 📚 Documentation:
+  - docs: update CHANGELOG.md for PR #1119
+  - docs: update CHANGELOG.md for PR #1118
+
+- 🔧 Chore/CI tweaks:
+  - 🔄 Update version to 0.4.1-beta.202608291631.6f2c9207d (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1121
+
+
+
+- 🔧 Chores & Improvements: CI/CD stability improvements
+  - cap the version-ops job to prevent hangs blocking alpha releases
+  - follow admin UI to proxy-smart org and adjust token access
+  - finish removing AI self-heal subsystem and related cleanup
+
+- 📚 Documentation: changelog updates
+  - update CHANGELOG.md for PR #1121
+  - update CHANGELOG.md for PR #1119
+  - update CHANGELOG.md for PR #1118
+
+- 🔄 Versioning: bump to 0.4.1-beta.202608291631.6f2c9207d (internal)
+
+- ⚠️ Breaking Changes: none detected
+
+- ✨ Features: none detected
+
+- 🐛 Bug Fixes: none detected
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1122
+
+
 ## [0.3.30-alpha.202608291138.c2ac99f12] - 2026-08-29
 
 - 🔧 Chores & Improvements: Version bumps for pre-release alpha 0.3.30-alpha.202608291138.c2ac99f12

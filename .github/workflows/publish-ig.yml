@@ -147,7 +147,7 @@ jobs:
       - name: Stamp name / version / build key
         if: steps.decide.outputs.publish == 'true'
         run: |
-          node -e "const fs=require('fs'),f='dist-ig/package.json',p=JSON.parse(fs.readFileSync(f));p.name='${{ env.PKG_NAME }}';p.version='${{ steps.decide.outputs.version }}';p._igBuildKey='${{ steps.decide.outputs.key }}';p.publishConfig={registry:'https://npm.pkg.github.com'};p.repository={type:'git',url:'https://github.com/Max-Health-Inc/proxy-smart.git'};fs.writeFileSync(f,JSON.stringify(p,null,2))"
+          node -e "const fs=require('fs'),f='dist-ig/package.json',p=JSON.parse(fs.readFileSync(f));p.name='${{ env.PKG_NAME }}';p.version='${{ steps.decide.outputs.version }}';p._igBuildKey='${{ steps.decide.outputs.key }}';p.publishConfig={registry:'https://npm.pkg.github.com'};p.repository={type:'git',url:'${{ github.server_url }}/${{ github.repository }}.git'};fs.writeFileSync(f,JSON.stringify(p,null,2))"
 
       - name: Publish to GitHub Packages
         if: steps.decide.outputs.publish == 'true'

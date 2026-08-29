@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: Deploy Production
 
 on:
@@ -99,6 +102,32 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # checkout: false — the repository is already checked out above, and a second
+      # checkout runs `git clean -ffdx` over the workspace.
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun-version
+        with:
+          checkout: 'false'
+
+      - name: Install Dependencies (Workspace)
+        timeout-minutes: 20
+        uses: ./.github/actions/bun-install
+        with:
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+      # Production ships the same admin UI as beta. It is built here rather than
+      # in the image so it compiles against the client this commit produced, and
+      # it must precede the image build, which copies webapp-dist/ into the tree.
+      # Without this the image serves an empty /webapp.
+      - name: Build admin UI
+        uses: ./.github/actions/build-admin-ui
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          packages_token: ${{ secrets.GH_PACKAGES_TOKEN }}
+          encryption_secret: ${{ secrets.VITE_ENCRYPTION_SECRET }}
+          base: /webapp/
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
@@ -139,22 +168,35 @@ jobs:
       # account and identity configuration, not the product, so they are not
       # part of the public source tree. The checkout has to happen BEFORE the
       # Keycloak image is built, because the realm is layered onto it below.
+      #
+      # Named explicitly rather than derived from github.repository_owner. This
+      # repository moved to the proxy-smart org and infra did not: it belongs to
+      # the operator, not the product. Deriving it would have repointed
+      # production at an org that has no infra repository at all.
       - name: Authenticate as GitHub App for infra checkout
         id: infra-app-auth
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
+          owner: Max-Health-Inc
           repositories: proxy-smart-infra
 
       - name: Checkout infrastructure
         uses: actions/checkout@v6
         with:
-          repository: ${{ github.repository_owner }}/proxy-smart-infra
+          repository: Max-Health-Inc/proxy-smart-infra
           ref: main
           path: infra
           token: ${{ steps.infra-app-auth.outputs.token }}
+
+      # Fail here rather than serve a broken theme. Keycloak substitutes ${env.X} in
+      # theme.properties at theme load, and an UNSET variable is emitted verbatim — it does not
+      # fail or warn. That is how the error page's "Back to application" came to be a 403: the
+      # fallback had no configured destination and nothing said so. The requirement is read out
+      # of the theme itself, so adding a placeholder makes it a deploy gate automatically.
+      - name: Assert the Keycloak environment provides what the theme needs
+        run: node scripts/check-theme-env.mjs infra
 
       # Two stages, because the realm is not part of the product.
       #

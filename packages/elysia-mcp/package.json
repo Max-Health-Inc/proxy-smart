@@ -1,6 +1,6 @@
 {
-  "name": "@max-health-inc/elysia-mcp",
-  "version": "0.4.0-beta.202608291337.5ed1bac44",
+  "name": "@proxy-smart/elysia-mcp",
+  "version": "0.4.1-alpha.202608292041.eca892479",
   "private": false,
   "type": "module",
   "description": "Auto-generate MCP tools and resources from Elysia routes via introspection. TypeBox-to-Standard-Schema bridge and tool execution; the HTTP edge lives in @maxhealth.tech/mcp-http.",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
+    "url": "https://github.com/proxy-smart/proxy-smart.git",
     "directory": "packages/elysia-mcp"
   },
   "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",

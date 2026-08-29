@@ -6,8 +6,8 @@ There are two endpoints, and they are different servers:
 
 | Endpoint | Tools | Registered by |
 |---|---|---|
-| `/mcp` | The backend's own admin API, derived from the Elysia route table | [`backend/src/routes/mcp-endpoint.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/routes/mcp-endpoint.ts) |
-| `/fhir/{server_id}/mcp` | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update`, `fhir_delete`, `fhir_capabilities`, bound to one configured FHIR server | [`backend/src/routes/fhir-mcp.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/routes/fhir-mcp.ts) |
+| `/mcp` | The backend's own admin API, derived from the Elysia route table | [`backend/src/routes/mcp-endpoint.ts`](https://github.com/proxy-smart/proxy-smart/blob/main/backend/src/routes/mcp-endpoint.ts) |
+| `/fhir/{server_id}/mcp` | `fhir_read`, `fhir_search`, `fhir_create`, `fhir_update`, `fhir_delete`, `fhir_capabilities`, bound to one configured FHIR server | [`backend/src/routes/fhir-mcp.ts`](https://github.com/proxy-smart/proxy-smart/blob/main/backend/src/routes/fhir-mcp.ts) |
 
 Both speak JSON-RPC 2.0 over `POST`. Neither accepts the ad-hoc `{"type":"listTools"}` envelope that earlier revisions of this document described; use an MCP client, or `tools/list` and `tools/call` directly.
 
@@ -29,7 +29,7 @@ answered at `2025-11-25`. So pinning `MCP-Protocol-Version: 2026-07-28` appears 
 delivering none of that revision's additions. Ask for `2025-11-25`, or send no version header and
 let the SDK default apply.
 
-Raising the ceiling is an SDK bump, not a change here. `@max-health-inc/elysia-mcp` carries no
+Raising the ceiling is an SDK bump, not a change here. `@proxy-smart/elysia-mcp` carries no
 protocol version at all — it derives tools and executes them, and the revision is entirely the
 SDK's business.
 
@@ -55,7 +55,7 @@ GET /.well-known/oauth-authorization-server
   → authorization_endpoint, token_endpoint, registration_endpoint, jwks_uri, …
 ```
 
-Both are served by [`backend/src/routes/auth/mcp-metadata.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/routes/auth/mcp-metadata.ts). `authorization_servers` points at the proxy's own base URL, not directly at Keycloak, because the proxy owns the `registration_endpoint` and fronts `/auth/authorize` and `/auth/token` to add SMART launch-context enrichment and audience enforcement. The AS metadata sets `issuer` to the proxy base URL for the same reason, and advertises `authorization_response_iss_parameter_supported: true` (RFC 9207) so clients that string-compare `iss` against the document match.
+Both are served by [`backend/src/routes/auth/mcp-metadata.ts`](https://github.com/proxy-smart/proxy-smart/blob/main/backend/src/routes/auth/mcp-metadata.ts). `authorization_servers` points at the proxy's own base URL, not directly at Keycloak, because the proxy owns the `registration_endpoint` and fronts `/auth/authorize` and `/auth/token` to add SMART launch-context enrichment and audience enforcement. The AS metadata sets `issuer` to the proxy base URL for the same reason, and advertises `authorization_response_iss_parameter_supported: true` (RFC 9207) so clients that string-compare `iss` against the document match.
 
 Path-insertion variants are served too, since MCP clients try them first: `/.well-known/oauth-protected-resource/*`, `/.well-known/oauth-authorization-server/auth`, and `/.well-known/openid-configuration/auth`.
 
@@ -78,7 +78,7 @@ The order of checks matters and is not the order `mcp-http` uses:
 
 ### Scopes
 
-`scopes_supported` is exactly `MCP_SCOPES_SUPPORTED` in [`backend/src/lib/oauth-scopes.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/lib/oauth-scopes.ts), which is the standard OIDC default set — `openid profile email`. There is no `read:mcp` or `execute:mcp`; earlier drafts of this document described scopes that were never implemented.
+`scopes_supported` is exactly `MCP_SCOPES_SUPPORTED` in [`backend/src/lib/oauth-scopes.ts`](https://github.com/proxy-smart/proxy-smart/blob/main/backend/src/lib/oauth-scopes.ts), which is the standard OIDC default set — `openid profile email`. There is no `read:mcp` or `execute:mcp`; earlier drafts of this document described scopes that were never implemented.
 
 That set is deliberately narrow. Whatever is advertised here is also granted to every client the backend provisions, so anything added must be grantable to any user who can log in. `offline_access` was removed for exactly this reason: it is gated on a realm role, and a user without that role does not get a degraded token — the whole code exchange fails after a successful login. The `authorization_code` grant already returns a session-bound refresh token without it.
 
@@ -138,7 +138,7 @@ Both CIMD and DCR are advertised via `client_registration_types_supported`. `tok
 
 ### Where they come from
 
-Tools on `/mcp` are derived from the Elysia route table by [`@max-health-inc/elysia-mcp`](../packages/elysia-mcp/README.md), which reads path, method, body/query/params schemas, the handler reference, and the route's `meta.public` flag. Only routes under the configured prefixes are considered, so a route is never exposed merely by existing. Naming, resource URIs, and the annotations derived from each HTTP verb are documented in that package; [Backend API Tools](./BACKEND_API_TOOLS.md) summarises them.
+Tools on `/mcp` are derived from the Elysia route table by [`@proxy-smart/elysia-mcp`](../packages/elysia-mcp/README.md), which reads path, method, body/query/params schemas, the handler reference, and the route's `meta.public` flag. Only routes under the configured prefixes are considered, so a route is never exposed merely by existing. Naming, resource URIs, and the annotations derived from each HTTP verb are documented in that package; [Backend API Tools](./BACKEND_API_TOOLS.md) summarises them.
 
 Execution goes back through the real Elysia pipeline via a registered dispatch app, so route guards, response-schema coercion, and lifecycle hooks such as admin audit logging all run. A synthetic-context fallback exists for the case where no dispatch app is registered, and the `getAdmin` / `getAccessControl` decorators serve that path.
 
@@ -168,7 +168,7 @@ It also registers **`show_form`**, which is the input side of the same idea. Giv
 
 ### Controlling exposure
 
-Exposure is configured through the admin UI (**AI Tools → MCP Endpoint**) and persisted by [`backend/src/lib/mcp-endpoint-config.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/lib/mcp-endpoint-config.ts) — PostgreSQL when `DATABASE_URL` is set, otherwise `DATA_DIR/mcp-endpoint.json`.
+Exposure is configured through the admin UI (**AI Tools → MCP Endpoint**) and persisted by [`backend/src/lib/mcp-endpoint-config.ts`](https://github.com/proxy-smart/proxy-smart/blob/main/backend/src/lib/mcp-endpoint-config.ts) — PostgreSQL when `DATABASE_URL` is set, otherwise `DATA_DIR/mcp-endpoint.json`.
 
 | Field | Meaning |
 |---|---|
@@ -260,6 +260,6 @@ bun run test:backend
 
 - [Model Context Protocol](https://modelcontextprotocol.io/)
 - [`@maxhealth.tech/mcp-http`](https://github.com/Max-Health-Inc/mcp-http) — the HTTP edge, shared across the organization
-- [`@max-health-inc/elysia-mcp`](../packages/elysia-mcp/README.md) — route table to tools
+- [`@proxy-smart/elysia-mcp`](../packages/elysia-mcp/README.md) — route table to tools
 - [RFC 9728](https://datatracker.ietf.org/doc/html/rfc9728) protected resource metadata · [RFC 8414](https://datatracker.ietf.org/doc/html/rfc8414) AS metadata · [RFC 8707](https://datatracker.ietf.org/doc/html/rfc8707) resource indicators · [RFC 7591](https://datatracker.ietf.org/doc/html/rfc7591) DCR · [RFC 9207](https://datatracker.ietf.org/doc/html/rfc9207) issuer identification
 - [Keycloak as an MCP authorization server](https://www.keycloak.org/securing-apps/mcp-authz-server)

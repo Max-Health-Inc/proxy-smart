@@ -111,7 +111,7 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Max-Health-Inc/proxy-smart' },
+      { icon: 'github', link: 'https://github.com/proxy-smart/proxy-smart' },
     ],
 
     search: {
