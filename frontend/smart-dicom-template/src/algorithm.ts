@@ -7,7 +7,7 @@
  * ╚══════════════════════════════════════════════════════════════════╝
  */
 
-import type { ImagingStudyUvIps as ImagingStudy } from "hl7.fhir.uv.ips-generated"
+import type { ImagingStudyUvIps as ImagingStudy } from "@max-health-inc/fhir-ips"
 
 // ── Input provided to your algorithm ─────────────────────────────────────
 

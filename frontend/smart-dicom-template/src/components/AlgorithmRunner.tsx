@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import type { ImagingStudyUvIps as ImagingStudy } from "hl7.fhir.uv.ips-generated"
+import type { ImagingStudyUvIps as ImagingStudy } from "@max-health-inc/fhir-ips"
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Spinner } from "@proxy-smart/shared-ui"
 import { smartAuth } from "@/lib/smart-auth"
 import { fhirBaseUrl } from "@/lib/smart-auth"
