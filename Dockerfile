@@ -17,9 +17,6 @@ RUN apt-get update -qq && \
 # $GH_PACKAGES_TOKEN); without it `bun install` cannot authenticate them and stalls.
 COPY package.json bun.lock bunfig.toml ./
 
-# Copy root lib (contains shared tarballs like smart-app-launch-generated.tgz)
-COPY lib/ ./lib/
-
 # Copy workspace package files (only the ones needed for Docker build)
 COPY backend/package.json ./backend/
 COPY packages/patient-picker/package.json ./packages/patient-picker/
