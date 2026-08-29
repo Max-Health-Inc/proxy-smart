@@ -105,8 +105,8 @@ COPY --from=backend-build /app/backend/package.json ./backend/package.json
 # Copy backend's public directory (landing page, static assets)
 COPY --from=backend-build /app/backend/public ./backend/public
 
-# Admin UI, built by CI from Max-Health-Inc/proxy-smart-admin-ui and placed here
-# as webapp-dist/. Empty in a local build, which the /webapp route reports rather
+# Admin UI, built by CI from proxy-smart/proxy-smart-admin-ui straight into
+# webapp-dist/. Empty in a local build, which the /webapp route reports rather
 # than failing on — the API and /mcp carry the same surface.
 COPY webapp-dist/ ./backend/public/webapp
 

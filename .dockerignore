@@ -73,3 +73,6 @@ keycloak/
 
 # Agent (if not needed in production)
 agent/
+
+# CI checks the admin UI out here; only its build output (webapp-dist/) is copied.
+admin-ui/
