@@ -29,6 +29,20 @@ inputs:
 runs:
   using: composite
   steps:
+    # checkout: false — the caller has already checked this repository out, and a
+    # second checkout runs `git clean -ffdx`, which would delete the admin UI
+    # working tree. Hence also the ordering: toolchain first, UI second.
+    - name: Setup Bun
+      uses: ./.github/actions/setup-bun-version
+      with:
+        checkout: 'false'
+
+    - name: Install Dependencies (Workspace)
+      timeout-minutes: 20
+      uses: ./.github/actions/bun-install
+      with:
+        token: ${{ inputs.packages_token }}
+
     # create-github-app-token mints for ONE org, and the UI is no longer in this
     # repository's. This collapses into the caller's token once the monorepo
     # moves to proxy-smart too.
@@ -48,15 +62,6 @@ runs:
         ref: ${{ inputs.ref }}
         path: admin-ui
         token: ${{ steps.ui-app-token.outputs.token }}
-
-    - name: Setup Bun
-      uses: ./.github/actions/setup-bun-version
-
-    - name: Install Dependencies (Workspace)
-      timeout-minutes: 20
-      uses: ./.github/actions/bun-install
-      with:
-        token: ${{ inputs.packages_token }}
 
     - name: Install OpenAPI generator
       shell: bash
