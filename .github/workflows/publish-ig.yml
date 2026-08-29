@@ -5,10 +5,18 @@ name: Publish FHIR IG package
 
 # Publishes the babelfhir-ts-generated typed package for proxy-smart's OWN
 # Consent IG (fhir/, id maxhealth.consent) to GitHub Packages as
-# @max-health-inc/consent-fhir, so apps (consent portal, this backend) install
+# @proxy-smart/consent-fhir, so apps (consent portal, this backend) install
 # ONE published package instead of vendoring
 # lib/maxhealth.consent-<version>-generated.tgz. Mirrors the dicom-viewer / AIHR
 # publish-ig pattern.
+#
+# The scope is @proxy-smart, unlike its siblings core-fhir, trust-fhir and
+# aihr-fhir: GitHub Packages refuses a package whose npm scope is not the org
+# owning the repository, and this repository moved to proxy-smart. Publishing
+# failed with "permission_denied: The requested installation does not exist"
+# until it was renamed. This is NOT a candidate for Max-Health-Inc/fhir-igs,
+# which publishes the PUBLIC IGs from babelfhir-ts's parity matrix and keeps no
+# hand-maintained list — this IG is authored here in FSH.
 #
 # Input-driven publish: the build key hashes the FSH SOURCES (fhir/input +
 # sushi-config) plus the babelfhir version + flags — NOT the generated output,
@@ -33,7 +41,7 @@ permissions:
   packages: write
 
 env:
-  PKG_NAME: "@max-health-inc/consent-fhir"
+  PKG_NAME: "@proxy-smart/consent-fhir"
 
 jobs:
   publish:
@@ -45,7 +53,7 @@ jobs:
         with:
           node-version: 22
           registry-url: https://npm.pkg.github.com
-          scope: "@max-health-inc"
+          scope: "@${{ github.repository_owner }}"
 
       # The generator version comes from the root package.json, the same field
       # fhir/build.mjs reads. It used to be restated here, which let the two
