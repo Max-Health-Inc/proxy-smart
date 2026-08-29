@@ -13,6 +13,20 @@ const __dirname = path.dirname(__filename);
 // Directories to skip entirely during recursive search
 const SKIP_DIRS = ['node_modules', 'dist', 'build', '.git', '.cache', 'cache'];
 
+/**
+ * A manifest opts out of lockstep with `"versionPolicy": "independent"`.
+ *
+ * Lockstep is correct for anything whose contract IS the backend's: api-client and
+ * the CLI are both generated from backend/dist/openapi.json, so api-client@X is by
+ * definition the client for backend@X, and syncing them says something true.
+ *
+ * It is wrong for the libraries the backend imports — auth, app-store, elysia-mcp.
+ * Their API is their own, and moving them because the backend was reshaped tells a
+ * consumer nothing while burning a version. They declare the policy themselves
+ * rather than being listed here, so there is no central list to go stale.
+ */
+const INDEPENDENT = 'independent';
+
 // Recursively find all package.json files using built-in modules
 function findPackageFiles(dir = process.cwd(), found = [], depth = 0) {
   try {
@@ -93,6 +107,10 @@ function updateVersion(newVersion, quiet = false, dryRun = false) {
     const raw = fs.readFileSync(packagePath, 'utf8');
     const eol = raw.includes('\r\n') ? '\r\n' : '\n';
     const packageContent = JSON.parse(raw);
+    if (packageContent.versionPolicy === INDEPENDENT) {
+      log(`~ Independent ${packagePath} (${packageContent.version})`);
+      return;
+    }
     if (packageContent.version === newVersion) {
       log(`= Unchanged ${packagePath}`);
       return;
@@ -149,6 +167,10 @@ function checkConsistency() {
   packagePaths.slice(1).forEach(packagePath => {
     if (fs.existsSync(packagePath)) {
       const packageContent = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+      if (packageContent.versionPolicy === INDEPENDENT) {
+        console.log(`~ ${packagePath}: ${packageContent.version} (independent)`);
+        return;
+      }
       if (packageContent.version !== rootVersion) {
         console.log(`❌ ${packagePath}: ${packageContent.version} (expected: ${rootVersion})`);
         isConsistent = false;
