@@ -3,16 +3,36 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 # deploy-beta-remote.sh — Runs on VPS to deploy the beta stack
 #
-# Required env vars: DEPLOY_DIR, GH_TOKEN, GH_ACTOR
-# Optional env vars: RESEND_API_KEY
+# Required env vars: DEPLOY_DIR, GH_ACTOR
+# Required on stdin: KEY=VALUE lines carrying the secrets (GH_TOKEN)
 set -euo pipefail
 
+# Secrets arrive on stdin rather than in the ssh command. Anything in that
+# command is an argument of this process, so it shows up in `ps` output for
+# every user on this host and in sshd's record of the command.
+if [ ! -t 0 ]; then
+  while IFS= read -r _secret_line || [ -n "$_secret_line" ]; do
+    case "$_secret_line" in
+      ''|'#'*) continue ;;
+      *=*) export "${_secret_line%%=*}=${_secret_line#*=}" ;;
+    esac
+  done
+  unset _secret_line
+fi
+
 : "${DEPLOY_DIR:?DEPLOY_DIR is required}"
-: "${GH_TOKEN:?GH_TOKEN is required}"
+: "${GH_TOKEN:?GH_TOKEN is required (pipe it in as GH_TOKEN=... on stdin)}"
 : "${GH_ACTOR:?GH_ACTOR is required}"
 
 cd "$DEPLOY_DIR"
 COMPOSE="docker compose -f docker-compose.beta.yml --env-file .env.beta"
+
+# The deploy wrote .env.beta here, mode 600, with RESEND_API_KEY already in it.
+# Read it from there rather than shipping the same secret over ssh a second time.
+# `|| true`: under `set -e` a missing .env.beta would abort the deploy, where the
+# old behaviour was to skip the SMTP step.
+RESEND_API_KEY="$(sed -n 's/^RESEND_API_KEY=//p' .env.beta 2>/dev/null | head -1 || true)"
+export RESEND_API_KEY
 
 # ── 1. GHCR Login ──
 echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
@@ -212,23 +232,27 @@ if [ -n "${RESEND_API_KEY:-}" ]; then
         if [ "$EXISTING_HOST" = 'smtp.resend.com' ]; then
           echo '  ✅ SMTP already configured'
         else
+          # Body on stdin: as a -d argument the API key would sit in this
+          # process's arguments, readable via `ps` while the request runs.
           curl -sf -X PUT "${KC_BASE}/admin/realms/proxy-smart" \
             -H 'Content-Type: application/json' \
             -H "Authorization: Bearer $KC_TOKEN" \
-            -d '{
-              "resetPasswordAllowed": true,
-              "smtpServer": {
-                "host": "smtp.resend.com",
-                "port": "465",
-                "from": "noreply@maxhealth.tech",
-                "fromDisplayName": "Proxy Smart",
-                "replyTo": "noreply@maxhealth.tech",
-                "ssl": "true",
-                "auth": "true",
-                "user": "resend",
-                "password": "'"${RESEND_API_KEY}"'"
-              }
-            }'
+            --data @- <<SMTP_JSON
+{
+  "resetPasswordAllowed": true,
+  "smtpServer": {
+    "host": "smtp.resend.com",
+    "port": "465",
+    "from": "noreply@maxhealth.tech",
+    "fromDisplayName": "Proxy Smart",
+    "replyTo": "noreply@maxhealth.tech",
+    "ssl": "true",
+    "auth": "true",
+    "user": "resend",
+    "password": "${RESEND_API_KEY}"
+  }
+}
+SMTP_JSON
           echo '  ✅ SMTP configured (Resend via maxhealth.tech)'
         fi
       fi

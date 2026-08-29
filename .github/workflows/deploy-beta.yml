@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 name: Deploy Beta
 
 on:
@@ -301,9 +304,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_ACTOR: ${{ github.actor }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
-          ${SSH_CMD} "DEPLOY_DIR='${DEPLOY_DIR}' GH_TOKEN='${GH_TOKEN}' GH_ACTOR='${GH_ACTOR}' RESEND_API_KEY='${RESEND_API_KEY:-}' bash '${DEPLOY_DIR}/deploy-beta-remote.sh'"
+          # Secrets go over stdin, not in the ssh command. Anything in that
+          # command becomes an argument of the remote shell, so it is visible in
+          # `ps` to every user on the box and recorded by sshd.
+          #
+          # RESEND_API_KEY is not sent at all: the step above already wrote it
+          # into .env.beta (mode 600) on that host, and the script reads it there.
+          printf 'GH_TOKEN=%s\n' "${GH_TOKEN}" \
+          | ${SSH_CMD} "DEPLOY_DIR='${DEPLOY_DIR}' GH_ACTOR='${GH_ACTOR}' bash '${DEPLOY_DIR}/deploy-beta-remote.sh'"
 
       - name: Verify deployment
         id: outputs
