@@ -78,3 +78,6 @@ testing/*/report/
 
 # CI checks proxy-smart/proxy-smart-admin-ui out here to build webapp-dist/.
 /admin-ui/
+
+# npm/bun registry auth: GitHub Packages docs tell you to write _authToken here.
+.npmrc
