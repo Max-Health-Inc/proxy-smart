@@ -75,3 +75,6 @@ lib/maxhealth.consent-*.tgz
 # SMART compliance reports are CI artifacts published to Pages, not commits
 # (see smart-compliance-tests.yml -> deploy-docs.yml)
 testing/*/report/
+
+# CI checks proxy-smart/proxy-smart-admin-ui out here to build webapp-dist/.
+/admin-ui/
