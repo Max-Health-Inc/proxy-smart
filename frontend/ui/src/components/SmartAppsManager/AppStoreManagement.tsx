@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback, useMemo, type ReactNode } from 'react';
 import {
   Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -14,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
-import type { AppStoreApp, PublishedApp, SmartApp } from '@/lib/api-client';
+import type { AppStoreApp, PublishedApp, SmartApp } from '@max-health-inc/proxy-smart-client';
 
 /** Icon registry — maps icon key to Lucide component. Synced with public /apps store SVG names. */
 const ICON_MAP: Record<string, LucideIcon> = {

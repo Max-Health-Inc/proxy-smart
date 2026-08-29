@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Badge, Button } from '@proxy-smart/shared-ui';
 import {
   Activity,
@@ -21,10 +24,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import type { SystemStatusResponse } from '../../lib/api-client/models/SystemStatusResponse';
-import type { AccessHealthResponse } from '../../lib/api-client/models/AccessHealthResponse';
-import type { AccessEvent } from '../../lib/api-client/models/AccessEvent';
-import type { FhirUptimeSummary } from '../../lib/api-client/models/FhirUptimeSummary';
+import type { SystemStatusResponse } from '@max-health-inc/proxy-smart-client/models';
+import type { AccessHealthResponse } from '@max-health-inc/proxy-smart-client/models';
+import type { AccessEvent } from '@max-health-inc/proxy-smart-client/models';
+import type { FhirUptimeSummary } from '@max-health-inc/proxy-smart-client/models';
 import type { OAuthAnalyticsResponse } from '../../lib/types/api';
 
 interface SystemHealthTabProps {

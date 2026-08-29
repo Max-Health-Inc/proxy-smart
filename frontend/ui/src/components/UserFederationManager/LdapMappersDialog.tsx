@@ -12,7 +12,7 @@ import {
 } from '@/components/mappers/MapperManagerDialog';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
-import type { UserFederationMapperTypeResponse } from '@/lib/api-client';
+import type { UserFederationMapperTypeResponse } from '@max-health-inc/proxy-smart-client';
 
 interface LdapMappersDialogProps {
   isOpen: boolean;

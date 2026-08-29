@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../stores/authStore';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +19,7 @@ import { SearchInput } from '../ui/search-input';
 import { PageLoadingState } from '../ui/page-loading-state';
 import { PageErrorState } from '../ui/page-error-state';
 import { EmptyState } from '../ui/empty-state';
-import type { AccessEvent } from '../../lib/api-client';
+import type { AccessEvent } from '@max-health-inc/proxy-smart-client';
 
 const PAGE_SIZE = 25;
 

@@ -1,5 +1,8 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useTranslation } from 'react-i18next'
-import type { AddDicomServerRequest, AddDicomServerRequestAuthTypeEnum } from '@/lib/api-client'
+import type { AddDicomServerRequest, AddDicomServerRequestAuthTypeEnum } from '@max-health-inc/proxy-smart-client'
 import { DicomServerFormDialog } from './DicomServerFormDialog'
 
 interface AddDicomServerDialogProps {

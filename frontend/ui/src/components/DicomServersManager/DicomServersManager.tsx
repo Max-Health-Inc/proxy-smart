@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react'
 import { HardDrive, RefreshCw, Plus, Info, Eye } from 'lucide-react'
 import { Button, Tabs, TabsContent, TabsTrigger, ResponsiveTabsList, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@proxy-smart/shared-ui'
@@ -7,7 +10,7 @@ import { useAuth } from '@/stores/authStore'
 import { useAlertStore } from '@/stores/alertStore'
 import { useNotificationStore } from '@/stores/notificationStore'
 import { adminApiCall } from '@/lib/admin-api'
-import type { DicomServerConfig, DicomServerStatusResponse, AddDicomServerRequest, UpdateDicomServerRequest, SmartApp } from '@/lib/api-client'
+import type { DicomServerConfig, DicomServerStatusResponse, AddDicomServerRequest, UpdateDicomServerRequest, SmartApp } from '@max-health-inc/proxy-smart-client'
 import { DicomStatsCards } from './DicomStatsCards'
 import { DicomServerOverview } from './DicomServerOverview'
 import { DicomServerDetails } from './DicomServerDetails'

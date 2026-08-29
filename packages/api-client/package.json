@@ -1,0 +1,50 @@
+{
+  "name": "@max-health-inc/proxy-smart-client",
+  "version": "0.3.30-beta.202608290842.c91c9caea",
+  "private": false,
+  "type": "module",
+  "description": "Typed fetch client for the Proxy Smart admin and FHIR API, generated from its OpenAPI spec.",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Max-Health-Inc/proxy-smart.git",
+    "directory": "packages/api-client"
+  },
+  "license": "AGPL-3.0-or-later OR LicenseRef-Commercial",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./models": {
+      "types": "./dist/generated/models/index.d.ts",
+      "import": "./dist/generated/models/index.js"
+    },
+    "./apis": {
+      "types": "./dist/generated/apis/index.d.ts",
+      "import": "./dist/generated/apis/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/generated/runtime.d.ts",
+      "import": "./dist/generated/runtime.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "generate": "openapi-ts-fetch ../../backend/dist/openapi.json ./src/generated",
+    "build": "bun run generate && tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "proxy-smart",
+    "openapi",
+    "client",
+    "fhir",
+    "smart-on-fhir"
+  ]
+}

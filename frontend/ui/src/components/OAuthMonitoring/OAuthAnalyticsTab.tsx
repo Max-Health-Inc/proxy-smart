@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Badge, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow, StatCard } from '@proxy-smart/shared-ui';
 import { formatChartTimestamp } from '@/lib/utils'
 import {
@@ -26,7 +29,7 @@ import {
   Cell,
 } from 'recharts';
 import type { OAuthAnalyticsResponse, OAuthEvent, OAuthWeekdayInsight } from '../../lib/types/api';
-import type { OAuthAnalyticsTopClient } from '../../lib/api-client/models/OAuthAnalyticsTopClient';
+import type { OAuthAnalyticsTopClient } from '@max-health-inc/proxy-smart-client/models';
 import { useMemo } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 

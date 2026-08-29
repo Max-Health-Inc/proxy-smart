@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
 import { config } from '@/config';
-import { AuthenticationApi, Configuration } from '../lib/api-client';
-import type { TokenRequest } from '../lib/api-client';
+import { AuthenticationApi, Configuration } from '@max-health-inc/proxy-smart-client';
+import type { TokenRequest } from '@max-health-inc/proxy-smart-client';
 import { logger } from '@/lib/logger';
 
 interface OpenIDConfig {

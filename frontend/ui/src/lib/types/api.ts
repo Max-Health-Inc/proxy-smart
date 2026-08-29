@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /* tslint:disable */
  
 /**
@@ -5,10 +8,10 @@
  */
 
 // Re-export all models from the API client
-export * from '../api-client/models';
+export * from '@max-health-inc/proxy-smart-client/models';
 
 // Re-export API classes and request types
-export * from '../api-client/apis';
+export * from '@max-health-inc/proxy-smart-client/apis';
 
 // Import types needed for extending
 import type { 
@@ -19,7 +22,7 @@ import type {
   IdentityProviderResponse,
   CreateIdentityProviderRequest,
   IdentityProviderConfig
-} from '../api-client/models';
+} from '@max-health-inc/proxy-smart-client/models';
 
 // Additional type aliases for compatibility
 export type {
@@ -35,7 +38,7 @@ export type {
   UpdateSmartAppRequest,
   CreateHealthcareUserRequest,
   UpdateHealthcareUserRequest,
-} from '../api-client/models';
+} from '@max-health-inc/proxy-smart-client/models';
 
 // Extended SmartApp with UI-specific properties ONLY (not in backend)
 export interface SmartApp extends ApiSmartApp {
@@ -65,17 +68,17 @@ export interface SmartAppFormData extends CreateSmartAppRequest {
 }
 
 // Import and re-export the API client's enum types
-import type { SmartAppAppTypeEnum } from '../api-client/models';
-import { SmartAppAppTypeEnum as SmartAppTypeEnum } from '../api-client/models';
+import type { SmartAppAppTypeEnum } from '@max-health-inc/proxy-smart-client/models';
+import { SmartAppAppTypeEnum as SmartAppTypeEnum } from '@max-health-inc/proxy-smart-client/models';
 export type SmartAppType = SmartAppAppTypeEnum;
 export { SmartAppTypeEnum };
 // Use the generated ClientType enum from backend instead of custom AuthenticationType
-export type { CreateSmartAppRequestClientTypeEnum as ClientType } from '../api-client/models';
+export type { CreateSmartAppRequestClientTypeEnum as ClientType } from '@max-health-inc/proxy-smart-client/models';
 
 /**
  * FHIR server details response - uses generated type from OpenAPI spec
  */
-export type { FhirServerDetails } from '../api-client/models';
+export type { FhirServerDetails } from '@max-health-inc/proxy-smart-client/models';
 
 export interface DashboardData {
   loading: boolean;
@@ -105,11 +108,11 @@ export interface DashboardData {
 }
 
 // Additional missing types
-export type { FhirServerList as FhirServersListResponse } from '../api-client/models';
-export type { KeycloakConfigResponse } from '../api-client/models';
-export type { SystemStatusResponse } from '../api-client/models';
-export type { OAuthAnalyticsResponse } from '../api-client/models';
-export type { OAuthEventsResponse as OAuthEventsListResponse } from '../api-client/models';
+export type { FhirServerList as FhirServersListResponse } from '@max-health-inc/proxy-smart-client/models';
+export type { KeycloakConfigResponse } from '@max-health-inc/proxy-smart-client/models';
+export type { SystemStatusResponse } from '@max-health-inc/proxy-smart-client/models';
+export type { OAuthAnalyticsResponse } from '@max-health-inc/proxy-smart-client/models';
+export type { OAuthEventsResponse as OAuthEventsListResponse } from '@max-health-inc/proxy-smart-client/models';
 
 // Identity Provider UI extensions
 

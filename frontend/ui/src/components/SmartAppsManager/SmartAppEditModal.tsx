@@ -37,12 +37,12 @@ import {
 } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type { SmartApp } from '@/lib/types/api';
-import type { UpdateSmartAppRequest } from '@/lib/api-client/models';
+import type { UpdateSmartAppRequest } from '@max-health-inc/proxy-smart-client/models';
 import {
   UpdateSmartAppRequestAppTypeEnum as AppTypeEnum,
   UpdateSmartAppRequestClientTypeEnum as ClientTypeEnum,
   UpdateSmartAppRequestServerAccessTypeEnum as ServerAccessEnum,
-} from '@/lib/api-client/models';
+} from '@max-health-inc/proxy-smart-client/models';
 import { useTranslation } from 'react-i18next';
 
 // ── Types ────────────────────────────────────────────────────────────────────

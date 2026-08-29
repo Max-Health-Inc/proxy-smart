@@ -19,7 +19,7 @@ import type {
   IdentityProviderMapperDefinition,
   IdentityProviderMapperStatus,
   IdentityProviderMapperTypeResponse,
-} from '@/lib/api-client';
+} from '@max-health-inc/proxy-smart-client';
 
 interface IdPMappersDialogProps {
   isOpen: boolean;

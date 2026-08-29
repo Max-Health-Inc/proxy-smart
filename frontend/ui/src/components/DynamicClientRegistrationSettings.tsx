@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react';
 import { Alert, AlertDescription, Badge, Button, Card, CardContent, CardHeader, CardTitle, Input, Label, StatCard, Switch } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
@@ -18,7 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import type { ClientRegistrationSettings } from '@/lib/types/api';
-import type { CimdStatusResponse } from '@/lib/api-client';
+import type { CimdStatusResponse } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 
 const DEFAULT_SCOPES = [

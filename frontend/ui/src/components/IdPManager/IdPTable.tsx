@@ -29,7 +29,7 @@ import {
   Minus
 } from 'lucide-react';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
-import type { IdentityProviderMapperStatus } from '@/lib/api-client';
+import type { IdentityProviderMapperStatus } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 
 interface IdPTableProps {

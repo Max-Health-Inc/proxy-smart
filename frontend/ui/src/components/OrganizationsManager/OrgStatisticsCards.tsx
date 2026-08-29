@@ -1,6 +1,9 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Building2, CheckCircle2, XCircle, Users } from 'lucide-react';
 import { StatCard } from '@proxy-smart/shared-ui';
-import type { Organization } from '@/lib/api-client';
+import type { Organization } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 
 interface OrgStatisticsCardsProps {

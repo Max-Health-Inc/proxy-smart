@@ -10,7 +10,7 @@ import { HealthcareUsersStats } from './HealthcareUsersStats';
 import { HealthcareUserAddForm } from './HealthcareUserAddForm';
 import { HealthcareUserEditForm } from './HealthcareUserEditForm';
 import type { FhirPersonAssociation, HealthcareUserFormData, HealthcareUser } from '@/lib/types/api';
-import type { FederatedIdentity, IdentityProviderResponse, RoleResponse } from '@/lib/api-client';
+import type { FederatedIdentity, IdentityProviderResponse, RoleResponse } from '@max-health-inc/proxy-smart-client';
 import { useFhirServers } from '@/stores/smartStore';
 import { AddFhirPersonModal } from './AddFhirPersonModal';
 import { HealthcareUsersTable } from './HealthcareUsersTable';

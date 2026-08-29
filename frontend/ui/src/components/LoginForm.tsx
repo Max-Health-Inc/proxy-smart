@@ -1,8 +1,11 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { openidService } from '../service/openid-service';
 import { getSessionItem, removeSessionItem } from '@/lib/storage';
-import type { PublicIdentityProvider } from '../lib/api-client/models';
+import type { PublicIdentityProvider } from '@max-health-inc/proxy-smart-client/models';
 import { KeycloakConfigForm } from './KeycloakConfigForm';
 import { AuthDebugPanel } from './AuthDebugPanel';
 import { logger } from '@/lib/logger';

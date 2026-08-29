@@ -1,4 +1,7 @@
-import type { RoleResponse } from '@/lib/api-client';
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
+import type { RoleResponse } from '@max-health-inc/proxy-smart-client';
 
 export type RolesMeta = Record<string, RoleResponse>;
 

@@ -20,7 +20,11 @@
 
 # OpenAPI Generator auto-generated files we don't want
 **/generated
-**/api-client
+# Generated OpenAPI clients. Scoped to the emit directories so
+# packages/api-client (the published package itself) stays tracked.
+**/src/api-client
+**/src/lib/api-client
+packages/api-client/src/generated
 **/generated_mcp
 **/generated_openapi
 **/openapi.json

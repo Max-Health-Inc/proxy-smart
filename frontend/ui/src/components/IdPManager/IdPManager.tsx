@@ -24,7 +24,7 @@ import type {
   UpdateIdentityProviderRequest,
   CreateIdentityProviderRequest
 } from '@/lib/types/api';
-import type { IdentityProviderMapperStatus, Organization } from '@/lib/api-client';
+import type { IdentityProviderMapperStatus, Organization } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 
 const DEFAULT_NAME_ID_FORMAT = 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent';
