@@ -19,8 +19,8 @@ import {
 import { config } from '@/config';
 import { adminApiCall } from '@/lib/admin-api';
 import { useTranslation } from 'react-i18next';
-import type { UserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet';
-import { isValidUserAccessCategoryValueSetCode, UserAccessCategoryValueSetConcepts } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet';
+import type { UserAccessCategoryValueSetCode } from '@max-health-inc/fhir-smart/valuesets/ValueSet-UserAccessCategoryValueSet';
+import { isValidUserAccessCategoryValueSetCode, UserAccessCategoryValueSetConcepts } from '@max-health-inc/fhir-smart/valuesets/ValueSet-UserAccessCategoryValueSet';
 
 // ─── Types ───────────────────────────────────────────────────────────
 

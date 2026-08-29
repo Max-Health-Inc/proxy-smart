@@ -13,7 +13,7 @@
 
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type { BrandConfigType } from '@/schemas'
-import { isValidUserAccessCategoryValueSetCode } from 'hl7.fhir.uv.smart-app-launch-generated/valuesets/ValueSet-UserAccessCategoryValueSet'
+import { isValidUserAccessCategoryValueSetCode } from '@max-health-inc/fhir-smart/valuesets/ValueSet-UserAccessCategoryValueSet'
 import type { BrandCategoryType } from '@/schemas/admin/branding'
 import { logger } from './logger'
 import { config } from '@/config'
