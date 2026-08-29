@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.30-beta.202608291115.70c5bb971] - 2026-08-29
+
+- ✨ Features:
+  - MCP UI: render tool results as prefab UIs for MCP Apps hosts (prefab UI from tool payload)
+  - MCP UI: draw a write tool's arguments as a form the user fills in
+
+- 🐛 Bug Fixes:
+  - Fix CI gates: green doc-coverage and REUSE gates by aligning documentation naming with actual symbols
+
+- 🔧 Chores & Improvements:
+  - Sync package versions
+  - Update version metadata to 0.3.30-beta.202608291115.70c5bb971 (beta)
+
+**Full Changelog**: https://github.com/Max-Health-Inc/proxy-smart/pull/1106
+
+
 ## [0.3.30-beta.202608291010.f3c0b0f8b] - 2026-08-29
 
 - ✨ Features: render tool results as prefab UIs for MCP Apps hosts (mcp)
