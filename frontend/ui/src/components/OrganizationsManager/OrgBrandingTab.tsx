@@ -1,10 +1,13 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect } from 'react';
 import { Button, Input, Label, Badge, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from '@proxy-smart/shared-ui';
 import { Save, RotateCcw, Loader2, Image, Globe, MapPin, Palette } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
-import type { OrgBrandConfig } from '@/lib/api-client';
+import type { OrgBrandConfig } from '@max-health-inc/proxy-smart-client';
 
 const CATEGORY_OPTIONS = [
   { value: 'prov', label: 'Healthcare Provider' },

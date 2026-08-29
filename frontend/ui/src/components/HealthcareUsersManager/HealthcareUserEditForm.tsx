@@ -26,7 +26,7 @@ import {
 import { Shield, Server, Database, Trash2, Link2, Unlink, Plus, Undo2, Info } from 'lucide-react';
 import { LoadingButton } from '@/components/ui/loading-button';
 import type { FhirPersonAssociation, FhirServer } from '@/lib/types/api';
-import type { FederatedIdentity, IdentityProviderResponse } from '@/lib/api-client';
+import type { FederatedIdentity, IdentityProviderResponse } from '@max-health-inc/proxy-smart-client';
 import { roleSubtitle, isPlumbingRoleName, type RolesMeta } from './rolePickerHelpers';
 import { createPersonResource } from '@/service/fhirService';
 import { useTranslation } from 'react-i18next';

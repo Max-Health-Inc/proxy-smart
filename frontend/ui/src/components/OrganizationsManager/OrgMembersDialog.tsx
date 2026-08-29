@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import {
   Badge,
   Button,
@@ -23,7 +26,7 @@ import type {
   Organization,
   OrganizationMember,
   HealthcareUser,
-} from '@/lib/api-client';
+} from '@max-health-inc/proxy-smart-client';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 

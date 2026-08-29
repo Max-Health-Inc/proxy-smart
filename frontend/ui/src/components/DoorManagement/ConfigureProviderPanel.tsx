@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState } from 'react';
 import { useAuth } from '../../stores/authStore';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +18,8 @@ import { Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectV
 import { LoadingButton } from '@/components/ui/loading-button';
 import type {
   TestAccessControlConfigResponse,
-} from '../../lib/api-client';
-import { TestAccessControlConfigRequestProviderEnum } from '../../lib/api-client';
+} from '@max-health-inc/proxy-smart-client';
+import { TestAccessControlConfigRequestProviderEnum } from '@max-health-inc/proxy-smart-client';
 
 type ProviderType = 'kisi' | 'unifi-access';
 

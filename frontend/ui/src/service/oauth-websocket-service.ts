@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 /**
  * OAuth WebSocket Service — real-time monitoring with SSE fallback.
  *
@@ -7,7 +10,7 @@
 import type { OAuthEvent, OAuthAnalyticsResponse, OAuthPredictiveInsights, OAuthWeekdayInsight } from '@/lib/types/api';
 import { oauthMonitoringService } from './oauth-monitoring-service';
 import { MonitoringWebSocketService } from './monitoring-websocket-service';
-import { ResponseError } from '@/lib/api-client/runtime';
+import { ResponseError } from '@max-health-inc/proxy-smart-client/runtime';
 
 // Re-export generated types under legacy names for backward compatibility
 export type OAuthEventSimple = OAuthEvent;

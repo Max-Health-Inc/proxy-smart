@@ -4,7 +4,7 @@
 import { Server, Shield, Globe, Key, Shuffle } from 'lucide-react';
 import { StatCard } from '@proxy-smart/shared-ui';
 import type { IdentityProviderWithStats } from '@/lib/types/api';
-import type { IdentityProviderMapperStatus } from '@/lib/api-client';
+import type { IdentityProviderMapperStatus } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 
 interface IdPStatisticsCardsProps {

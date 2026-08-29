@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react';
 import {
   Badge,
@@ -19,7 +22,7 @@ import {
 } from '@proxy-smart/shared-ui';
 import { Plus, Trash2, RefreshCw, Shield, Search, AlertTriangle, Database, Rocket, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { SmartScopeResponse } from '@/lib/api-client';
+import type { SmartScopeResponse } from '@max-health-inc/proxy-smart-client';
 import { useAuth } from '@/stores/authStore';
 
 /** Categorize a scope name for display */

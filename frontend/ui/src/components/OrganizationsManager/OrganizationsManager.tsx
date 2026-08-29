@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Button, PageLayout } from '@proxy-smart/shared-ui';
 import { PageLoadingState } from '@/components/ui/page-loading-state';
 import { useState, useEffect, useCallback } from 'react';
@@ -11,7 +14,7 @@ import { OrgEditDialog } from './OrgEditDialog';
 import { OrgMembersDialog } from './OrgMembersDialog';
 import type { OrgFormData } from './OrgAddForm';
 
-import type { Organization } from '@/lib/api-client';
+import type { Organization } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 
 export function OrganizationsManager() {

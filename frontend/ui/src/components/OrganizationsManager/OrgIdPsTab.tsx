@@ -1,9 +1,12 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Badge } from '@proxy-smart/shared-ui';
 import { useState, useEffect } from 'react';
 import { Shield, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
-import type { IdentityProviderResponse } from '@/lib/api-client';
+import type { IdentityProviderResponse } from '@max-health-inc/proxy-smart-client';
 
 interface OrgIdPsTabProps {
   orgId: string;

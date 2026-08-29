@@ -29,7 +29,7 @@ import type {
   CreateUserFederationRequest,
   LdapTestConnectionRequest,
   UserFederationSyncResultResponse,
-} from '@/lib/api-client';
+} from '@max-health-inc/proxy-smart-client';
 
 
 // ==================== Mapper Overview ====================

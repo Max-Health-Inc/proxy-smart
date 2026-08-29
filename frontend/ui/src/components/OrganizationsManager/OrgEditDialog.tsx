@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Button, Checkbox, Input, Label, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from '@proxy-smart/shared-ui';
 import {
   Dialog,
@@ -8,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Edit, X, Palette, Settings, Shield, Check } from 'lucide-react';
 import { useState } from 'react';
-import type { Organization } from '@/lib/api-client';
+import type { Organization } from '@max-health-inc/proxy-smart-client';
 import { useTranslation } from 'react-i18next';
 import { OrgBrandingTab } from './OrgBrandingTab';
 import { OrgIdPsTab } from './OrgIdPsTab';

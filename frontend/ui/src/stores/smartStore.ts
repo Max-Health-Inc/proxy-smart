@@ -10,7 +10,7 @@ import type {
   FhirServerList,
   FhirServerListServersInner,
   HealthcareUser
-} from '@/lib/api-client';
+} from '@max-health-inc/proxy-smart-client';
 interface SmartState {
   // FHIR Servers
   servers: FhirServerListServersInner[];

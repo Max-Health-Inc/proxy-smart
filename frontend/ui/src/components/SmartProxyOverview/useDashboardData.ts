@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../stores/authStore';
 import { useTranslation } from 'react-i18next';
@@ -8,7 +11,7 @@ import type {
     KeycloakConfigResponse,
     SystemStatusResponse,
 } from '../../lib/types/api';
-import type { AccessHealthResponse } from '../../lib/api-client/models/AccessHealthResponse';
+import type { AccessHealthResponse } from '@max-health-inc/proxy-smart-client/models';
 
 // ─── State Types ─────────────────────────────────────────────────────
 

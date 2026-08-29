@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { Button } from '@proxy-smart/shared-ui';
 import {
     Activity,
@@ -7,7 +10,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SystemHealthState, KeycloakConfigState } from './useDashboardData';
-import type { AccessHealthResponse } from '../../lib/api-client/models/AccessHealthResponse';
+import type { AccessHealthResponse } from '@max-health-inc/proxy-smart-client/models';
 
 interface SystemHealthPanelProps {
     systemHealth: SystemHealthState;

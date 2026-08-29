@@ -35,7 +35,7 @@ import {
   UserFederationApi,
   Configuration,
   ResponseError
-} from './api-client';
+} from '@max-health-inc/proxy-smart-client';
 
 // Auth error handler to automatically logout on authentication failures
 let onAuthError: (() => void) | null = null;

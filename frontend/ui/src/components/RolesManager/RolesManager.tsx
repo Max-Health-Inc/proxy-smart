@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Max Health Inc.
+// SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
 import { useState, useEffect, useCallback } from 'react';
 import {
   Alert,
@@ -36,7 +39,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/stores/authStore';
 import { config } from '@/config';
 import { getStoredToken } from '@/lib/apiClient';
-import type { RoleResponse, ScopeSet } from '@/lib/api-client';
+import type { RoleResponse, ScopeSet } from '@max-health-inc/proxy-smart-client';
 
 const NONE_SCOPE_SET = '__none__';
 
