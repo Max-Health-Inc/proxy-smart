@@ -95,6 +95,7 @@ Complete reference for all environment variables used by Proxy Smart.
 |---|---|---|
 | `OPENAI_API_KEY` | API key for embeddings and semantic search | -- |
 | `MCP_ENDPOINT_PATH` | MCP endpoint URL path | `/mcp` |
+| `MCP_PREFAB_UI` | Render MCP tool results as prefab UIs for MCP Apps hosts. Tools stop advertising `outputSchema` when on | `false` |
 
 ## DICOMweb Proxy
 

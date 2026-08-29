@@ -153,6 +153,16 @@ Two tools are hand-written rather than derived:
 
 Tool text is emitted as whichever of JSON and TOON is shorter for that payload (`textFormat: 'auto'`). Admin list endpoints are the high-token responses an agent hits most and are uniform enough for TOON's tabular form to collapse the repeated keys; nested and single-object responses, which TOON handles badly, keep their JSON. `structuredContent` is always JSON.
 
+### Rendered UIs (MCP Apps)
+
+With `MCP_PREFAB_UI=true`, a tool result carries a rendered UI instead of raw JSON in `structuredContent`, and a host that speaks [MCP Apps](https://modelcontextprotocol.io/seps/1865-mcp-apps-interactive-user-interfaces-for-mcp) — VS Code, Claude Desktop, ChatGPT — draws it in a sandboxed iframe. A list becomes a searchable table, a record becomes a detail card. Views are built by [`@maxhealth.tech/prefab`](https://www.npmjs.com/package/@maxhealth.tech/prefab) from the payload alone, so no route writes UI code.
+
+Three things follow from turning it on:
+
+- **The endpoint registers a `ui://` viewer resource.** It is the HTML page the host loads before any tool runs; prefab owns its content, CSP and cache hints, and each tool points at it through `_meta.ui.resourceUri` on its own definition.
+- **Tools stop advertising an `outputSchema`.** A result has one `structuredContent` and it cannot mean two things: the spec requires structured results to conform to a declared output schema, and a view does not. This is why the flag defaults to off — the machine-facing contract is unchanged until a deployment asks for UI.
+- **Nothing changes for the model.** The payload stays in the text block under the encoding described above, and `structuredContent` never enters model context, so the UI costs no tokens. A payload with no sensible view (a scalar, an empty body) keeps its JSON, and a view that fails to build is dropped rather than failing the call.
+
 ### Controlling exposure
 
 Exposure is configured through the admin UI (**AI Tools → MCP Endpoint**) and persisted by [`backend/src/lib/mcp-endpoint-config.ts`](https://github.com/Max-Health-Inc/proxy-smart/blob/main/backend/src/lib/mcp-endpoint-config.ts) — PostgreSQL when `DATABASE_URL` is set, otherwise `DATA_DIR/mcp-endpoint.json`.
@@ -192,6 +202,7 @@ Every call inherits auth, consent, scope enforcement, and capability-aware norma
 | Variable | Description | Default |
 |---|---|---|
 | `MCP_ENDPOINT_PATH` | Path the endpoint is mounted at | `/mcp` |
+| `MCP_PREFAB_UI` | Render tool results as prefab UIs for MCP Apps hosts | `false` |
 | `DATA_DIR` | Where `mcp-endpoint.json` lives when `DATABASE_URL` is unset | — |
 | `DATABASE_URL` | When set, endpoint config is stored in PostgreSQL instead | — |
 

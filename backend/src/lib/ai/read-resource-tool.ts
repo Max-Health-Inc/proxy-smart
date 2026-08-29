@@ -13,7 +13,8 @@
  */
 import type { McpServer } from '@modelcontextprotocol/server'
 import * as z from 'zod'
-import { executeResource as pkgExecuteResource, DISPATCH_APP_KEY } from '@max-health-inc/elysia-mcp'
+import { executeResourceResult, DISPATCH_APP_KEY } from '@max-health-inc/elysia-mcp'
+import { prefabView, uiToolMeta } from '@max-health-inc/elysia-mcp/prefab'
 import {
   getResourceRegistry,
   isResourceRegistryInitialized,
@@ -21,6 +22,7 @@ import {
 } from './tool-registry'
 import type { ResourceMetadata } from './tool-registry'
 import { isResourceExposed } from '../mcp-endpoint-config'
+import { config } from '../../config'
 import { createAdminClient } from '../keycloak-plugin'
 import { getAccessControlInstance } from '../access-control/plugin'
 
@@ -112,10 +114,16 @@ export function registerReadResourceTool(
   const resources = buildResourceIndex(userRoles)
   if (resources.size === 0) return
 
+  // This one tool stands in for every GET route, so it carries the admin lists
+  // — the payloads a table is actually worth drawing. The view is chosen per
+  // call from the resource that answered, not from this tool's own name.
+  const view = config.mcp.ui ? prefabView() : undefined
+
   server.registerTool(
     'read_resource',
     {
       description: buildReadResourceDescription(resources),
+      ...(view ? { _meta: uiToolMeta() } : {}),
       inputSchema: z.object({
               path: z.string().describe('The API path to read (e.g. /admin/users, /admin/smart-apps/:appId)'),
               query: z.record(z.string(), z.string()).optional().describe('Optional query parameters as key-value pairs'),
@@ -154,10 +162,16 @@ export function registerReadResourceTool(
         // This tool collapses every GET route, so it carries the admin list
         // responses — the uniform, high-token payloads TOON's tabular form
         // actually collapses. 'auto' keeps JSON wherever TOON would be larger.
-        const text = await pkgExecuteResource(match.meta, params, tokenRef.current, contextDecorators, {
-          textFormat: 'auto',
-        })
-        return { content: [{ type: 'text' as const, text }] }
+        const { text, structuredContent } = await executeResourceResult(
+          match.meta,
+          params,
+          tokenRef.current,
+          contextDecorators,
+          { textFormat: 'auto', ...(view ? { view } : {}) },
+        )
+        return structuredContent !== undefined
+          ? { content: [{ type: 'text' as const, text }], structuredContent }
+          : { content: [{ type: 'text' as const, text }] }
       } catch (err) {
         return {
           content: [{

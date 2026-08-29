@@ -377,6 +377,13 @@ export const config = {
     get path() {
       return process.env.MCP_ENDPOINT_PATH || '/mcp'
     },
+    // Render tool results as prefab UIs for MCP Apps hosts (VS Code, Claude
+    // Desktop, ChatGPT). Off by default: it moves structuredContent from the
+    // route payload to the rendered view, so tools stop advertising an
+    // outputSchema — see mcp-endpoint.ts.
+    get ui(): boolean {
+      return process.env.MCP_PREFAB_UI === 'true'
+    },
   },
 
   dicomweb: {
