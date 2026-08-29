@@ -1,0 +1,108 @@
+# SPDX-FileCopyrightText: Max Health Inc.
+# SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
+
+name: Publish packages
+
+# Publishes this repo's publishable workspace packages to GitHub Packages.
+#
+# RELEASING = THE VERSION IN package.json. scripts/version.js keeps every workspace
+# on the root version, so a release publishes them together; a run whose version is
+# already on the registry publishes nothing and says so, making an ordinary merge a
+# safe no-op rather than a red build.
+#
+# Which packages: anything with `"private": false`. The CLI and the API client are
+# the two that consumers install; auth, app-store and elysia-mcp are marked
+# publishable but are only consumed in-tree today, so they publish too and cost
+# nothing extra.
+#
+# SCOPE MUST MATCH THE OWNING ORG. GitHub Packages rejects a package whose npm scope
+# is not the org that owns the repository, so from Max-Health-Inc/proxy-smart only
+# `@max-health-inc/*` can go out. `@proxy-smart/*` packages are skipped with a note
+# rather than failing the run — the check compares against the repository owner at
+# runtime, so they start publishing on their own if either the scope or the owning
+# org changes to agree.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publish-packages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup-bun-version
+
+      - uses: ./.github/actions/bun-install
+        with:
+          token: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: https://npm.pkg.github.com
+          scope: '@max-health-inc'
+
+      # The API client does not exist in a checkout — it is generated from the
+      # backend's OpenAPI spec and gitignored, so it has to be produced before it
+      # can be published.
+      - name: Generate and build clients
+        env:
+          GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+        run: |
+          pip install --break-system-packages openapi-ts-fetch==0.2.2
+          cd backend && bun run export-openapi && cd ..
+          bun run generate:clients
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          OWNER_SCOPE: '@${{ github.repository_owner }}'
+        run: |
+          set -euo pipefail
+          OWNER_SCOPE=$(echo "$OWNER_SCOPE" | tr '[:upper:]' '[:lower:]')
+          PUBLISHED=0 SKIPPED=0 MISMATCHED=0
+
+          for dir in packages/*/; do
+            [ -f "${dir}package.json" ] || continue
+            PRIVATE=$(node -p "require('./${dir}package.json').private === true")
+            [ "$PRIVATE" = "false" ] || continue
+
+            NAME=$(node -p "require('./${dir}package.json').name")
+            VERSION=$(node -p "require('./${dir}package.json').version")
+            SCOPE="${NAME%%/*}"
+
+            if [ "$SCOPE" != "$OWNER_SCOPE" ]; then
+              echo "- \`$NAME\` skipped: scope \`$SCOPE\` is not \`$OWNER_SCOPE\`, which GitHub Packages requires." >> "$GITHUB_STEP_SUMMARY"
+              MISMATCHED=$((MISMATCHED+1))
+              continue
+            fi
+
+            # `npm view` exits non-zero for an unpublished version — that is the
+            # success path here, so swallow it and test the captured output.
+            FOUND=$(npm view "$NAME@$VERSION" version --registry=https://npm.pkg.github.com 2>/dev/null || true)
+            if [ -n "$FOUND" ]; then
+              echo "- \`$NAME@$VERSION\` already published." >> "$GITHUB_STEP_SUMMARY"
+              SKIPPED=$((SKIPPED+1))
+              continue
+            fi
+
+            echo "Publishing $NAME@$VERSION"
+            (cd "$dir" && npm publish)
+            echo "- \`$NAME@$VERSION\` published." >> "$GITHUB_STEP_SUMMARY"
+            PUBLISHED=$((PUBLISHED+1))
+          done
+
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$PUBLISHED published, $SKIPPED already current, $MISMATCHED skipped on scope." >> "$GITHUB_STEP_SUMMARY"
