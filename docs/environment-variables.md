@@ -97,6 +97,16 @@ Complete reference for all environment variables used by Proxy Smart.
 | `MCP_ENDPOINT_PATH` | MCP endpoint URL path | `/mcp` |
 | `MCP_PREFAB_UI` | Render MCP tool results as prefab UIs for MCP Apps hosts. Tools stop advertising `outputSchema` when on | `false` |
 
+## App Store
+
+| Variable | Description | Default |
+|---|---|---|
+| `APP_STORE_SHOW_ADMIN` | Show the Admin link in the app store header. The store is a public page and the console only works for a staff admin, so it is hidden unless a deployment asks for it | `false` |
+
+Replaces `APP_STORE_HIDE_ADMIN`, which defaulted to SHOWING the link: a deployment that set
+nothing published a link to the staff console on a public page. Set `APP_STORE_SHOW_ADMIN=true`
+to get the old behaviour back on an internal deployment.
+
 ## DICOMweb Proxy
 
 | Variable | Description | Default |

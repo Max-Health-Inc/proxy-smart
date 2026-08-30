@@ -166,9 +166,15 @@
       <a href="/" class="brand"><img src="/proxy-smart.svg" alt="Proxy Smart"><span>Proxy Smart</span></a>
       <div class="links">
         <a href="/">Home</a>
-        <a href="/webapp/" id="adminLink">Admin</a>
+        <a href="/webapp/" id="adminLink" style="display:none">Admin</a>
       </div>
-      <script>if(window.__APP_STORE_HIDE_ADMIN__)document.getElementById('adminLink').style.display='none'</script>
+      <!--
+        Hidden unless the deployment asks for it. This is a PUBLIC page, and the console behind
+        the link only ever works for a staff admin, so showing it by default invited everyone
+        else to a dead end. Hidden in the markup rather than by script: nothing flashes, and a
+        deployment that sets nothing cannot ship the link by accident.
+      -->
+      <script>if(window.__APP_STORE_SHOW_ADMIN__)document.getElementById('adminLink').style.display=''</script>
     </div>
   </header>
 

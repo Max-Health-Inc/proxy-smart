@@ -39,6 +39,23 @@ export function getAttr(attrs: Record<string, string | string[]> | undefined, ke
 }
 
 /**
+ * Read `patient_facing` off a Keycloak client. Client attributes are plain strings, user
+ * attributes are arrays; `getAttr` is what knows the difference. Anything else is `undefined`,
+ * which means passthrough — including the empty string an admin clear writes.
+ *
+ * Lives here, beside `getAttr`, because both readers of this attribute need it and the second
+ * one used to inline the comparison instead. That copy is how the original bug survived: the
+ * cache indexed the raw value (`'true'[0]` is `'t'`), matching neither branch, so every client
+ * fell through to passthrough and no app got the role it registered for.
+ */
+export function parsePatientFacing(
+  attrs: Record<string, string | string[]> | undefined,
+): boolean | undefined {
+  const raw = getAttr(attrs, 'patient_facing')
+  return raw === 'true' ? true : raw === 'false' ? false : undefined
+}
+
+/**
  * Fetch the actual scope names assigned to a client via the Keycloak
  * `default-client-scopes` / `optional-client-scopes` sub-resources.
  *
@@ -128,9 +145,7 @@ export async function enrichClient(
     requiredRoles: getAttr(fullClient.attributes, 'required_roles')?.split(',').filter(Boolean) || [],
 
     // fhirUser resolution
-    patientFacing: getAttr(fullClient.attributes, 'patient_facing') === 'true' ? true
-      : getAttr(fullClient.attributes, 'patient_facing') === 'false' ? false
-      : undefined,
+    patientFacing: parsePatientFacing(fullClient.attributes),
 
     // Consent & scope settings
     consentRequired: fullClient.consentRequired ?? false,

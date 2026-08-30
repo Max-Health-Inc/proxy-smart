@@ -13,6 +13,7 @@
  *   handleAuthorize,
  *   handleCallback,
  *   handlePatientSelect,
+ *   handleIdentitySelect,
  *   enrichTokenResponse,
  *   enrichIntrospection,
  *   getRewrittenRedirectUri,
@@ -60,7 +61,7 @@ export {
 export { signLaunchCode, verifyLaunchCode, toLaunchCodeOptions, type LaunchCodeServiceOptions, type LaunchCodeConfig } from './launch-code'
 
 // ─── Redirect URI Validation ──────────────────────────────────────────────────
-export { isRedirectUriRegistered, resolvePostLogoutUri, type GetRegisteredRedirectUris } from './redirect-uri'
+export { isRedirectUriRegistered, resolvePostLogoutUri, resolveClientHomeUrl, type GetRegisteredRedirectUris } from './redirect-uri'
 
 export {
   isCimdClientId,
@@ -86,13 +87,26 @@ export {
 export {
   handleCallback,
   handlePatientSelect,
+  handleIdentitySelect,
   isPractitioner,
   ACCOUNT_NOT_LINKED_MESSAGE,
   PRACTITIONER_REQUIRED_MESSAGE,
+  DEFAULT_IDENTITY_PICKER_PATH,
   type CallbackParams,
   type CallbackHandlerDeps,
   type CallbackResult,
 } from './callback-handler'
+
+// ─── Identity Choice ────────────────────────────────────────────────────────
+export {
+  chooseIdentity,
+  candidatesForScopes,
+  isOfferedIdentity,
+  IDENTITY_TYPES,
+  type IdentityCandidate,
+  type IdentityChoice,
+  type IdentityType,
+} from './identity-choice'
 
 // ─── Token Enricher ─────────────────────────────────────────────────────────
 export {

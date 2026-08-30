@@ -59,11 +59,18 @@ export interface DiscoveredApp {
     source: 'filesystem' | 'registered'
 }
 
-/** Serve app store UI, optionally injecting config globals (e.g. hide admin link) */
+/**
+ * Serve the app store UI, revealing the admin link only where the deployment asks for it.
+ *
+ * Opt IN, not opt out. `APP_STORE_HIDE_ADMIN` defaulted to showing, so every deployment that
+ * never set it published a link to the staff console on a public page — production included,
+ * for everyone browsing the store. The console is guarded, so nothing leaked; what it offered
+ * a patient or clinician was a door that could only ever refuse them.
+ */
 function serveAppStoreUi(): Response {
     const html = readFileSync(require.resolve('@proxy-smart/app-store/ui'), 'utf-8')
-    if (process.env.APP_STORE_HIDE_ADMIN === 'true') {
-        const injected = html.replace('<head>', '<head><script>window.__APP_STORE_HIDE_ADMIN__=true</script>')
+    if (process.env.APP_STORE_SHOW_ADMIN === 'true') {
+        const injected = html.replace('<head>', '<head><script>window.__APP_STORE_SHOW_ADMIN__=true</script>')
         return new Response(injected, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     }
     return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } })

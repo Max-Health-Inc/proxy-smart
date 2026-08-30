@@ -204,6 +204,11 @@ export async function handleAuthorize(
       codeChallengeMethod: params.code_challenge_method,
       aud: aud || undefined,
       needsPatientPicker: standaloneLaunch && !resolvedLaunchContext?.patient,
+      // The launch KIND, kept because it outlives this request and the identity choice at callback
+      // time reads it: an EHR launch means the human is here in a clinical capacity.
+      ehrLaunch: !!resolvedLaunchContext,
+      // Kept so an interstitial can honour `prompt=none` rather than interacting anyway.
+      prompt: params.prompt,
       createdAt: Date.now(),
     }
 

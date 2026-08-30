@@ -24,6 +24,7 @@ import { enrichClient, ensureScopesExist, replaceClientScopes, assignResourceInd
 import { BACKEND_SERVICE_DEFAULT_SCOPES, STANDARD_OIDC_DEFAULT_SCOPES } from '@/lib/oauth-scopes'
 import { invalidateClientConfig } from '@/lib/smart-client-config-cache'
 import { config } from '@/config'
+import { resolveClientHomeUrl } from '@proxy-smart/auth'
 import * as crypto from 'crypto'
 
 /**
@@ -37,6 +38,15 @@ function withProxyCallback(redirectUris: string[], isBackendService: boolean): s
   if (isBackendService) return redirectUris
   const proxyCallback = `${config.baseUrl}/auth/smart-callback`
   return redirectUris.includes(proxyCallback) ? redirectUris : [...redirectUris, proxyCallback]
+}
+
+/**
+ * The client's Home URL, derived from its own redirect URIs. Keycloak's error page offers it as
+ * "Back to application"; unset, that link fell back to the proxy's origin for every client.
+ * Admin-created apps carry no RFC 7591 `client_uri`, so the redirect origin is all there is.
+ */
+function homeUrlFor(redirectUris: readonly string[] | undefined): string | undefined {
+  return resolveClientHomeUrl({ redirectUris, proxyBaseUrl: config.baseUrl })
 }
 import type KcAdminClient from '@keycloak/keycloak-admin-client'
 import type ClientRepresentation from '@keycloak/keycloak-admin-client/lib/defs/clientRepresentation'
@@ -247,6 +257,7 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
         protocol: 'openid-connect',
         publicClient: isPublicClient,
         redirectUris: withProxyCallback(body.redirectUris || [], isBackendService),
+        ...(homeUrlFor(body.redirectUris) && { baseUrl: homeUrlFor(body.redirectUris) }),
         webOrigins: body.webOrigins || [],
         attributes: {
           'smart_app': 'true',
@@ -660,6 +671,8 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           body.redirectUris ?? existing.redirectUris ?? [],
           existing.serviceAccountsEnabled === true && !existing.standardFlowEnabled,
         ),
+        // Keep a Home URL an operator set by hand; supply one only where none exists.
+        baseUrl: existing.baseUrl || homeUrlFor(body.redirectUris ?? existing.redirectUris),
         webOrigins: body.webOrigins ?? existing.webOrigins,
         attributes: {
           ...existing.attributes,

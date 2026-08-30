@@ -12,6 +12,15 @@ import type { LaunchSession, SmartProxyConfig, SmartProxyLogger, SmartProxyResul
 import type { ILaunchContextStore } from './stores/interface'
 import { extractPatientFromFhirUser, getFhirUserResourceType } from './fhir-user'
 import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
+import { chooseIdentity, isOfferedIdentity, type IdentityCandidate } from './identity-choice'
+import { parseScopes } from './smart-scopes'
+
+/**
+ * The identity picker is the patient picker's bundle in a second mode, rather than a second app:
+ * it needs the same session/code/aud plumbing, the same error screens and the same brand theming,
+ * and a separate Vite package would have been a copy of all of it.
+ */
+export const DEFAULT_IDENTITY_PICKER_PATH = '/patient-picker/?choose=identity'
 
 export interface CallbackParams {
   state?: string
@@ -33,6 +42,16 @@ export interface CallbackHandlerDeps {
    * (e.g. because fhirUser is "Patient/123"), the picker is skipped.
    */
   autoResolvePatient?: (session: LaunchSession, params: CallbackParams) => Promise<string | null>
+  /** Path for the identity picker page (default: "/patient-picker/?choose=identity") */
+  identityPickerPath?: string
+  /**
+   * The identities a `Person` fhirUser links to, for the launch to pick one of.
+   *
+   * Injected because reading them is a FHIR call and this package makes none. Omitted, a Person
+   * falls through to the token endpoint exactly as before, so a consumer that has not wired this
+   * is unchanged rather than broken.
+   */
+  resolveIdentities?: (session: LaunchSession) => Promise<IdentityCandidate[]>
   /**
    * Look up the redirect URIs registered for a client (RFC 6749 §3.1.2.3).
    * Defense in depth: re-validate the session's stored `clientRedirectUri`
@@ -211,19 +230,98 @@ export async function handleCallback(
   }
 
   /*
-   * A PERSON IS DEFERRED, NOT REFUSED. SMART permits `fhirUser` to name a Person — the spec's
-   * case for "the authorized representative for >1 patients" — which is an identity rather than
-   * a patient, so `extractPatientFromFhirUser` cannot place it and the practitioner gate below
-   * would refuse it. The token endpoint already resolves it per client
-   * (`resolveFhirUserForClient` + the app's `patientFacing` flag) and derives `patient` from the
-   * result, so let the launch reach it. Refusing here failed EVERY patient whose identity is a
-   * Person, in every patient-facing app, with a message about practitioner accounts.
+   * A PERSON NAMES THE HUMAN, NOT THE IDENTITY THIS LAUNCH IS FOR. SMART permits `fhirUser` to
+   * name a Person, and ours always does: one Person per human, linking to their Patient and, when
+   * they hold a practitioner seat, their Practitioner. Something has to turn that into the single
+   * concrete reference the app receives.
+   *
+   * Resolved HERE, while there is still a browser to ask. The token endpoint cannot ask anyone —
+   * which is why the version that resolved there had to guess from `patient_facing`, an attribute
+   * no dynamic registration writes, and handed every DCR client the raw Person instead.
+   *
+   * `chooseIdentity` answers from the request wherever the request answers it, so nobody is
+   * prompted for being only a patient. A prompt happens only when a human genuinely holds more
+   * than one usable identity and the launch did not say which.
+   */
+  let identitySettled = false
+  const fhirUserIsPerson = getFhirUserResourceType(session.fhirUser ?? '') === 'Person'
+
+  if (fhirUserIsPerson && deps.resolveIdentities) {
+    // A failure to read the Person must not fail the launch: it falls through to the deferral
+    // below, which is exactly the behaviour before any of this existed.
+    const candidates = await deps.resolveIdentities(session).catch((error: unknown) => {
+      logger?.warn('SMART callback: could not read the identities on the Person', {
+        sessionKey: sessionKey.slice(0, 8) + '...',
+        fhirUser: session.fhirUser,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      return [] as IdentityCandidate[]
+    })
+
+    const choice = chooseIdentity(candidates, session.scope, {
+      patientContextEstablished: !!session.patient,
+      ehrLaunch: !!session.ehrLaunch,
+    })
+
+    /*
+     * `prompt=none` means the client will accept NO user interaction (OIDC Core 3.1.2.6). So a
+     * choice that would have been asked is not asked: the launch falls through to the deferral
+     * below, which is what happened before any of this existed. Silent, and never a picker the
+     * client said it could not tolerate.
+     */
+    const mayInteract = !parseScopes(session.prompt).has('none')
+
+    if (choice.action === 'resolved') {
+      // A Patient identity IS the patient context, so a standalone launch is complete here and
+      // never reaches the picker.
+      const patient = extractPatientFromFhirUser(choice.identity.reference)
+      store.update(sessionKey, {
+        fhirUser: choice.identity.reference,
+        needsIdentityPicker: false,
+        ...(patient && !session.patient ? { patient, needsPatientPicker: false } : {}),
+      })
+      identitySettled = true
+      logger?.info('SMART callback: resolved the launch identity from the request', {
+        sessionKey: sessionKey.slice(0, 8) + '...',
+        fhirUser: choice.identity.reference,
+        clientId: session.clientId,
+      })
+    } else if (choice.action === 'choose' && mayInteract) {
+      const offered = choice.candidates.map((c) => c.reference)
+      store.update(sessionKey, {
+        needsIdentityPicker: true,
+        identityOffered: offered,
+        // The identity picker supersedes the patient one for this launch: choosing a Patient
+        // identity establishes the context, and choosing a Practitioner sends it back through
+        // the gate below on the next pass.
+        needsPatientPicker: false,
+      })
+      logger?.info('SMART callback: asking which identity this launch is for', {
+        sessionKey: sessionKey.slice(0, 8) + '...',
+        offered,
+        clientId: session.clientId,
+      })
+      const pickerUrl = new URL(`${config.baseUrl}${deps.identityPickerPath ?? DEFAULT_IDENTITY_PICKER_PATH}`)
+      pickerUrl.searchParams.set('session', sessionKey)
+      pickerUrl.searchParams.set('code', code)
+      if (session.aud) pickerUrl.searchParams.set('aud', session.aud)
+      return { result: { type: 'redirect', url: pickerUrl.href }, session }
+    }
+  }
+
+  /*
+   * A PERSON IS DEFERRED, NOT REFUSED — the fallback when the identities could not be read, or
+   * when a consumer has not wired `resolveIdentities`. `extractPatientFromFhirUser` cannot place a
+   * Person, so the practitioner gate below would refuse it, and refusing here failed EVERY patient
+   * whose identity is a Person in every patient-facing app, with a message about practitioner
+   * accounts. Letting it reach the token endpoint is strictly better than that.
    */
   const deferPersonResolution =
+    !identitySettled &&
     session.needsPatientPicker &&
     !session.patient &&
     !patientAutoResolved &&
-    getFhirUserResourceType(session.fhirUser ?? '') === 'Person'
+    fhirUserIsPerson
 
   if (deferPersonResolution) {
     store.update(sessionKey, { needsPatientPicker: false })
@@ -235,7 +333,7 @@ export async function handleCallback(
   }
 
   // If still needs picker after auto-resolve attempt, redirect to picker UI
-  if (session.needsPatientPicker && !session.patient && !patientAutoResolved && !deferPersonResolution) {
+  if (session.needsPatientPicker && !session.patient && !patientAutoResolved && !deferPersonResolution && !identitySettled) {
     /*
      * ONLY PRACTITIONERS CHOOSE A PATIENT. The picker is a searchable directory of everyone on the
      * server, so reaching it must require positive evidence of being a clinician — not merely the
@@ -351,4 +449,74 @@ export function handlePatientSelect(
   if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
 
   return { type: 'redirect', url: withIssuer(clientUrl, config).href }
+}
+
+/**
+ * Handle identity picker form submission.
+ *
+ * The chosen reference is checked against what the session offered, and that check is the whole
+ * authorization: the offer was built from the signed-in human's own Person, so anything outside it
+ * is a reference this human was never entitled to be. Without it a session key would be enough to
+ * name any Practitioner on the server and have a token issued as them.
+ */
+export function handleIdentitySelect(
+  params: { session?: string; code?: string; identity?: string },
+  deps: CallbackHandlerDeps,
+): SmartProxyResult {
+  const { config, store, logger } = deps
+
+  if (!params.session || !params.code || !params.identity) {
+    return { type: 'error', status: 400, error: 'invalid_request', error_description: 'Missing required parameters (session, code, identity)' }
+  }
+
+  const session = store.get(params.session)
+  if (!session) {
+    return { type: 'error', status: 400, error: 'invalid_request', error_description: 'Session expired. Please restart the authorization flow.' }
+  }
+
+  const forward = () => {
+    const clientUrl = new URL(session.clientRedirectUri)
+    clientUrl.searchParams.set('code', params.code as string)
+    if (session.clientState) clientUrl.searchParams.set('state', session.clientState)
+    return { type: 'redirect' as const, url: withIssuer(clientUrl, config).href }
+  }
+
+  // Browser back, or a double submit: the choice already stands, so repeat the redirect rather
+  // than refusing something that already succeeded.
+  if (!session.needsIdentityPicker) {
+    logger?.info('Identity selection already completed (duplicate submission)', {
+      sessionKey: params.session.slice(0, 8) + '...',
+      fhirUser: session.fhirUser,
+      clientId: session.clientId,
+    })
+    return forward()
+  }
+
+  if (!isOfferedIdentity(params.identity, session.identityOffered ?? [])) {
+    logger?.warn('Identity selection refused: not one this session offered', {
+      sessionKey: params.session.slice(0, 8) + '...',
+      requested: params.identity,
+      offered: session.identityOffered ?? [],
+      clientId: session.clientId,
+    })
+    return { type: 'error', status: 403, error: 'access_denied', error_description: 'That identity was not offered for this sign-in.' }
+  }
+
+  // A Patient identity IS the patient context, so choosing one completes a standalone launch and
+  // the patient picker must not then ask again.
+  const patient = extractPatientFromFhirUser(params.identity)
+  store.update(params.session, {
+    fhirUser: params.identity,
+    needsIdentityPicker: false,
+    identityOffered: undefined,
+    ...(patient ? { patient, needsPatientPicker: false } : {}),
+  })
+
+  logger?.info('Identity selected in picker', {
+    sessionKey: params.session.slice(0, 8) + '...',
+    fhirUser: params.identity,
+    clientId: session.clientId,
+  })
+
+  return forward()
 }

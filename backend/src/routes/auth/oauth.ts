@@ -11,7 +11,7 @@ import { logger } from '@/lib/logger'
 import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
 import { getSmartClientConfig, getRegisteredRedirectUris } from '@/lib/smart-client-config-cache'
-import { resolveFhirUserForClient } from '@/lib/consent/person-resolver'
+import { resolveFhirUserForClient, identitiesForPerson } from '@/lib/consent/person-resolver'
 import { tokenContextStore } from '@/lib/token-context-store'
 import { hasClientAssertion, translateClientAssertion, ClientAssertionError } from './backend-services'
 import { kcUnavailablePage, authErrorPage } from './smart-templates'
@@ -23,6 +23,11 @@ import { safeCssColor } from '@/lib/brand-color'
 import {
   handleAuthorize,
   handleCallback,
+  handleIdentitySelect,
+  IDENTITY_TYPES,
+  type IdentityCandidate,
+  type IdentityType,
+  type LaunchSession,
   PRACTITIONER_REQUIRED_MESSAGE,
   handlePatientSelect,
   enrichTokenResponse,
@@ -158,6 +163,33 @@ async function validateAudience(aud: string): Promise<string | null> {
 
 // ─── Route Handlers ─────────────────────────────────────────────────────────
 
+/**
+ * The identities behind a `Person` fhirUser, read while the browser is still here.
+ *
+ * The FHIR server is reached DIRECTLY and server-side, with no bearer — the same position the
+ * picker's own patient search is already in, and for the same reason: at this point in the flow
+ * no token exists yet, and the proxy is the one asking rather than the app.
+ *
+ * Every failure answers [], which the callback handler treats as "could not decide" and falls
+ * through to the behaviour that existed before. Reading a Person must never fail a launch.
+ */
+const resolveIdentities = async (session: LaunchSession): Promise<IdentityCandidate[]> => {
+  if (!session.fhirUser || !session.aud) return []
+
+  const segments = new URL(session.aud).pathname.split('/').filter(Boolean)
+  const serverName = segments[segments.length - 2]
+  if (!serverName) return []
+
+  const serverInfo = await getServerInfoByName(serverName)
+  if (!serverInfo) return []
+
+  const identities = await identitiesForPerson(session.fhirUser, serverInfo.url, serverName)
+  return identities
+    .filter((identity): identity is typeof identity & { resourceType: IdentityType } =>
+      IDENTITY_TYPES.includes(identity.resourceType))
+    .map((identity) => ({ reference: identity.reference, resourceType: identity.resourceType }))
+}
+
 export const oauthRoutes = new Elysia({ tags: ['authentication'] })
 
   // ── EHR Launch: issue a signed launch code ────────────────────────────
@@ -231,7 +263,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   .get('/smart-callback', async ({ query, redirect, set }) => {
     const { result, session } = await handleCallback(
       { state: query.state, code: query.code, error: query.error, error_description: query.error_description, session_state: query.session_state },
-      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient, getRegisteredRedirectUris },
+      { config: smartProxyConfig, store: smartStore, logger: smartLogger, autoResolvePatient, getRegisteredRedirectUris, resolveIdentities },
     )
 
     switch (result.type) {
@@ -272,6 +304,60 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   }, {
     query: SmartCallbackQuery,
     detail: { summary: 'SMART Launch Callback', description: 'Receives Keycloak callback during SMART launch flows.', tags: ['authentication'] }
+  })
+
+  // ── Identity picker (→ the same React app, in its identity mode) ──
+  //
+  // Only reached when the signed-in human holds MORE THAN ONE usable identity and the request did
+  // not settle which — a clinician who also has a chart here. Everyone else is resolved silently
+  // in the callback and never sees this.
+  .get('/identity-options', async ({ query, set }) => {
+    const sessionKey = query.session as string | undefined
+    const session = sessionKey ? smartStore.get(sessionKey) : undefined
+    if (!session) {
+      set.status = 401
+      return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
+    }
+
+    /*
+     * Answers ONLY what the callback already offered this session. Nothing is looked up here, so
+     * a session key cannot be used to enumerate identities — unlike the patient directory next
+     * door, which is why that one needs `pickerAllowed` and this one does not.
+     */
+    return {
+      identities: (session.identityOffered ?? []).map((reference) => ({
+        reference,
+        resourceType: reference.split('/')[0] ?? '',
+      })),
+    }
+  }, {
+    detail: { summary: 'Identity Options (Picker)', description: 'The identities this launch session offered, for the identity picker SPA.', tags: ['authentication'] }
+  })
+
+  .post('/identity-select', async ({ body, redirect, set, headers }) => {
+    const { session, code, identity } = body as { session?: string; code?: string; identity?: string }
+    const result = handleIdentitySelect(
+      { session, code, identity },
+      { config: smartProxyConfig, store: smartStore, logger: smartLogger },
+    )
+
+    const isJsonRequest = headers['content-type']?.includes('application/json')
+
+    switch (result.type) {
+      case 'redirect':
+        if (isJsonRequest) {
+          set.status = 200
+          return { redirect_url: result.url }
+        }
+        return redirect(result.url)
+      case 'error':
+        set.status = result.status
+        return { error: result.error, error_description: result.error_description }
+      default:
+        return result.body
+    }
+  }, {
+    detail: { summary: 'Identity Selection', description: 'Records which of the signed-in person’s identities this launch is for.', tags: ['authentication'] }
   })
 
   // ── Patient picker redirect (→ React app at /patient-picker/) ──
