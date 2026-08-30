@@ -728,8 +728,22 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
               ? `${config.baseUrl}/${config.name}/${firstServer.identifier}/${firstServer.metadata.fhirVersion}`
               : ''
 
+            /*
+             * Read the Person UPSTREAM, not back through the proxy with the app's own token.
+             *
+             * Going through fhirBaseUrl re-enters access control, and a patient-scoped grant is
+             * refused there when the token carries no patient context yet — which is exactly the
+             * state this call exists to resolve. The app cannot read the Person that would
+             * establish its context because it has no context, so a Person fhirUser silently
+             * produced no fhirUser and no patient for every patient-facing app.
+             *
+             * The proxy is the one asking, and it only ever follows a link the Person named in
+             * the token's own claim declares, so it resolves against the server directly. The
+             * reference is still handed back re-based on fhirBaseUrl below: what the app sees
+             * does not change, only who performs the lookup.
+             */
             const resolvedFhirUser = await resolveFhirUserForClient(
-              tokenPayload.fhirUser, clientConfig.patientFacing, fhirBaseUrl,
+              tokenPayload.fhirUser, clientConfig.patientFacing, firstServer?.url || fhirBaseUrl,
               firstServer?.identifier || '', `Bearer ${data.access_token}`
             )
             if (resolvedFhirUser) {
