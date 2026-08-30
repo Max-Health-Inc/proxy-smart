@@ -1,17 +1,21 @@
 import { useState, useMemo, useEffect } from "react"
-import { getPickerParams, getPickerError } from "@/lib/picker-params"
-import { submitPatientSelection, fetchBrandContext } from "@/lib/api-client"
+import { getPickerParams, getPickerError, isIdentityMode } from "@/lib/picker-params"
+import { submitPatientSelection, submitIdentitySelection, fetchBrandContext } from "@/lib/api-client"
 import { PatientList } from "@/components/PatientList"
+import { IdentityList } from "@/components/IdentityList"
 import { formatHumanName, AppHeader, Button, onAuthError, useScene } from "@proxy-smart/shared-ui"
-import { UserSearch, AlertTriangle, CheckCircle2, LogIn } from "lucide-react"
-import type { Patient } from "@/lib/api-client"
+import { UserSearch, AlertTriangle, CheckCircle2, LogIn, UserCircle } from "lucide-react"
+import type { Patient, Identity } from "@/lib/api-client"
 import "./index.css"
 
 export default function App() {
   useScene({ defaultScene: "perspective-grid" })
   const params = useMemo(() => getPickerParams(), [])
   const pickerError = useMemo(() => getPickerError(), [])
+  // Which of the two things this launch is choosing. Set by the backend redirect.
+  const identityMode = useMemo(() => isIdentityMode(), [])
   const [selected, setSelected] = useState<Patient | null>(null)
+  const [identity, setIdentity] = useState<Identity | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
 
@@ -72,15 +76,47 @@ export default function App() {
   }
 
   const handleSubmit = async () => {
-    if (!selected?.id) return
     setSubmitting(true)
     try {
-      const redirectUrl = await submitPatientSelection(params.session, params.code, selected.id)
+      const redirectUrl = identityMode
+        ? await submitIdentitySelection(params.session, params.code, identity?.reference ?? "")
+        : await submitPatientSelection(params.session, params.code, selected?.id ?? "")
       window.location.href = redirectUrl
     } catch {
       // Error already reported via reportAuthError → onAuthError bus
       setSubmitting(false)
     }
+  }
+
+  if (identityMode) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader title="Continue as" icon={UserCircle} authenticated={false} maxWidth="max-w-2xl" />
+
+        <main className="max-w-2xl mx-auto px-4 py-6">
+          <div className="mb-6">
+            <p className="text-muted-foreground text-sm">
+              You are both a patient and a clinician here. Choose which of your records this
+              application should be given access to.
+            </p>
+          </div>
+
+          <IdentityList onSelect={setIdentity} selected={identity} />
+
+          {identity && (
+            <Button
+              data-testid="identity-picker-submit"
+              size="lg"
+              className="w-full mt-6"
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? "Continuing..." : "Continue"}
+            </Button>
+          )}
+        </main>
+      </div>
+    )
   }
 
   return (

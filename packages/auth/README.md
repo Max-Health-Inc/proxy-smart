@@ -62,6 +62,35 @@ The proxy replaces the client's `redirect_uri` with its own callback so it can r
 
 `enrichIntrospection(data)` normalizes an introspection response, filling `fhirUser` from a `fhir_user` claim so consumers read one spelling. It leaves inactive tokens untouched.
 
+## Choosing an identity
+
+Our IdP emits `fhirUser` as `Person/<id>`, because one human is one Person. SMART's `fhirUser` is
+single-valued, so something has to turn that Person into the one concrete reference an app
+receives — and guessing is what this replaces.
+
+`chooseIdentity(candidates, scope, shape)` returns an `IdentityChoice`: `none` when the Person
+links to nothing this launch could use, `resolved` when exactly one candidate survives so nobody is
+asked, and `choose` when several do. `candidatesForScopes(candidates, scope, shape)` is the filter
+behind it, answering an EHR launch first because that is a stronger statement about why this human
+is here than the scopes an EHR-launched app also sets.
+
+An `IdentityCandidate` is a `reference` the token can carry verbatim, its `resourceType`, and an
+optional `display` for the picker. `IdentityType` and `IDENTITY_TYPES` name the three the flow can
+use: `Patient`, `Practitioner` and `RelatedPerson`.
+
+`handleIdentitySelect(params, deps)` completes the picker. `isOfferedIdentity(reference, offered)`
+is the whole authorization on that path: the offer was built from the signed-in human's own Person,
+so a reference outside it is one they were never entitled to be. Without that check a session key
+would be enough to name any Practitioner on the server and be issued a token as them. The picker
+lives at `DEFAULT_IDENTITY_PICKER_PATH` unless `identityPickerPath` overrides it.
+
+`isPractitioner(fhirUser)` reports whether a reference is a `Practitioner` or `PractitionerRole`,
+which is what gates patient selection. `SmartErrorReason` distinguishes the two refusals a caller
+must tell apart — `account-not-linked` when the account carries no `fhirUser` at all, and
+`not-a-practitioner` when an identity exists but cannot be placed on a patient.
+`ACCOUNT_NOT_LINKED_MESSAGE` and `PRACTITIONER_REQUIRED_MESSAGE` are the copy for each, exported so
+the picker routes and the gate cannot drift into two explanations of one refusal.
+
 ## Scopes
 
 The scope helpers are pure functions over a `Set<string>` and carry most of the spec reasoning in the package.
@@ -83,6 +112,17 @@ The scope helpers are pure functions over a `Set<string>` and carry most of the 
 Matching replicates Keycloak's, because the proxy has to reach the same verdict Keycloak would or legitimate clients break. That means exact string match, or a **single trailing** `*` matching any suffix after the literal prefix. Only a trailing wildcard counts, never a mid-string glob, so `https://app.example.com/*` cannot match `https://app.example.com.evil/cb`, and a registration without a wildcard stays strictly exact.
 
 `GetRegisteredRedirectUris` is the async source of a client's registered URIs. An empty list rejects every candidate, so an unknown client fails closed.
+
+`resolvePostLogoutUri({ baseUrl, sessionRedirectUri, requested, registered })` decides where the
+browser goes after logout. A session's `clientRedirectUri` was validated at authorize so its origin
+is trusted; anything the caller supplies is not, and an unregistered value falls back to `baseUrl`
+rather than being honoured. That fallback is what stops `/logout` being an open redirect.
+
+`resolveClientHomeUrl({ clientUri, redirectUris, proxyBaseUrl })` finds the app's own home page for
+a link back. RFC 7591 `client_uri` wins; failing that a redirect URI's origin IS the app, since the
+browser is already going there. A wildcard pattern is not a destination and the proxy's own
+callback is not the client, so neither qualifies — and when nothing does the answer is `undefined`,
+which renders no link rather than a wrong one.
 
 ## Client ID Metadata Documents
 

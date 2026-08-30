@@ -43,6 +43,36 @@ export interface LaunchSession {
   /** Whether patient picker is required (standalone launch without pre-set context) */
   needsPatientPicker?: boolean
   /**
+   * Launched from inside an EHR (a `launch` parameter resolved to context).
+   *
+   * Recorded because the launch KIND outlives the request that carried it, and the identity choice
+   * at callback time needs it: an EHR launch means this human is here as a clinician.
+   */
+  ehrLaunch?: boolean
+  /**
+   * The OIDC `prompt` the client asked for.
+   *
+   * Kept so an interstitial can honour `prompt=none`, which says the client will accept no user
+   * interaction at all (OIDC Core 3.1.2.6).
+   */
+  prompt?: string
+  /**
+   * Whether the human signing in has to say WHICH of their identities this launch is for.
+   *
+   * Set only when their Person links to more than one usable identity and the request did not
+   * settle it — a clinician who also has a chart here, opening an app that asked for neither.
+   */
+  needsIdentityPicker?: boolean
+  /**
+   * The identity references that picker offered, e.g. `["Patient/1", "Practitioner/2"]`.
+   *
+   * Kept because the choice comes back in a form POST and must be checked against what was
+   * actually offered. Derived from the signed-in human's own Person, so membership in this list
+   * IS the authorization check — without it a session key would let anyone name any Practitioner
+   * on the server and be issued a token as them.
+   */
+  identityOffered?: string[]
+  /**
    * Set ONLY by the callback gate, once the user was established as a practitioner. The patient
    * search endpoint refuses without it, so a launch session alone does not open the directory.
    */
