@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.6-beta.202608300840.a2036590b] - 2026-08-30
+
+- ✨ Features: 
+  - feat(build): allow builder to supply the commit and fix a source offer to ensure it points to a valid commit; enables version strings to expose the build source commit
+
+- 🔧 Chores & Improvements:
+  - Update version to 0.4.6-beta.202608300840.a2036590b (beta)
+  - Update version to 0.4.6-beta.202608300837.56ff60d6a (beta)
+  - docs: update CHANGELOG.md for PR #1152
+
+- ⚠️ Breaking Changes:
+  - (none)
+
+- 🐛 Bug Fixes:
+  - (none)
+
+- 📚 Documentation:
+  - (none)
+
+**Full Changelog**: https://github.com/proxy-smart/proxy-smart/pull/1154
+
+
 ## [0.4.6-alpha.202608300840.a2036590b] - 2026-08-30
 
 - 🔧 Chores & Improvements: Version stamping on release branches and selective CI hooks
