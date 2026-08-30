@@ -4,8 +4,8 @@
  * consent portal.
  */
 import { describe, it, expect } from 'bun:test'
-import { validateMaxHealthShareConsent } from '@max-health-inc/consent-fhir'
-import { MaxHealthConsentCategoryVSConcepts } from '@max-health-inc/consent-fhir/valuesets/ValueSet-MaxHealthConsentCategoryVS'
+import { validateMaxHealthShareConsent } from '@proxy-smart/consent-fhir'
+import { MaxHealthConsentCategoryVSConcepts } from '@proxy-smart/consent-fhir/valuesets/ValueSet-MaxHealthConsentCategoryVS'
 import {
   buildShareConsent,
   SHL_CONSENT_IDENTIFIER_SYSTEM,

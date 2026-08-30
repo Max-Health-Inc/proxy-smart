@@ -21,12 +21,12 @@
  * Revocation-by-expiry is automatic: the Consent's `provision.period.end` equals
  * the SHL's `expiresAt`, so an expired share is already inactive by period.
  */
-import type { MaxHealthShareConsent } from '@max-health-inc/consent-fhir'
-import { validateMaxHealthShareConsent } from '@max-health-inc/consent-fhir'
+import type { MaxHealthShareConsent } from '@proxy-smart/consent-fhir'
+import { validateMaxHealthShareConsent } from '@proxy-smart/consent-fhir'
 // Subpath import: the generated package exposes individual ValueSets under
 // ./valuesets/* and only the registry at the root, same as the smart-app-launch
 // package this repo already consumes that way (see lib/brand-bundle.ts).
-import { MaxHealthConsentCategoryVSConcepts } from '@max-health-inc/consent-fhir/valuesets/ValueSet-MaxHealthConsentCategoryVS'
+import { MaxHealthConsentCategoryVSConcepts } from '@proxy-smart/consent-fhir/valuesets/ValueSet-MaxHealthConsentCategoryVS'
 import { shlSessionStore, type ShlSession } from '@/lib/shl-session-store'
 import { getServiceAccountToken, getDefaultFhirServerUrl } from '@/lib/shl-service-account'
 import { invalidateConsentCache } from '@/lib/consent/consent-service'
