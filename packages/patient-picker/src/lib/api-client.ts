@@ -100,3 +100,37 @@ export async function submitPatientSelection(session: string, code: string, pati
   })
   return data.redirect_url
 }
+
+// ── Identity Select API ─────────────────────────────────────────────────────
+//
+// The second thing this bundle picks. Same session, same code, same redirect contract as the
+// patient selection above — which is why it lives here rather than in an app of its own.
+
+/** One identity the signed-in human may act as for this launch. */
+export interface Identity {
+  reference: string
+  resourceType: string
+}
+
+/**
+ * The identities this launch offered.
+ *
+ * The backend answers only from what it already put in the session, so nothing is searchable
+ * here — unlike the patient directory, this is a list of the caller's own identities.
+ */
+export async function fetchIdentityOptions(): Promise<Identity[]> {
+  const pickerParams = getPickerParams()
+  const url = new URL("/auth/identity-options", window.location.origin)
+  url.searchParams.set("session", pickerParams?.session ?? "")
+  const data = await apiFetch<{ identities: Identity[] }>(url.href)
+  return data.identities
+}
+
+export async function submitIdentitySelection(session: string, code: string, reference: string): Promise<string> {
+  const data = await apiFetch<PatientSelectResult>("/auth/identity-select", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session, code, identity: reference }),
+  })
+  return data.redirect_url
+}

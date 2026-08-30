@@ -354,7 +354,7 @@ export async function resolveFhirUserForClient(
 async function fetchPerson(
   serverUrl: string,
   personId: string,
-  authHeader: string
+  authHeader?: string
 ): Promise<FhirPerson | null> {
   const url = `${serverUrl}/Person/${personId}`
   
@@ -368,7 +368,9 @@ async function fetchPerson(
       method: 'GET',
       headers: {
         'Accept': 'application/fhir+json',
-        'Authorization': authHeader
+        // Omitted at launch time, when no token exists yet. The upstream is reached server-side
+        // and directly, exactly as the picker's own patient search already does.
+        ...(authHeader ? { Authorization: authHeader } : {}),
       }
     })
     
@@ -677,4 +679,35 @@ export async function verifyPatientLinkOnly(
     verified: true, 
     reason: `Patient ${patientId} verified via Person link (IAL: ${resolution.validatedPatient?.assuranceLevel})` 
   }
+}
+
+/**
+ * The identities a `Person` fhirUser links to, for the launch to choose between.
+ *
+ * Reuses the same cache and the same reader the token endpoint uses — this is the SAME question
+ * asked earlier, while there is still a browser to ask a human. Answering it at the token endpoint
+ * is what forced a guess from `patient_facing`.
+ *
+ * Returns [] for anything that is not a Person, or a Person that could not be read. The caller
+ * treats that as "could not decide" and falls through to the behaviour that existed before.
+ */
+export async function identitiesForPerson(
+  fhirUser: string,
+  serverUrl: string,
+  serverName: string,
+  authHeader?: string
+): Promise<ResolvedFhirIdentity[]> {
+  const personId = extractPersonId(fhirUser)
+  if (!personId) return []
+
+  const cached = getCachedPerson(serverName, personId)
+  let person: FhirPerson | null
+  if (cached !== undefined) {
+    person = cached
+  } else {
+    person = await fetchPerson(serverUrl, personId, authHeader)
+    setCachedPerson(serverName, personId, person, getIalConfig().cacheTtl)
+  }
+
+  return person ? extractLinkedIdentities(person) : []
 }
