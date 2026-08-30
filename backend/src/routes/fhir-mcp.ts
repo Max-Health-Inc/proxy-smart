@@ -58,8 +58,11 @@ function handlerFor(serverId: string): McpHandler {
     cors: { origin: allowedOrigin },
     createServer: async (token) => {
       // Proven good before it is forwarded to FHIR as this request's identity.
+      // Audience unenforced, as on the FHIR proxy this wraps (#355): the same tools
+      // over the same server, so a stricter door here refuses only clients that can
+      // do the identical operations over REST with the identical token.
       try {
-        await validateToken(token ?? '')
+        await validateToken(token ?? '', { enforceAudience: false })
       } catch {
         throw new McpUnauthorizedError('Invalid or expired token')
       }

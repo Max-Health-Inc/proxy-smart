@@ -314,7 +314,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
           }),
 
           // fhirUser resolution mode
-          ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
+          // Empty string clears it, matching the other attributes here, and enrichment reads
+          // anything that is not 'true'/'false' back as undefined — the passthrough default.
+          ...(body.patientFacing !== undefined && {
+            'patient_facing': body.patientFacing === null ? '' : String(body.patientFacing)
+          }),
 
           // Session timeout overrides
           ...(body.clientSessionIdleTimeout !== undefined && { 'client.session.idle.timeout': String(body.clientSessionIdleTimeout) }),
@@ -690,7 +694,11 @@ export const smartAppsRoutes = new Elysia({ prefix: '/smart-apps', tags: ['smart
             'required_roles': body.requiredRoles.length > 0 ? body.requiredRoles.join(',') : ''
           }),
           // fhirUser resolution mode
-          ...(body.patientFacing !== undefined && { 'patient_facing': String(body.patientFacing) }),
+          // Empty string clears it, matching the other attributes here, and enrichment reads
+          // anything that is not 'true'/'false' back as undefined — the passthrough default.
+          ...(body.patientFacing !== undefined && {
+            'patient_facing': body.patientFacing === null ? '' : String(body.patientFacing)
+          }),
           // Metadata fields
           ...(body.launchUrl !== undefined && { 'launch_url': body.launchUrl }),
           ...(body.logoUri !== undefined && { 'logo_uri': body.logoUri }),
