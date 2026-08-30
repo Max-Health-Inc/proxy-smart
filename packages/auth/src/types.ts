@@ -43,6 +43,20 @@ export interface LaunchSession {
   /** Whether patient picker is required (standalone launch without pre-set context) */
   needsPatientPicker?: boolean
   /**
+   * Launched from inside an EHR (a `launch` parameter resolved to context).
+   *
+   * Recorded because the launch KIND outlives the request that carried it, and the identity choice
+   * at callback time needs it: an EHR launch means this human is here as a clinician.
+   */
+  ehrLaunch?: boolean
+  /**
+   * The OIDC `prompt` the client asked for.
+   *
+   * Kept so an interstitial can honour `prompt=none`, which says the client will accept no user
+   * interaction at all (OIDC Core 3.1.2.6).
+   */
+  prompt?: string
+  /**
    * Whether the human signing in has to say WHICH of their identities this launch is for.
    *
    * Set only when their Person links to more than one usable identity and the request did not

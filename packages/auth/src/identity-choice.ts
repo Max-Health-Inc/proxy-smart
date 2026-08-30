@@ -49,6 +49,21 @@ export interface IdentityCandidate {
   display?: string
 }
 
+/** What kind of launch this is, which is the context the choice is read from. */
+export interface LaunchShape {
+  /** An EHR launch code already named a patient, so the context was not established here. */
+  patientContextEstablished?: boolean
+  /**
+   * Launched from inside an EHR.
+   *
+   * The launch context is itself the answer: the EHR started this app for a human working in it,
+   * on a patient who is somebody else. That human is here as a clinician, so a Practitioner they
+   * hold is the identity — reading the launch, rather than guessing. Prompting instead would
+   * interrupt a flow SMART expects to be seamless, for a question the launch already answered.
+   */
+  ehrLaunch?: boolean
+}
+
 export type IdentityChoice =
   /** The Person links to nothing this launch could use. */
   | { action: 'none' }
@@ -71,9 +86,17 @@ export type IdentityChoice =
 export function candidatesForScopes(
   candidates: readonly IdentityCandidate[],
   scope: string | undefined,
-  patientContextEstablished = false,
+  shape: LaunchShape = {},
 ): IdentityCandidate[] {
-  if (!isStandaloneLaunch(parseScopes(scope), patientContextEstablished)) return [...candidates]
+  // An EHR launch is answered first, because it is the strongest statement about why this human
+  // is here — stronger than the scopes, which an EHR-launched app also sets.
+  if (shape.ehrLaunch) {
+    const practitioners = candidates.filter((c) => c.resourceType === 'Practitioner')
+    if (practitioners.length > 0) return practitioners
+    return [...candidates]
+  }
+
+  if (!isStandaloneLaunch(parseScopes(scope), !!shape.patientContextEstablished)) return [...candidates]
   const patients = candidates.filter((c) => c.resourceType === 'Patient')
   return patients.length > 0 ? patients : [...candidates]
 }
@@ -82,9 +105,9 @@ export function candidatesForScopes(
 export function chooseIdentity(
   candidates: readonly IdentityCandidate[],
   scope: string | undefined,
-  patientContextEstablished = false,
+  shape: LaunchShape = {},
 ): IdentityChoice {
-  const usable = candidatesForScopes(candidates, scope, patientContextEstablished)
+  const usable = candidatesForScopes(candidates, scope, shape)
   const [first] = usable
   if (!first) return { action: 'none' }
   if (usable.length === 1) return { action: 'resolved', identity: first }

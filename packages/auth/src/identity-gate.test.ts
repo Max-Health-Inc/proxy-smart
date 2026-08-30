@@ -86,6 +86,35 @@ describe('identity gate', () => {
     expect(updated?.identityOffered).toEqual(['Patient/1', 'Practitioner/2'])
   })
 
+  test('never interacts when the client sent prompt=none', async () => {
+    // OIDC Core 3.1.2.6: the client said it will accept no user interaction. So the choice that
+    // would have been asked is not asked, and the launch falls through silently.
+    const { store, deps } = setup(
+      { scope: 'openid fhirUser user/Patient.rs', prompt: 'none' },
+      [PATIENT, PRACTITIONER],
+    )
+
+    const { result } = await callback(deps)
+
+    expect(result.type === 'redirect' && result.url).toContain('app.example.com/callback')
+    expect(result.type === 'redirect' && result.url).not.toContain('choose=identity')
+    expect(store.get('session-key')?.needsIdentityPicker).toBeFalsy()
+  })
+
+  test('an EHR launch resolves to the Practitioner without interrupting it', async () => {
+    const { store, deps } = setup(
+      { scope: 'openid fhirUser launch', ehrLaunch: true, patient: '55' },
+      [PATIENT, PRACTITIONER],
+    )
+
+    const { result } = await callback(deps)
+
+    expect(result.type === 'redirect' && result.url).not.toContain('choose=identity')
+    expect(store.get('session-key')?.fhirUser).toBe('Practitioner/2')
+    // The EHR's patient stands: resolving the user must not overwrite the launch context.
+    expect(store.get('session-key')?.patient).toBe('55')
+  })
+
   test('a failure to read the Person falls through instead of failing the launch', async () => {
     // The behaviour that existed before any of this: a Person is deferred, never refused.
     const { deps } = setup({ scope: 'openid fhirUser launch/patient' }, new Error('FHIR unreachable'))

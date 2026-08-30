@@ -13,6 +13,7 @@ import type { ILaunchContextStore } from './stores/interface'
 import { extractPatientFromFhirUser, getFhirUserResourceType } from './fhir-user'
 import { isRedirectUriRegistered, type GetRegisteredRedirectUris } from './redirect-uri'
 import { chooseIdentity, isOfferedIdentity, type IdentityCandidate } from './identity-choice'
+import { parseScopes } from './smart-scopes'
 
 /**
  * The identity picker is the patient picker's bundle in a second mode, rather than a second app:
@@ -257,7 +258,18 @@ export async function handleCallback(
       return [] as IdentityCandidate[]
     })
 
-    const choice = chooseIdentity(candidates, session.scope, !!session.patient)
+    const choice = chooseIdentity(candidates, session.scope, {
+      patientContextEstablished: !!session.patient,
+      ehrLaunch: !!session.ehrLaunch,
+    })
+
+    /*
+     * `prompt=none` means the client will accept NO user interaction (OIDC Core 3.1.2.6). So a
+     * choice that would have been asked is not asked: the launch falls through to the deferral
+     * below, which is what happened before any of this existed. Silent, and never a picker the
+     * client said it could not tolerate.
+     */
+    const mayInteract = !parseScopes(session.prompt).has('none')
 
     if (choice.action === 'resolved') {
       // A Patient identity IS the patient context, so a standalone launch is complete here and
@@ -274,7 +286,7 @@ export async function handleCallback(
         fhirUser: choice.identity.reference,
         clientId: session.clientId,
       })
-    } else if (choice.action === 'choose') {
+    } else if (choice.action === 'choose' && mayInteract) {
       const offered = choice.candidates.map((c) => c.reference)
       store.update(sessionKey, {
         needsIdentityPicker: true,

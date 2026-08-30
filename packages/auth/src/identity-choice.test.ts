@@ -32,13 +32,25 @@ describe('candidatesForScopes', () => {
   })
 
   test('a launch code in context means the context was not established here', () => {
-    expect(candidatesForScopes([patient, practitioner], 'launch/patient', true))
+    expect(candidatesForScopes([patient, practitioner], 'launch/patient', { patientContextEstablished: true }))
       .toEqual([patient, practitioner])
   })
 
   test('a request that asked for no patient context keeps every candidate', () => {
     expect(candidatesForScopes([patient, practitioner], 'user/Patient.rs openid'))
       .toEqual([patient, practitioner])
+  })
+
+  test('an EHR launch takes the Practitioner, because that is what the launch means', () => {
+    // The EHR started this app for someone working in it, on a patient who is somebody else.
+    // Prompting here would interrupt a flow SMART expects to be seamless, to ask a question the
+    // launch already answered.
+    expect(candidatesForScopes([patient, practitioner], 'launch openid', { ehrLaunch: true }))
+      .toEqual([practitioner])
+  })
+
+  test('an EHR launch by someone with no Practitioner keeps every candidate', () => {
+    expect(candidatesForScopes([patient], 'launch openid', { ehrLaunch: true })).toEqual([patient])
   })
 
   test('keeps everything when patient context is wanted but no Patient exists', () => {
@@ -60,9 +72,14 @@ describe('chooseIdentity', () => {
       .toEqual({ action: 'resolved', identity: patient })
   })
 
-  test('asks in an EHR launch, rather than assuming the clinician is the patient', () => {
+  test('asks when a launch scope is present but no EHR launch resolved', () => {
     expect(chooseIdentity([patient, practitioner], 'launch openid'))
       .toEqual({ action: 'choose', candidates: [patient, practitioner] })
+  })
+
+  test('never asks during an EHR launch', () => {
+    expect(chooseIdentity([patient, practitioner], 'launch openid', { ehrLaunch: true }))
+      .toEqual({ action: 'resolved', identity: practitioner })
   })
 
   test('asks when the request leaves it genuinely open', () => {
