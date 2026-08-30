@@ -131,7 +131,7 @@ export const CreateSmartAppRequest = t.Object({
   requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
   
   // fhirUser resolution
-  patientFacing: t.Optional(t.Boolean({ description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. If undefined, uses raw fhirUser as-is (backward compat).' })),
+  patientFacing: t.Optional(t.Union([t.Boolean(), t.Null()], { description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. Null clears it, restoring the raw-passthrough default for an app that resolves the Person itself or serves both roles. Omit to leave unchanged.' })),
   
   // Consent & scope settings
   consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
@@ -198,7 +198,7 @@ export const UpdateSmartAppRequest = t.Object({
   requiredRoles: t.Optional(t.Array(t.String(), { description: 'Realm roles required to access this app. Users without these roles are denied at login.' })),
   
   // fhirUser resolution
-  patientFacing: t.Optional(t.Boolean({ description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. If undefined, uses raw fhirUser as-is (backward compat).' })),
+  patientFacing: t.Optional(t.Union([t.Boolean(), t.Null()], { description: 'If true, resolves fhirUser to Patient (from Person links). If false, resolves to Practitioner. Null clears it, restoring the raw-passthrough default for an app that resolves the Person itself or serves both roles. Omit to leave unchanged.' })),
   
   // Consent & scope settings
   consentRequired: t.Optional(t.Boolean({ description: 'Whether the user must explicitly consent to scopes at login' })),
