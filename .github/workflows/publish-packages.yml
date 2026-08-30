@@ -40,6 +40,9 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Tags are the release identity below; a shallow checkout has none.
+          fetch-depth: 0
 
       - uses: ./.github/actions/setup-bun-version
 
@@ -66,10 +69,37 @@ jobs:
           cd backend && bun run export-openapi && cd ..
           bun run generate:clients
 
+      # The release version, from the tag on this commit rather than from a manifest.
+      #
+      # The tag is created by the release, so it names the release; the version in
+      # package.json is only there because the automation commits it back, which is what
+      # makes develop, test and main rewrite the same lines and conflict. While it is still
+      # committed the two agree and this changes nothing — it is what lets the commit stop.
+      #
+      # Falls back to the manifest when no tag points here, so a manual run still publishes
+      # what a checkout says it is.
+      - name: Resolve release version
+        id: release
+        run: |
+          set -euo pipefail
+          # A commit can in principle carry more than one channel's tag, and this job only
+          # ever runs on main, so a RELEASE tag wins over any prerelease one that reached it.
+          TAGS=$(git tag --points-at HEAD --sort=-creatordate | grep -E '^v[0-9]' || true)
+          TAG=$(grep -- '-RELEASE\.' <<< "$TAGS" | head -1 || true)
+          [ -n "$TAG" ] || TAG=$(head -1 <<< "$TAGS")
+          if [ -n "$TAG" ]; then
+            echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+            echo "Release version ${TAG#v} (from tag $TAG)"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+            echo "No release tag on this commit - using each manifest's own version"
+          fi
+
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
           OWNER_SCOPE: '@${{ github.repository_owner }}'
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
           set -euo pipefail
           OWNER_SCOPE=$(echo "$OWNER_SCOPE" | tr '[:upper:]' '[:lower:]')
@@ -81,7 +111,7 @@ jobs:
             [ "$PRIVATE" = "false" ] || continue
 
             NAME=$(node -p "require('./${dir}package.json').name")
-            VERSION=$(node -p "require('./${dir}package.json').version")
+            VERSION="${RELEASE_VERSION:-$(node -p "require('./${dir}package.json').version")}"
             SCOPE="${NAME%%/*}"
 
             if [ "$SCOPE" != "$OWNER_SCOPE" ]; then
@@ -99,8 +129,10 @@ jobs:
               continue
             fi
 
+            # npm publishes what the manifest says, so the resolved version has to be in it.
+            # Written in the runner only and never committed — that is the whole point.
             echo "Publishing $NAME@$VERSION"
-            (cd "$dir" && npm publish)
+            (cd "$dir" && npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null && npm publish)
             echo "- \`$NAME@$VERSION\` published." >> "$GITHUB_STEP_SUMMARY"
             PUBLISHED=$((PUBLISHED+1))
           done
