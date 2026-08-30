@@ -75,6 +75,11 @@ RUN bun run docs:build
 FROM base AS backend
 WORKDIR /app
 
+# The commit this image was built from, so the running server can name its own source for
+# the AGPL offer without the repository carrying a stamped version.
+ARG BUILD_SHA=""
+ENV BUILD_SHA=$BUILD_SHA
+
 # Install minimal runtime dependencies (Java 21 needed for @opendataloader/pdf)
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \

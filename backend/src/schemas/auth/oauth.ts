@@ -79,6 +79,10 @@ export type IntrospectResponseType = Static<typeof IntrospectResponse>
 
 // ==================== OAuth Query Parameters ====================
 
+/*
+ * An ALLOWLIST, not documentation: the interceptor forwards every param it receives, so
+ * anything undeclared here is dropped by validation before reaching it.
+ */
 export const AuthorizationQuery = t.Object({
   response_type: t.Optional(t.String({ description: 'OAuth response type' })),
   client_id: t.Optional(t.String({ description: 'OAuth client ID' })),
@@ -91,7 +95,11 @@ export const AuthorizationQuery = t.Object({
   resource: t.Optional(t.String({ description: 'RFC 8707 Resource Indicator — synonym for aud (servers MAY support)' })),
   launch: t.Optional(t.String({ description: 'EHR Launch: opaque launch context identifier received from the EHR (SMART App Launch 2.2.0)' })),
   authorization_details: t.Optional(t.String({ description: 'Authorization details JSON string for multiple FHIR servers' })),
-  kc_idp_hint: t.Optional(t.String({ description: 'Keycloak Identity Provider hint to skip provider selection' }))
+  kc_idp_hint: t.Optional(t.String({ description: 'Keycloak Identity Provider hint to skip provider selection' })),
+  prompt: t.Optional(t.String({ description: 'OIDC Core 3.1.2.1 — none, login, consent, select_account. `login` MUST re-authenticate instead of reusing the SSO session' })),
+  nonce: t.Optional(t.String({ description: 'OIDC Core 3.1.2.1 — bound into the id_token to detect replay' })),
+  login_hint: t.Optional(t.String({ description: 'OIDC Core 3.1.2.1 — identifier to prefill on the login form' })),
+  max_age: t.Optional(t.String({ description: 'OIDC Core 3.1.2.1 — seconds before the IdP must re-authenticate' })),
 }, { title: 'AuthorizationQuery' })
 export type AuthorizationQueryType = Static<typeof AuthorizationQuery>
 

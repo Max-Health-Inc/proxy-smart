@@ -13,6 +13,7 @@
 
 import { isCimdClientId, resolveCimdRedirectUris, type SmartProxyLogger } from '@proxy-smart/auth'
 import { getAdminClient } from '@/lib/kc-admin-factory'
+import { getAttr } from '@/lib/smart-client-enrichment'
 import { logger } from '@/lib/logger'
 
 /** The lib takes a flat logger; adapt our structured one once, here. */
@@ -180,6 +181,21 @@ export function clearClientConfigCache(): void {
   defaultCache.clear()
 }
 
+/**
+ * Read `patient_facing` off a Keycloak client. Client attributes are plain strings, user
+ * attributes are arrays; `getAttr` is what knows the difference. Anything else is `undefined`,
+ * which means passthrough — including the empty string an admin clear writes.
+ *
+ * Exported because the cache's tests drive it through a fake source, so nothing else here
+ * ever sees a real attribute.
+ */
+export function parsePatientFacing(
+  attrs: Record<string, string | string[]> | undefined,
+): boolean | undefined {
+  const raw = getAttr(attrs, 'patient_facing')
+  return raw === 'true' ? true : raw === 'false' ? false : undefined
+}
+
 async function fetchClientConfig(clientId: string): Promise<ClientLookup> {
   try {
     const admin = await getAdminClient()
@@ -193,15 +209,12 @@ async function fetchClientConfig(clientId: string): Promise<ClientLookup> {
       return { status: 'absent' }
     }
 
-    const attrs = clients[0].attributes || {}
-    const patientFacingRaw = attrs['patient_facing']?.[0] ?? attrs['patient_facing']
-    const patientFacing = patientFacingRaw === 'true' ? true
-      : patientFacingRaw === 'false' ? false
-      : undefined
-
     const redirectUris = Array.isArray(clients[0].redirectUris) ? clients[0].redirectUris : []
 
-    return { status: 'found', config: { patientFacing, redirectUris } }
+    return {
+      status: 'found',
+      config: { patientFacing: parsePatientFacing(clients[0].attributes), redirectUris },
+    }
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Unknown error'
     logger.auth.error('Cannot reach Keycloak to read client config', { clientId, error: reason })

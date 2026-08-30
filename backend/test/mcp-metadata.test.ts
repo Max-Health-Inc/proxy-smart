@@ -147,6 +147,31 @@ describe('MCP Metadata — /.well-known/oauth-protected-resource/* (path-scoped)
     expect(body.resource).toBe(`${TEST_BASE_URL}${TEST_MCP_PATH}`)
     expect(body.authorization_servers).toBeInstanceOf(Array)
   })
+
+  it('describes the resource at the requested path, not the admin MCP', async () => {
+    // §3.1 inserts the well-known segment between host and resource path, so this document
+    // describes /fhir/hapi-fhir-server/mcp. Answering with the admin MCP made every
+    // per-server FHIR endpoint unauthorizable: a client checking `resource` against what it
+    // asked about sees a different URL and stops.
+    const app = createApp()
+    const res = await app.handle(
+      new Request('http://localhost/.well-known/oauth-protected-resource/fhir/hapi-fhir-server/mcp'),
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.resource).toBe(`${TEST_BASE_URL}/fhir/hapi-fhir-server/mcp`)
+    // The AS is the proxy for every resource it fronts — that part was already right.
+    expect(body.authorization_servers[0]).toBe(TEST_BASE_URL)
+  })
+
+  it('never emits a double slash, whatever the client asked for', async () => {
+    const app = createApp()
+    const res = await app.handle(
+      new Request('http://localhost/.well-known/oauth-protected-resource//fhir//mcp'),
+    )
+    const body = await res.json()
+    expect((body.resource as string).replace(/^https?:\/\//, '')).not.toContain('//')
+  })
 })
 
 describe('MCP Metadata — /.well-known/oauth-authorization-server', () => {
