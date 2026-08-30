@@ -11,7 +11,7 @@
  * touched a real attribute.
  */
 import { describe, it, expect } from 'bun:test'
-import { parsePatientFacing } from '../src/lib/smart-client-config-cache'
+import { parsePatientFacing } from '../src/lib/smart-client-enrichment'
 
 describe('parsePatientFacing', () => {
   it('reads the string shape Keycloak actually sends for a client', () => {
