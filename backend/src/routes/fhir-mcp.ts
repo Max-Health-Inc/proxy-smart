@@ -21,7 +21,7 @@ import { McpServer } from '@modelcontextprotocol/server'
 import { createMcpHttpHandler } from '@maxhealth.tech/mcp-http'
 import type { McpHandler } from '@maxhealth.tech/mcp-http'
 import { config } from '../config'
-import { isOriginAllowed } from '../lib/cors-origins'
+import { allowedOrigin, isOriginAllowed } from '../lib/cors-origins'
 import { validateToken } from '../lib/auth'
 import { getServerInfoByName, ensureServersInitialized } from '../lib/fhir-server-store'
 import { registerFhirToolsForServer } from '../lib/ai/fhir-tools'
@@ -34,12 +34,6 @@ import { registerFhirToolsForServer } from '../lib/ai/fhir-tools'
 class McpUnauthorizedError extends Error {}
 
 /** mcp-http wants the origin to echo, or null to refuse. No Origin stays allowed. */
-function allowedOrigin(req: Request): string | null {
-  const origin = req.headers.get('origin')
-  if (!origin) return null
-  return isOriginAllowed(origin) ? origin : null
-}
-
 /** `mcpPath` must match the mount exactly, and the mount is per-server. */
 const handlers = new Map<string, McpHandler>()
 
