@@ -15,7 +15,7 @@
  *  - registration_endpoint points to proxy, not Keycloak
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 
 // ── Mock config ──────────────────────────────────────────────────────────────
 
@@ -34,6 +34,17 @@ process.env.KEYCLOAK_REALM = TEST_REALM
 
 // NOTE: Do NOT mock.module('../src/lib/logger') — partial logger mocks leak
 // to subsequent test files and break tests that use logger.consent, etc.
+
+// The path-scoped metadata now answers only for MCP endpoints this deployment serves, so the
+// route asks the server store. Safe to mock here (unlike config/logger, it holds no state other
+// tests read): `hapi-fhir-server` has MCP on, `mcp-off-server` has it off.
+mock.module('@/lib/fhir-server-store', () => ({
+  ensureServersInitialized: async () => {},
+  getServerInfoByName: async (name: string) =>
+    name === 'hapi-fhir-server' ? { name, mcpEnabled: true }
+    : name === 'mcp-off-server' ? { name, mcpEnabled: false }
+    : undefined,
+}))
 
 // ── Import routes after mocks ────────────────────────────────────────────────
 
@@ -167,10 +178,39 @@ describe('MCP Metadata — /.well-known/oauth-protected-resource/* (path-scoped)
   it('never emits a double slash, whatever the client asked for', async () => {
     const app = createApp()
     const res = await app.handle(
-      new Request('http://localhost/.well-known/oauth-protected-resource//fhir//mcp'),
+      new Request('http://localhost/.well-known/oauth-protected-resource//mcp'),
     )
     const body = await res.json()
     expect((body.resource as string).replace(/^https?:\/\//, '')).not.toContain('//')
+  })
+
+  /*
+   * The wildcard used to answer 200 for ANY path, so a client could discover an authorization
+   * server for an endpoint that does not exist, or whose MCP is switched off, sign in against
+   * it, and only then be refused. Metadata is a claim that the resource IS one.
+   */
+  it('does not describe a path that is not an MCP endpoint here', async () => {
+    const app = createApp()
+    const res = await app.handle(
+      new Request('http://localhost/.well-known/oauth-protected-resource/this/is/not/real'),
+    )
+    expect(res.status).toBe(404)
+  })
+
+  it('does not describe a FHIR server whose MCP endpoint is disabled', async () => {
+    const app = createApp()
+    const res = await app.handle(
+      new Request('http://localhost/.well-known/oauth-protected-resource/fhir/mcp-off-server/mcp'),
+    )
+    expect(res.status).toBe(404)
+  })
+
+  it('does not describe a FHIR server that does not exist', async () => {
+    const app = createApp()
+    const res = await app.handle(
+      new Request('http://localhost/.well-known/oauth-protected-resource/fhir/nope/mcp'),
+    )
+    expect(res.status).toBe(404)
   })
 })
 

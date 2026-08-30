@@ -21,6 +21,11 @@ mock.module('../src/lib/auth', () => ({ validateToken: mockValidateToken }))
 
 mock.module('../src/lib/cors-origins', () => ({
   isOriginAllowed: (origin: string) => origin === 'https://app.example.com',
+  // Whole-module mock, so the real one is not here to fall back on.
+  allowedOrigin: (req: Request) => {
+    const origin = req.headers.get('origin')
+    return origin === 'https://app.example.com' ? origin : null
+  },
   getAllowedOrigins: () => ['https://app.example.com'],
   refreshIfStale: () => {},
   refreshCorsOrigins: async () => {},

@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger'
 import { getProxyJwks } from '@/lib/proxy-signing'
 import { sanitizeDiscoveryDocument } from '@/lib/oidc-discovery'
 import { MCP_SCOPES_SUPPORTED } from '@/lib/oauth-scopes'
+import { ensureServersInitialized, getServerInfoByName } from '@/lib/fhir-server-store'
 import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
 
 /**
@@ -19,6 +20,24 @@ import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
  * authorization server and what scopes are supported.
  */
 
+
+/**
+ * Whether a path is an MCP endpoint this deployment actually serves: the admin MCP, or a per
+ * FHIR server one whose `mcpEnabled` is set. Anything else has no protected-resource metadata.
+ */
+async function isMcpResource(resourcePath: string): Promise<boolean> {
+  if (resourcePath === '/mcp') return true
+
+  const perServer = /^\/fhir\/([^/]+)\/mcp$/.exec(resourcePath)
+  if (!perServer) return false
+
+  try {
+    await ensureServersInitialized()
+    return (await getServerInfoByName(perServer[1]))?.mcpEnabled === true
+  } catch {
+    return false
+  }
+}
 
 /**
  * MCP OAuth metadata routes
@@ -67,7 +86,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
 
   // Path-based resource metadata discovery (RFC 9728 §5.1)
   // Clients may request /.well-known/oauth-protected-resource{path} for path-scoped resources
-  .get('/oauth-protected-resource/*', ({ params }) => {
+  .get('/oauth-protected-resource/*', async ({ params, set }) => {
     const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
     /*
      * §3.1 inserts the well-known segment between host and resource path, so the wildcard IS
@@ -76,6 +95,14 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
      * FHIR MCP endpoint could be authorized against at all.
      */
     const resourcePath = `/${params['*'] ?? ''}`.replace(/\/{2,}/g, '/')
+
+    // Only describe a resource that IS one. The wildcard used to answer 200 for any path at
+    // all, so a client could discover an authorization server for an endpoint that does not
+    // exist, or whose MCP is switched off, and only learn otherwise after signing in.
+    if (!(await isMcpResource(resourcePath))) {
+      set.status = 404
+      return { error: 'not_found', message: `No protected resource at '${resourcePath}'` }
+    }
 
     return {
       resource: `${baseUrl}${resourcePath}`,
@@ -93,9 +120,6 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
       summary: 'Get Protected Resource Metadata (path-scoped)',
       description: 'Path-scoped OAuth 2.0 Protected Resource Metadata (RFC 9728 §5.1)',
       tags: ['mcp-authorization']
-    },
-    response: {
-      200: ProtectedResourceMetadata
     }
   })
   

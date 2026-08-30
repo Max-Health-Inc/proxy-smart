@@ -19,7 +19,7 @@ import { Elysia } from 'elysia'
 import * as z from 'zod'
 import { McpServer, ResourceTemplate } from '@modelcontextprotocol/server'
 import { createMcpHttpHandler } from '@maxhealth.tech/mcp-http'
-import { isOriginAllowed } from '@/lib/cors-origins'
+import { allowedOrigin, isOriginAllowed } from '@/lib/cors-origins'
 
 import {
   typeboxToSchema,
@@ -268,12 +268,6 @@ interface AuthResult {
 class McpUnauthorizedError extends Error {}
 
 /** mcp-http wants the origin to echo, or null to refuse. No Origin stays allowed. */
-function allowedOrigin(req: Request): string | null {
-  const origin = req.headers.get('origin')
-  if (!origin) return null
-  return isOriginAllowed(origin) ? origin : null
-}
-
 /**
  * Rewrite the 401 challenge on the way out.
  *
