@@ -28,10 +28,27 @@ export interface SourceOffer {
   }
 }
 
-/** Extract the trailing git SHA embedded by the release automation, if present. */
+/**
+ * The git SHA a version names, if it names one.
+ *
+ * Two shapes: SemVer build metadata (`0.4.6+10a84383`), which a build stamps without the
+ * repository carrying it, and the trailing dot-segment the release automation has emitted
+ * so far (`0.2.13-beta.202607241442.ef7430c8b`). Both are read so a deployment running
+ * either keeps answering the AGPL offer with its exact commit.
+ */
 export function commitFromVersion(version: string): string | null {
-  const last = version.split('.').pop() ?? ''
-  return /^[0-9a-f]{7,40}$/i.test(last) ? last : null
+  const isSha = (value: string) => /^[0-9a-f]{7,40}$/i.test(value)
+
+  const build = version.split('+')[1]
+  if (build && isSha(build)) return build
+
+  // Legacy shape is `<base>-<channel>.<build>.<sha>`, so the commit is the last of at least
+  // three segments. A lone trailing segment is the build number — all digits, therefore
+  // valid hex — which read as a commit and offered a tree that does not exist.
+  const prerelease = version.split('-').slice(1).join('-')
+  const parts = prerelease.split('.')
+  const last = parts[parts.length - 1] ?? ''
+  return parts.length >= 3 && isSha(last) ? last : null
 }
 
 function stripTrailingSlash(url: string): string {
