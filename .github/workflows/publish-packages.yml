@@ -131,8 +131,12 @@ jobs:
 
             # npm publishes what the manifest says, so the resolved version has to be in it.
             # Written in the runner only and never committed — that is the whole point.
+            #
+            # `npm pkg set`, NOT `npm version`: the latter reifies the workspace, and
+            # `backend` declares `workspace:*` deps, a pnpm/bun protocol npm cannot resolve.
+            # It failed with EUNSUPPORTEDPROTOCOL before ever reaching the registry.
             echo "Publishing $NAME@$VERSION"
-            (cd "$dir" && npm version "$VERSION" --no-git-tag-version --allow-same-version >/dev/null && npm publish)
+            (cd "$dir" && npm pkg set version="$VERSION" && npm publish)
             echo "- \`$NAME@$VERSION\` published." >> "$GITHUB_STEP_SUMMARY"
             PUBLISHED=$((PUBLISHED+1))
           done
