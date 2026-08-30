@@ -60,7 +60,7 @@ export {
 export { signLaunchCode, verifyLaunchCode, toLaunchCodeOptions, type LaunchCodeServiceOptions, type LaunchCodeConfig } from './launch-code'
 
 // ─── Redirect URI Validation ──────────────────────────────────────────────────
-export { isRedirectUriRegistered, resolvePostLogoutUri, type GetRegisteredRedirectUris } from './redirect-uri'
+export { isRedirectUriRegistered, resolvePostLogoutUri, resolveClientHomeUrl, type GetRegisteredRedirectUris } from './redirect-uri'
 
 export {
   isCimdClientId,

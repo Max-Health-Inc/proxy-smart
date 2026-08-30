@@ -96,3 +96,44 @@ export function isRedirectUriRegistered(candidate: string, registered: readonly 
   }
   return false
 }
+
+/**
+ * A client's Home URL, which Keycloak stores as `baseUrl` and its error page offers as
+ * "Back to application".
+ *
+ * Nothing here ever set it, so `client.baseUrl` was always empty and the theme's fallback —
+ * the proxy's own origin — took every link. A login that failed anywhere in the broker sent
+ * the user to Proxy Smart rather than back to the app they were signing in to, whichever app
+ * that was.
+ *
+ * RFC 7591 `client_uri` is the registered home page, so it wins. Failing that a redirect URI's
+ * origin IS the app, since the browser is already going there to finish the flow. A wildcard
+ * pattern is not a destination and the proxy's own callback is not the client, so neither can
+ * supply one; when nothing qualifies the answer is undefined and the caller leaves `baseUrl`
+ * unset, which is the state that at least renders no link rather than a wrong one.
+ */
+export function resolveClientHomeUrl(opts: {
+  clientUri?: string
+  redirectUris?: readonly string[]
+  proxyBaseUrl?: string
+}): string | undefined {
+  const absolute = (value: string): URL | undefined => {
+    try {
+      const url = new URL(value)
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url : undefined
+    } catch {
+      return undefined
+    }
+  }
+
+  const home = opts.clientUri && absolute(opts.clientUri)
+  if (home) return home.toString()
+
+  const proxyOrigin = opts.proxyBaseUrl ? absolute(opts.proxyBaseUrl)?.origin : undefined
+  for (const uri of opts.redirectUris ?? []) {
+    if (uri.includes('*')) continue
+    const origin = absolute(uri)?.origin
+    if (origin && origin !== proxyOrigin) return origin
+  }
+  return undefined
+}

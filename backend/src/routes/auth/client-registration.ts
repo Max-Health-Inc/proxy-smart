@@ -25,6 +25,7 @@ import { getClientRegistrationSettings } from '../admin/client-registration-sett
 import { ClientRegistrationRequest, ClientRegistrationResponse, CommonErrorResponses } from '@/schemas'
 import { config } from '@/config'
 import { validateExternalUrl } from '@/lib/url-validation'
+import { resolveClientHomeUrl } from '@proxy-smart/auth'
 
 /**
  * OAuth 2.0 Dynamic Client Registration Protocol (RFC 7591)
@@ -286,9 +287,18 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
         ? body.redirect_uris
         : [...body.redirect_uris, proxyCallbackUri]
 
+      // Keycloak's error page offers this as "Back to application". Unset, it fell back to the
+      // proxy's own origin, so a broker failure sent every app's user to Proxy Smart.
+      const homeUrl = resolveClientHomeUrl({
+        clientUri: body.client_uri,
+        redirectUris: body.redirect_uris,
+        proxyBaseUrl: config.baseUrl,
+      })
+
       const keycloakClient = {
         clientId,
         name: body.client_name || clientId,
+        ...(homeUrl && { baseUrl: homeUrl }),
         description: `SMART App: ${body.client_name || 'Dynamic Client'}`,
         enabled: !settings.adminApprovalRequired, // Disable if approval required
         protocol: 'openid-connect',
