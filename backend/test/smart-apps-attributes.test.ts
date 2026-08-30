@@ -97,6 +97,25 @@ describe('PUT /smart-apps/:clientId — Keycloak attribute contract', () => {
     expect(nonStringAttributes(updates[0]!.body)).toEqual([])
   })
 
+  it('clears patient_facing when null is sent, so an app can go back to passthrough', async () => {
+    // The resolver has three states — Patient, Practitioner, and raw passthrough for an app that
+    // resolves the Person itself or serves both roles. Only two were reachable: `undefined` on
+    // the request means "leave unchanged", so once set an app could never return to the third.
+    updates.length = 0
+    await app().handle(put({ patientFacing: null }))
+
+    const attrs = updates[0]!.body.attributes as Record<string, unknown>
+    expect(attrs.patient_facing).toBe('')
+    expect(nonStringAttributes(updates[0]!.body)).toEqual([])
+  })
+
+  it('still writes the boolean when one is sent', async () => {
+    updates.length = 0
+    await app().handle(put({ patientFacing: true }))
+
+    expect((updates[0]!.body.attributes as Record<string, unknown>).patient_facing).toBe('true')
+  })
+
   it('preserves an existing version when the field is omitted', async () => {
     updates.length = 0
     await app().handle(put({ patientFacing: false }))
