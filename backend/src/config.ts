@@ -40,6 +40,20 @@ try {
 }
 
 /**
+ * The commit this build was made from, supplied by the builder rather than the repository.
+ *
+ * Lets the deployed version name its own source without the tree carrying a stamped
+ * version — which is what makes develop, test and main rewrite the same manifest lines and
+ * conflict. Absent (a local run), the version is the base one and nothing changes.
+ */
+function versionWithBuildSha(base: string): string {
+  const sha = (process.env.BUILD_SHA || process.env.GITHUB_SHA || '').trim().toLowerCase()
+  if (!/^[0-9a-f]{7,40}$/.test(sha)) return base
+  // A version the release automation already stamped carries the commit; do not say it twice.
+  return base.includes(sha) ? base : `${base}+${sha}`
+}
+
+/**
  * Application configuration from environment variables
  */
 export const config = {
@@ -68,7 +82,7 @@ export const config = {
   // Application name and version from package.json
   name: packageJson.name,
   displayName: packageJson.displayName || packageJson.name,
-  version: packageJson.version,
+  version: versionWithBuildSha(packageJson.version),
   
   keycloak: {
     // Dynamic getters that read from process.env for real-time updates
