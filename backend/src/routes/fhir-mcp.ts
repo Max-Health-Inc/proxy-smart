@@ -25,6 +25,7 @@ import { allowedOrigin, isOriginAllowed } from '../lib/cors-origins'
 import { validateToken } from '../lib/auth'
 import { getServerInfoByName, ensureServersInitialized } from '../lib/fhir-server-store'
 import { registerFhirToolsForServer } from '../lib/ai/fhir-tools'
+import { fhirMcpPath } from '../lib/mcp-resources'
 
 // Stateless: each request is served by a fresh server bound to the bearer on
 // THAT request. The HTTP edge is @maxhealth.tech/mcp-http, which tracks the
@@ -120,7 +121,7 @@ export const fhirMcpRoutes = new Elysia()
       return new Response(null, {
         status: 401,
         headers: {
-          'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource/fhir/${server_id}/mcp"`,
+          'WWW-Authenticate': `Bearer resource_metadata="${baseUrl}/.well-known/oauth-protected-resource${fhirMcpPath(server_id)}"`,
         },
       })
     }
