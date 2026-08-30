@@ -20,6 +20,19 @@ set -euo pipefail
 #                       every file; version.js now writes only real changes, so
 #                       there is nothing to clean up.
 
+# Only a RELEASE branch carries a stamped version: CI writes alpha on develop, beta on
+# test, RELEASE on main. Stamping anything else adds a commit to the very lines those
+# branches own, so a feature branch collects conflicts in manifests it never touched,
+# and it publishes nothing, so the stamp had no reader in the first place.
+branch="$(git rev-parse --abbrev-ref HEAD)"
+case "$branch" in
+  develop|test|main) ;;
+  *)
+    echo "Skipping version sync: $branch is not a release branch"
+    exit 0
+    ;;
+esac
+
 echo "Syncing package versions before push..."
 
 # Ask what WOULD change before touching anything, so a refusal below leaves the
