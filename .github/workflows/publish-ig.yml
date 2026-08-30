@@ -75,7 +75,7 @@ jobs:
       - name: Decide whether to publish (build key vs last published)
         id: decide
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
         run: |
           # Identity = FSH source content + generator version + flags (deterministic;
           # generated output bakes per-run timestamps so can't be hashed directly).
@@ -97,7 +97,14 @@ jobs:
             echo "publish=true" >> "$GITHUB_OUTPUT"
             echo "version=$BASE" >> "$GITHUB_OUTPUT"
           else
-            PUB_KEY=$(npm view "$PKG_NAME@$LATEST" _igBuildKey 2>/dev/null || true)
+            # From the TARBALL, not `npm view`: GitHub Packages drops unknown top-level
+            # manifest fields, so the stamped key is absent from registry metadata and
+            # every run read it as empty, never matched, and re-published.
+            PUB_KEY=""
+            TGZ=$(npm pack "$PKG_NAME@$LATEST" --silent --pack-destination "$RUNNER_TEMP" 2>/dev/null | tail -1)
+            if [ -n "$TGZ" ] && [ -f "$RUNNER_TEMP/$TGZ" ]; then
+              PUB_KEY=$(tar -xzOf "$RUNNER_TEMP/$TGZ" package/package.json 2>/dev/null | node -pe "JSON.parse(require('fs').readFileSync(0,'utf8'))._igBuildKey || ''" 2>/dev/null || true)
+            fi
             if [ "$PUB_KEY" = "$KEY" ]; then
               echo "IG unchanged (same FSH + generator + flags as $LATEST) — skipping."
               echo "publish=false" >> "$GITHUB_OUTPUT"
@@ -162,4 +169,4 @@ jobs:
         working-directory: dist-ig
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
