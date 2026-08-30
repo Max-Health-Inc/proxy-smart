@@ -67,12 +67,18 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
 
   // Path-based resource metadata discovery (RFC 9728 §5.1)
   // Clients may request /.well-known/oauth-protected-resource{path} for path-scoped resources
-  .get('/oauth-protected-resource/*', () => {
+  .get('/oauth-protected-resource/*', ({ params }) => {
     const baseUrl = (config.baseUrl || 'http://localhost:3001').replace(/\/+$/, '')
-    const mcpPath = config.mcp?.path || '/mcp'
+    /*
+     * §3.1 inserts the well-known segment between host and resource path, so the wildcard IS
+     * the resource's path. This returned the admin MCP for every path instead, which a client
+     * validating `resource` against the endpoint it asked about must reject — so no per-server
+     * FHIR MCP endpoint could be authorized against at all.
+     */
+    const resourcePath = `/${params['*'] ?? ''}`.replace(/\/{2,}/g, '/')
 
     return {
-      resource: `${baseUrl}${mcpPath}`,
+      resource: `${baseUrl}${resourcePath}`,
       authorization_servers: [
         baseUrl
       ],
