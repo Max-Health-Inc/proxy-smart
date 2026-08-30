@@ -28,8 +28,10 @@ export interface ValidateTokenOptions {
    * FHIR base as `aud`. The anti-leakage guarantee for FHIR is instead met by the
    * `aud`/`resource` REQUEST parameter validated at /authorize (issue #355
    * Phase 2), while issuer/signature/expiry verification and SMART scope
-   * enforcement remain the gates. This flag is a no-op for callers that omit it;
-   * admin and MCP call sites keep audience enforced.
+   * enforcement remain the gates. This flag is a no-op for callers that omit it.
+   * "The FHIR proxy" is the call site's job, not its path: the per-server FHIR MCP
+   * endpoint serves those same tools and shares the policy. The admin MCP endpoint,
+   * which administers the deployment rather than reading it, keeps audience enforced.
    */
   enforceAudience?: boolean
 }
