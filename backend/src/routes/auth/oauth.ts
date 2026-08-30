@@ -164,14 +164,8 @@ async function validateAudience(aud: string): Promise<string | null> {
 // ─── Route Handlers ─────────────────────────────────────────────────────────
 
 /**
- * The identities behind a `Person` fhirUser, read while the browser is still here.
- *
- * The FHIR server is reached DIRECTLY and server-side, with no bearer — the same position the
- * picker's own patient search is already in, and for the same reason: at this point in the flow
- * no token exists yet, and the proxy is the one asking rather than the app.
- *
- * Every failure answers [], which the callback handler treats as "could not decide" and falls
- * through to the behaviour that existed before. Reading a Person must never fail a launch.
+ * The identities behind a `Person` fhirUser. Read upstream with no bearer — no token exists
+ * yet, and the proxy is the one asking. Any failure answers [], which never fails a launch.
  */
 const resolveIdentities = async (session: LaunchSession): Promise<IdentityCandidate[]> => {
   if (!session.fhirUser || !session.aud) return []
@@ -307,10 +301,6 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
   })
 
   // ── Identity picker (→ the same React app, in its identity mode) ──
-  //
-  // Only reached when the signed-in human holds MORE THAN ONE usable identity and the request did
-  // not settle which — a clinician who also has a chart here. Everyone else is resolved silently
-  // in the callback and never sees this.
   .get('/identity-options', async ({ query, set }) => {
     const sessionKey = query.session as string | undefined
     const session = sessionKey ? smartStore.get(sessionKey) : undefined
@@ -319,11 +309,7 @@ export const oauthRoutes = new Elysia({ tags: ['authentication'] })
       return { error: 'session_expired', error_description: 'Session expired. Please restart the authorization flow.' }
     }
 
-    /*
-     * Answers ONLY what the callback already offered this session. Nothing is looked up here, so
-     * a session key cannot be used to enumerate identities — unlike the patient directory next
-     * door, which is why that one needs `pickerAllowed` and this one does not.
-     */
+    // Only what the callback already offered: nothing is enumerable here.
     return {
       identities: (session.identityOffered ?? []).map((reference) => ({
         reference,

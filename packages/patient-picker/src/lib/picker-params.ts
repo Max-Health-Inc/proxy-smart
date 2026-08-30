@@ -31,12 +31,7 @@ export function getPickerError(): PickerError | null {
   return { error, errorDescription: errorDescription || "An unexpected error occurred." }
 }
 
-/**
- * Whether this launch is choosing an IDENTITY rather than a patient.
- *
- * One bundle, two modes: both need the same session/code/aud plumbing, the same error screens and
- * the same brand theming, so a second Vite package would have been a copy of all of it.
- */
+/** Whether this launch is choosing an IDENTITY rather than a patient. One bundle, two modes. */
 export function isIdentityMode(): boolean {
   return new URLSearchParams(window.location.search).get("choose") === "identity"
 }
