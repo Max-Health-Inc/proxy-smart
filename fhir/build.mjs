@@ -94,7 +94,7 @@ rmSync(cacheEntry, { recursive: true, force: true });
 
 console.log("\n── Step 3: Generate TypeScript package (no install) ──");
 // --skip-install: pack the generated package for local inspection only. The
-// backend consumes the PUBLISHED @max-health-inc/consent-fhir (minted by
+// backend consumes the PUBLISHED @proxy-smart/consent-fhir (minted by
 // .github/workflows/publish-ig.yml), so we no longer vendor a lib/*.tgz — that
 // avoids the tgz/bun.lock integrity drift that used to break cold CI installs.
 run(`npx --yes babelfhir-ts@${BABELFHIR_VERSION} install ./fhir/${tgzName} --skip-install`);
