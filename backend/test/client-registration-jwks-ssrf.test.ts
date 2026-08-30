@@ -184,7 +184,7 @@ describe('VULN 2 — DCR jwks_uri SSRF (registration layer, fail-closed)', () =>
       jwks_uri: PUBLIC_JWKS,
     })
 
-    expect(res.status).toBe(200)
+    expect(res.status).toBe(201)
     const data = await res.json()
     expect(data.client_id).toBeDefined()
     expect(data.jwks_uri).toBe(PUBLIC_JWKS)
@@ -192,5 +192,41 @@ describe('VULN 2 — DCR jwks_uri SSRF (registration layer, fail-closed)', () =>
     expect(createCalls.length).toBe(1)
     const created = createCalls[0] as { attributes?: Record<string, string> }
     expect(created.attributes?.['jwks.url']).toBe(PUBLIC_JWKS)
+  })
+})
+
+/**
+ * RFC 7591 3.2.1 fixes the success status at 201, and strict clients enforce it.
+ * oauth4webapi rejects a 200 with "not a conform Dynamic Client Registration Endpoint
+ * response", so AIHR's connector sign-in failed AFTER this endpoint had already created the
+ * client — and registered a fresh one on every retry, leaving orphans behind.
+ */
+describe('DCR success status', () => {
+  const savedEnv: Record<string, string | undefined> = {}
+
+  beforeEach(() => {
+    for (const [key, value] of Object.entries(CONFIG_ENV_VARS)) {
+      savedEnv[key] = process.env[key]
+      process.env[key] = value
+    }
+    createCalls.length = 0
+  })
+
+  afterEach(() => {
+    for (const [key] of Object.entries(CONFIG_ENV_VARS)) {
+      const value = savedEnv[key]
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  })
+
+  it('answers a successful registration with 201, not 200', async () => {
+    const res = await register({
+      redirect_uris: [REGISTERED_REDIRECT],
+      client_name: 'status-client',
+    })
+
+    expect(res.status).toBe(201)
+    expect((await res.json()).client_id).toBeDefined()
   })
 })

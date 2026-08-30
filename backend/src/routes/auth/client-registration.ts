@@ -486,7 +486,11 @@ export const clientRegistrationRoutes = new Elysia({ tags: ['authentication'] })
 
       // Refresh CORS origins cache (new client has webOrigins)
       refreshCorsOrigins().catch(() => {})
-      
+
+      // RFC 7591 3.2.1: a successful registration is 201, not 200. Strict clients check it —
+      // oauth4webapi rejects 200 outright, so AIHR could never finish a connector sign-in even
+      // though the client had already been created here, and re-registered on every attempt.
+      set.status = 201
       return response
 
     } catch (error) {
