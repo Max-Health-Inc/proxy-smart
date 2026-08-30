@@ -5,7 +5,7 @@ import { Elysia, t } from 'elysia'
 import { config } from '../config'
 import { getAllServers, getServerInfoByName, ensureServersInitialized, addServer, updateServer, deleteServer, refreshServer, retryUnknownServers, setStrictCapabilities, setMcpEnabled } from '../lib/fhir-server-store'
 import { logger } from '../lib/logger'
-import { validateToken } from '../lib/auth'
+import { validateAdminToken } from '../lib/auth'
 import { extractBearerToken } from '../lib/admin-utils'
 import { handleAdminError } from '../lib/admin-error-handler'
 import { validateExternalUrl } from '../lib/url-validation'
@@ -245,9 +245,133 @@ export async function fetchWithMtls(
 }
 
 /**
- * Server discovery routes
+ * Public server discovery — which FHIR servers this proxy fronts.
+ *
+ * Read-only and unauthenticated on purpose: a client must be able to find the servers before
+ * it holds a token for any of them, and CI's compliance job reads this to learn what to test.
+ * Everything that CHANGES a server lives in `fhirServersAdminRoutes`.
  */
 export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags: ['fhir-servers'] })
+  // List all available FHIR servers
+  .get('/', async ({ set }): Promise<FhirServerListResponseType | ErrorResponseType> => {
+    try {
+      // Ensure servers are initialized
+      await ensureServersInitialized()
+
+      // Auto-retry metadata for servers that previously failed (non-blocking)
+      await retryUnknownServers()
+
+      // Get all servers from the store
+      const serverInfos = await getAllServers()
+
+      const servers = serverInfos.map(serverInfo => ({
+        id: serverInfo.identifier,
+        name: serverInfo.name, // Use the actual name, not identifier
+        url: serverInfo.url,
+        fhirVersion: serverInfo.metadata.fhirVersion,
+        serverVersion: serverInfo.metadata.serverVersion,
+        serverName: serverInfo.metadata.serverName,
+        supported: serverInfo.metadata.supported,
+        smartCapabilities: serverInfo.metadata.smartCapabilities,
+        strictCapabilities: serverInfo.strictCapabilities ?? false,
+        mcpEnabled: serverInfo.mcpEnabled ?? false,
+        organizationIds: serverInfo.organizationIds,
+        endpoints: {
+          base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
+          smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
+          metadata: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/metadata`
+        }
+      }))
+
+      return {
+        totalServers: servers.length,
+        servers
+      }
+    } catch (error) {
+      logger.fhir.error('Failed to list FHIR servers', { error })
+      return handleAdminError(error, set)
+    }
+  }, {
+    response: {
+      200: FhirServerListResponse,
+      500: ErrorResponse
+    },
+    detail: {
+      summary: 'List Available FHIR Servers',
+      description: 'Get a list of all configured FHIR servers with their connection information and endpoints',
+      tags: ['servers']
+    }
+  })
+  // Get specific server information
+  .get('/:server_id', async ({ params, set }): Promise<FhirServerInfoResponseType | ErrorResponseType> => {
+    try {
+      // Ensure servers are initialized
+      await ensureServersInitialized()
+
+      // Get server info from store
+      const serverInfo = await getServerInfoByName(params.server_id)
+
+      if (!serverInfo) {
+        set.status = 404
+        return { error: `FHIR server '${params.server_id}' not found` }
+      }
+
+      // Build proxy endpoints for this FHIR server
+      // These are the SMART on FHIR endpoints that the PROXY provides
+      const proxyBase = `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`
+
+      return {
+        name: serverInfo.name,
+        url: serverInfo.url,
+        fhirVersion: serverInfo.metadata.fhirVersion,
+        serverVersion: serverInfo.metadata.serverVersion,
+        serverName: serverInfo.metadata.serverName,
+        supported: serverInfo.metadata.supported,
+        smartCapabilities: serverInfo.metadata.smartCapabilities,
+        strictCapabilities: serverInfo.strictCapabilities ?? false,
+        mcpEnabled: serverInfo.mcpEnabled ?? false,
+        endpoints: {
+          // Proxy's FHIR endpoints
+          base: proxyBase,
+          smartConfig: `${proxyBase}/.well-known/smart-configuration`,
+          metadata: `${proxyBase}/metadata`,
+
+          // Proxy's OAuth endpoints (provided by Keycloak via the proxy)
+          authorize: `${config.baseUrl}/auth/authorize`,
+          token: `${config.baseUrl}/auth/token`,
+          registration: `${config.baseUrl}/auth/register`,
+          manage: `${config.baseUrl}/auth/manage`,
+          introspection: `${config.baseUrl}/auth/introspect`,
+          revocation: `${config.baseUrl}/auth/revoke`
+        }
+      }
+    } catch (error) {
+      logger.fhir.error('Failed to get server information', { serverId: params.server_id, error })
+      return handleAdminError(error, set)
+    }
+  }, {
+    params: ServerIdParam,
+    response: {
+      200: FhirServerInfoResponse,
+      ...CommonErrorResponses
+    },
+    detail: {
+      summary: 'Get Server Information',
+      description: 'Get detailed information about a specific FHIR server',
+      tags: ['servers']
+    }
+  })
+
+/**
+ * FHIR server administration — mounted INSIDE `adminRoutes`, so it serves /admin/fhir-servers.
+ *
+ * Registering a server, repointing one, uploading mTLS client certificates and deleting
+ * servers all sat behind a bare `validateToken`, whose default audience set matches the proxy
+ * FHIR base — the audience every SMART app token carries. Any signed-in end user satisfied it.
+ * Under `adminRoutes` they inherit `adminAuthGuard`, which demands an admin-audienced token
+ * AND admin roles before a handler runs, plus the admin audit log.
+ */
+export const fhirServersAdminRoutes = new Elysia({ prefix: '/fhir-servers', tags: ['fhir-servers'] })
   // Create a new FHIR server
   .post('/', async ({ body, set, headers }) => {
     try {
@@ -258,7 +382,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       // Validate URL format
       try {
@@ -335,7 +459,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Update an existing FHIR server
   .put('/:server_id', async ({ params, body, set, headers }) => {
     try {
@@ -346,7 +469,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       // Validate URL format
       try {
@@ -416,118 +539,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
-  // List all available FHIR servers
-  .get('/', async ({ set }): Promise<FhirServerListResponseType | ErrorResponseType> => {
-    try {
-      // Ensure servers are initialized
-      await ensureServersInitialized()
-
-      // Auto-retry metadata for servers that previously failed (non-blocking)
-      await retryUnknownServers()
-
-      // Get all servers from the store
-      const serverInfos = await getAllServers()
-
-      const servers = serverInfos.map(serverInfo => ({
-        id: serverInfo.identifier,
-        name: serverInfo.name, // Use the actual name, not identifier
-        url: serverInfo.url,
-        fhirVersion: serverInfo.metadata.fhirVersion,
-        serverVersion: serverInfo.metadata.serverVersion,
-        serverName: serverInfo.metadata.serverName,
-        supported: serverInfo.metadata.supported,
-        smartCapabilities: serverInfo.metadata.smartCapabilities,
-        strictCapabilities: serverInfo.strictCapabilities ?? false,
-        mcpEnabled: serverInfo.mcpEnabled ?? false,
-        organizationIds: serverInfo.organizationIds,
-        endpoints: {
-          base: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`,
-          smartConfig: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/.well-known/smart-configuration`,
-          metadata: `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}/metadata`
-        }
-      }))
-
-      return {
-        totalServers: servers.length,
-        servers
-      }
-    } catch (error) {
-      logger.fhir.error('Failed to list FHIR servers', { error })
-      return handleAdminError(error, set)
-    }
-  }, {
-    response: {
-      200: FhirServerListResponse,
-      500: ErrorResponse
-    },
-    detail: {
-      summary: 'List Available FHIR Servers',
-      description: 'Get a list of all configured FHIR servers with their connection information and endpoints',
-      tags: ['servers']
-    }
-  })
-
-  // Get specific server information
-  .get('/:server_id', async ({ params, set }): Promise<FhirServerInfoResponseType | ErrorResponseType> => {
-    try {
-      // Ensure servers are initialized
-      await ensureServersInitialized()
-
-      // Get server info from store
-      const serverInfo = await getServerInfoByName(params.server_id)
-
-      if (!serverInfo) {
-        set.status = 404
-        return { error: `FHIR server '${params.server_id}' not found` }
-      }
-
-      // Build proxy endpoints for this FHIR server
-      // These are the SMART on FHIR endpoints that the PROXY provides
-      const proxyBase = `${config.baseUrl}/${config.name}/${serverInfo.identifier}/${serverInfo.metadata.fhirVersion}`
-
-      return {
-        name: serverInfo.name,
-        url: serverInfo.url,
-        fhirVersion: serverInfo.metadata.fhirVersion,
-        serverVersion: serverInfo.metadata.serverVersion,
-        serverName: serverInfo.metadata.serverName,
-        supported: serverInfo.metadata.supported,
-        smartCapabilities: serverInfo.metadata.smartCapabilities,
-        strictCapabilities: serverInfo.strictCapabilities ?? false,
-        mcpEnabled: serverInfo.mcpEnabled ?? false,
-        endpoints: {
-          // Proxy's FHIR endpoints
-          base: proxyBase,
-          smartConfig: `${proxyBase}/.well-known/smart-configuration`,
-          metadata: `${proxyBase}/metadata`,
-
-          // Proxy's OAuth endpoints (provided by Keycloak via the proxy)
-          authorize: `${config.baseUrl}/auth/authorize`,
-          token: `${config.baseUrl}/auth/token`,
-          registration: `${config.baseUrl}/auth/register`,
-          manage: `${config.baseUrl}/auth/manage`,
-          introspection: `${config.baseUrl}/auth/introspect`,
-          revocation: `${config.baseUrl}/auth/revoke`
-        }
-      }
-    } catch (error) {
-      logger.fhir.error('Failed to get server information', { serverId: params.server_id, error })
-      return handleAdminError(error, set)
-    }
-  }, {
-    params: ServerIdParam,
-    response: {
-      200: FhirServerInfoResponse,
-      ...CommonErrorResponses
-    },
-    detail: {
-      summary: 'Get Server Information',
-      description: 'Get detailed information about a specific FHIR server',
-      tags: ['servers']
-    }
-  })
-
   // Get mTLS configuration for a server
   .get('/:server_id/mtls', async ({ params, set, headers }) => {
     try {
@@ -538,7 +549,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const mtlsConfig = await mtlsStore.getConfig(params.server_id)
       
@@ -581,7 +592,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Update mTLS configuration for a server
   .put('/:server_id/mtls', async ({ params, body, set, headers }) => {
     try {
@@ -592,7 +602,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const updatedConfig = await mtlsStore.setEnabled(params.server_id, body.enabled)
 
@@ -638,7 +648,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Upload certificate for mTLS
   .post('/:server_id/mtls/certificates', async ({ params, body, set, headers }) => {
     try {
@@ -649,7 +658,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       // Validate certificate type
       if (!['client', 'key', 'ca'].includes(body.type)) {
@@ -705,7 +714,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Toggle strict capability enforcement for a server
   .patch('/:server_id/strict-capabilities', async ({ params, body, set, headers }) => {
     try {
@@ -715,7 +723,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const updated = await setStrictCapabilities(params.server_id, body.strict)
 
@@ -752,7 +760,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Toggle MCP endpoint for a server
   .patch('/:server_id/mcp', async ({ params, body, set, headers }) => {
     try {
@@ -762,7 +769,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const updated = await setMcpEnabled(params.server_id, body.enabled)
 
@@ -799,7 +806,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Delete a FHIR server
   .delete('/:server_id', async ({ params, set, headers }) => {
     try {
@@ -809,7 +815,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       await deleteServer(params.server_id)
 
@@ -841,7 +847,6 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
       security: [{ BearerAuth: [] }]
     }
   })
-
   // Refresh metadata for a FHIR server (re-fetch from origin)
   .post('/:server_id/refresh', async ({ params, set, headers }) => {
     try {
@@ -851,7 +856,7 @@ export const serverDiscoveryRoutes = new Elysia({ prefix: '/fhir-servers', tags:
         return { error: 'Authentication required' }
       }
 
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const updated = await refreshServer(params.server_id)
 

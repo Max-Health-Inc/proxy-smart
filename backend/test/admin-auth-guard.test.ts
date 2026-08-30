@@ -71,6 +71,23 @@ function nonAdminToken(): string {
   })
 }
 
+/**
+ * What a signed-in end user actually holds: audienced to the proxy FHIR base, no admin role.
+ * `validateToken`'s default audience set prefix-matches that base, so this token satisfied the
+ * FHIR-server management routes back when they were mounted outside the admin router.
+ */
+function fhirAudiencedToken(): string {
+  return signTestToken({
+    iss: ISSUER,
+    sub: 'patient-user',
+    aud: 'http://localhost:8445/proxy-smart-backend/hapi-fhir-server/R4',
+    azp: 'patient-portal',
+    realmRoles: ['offline_access'],
+    email: 'patient@example.com',
+    preferred_username: 'patient',
+  })
+}
+
 // Wrong-signature token → 401 (signed with a throwaway HS256 secret).
 const INVALID_TOKEN = 'not.a.valid-jwt'
 
@@ -203,5 +220,51 @@ describe('Admin auth guard — positive (no regression)', () => {
     const res = await app.handle(adminReq('POST', '/admin/access-control/doors/door-1/unlock', adminToken()))
     expect(res.status).toBe(200)
     expect(unlockSpy).toHaveBeenCalledTimes(1)
+  })
+})
+
+/**
+ * FHIR server management used to sit outside the admin router, behind a bare `validateToken`.
+ * Its default audience set prefix-matches the proxy FHIR base, so an ordinary SMART app token
+ * passed — and nothing checked roles. Registering, repointing and deleting servers, and
+ * uploading mTLS client certificates, were all reachable by any signed-in user.
+ *
+ * Only routes whose body schema is trivial or absent are exercised: Elysia validates the body
+ * before the guard answers, so a bodyless PATCH is a 422 rather than a 401. The guard is one
+ * `onBeforeHandle` over the whole router, so these three stand for all of them.
+ */
+describe('FHIR server management is admin-only', () => {
+  function req(method: string, path: string, token?: string, body?: unknown) {
+    const headers: Record<string, string> = {}
+    if (token) headers.authorization = `Bearer ${token}`
+    if (body !== undefined) headers['content-type'] = 'application/json'
+    return new Request(`http://localhost${path}`, {
+      method,
+      headers,
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    })
+  }
+
+  const CASES: [string, string, unknown][] = [
+    ['PATCH', '/admin/fhir-servers/hapi-fhir-server/mcp', { enabled: true }],
+    ['DELETE', '/admin/fhir-servers/hapi-fhir-server', undefined],
+    ['GET', '/admin/fhir-servers/hapi-fhir-server/mtls', undefined],
+  ]
+
+  it.each(CASES)('refuses %s %s with no token', async (method, path, body) => {
+    const res = await createApp().handle(req(method, path, undefined, body))
+    expect(res.status).toBe(401)
+  })
+
+  it.each(CASES)('refuses %s %s with a FHIR-audienced end-user token', async (method, path, body) => {
+    const res = await createApp().handle(req(method, path, fhirAudiencedToken(), body))
+    expect([401, 403]).toContain(res.status)
+  })
+
+  it('no longer serves FHIR server management outside the admin router', async () => {
+    const res = await createApp().handle(
+      req('PATCH', '/fhir-servers/hapi-fhir-server/mcp', undefined, { enabled: true }),
+    )
+    expect(res.status).toBe(404)
   })
 })
