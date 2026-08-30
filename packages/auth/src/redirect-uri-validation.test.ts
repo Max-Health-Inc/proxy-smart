@@ -20,7 +20,7 @@
 import { describe, test, expect } from 'bun:test'
 import { handleAuthorize, type AuthorizeInterceptorDeps } from './authorize-interceptor'
 import { handleCallback, type CallbackParams, type CallbackHandlerDeps } from './callback-handler'
-import { isRedirectUriRegistered, resolvePostLogoutUri } from './redirect-uri'
+import { isRedirectUriRegistered, resolvePostLogoutUri, resolveClientHomeUrl } from './redirect-uri'
 import { MemoryStore } from './stores/memory'
 import type { AuthorizeParams, LaunchSession, SmartProxyConfig } from './types'
 import type { IdPAdapter } from './idp/interface'
@@ -299,5 +299,67 @@ describe('resolvePostLogoutUri', () => {
 
   test('a malformed session URI falls back rather than throwing', () => {
     expect(resolvePostLogoutUri({ baseUrl: BASE, sessionRedirectUri: 'not-a-url' })).toBe('https://proxy.example.com/')
+  })
+})
+
+/**
+ * The Home URL Keycloak's error page offers as "Back to application".
+ *
+ * No client-creation path ever set it, so `client.baseUrl` was empty for every client and the
+ * theme's fallback — the proxy's own origin — took the link. A login that failed in the broker
+ * offered the user Proxy Smart's front page instead of the app they came from.
+ */
+describe('resolveClientHomeUrl', () => {
+  const PROXY = 'https://proxy.example.com'
+
+  test('prefers the registered client_uri, which is the app home by definition', () => {
+    expect(
+      resolveClientHomeUrl({
+        clientUri: 'https://app.example.com/welcome',
+        redirectUris: ['https://other.example.com/cb'],
+        proxyBaseUrl: PROXY,
+      }),
+    ).toBe('https://app.example.com/welcome')
+  })
+
+  test('falls back to a redirect origin, since the browser already goes there', () => {
+    expect(
+      resolveClientHomeUrl({ redirectUris: ['https://app.example.com/auth/cb'], proxyBaseUrl: PROXY }),
+    ).toBe('https://app.example.com')
+  })
+
+  test('never answers with the proxy itself, which is the dead end being fixed', () => {
+    expect(
+      resolveClientHomeUrl({
+        redirectUris: [`${PROXY}/auth/smart-callback`],
+        proxyBaseUrl: PROXY,
+      }),
+    ).toBeUndefined()
+  })
+
+  test('skips the proxy callback to reach the app behind it', () => {
+    expect(
+      resolveClientHomeUrl({
+        redirectUris: [`${PROXY}/auth/smart-callback`, 'https://app.example.com/cb'],
+        proxyBaseUrl: PROXY,
+      }),
+    ).toBe('https://app.example.com')
+  })
+
+  test('a wildcard pattern is not a destination', () => {
+    expect(
+      resolveClientHomeUrl({ redirectUris: ['https://app.example.com/*'], proxyBaseUrl: PROXY }),
+    ).toBeUndefined()
+  })
+
+  test('rejects a non-http scheme, so a native client cannot put javascript: on the page', () => {
+    expect(
+      resolveClientHomeUrl({ clientUri: 'javascript:alert(1)', redirectUris: ['myapp://cb'] }),
+    ).toBeUndefined()
+  })
+
+  test('undefined when there is nothing to offer, so no link beats a wrong one', () => {
+    expect(resolveClientHomeUrl({})).toBeUndefined()
+    expect(resolveClientHomeUrl({ clientUri: 'not-a-url', redirectUris: [] })).toBeUndefined()
   })
 })
