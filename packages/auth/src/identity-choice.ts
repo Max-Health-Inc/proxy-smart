@@ -35,7 +35,18 @@
 
 import { isStandaloneLaunch, parseScopes } from './smart-scopes'
 
-/** The resource types SMART permits as a `fhirUser`, other than the Person doing the linking. */
+/**
+ * The identities a Person can actually resolve to.
+ *
+ * SMART permits five types as `fhirUser` — Patient, Practitioner, PractitionerRole, RelatedPerson
+ * and Person. Three of them appear here, and PractitionerRole's absence is not an oversight:
+ * `Person.link.target` in R4 is `Reference(Patient | Practitioner | RelatedPerson | Person)`, so a
+ * PractitionerRole can never be reached by following a Person and can never be a candidate.
+ *
+ * Person itself is excluded for a different reason: it is where we started. The spec treats it as
+ * the fallback used when the other types do not apply, which is also why resolving it to a
+ * concrete type is the spec-aligned direction rather than a liberty taken with it.
+ */
 export const IDENTITY_TYPES = ['Patient', 'Practitioner', 'RelatedPerson'] as const
 
 export type IdentityType = (typeof IDENTITY_TYPES)[number]
