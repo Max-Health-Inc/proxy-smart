@@ -33,6 +33,7 @@ import { clientPoliciesRoutes } from './client-policies'
 import { dicomServersAdminRoutes } from './dicom-servers'
 import { authFlowsRoutes } from './auth-flows'
 import { scopeSetsAdminRoutes } from './scope-sets'
+import { fhirServersAdminRoutes } from '../fhir-servers'
 import { initializeToolRegistry } from '@/lib/ai/tool-registry'
 import { adminAuditPlugin } from '@/lib/admin-audit-middleware'
 
@@ -151,11 +152,13 @@ export const adminRoutes = new Elysia({ prefix: '/admin' })
   .use(authFlowsRoutes)
   // Scope Sets — reusable named scope collections
   .use(scopeSetsAdminRoutes)
+  // FHIR server administration. Here rather than alongside public discovery so it inherits
+  // adminAuthGuard and the audit log, and so the tool registry below can see it at all.
+  .use(fhirServersAdminRoutes)
 
 // Initialize the tool registry once at startup
 initializeToolRegistry(adminRoutes, {
   prefixes: [
-    '/admin/',        // Admin routes (healthcare users, SMART apps, etc.)
-    '/fhir-servers/', // FHIR server management
+    '/admin/', // Admin routes (healthcare users, SMART apps, FHIR servers, etc.)
   ]
 })

@@ -7,13 +7,13 @@ Configure upstream FHIR servers that the proxy routes requests to. Each register
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/fhir-servers/` | List all registered FHIR servers |
-| POST | `/fhir-servers/` | Add a new FHIR server |
+| POST | `/admin/fhir-servers/` | Add a new FHIR server |
 | GET | `/fhir-servers/:server_id` | Get server details + proxy URLs |
-| PUT | `/fhir-servers/:server_id` | Update server name/URL |
-| DELETE | `/fhir-servers/:server_id` | Remove a FHIR server |
-| POST | `/fhir-servers/:server_id/refresh` | Re-fetch server metadata |
-| PATCH | `/fhir-servers/:server_id/strict-capabilities` | Toggle strict CapabilityStatement enforcement |
-| PATCH | `/fhir-servers/:server_id/mcp` | Toggle per-server MCP endpoint |
+| PUT | `/admin/fhir-servers/:server_id` | Update server name/URL |
+| DELETE | `/admin/fhir-servers/:server_id` | Remove a FHIR server |
+| POST | `/admin/fhir-servers/:server_id/refresh` | Re-fetch server metadata |
+| PATCH | `/admin/fhir-servers/:server_id/strict-capabilities` | Toggle strict CapabilityStatement enforcement |
+| PATCH | `/admin/fhir-servers/:server_id/mcp` | Toggle per-server MCP endpoint |
 
 ## mTLS Configuration
 
@@ -21,9 +21,9 @@ For servers that require mutual TLS (client certificates):
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/fhir-servers/:server_id/mtls` | Get current mTLS config |
-| PUT | `/fhir-servers/:server_id/mtls` | Enable/disable mTLS |
-| POST | `/fhir-servers/:server_id/mtls/certificates` | Upload client certificate |
+| GET | `/admin/fhir-servers/:server_id/mtls` | Get current mTLS config |
+| PUT | `/admin/fhir-servers/:server_id/mtls` | Enable/disable mTLS |
+| POST | `/admin/fhir-servers/:server_id/mtls/certificates` | Upload client certificate |
 
 ## Adding a Server
 
@@ -49,7 +49,7 @@ All requests through the proxy pass through the authorization pipeline (token va
 
 ## Strict Capabilities
 
-When enabled, the proxy rejects requests for resources or interactions not declared in the server's `CapabilityStatement`. Toggle via `PATCH /fhir-servers/:server_id/strict-capabilities`.
+When enabled, the proxy rejects requests for resources or interactions not declared in the server's `CapabilityStatement`. Toggle via `PATCH /admin/fhir-servers/:server_id/strict-capabilities`.
 
 ## DICOM Servers
 

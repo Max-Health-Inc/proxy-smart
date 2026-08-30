@@ -120,3 +120,13 @@ export function refreshIfStale(): void {
     refreshCorsOrigins().catch(() => {})
   }
 }
+
+/**
+ * The request's `Origin` when it is allowed, for echoing back in
+ * `Access-Control-Allow-Origin`; null when absent or not allowed.
+ */
+export function allowedOrigin(req: Request): string | null {
+  const origin = req.headers.get('origin')
+  if (!origin) return null
+  return isOriginAllowed(origin) ? origin : null
+}
