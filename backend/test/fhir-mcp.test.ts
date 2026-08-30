@@ -12,7 +12,7 @@
 
 import { describe, it, expect, mock } from 'bun:test'
 
-const mockValidateToken = mock(async (token: string) => {
+const mockValidateToken = mock(async (token: string, _options?: { enforceAudience?: boolean }) => {
   if (token === 'bad-token') throw new Error('invalid')
   return { sub: 'test-user', iss: 'http://localhost:8080/realms/proxy-smart' }
 })
@@ -118,6 +118,16 @@ describe('FHIR MCP endpoint — Bearer gate', () => {
   it('returns 401 for a non-Bearer scheme', async () => {
     const res = await call(post(URL_ENABLED, { Authorization: 'Basic abc123' }))
     expect(res.status).toBe(401)
+  })
+
+  // Same tools over the same server as the FHIR proxy, so the same audience policy
+  // (#355). The default matcher set describes the ADMIN /mcp endpoint, and applying
+  // it here refused SMART tokens that REST accepts for the identical operations.
+  it('validates the token under the FHIR proxy audience policy', async () => {
+    mockValidateToken.mockClear()
+    await call(post(URL_ENABLED, { Authorization: 'Bearer good-token' }))
+    expect(mockValidateToken).toHaveBeenCalled()
+    expect(mockValidateToken.mock.calls[0]?.[1]).toMatchObject({ enforceAudience: false })
   })
 })
 
