@@ -7,8 +7,8 @@ import { logger } from '@/lib/logger'
 import { getProxyJwks } from '@/lib/proxy-signing'
 import { sanitizeDiscoveryDocument } from '@/lib/oidc-discovery'
 import { MCP_SCOPES_SUPPORTED } from '@/lib/oauth-scopes'
-import { ensureServersInitialized, getServerInfoByName } from '@/lib/fhir-server-store'
 import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
+import { isServedMcpPath } from '@/lib/mcp-resources'
 
 /**
  * OAuth 2.0 Protected Resource Metadata for MCP Authorization
@@ -20,24 +20,6 @@ import { ProtectedResourceMetadata, JWKSResponse } from '@/schemas'
  * authorization server and what scopes are supported.
  */
 
-
-/**
- * Whether a path is an MCP endpoint this deployment actually serves: the admin MCP, or a per
- * FHIR server one whose `mcpEnabled` is set. Anything else has no protected-resource metadata.
- */
-async function isMcpResource(resourcePath: string): Promise<boolean> {
-  if (resourcePath === '/mcp') return true
-
-  const perServer = /^\/fhir\/([^/]+)\/mcp$/.exec(resourcePath)
-  if (!perServer) return false
-
-  try {
-    await ensureServersInitialized()
-    return (await getServerInfoByName(perServer[1]))?.mcpEnabled === true
-  } catch {
-    return false
-  }
-}
 
 /**
  * MCP OAuth metadata routes
@@ -99,7 +81,7 @@ export const mcpMetadataRoutes = new Elysia({ prefix: '/.well-known', tags: ['mc
     // Only describe a resource that IS one. The wildcard used to answer 200 for any path at
     // all, so a client could discover an authorization server for an endpoint that does not
     // exist, or whose MCP is switched off, and only learn otherwise after signing in.
-    if (!(await isMcpResource(resourcePath))) {
+    if (!(await isServedMcpPath(resourcePath))) {
       set.status = 404
       return { error: 'not_found', message: `No protected resource at '${resourcePath}'` }
     }

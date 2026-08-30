@@ -6,6 +6,7 @@ import fetch from 'cross-fetch'
 import { config } from '@/config'
 import { validateToken } from '@/lib/auth'
 import { getAllServers, ensureServersInitialized, getServerInfoByName } from '@/lib/fhir-server-store'
+import { fhirMcpPath } from '@/lib/mcp-resources'
 import { logger } from '@/lib/logger'
 import { getRuntimeAccessControlConfig } from '@/lib/runtime-config'
 import { oauthMetricsLogger } from '@/lib/oauth-metrics-logger'
@@ -121,6 +122,13 @@ async function validateAudience(aud: string): Promise<string | null> {
     })
   )
   if (matchesServer) return null
+
+  // Per-server MCP endpoints. Enabling one made it serve and publish metadata, but this check
+  // had never heard of it, so authorize refused the resource and no token could name it.
+  const matchesFhirMcp = servers.some(
+    (s) => s.mcpEnabled === true && aud === `${baseUrl}${fhirMcpPath(s.identifier)}`,
+  )
+  if (matchesFhirMcp) return null
 
   // External resource servers that use this proxy as their authorization server
   // (e.g. third-party MCP servers). Configurable via admin UI or ALLOWED_EXTERNAL_AUDIENCES env var.
