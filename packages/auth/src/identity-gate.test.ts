@@ -1,14 +1,7 @@
 // SPDX-FileCopyrightText: Max Health Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
-/**
- * Turning a `Person` fhirUser into the one concrete identity the app receives.
- *
- * Resolved in the CALLBACK, while a browser is still there to ask. The version that resolved at
- * the token endpoint could not ask anyone, so it guessed from `patient_facing` — a client
- * attribute no dynamic registration writes, which left every DCR client holding a raw Person that
- * most SMART apps cannot read.
- */
+/** A `Person` fhirUser resolved to one concrete identity, in the callback where a human can be asked. */
 import { describe, test, expect } from 'bun:test'
 import { handleCallback, handleIdentitySelect, type CallbackHandlerDeps } from './callback-handler'
 import { MemoryStore } from './stores/memory'
@@ -60,7 +53,6 @@ describe('identity gate', () => {
     expect(result.type === 'redirect' && result.url).not.toContain('choose=identity')
     const updated = store.get('session-key')
     expect(updated?.fhirUser).toBe('Patient/1')
-    // A Patient identity IS the patient context, so the patient picker must not ask again.
     expect(updated?.patient).toBe('1')
     expect(updated?.needsPatientPicker).toBe(false)
   })
@@ -87,8 +79,6 @@ describe('identity gate', () => {
   })
 
   test('never interacts when the client sent prompt=none', async () => {
-    // OIDC Core 3.1.2.6: the client said it will accept no user interaction. So the choice that
-    // would have been asked is not asked, and the launch falls through silently.
     const { store, deps } = setup(
       { scope: 'openid fhirUser user/Patient.rs', prompt: 'none' },
       [PATIENT, PRACTITIONER],
@@ -116,7 +106,6 @@ describe('identity gate', () => {
   })
 
   test('a failure to read the Person falls through instead of failing the launch', async () => {
-    // The behaviour that existed before any of this: a Person is deferred, never refused.
     const { deps } = setup({ scope: 'openid fhirUser launch/patient' }, new Error('FHIR unreachable'))
 
     const { result } = await callback(deps)
@@ -180,8 +169,6 @@ describe('handleIdentitySelect', () => {
   })
 
   test('refuses an identity the session never offered', () => {
-    // The whole authorization check on this POST. Without it a session key would be enough to
-    // name any Practitioner on the server and be issued a token as them.
     const { store, deps } = offered()
 
     const result = handleIdentitySelect({ session: 'session-key', code: 'c', identity: 'Practitioner/999' }, deps)

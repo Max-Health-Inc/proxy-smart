@@ -43,10 +43,8 @@ export function getAttr(attrs: Record<string, string | string[]> | undefined, ke
  * attributes are arrays; `getAttr` is what knows the difference. Anything else is `undefined`,
  * which means passthrough — including the empty string an admin clear writes.
  *
- * Lives here, beside `getAttr`, because both readers of this attribute need it and the second
- * one used to inline the comparison instead. That copy is how the original bug survived: the
- * cache indexed the raw value (`'true'[0]` is `'t'`), matching neither branch, so every client
- * fell through to passthrough and no app got the role it registered for.
+ * One reader, beside `getAttr`. A second inlined copy is how the original bug survived:
+ * the cache indexed the raw value (`'true'[0]` is `'t'`), so every client fell through.
  */
 export function parsePatientFacing(
   attrs: Record<string, string | string[]> | undefined,

@@ -1,14 +1,7 @@
 // SPDX-FileCopyrightText: Max Health Inc.
 // SPDX-License-Identifier: AGPL-3.0-or-later OR LicenseRef-Commercial
 
-/**
- * Choosing which of a human's identities a launch is for.
- *
- * The two behaviours being replaced both guessed: `patient_facing` decided from a client attribute
- * nothing sets on a dynamically-registered client, and AIHR took Practitioner whenever both
- * existed. What is pinned here is that the REQUEST decides where it can, and the human decides
- * where it cannot.
- */
+/** The REQUEST decides where it can; the human decides where it cannot. Nothing guesses. */
 import { describe, test, expect } from 'bun:test'
 import { chooseIdentity, candidatesForScopes, isOfferedIdentity } from './identity-choice'
 import type { IdentityCandidate } from './identity-choice'
@@ -24,9 +17,6 @@ describe('candidatesForScopes', () => {
   })
 
   test('an EHR launch is NOT narrowed, because the patient is somebody else', () => {
-    // The trap in reusing `canReturnPatient`: it answers true for a bare `launch` too, so a
-    // clinician who happens to have a chart of their own would have been handed it as `fhirUser`
-    // while working on the patient the EHR put in context.
     expect(candidatesForScopes([patient, practitioner], 'launch openid'))
       .toEqual([patient, practitioner])
   })
@@ -42,9 +32,6 @@ describe('candidatesForScopes', () => {
   })
 
   test('an EHR launch takes the Practitioner, because that is what the launch means', () => {
-    // The EHR started this app for someone working in it, on a patient who is somebody else.
-    // Prompting here would interrupt a flow SMART expects to be seamless, to ask a question the
-    // launch already answered.
     expect(candidatesForScopes([patient, practitioner], 'launch openid', { ehrLaunch: true }))
       .toEqual([practitioner])
   })
@@ -54,8 +41,6 @@ describe('candidatesForScopes', () => {
   })
 
   test('keeps everything when patient context is wanted but no Patient exists', () => {
-    // Dropping them would leave the launch with nothing and no way to say why. The practitioner
-    // gate downstream refuses this case with a message; an empty list cannot.
     expect(candidatesForScopes([practitioner, related], 'launch/patient')).toEqual([practitioner, related])
   })
 })
@@ -66,8 +51,6 @@ describe('chooseIdentity', () => {
   })
 
   test('resolves without prompting when the scopes settle it', () => {
-    // A clinician with a chart opening a standalone patient app is NOT ambiguous — they asked for
-    // patient context, and only one of their identities can carry it.
     expect(chooseIdentity([patient, practitioner], 'launch/patient'))
       .toEqual({ action: 'resolved', identity: patient })
   })
@@ -98,8 +81,6 @@ describe('isOfferedIdentity', () => {
   })
 
   test('refuses one it did not, which is the whole authorization check on the POST', () => {
-    // The choice arrives in a form body. Without this, a session key would let anyone name any
-    // Practitioner on the server and be issued a token as them.
     expect(isOfferedIdentity('Practitioner/999', ['Patient/1', 'Practitioner/2'])).toBe(false)
     expect(isOfferedIdentity('', ['Patient/1'])).toBe(false)
   })
