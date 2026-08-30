@@ -20,6 +20,13 @@
  * every human who is only a patient. When more than one survives, the person signing in is asked,
  * because at that point the answer is genuinely theirs.
  *
+ * A SEAT IS NOT SCOPED TO THE ACCOUNT THAT HOLDS IT, and that is deliberate. The grant lives on
+ * one customer account (`parties.practitioner_seat`), but the Practitioner it produces hangs off
+ * the human's Person, so it is offered whichever of their accounts they signed in with — a
+ * personal passkey included. Decided 2026-08-30: a seat makes someone a clinician, and a clinician
+ * signing in from their own account is still that clinician. Do NOT "fix" this by filtering
+ * candidates down to the seat-holding parties; it was considered and rejected.
+ *
  * NOT `canReturnPatient`, which looks like the same question and is not. It also answers true for
  * a bare `launch` — an EHR launch, where a clinician has already picked a patient who is somebody
  * else. Narrowing on it would hand those launches the CLINICIAN'S own chart as `fhirUser` whenever
