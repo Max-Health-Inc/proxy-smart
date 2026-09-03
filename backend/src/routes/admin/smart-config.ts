@@ -4,7 +4,7 @@
 import { Elysia, t } from 'elysia'
 import { smartConfigService } from '@/lib/smart-config'
 import { brandBundleService } from '@/lib/brand-bundle'
-import { validateToken } from '@/lib/auth'
+import { validateAdminToken } from '@/lib/auth'
 import { extractBearerToken } from '@/lib/admin-utils'
 import { handleAdminError } from '@/lib/admin-error-handler'
 import { CommonErrorResponses, SmartConfigRefreshResponse, type SmartConfigurationResponseType } from '@/schemas'
@@ -24,7 +24,7 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       // Clear both SMART config and brand bundle caches
       smartConfigService.clearCache()
@@ -59,7 +59,7 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const admin = await getAdminClient()
       if (!admin) {
@@ -104,7 +104,7 @@ export const smartConfigAdminRoutes = new Elysia({ prefix: '/smart-config', tags
     }
 
     try {
-      await validateToken(auth)
+      await validateAdminToken(auth)
 
       const admin = await getAdminClient()
       if (!admin) {
